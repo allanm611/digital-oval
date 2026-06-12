@@ -37,6 +37,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const SEGMENT_CATALOG_TAG_PREFIX = "catalog:";
 
@@ -66,6 +67,7 @@ function CategoryModal({
   onSave,
 }: CategoryModalProps) {
   const [formData, setFormData] = useState({
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
     name: "",
     description: "",
   });
@@ -594,7 +596,7 @@ export default function SegmentCategoriesPage() {
 
   const handleDeleteCategory = (category: SegmentCategory) => {
     setCategoryToDelete(category);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleToggleActive = async (category: SegmentCategory) => {
@@ -651,7 +653,7 @@ export default function SegmentCategoriesPage() {
         "Catalog deleted",
         `Segment catalog "${categoryToDelete.name}" has been deleted successfully`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setCategoryToDelete(null);
     } catch (err) {
       const errorMsg2 = extractBackendError(err, "Failed to delete segment catalog");
@@ -664,7 +666,7 @@ export default function SegmentCategoriesPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setCategoryToDelete(null);
   };
 
@@ -1086,9 +1088,9 @@ export default function SegmentCategoriesPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        onConfirm={confirmDeleteItem}
         title="Delete Segment Catalog"
         description={
           categoryToDelete && (segmentCounts[categoryToDelete.id] || 0) > 0

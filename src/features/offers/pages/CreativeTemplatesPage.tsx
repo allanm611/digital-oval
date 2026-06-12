@@ -11,6 +11,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 interface CreativeTemplate {
   id: number;
@@ -29,6 +30,7 @@ export default function CreativeTemplatesPage() {
   const { t } = useLanguage();
 
   const [templates, setTemplates] = useState<CreativeTemplate[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,7 +58,7 @@ export default function CreativeTemplatesPage() {
 
   const handleDeleteClick = (template: CreativeTemplate) => {
     setTemplateToDelete(template);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteTemplate = async () => {
@@ -67,7 +69,7 @@ export default function CreativeTemplatesPage() {
       await creativeTemplateService.deleteCreativeTemplate(templateToDelete.id);
       setTemplates((prev) => prev.filter((t) => t.id !== templateToDelete.id));
       showSuccess("Creative Template deleted successfully");
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setTemplateToDelete(null);
     } catch (error) {
       showError("Failed to delete creative template", extractBackendError(error, "Failed to delete creative template. Please try again."));;
@@ -323,9 +325,9 @@ export default function CreativeTemplatesPage() {
       )}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setTemplateToDelete(null);
         }}
         onConfirm={confirmDeleteTemplate}

@@ -53,6 +53,7 @@ import CreateCommunicationModal from "../../../shared/components/CreateCommunica
 import type { Customer } from "../../customers360/types/customer";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import Radio from "../../../shared/components/ui/Radio";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function SegmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -61,6 +62,7 @@ export default function SegmentDetailsPage() {
   const { success, error: showError, info: showInfo } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Check if we came from a catalog modal
@@ -546,7 +548,7 @@ export default function SegmentDetailsPage() {
 
   const handleDelete = () => {
     if (!segment) return;
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -559,7 +561,7 @@ export default function SegmentDetailsPage() {
         "Segment deleted",
         `Segment "${segment.name}" has been deleted successfully`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       navigate("/dashboard/segments");
     } catch (err) {
       console.error("Failed to delete segment:", err);
@@ -570,7 +572,7 @@ export default function SegmentDetailsPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
   };
 
   const handleAddMembers = async () => {
@@ -2665,9 +2667,9 @@ export default function SegmentDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        onConfirm={confirmDeleteItem}
         title="Delete Segment"
         description="Are you sure you want to delete this segment? This action cannot be undone."
         itemName={segment?.name || ""}

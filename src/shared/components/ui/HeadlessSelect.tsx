@@ -100,27 +100,35 @@ export default function HeadlessSelect({
               setIsOpen(!isOpen);
             }}
             className={`
-            relative w-full cursor-default py-2 px-3 pr-10 text-left transition-all duration-200 text-sm
-            ${error ? components.input.error : components.input.default}
+            relative w-full cursor-default py-2 px-3 pr-10 text-left transition-all duration-200 text-sm ${tw.rounded} border border-gray-200
             ${
               disabled
-                ? "bg-gray-50 text-gray-500 cursor-not-allowed opacity-50"
+                ? "opacity-50 cursor-not-allowed"
                 : ""
             }
             focus:outline-none focus:ring-0
           `}
+            style={
+              error
+                ? { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                : disabled
+                ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)' }
+                : { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+            }
           >
             {" "}
             <span
-              className={`block text-sm ${
-                selectedOption ? "text-gray-900" : "text-gray-500"
-              }`}
+              className="block text-sm"
+              style={{
+                color: selectedOption ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+              }}
             >
               {selectedOption ? selectedOption.label : placeholder}
             </span>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400"
+                className="h-5 w-5"
+                style={{ color: 'var(--c-text-secondary)' }}
                 aria-hidden="true"
               />
             </span>
@@ -132,18 +140,26 @@ export default function HeadlessSelect({
         <>
           {createPortal(
             <div
-              className={`${tw.rounded} bg-white py-1 text-sm shadow-lg border border-gray-300 focus:outline-none max-h-80 overflow-auto pointer-events-auto`}
+              className={`${tw.rounded} py-1 text-sm shadow-lg focus:outline-none max-h-80 overflow-auto pointer-events-auto`}
               style={{
                 position: "fixed",
                 top: `${dropdownPosition.top}px`,
                 left: `${dropdownPosition.left}px`,
                 width: `${dropdownPosition.width}px`,
                 zIndex: effectiveZIndex,
+                backgroundColor: 'var(--c-surface-cards)',
+                borderColor: 'var(--c-border-default)',
+                borderWidth: '1px',
               }}
             >
               {searchable && (
                 <div
-                  className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200"
+                  className={`sticky top-0 z-10 px-3 py-2 ${tw.rounded}`}
+                  style={{
+                    backgroundColor: 'var(--c-surface-cards)',
+                    borderBottomColor: 'var(--c-border-default)',
+                    borderBottomWidth: '1px',
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <input
@@ -151,14 +167,20 @@ export default function HeadlessSelect({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search options..."
-                    className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
+                    className={`w-full px-2 py-1 text-sm ${tw.rounded} focus:outline-none focus:ring-0`}
+                    style={{
+                      borderColor: 'var(--c-border-default)',
+                      borderWidth: '1px',
+                      backgroundColor: 'var(--c-input-bg)',
+                      color: 'var(--c-text-primary)',
+                    }}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               )}
 
               {filteredOptions.length === 0 ? (
-                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-sm text-gray-500 whitespace-nowrap">
+                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-sm whitespace-nowrap" style={{ color: 'var(--c-text-secondary)' }}>
                   No options found.
                 </div>
               ) : (
@@ -171,19 +193,36 @@ export default function HeadlessSelect({
                       setIsOpen(false);
                     }}
                     className={`relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
-                      value === option.value
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-900 hover:bg-gray-50"
-                    } ${
                       option.disabled
                         ? "opacity-50 cursor-not-allowed"
                         : "cursor-pointer"
                     }`}
+                    style={
+                      value === option.value
+                        ? {
+                            backgroundColor: 'var(--c-interactive-active)',
+                            color: 'var(--c-text-primary)',
+                          }
+                        : {}
+                    }
+                    onMouseEnter={(e) => {
+                      if (!option.disabled && value !== option.value) {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
+                        (e.currentTarget as HTMLElement).style.color = 'var(--c-text-primary)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!option.disabled && value !== option.value) {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                        (e.currentTarget as HTMLElement).style.color = '';
+                      }
+                    }}
                   >
                     <span
                       className={`block text-sm ${
                         value === option.value ? "font-medium" : "font-normal"
                       }`}
+                      style={{ color: 'inherit' }}
                     >
                       {option.label}
                     </span>
@@ -242,7 +281,8 @@ export default function HeadlessSelect({
             </span>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400"
+                className="h-5 w-5"
+                style={{ color: 'var(--c-text-secondary)' }}
                 aria-hidden="true"
               />
             </span>
@@ -254,18 +294,26 @@ export default function HeadlessSelect({
         <>
           {createPortal(
             <div
-              className={`${tw.rounded} bg-white py-1 text-sm shadow-lg border border-gray-300 focus:outline-none max-h-80 overflow-auto pointer-events-auto`}
+              className={`${tw.rounded} py-1 text-sm shadow-lg focus:outline-none max-h-80 overflow-auto pointer-events-auto`}
               style={{
                 position: "fixed",
                 top: `${dropdownPosition.top}px`,
                 left: `${dropdownPosition.left}px`,
                 width: `${dropdownPosition.width}px`,
                 zIndex: effectiveZIndex,
+                backgroundColor: 'var(--c-surface-cards)',
+                borderColor: 'var(--c-border-default)',
+                borderWidth: '1px',
               }}
             >
               {searchable && (
                 <div
-                  className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200"
+                  className={`sticky top-0 z-10 px-3 py-2 ${tw.rounded}`}
+                  style={{
+                    backgroundColor: 'var(--c-surface-cards)',
+                    borderBottomColor: 'var(--c-border-default)',
+                    borderBottomWidth: '1px',
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <input
@@ -273,14 +321,20 @@ export default function HeadlessSelect({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search options..."
-                    className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
+                    className={`w-full px-2 py-1 text-sm ${tw.rounded} focus:outline-none focus:ring-0`}
+                    style={{
+                      borderColor: 'var(--c-border-default)',
+                      borderWidth: '1px',
+                      backgroundColor: 'var(--c-input-bg)',
+                      color: 'var(--c-text-primary)',
+                    }}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               )}
 
               {filteredOptions.length === 0 ? (
-                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-sm text-gray-500 whitespace-nowrap">
+                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-sm whitespace-nowrap" style={{ color: 'var(--c-text-secondary)' }}>
                   No options found.
                 </div>
               ) : (
@@ -293,19 +347,36 @@ export default function HeadlessSelect({
                       setIsOpen(false);
                     }}
                     className={`relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
-                      value === option.value
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-900 hover:bg-gray-50"
-                    } ${
                       option.disabled
                         ? "opacity-50 cursor-not-allowed"
                         : "cursor-pointer"
                     }`}
+                    style={
+                      value === option.value
+                        ? {
+                            backgroundColor: 'var(--c-interactive-active)',
+                            color: 'var(--c-text-primary)',
+                          }
+                        : {}
+                    }
+                    onMouseEnter={(e) => {
+                      if (!option.disabled && value !== option.value) {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
+                        (e.currentTarget as HTMLElement).style.color = 'var(--c-text-primary)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!option.disabled && value !== option.value) {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                        (e.currentTarget as HTMLElement).style.color = '';
+                      }
+                    }}
                   >
                     <span
                       className={`block text-sm ${
                         value === option.value ? "font-medium" : "font-normal"
                       }`}
+                      style={{ color: 'inherit' }}
                     >
                       {option.label}
                     </span>

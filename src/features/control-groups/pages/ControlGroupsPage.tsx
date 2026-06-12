@@ -22,11 +22,13 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { controlGroupService } from "../services/controlGroupService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { ControlGroupApiModel, ControlGroupStatistics } from "../types/controlGroup";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ControlGroupsPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
   const [controlGroups, setControlGroups] = useState<ControlGroupApiModel[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [statistics, setStatistics] = useState<ControlGroupStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
@@ -80,7 +82,7 @@ export default function ControlGroupsPage() {
 
   const handleDeleteClick = (id: number, name: string) => {
     setGroupToDelete({ id, name });
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -92,7 +94,7 @@ export default function ControlGroupsPage() {
       setControlGroups(controlGroups.filter((g) => g.id !== groupToDelete.id));
       setTotalCount(Math.max(0, totalCount - 1));
       showSuccess("Control group deleted successfully");
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setGroupToDelete(null);
     } catch (error) {
       showError(extractBackendError(error, "Failed to delete control group. Please try again."));
@@ -444,9 +446,9 @@ export default function ControlGroupsPage() {
       </div>
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setGroupToDelete(null);
         }}
         onConfirm={handleConfirmDelete}

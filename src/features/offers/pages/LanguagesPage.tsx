@@ -11,12 +11,14 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { languageService, Language } from "../../configurations/services/languageService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LanguageModal from "../../configurations/components/LanguageModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function LanguagesPage() {
   const { success: showSuccess, error: showError } = useToast();
   const { t } = useLanguage();
 
   const [languages, setLanguages] = useState<Language[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,7 +70,7 @@ export default function LanguagesPage() {
 
   const handleDeleteClick = (language: Language) => {
     setLanguageToDelete(language);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteLanguage = async () => {
@@ -79,7 +81,7 @@ export default function LanguagesPage() {
       await languageService.deleteLanguage(languageToDelete.id);
       setLanguages((prev) => prev.filter((l) => l.id !== languageToDelete.id));
       showSuccess("Language deleted successfully");
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setLanguageToDelete(null);
     } catch (error) {
       showError("Failed to delete language", extractBackendError(error, "Failed to delete language. Please try again."));;
@@ -379,9 +381,9 @@ export default function LanguagesPage() {
       )}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setLanguageToDelete(null);
         }}
         onConfirm={confirmDeleteLanguage}

@@ -24,6 +24,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import Input from "../../../shared/components/ui/Input";
@@ -73,10 +74,17 @@ export default function ScheduledJobsPage() {
     dueForExecution: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingJob, setDeletingJob] = useState<ScheduledJob | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [jobTypeMap, setJobTypeMap] = useState<Record<number, string>>({});
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteJob } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setJobs((prev) => prev.filter((j) => j.id !== numId));
+      await scheduledJobService.deleteScheduledJob(numId);
+    },
+    itemLabel: "Scheduled Job",
+  });
   const [isSelectTypeModalOpen, setIsSelectTypeModalOpen] = useState(false);
   // Bulk selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -931,7 +939,7 @@ export default function ScheduledJobsPage() {
                           <button
                             onClick={() => {
                               setDeletingJob(job);
-                              setShowDeleteModal(true);
+                              openDeleteConfirm(job.id, job.name || `Job #${job.id}`);
                             }}
                             className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                             aria-label="Delete job"
@@ -959,36 +967,15 @@ export default function ScheduledJobsPage() {
 
       {deletingJob && (
         <DeleteConfirmModal
-          isOpen={showDeleteModal}
+          isOpen={deleteConfirm.id !== null}
           onClose={() => {
-            setShowDeleteModal(false);
+            closeDeleteConfirm();
             setDeletingJob(null);
           }}
-          onConfirm={async () => {
-            if (!deletingJob) return;
-            try {
-              setIsDeleting(true);
-              await scheduledJobService.deleteScheduledJob(deletingJob.id);
-              showToast(
-                "Scheduled job deleted",
-                `"${deletingJob.name}" has been deleted successfully.`,
-              );
-              setShowDeleteModal(false);
-              setDeletingJob(null);
-              await fetchJobs();
-            } catch (err) {
-              const message =
-                err instanceof Error
-                  ? err.message
-                  : "Failed to delete scheduled job";
-              showError("Unable to delete scheduled job", extractBackendError(error, "Unable to delete scheduled job. Please try again."));
-            } finally {
-              setIsDeleting(false);
-            }
-          }}
+          onConfirm={confirmDeleteJob}
           title="Delete Scheduled Job"
-          description={`Are you sure you want to delete the scheduled job "${deletingJob.name}"? This action cannot be undone.`}
-          itemName={deletingJob.name}
+          description={`Are you sure you want to delete the scheduled job "${deleteConfirm.itemName}"? This action cannot be undone.`}
+          itemName={deleteConfirm.itemName}
           isLoading={isDeleting}
           confirmText="Delete"
           cancelText="Cancel"

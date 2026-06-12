@@ -12,6 +12,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   variant?: 'default' | 'medium' | 'compact'; // default: px-4 py-2, medium: px-3 py-2, compact: px-3 py-1
   type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time'; // default: text
   label?: string; // Floating label (optional)
+  style?: React.CSSProperties;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -25,6 +26,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   variant = 'medium',
   type = 'text',
   label,
+  style = {},
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -34,13 +36,31 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   if (variant === 'compact') paddingClass = 'px-3 py-1';
 
   // Determine border color based on error state
-  const borderClass = hasError ? 'border-red-500' : 'border-gray-300';
+  const borderClass = hasError ? 'border-red-500' : 'border-gray-200';
 
   // Determine background based on disabled/readOnly state
   const isReadOnly = rest.readOnly;
-  let bgClass = 'bg-white';
-  if (disabled) bgClass = 'bg-gray-100 cursor-not-allowed text-gray-500';
-  else if (isReadOnly) bgClass = 'bg-gray-50 cursor-default text-gray-600';
+  let inputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--c-input-bg)',
+    color: 'var(--c-text-primary)',
+    ...style
+  };
+
+  if (disabled) {
+    inputStyle = {
+      backgroundColor: 'var(--c-input-disabled-bg)',
+      color: 'var(--c-text-muted)',
+      cursor: 'not-allowed',
+      ...style
+    };
+  } else if (isReadOnly) {
+    inputStyle = {
+      backgroundColor: 'var(--c-input-bg)',
+      color: 'var(--c-text-primary)',
+      cursor: 'default',
+      ...style
+    };
+  }
 
   const hasValue = value !== '' && value !== 0;
   const shouldFloatLabel = isFocused || hasValue;
@@ -61,8 +81,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         onKeyDown={onKeyDown}
         className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-          ${bgClass}
           ${className}`}
+        style={inputStyle}
         {...rest}
       />
     );
@@ -84,8 +104,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         onKeyDown={onKeyDown}
         className={`w-full px-3 py-3 text-sm border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-          ${bgClass}
           ${className}`}
+        style={inputStyle}
         {...rest}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}

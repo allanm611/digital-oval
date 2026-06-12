@@ -12,6 +12,7 @@ import type { ControlGroupApiModel, ControlGroupMember } from "../types/controlG
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination from "../../../shared/components/ui/Pagination";
 import AddMembersModal from "../components/AddMembersModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ControlGroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function ControlGroupDetailPage() {
   const location = useLocation();
   const { success: showSuccess, error: showError } = useToast();
   const [group, setGroup] = useState<ControlGroupApiModel | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -150,7 +152,7 @@ export default function ControlGroupDetailPage() {
       console.error(error);
     } finally {
       setIsDeleting(false);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -278,7 +280,7 @@ export default function ControlGroupDetailPage() {
             Edit
           </button>
           <button
-            onClick={() => setShowDeleteModal(true)}
+            onClick={() => openDeleteConfirm(item?.id || 0, item?.name || "")}
             disabled={isDeleting}
             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{
@@ -629,8 +631,8 @@ export default function ControlGroupDetailPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => closeDeleteConfirm()}
         onConfirm={handleDelete}
         title="Delete Control Group"
         description="Are you sure you want to delete this control group? This action cannot be undone."

@@ -10,6 +10,7 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();

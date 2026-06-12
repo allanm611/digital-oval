@@ -29,6 +29,7 @@ import ProgramModal from "../components/ProgramModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import Radio from "../../../shared/components/ui/Radio";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const PAGE_SIZE = 20;
 
@@ -37,9 +38,17 @@ export default function ProgramsPage() {
   const { success: showToast, error: showError } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteProgram } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setPrograms((prev) => prev.filter((p) => p.id !== numId));
+      await programService.deleteProgram(numId);
+    },
+    itemLabel: "Program",
+  });
+
+
+
 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,7 +206,7 @@ export default function ProgramsPage() {
 
   const handleDeleteProgram = (program: Program) => {
     setProgramToDelete(program);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -207,7 +216,7 @@ export default function ProgramsPage() {
     try {
       await programService.deleteProgram(Number(programToDelete.id));
       showToast(`Program "${programToDelete.name}" deleted successfully!`);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setProgramToDelete(null);
       await loadPrograms(true);
       await loadStats();
@@ -220,7 +229,7 @@ export default function ProgramsPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setProgramToDelete(null);
   };
 
@@ -740,7 +749,7 @@ export default function ProgramsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete Program"

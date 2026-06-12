@@ -37,6 +37,7 @@ import { userService } from "../../users/services/userService";
 import { segmentService } from "../../segments/services/segmentService";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const formatMetadataKey = (key: string) =>
   key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -117,6 +118,7 @@ export default function ScheduledJobDetailsPage() {
   const { user } = useAuth();
 
   const [job, setJob] = useState<ScheduledJob | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -654,7 +656,7 @@ export default function ScheduledJobDetailsPage() {
           </div>
 
           <button
-            onClick={() => setShowDeleteModal(true)}
+            onClick={() => openDeleteConfirm(item?.id || 0, item?.name || "")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white bg-red-600`}
           >
             <Trash2 className="h-4 w-4" />
@@ -1539,8 +1541,8 @@ export default function ScheduledJobDetailsPage() {
       {/* Delete Modal */}
       {job && (
         <DeleteConfirmModal
-          isOpen={showDeleteModal}
-          onClose={() => setShowDeleteModal(false)}
+          isOpen={deleteConfirm.id !== null}
+          onClose={() => closeDeleteConfirm()}
           onConfirm={handleDelete}
           title="Delete Scheduled Job"
           description={`Are you sure you want to delete the scheduled job "${job.name}"? This action cannot be undone.`}

@@ -25,6 +25,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CategoryDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +33,7 @@ export default function CategoryDetailsPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [category, setCategory] = useState<OfferCategoryType | null>(null);
@@ -194,7 +196,7 @@ export default function CategoryDetailsPage() {
 
   const handleDeleteCategory = () => {
     if (!category) return;
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -205,7 +207,7 @@ export default function CategoryDetailsPage() {
       const response = await offerCategoryService.deleteCategory(category.id);
       if (response.success) {
         showToast(t.categories.deleteSuccess);
-        setShowDeleteModal(false);
+        closeDeleteConfirm();
         navigate("/dashboard/offer-catalogs");
       } else {
         showError(t.categories.deleteError);
@@ -219,7 +221,7 @@ export default function CategoryDetailsPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
   };
 
   const handleToggleStatus = async () => {
@@ -777,9 +779,9 @@ export default function CategoryDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        onConfirm={confirmDeleteItem}
         title="Delete Category"
         description="Are you sure you want to delete this category? This action cannot be undone."
         itemName={category?.name || ""}

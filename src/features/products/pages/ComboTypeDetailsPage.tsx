@@ -9,6 +9,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { tw, color, button } from "../../../shared/utils/utils";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ComboTypeDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function ComboTypeDetailsPage() {
   const { success, error: showError } = useToast();
 
   const [comboType, setComboType] = useState<ComboType | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -40,7 +42,7 @@ export default function ComboTypeDetailsPage() {
   }, [id, showError]);
 
   const handleDelete = () => {
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -59,7 +61,7 @@ export default function ComboTypeDetailsPage() {
       showError("Cannot Delete Combo Type", extractBackendError(err, "Cannot Delete Combo Type. Please try again."));
     } finally {
       setIsDeleting(false);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -421,12 +423,12 @@ export default function ComboTypeDetailsPage() {
 
       {/* Delete Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         title="Delete Combo Type"
         message={`Are you sure you want to delete "${comboType.name}"? This action cannot be undone.`}
         isLoading={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteItem}
+        onCancel={() => closeDeleteConfirm()}
       />
     </div>
   );

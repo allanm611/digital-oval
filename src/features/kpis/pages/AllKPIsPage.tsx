@@ -14,6 +14,7 @@ import { kpiService } from "../services/kpiService";
 import { systemEventService } from "../services/systemEventService";
 import { type KPI } from "../types/kpi";
 import { type SystemEvent } from "../types/systemEvent";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -21,6 +22,7 @@ export default function AllKPIsPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [allKPIs, setAllKPIs] = useState<KPI[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -172,7 +174,7 @@ export default function AllKPIsPage() {
 
   const handleDeleteClick = (kpi: typeof allKPIs[0]) => {
     setKpiToDelete({ id: kpi.id, name: kpi.name });
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -183,7 +185,7 @@ export default function AllKPIsPage() {
       await kpiService.deleteKPI(Number(kpiToDelete.id));
       showToast("success", `"${kpiToDelete.name}" has been deleted successfully`);
       setAllKPIs((prev) => prev.filter((k) => k.id !== kpiToDelete.id));
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setKpiToDelete(null);
     } catch (error) {
       console.error("Failed to delete KPI:", error);
@@ -194,7 +196,7 @@ export default function AllKPIsPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setKpiToDelete(null);
   };
 
@@ -551,9 +553,9 @@ export default function AllKPIsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        onConfirm={confirmDeleteItem}
         title="Delete KPI"
         description="Are you sure you want to delete this KPI? This action cannot be undone."
         itemName={kpiToDelete?.name || ""}

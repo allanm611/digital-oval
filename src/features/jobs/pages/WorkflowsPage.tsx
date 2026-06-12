@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -66,16 +67,27 @@ export default function WorkflowsPage() {
     deleted: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingWorkflow, setDeletingWorkflow] = useState<Workflow | null>(
-    null,
-  );
-  const [deleteName, setDeleteName] = useState<string>("this workflow");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [rowLoading, setRowLoading] = useState<{
     id: number;
     action: "clone" | "delete";
   } | null>(null);
+  const [deletingWorkflow, setDeletingWorkflow] = useState<Workflow | null>(null);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteWorkflow } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      const workflowToDelete = workflows.find(w => w.id === numId);
+      if (!workflowToDelete) return;
+
+      setWorkflows((prev) => prev.filter((w) => w.id !== numId));
+      setTotalCount((prev) => prev - 1);
+
+      await workflowService.deleteWorkflow(numId);
+      setRowLoading(null);
+      fetchStats();
+    },
+    itemLabel: "Workflow",
+  });
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedWorkflows, setSelectedWorkflows] = useState<Set<number>>(
     new Set(),
@@ -235,36 +247,9 @@ export default function WorkflowsPage() {
     fetchStats();
   }, [fetchWorkflows, fetchStats]);
 
-  const handleDelete = async () => {
-    if (!deletingWorkflow) return;
-
-    setIsDeleting(true);
-    // Optimistic update: remove immediately
-    const workflowToDelete = deletingWorkflow;
-    setWorkflows((prev) => prev.filter((w) => w.id !== workflowToDelete.id));
-    setTotalCount((prev) => prev - 1);
-
-    try {
-      await workflowService.deleteWorkflow(deletingWorkflow.id);
-      showToast(
-        t.workflows.deleteSuccess,
-        "Workflow has been deleted successfully.",
-      );
-      setShowDeleteModal(false);
-      setDeletingWorkflow(null);
-      setRowLoading(null);
-      fetchStats();
-    } catch (err) {
-      // Rollback on error
-      setWorkflows((prev) => [...prev, workflowToDelete]);
-      setTotalCount((prev) => prev + 1);
-      showError(
-        t.workflows.deleteFailed || "Delete failed",
-        err instanceof Error ? err.message : t.common.error || "Unknown error",
-      );
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDeleteWorkflow = (workflow: Workflow) => {
+    setDeletingWorkflow(workflow);
+    openDeleteConfirm(workflow.id, workflow.name || `Workflow #${workflow.id}`);
   };
 
   const handleToggleSelection = (workflowId: number) => {
@@ -821,13 +806,7 @@ export default function WorkflowsPage() {
                         )}
                       </button>
                       <button
-                        onClick={() => {
-                          setDeletingWorkflow(workflow);
-                          setDeleteName(
-                            workflow.name?.trim() || "this workflow",
-                          );
-                          setShowDeleteModal(true);
-                        }}
+                        onClick={() => handleDeleteWorkflow(workflow)}
                         className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                         aria-label="Delete workflow"
                         title="Delete"
@@ -854,17 +833,16 @@ export default function WorkflowsPage() {
       </div>
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setDeletingWorkflow(null);
           setRowLoading(null);
-          setDeleteName("this workflow");
         }}
-        onConfirm={handleDelete}
+        onConfirm={confirmDeleteWorkflow}
         title="Delete Workflow"
         description="This action cannot be undone."
-        itemName={deleteName}
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
       />
 

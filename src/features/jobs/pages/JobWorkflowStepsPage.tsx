@@ -49,6 +49,7 @@ import type {
 import { useAuth } from "../../../contexts/AuthContext";
 import type { ScheduledJob } from "../types/scheduledJob";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const STEP_TYPE_OPTIONS: Array<{ label: string; value: StepType | "" }> = [
   { label: "All Types", value: "" },
@@ -79,6 +80,7 @@ export default function JobWorkflowStepsPage() {
   const { user } = useAuth();
 
   const [steps, setSteps] = useState<JobWorkflowStep[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [stepTypeFilter, setStepTypeFilter] = useState<StepType | "">("");
@@ -1554,7 +1556,7 @@ export default function JobWorkflowStepsPage() {
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeletingStep(step);
-                    setShowDeleteModal(true);
+                    openDeleteConfirm(item?.id || 0, item?.name || "");
                     setShowActionMenu(null);
                   }}
                   className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -1572,9 +1574,9 @@ export default function JobWorkflowStepsPage() {
 
       {deletingStep && (
         <DeleteConfirmModal
-          isOpen={showDeleteModal}
+          isOpen={deleteConfirm.id !== null}
           onClose={() => {
-            setShowDeleteModal(false);
+            closeDeleteConfirm();
             setDeletingStep(null);
           }}
           onConfirm={async () => {
@@ -1588,7 +1590,7 @@ export default function JobWorkflowStepsPage() {
                 "Workflow step deleted",
                 `"${deletingStep.step_name}" has been deleted successfully.`,
               );
-              setShowDeleteModal(false);
+              closeDeleteConfirm();
               setDeletingStep(null);
               // Optimistically remove deleted step
               setSteps((prev) => prev.filter((s) => s.id !== deletingStep.id));

@@ -420,9 +420,19 @@ export default function ConfigurationPage() {
               onClick={() => setSelectedCategory(category.id)}
               className={`px-3 sm:px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                 selectedCategory === category.id
-                  ? `bg-[#5F6F77] text-white`
-                  : `bg-white ${tw.textSecondary} hover:bg-gray-50 border border-gray-300`
+                  ? `text-white`
+                  : `hover:bg-gray-50 border border-gray-300`
               }`}
+              style={
+                selectedCategory === category.id
+                  ? {
+                      backgroundColor: '#5F6F77',
+                    }
+                  : {
+                      backgroundColor: '#ffffff',
+                      color: 'var(--c-text-on-light)',
+                    }
+              }
             >
               {category.name} ({category.count})
             </button>
@@ -481,7 +491,7 @@ export default function ConfigurationPage() {
                   {/* Category */}
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <span
-                      className={`bg-neutral-100 px-3 py-1 rounded-full text-sm font-medium ${tw.textSecondary}`}
+                      className={`text-sm font-medium ${tw.textSecondary}`}
                     >
                       {config.category}
                     </span>

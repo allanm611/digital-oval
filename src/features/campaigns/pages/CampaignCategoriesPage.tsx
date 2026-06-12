@@ -27,6 +27,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { BackendCampaignType } from "../types/campaign";
 import {
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
   FolderOpen,
   CheckCircle,
   XCircle,
@@ -69,6 +70,7 @@ function CategoryModal({
 }: CategoryModalProps) {
   const { error: showError } = useToast();
   const [formData, setFormData] = useState({
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
     name: "",
     description: "",
   });
@@ -491,7 +493,7 @@ export default function CampaignCategoriesPage() {
 
   const handleDeleteCategory = useCallback((category: CampaignCategory) => {
     setCategoryToDelete(category);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   }, []);
 
   const handleConfirmDelete = useCallback(async () => {
@@ -509,7 +511,7 @@ export default function CampaignCategoriesPage() {
         "Category Deleted",
         `"${categoryToDelete.name}" has been deleted successfully.`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setCategoryToDelete(null);
     } catch (err) {
       console.error("Failed to delete category:", err);
@@ -523,7 +525,7 @@ export default function CampaignCategoriesPage() {
   }, [categoryToDelete, campaignCategories, showToast, showError]);
 
   const handleCancelDelete = useCallback(() => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setCategoryToDelete(null);
   }, []);
 
@@ -1182,7 +1184,7 @@ export default function CampaignCategoriesPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete Category"

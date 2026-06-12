@@ -12,6 +12,7 @@ import { useDocumentation } from '../hooks/useDocumentation';
 import HeadlessSelect from '../../../shared/components/ui/HeadlessSelect';
 import DeleteConfirmModal from '../../../shared/components/ui/DeleteConfirmModal';
 import styles from './EditDocsPage.module.css';
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 // API integration commented out - will use when backend is ready
 // import { DocDocument, DocCategory, DocVersion, CreateDocPayload } from '../types/documentation';

@@ -29,6 +29,7 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const InfoRow = ({
   label,

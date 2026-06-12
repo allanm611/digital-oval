@@ -42,6 +42,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const PAGE_SIZE = 15;
 const BASE_FETCH_LIMIT = 100;

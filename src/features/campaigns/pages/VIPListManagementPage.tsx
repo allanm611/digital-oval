@@ -14,6 +14,7 @@ import CreateVIPListModal from "../components/CreateVIPListModal";
 import AddVIPMembersModal from "../components/AddVIPMembersModal";
 import { vipListService } from "../../../shared/services/vipListService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 // Types
 export interface VIPCustomer {

@@ -90,6 +90,7 @@ import {
   formatVariablePlaceholder,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const localeLabelMap: Record<string, string> = {
   en: "English",
@@ -133,9 +134,12 @@ export default function OfferDetailsPage() {
   const { confirm } = useConfirm();
   const { t } = useLanguage();
   const { user } = useAuth();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteCreativeModal, setShowDeleteCreativeModal] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteOffer } = useDeleteConfirm({
+    onDelete: async (id) => { await offerService.deleteOffer(id); },
+    itemLabel: "Offer",
+  });
   const [creativeToDelete, setCreativeToDelete] =
     useState<OfferCreative | null>(null);
   const [isDeletingCreative, setIsDeletingCreative] = useState(false);

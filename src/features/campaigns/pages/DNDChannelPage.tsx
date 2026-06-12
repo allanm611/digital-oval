@@ -21,6 +21,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { communicationChannelService, CommunicationChannel as ChannelData } from "../../../shared/services/communicationChannelService";
 import { dndService, DNDSubscription, DNDType } from "../services/dndService";
 import AddDNDMembersModal from "../components/AddDNDMembersModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function DNDChannelPage() {
   const navigate = useNavigate();

@@ -17,6 +17,7 @@ import {
 } from "../../../shared/services/communicationChannelService";
 import { dndService, DNDSubscription, DNDType } from "../services/dndService";
 import AddDNDBulkModal from "../components/AddDNDBulkModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function DNDBulkManagementPage() {
   const navigate = useNavigate();

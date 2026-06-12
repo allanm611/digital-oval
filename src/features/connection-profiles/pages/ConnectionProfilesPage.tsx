@@ -43,6 +43,7 @@ import {
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 type StatusFilter = "all" | "active" | "inactive" | "expired";
 type PiiFilter = "all" | "with" | "without";

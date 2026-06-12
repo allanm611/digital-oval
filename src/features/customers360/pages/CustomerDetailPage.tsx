@@ -47,6 +47,7 @@ import type { CustomerSearchResultsResponse } from "../../reports-analytics/type
 import { customerService } from "../services/customerServices";
 import { revenueMetricService } from "../../kpis/services/revenueMetricService";
 import type { RevenueMetric } from "../../kpis/types/revenueMetrics";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 // Extract types from API response
 type CustomerSegment = CustomerSearchResultsResponse["segments"][number];

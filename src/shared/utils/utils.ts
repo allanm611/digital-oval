@@ -61,8 +61,8 @@ const themedButtons = {
   },
   bordered: {
     ...buttons.bordered,
-    color: "var(--c-primary-action)",
-    border: "1px solid var(--c-primary-action)",
+    color: "var(--c-text-primary)",
+    border: "1px solid var(--c-text-primary)",
   },
 };
 

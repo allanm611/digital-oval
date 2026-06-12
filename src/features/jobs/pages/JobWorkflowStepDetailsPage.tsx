@@ -26,10 +26,12 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function JobWorkflowStepDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const jobIdParam = searchParams.get("job_id");
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
@@ -149,7 +151,7 @@ export default function JobWorkflowStepDetailsPage() {
       showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsDeleting(false);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -332,7 +334,7 @@ export default function JobWorkflowStepDetailsPage() {
           </PermissionGate>
           <PermissionGate permission="job-workflow-steps.delete">
             <button
-              onClick={() => setShowDeleteModal(true)}
+              onClick={() => openDeleteConfirm(item?.id || 0, item?.name || "")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
             >
               <Trash2 className="h-4 w-4" />
@@ -761,9 +763,9 @@ export default function JobWorkflowStepDetailsPage() {
 
       {step && (
         <DeleteConfirmModal
-          isOpen={showDeleteModal}
+          isOpen={deleteConfirm.id !== null}
           onClose={() => {
-            setShowDeleteModal(false);
+            closeDeleteConfirm();
           }}
           onConfirm={handleDelete}
           title="Delete Workflow Step"

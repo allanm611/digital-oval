@@ -34,6 +34,7 @@ import EditQuickListModal from "../components/EditQuickListModal";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function QuickListDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +43,7 @@ export default function QuickListDetailsPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [quicklist, setQuicklist] = useState<QuickList | null>(null);
@@ -282,7 +284,7 @@ export default function QuickListDetailsPage() {
 
   const handleDelete = () => {
     if (!quicklist) return;
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -292,7 +294,7 @@ export default function QuickListDetailsPage() {
     try {
       await quicklistService.deleteQuickList(quicklist.id);
       showToast(`QuickList "${quicklist.name}" deleted successfully`);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       navigate("/dashboard/quick-lists");
     } catch (err) {
       showError("Error deleting quicklist", extractBackendError(error, "Error deleting quicklist. Please try again."));
@@ -302,7 +304,7 @@ export default function QuickListDetailsPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
   };
 
   const loadTableMapping = async () => {
@@ -1224,7 +1226,7 @@ export default function QuickListDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete QuickList"

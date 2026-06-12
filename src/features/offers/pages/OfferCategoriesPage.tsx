@@ -43,6 +43,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Radio from "../../../shared/components/ui/Radio";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const CATALOG_TAG_PREFIX = "catalog:";
 
@@ -407,10 +408,17 @@ function OfferCategoriesPage() {
   const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<OfferCategoryType | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] =
     useState<OfferCategoryType | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteCategory } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setCategories((prev) => prev.filter((c) => c.id !== numId));
+      await offerCategoryService.deleteCategory(numId);
+    },
+    itemLabel: "Offer Category",
+  });
   const [togglingCategoryId, setTogglingCategoryId] = useState<number | null>(
     null,
   );
@@ -849,7 +857,7 @@ function OfferCategoriesPage() {
 
   const handleDeleteCategory = (category: OfferCategoryType) => {
     setCategoryToDelete(category);
-    setShowDeleteModal(true);
+    openDeleteConfirm(category.id, category.name);
   };
 
   const handleToggleActive = async (category: OfferCategoryType) => {
@@ -890,49 +898,11 @@ function OfferCategoriesPage() {
     }
   };
 
-  const handleConfirmDelete = async () => {
-    if (!categoryToDelete) return;
-
-    setIsDeleting(true);
-    const categoryId = categoryToDelete.id;
-    const categoryIsActive = categoryToDelete.isActive;
-    const previousCategories = offerCategories;
-
-    try {
-      // Optimistic update: remove category from list immediately
-      setOfferCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
-
-      await offerCategoryService.deleteCategory(categoryId);
-
-      success(t.offerCatalogs.deleteSuccess, t.offerCatalogs.deleteSuccess);
-
-      // Update stats optimistically
-      setStats((prev) => ({
-        ...prev,
-        totalCategories: Math.max(0, prev.totalCategories - 1),
-        activeCategories: categoryIsActive
-          ? Math.max(0, prev.activeCategories - 1)
-          : prev.activeCategories,
-        inactiveCategories: !categoryIsActive
-          ? Math.max(0, prev.inactiveCategories - 1)
-          : prev.inactiveCategories,
-      }));
-
-      setShowDeleteModal(false);
-      setCategoryToDelete(null);
-    } catch (err) {
-      console.error("Error deleting category:", err);
-      const errorMsg = extractBackendError(err, "Failed to delete category");
-      showError(errorMsg, "", true);
-      // Revert optimistic update on error
-      setOfferCategories(previousCategories);
-    } finally {
-      setIsDeleting(false);
     }
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setCategoryToDelete(null);
   };
 
@@ -1795,12 +1765,15 @@ function OfferCategoriesPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => {
+          closeDeleteConfirm();
+          setCategoryToDelete(null);
+        }}
+        onConfirm={confirmDeleteCategory}
         title={t.offerCatalogs.deleteConfirmTitle}
         description={t.offerCatalogs.deleteConfirmMessage}
-        itemName={categoryToDelete?.name || ""}
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
         confirmText={t.offerCatalogs.delete}
         cancelText={t.offerCatalogs.cancel}

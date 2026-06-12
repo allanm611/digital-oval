@@ -53,6 +53,7 @@ import {
 } from "recharts";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import Radio from "../../../shared/components/ui/Radio";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 // Helper function to extract error messages from various error types
 const extractErrorMessage = (error: unknown): string => {
@@ -165,6 +166,7 @@ export default function UserManagementPage() {
   const PAGE_SIZE = 20;
 
   const [users, setUsers] = useState<UserWithResolvedRole[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [accountRequests, setAccountRequests] = useState<
     AccountRequestListItem[]
   >([]);
@@ -1182,7 +1184,7 @@ export default function UserManagementPage() {
       return;
     }
     setUserToDelete(user);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -1203,7 +1205,7 @@ export default function UserManagementPage() {
         t.userManagement.userDeleted,
         `${userToDelete.first_name} ${userToDelete.last_name} deleted successfully`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setUserToDelete(null);
     } catch (err) {
       showError("Error deleting user", extractBackendError(error, "Error deleting user. Please try again."));
@@ -1220,7 +1222,7 @@ export default function UserManagementPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setUserToDelete(null);
   };
 
@@ -2597,7 +2599,7 @@ export default function UserManagementPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete User"

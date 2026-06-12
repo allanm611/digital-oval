@@ -27,6 +27,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +53,7 @@ export default function ProductDetailsPage() {
   };
 
   const [product, setProduct] = useState<Product | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [category, setCategory] = useState<ProductCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +138,7 @@ export default function ProductDetailsPage() {
 
   const handleDelete = () => {
     if (!product) return;
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -149,7 +151,7 @@ export default function ProductDetailsPage() {
         "Product Deleted",
         `"${product.name}" has been deleted successfully.`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       navigate("/dashboard/products");
     } catch (err) {
       console.error("Failed to delete product:", err);
@@ -168,7 +170,7 @@ export default function ProductDetailsPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
   };
 
   if (loading) {
@@ -743,9 +745,9 @@ export default function ProductDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        onConfirm={confirmDeleteItem}
         title="Delete Product"
         description="Are you sure you want to delete this product? This action cannot be undone."
         itemName={product?.name || ""}

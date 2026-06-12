@@ -29,6 +29,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import ProgramModal from "../components/ProgramModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 interface Campaign {
   id: number;
@@ -69,6 +70,7 @@ export default function ProgramDetailsPage() {
   const { t } = useLanguage();
 
   const [program, setProgram] = useState<Program | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -273,7 +275,7 @@ export default function ProgramDetailsPage() {
   };
 
   const handleDelete = () => {
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleBack = () => {
@@ -293,7 +295,7 @@ export default function ProgramDetailsPage() {
       showToast("error", t.programs.deleteError);
     } finally {
       setIsActionLoading(false);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -853,8 +855,8 @@ export default function ProgramDetailsPage() {
       />
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => closeDeleteConfirm()}
         onConfirm={handleConfirmDelete}
         title="Delete Program"
         description="This action cannot be undone."

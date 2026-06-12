@@ -2494,11 +2494,16 @@ Satoshi
   --c-note-warning-border: #fcd34d;
   --c-note-warning-text: #92400e;
   --c-note-warning-text-light: #b45309;
+
+  --c-input-disabled-bg: #f3f4f6;
+  --c-input-bg: #ffffff;
+  --c-icon-color: #252829;
+  --c-text-on-light: #111827;
 }
 
 .dark,
 [color-mode="dark"] {
-  --c-primary-action: #00bbcc;
+  --c-primary-action: #252829;
   --c-primary-accent: #22d3ee;
   --c-primary-background: #2a2f31;
 
@@ -2537,6 +2542,11 @@ Satoshi
   --c-note-warning-border: #d97706;
   --c-note-warning-text: #fde68a;
   --c-note-warning-text-light: #fcd34d;
+
+  --c-input-disabled-bg: #4b5563;
+  --c-input-bg: #394247;
+  --c-icon-color: #00BBCC;
+  --c-text-on-light: #111827;
 }
 
 /*
@@ -2590,7 +2600,7 @@ Satoshi
 [color-mode="dark"] .border-gray-200,
 .dark .border-gray-300,
 [color-mode="dark"] .border-gray-300 {
-  border-color: var(--c-border-default) !important;
+  border-color: #6b7c8d !important;
 }
 
 /* Normalize hardcoded light utility classes when dark theme is active */

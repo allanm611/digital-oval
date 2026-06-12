@@ -18,6 +18,7 @@ import { validateMSISDN } from "../../../shared/utils/validation";
 import { buttons } from "../../../shared/utils/tokens";
 import { getButtonStyles } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 // Types
 export interface SeedListRecipient {

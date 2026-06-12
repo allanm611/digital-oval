@@ -61,6 +61,7 @@ import {
   GetCampaignsResponse,
 } from "../types/campaign";
 import { CampaignCategory } from "../types/campaignCategory";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 type CampaignListResponse = CampaignCollection | GetCampaignsResponse;
 
 export default function CampaignsPage() {
@@ -82,12 +83,19 @@ export default function CampaignsPage() {
   const filterRef = useRef<HTMLDivElement>(null);
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<{
     id: number;
     name: string;
   } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteCampaign } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setCampaigns((prev) => prev.filter((c) => c.id !== numId));
+      await campaignService.deleteCampaign(numId);
+    },
+    itemLabel: "Campaign",
+  });
   const [showRunModal, setShowRunModal] = useState(false);
   const [campaignToRun, setCampaignToRun] = useState<{
     id: number;
@@ -1054,58 +1062,10 @@ export default function CampaignsPage() {
 
   const handleDeleteCampaign = (campaignId: number, campaignName: string) => {
     setCampaignToDelete({ id: campaignId, name: campaignName });
-    setShowDeleteModal(true);
+    openDeleteConfirm(campaignId, campaignName);
     setShowActionMenu(null);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!campaignToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      const userId = user?.user_id;
-      if (!userId) {
-        throw new Error("User ID not available");
-      }
-      await campaignService.deleteCampaign(campaignToDelete.id, userId);
-      // Remove campaign from list instead of refetching
-      setCampaigns((prev) => prev.filter((c) => c.id !== campaignToDelete.id));
-      setAllCampaignsUnfiltered((prev) =>
-        prev.filter((c) => c.id !== campaignToDelete.id),
-      );
-      setTotalCampaigns((prev) => Math.max(0, prev - 1));
-      showToast(
-        "success",
-        `Campaign "${campaignToDelete.name}" deleted successfully!`,
-      );
-      setShowDeleteModal(false);
-      setCampaignToDelete(null);
-      // Only refetch stats since total count changed
-      fetchCampaignStats();
-    } catch (error) {
-      console.error("Failed to delete campaign:", error);
-      // Extract error message from backend response
-      let errorMessage = "Failed to delete campaign";
-
-      if (error instanceof Error) {
-        const match = error.message.match(/details: ({.*})/);
-        if (match) {
-          try {
-            const errorData = JSON.parse(match[1]);
-            errorMessage = errorData.error || errorData.message || errorMessage;
-          } catch {
-            errorMessage = error.message;
-          }
-        } else {
-          errorMessage = error.message;
-        }
-      }
-
-      showToast("error", errorMessage);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
@@ -1771,12 +1731,15 @@ export default function CampaignsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => {
+          closeDeleteConfirm();
+          setCampaignToDelete(null);
+        }}
+        onConfirm={confirmDeleteCampaign}
         title="Delete Campaign"
         description="Are you sure you want to delete this campaign? This action cannot be undone."
-        itemName={campaignToDelete?.name || ""}
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
         confirmText="Delete Campaign"
         cancelText="Cancel"

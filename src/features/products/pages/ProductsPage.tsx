@@ -29,6 +29,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 interface ProductFilters {
   search?: string;
@@ -64,13 +65,20 @@ export default function ProductsPage() {
   const [topSelling, setTopSelling] = useState<Product[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
   const { success: showToast, error: showError } = useToast();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState<{
     id: string;
     name: string;
   } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteProduct } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const strId = typeof id === "string" ? id : id.toString();
+      setProducts((prev) => prev.filter((p) => p.id !== strId));
+      await productService.deleteProduct(strId);
+    },
+    itemLabel: "Product",
+  });
 
   const loadCategories = async () => {
     try {
@@ -241,46 +249,11 @@ export default function ProductsPage() {
 
   const handleDelete = (productId: string) => {
     const product = products.find((p) => p.id === productId);
-    const productName = product?.name || "this product";
+    const productName = product?.name || `Product #${productId}`;
     setProductToDelete({ id: productId, name: productName });
-    setShowDeleteModal(true);
+    openDeleteConfirm(productId, productName);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!productToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await productService.deleteProduct(Number(productToDelete.id));
-      // Remove from list (optimistic UI)
-      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
-      showToast(
-        "Product Deleted",
-        `"${productToDelete.name}" has been deleted successfully.`,
-      );
-      setShowDeleteModal(false);
-      setProductToDelete(null);
-      loadStats(); // Refresh stats cards only
-    } catch (err) {
-      console.error("Failed to delete product:", err);
-      // Extract error message from backend response
-      const errorMessage =
-        (err instanceof Error ? err.message : null) ||
-        (typeof err === "object" && err !== null && "error" in err
-          ? String((err as Record<string, unknown>).error)
-          : null) ||
-        "Failed to delete product. Please try again.";
-      // Bypass silent mode for delete operations to always show error
-      showError("Cannot Delete Product", extractBackendError(error, "Cannot Delete Product. Please try again."));
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteModal(false);
-    setProductToDelete(null);
-  };
 
   return (
     <div className="space-y-6">
@@ -729,12 +702,15 @@ export default function ProductsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => {
+          closeDeleteConfirm();
+          setProductToDelete(null);
+        }}
+        onConfirm={confirmDeleteProduct}
         title="Delete Product"
         description="Are you sure you want to delete this product? This action cannot be undone."
-        itemName={productToDelete?.name || ""}
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
         confirmText="Delete Product"
         cancelText="Cancel"

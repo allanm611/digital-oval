@@ -15,6 +15,7 @@ import CreateButton from "../../../../shared/components/ui/CreateButton";
 import { useBackendConfigurationData } from "../../../../shared/hooks/useBackendConfigurationData";
 import ConfigurationModal from "./ConfigurationModal";
 import { ConfigurationPageConfig, ConfigurationItem, MetadataField } from "./ConfigurationManager";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 type BackendConfigType =
   | "campaignTypes"
@@ -67,6 +68,7 @@ export default function ConfigurationManagerAPI({
   const backendConfig = useBackendConfigurationData(config.configType);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,7 +128,7 @@ export default function ConfigurationManagerAPI({
 
   const handleDeleteItem = (item: ConfigurationItem) => {
     setItemToDelete(item);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteItem = async () => {
@@ -144,7 +146,7 @@ export default function ConfigurationManagerAPI({
         config.deleteConfirmTitle,
         config.deleteSuccessMessage(itemToDelete.name)
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setItemToDelete(null);
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
@@ -505,9 +507,9 @@ export default function ConfigurationManagerAPI({
       />
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setItemToDelete(null);
         }}
         onConfirm={confirmDeleteItem}

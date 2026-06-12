@@ -55,6 +55,7 @@ import Input from '../../../shared/components/ui/Input';
 import BackButton from '../../../shared/components/ui/BackButton';
 import { zIndex } from '../../../shared/utils/utils';
 import styles from './ManageSidebarPage.module.css';
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 [Full implementation commented - restore when API is ready]
 */

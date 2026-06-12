@@ -19,6 +19,7 @@ import {
 import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
 import { communicationPolicyService } from "../services/communicationPolicyService";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CommunicationPolicyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +28,7 @@ export default function CommunicationPolicyDetailPage() {
   const { t } = useLanguage();
 
   const [policy, setPolicy] = useState<CommunicationPolicyConfiguration | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -239,7 +241,7 @@ export default function CommunicationPolicyDetailPage() {
             Edit Policy
           </button>
           <button
-            onClick={() => setShowDeleteModal(true)}
+            onClick={() => openDeleteConfirm(item?.id || 0, item?.name || "")}
             className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm`}
             style={{
               backgroundColor: buttonStyle.delete.background,
@@ -382,8 +384,8 @@ export default function CommunicationPolicyDetailPage() {
       />
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => closeDeleteConfirm()}
         onConfirm={handleConfirmDelete}
         title={t.communicationPolicy.deleteConfirmTitle}
         description={t.communicationPolicy.deleteConfirmMessage}

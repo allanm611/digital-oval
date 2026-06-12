@@ -19,6 +19,7 @@ import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CampaignFlowDetailsPage() {
   const { flowId } = useParams<{

@@ -12,6 +12,7 @@ import { emailRouteService } from "../services/emailRouteService";
 import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
 import { whatsappRouteService } from "../services/whatsappRouteService";
 import { ussdRouteService } from "../services/ussdRouteService";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function RouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function RouteDetailsPage() {
   const { success, error: showError } = useToast();
 
   const [route, setRoute] = useState<any>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -105,7 +107,7 @@ export default function RouteDetailsPage() {
   };
 
   const handleDelete = () => {
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -131,7 +133,7 @@ export default function RouteDetailsPage() {
       showError("Error", extractBackendError(err, "Failed to delete route"));
     } finally {
       setDeleting(false);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -300,9 +302,9 @@ export default function RouteDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleConfirmDelete}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => closeDeleteConfirm()}
+        onConfirm={confirmDeleteItem}
         title="Delete Route"
         description="Are you sure you want to delete this route? This action cannot be undone."
         itemName={route.name}

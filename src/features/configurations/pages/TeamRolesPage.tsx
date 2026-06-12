@@ -12,6 +12,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { roleService, Role } from "../../roles/services/roleService";
 import RolesModal from "../components/RolesModal";
 import BackButton from "../../../shared/components/ui/BackButton";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function TeamRolesPage() {
   const { success: showSuccess, error: showError } = useToast();
@@ -19,6 +20,7 @@ export default function TeamRolesPage() {
   const { user } = useAuth();
 
   const [roles, setRoles] = useState<Role[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,7 +78,7 @@ export default function TeamRolesPage() {
 
   const handleDeleteClick = (role: Role) => {
     setRoleToDelete(role);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteRole = async () => {
@@ -88,7 +90,7 @@ export default function TeamRolesPage() {
       await roleService.deleteRole(roleToDelete.id, { userId });
       setRoles((prev) => prev.filter((r) => r.id !== roleToDelete.id));
       showSuccess("Role deleted successfully");
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setRoleToDelete(null);
     } catch (error) {
       showError("Failed to delete role", extractBackendError(error, "Failed to delete role. Please try again."));;
@@ -368,9 +370,9 @@ export default function TeamRolesPage() {
       )}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setRoleToDelete(null);
         }}
         onConfirm={confirmDeleteRole}

@@ -20,12 +20,14 @@ import {
 import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
 import { communicationPolicyService } from "../services/communicationPolicyService";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CommunicationPolicyPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [policyToDelete, setPolicyToDelete] =
     useState<CommunicationPolicyConfiguration | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -99,7 +101,7 @@ export default function CommunicationPolicyPage() {
 
   const handleDeletePolicy = (policy: CommunicationPolicyConfiguration) => {
     setPolicyToDelete(policy);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -109,7 +111,7 @@ export default function CommunicationPolicyPage() {
     try {
       await communicationPolicyService.deletePolicy(policyToDelete.id);
       showToast(t.communicationPolicy.deleteSuccess);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setPolicyToDelete(null);
     } catch (err) {
       console.error("Failed to delete policy:", err);
@@ -120,7 +122,7 @@ export default function CommunicationPolicyPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setPolicyToDelete(null);
   };
 
@@ -496,7 +498,7 @@ export default function CommunicationPolicyPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title={t.communicationPolicy.deleteConfirmTitle}

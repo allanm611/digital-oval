@@ -12,6 +12,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 
 import { color, tw } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function WhatsAppRouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function WhatsAppRouteDetailsPage() {
   const { success, error: showError } = useToast();
 
   const [route, setRoute] = useState<WhatsAppRoute | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
@@ -45,7 +47,7 @@ export default function WhatsAppRouteDetailsPage() {
   };
 
   const handleDeleteClick = () => {
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteRoute = async () => {
@@ -55,7 +57,7 @@ export default function WhatsAppRouteDetailsPage() {
       setDeleting(true);
       await whatsappRouteService.deleteRoute(route.id);
       success("Success", `"${route.name}" has been deleted successfully`);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       navigate("/dashboard/whatsapp-routes");
     } catch (err) {
       showError("Error", "Failed to delete WhatsApp route");
@@ -187,8 +189,8 @@ export default function WhatsAppRouteDetailsPage() {
       </div>
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => closeDeleteConfirm()}
         onConfirm={confirmDeleteRoute}
         title="Delete WhatsApp Route"
         description="This action cannot be undone."

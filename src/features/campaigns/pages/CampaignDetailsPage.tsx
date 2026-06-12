@@ -72,6 +72,7 @@ import {
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 interface ChannelStat {
   channel: CreativeChannel;
@@ -107,8 +108,12 @@ export default function CampaignDetailsPage() {
   };
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteCampaign } = useDeleteConfirm({
+    onDelete: async (id) => { await campaignService.deleteCampaign(id); },
+    itemLabel: "Campaign",
+  });
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [rejectComments, setRejectComments] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -1245,7 +1250,7 @@ export default function CampaignDetailsPage() {
                 <PermissionGate permission="campaigns.delete">
                   <button
                     onClick={() => {
-                      setShowDeleteModal(true);
+                      openDeleteConfirm(campaign?.id || 0, campaign?.name || "");
                       setShowMoreMenu(false);
                     }}
                     className="w-full flex items-center px-4 py-2 text-sm"

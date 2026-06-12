@@ -18,6 +18,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateEditCommunicationChannelModal from "../components/CreateEditCommunicationChannelModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CommunicationChannelDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export default function CommunicationChannelDetailsPage() {
   };
 
   const [channel, setChannel] = useState<CommunicationChannel | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -126,7 +128,7 @@ export default function CommunicationChannelDetailsPage() {
 
   const handleDelete = () => {
     if (!channel) return;
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -139,7 +141,7 @@ export default function CommunicationChannelDetailsPage() {
         "Channel Deleted",
         `"${channel.name}" has been deleted successfully.`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       navigate("/dashboard/communication-channels");
     } catch (err) {
       console.error("Failed to delete channel:", err);
@@ -416,12 +418,12 @@ export default function CommunicationChannelDetailsPage() {
       {channel && (
         <>
           <DeleteConfirmModal
-            isOpen={showDeleteModal}
+            isOpen={deleteConfirm.id !== null}
             title="Delete Communication Channel"
             description={`Are you sure you want to delete "${channel.name}"? This action cannot be undone.`}
             itemName={channel.name}
-            onConfirm={handleConfirmDelete}
-            onClose={() => setShowDeleteModal(false)}
+            onConfirm={confirmDeleteItem}
+            onClose={() => closeDeleteConfirm()}
             isLoading={isDeleting}
           />
 

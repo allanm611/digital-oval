@@ -22,6 +22,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,6 +38,7 @@ export default function ManualBroadcastListsPage() {
   )?.returnTo;
 
   const [broadcasts, setBroadcasts] = useState<ManualBroadcast[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [allBroadcasts, setAllBroadcasts] = useState<ManualBroadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -203,7 +205,7 @@ export default function ManualBroadcastListsPage() {
 
   const handleDelete = (broadcast: ManualBroadcast) => {
     setBroadcastToDelete(broadcast);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -215,7 +217,7 @@ export default function ManualBroadcastListsPage() {
       showToast(
         `Broadcast "${broadcastToDelete.source_name}" deleted successfully!`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setBroadcastToDelete(null);
       await loadBroadcasts(pagination.page);
     } catch (err) {
@@ -515,9 +517,9 @@ export default function ManualBroadcastListsPage() {
       {/* Modals */}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setBroadcastToDelete(null);
         }}
         onConfirm={handleConfirmDelete}

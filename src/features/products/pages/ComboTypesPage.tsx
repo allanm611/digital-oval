@@ -11,6 +11,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { comboTypeService, ComboType } from "../services/comboTypeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ComboTypesPage() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function ComboTypesPage() {
   const { t } = useLanguage();
 
   const [comboTypes, setComboTypes] = useState<ComboType[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,7 +47,7 @@ export default function ComboTypesPage() {
 
   const handleDeleteClick = (combo: ComboType) => {
     setComboToDelete(combo);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteCombo = async () => {
@@ -56,7 +58,7 @@ export default function ComboTypesPage() {
       await comboTypeService.deleteComboType(comboToDelete.id);
       setComboTypes((prev) => prev.filter((c) => c.id !== comboToDelete.id));
       showSuccess("Combo type deleted successfully");
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setComboToDelete(null);
     } catch (error) {
       showError("Failed to delete combo type", extractBackendError(error, "Failed to delete combo type. Please try again."));;
@@ -311,9 +313,9 @@ export default function ComboTypesPage() {
       )}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setComboToDelete(null);
         }}
         onConfirm={confirmDeleteCombo}

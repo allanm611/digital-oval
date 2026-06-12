@@ -5,6 +5,7 @@ import { MessageTemplate } from "../types/template";
 import { CommunicationChannel } from "../types/communication";
 import { templateService } from "../services/templateService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 interface TemplateSelectorProps {
   channel: CommunicationChannel;
@@ -18,6 +19,7 @@ export default function TemplateSelector({
   onCreateNew,
 }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] =
     useState<MessageTemplate | null>(null);
@@ -41,7 +43,7 @@ export default function TemplateSelector({
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setTemplateToDelete(id);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = () => {
@@ -51,12 +53,12 @@ export default function TemplateSelector({
     if (selectedId === templateToDelete) {
       setSelectedId(null);
     }
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setTemplateToDelete(null);
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setTemplateToDelete(null);
   };
 
@@ -215,7 +217,7 @@ export default function TemplateSelector({
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Delete Template"

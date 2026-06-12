@@ -38,6 +38,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function DataConnectors() {
   const navigate = useNavigate();

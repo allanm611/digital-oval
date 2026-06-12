@@ -12,12 +12,14 @@ import { notificationTypeService, NotificationRule } from "../../../shared/servi
 import { notificationCategoryService } from "../../notifications/services/notificationCategoryService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import NotificationTypeModal from "../components/NotificationTypeModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function NotificationTypesPage() {
   const { success: showSuccess, error: showError } = useToast();
   const { t } = useLanguage();
 
   const [notificationRules, setNotificationRules] = useState<NotificationRule[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,7 +61,7 @@ export default function NotificationTypesPage() {
 
   const handleDeleteClick = (rule: NotificationRule) => {
     setRuleToDelete(rule);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteRule = async () => {
@@ -70,7 +72,7 @@ export default function NotificationTypesPage() {
       await notificationTypeService.delete(ruleToDelete.id);
       setNotificationRules((prev) => prev.filter((r) => r.id !== ruleToDelete.id));
       showSuccess("Notification type deleted successfully");
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setRuleToDelete(null);
     } catch (error) {
       showError("Failed to delete notification type", extractBackendError(error, "Failed to delete notification type. Please try again."));;
@@ -344,9 +346,9 @@ export default function NotificationTypesPage() {
       )}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setRuleToDelete(null);
         }}
         onConfirm={confirmDeleteRule}

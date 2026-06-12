@@ -29,6 +29,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { getConnectorDisplayName } from "../utils/connectorIcons";
 import SelectConnectionProfileModal from "../components/SelectConnectionProfileModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function DataConnectorDetailsPage() {
   const { id } = useParams<{ id: string }>();

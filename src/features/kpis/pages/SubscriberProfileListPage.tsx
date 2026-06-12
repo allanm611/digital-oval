@@ -11,6 +11,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { subscriberProfileService } from "../services/subscriberProfileService";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -26,6 +27,7 @@ export default function SubscriberProfileListPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,7 +84,7 @@ export default function SubscriberProfileListPage() {
 
   const handleDeleteClick = (profile: Profile) => {
     setProfileToDelete({ id: profile.id, name: profile.name });
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleConfirmDelete = async () => {
@@ -90,7 +92,7 @@ export default function SubscriberProfileListPage() {
     try {
       setIsDeleting(true);
       showToast("info", `Delete functionality for "${profileToDelete.name}" will be implemented soon`);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setProfileToDelete(null);
     } catch (error) {
       console.error("Failed to delete profile:", error);
@@ -101,7 +103,7 @@ export default function SubscriberProfileListPage() {
   };
 
   const handleCancelDelete = () => {
-    setShowDeleteModal(false);
+    closeDeleteConfirm();
     setProfileToDelete(null);
   };
 
@@ -324,10 +326,10 @@ export default function SubscriberProfileListPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         title="Delete Profile Field"
         message={`Are you sure you want to delete "${profileToDelete?.name}"? This action cannot be undone.`}
-        onConfirm={handleConfirmDelete}
+        onConfirm={confirmDeleteItem}
         onCancel={handleCancelDelete}
         isLoading={isDeleting}
       />

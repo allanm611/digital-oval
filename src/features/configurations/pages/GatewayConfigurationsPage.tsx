@@ -20,6 +20,7 @@ import { WhatsAppGatewayConfig } from "../types/whatsappGatewayConfig";
 import { PushGatewayConfig } from "../types/pushGatewayConfig";
 import { USSDGatewayConfig } from "../types/ussdGatewayConfig";
 import { useNavigate } from "react-router-dom";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 type ChannelType = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH" | "USSD";
 
@@ -129,6 +130,7 @@ export default function GatewayConfigurationsPage() {
   const { success: showSuccess, error: showError } = useToast();
   const { t } = useLanguage();
   const [configs, setConfigs] = useState<UnifiedGatewayConfig[]>(buildInitialConfigs);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [searchTerm, setSearchTerm] = useState("");
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -229,7 +231,7 @@ export default function GatewayConfigurationsPage() {
 
   const handleDeleteClick = (config: UnifiedGatewayConfig) => {
     setConfigToDelete(config);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteConfig = async () => {
@@ -253,7 +255,7 @@ export default function GatewayConfigurationsPage() {
 
       setConfigs((prev) => prev.filter((c) => !(c.id === id && c.channel_type === channel_type)));
       showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setConfigToDelete(null);
     } catch (err) {
       showError(extractBackendError(error, "Failed to delete gateway configuration. Please try again."));
@@ -473,9 +475,9 @@ export default function GatewayConfigurationsPage() {
           )}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setConfigToDelete(null);
         }}
         onConfirm={confirmDeleteConfig}

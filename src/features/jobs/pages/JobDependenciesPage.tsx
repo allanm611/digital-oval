@@ -46,6 +46,7 @@ import {
 } from "../types/jobDependency";
 import { ScheduledJob } from "../types/scheduledJob";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const PAGE_SIZE = 20;
 
@@ -67,6 +68,7 @@ function JobDependencyModal({
   const { user } = useAuth();
   const { t } = useLanguage();
   const [jobId, setJobId] = useState<number | "">("");
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [dependsOnJobId, setDependsOnJobId] = useState<number | "">("");
   const [dependencyType, setDependencyType] =
     useState<DependencyType>("blocking");
@@ -1163,7 +1165,7 @@ export default function JobDependenciesPage() {
 
   const handleDeleteClick = (dependency: JobDependency) => {
     setDeletingDependency(dependency);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const handleDeleteConfirm = async () => {
@@ -1176,7 +1178,7 @@ export default function JobDependenciesPage() {
         "Job dependency deleted",
         `Dependency ${deletingDependency.id} has been deleted`,
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setDeletingDependency(null);
       // Optimistically remove deleted dependency
       setDependencies((prev) => prev.filter((d) => d.id !== deletingDependency.id));
@@ -4480,9 +4482,9 @@ export default function JobDependenciesPage() {
       />
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setDeletingDependency(null);
         }}
         onConfirm={handleDeleteConfirm}

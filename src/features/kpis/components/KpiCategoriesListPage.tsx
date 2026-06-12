@@ -13,6 +13,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { kpiCategoryService } from "../services/kpiCategoryService";
 import KpiCategoryModal, { KpiCategory } from "./KpiCategoryModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function KpiCategoriesListPage() {
   const { success: showToast, error: showError } = useToast();
@@ -20,6 +21,7 @@ export default function KpiCategoriesListPage() {
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState<KpiCategory[]>([]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,7 +67,7 @@ export default function KpiCategoriesListPage() {
 
   const handleDeleteCategory = (category: KpiCategory) => {
     setCategoryToDelete(category);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteCategory = async () => {
@@ -85,7 +87,7 @@ export default function KpiCategoriesListPage() {
         "Category Deleted",
         `"${categoryToDelete.name}" has been deleted successfully.`
       );
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setCategoryToDelete(null);
     } catch (err) {
       console.error("Failed to delete category:", err);
@@ -444,13 +446,13 @@ export default function KpiCategoriesListPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         title="Delete KPI Category"
         description="This will fail if KPIs are using it."
         itemName={categoryToDelete?.name || ""}
         onConfirm={confirmDeleteCategory}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setCategoryToDelete(null);
         }}
         isLoading={isDeleting}

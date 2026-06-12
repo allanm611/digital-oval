@@ -438,7 +438,7 @@ export default function AdminHubPage() {
                   <div className="flex items-start gap-3">
                     <Icon
                       className="w-6 h-6 flex-shrink-0 mt-1"
-                      style={{ color: color.primary.action }}
+                      style={{ color: 'var(--c-icon-color)' }}
                     />
                     <div className="flex-1">
                       <h3 className={`text-base font-semibold ${tw.textPrimary}`}>

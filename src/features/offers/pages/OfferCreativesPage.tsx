@@ -14,6 +14,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function OfferCreativesPage() {
   const navigate = useNavigate();

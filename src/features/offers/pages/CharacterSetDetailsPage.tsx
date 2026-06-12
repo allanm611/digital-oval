@@ -10,6 +10,7 @@ import { tw, color, button } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { CharacterSet } from "../../configurations/types/characterSetType";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CharacterSetDetailsPage() {
   const { id } = useParams<{ id: string }>();

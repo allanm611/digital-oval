@@ -37,16 +37,22 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(
-    null,
-  );
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(null);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteQuicklist } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setAllQuicklists((prev) => prev.filter((q) => q.id !== numId));
+      await quicklistService.deleteQuicklist(numId);
+    },
+    itemLabel: "Quick List",
+  });
 
   const [allQuicklists, setAllQuicklists] = useState<QuickList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -238,35 +244,7 @@ export default function QuickListsPage() {
 
   const handleDelete = (quicklist: QuickList) => {
     setQuicklistToDelete(quicklist);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!quicklistToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await quicklistService.deleteQuickList(quicklistToDelete.id);
-      showToast(
-        t.quickList.deletedSuccess.replace("{name}", quicklistToDelete.name),
-      );
-      setShowDeleteModal(false);
-      setQuicklistToDelete(null);
-      // Reload both stats and quicklists
-      await loadStats();
-      await loadInitialData();
-      setCurrentPage(1);
-    } catch (err) {
-      console.error("Failed to delete quicklist:", err);
-      showError(t.quickList.deletedFailed, t.common.loading);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteModal(false);
-    setQuicklistToDelete(null);
+    openDeleteConfirm(quicklist.id, quicklist.name);
   };
 
   const handleExport = async (quicklist: QuickList, format: "csv" | "json") => {
@@ -783,12 +761,15 @@ export default function QuickListsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => {
+          closeDeleteConfirm();
+          setQuicklistToDelete(null);
+        }}
+        onConfirm={confirmDeleteQuicklist}
         title={t.quickList.deleteQuickList}
         description="Are you sure you want to delete this QuickList? This action cannot be undone."
-        itemName={quicklistToDelete?.name || ""}
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
         confirmText={t.quickList.deleteConfirmText}
         cancelText={t.common.cancel}

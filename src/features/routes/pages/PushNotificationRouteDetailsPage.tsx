@@ -12,6 +12,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 
 import { color, tw } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function PushNotificationRouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +20,7 @@ export default function PushNotificationRouteDetailsPage() {
   const { success, error: showError } = useToast();
 
   const [route, setRoute] = useState<PushNotificationRoute | null>(null);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
@@ -45,7 +47,7 @@ export default function PushNotificationRouteDetailsPage() {
   };
 
   const handleDeleteClick = () => {
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteRoute = async () => {
@@ -55,7 +57,7 @@ export default function PushNotificationRouteDetailsPage() {
       setDeleting(true);
       await pushNotificationRouteService.deleteRoute(route.id);
       success("Success", `"${route.name}" has been deleted successfully`);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       navigate("/dashboard/push-notification-routes");
     } catch (err) {
       showError("Error", "Failed to delete push notification route");
@@ -187,8 +189,8 @@ export default function PushNotificationRouteDetailsPage() {
       </div>
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        isOpen={deleteConfirm.id !== null}
+        onClose={() => closeDeleteConfirm()}
         onConfirm={confirmDeleteRoute}
         title="Delete Push Notification Route"
         description="This action cannot be undone."

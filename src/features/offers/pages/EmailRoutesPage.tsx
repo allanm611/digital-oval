@@ -15,6 +15,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
 import EmailRoutesFormPage from "./EmailRoutesFormPage";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 interface EmailRoute {
   id: number | string;
@@ -31,6 +32,7 @@ function EmailRoutesListView() {
   const { t } = useLanguage();
 
   const [routes, setRoutes] = useState<EmailRoute[]>(hardcodedEmailRoutes as EmailRoute[]);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
@@ -58,7 +60,7 @@ function EmailRoutesListView() {
 
   const handleDeleteClick = (route: EmailRoute) => {
     setRouteToDelete(route);
-    setShowDeleteModal(true);
+    openDeleteConfirm(item?.id || 0, item?.name || "");
   };
 
   const confirmDeleteRoute = async () => {
@@ -68,7 +70,7 @@ function EmailRoutesListView() {
     try {
       setRoutes((prev) => prev.filter((r) => r.id !== routeToDelete.id));
       showToast("Delete Email Route", `"${routeToDelete.name}" has been deleted successfully.`);
-      setShowDeleteModal(false);
+      closeDeleteConfirm();
       setRouteToDelete(null);
     } catch (err) {
       showError(t.genericConfig.error, "Failed to delete email route");
@@ -250,9 +252,9 @@ function EmailRoutesListView() {
       )}
 
       <DeleteConfirmModal
-        isOpen={showDeleteModal}
+        isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          setShowDeleteModal(false);
+          closeDeleteConfirm();
           setRouteToDelete(null);
         }}
         onConfirm={confirmDeleteRoute}

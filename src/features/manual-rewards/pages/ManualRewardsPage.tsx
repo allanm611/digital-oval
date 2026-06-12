@@ -23,6 +23,7 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ManualRewardsPage() {
   const navigate = useNavigate();

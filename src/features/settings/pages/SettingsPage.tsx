@@ -128,7 +128,7 @@ interface SettingsType {
   dnd_days: string;
   custom_dnd_days: number[];
   notificationSound?: string;
-  theme: "light" | "dark";
+  theme: "light" | "dark" | "system";
 }
 
 export default function SettingsPage() {
@@ -568,7 +568,7 @@ export default function SettingsPage() {
   };
 
 
-  const handleThemeChange = (newTheme: "light" | "dark") => {
+  const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setSettings({ ...settings, theme: newTheme });
   };
 
@@ -677,7 +677,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-4 border-b border-gray-200">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-4">
         <div className="min-w-0">
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             {t.settings.title}
@@ -701,7 +701,8 @@ export default function SettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap bg-[#252829]`}
+                className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
               >
                 {isSaving ? (
                   <>
@@ -724,21 +725,23 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-0">
         {/* Location Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 {t.settings.location}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Set your country and regional information
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('location')}
               disabled={savingSection === 'location'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'location' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -751,7 +754,8 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="country"
-                className="block text-sm font-semibold text-gray-700 mb-2.5"
+                className="block text-sm font-semibold mb-2.5"
+                style={{ color: 'var(--c-text-primary)' }}
               >
                 {t.settings.country}
               </label>
@@ -767,7 +771,8 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="country-code"
-                className="block text-sm font-semibold text-gray-700 mb-2.5"
+                className="block text-sm font-semibold mb-2.5"
+                style={{ color: 'var(--c-text-primary)' }}
               >
                 {t.settings.countryCode}
               </label>
@@ -776,9 +781,13 @@ export default function SettingsPage() {
                 type="text"
                 value={settings.country_code}
                 readOnly
-                className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} bg-gray-50 text-sm text-gray-700 cursor-not-allowed`}
+                className={`w-full px-4 py-3 border border-gray-200 ${tw.rounded} text-sm cursor-not-allowed`}
+                style={{
+                  backgroundColor: 'var(--c-input-bg)',
+                  color: 'var(--c-text-primary)'
+                }}
               />
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs mt-2" style={{ color: 'var(--c-text-muted)' }}>
                 Automatically set based on selected country
               </p>
             </div>
@@ -787,21 +796,23 @@ export default function SettingsPage() {
 
         {/* Localization Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Localization
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Configure language and timezone preferences
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('localization')}
               disabled={savingSection === 'localization'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'localization' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -814,7 +825,8 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="language"
-                className="block text-sm font-semibold text-gray-700 mb-2.5"
+                className="block text-sm font-semibold mb-2.5"
+                style={{ color: 'var(--c-text-primary)' }}
               >
                 {t.settings.language}
               </label>
@@ -829,7 +841,8 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="timezone"
-                className="block text-sm font-semibold text-gray-700 mb-2.5"
+                className="block text-sm font-semibold mb-2.5"
+                style={{ color: 'var(--c-text-primary)' }}
               >
                 {t.settings.timezone}
               </label>
@@ -846,21 +859,23 @@ export default function SettingsPage() {
 
         {/* Date Format Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 {t.settings.dateFormat}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Choose how dates are displayed throughout the system
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('dateFormat')}
               disabled={savingSection === 'dateFormat'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'dateFormat' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -872,7 +887,8 @@ export default function SettingsPage() {
           <div>
             <label
               htmlFor="date-format"
-              className="block text-sm font-semibold text-gray-700 mb-2.5"
+              className="block text-sm font-semibold mb-2.5"
+              style={{ color: 'var(--c-text-primary)' }}
             >
               Format
             </label>
@@ -883,10 +899,13 @@ export default function SettingsPage() {
               placeholder="Select date format"
             />
             <div
-              className={`mt-3 p-3 bg-gray-50 ${tw.rounded} border border-gray-200`}
+              className={`mt-3 p-3 ${tw.rounded} border border-gray-200`}
+              style={{
+                backgroundColor: 'var(--c-surface-cards)',
+              }}
             >
-              <p className="text-xs text-gray-500 mb-1">Preview:</p>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-xs mb-1" style={{ color: 'var(--c-text-secondary)' }}>Preview:</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 {formatDate(new Date(), { customFormat: settings.date_format })}
               </p>
             </div>
@@ -895,21 +914,23 @@ export default function SettingsPage() {
 
         {/* Currency & Number Formatting Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 {t.settings.currency} & Formatting
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Set currency and number display preferences
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('currency')}
               disabled={savingSection === 'currency'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'currency' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -922,7 +943,8 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="currency"
-                className="block text-sm font-semibold text-gray-700 mb-2.5"
+                className="block text-sm font-semibold mb-2.5"
+                style={{ color: 'var(--c-text-primary)' }}
               >
                 {t.settings.currency}
               </label>
@@ -938,7 +960,8 @@ export default function SettingsPage() {
             <div>
               <label
                 htmlFor="number-format"
-                className="block text-sm font-semibold text-gray-700 mb-2.5"
+                className="block text-sm font-semibold mb-2.5"
+                style={{ color: 'var(--c-text-primary)' }}
               >
                 {t.settings.numberFormatting}
               </label>
@@ -949,10 +972,13 @@ export default function SettingsPage() {
                 placeholder="Select number format"
               />
               <div
-                className={`mt-3 p-3 bg-gray-50 ${tw.rounded} border border-gray-200`}
+                className={`mt-3 p-3 ${tw.rounded} border border-gray-200`}
+                style={{
+                  backgroundColor: 'var(--c-surface-cards)',
+                }}
               >
-                <p className="text-xs text-gray-500 mb-1">Preview:</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-xs mb-1" style={{ color: 'var(--c-text-secondary)' }}>Preview:</p>
+                <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                   {(() => {
                     const testValue = 1234.56;
                     if (settings.number_formatting === "1,234.56") {
@@ -989,21 +1015,23 @@ export default function SettingsPage() {
 
         {/* Character Sets Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Character Sets
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Select SMS text encoding for message delivery
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('characterSet')}
               disabled={savingSection === 'characterSet'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'characterSet' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1015,7 +1043,8 @@ export default function SettingsPage() {
           <div>
             <label
               htmlFor="character-set"
-              className="block text-sm font-semibold text-gray-700 mb-2.5"
+              className="block text-sm font-semibold mb-2.5"
+              style={{ color: 'var(--c-text-primary)' }}
             >
               Encoding
             </label>
@@ -1030,21 +1059,23 @@ export default function SettingsPage() {
 
         {/* Sender ID Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Default Sender ID
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Set the default SMS sender ID for campaigns
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('senderId')}
               disabled={savingSection === 'senderId'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'senderId' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1056,7 +1087,8 @@ export default function SettingsPage() {
           <div>
             <label
               htmlFor="sender-id"
-              className="block text-sm font-semibold text-gray-700 mb-2.5"
+              className="block text-sm font-semibold mb-2.5"
+              style={{ color: 'var(--c-text-primary)' }}
             >
               Sender ID
             </label>
@@ -1071,21 +1103,23 @@ export default function SettingsPage() {
 
         {/* Communication Channel & Route Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Default Communication Channel & Route
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Set the default channel and its corresponding route
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('communication')}
               disabled={savingSection === 'communication'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'communication' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1142,7 +1176,8 @@ export default function SettingsPage() {
                 <div>
                   <label
                     htmlFor="communication-channel"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                    className="block text-sm font-semibold mb-2.5"
+                    style={{ color: 'var(--c-text-primary)' }}
                   >
                     Channel
                   </label>
@@ -1161,7 +1196,8 @@ export default function SettingsPage() {
                   <div>
                     <label
                       htmlFor="route"
-                      className="block text-sm font-semibold text-gray-700 mb-2.5"
+                      className="block text-sm font-semibold mb-2.5"
+                      style={{ color: 'var(--c-text-primary)' }}
                     >
                       {routeType} Route
                     </label>
@@ -1330,21 +1366,23 @@ export default function SettingsPage() {
 
         {/* Theme Settings Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+          className={`${tw.surfaceBackground} ${tw.rounded} p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+          style={{ border: '1px solid var(--c-border-default)' }}
         >
           <div className="mb-6 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Display Theme
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
                 Choose your preferred color scheme
               </p>
             </div>
             <button
               onClick={() => handleSaveSection('theme')}
               disabled={savingSection === 'theme'}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[#252829]`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: 'var(--c-primary-action)' }}
             >
               {savingSection === 'theme' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1354,19 +1392,20 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2.5">
+            <label className="block text-sm font-semibold mb-2.5" style={{ color: 'var(--c-text-primary)' }}>
               Theme
             </label>
             <HeadlessSelect
               value={settings.theme}
-              onChange={(value) => handleThemeChange(value as "light" | "dark")}
+              onChange={(value) => handleThemeChange(value as "light" | "dark" | "system")}
               options={[
                 { label: "Light - Bright and clean", value: "light" },
                 { label: "Dark - Easy on the eyes", value: "dark" },
+                { label: "System - Follow OS preference", value: "system" },
               ]}
               placeholder="Select theme"
             />
-            <p className="text-xs text-gray-400 mt-3">
+            <p className="text-xs mt-3" style={{ color: 'var(--c-text-muted)' }}>
               Changes apply immediately when saved
             </p>
           </div>

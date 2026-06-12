@@ -40,6 +40,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const pageSize = 20;
 
