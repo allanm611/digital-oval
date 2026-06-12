@@ -19,7 +19,6 @@ export default function NotificationTypesPage() {
   const { t } = useLanguage();
 
   const [notificationRules, setNotificationRules] = useState<NotificationRule[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

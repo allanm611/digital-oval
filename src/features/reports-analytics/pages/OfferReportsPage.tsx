@@ -42,6 +42,9 @@ import Input from "../../../shared/components/ui/Input";
 import { offerService } from "../../offers/services/offerService";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Offer } from "../../offers/types/offer";
+import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import type { TableColumn } from "../../../shared/components/Table/types";
 
 // Extract types from API response type
 type CombinedSummary = OfferReportsResponse["summary"];
@@ -521,6 +524,19 @@ const statIcons = {
   sparkles: Sparkles,
 };
 
+type OfferTableRow = {
+  id: string;
+  offerName: string;
+  status: string;
+  targetGroup: number;
+  controlGroup: number;
+  messagesGenerated: number;
+  sent: number;
+  delivered: number;
+  conversions: number;
+  lastUpdated: string;
+};
+
 export default function OfferReportsPage() {
   const { t } = useLanguage();
   const { error: showError } = useToast();
@@ -535,6 +551,82 @@ export default function OfferReportsPage() {
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const tablePageSize = 20;
+
+  const tableColumns: TableColumn<OfferTableRow>[] = [
+    {
+      id: "offerName",
+      label: "Offer Name",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: statusOptions.slice(1) },
+    },
+    {
+      id: "targetGroup",
+      label: "Target Group",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "controlGroup",
+      label: "Control Group",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "messagesGenerated",
+      label: "Messages Generated",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "sent",
+      label: "Sent",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "delivered",
+      label: "Delivered",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "conversions",
+      label: "Conversions",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "lastUpdated",
+      label: "Last Updated",
+      visible: true,
+      sortable: true,
+    },
+  ];
+
+  const { columns: tableColumnsMemo } = useTable({
+    tableId: "offer-reports-table",
+    defaultColumns: tableColumns,
+    defaultPageSize: tablePageSize,
+  });
 
   // State for real offer data
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -853,12 +945,6 @@ export default function OfferReportsPage() {
     appliedCustomRange.start,
     appliedCustomRange.end,
   ]);
-
-  // Paginated rows for table display
-  const paginatedRows = useMemo(() => {
-    const startIdx = (tablePage - 1) * tablePageSize;
-    return filteredRows.slice(startIdx, startIdx + tablePageSize);
-  }, [filteredRows, tablePage]);
 
   const csvHeaders = [
     "Offer Name",
@@ -1286,132 +1372,21 @@ export default function OfferReportsPage() {
         )}
 
         {!isLoadingOffers && !offerFetchError && offers.length > 0 && (
-        <div className="hidden lg:block">
-          <div className="overflow-x-auto">
-            <table
-              className="w-full text-sm text-gray-900"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: colors.surface.tableHeader }}>
-                <tr className="text-left text-sm font-medium uppercase tracking-wide">
-                  {[
-                    "Offer Name",
-                    "Status",
-                    "Target Group",
-                    "Control Group",
-                    "Messages Generated",
-                    "Sent",
-                    "Delivered",
-                    "Conversions",
-                    "Last Updated",
-                  ].map((header, idx, arr) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3"
-                      style={{
-                        color: colors.surface.tableHeaderText,
-                        borderTopLeftRadius: idx === 0 ? "0.375rem" : undefined,
-                        borderTopRightRadius:
-                          idx === arr.length - 1 ? "0.375rem" : undefined,
-                      }}
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={11}
-                      className="px-6 py-12 text-center text-gray-500"
-                    >
-                      No offers found matching your filters
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedRows.map((entry) => (
-                    <tr key={entry.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4 font-semibold"
-                        style={{
-                          backgroundColor: colors.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        <div className="text-gray-900">{entry.offerName}</div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-gray-900"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.status}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.targetGroup.toLocaleString("en-US")}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.controlGroup.toLocaleString("en-US")}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.messagesGenerated.toLocaleString("en-US")}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.sent.toLocaleString("en-US")}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.delivered.toLocaleString("en-US")}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: colors.surface.tablebodybg,
-                        }}
-                      >
-                        {entry.conversions.toLocaleString("en-US")}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: colors.surface.tablebodybg,
-                          borderTopRightRadius: "0.375rem",
-                          borderBottomRightRadius: "0.375rem",
-                        }}
-                      >
-                        {entry.lastUpdated}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {filteredRows.length > 0 && (
-            <Pagination
+          <div>
+            <Table<OfferTableRow>
+              columns={tableColumnsMemo}
+              data={filteredRows}
+              totalItems={filteredRows.length}
               currentPage={tablePage}
               pageSize={tablePageSize}
-              totalItems={filteredRows.length}
               onPageChange={setTablePage}
+              style={{
+                headerBackground: colors.surface.tableHeader,
+                headerTextColor: colors.surface.tableHeaderText,
+                rowBackground: colors.surface.tablebodybg,
+              }}
             />
-          )}
-        </div>
+          </div>
         )}
       </section>
     </div>

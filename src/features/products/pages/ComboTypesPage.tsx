@@ -19,7 +19,6 @@ export default function ComboTypesPage() {
   const { t } = useLanguage();
 
   const [comboTypes, setComboTypes] = useState<ComboType[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

@@ -166,7 +166,6 @@ export default function UserManagementPage() {
   const PAGE_SIZE = 20;
 
   const [users, setUsers] = useState<UserWithResolvedRole[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [accountRequests, setAccountRequests] = useState<
     AccountRequestListItem[]
   >([]);

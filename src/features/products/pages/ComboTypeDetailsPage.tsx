@@ -17,7 +17,6 @@ export default function ComboTypeDetailsPage() {
   const { success, error: showError } = useToast();
 
   const [comboType, setComboType] = useState<ComboType | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

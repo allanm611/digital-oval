@@ -27,7 +27,6 @@ export default function SubscriberProfileListPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

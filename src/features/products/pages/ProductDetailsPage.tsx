@@ -53,7 +53,6 @@ export default function ProductDetailsPage() {
   };
 
   const [product, setProduct] = useState<Product | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [category, setCategory] = useState<ProductCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

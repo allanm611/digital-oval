@@ -27,7 +27,6 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { BackendCampaignType } from "../types/campaign";
 import {
-import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
   FolderOpen,
   CheckCircle,
   XCircle,
@@ -35,6 +34,7 @@ import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
   Archive,
   Star,
 } from "lucide-react";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 const CATALOG_TAG_PREFIX = "catalog:";
 
@@ -70,7 +70,6 @@ function CategoryModal({
 }: CategoryModalProps) {
   const { error: showError } = useToast();
   const [formData, setFormData] = useState({
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
     name: "",
     description: "",
   });

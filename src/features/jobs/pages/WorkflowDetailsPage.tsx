@@ -21,7 +21,6 @@ export default function WorkflowDetailsPage() {
   const { user } = useAuth();
 
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [isActive, setIsActive] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

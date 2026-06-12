@@ -118,8 +118,8 @@ export class AppErrorBoundary extends React.Component<
                   onClick={this.handleClearCache}
                   className={`w-full flex items-center justify-center gap-2 ${tw.borderedButton}`}
                   style={{
-                    borderColor: color.primary.action,
-                    color: color.primary.action,
+                    borderColor: 'var(--c-text-primary)',
+                    color: 'var(--c-text-primary)',
                   }}
                 >
                   <RefreshCw className="h-4 w-4" />

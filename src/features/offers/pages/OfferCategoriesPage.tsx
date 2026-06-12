@@ -898,14 +898,6 @@ function OfferCategoriesPage() {
     }
   };
 
-    }
-  };
-
-  const handleCancelDelete = () => {
-    closeDeleteConfirm();
-    setCategoryToDelete(null);
-  };
-
   const handleViewOffers = (category: OfferCategoryType) => {
     setSelectedCategory(category);
     setIsOffersModalOpen(true);

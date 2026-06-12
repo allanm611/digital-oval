@@ -563,9 +563,9 @@ export default function CreateRoutePage() {
             disabled={saving}
             className={`text-sm font-medium ${tw.rounded} transition-colors`}
             style={{
-              backgroundColor: button.bordered.background,
-              color: button.bordered.color,
-              border: button.bordered.border,
+              backgroundColor: 'transparent',
+              color: 'var(--c-text-primary)',
+              border: '1px solid var(--c-text-primary)',
               padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
             }}
           >

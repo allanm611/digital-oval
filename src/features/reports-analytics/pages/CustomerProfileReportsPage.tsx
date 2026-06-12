@@ -49,6 +49,9 @@ import {
 import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../../customers360/services/customerServices";
 import { useToast } from "../../../contexts/ToastContext";
+import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import type { TableColumn } from "../../../shared/components/Table/types";
 
 // Extract types from API response type
 type ValueMatrixPoint = CustomerProfileReportsResponse["valueMatrix"][number];
@@ -498,6 +501,71 @@ export default function CustomerProfileReportsPage() {
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [isSearchingTable, setIsSearchingTable] = useState(false);
   const [useDummyData, setUseDummyData] = useState(true); // Charts use dummy data, table uses API data
+
+  const tableColumns: TableColumn<CustomerRow>[] = [
+    {
+      id: "id",
+      label: "Customer ID",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "email",
+      label: "Name",
+      visible: true,
+      sortable: true,
+      render: (_, row) => row.name,
+    },
+    {
+      id: "phone",
+      label: "MSISDN",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "segment",
+      label: "Customer Type",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["Champions", "Loyalists", "Potential Loyalist", "At-Risk", "Reactivated"] },
+    },
+    {
+      id: "orders",
+      label: "Status",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "lifetimeValue",
+      label: "Activation Date",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "location",
+      label: "City",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "clv",
+      label: "Email",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "engagementScore",
+      label: "Actions",
+      visible: true,
+    },
+  ];
+
+  const { columns: tableColumnsMemo } = useTable({
+    tableId: "customer-reports-table",
+    defaultColumns: tableColumns,
+    defaultPageSize: CUSTOMER_TABLE_PAGE_SIZE,
+  });
+
   const locationState = location.state as
     | { subscription?: CustomerSubscriptionRecord }
     | undefined;
@@ -1073,18 +1141,6 @@ export default function CustomerProfileReportsPage() {
       return Math.min(prev, maxPage);
     });
   }, [tableCustomers.length]);
-
-  const tableOffset = Math.max(0, (tablePage - 1) * CUSTOMER_TABLE_PAGE_SIZE);
-  const paginatedCustomers = useMemo(() => {
-    return tableCustomers.slice(
-      tableOffset,
-      tableOffset + CUSTOMER_TABLE_PAGE_SIZE,
-    );
-  }, [tableCustomers, tableOffset]);
-  const totalPages = Math.max(
-    1,
-    Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE),
-  );
 
   const csvHeaders = [
     "Customer ID",
@@ -1832,181 +1888,24 @@ export default function CustomerProfileReportsPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead
-                  className="text-xs uppercase tracking-wide"
-                  style={{ background: color.surface.tableHeader }}
-                >
-                  <tr>
-                    {[
-                      "Customer ID",
-                      "Subscription ID",
-                      "Name",
-                      "MSISDN",
-                      "Customer Type",
-                      "Tariff",
-                      "SIM Type",
-                      "Status",
-                      "Activation Date",
-                      "City",
-                      "Email",
-                      "Actions",
-                    ].map((header) => (
-                      <th
-                        key={header}
-                        className="px-6 py-3 text-left font-semibold text-sm text-gray-900"
-                      >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedCustomers.map((subscription, index) => {
-                    const status = subscription.status ?? "Unknown";
-                    const statusLower = status.toLowerCase();
-
-                    // Use combination of subscriptionId, msisdn for guaranteed uniqueness
-                    const uniqueKey = `${subscription.subscriptionId}-${subscription.msisdn}`;
-
-                    return (
-                      <tr key={uniqueKey}>
-                        {/* Customer ID */}
-                        <td
-                          className="rounded-l-md px-6 py-5 text-sm font-semibold text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.customerId ?? "—"}
-                        </td>
-                        {/* Subscription ID */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.subscriptionId ?? "—"}
-                        </td>
-                        {/* Name */}
-                        <td
-                          className="px-6 py-5 text-sm font-semibold text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          <button
-                            type="button"
-                            className="text-left hover:underline"
-                          >
-                            {`${subscription.firstName} ${subscription.lastName}`}
-                          </button>
-                        </td>
-                        {/* MSISDN */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.msisdn ?? "—"}
-                        </td>
-                        {/* Customer Type */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.customerType ?? "—"}
-                        </td>
-                        {/* Tariff */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.tariff ?? "—"}
-                        </td>
-                        {/* SIM Type */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.simType ?? "—"}
-                        </td>
-                        {/* Status */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {status}
-                        </td>
-                        {/* Activation Date */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.activationDate
-                            ? formatDate(subscription.activationDate)
-                            : "—"}
-                        </td>
-                        {/* City */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.city ?? "—"}
-                        </td>
-                        {/* Email */}
-                        <td
-                          className="px-6 py-5 text-sm text-gray-900"
-                          style={tableCellBackground}
-                        >
-                          {subscription.email ?? "—"}
-                        </td>
-                        {/* Actions */}
-                        <td
-                          className="rounded-r-md px-6 py-5 text-right"
-                          style={tableCellBackground}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigate(
-                                `/dashboard/customers/details/${subscription.customerId}`,
-                                {
-                                  state: {
-                                    customer: {
-                                      id: subscription.customerId,
-                                      name: `${subscription.firstName} ${subscription.lastName}`,
-                                      msisdn: subscription.msisdn,
-                                      email: subscription.email,
-                                      city: subscription.city,
-                                    },
-                                    subscription: subscription,
-                                  },
-                                },
-                              );
-                            }}
-                            className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+          <div>
+            <Table<CustomerRow>
+              columns={tableColumnsMemo}
+              data={apiCustomerRows}
+              totalItems={apiCustomerRows.length}
+              currentPage={tablePage}
+              pageSize={CUSTOMER_TABLE_PAGE_SIZE}
+              onPageChange={setTablePage}
+              style={{
+                headerBackground: colors.surface.tableHeader,
+                headerTextColor: colors.surface.tableHeaderText,
+                rowBackground: colors.surface.tablebodybg,
+              }}
+            />
             {!tableCustomers.length && (
               <div className="px-6 py-10 text-center text-sm text-gray-500">
                 {t.customerProfileReports.noCustomersMatchFilters}
               </div>
-            )}
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={tablePage}
-                pageSize={CUSTOMER_TABLE_PAGE_SIZE}
-                totalItems={tableCustomers.length}
-                onPageChange={(page) => setTablePage(page)}
-              />
             )}
           </div>
         )}

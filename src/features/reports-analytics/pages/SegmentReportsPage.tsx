@@ -34,6 +34,9 @@ import { useToast } from "../../../contexts/ToastContext";
 import type { RangeOption } from "../types/ReportsAPI";
 import { segmentService } from "../../segments/services/segmentService";
 import type { SegmentType } from "../../segments/types/segment";
+import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import type { TableColumn } from "../../../shared/components/Table/types";
 
 // Types
 type SegmentSummary = {
@@ -351,6 +354,81 @@ export default function SegmentReportsPage() {
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const tablePageSize = 20;
+
+  const tableColumns: TableColumn<SegmentRow>[] = [
+    {
+      id: "name",
+      label: "Segment Name",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "memberCount",
+      label: "Members",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "growthRate",
+      label: "Growth Rate",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`,
+    },
+    {
+      id: "campaignsUsed",
+      label: "Campaigns Used",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+    },
+    {
+      id: "engagementRate",
+      label: "Engagement Rate",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => `${value.toFixed(1)}%`,
+    },
+    {
+      id: "conversionRate",
+      label: "Conversion Rate",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => `${value.toFixed(1)}%`,
+    },
+    {
+      id: "avgValue",
+      label: "Avg Value",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => `${value.toFixed(2)}`,
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["Active", "Inactive"] },
+    },
+    {
+      id: "lastUpdated",
+      label: "Last Updated",
+      visible: true,
+      sortable: true,
+    },
+  ];
+
+  const { columns: tableColumnsMemo } = useTable({
+    tableId: "segment-reports-table",
+    defaultColumns: tableColumns,
+    defaultPageSize: tablePageSize,
+  });
 
   // Real segment data state
   const [segments, setSegments] = useState<SegmentType[]>([]);
@@ -684,11 +762,6 @@ export default function SegmentReportsPage() {
   useEffect(() => {
     setTablePage(1);
   }, [tableQuery, statusFilter, appliedCustomRange.start]);
-
-  const paginatedRows = useMemo(() => {
-    const startIdx = (tablePage - 1) * tablePageSize;
-    return filteredRows.slice(startIdx, startIdx + tablePageSize);
-  }, [filteredRows, tablePage]);
 
   const csvHeaders = [
     "Segment Name",
@@ -1159,119 +1232,20 @@ export default function SegmentReportsPage() {
         )}
 
         {!isLoadingSegments && !segmentFetchError && segments.length > 0 && (
-          <div className="hidden lg:block">
-            <div className="overflow-x-auto">
-              <table
-                className="w-full text-sm text-gray-900"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: colors.surface.tableHeader }}>
-                  <tr className="text-left text-sm font-medium uppercase tracking-wide">
-                    {[
-                      "Segment Name",
-                      "Members",
-                      "Growth Rate",
-                      "Campaigns Used",
-                      "Engagement Rate",
-                      "Conversion Rate",
-                      "Avg Value",
-                      "Status",
-                      "Last Updated",
-                    ].map((header, idx, arr) => (
-                      <th
-                        key={header}
-                        className="px-6 py-3"
-                        style={{
-                          color: colors.surface.tableHeaderText,
-                          borderTopLeftRadius: idx === 0 ? "0.375rem" : undefined,
-                          borderTopRightRadius:
-                            idx === arr.length - 1 ? "0.375rem" : undefined,
-                        }}
-                      >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedRows.map((row) => (
-                    <tr key={row.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4 font-semibold"
-                        style={{
-                          backgroundColor: colors.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        <div className="text-gray-900">{row.name}</div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-gray-900"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {row.memberCount.toLocaleString("en-US")}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-gray-900"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {row.growthRate >= 0 ? "+" : ""}
-                        {row.growthRate.toFixed(1)}%
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {row.campaignsUsed}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {row.engagementRate.toFixed(1)}%
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {row.conversionRate.toFixed(1)}%
-                      </td>
-                      <td
-                        className="px-6 py-4 text-gray-900"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {row.avgValue.toFixed(2)}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-gray-900"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {row.status}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: colors.surface.tablebodybg,
-                          borderTopRightRadius: "0.375rem",
-                          borderBottomRightRadius: "0.375rem",
-                        }}
-                      >
-                        {row.lastUpdated}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {filteredRows.length > 0 && (
-              <Pagination
-                currentPage={tablePage}
-                pageSize={tablePageSize}
-                totalItems={filteredRows.length}
-                onPageChange={setTablePage}
-              />
-            )}
+          <div>
+            <Table<SegmentRow>
+              columns={tableColumnsMemo}
+              data={filteredRows}
+              totalItems={filteredRows.length}
+              currentPage={tablePage}
+              pageSize={tablePageSize}
+              onPageChange={setTablePage}
+              style={{
+                headerBackground: colors.surface.tableHeader,
+                headerTextColor: colors.surface.tableHeaderText,
+                rowBackground: colors.surface.tablebodybg,
+              }}
+            />
           </div>
         )}
       </section>

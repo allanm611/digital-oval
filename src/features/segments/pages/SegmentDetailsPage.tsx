@@ -62,7 +62,6 @@ export default function SegmentDetailsPage() {
   const { success, error: showError, info: showInfo } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Check if we came from a catalog modal

@@ -20,7 +20,6 @@ export default function ControlGroupDetailPage() {
   const location = useLocation();
   const { success: showSuccess, error: showError } = useToast();
   const [group, setGroup] = useState<ControlGroupApiModel | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

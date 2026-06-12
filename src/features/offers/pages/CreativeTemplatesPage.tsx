@@ -30,7 +30,6 @@ export default function CreativeTemplatesPage() {
   const { t } = useLanguage();
 
   const [templates, setTemplates] = useState<CreativeTemplate[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

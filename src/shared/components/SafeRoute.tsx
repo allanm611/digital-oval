@@ -1,5 +1,6 @@
 import React from "react";
 import { tw, color, button } from "../utils/utils";
+import logo from "../../assets/Effortel_logo.svg";
 
 interface SafeRouteProps {
   children: React.ReactNode;
@@ -45,13 +46,14 @@ export class SafeRoute extends React.Component<SafeRouteProps, SafeRouteState> {
   render() {
     if (this.state.hasError) {
       const isNetwork = this.isNetworkError(this.state.error);
-      const title = isNetwork ? "Network Issue" : "Page Error";
+      const title = isNetwork ? "Connection Interrupted" : "Page Error";
       const message = isNetwork
-        ? "There is a network issue . Please check your connection and try again."
+        ? "Your connection was interrupted. Try refreshing when your connection is stable."
         : "This page encountered an error. Please try refreshing or going back.";
 
       return (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex flex-col items-center justify-center relative">
+          <img src={logo} alt="Effortel Logo" className="absolute top-4 left-4 h-8 w-auto" />
           <div className="max-w-md w-full mx-4">
             <div className="text-center space-y-4">
               <h1 className={`text-lg font-bold ${tw.textPrimary}`}>{title}</h1>
@@ -71,8 +73,8 @@ export class SafeRoute extends React.Component<SafeRouteProps, SafeRouteState> {
                   onClick={() => window.history.back()}
                   className={`${tw.borderedButton}`}
                   style={{
-                    borderColor: color.primary.action,
-                    color: color.primary.action,
+                    borderColor: 'var(--c-text-primary)',
+                    color: 'var(--c-text-primary)',
                   }}
                 >
                   Go Back

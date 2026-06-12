@@ -21,7 +21,6 @@ export default function KpiCategoriesListPage() {
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState<KpiCategory[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

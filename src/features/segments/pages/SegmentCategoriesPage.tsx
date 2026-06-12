@@ -67,7 +67,6 @@ function CategoryModal({
   onSave,
 }: CategoryModalProps) {
   const [formData, setFormData] = useState({
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
     name: "",
     description: "",
   });

@@ -181,7 +181,6 @@ function ProductsModal({
   const { removeFromCatalog, removingId } = useRemoveFromCatalog();
   const { success: showToast, error: showError } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

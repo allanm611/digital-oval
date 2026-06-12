@@ -80,7 +80,6 @@ export default function JobWorkflowStepsPage() {
   const { user } = useAuth();
 
   const [steps, setSteps] = useState<JobWorkflowStep[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [stepTypeFilter, setStepTypeFilter] = useState<StepType | "">("");

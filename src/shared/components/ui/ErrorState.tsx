@@ -47,7 +47,10 @@ export default function ErrorState({
             <button
               type="button"
               onClick={onRetry}
-              className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border ${tw.borderDefault} px-4 py-2 text-sm font-semibold ${tw.textSecondary} transition hover:bg-[var(--c-interactive-hover)]`}
+              className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border ${tw.borderDefault} px-4 py-2 text-sm font-semibold transition hover:bg-[var(--c-interactive-hover)]`}
+              style={{
+                color: 'var(--c-text-primary)',
+              }}
             >
               {actionLabel}
             </button>

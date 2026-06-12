@@ -22,7 +22,6 @@ export default function AllKPIsPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [allKPIs, setAllKPIs] = useState<KPI[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");

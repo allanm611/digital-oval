@@ -19,7 +19,6 @@ export default function TemplateSelector({
   onCreateNew,
 }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] =
     useState<MessageTemplate | null>(null);

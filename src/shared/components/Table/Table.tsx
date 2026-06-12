@@ -580,7 +580,7 @@ export function Table<T extends { id?: number | string } = any>({
                       {visibleColumns.map((col, colIdx) => (
                         <td
                           key={`${rowId}-${col.id}`}
-                          className={`px-6 py-4 ${cellClassName}`}
+                          className={`px-6 py-4 text-sm ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,

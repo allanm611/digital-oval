@@ -33,7 +33,6 @@ export default function CategoryDetailsPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [category, setCategory] = useState<OfferCategoryType | null>(null);

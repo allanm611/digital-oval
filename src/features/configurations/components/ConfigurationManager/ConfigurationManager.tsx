@@ -78,7 +78,6 @@ export default function ConfigurationManager({
   const { t } = useLanguage();
 
   const [items, setItems] = useState<ConfigurationItem[]>(config.initialData);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

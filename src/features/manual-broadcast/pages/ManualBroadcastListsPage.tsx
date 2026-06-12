@@ -38,7 +38,6 @@ export default function ManualBroadcastListsPage() {
   )?.returnTo;
 
   const [broadcasts, setBroadcasts] = useState<ManualBroadcast[]>([]);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [allBroadcasts, setAllBroadcasts] = useState<ManualBroadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({

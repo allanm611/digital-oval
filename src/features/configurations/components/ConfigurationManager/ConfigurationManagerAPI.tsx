@@ -68,7 +68,6 @@ export default function ConfigurationManagerAPI({
   const backendConfig = useBackendConfigurationData(config.configType);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [isModalOpen, setIsModalOpen] = useState(false);

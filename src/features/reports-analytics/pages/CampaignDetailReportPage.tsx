@@ -622,9 +622,10 @@ export default function CampaignDetailReportPage() {
                 id="report-data-toggle"
                 type="button"
                 onClick={() => setUseDummyData(!useDummyData)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
-                  useDummyData ? "bg-[#252829]" : "bg-gray-300"
-                }`}
+                className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{
+                  backgroundColor: useDummyData ? 'var(--c-toggle-active)' : '#d1d5db',
+                }}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${

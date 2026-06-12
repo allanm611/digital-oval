@@ -43,7 +43,6 @@ export default function QuickListDetailsPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [quicklist, setQuicklist] = useState<QuickList | null>(null);

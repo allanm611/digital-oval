@@ -28,7 +28,6 @@ export default function CommunicationPolicyDetailPage() {
   const { t } = useLanguage();
 
   const [policy, setPolicy] = useState<CommunicationPolicyConfiguration | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);

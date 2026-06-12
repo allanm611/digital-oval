@@ -68,7 +68,6 @@ function JobDependencyModal({
   const { user } = useAuth();
   const { t } = useLanguage();
   const [jobId, setJobId] = useState<number | "">("");
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [dependsOnJobId, setDependsOnJobId] = useState<number | "">("");
   const [dependencyType, setDependencyType] =
     useState<DependencyType>("blocking");

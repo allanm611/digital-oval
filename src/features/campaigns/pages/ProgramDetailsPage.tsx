@@ -70,7 +70,6 @@ export default function ProgramDetailsPage() {
   const { t } = useLanguage();
 
   const [program, setProgram] = useState<Program | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);

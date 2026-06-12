@@ -118,7 +118,6 @@ export default function ScheduledJobDetailsPage() {
   const { user } = useAuth();
 
   const [job, setJob] = useState<ScheduledJob | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);

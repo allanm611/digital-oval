@@ -31,7 +31,6 @@ import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 export default function JobWorkflowStepDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const jobIdParam = searchParams.get("job_id");
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();

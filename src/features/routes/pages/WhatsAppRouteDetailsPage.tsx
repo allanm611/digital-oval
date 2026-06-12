@@ -20,7 +20,6 @@ export default function WhatsAppRouteDetailsPage() {
   const { success, error: showError } = useToast();
 
   const [route, setRoute] = useState<WhatsAppRoute | null>(null);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);

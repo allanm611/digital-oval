@@ -45,6 +45,9 @@ import type { CampaignDisplay } from "../../campaigns/types/campaign";
 import CampaignOffersModal from "../../campaigns/components/CampaignOffersModal";
 import CampaignSegmentsModal from "../../campaigns/components/CampaignSegmentsModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import type { TableColumn } from "../../../shared/components/Table/types";
 
 // Extract types from API response type
 type CampaignSummary = CampaignReportsResponse["summary"];
@@ -429,6 +432,24 @@ const statIcons = {
   growth: ArrowUpRight,
 };
 
+type CampaignTableRow = {
+  id: string;
+  name: string;
+  targetGroup: number;
+  controlGroup: number;
+  messagesGenerated: number;
+  sent: number;
+  delivered: number;
+  conversions: number;
+  cgConversions: number;
+  tgConversionPercentage: number;
+  cgConversionPercentage: number;
+  lastRunDate: string;
+  campaign?: CampaignDisplay;
+  segmentCount: number;
+  offerCount: number;
+};
+
 export default function CampaignReportsPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -443,6 +464,130 @@ export default function CampaignReportsPage() {
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const tablePageSize = 20;
+
+  const tableColumns: TableColumn<CampaignTableRow>[] = [
+    {
+      id: "name",
+      label: "Campaign Name",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "targetGroup",
+      label: "Target Group",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "controlGroup",
+      label: "Control Group",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "messagesGenerated",
+      label: "Messages Generated",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "sent",
+      label: "Sent",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => value.toLocaleString("en-US"),
+    },
+    {
+      id: "delivered",
+      label: "Delivered",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => (value ?? 0).toLocaleString("en-US"),
+    },
+    {
+      id: "conversions",
+      label: "Target Group Conversions",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => (value ?? 0).toLocaleString("en-US"),
+    },
+    {
+      id: "cgConversions",
+      label: "Control Group Conversions",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => (value ?? 0).toLocaleString("en-US"),
+    },
+    {
+      id: "tgConversionPercentage",
+      label: "Target Group %",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => `${(value ?? 0).toFixed(2)}%`,
+    },
+    {
+      id: "cgConversionPercentage",
+      label: "Control Group %",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "number" },
+      render: (value: number) => `${(value ?? 0).toFixed(2)}%`,
+    },
+    {
+      id: "lastRunDate",
+      label: "Last Run",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      render: (_, row: CampaignTableRow) => (
+        <div className="space-x-2 flex items-center">
+          <button
+            onClick={() => {
+              if (row.campaign?.id) {
+                navigate(`/dashboard/campaigns/${row.campaign.id}`);
+              }
+            }}
+            className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+            title="View campaign details"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => {
+              if (row.campaign?.id) {
+                navigate(`/dashboard/campaigns/${row.campaign.id}/report`);
+              }
+            }}
+            className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+            title="View campaign report"
+          >
+            <FileText className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const { columns: tableColumnsMemo } = useTable({
+    tableId: "campaign-reports-table",
+    defaultColumns: tableColumns,
+    defaultPageSize: tablePageSize,
+  });
 
   // State for real campaign data
   const [campaigns, setCampaigns] = useState<CampaignDisplay[]>([]);
@@ -732,12 +877,6 @@ export default function CampaignReportsPage() {
     appliedCustomRange.start,
     appliedCustomRange.end,
   ]);
-
-  // Paginated rows for table display
-  const paginatedRows = useMemo(() => {
-    const startIdx = (tablePage - 1) * tablePageSize;
-    return filteredRows.slice(startIdx, startIdx + tablePageSize);
-  }, [filteredRows, tablePage]);
 
   // Chart colors now use standardized colors from tokens.reportCharts
 
@@ -1261,196 +1400,26 @@ export default function CampaignReportsPage() {
         )}
 
         {!isLoadingCampaigns && !campaignFetchError && campaigns.length > 0 && (
-        <div className="hidden lg:block">
-          <div className="overflow-x-auto">
-            <table
-              className="w-full text-sm text-gray-900"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: colors.surface.tableHeader }}>
-                <tr className="text-left text-sm font-medium uppercase tracking-wide">
-                  {[
-                    "Campaign Name",
-                    // "Segment Count",
-                    // "Offer Count",
-                    "Target Group",
-                    "Control Group",
-                    "Messages Generated",
-                    "Sent",
-                    "Delivered",
-                    "Target Group Conversions",
-                    "Control Group Conversions",
-                    "Target Group %",
-                    "Control Group %",
-                    "Last Run",
-                    "Actions",
-                  ].map((header, idx, arr) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3"
-                      style={{
-                        color: colors.surface.tableHeaderText,
-                        borderTopLeftRadius: idx === 0 ? "0.375rem" : undefined,
-                        borderTopRightRadius:
-                          idx === arr.length - 1 ? "0.375rem" : undefined,
-                      }}
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRows.map((entry) => (
-                  <tr key={entry.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4 font-semibold"
-                      style={{
-                        backgroundColor: colors.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="text-gray-900">{entry.name}</div>
-                    </td>
-                    {/* <td
-                      className="px-6 py-4 cursor-pointer"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                      onClick={() => {
-                        if ((entry.segmentCount ?? 0) > 0 && entry.campaign) {
-                          setSelectedCampaignForModal(entry.campaign);
-                          setShowSegmentsModal(true);
-                        }
-                      }}
-                    >
-                      <span className="text-sm font-medium">{entry.segmentCount ?? 0}</span>
-                    </td>
-                    <td
-                      className="px-6 py-4 cursor-pointer"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                      onClick={() => {
-                        if ((entry.offerCount ?? 0) > 0 && entry.campaign) {
-                          setSelectedCampaignForModal(entry.campaign);
-                          setShowOffersModal(true);
-                        }
-                      }}
-                    >
-                      <span className="text-sm font-medium">{entry.offerCount ?? 0}</span>
-                    </td> */}
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {entry.targetGroup.toLocaleString("en-US")}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {entry.controlGroup.toLocaleString("en-US")}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: colors.surface.tablebodybg,
-                      }}
-                    >
-                      {entry.messagesGenerated.toLocaleString("en-US")}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {entry.sent.toLocaleString("en-US")}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {(entry.delivered ?? 0).toLocaleString("en-US")}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {(entry.conversions ?? 0).toLocaleString("en-US")}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {(entry.cgConversions ?? 0).toLocaleString("en-US")}
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {((entry.tgConversionPercentage ?? 0).toFixed(2))}%
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: colors.surface.tablebodybg }}
-                    >
-                      {((entry.cgConversionPercentage ?? 0).toFixed(2))}%
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: colors.surface.tablebodybg,
-                      }}
-                    >
-                      {entry.lastRunDate}
-                    </td>
-                    <td
-                      className="px-6 py-4 space-x-2 flex items-center"
-                      style={{
-                        backgroundColor: colors.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <button
-                        onClick={() => {
-                          if (entry.campaign?.id) {
-                            navigate(`/dashboard/campaigns/${entry.campaign.id}`);
-                          }
-                        }}
-                        className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                        title="View campaign details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (entry.campaign?.id) {
-                            navigate(`/dashboard/campaigns/${entry.campaign.id}/report`);
-                          }
-                        }}
-                        className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                        title="View campaign report"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div>
+            <Table<CampaignTableRow>
+              columns={tableColumnsMemo}
+              data={filteredRows}
+              totalItems={filteredRows.length}
+              currentPage={tablePage}
+              pageSize={tablePageSize}
+              onPageChange={setTablePage}
+              style={{
+                headerBackground: colors.surface.tableHeader,
+                headerTextColor: colors.surface.tableHeaderText,
+                rowBackground: colors.surface.tablebodybg,
+              }}
+            />
             {!filteredRows.length && (
               <div className="py-10 text-center text-sm text-gray-500">
                 No campaigns match your filters yet.
               </div>
             )}
           </div>
-          {filteredRows.length > 0 && (
-            <Pagination
-              currentPage={tablePage}
-              pageSize={tablePageSize}
-              totalItems={filteredRows.length}
-              onPageChange={setTablePage}
-            />
-          )}
-        </div>
         )}
       </section>
 

@@ -130,7 +130,6 @@ export default function GatewayConfigurationsPage() {
   const { success: showSuccess, error: showError } = useToast();
   const { t } = useLanguage();
   const [configs, setConfigs] = useState<UnifiedGatewayConfig[]>(buildInitialConfigs);
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async (id) => {}, itemLabel: "Item", });
   const [searchTerm, setSearchTerm] = useState("");
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
