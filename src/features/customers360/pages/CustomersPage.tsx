@@ -14,6 +14,7 @@ import {
   X,
   MoreHorizontal,
   Send,
+  Download,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -31,11 +32,12 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination from "../../../shared/components/ui/Pagination";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { Table } from "../../../shared/components/Table";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import EditCustomerModal from "../components/EditCustomerModal";
-import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { color, tw, zIndex, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
@@ -117,6 +119,86 @@ export default function CustomersPage() {
     useState<CustomerSubscriptionRecord | null>(null);
   const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>([]);
   const [allCustomers, setAllCustomers] = useState<CustomerSubscriptionRecord[]>([]);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+
+  const defaultColumns: TableColumn<any>[] = [
+    {
+      id: "subscriptionId",
+      label: "Subscription ID",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+    },
+    {
+      id: "msisdn",
+      label: "MSISDN",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+    },
+    {
+      id: "customer",
+      label: "Customer",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+    },
+    {
+      id: "customerType",
+      label: "Customer Type",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["prepaid", "postpaid"] },
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["active", "inactive", "suspended"] },
+    },
+    {
+      id: "preferredChannel",
+      label: "Preferred Channel",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["SMS", "USSD", "EMAIL", "PUSH"] },
+    },
+    {
+      id: "simType",
+      label: "SIM Type",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["KYC Verified", "Not Verified"] },
+    },
+    {
+      id: "activationDate",
+      label: "Activation Date",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "date" },
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+    },
+  ];
+
+  const {
+    columns,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+    expandedRowId,
+    setExpandedRowId,
+  } = useTable({
+    tableId: "customers-table-v2",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
   const loadCustomers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -831,6 +913,7 @@ export default function CustomersPage() {
                   id: "subscriptionId",
                   label: t.customer360.subscriptionId,
                   visible: true,
+                  filterConfig: { type: "text" },
                   render: (_, row) => (
                     <span className="text-sm text-gray-900">{row.subscriptionId}</span>
                   ),
@@ -839,6 +922,7 @@ export default function CustomersPage() {
                   id: "msisdn",
                   label: t.customer360.msisdn,
                   visible: true,
+                  filterConfig: { type: "text" },
                   render: (_, row) => (
                     <span className="text-sm text-gray-900">{row.msisdn}</span>
                   ),
@@ -847,6 +931,7 @@ export default function CustomersPage() {
                   id: "customer",
                   label: t.customer360.customer,
                   visible: true,
+                  filterConfig: { type: "text" },
                   render: (_, row) => {
                     const name = getSubscriptionDisplayName(
                       row,
@@ -869,6 +954,7 @@ export default function CustomersPage() {
                   id: "customerType",
                   label: t.customer360.customerType,
                   visible: true,
+                  filterConfig: { type: "select", options: ["prepaid", "postpaid"] },
                   render: (_, row) => (
                     <span className="text-sm text-gray-900">{row.customerType ?? "—"}</span>
                   ),
@@ -877,6 +963,7 @@ export default function CustomersPage() {
                   id: "status",
                   label: t.customer360.status,
                   visible: true,
+                  filterConfig: { type: "select", options: ["active", "inactive", "suspended"] },
                   render: (_, row) => (
                     <span className="text-sm text-black">{row.status ?? "Unknown"}</span>
                   ),
@@ -885,6 +972,7 @@ export default function CustomersPage() {
                   id: "preferredChannel",
                   label: t.customer360.preferredChannel,
                   visible: true,
+                  filterConfig: { type: "select", options: ["SMS", "USSD", "EMAIL", "PUSH"] },
                   render: (_, row) => (
                     <span className="text-sm text-gray-900">{getChannelLabel(row.tariff)}</span>
                   ),
@@ -893,6 +981,7 @@ export default function CustomersPage() {
                   id: "simType",
                   label: t.customer360.simType,
                   visible: true,
+                  filterConfig: { type: "select", options: ["KYC Verified", "Not Verified"] },
                   render: (_, row) => (
                     <span className="text-sm text-gray-900">{row.simType ?? "—"}</span>
                   ),
@@ -901,6 +990,7 @@ export default function CustomersPage() {
                   id: "activationDate",
                   label: t.customer360.activationDate,
                   visible: true,
+                  filterConfig: { type: "date" },
                   render: (_, row) => (
                     <span className="text-sm text-gray-900">{formatDate(row.activationDate)}</span>
                   ),
@@ -1001,6 +1091,28 @@ export default function CustomersPage() {
                 rowBackground: color.surface.tablebodybg,
                 rowSpacing: "0 12px",
               }}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
+              expandedRowId={expandedRowId}
+              onExpandChange={setExpandedRowId}
+              expandedContent={(row) => (
+                <div className="p-4 bg-gray-50 space-y-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600">Name</p>
+                      <p className="text-sm text-gray-900">{getSubscriptionDisplayName(row, `Customer ${row.customerId}`)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600">Email</p>
+                      <p className="text-sm text-gray-900">{row.email || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600">City</p>
+                      <p className="text-sm text-gray-900">{row.city || "—"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             />
           </div>
         )}
@@ -1075,6 +1187,16 @@ export default function CustomersPage() {
           }}
         />
       )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={defaultColumns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
 
       {/* Advanced filters modal */}
     </div>

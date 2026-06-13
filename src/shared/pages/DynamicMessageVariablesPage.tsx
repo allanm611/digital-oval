@@ -112,12 +112,7 @@ export default function DynamicMessageVariablesPage() {
 
       // Build category configs with sub-categories support
       const buildCategoryConfigs = (categories: any[]): CategoryConfig[] => {
-        return categories
-          .filter((cat) => {
-            const catValue = (cat.value || '').toLowerCase();
-            return !['segments', 'quicklists'].includes(catValue);
-          })
-          .map((cat) => {
+        return categories.map((cat) => {
           // Get direct fields
           const catFieldIds = new Set<number>();
           if (cat.fields && Array.isArray(cat.fields)) {
@@ -417,15 +412,17 @@ export default function DynamicMessageVariablesPage() {
                 <span className="text-sm text-gray-600">
                   {(category.fields?.length ?? 0)} field{(category.fields?.length ?? 0) !== 1 ? 's' : ''}
                 </span>
-                <button
-                  onClick={() => {
-                    setSelectedCategoryForModal(category);
-                    setIsFieldsModalOpen(true);
-                  }}
-                  className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                >
-                  View Fields
-                </button>
+                {(category.fields?.length ?? 0) > 0 && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategoryForModal(category);
+                      setIsFieldsModalOpen(true);
+                    }}
+                    className="text-sm font-medium text-gray-700 hover:underline transition-colors"
+                  >
+                    View Fields
+                  </button>
+                )}
               </div>
             </div>
           ))}

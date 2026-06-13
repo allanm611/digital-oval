@@ -9,9 +9,9 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hasError?: boolean;
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  variant?: 'default' | 'medium' | 'compact'; // default: px-4 py-2, medium: px-3 py-2, compact: px-3 py-1
+  variant?: 'default' | 'medium' | 'compact'; 
   type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time'; // default: text
-  label?: string; // Floating label (optional)
+  label?: string; // Floating label 
   style?: React.CSSProperties;
 }
 

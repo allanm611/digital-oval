@@ -849,10 +849,9 @@ export default function SegmentConditionsBuilder({
                 return (
                   <div
                     key={condition.id}
-                    className={`p-3 ${tw.rounded} border transition-colors hover:border-gray-300`}
+                    className={`p-3 ${tw.rounded} transition-colors`}
                     style={{
                       backgroundColor: color.surface.background,
-                      borderColor: color.border.muted,
                     }}
                   >
                     {/* Line 1: Type + Category + Field */}

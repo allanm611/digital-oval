@@ -89,7 +89,13 @@ export function useMessageVariableFields(): UseMessageVariableFieldsReturn {
             fields: (cat.fields || []).filter((f: any) => f.is_active !== false),
             sub_categories: cat.sub_categories ? filterCategoriesRecursive(cat.sub_categories) : undefined,
           }))
-          .filter((cat) => (cat.fields && cat.fields.length > 0) || (cat.sub_categories && cat.sub_categories.length > 0));
+          .filter((cat) => {
+            const catValue = (cat.value || '').toLowerCase();
+            const hasFields = cat.fields && cat.fields.length > 0;
+            const hasSubCategories = cat.sub_categories && cat.sub_categories.length > 0;
+            const isSegmentOrQuickList = ['segments', 'quicklists'].includes(catValue);
+            return hasFields || hasSubCategories || isSegmentOrQuickList;
+          });
       };
 
       const filteredCategories = filterCategoriesRecursive(allCategories);
