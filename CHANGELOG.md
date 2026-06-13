@@ -1,3 +1,11 @@
+## [1.4.8](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.7...v1.4.8) (2026-06-13)
+
+
+### Bug Fixes
+
+* added more props to the offers, products and customers tables ([959c842](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/959c842b41e9a43fbe40b1bf5b6d1ebbbe4e7dd3))
+* fixed message varibales and customers table ([fd0ccaa](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/fd0ccaa63c79f689d3249268cf253b6bbc91fc56))
+
 ## [1.4.7](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.6...v1.4.7) (2026-06-13)
 
 
