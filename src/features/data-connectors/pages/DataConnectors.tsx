@@ -38,6 +38,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function DataConnectors() {
@@ -66,14 +67,83 @@ export default function DataConnectors() {
   const [pageSize] = useState(15);
   const [totalCount, setTotalCount] = useState(0);
 
+  const defaultColumns: TableColumn<ProcessedDataConnector>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => <div className={`${tw.tableFirstColumn} text-sm`}>{value}</div>,
+    },
+    {
+      id: "type",
+      label: "Type",
+      visible: true,
+      render: (value) => <span className="text-sm text-gray-600">{getConnectorDisplayName(value)}</span>,
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => <span className="text-sm text-gray-600">{value || "—"}</span>,
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => <span className="text-sm text-gray-600">{value ? "Active" : "Inactive"}</span>,
+    },
+    {
+      id: "created_at",
+      label: "Created",
+      visible: true,
+      render: (value) => <span className="text-sm text-gray-600"><DateFormatter date={value as string} useUserTimezone /></span>,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, connector) => (
+        <div className="flex items-center justify-end gap-2">
+          <button onClick={() => handleConnectorClick(connector)} className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100`} title="View">
+            <Eye className="w-4 h-4" />
+          </button>
+          <PermissionGate permission="data-connectors.update">
+            <button onClick={() => handleEdit(connector)} className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100`} title="Edit">
+              <Edit className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="data-connectors.delete">
+            <button onClick={() => handleDelete(connector)} className={`p-2 ${tw.rounded} text-red-600 hover:text-red-700 hover:bg-red-50`} title="Delete">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "data-connectors-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
   const loadConnectors = async () => {
     try {
       setLoading(true);
 
       const params: DataConnectorFilterParams = {
         search: searchTerm.trim() || undefined,
-        limit: pageSize,
-        offset: (currentPage - 1) * pageSize,
+        limit: tablePageSize,
+        offset: (tableCurrentPage - 1) * tablePageSize,
       };
 
       // Type filter – single value
@@ -114,13 +184,13 @@ export default function DataConnectors() {
 
   // Reset to page 1 when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterType, filterStatus]);
+    tableHandlePageChange(1);
+  }, [searchTerm, filterType, filterStatus, tableHandlePageChange]);
 
-  // Load connectors when currentPage, search, filters, or pageSize changes
+  // Load connectors when tableCurrentPage, search, filters, or tablePageSize changes
   useEffect(() => {
     loadConnectors();
-  }, [searchTerm, filterType, filterStatus, currentPage, pageSize]);
+  }, [searchTerm, filterType, filterStatus, tableCurrentPage, tablePageSize]);
 
   useEffect(() => {
     loadReferenceData();
@@ -403,189 +473,150 @@ export default function DataConnectors() {
           <span>Loading connectors...</span>
         </div>
       ) : (
-        <div className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Connections
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Last Used
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {connectors.length === 0 ? (
-                  <tr>
-                    <td
-                      className={`px-6 py-6 text-sm ${tw.textSecondary}`}
-                      colSpan={6}
-                      style={{ backgroundColor: color.surface.tablebodybg }}
+        <div className={`${tw.rounded} overflow-hidden`}>
+          <Table<DataConnectorType>
+            columns={[
+              {
+                id: "name",
+                label: "Name",
+                visible: true,
+                render: (value, connector) => (
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {(() => {
+                        const { icon: IconComp, color: iconColor } =
+                          getConnectorIcon(connector.type);
+                        return (
+                          <IconComp
+                            className="h-5 w-5 flex-shrink-0"
+                            style={{ color: iconColor }}
+                          />
+                        );
+                      })()}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`text-sm font-semibold ${tw.textPrimary}`}
+                      >
+                        {value}
+                      </span>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "type",
+                label: "Type",
+                visible: true,
+                render: (_, connector) => (
+                  <span className={tw.textPrimary}>
+                    {getConnectorDisplayName(connector.type)}
+                  </span>
+                ),
+              },
+              {
+                id: "connection_count",
+                label: "Connections",
+                visible: true,
+                render: (value) => (
+                  <span className={`font-medium ${tw.textPrimary}`}>
+                    {value ?? "--"}
+                  </span>
+                ),
+              },
+              {
+                id: "is_active",
+                label: "Status",
+                visible: true,
+                render: (value) => (
+                  <span className="inline-flex items-center font-medium text-gray-900">
+                    {value ? "Active" : "Inactive"}
+                  </span>
+                ),
+              },
+              {
+                id: "last_used",
+                label: "Last Used",
+                visible: true,
+                render: (value) => (
+                  <span className={tw.textPrimary}>
+                    {value
+                      ? <DateFormatter date={new Date(value)} useUserTimezone />
+                      : "--"}
+                  </span>
+                ),
+              },
+              {
+                id: "actions",
+                label: "Actions",
+                visible: true,
+                sortable: false,
+                render: (_, connector) => (
+                  <div className="relative flex items-center justify-center space-x-2">
+                    <button
+                      onClick={() => handleConnectorClick(connector)}
+                      className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                      title="View details"
+                      disabled={isDeleting && connectorToDelete?.id === connector.id}
                     >
-                      No data connectors found. Get started by creating your
-                      first connector.
-                    </td>
-                  </tr>
-                ) : (
-                  connectors.map((connector) => (
-                    <tr key={connector.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <PermissionGate permission="servers.update">
+                      <button
+                        onClick={() => handleEdit(connector)}
+                        className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                        title="Edit connector"
+                        disabled={isDeleting && connectorToDelete?.id === connector.id}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0">
-                            {(() => {
-                              const { icon: IconComp, color: iconColor } =
-                                getConnectorIcon(connector.type);
-                              return (
-                                <IconComp
-                                  className="h-5 w-5 flex-shrink-0"
-                                  style={{ color: iconColor }}
-                                />
-                              );
-                            })()}
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <span
-                              className={`text-sm font-semibold ${tw.textPrimary}`}
-                            >
-                              {connector.name}
-                            </span>
-                            {/* <span className={`text-xs ${tw.textSecondary}`}>
-                              {connector.description}
-                            </span> */}
-                          </div>
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </PermissionGate>
+                    <PermissionGate permission="servers.delete">
+                      <button
+                        onClick={() => handleDelete(connector)}
+                        className={`group p-3 ${tw.rounded} text-red-600 hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        title="Delete connector"
+                        disabled={
+                          isDeleting && connectorToDelete?.id === connector.id
+                        }
                       >
-                        <span className={tw.textPrimary}>
-                          {getConnectorDisplayName(connector.type)}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className={`font-medium ${tw.textPrimary}`}>
-                          {connector.connection_count ?? "--"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="inline-flex items-center font-medium text-gray-900">
-                          {connector.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className={tw.textPrimary}>
-                          {connector.last_used
-                            ? <DateFormatter date={new Date(connector.last_used)} useUserTimezone />
-                            : "--"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="relative flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => handleConnectorClick(connector)}
-                            className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
-                            title="View details"
-                            disabled={isDeleting && connectorToDelete?.id === connector.id}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <PermissionGate permission="servers.update">
-                            <button
-                              onClick={() => handleEdit(connector)}
-                              className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
-                              title="Edit connector"
-                              disabled={isDeleting && connectorToDelete?.id === connector.id}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                          </PermissionGate>
-                          <PermissionGate permission="servers.delete">
-                            <button
-                              onClick={() => handleDelete(connector)}
-                              className={`group p-3 ${tw.rounded} text-red-600 hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                              title="Delete connector"
-                              disabled={
-                                isDeleting && connectorToDelete?.id === connector.id
-                              }
-                            >
-                              {isDeleting &&
-                              connectorToDelete?.id === connector.id ? (
-                                <div
-                                  className="animate-spin rounded-full h-4 w-4 border-2 border-red-300 border-t-red-600"
-                                />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                            </button>
-                          </PermissionGate>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                        {isDeleting &&
+                        connectorToDelete?.id === connector.id ? (
+                          <div
+                            className="animate-spin rounded-full h-4 w-4 border-2 border-red-300 border-t-red-600"
+                          />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </PermissionGate>
+                  </div>
+                ),
+              },
+            ]}
+            data={connectors}
+            totalItems={totalCount}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
 
           {/* Pagination */}
           {totalCount > 0 && (
-            <Pagination
-              currentPage={currentPage}
-              pageSize={pageSize}
-              totalItems={totalCount}
-              onPageChange={handlePageChange}
-            />
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={totalCount}
+                onPageChange={handlePageChange}
+              />
+            </div>
           )}
         </div>
       )}

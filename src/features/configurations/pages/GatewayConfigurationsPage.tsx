@@ -134,9 +134,30 @@ export default function GatewayConfigurationsPage() {
   const [configs, setConfigs] = useState<UnifiedGatewayConfig[]>(buildInitialConfigs);
   const [searchTerm, setSearchTerm] = useState("");
   const [togglingId, setTogglingId] = useState<number | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [configToDelete, setConfigToDelete] = useState<UnifiedGatewayConfig | null>(null);
-  const [deleting, setDeleting] = useState(false);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteConfig } = useDeleteConfirm({
+    onDelete: async (id) => {
+      if (!configToDelete) return;
+      const { channel_type, id: configId } = configToDelete;
+
+      if (channel_type === "EMAIL") {
+        await emailGatewayConfigService.deleteConfig(configId);
+      } else if (channel_type === "SMS") {
+        await smsGatewayConfigService.deleteConfig(configId);
+      } else if (channel_type === "WHATSAPP") {
+        await whatsappGatewayConfigService.deleteConfig(configId);
+      } else if (channel_type === "PUSH") {
+        await pushGatewayConfigService.deleteConfig(configId);
+      } else if (channel_type === "USSD") {
+        await ussdGatewayConfigService.deleteConfig(configId);
+      }
+
+      setConfigs((prev) => prev.filter((c) => !(c.id === configId && c.channel_type === channel_type)));
+      showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
+    },
+    itemLabel: "Gateway Configuration",
+  });
 
   useEffect(() => {
     loadAllConfigs();
@@ -232,37 +253,7 @@ export default function GatewayConfigurationsPage() {
 
   const handleDeleteClick = (config: UnifiedGatewayConfig) => {
     setConfigToDelete(config);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
-  };
-
-  const confirmDeleteConfig = async () => {
-    if (!configToDelete) return;
-
-    setDeleting(true);
-    try {
-      const { channel_type, id } = configToDelete;
-
-      if (channel_type === "EMAIL") {
-        await emailGatewayConfigService.deleteConfig(id);
-      } else if (channel_type === "SMS") {
-        await smsGatewayConfigService.deleteConfig(id);
-      } else if (channel_type === "WHATSAPP") {
-        await whatsappGatewayConfigService.deleteConfig(id);
-      } else if (channel_type === "PUSH") {
-        await pushGatewayConfigService.deleteConfig(id);
-      } else if (channel_type === "USSD") {
-        await ussdGatewayConfigService.deleteConfig(id);
-      }
-
-      setConfigs((prev) => prev.filter((c) => !(c.id === id && c.channel_type === channel_type)));
-      showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
-      closeDeleteConfirm();
-      setConfigToDelete(null);
-    } catch (err) {
-      showError(extractBackendError(error, "Failed to delete gateway configuration. Please try again."));
-    } finally {
-      setDeleting(false);
-    }
+    openDeleteConfirm(config.id, config.name);
   };
 
   const handleToggleActive = (config: UnifiedGatewayConfig) => {
@@ -466,6 +457,7 @@ export default function GatewayConfigurationsPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              getRowId={(row) => `${row.id}-${row.channel_type}`}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -476,30 +468,28 @@ export default function GatewayConfigurationsPage() {
 
             {/* Pagination */}
             {paginatedConfigs.length > 0 && filteredConfigs.length > 0 && (
-              <Pagination
-                currentPage={tableCurrentPage}
-                pageSize={tablePageSize}
-                totalItems={filteredConfigs.length}
-                onPageChange={tableHandlePageChange}
-              />
+              <div className="mt-4">
+                <Pagination
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
+                  totalItems={filteredConfigs.length}
+                  onPageChange={tableHandlePageChange}
+                />
+              </div>
             )}
           </>
         )}
       </div>
 
-        <DeleteConfirmModal
-          isOpen={deleteConfirm.id !== null}
-          onClose={() => {
-            closeDeleteConfirm();
-            setConfigToDelete(null);
-          }}
-          onConfirm={confirmDeleteConfig}
-          title="Delete Gateway Configuration"
-          description="This may affect message delivery."
-          itemName={configToDelete?.name || ""}
-          isLoading={deleting}
-        />
-      </div>
+      <DeleteConfirmModal
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
+        onConfirm={confirmDeleteConfig}
+        title="Delete Gateway Configuration"
+        description="This may affect message delivery."
+        itemName={deleteConfirm.itemName || ""}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

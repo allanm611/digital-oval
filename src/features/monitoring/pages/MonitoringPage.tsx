@@ -6,6 +6,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Pagination from "../../../shared/components/ui/Pagination";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
@@ -39,13 +40,91 @@ export default function MonitoringPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+
+  const defaultColumns: TableColumn<Execution>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => <div className={`${tw.tableFirstColumn}`}>{value}</div>,
+    },
+    {
+      id: "type",
+      label: "Type",
+      visible: true,
+      render: (value) => <span className="text-sm">{getTypeLabel(value)}</span>,
+    },
+    {
+      id: "recipientsCount",
+      label: "Recipients",
+      visible: true,
+      render: (value) => <span className="text-sm">{value || "—"}</span>,
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm px-2 py-1 rounded" style={{ backgroundColor: getStatusColor(value) + "20", color: getStatusColor(value) }}>
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "successCount",
+      label: "Success",
+      visible: true,
+      render: (value) => <span className="text-sm">{value || "—"}</span>,
+    },
+    {
+      id: "failureCount",
+      label: "Failed",
+      visible: true,
+      render: (value) => <span className="text-sm">{value || "—"}</span>,
+    },
+    {
+      id: "duration",
+      label: "Duration",
+      visible: true,
+      render: (value) => <span className="text-sm">{formatDuration(value)}</span>,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, execution) => (
+        <div className="flex items-center justify-center gap-2">
+          <button onClick={() => handleRetry(execution)} className={`p-2 ${tw.rounded} text-blue-600 hover:bg-blue-50`} title="Retry">
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "execution-monitoring-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
 
   useEffect(() => {
     loadExecutions();
     loadStatistics();
   }, []);
+
+  // Reset page when filters change
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchQuery, selectedType, selectedStatus, tableHandlePageChange]);
 
   const loadExecutions = async () => {
     try {
@@ -54,7 +133,6 @@ export default function MonitoringPage() {
       const response = await executionService.getExecutions();
       setExecutions(response.data || []);
     } catch (err) {
-      console.error("Failed to load executions:", err);
       setError("Failed to load executions");
       showError("Error", "Failed to load executions");
     } finally {
@@ -67,7 +145,7 @@ export default function MonitoringPage() {
       const response = await executionService.getExecutionStatistics();
       setStatistics(response);
     } catch (err) {
-      console.error("Failed to load statistics:", err);
+      // Error handled silently
     }
   };
 
@@ -114,8 +192,8 @@ export default function MonitoringPage() {
     return matchesType && matchesStatus && matchesSearch;
   });
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedExecutions = filteredExecutions.slice(startIndex, startIndex + pageSize);
+  const startIndex = (tableCurrentPage - 1) * tablePageSize;
+  const paginatedExecutions = filteredExecutions.slice(startIndex, startIndex + tablePageSize);
 
   const handleRetry = (execution: Execution) => {
     // Mock retry - in real app this would call an API
@@ -264,25 +342,17 @@ export default function MonitoringPage() {
       </div>
 
       {/* Table Container */}
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <LoadingSpinner
-              variant="modern"
-              size="xl"
-              color="primary"
-              className="mb-4"
-            />
-            <p className={`${tw.textMuted} font-medium text-sm`}>
+            <LoadingSpinner />
+            <p className={`${tw.textMuted} font-medium text-sm mt-4`}>
               Loading executions...
             </p>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+            <AlertTriangle className="w-12 h-12 text-red-400 mb-4" />
             <p className="text-red-600 font-medium">{error}</p>
             <button
               onClick={loadExecutions}
@@ -293,136 +363,36 @@ export default function MonitoringPage() {
             </button>
           </div>
         ) : executions.length > 0 && paginatedExecutions.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Recipients
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Success
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Failed
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Duration
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedExecutions.map((execution) => (
-                  <tr key={execution.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4 text-sm text-black font-bold"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="truncate">{execution.name}</div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {getTypeLabel(execution.type)}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {execution.recipientsCount || "-"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {execution.status.charAt(0).toUpperCase() + execution.status.slice(1)}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {execution.successCount !== undefined ? execution.successCount : "-"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {execution.failureCount !== undefined ? execution.failureCount : "-"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {formatDuration(execution.duration)}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-center"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => navigate(`/dashboard/monitoring/${execution.id}`)}
-                          className="text-black hover:text-gray-700 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {execution.status === "failed" && (
-                          <button
-                            onClick={() => handleRetry(execution)}
-                            className="text-black hover:text-gray-700 transition-colors"
-                            title="Retry Execution"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <Table<Execution>
+              columns={columns}
+              data={paginatedExecutions}
+              totalItems={filteredExecutions.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {!isLoading && paginatedExecutions.length > 0 && filteredExecutions.length > 0 && (
+              <div className="mt-4">
+                <Pagination
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
+                  totalItems={filteredExecutions.length}
+                  onPageChange={tableHandlePageChange}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-16">
             <p className={`${tw.textMuted} font-medium text-sm`}>
@@ -431,15 +401,6 @@ export default function MonitoringPage() {
           </div>
         )}
       </div>
-
-      {!isLoading && filteredExecutions.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredExecutions.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
     </div>
   );
 }

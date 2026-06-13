@@ -48,6 +48,7 @@ import { customerService } from "../services/customerServices";
 import { revenueMetricService } from "../../kpis/services/revenueMetricService";
 import type { RevenueMetric } from "../../kpis/types/revenueMetrics";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, type TableColumn } from "../../../shared/components/Table";
 
 // Extract types from API response
 type CustomerSegment = CustomerSearchResultsResponse["segments"][number];
@@ -486,7 +487,7 @@ export default function CustomerDetailPage() {
           }
         }
       } catch (error) {
-        console.error("Failed to fetch customer details:", error);
+        // Error handled silently
       } finally {
         setIsLoading(false);
       }
@@ -536,7 +537,7 @@ export default function CustomerDetailPage() {
         const metrics = await revenueMetricService.getAllMetrics();
         setRevenueMetrics(metrics);
       } catch (err) {
-        console.error("Failed to load revenue metrics:", err);
+        // Error handled silently
       } finally {
         setIsLoadingMetrics(false);
       }
@@ -575,12 +576,13 @@ export default function CustomerDetailPage() {
     kpi.category.toLowerCase().includes(kpiSearchTerm.toLowerCase())
   );
 
-  // Pagination states for the 4 tables
+  // Pagination states for the tables
   const [eventPage, setEventPage] = useState(1);
   const [segmentPage, setSegmentPage] = useState(1);
   const [offerPage, setOfferPage] = useState(1);
   const [listPage, setListPage] = useState(1);
   const [quicklistPage, setQuicklistPage] = useState(1);
+  const [kpiPage, setKpiPage] = useState(1);
   const pageSize = 20;
 
   useEffect(() => {
@@ -591,6 +593,7 @@ export default function CustomerDetailPage() {
       setOfferPage(1);
       setListPage(1);
       setQuicklistPage(1);
+      setKpiPage(1);
     }
   }, [customer]);
 
@@ -733,6 +736,11 @@ export default function CustomerDetailPage() {
     const startIdx = (quicklistPage - 1) * pageSize;
     return quicklists.slice(startIdx, startIdx + pageSize);
   }, [quicklists, quicklistPage]);
+
+  const paginatedKpis = useMemo(() => {
+    const startIdx = (kpiPage - 1) * pageSize;
+    return filteredKpis.slice(startIdx, startIdx + pageSize);
+  }, [filteredKpis, kpiPage]);
 
   const eventDistributionData = useMemo(() => {
     const distribution: Record<string, number> = {};
@@ -1108,96 +1116,70 @@ export default function CustomerDetailPage() {
                     No KPIs found matching "{kpiSearchTerm}"
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table
-                      className="w-full text-sm"
-                      style={{ borderCollapse: "separate", borderSpacing: "0 12px" }}
-                    >
-                      <thead
-                        className="text-xs uppercase tracking-wide"
-                        style={{ background: color.surface.tableHeader }}
-                      >
-                        <tr>
-                          <th
-                            className="px-6 py-3 text-left text-gray-900 font-semibold"
-                          >
-                            KPI Name
-                          </th>
-                          <th
-                            className="px-6 py-3 text-left text-gray-900 font-semibold"
-                          >
-                            Category
-                          </th>
-                          <th
-                            className="px-6 py-3 text-left text-gray-900 font-semibold"
-                          >
-                            Type
-                          </th>
-                          <th
-                            className="px-6 py-3 text-center text-gray-900 font-semibold"
-                          >
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {kpiList.filter((kpi) =>
-                          kpi.name.toLowerCase().includes(kpiSearchTerm.toLowerCase()) ||
-                          kpi.category.toLowerCase().includes(kpiSearchTerm.toLowerCase())
-                        ).map((kpi) => (
-                          <tr
-                            key={kpi.id}
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <td
-                              className="rounded-l-md px-6 py-4 text-sm text-gray-900 font-semibold"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
+                  <div className={`${tw.rounded} overflow-hidden`}>
+                    <Table<any>
+                      columns={[
+                        {
+                          id: "name",
+                          label: "KPI Name",
+                          visible: true,
+                          render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+                        },
+                        {
+                          id: "category",
+                          label: "Category",
+                          visible: true,
+                          render: (_, row) => <span className="text-sm text-gray-900">{row.category}</span>,
+                        },
+                        {
+                          id: "type",
+                          label: "Type",
+                          visible: true,
+                          render: (_, row) => <span className="text-sm text-gray-900">{revenueMetrics.find((m) => m.id === Number(row.id))?.field_type || "—"}</span>,
+                        },
+                        {
+                          id: "action",
+                          label: "Action",
+                          visible: true,
+                          sortable: false,
+                          render: (_, row) => (
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/kpis/revenue-metrics/${row.id}`,
+                                  { state: { parentLabel: "Customer Profile" } }
+                                )
+                              }
+                              className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+                              title="View details"
                             >
-                              {kpi.name}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {kpi.category}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {revenueMetrics.find((m) => m.id === Number(kpi.id))?.field_type || "—"}
-                            </td>
-                            <td
-                              className="rounded-r-md px-6 py-4 text-center"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              <button
-                                onClick={() =>
-                                  navigate(
-                                    `/dashboard/kpis/revenue-metrics/${kpi.id}`,
-                                    { state: { parentLabel: "Customer Profile" } }
-                                  )
-                                }
-                                className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
-                                title="View details"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          ),
+                        },
+                      ]}
+                      data={paginatedKpis}
+                      totalItems={filteredKpis.length}
+                      currentPage={kpiPage}
+                      pageSize={pageSize}
+                      onPageChange={setKpiPage}
+                      style={{
+                        headerBackground: color.surface.tableHeader,
+                        headerTextColor: color.surface.tableHeaderText,
+                        rowBackground: color.surface.tablebodybg,
+                        rowSpacing: "0 12px",
+                      }}
+                    />
+                  </div>
+                )}
+                {paginatedKpis.length > 0 && filteredKpis.length > 0 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={kpiPage}
+                      pageSize={pageSize}
+                      totalItems={filteredKpis.length}
+                      onPageChange={setKpiPage}
+                    />
                   </div>
                 )}
               </div>
@@ -1309,84 +1291,57 @@ export default function CustomerDetailPage() {
                 </div>
 
                 {/* Table */}
-                <div
-                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-                >
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table
-                      className="w-full"
-                      style={{
-                        borderCollapse: "separate",
-                        borderSpacing: "0 8px",
-                      }}
-                    >
-                      <thead style={{ background: color.surface.tableHeader }}>
-                        <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                          {[
-                            "Event Type",
-                            "Description",
-                            "Channel",
-                            "Status",
-                          ].map((header) => (
-                            <th
-                              key={header}
-                              className="px-6 py-3"
-                              style={{ color: color.surface.tableHeaderText }}
-                            >
-                              {header}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedEvents.map((event) => {
-                          return (
-                            <tr key={event.id} className="transition-colors">
-                              <td
-                                className="px-6 py-4 font-semibold text-sm text-gray-900"
-                                style={{
-                                  backgroundColor: color.surface.tablebodybg,
-                                }}
-                              >
-                                {event.title}
-                              </td>
-                              <td
-                                className="px-6 py-4 text-sm text-gray-900"
-                                style={{
-                                  backgroundColor: color.surface.tablebodybg,
-                                }}
-                              >
-                                {event.description}
-                              </td>
-                              <td
-                                className="px-6 py-4 text-sm text-gray-900"
-                                style={{
-                                  backgroundColor: color.surface.tablebodybg,
-                                }}
-                              >
-                                {event.type.toUpperCase()}
-                              </td>
-                              <td
-                                className="px-6 py-4 text-sm text-gray-900"
-                                style={{
-                                  backgroundColor: color.surface.tablebodybg,
-                                }}
-                              >
-                                {event.status}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className={`${tw.rounded} overflow-hidden`}>
+                  <Table<CustomerEvent>
+                    columns={[
+                      {
+                        id: "title",
+                        label: "Event Type",
+                        visible: true,
+                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.title}</span>,
+                      },
+                      {
+                        id: "description",
+                        label: "Description",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.description}</span>,
+                      },
+                      {
+                        id: "type",
+                        label: "Channel",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.type.toUpperCase()}</span>,
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
+                      },
+                    ]}
+                    data={paginatedEvents}
+                    totalItems={filteredEvents.length}
+                    currentPage={eventPage}
+                    pageSize={pageSize}
+                    onPageChange={setEventPage}
+                    style={{
+                      headerBackground: color.surface.tableHeader,
+                      headerTextColor: color.surface.tableHeaderText,
+                      rowBackground: color.surface.tablebodybg,
+                      rowSpacing: "0 8px",
+                    }}
+                  />
                 </div>
-                <Pagination
-                  currentPage={eventPage}
-                  pageSize={pageSize}
-                  totalItems={filteredEvents.length}
-                  onPageChange={setEventPage}
-                />
+                {paginatedEvents.length > 0 && filteredEvents.length > 0 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={eventPage}
+                      pageSize={pageSize}
+                      totalItems={filteredEvents.length}
+                      onPageChange={setEventPage}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -1578,81 +1533,55 @@ export default function CustomerDetailPage() {
               </div>
             ) : (
               <>
-                <div
-                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-                >
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table
-                      className="w-full"
-                      style={{
-                        borderCollapse: "separate",
-                        borderSpacing: "0 8px",
-                      }}
-                    >
-                      <thead style={{ background: color.surface.tableHeader }}>
-                        <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                          {["Segment Name", "Type", "Added Date"].map(
-                            (header) => (
-                              <th
-                                key={header}
-                                className="px-6 py-3"
-                                style={{ color: color.surface.tableHeaderText }}
-                              >
-                                {header}
-                              </th>
-                            ),
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedSegments.map((segment) => (
-                          <tr key={segment.id} className="transition-colors">
-                            <td
-                              className="px-6 py-4 font-semibold text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {segment.name}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {segment.type}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {segment.addedDate ? (
-                                <DateFormatter
-                                  date={segment.addedDate}
-                                  useLocale
-                                  year="numeric"
-                                  month="short"
-                                  day="numeric"
-                                />
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className={`${tw.rounded} overflow-hidden`}>
+                  <Table<CustomerSegment>
+                    columns={[
+                      {
+                        id: "name",
+                        label: "Segment Name",
+                        visible: true,
+                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+                      },
+                      {
+                        id: "type",
+                        label: "Type",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
+                      },
+                      {
+                        id: "addedDate",
+                        label: "Added Date",
+                        visible: true,
+                        render: (_, row) => (
+                          row.addedDate ? (
+                            <DateFormatter date={row.addedDate} useLocale year="numeric" month="short" day="numeric" />
+                          ) : (
+                            <span className="text-sm text-gray-900">—</span>
+                          )
+                        ),
+                      },
+                    ]}
+                    data={paginatedSegments}
+                    totalItems={segments.length}
+                    currentPage={segmentPage}
+                    pageSize={pageSize}
+                    onPageChange={setSegmentPage}
+                    style={{
+                      headerBackground: color.surface.tableHeader,
+                      headerTextColor: color.surface.tableHeaderText,
+                      rowBackground: color.surface.tablebodybg,
+                      rowSpacing: "0 8px",
+                    }}
+                  />
                 </div>
-                <Pagination
-                  currentPage={segmentPage}
-                  pageSize={pageSize}
-                  totalItems={segments.length}
-                  onPageChange={setSegmentPage}
-                />
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={segmentPage}
+                    pageSize={pageSize}
+                    totalItems={segments.length}
+                    onPageChange={setSegmentPage}
+                  />
+                </div>
               </>
             )}
           </div>
@@ -1674,101 +1603,69 @@ export default function CustomerDetailPage() {
               </div>
             ) : (
               <>
-                <div
-                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-                >
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table
-                      className="w-full"
-                      style={{
-                        borderCollapse: "separate",
-                        borderSpacing: "0 8px",
-                      }}
-                    >
-                      <thead style={{ background: color.surface.tableHeader }}>
-                        <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                          {[
-                            "Offer Name",
-                            "Type",
-                            "Status",
-                            "Value",
-                            "Redeemed Date",
-                          ].map((header) => (
-                            <th
-                              key={header}
-                              className="px-6 py-3"
-                              style={{ color: color.surface.tableHeaderText }}
-                            >
-                              {header}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedOffers.map((offer) => (
-                          <tr key={offer.id} className="transition-colors">
-                            <td
-                              className="px-6 py-4 font-semibold text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {offer.name}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {offer.type}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {offer.status}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              <CurrencyFormatter amount={offer.value} />
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {offer.redeemedDate ? (
-                                <DateFormatter
-                                  date={offer.redeemedDate}
-                                  useLocale
-                                  year="numeric"
-                                  month="short"
-                                  day="numeric"
-                                />
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className={`${tw.rounded} overflow-hidden`}>
+                  <Table<CustomerOffer>
+                    columns={[
+                      {
+                        id: "name",
+                        label: "Offer Name",
+                        visible: true,
+                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+                      },
+                      {
+                        id: "type",
+                        label: "Type",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
+                      },
+                      {
+                        id: "value",
+                        label: "Value",
+                        visible: true,
+                        render: (_, row) => <CurrencyFormatter amount={row.value} />,
+                      },
+                      {
+                        id: "redeemedDate",
+                        label: "Redeemed Date",
+                        visible: true,
+                        render: (_, row) => (
+                          row.redeemedDate ? (
+                            <DateFormatter date={row.redeemedDate} useLocale year="numeric" month="short" day="numeric" />
+                          ) : (
+                            <span className="text-sm text-gray-900">—</span>
+                          )
+                        ),
+                      },
+                    ]}
+                    data={paginatedOffers}
+                    totalItems={offers.length}
+                    currentPage={offerPage}
+                    pageSize={pageSize}
+                    onPageChange={setOfferPage}
+                    style={{
+                      headerBackground: color.surface.tableHeader,
+                      headerTextColor: color.surface.tableHeaderText,
+                      rowBackground: color.surface.tablebodybg,
+                      rowSpacing: "0 8px",
+                    }}
+                  />
                 </div>
-                <Pagination
-                  currentPage={offerPage}
-                  pageSize={pageSize}
-                  totalItems={offers.length}
-                  onPageChange={setOfferPage}
-                />
+                {paginatedOffers.length > 0 && offers.length > 0 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={offerPage}
+                      pageSize={pageSize}
+                      totalItems={offers.length}
+                      onPageChange={setOfferPage}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -1790,94 +1687,63 @@ export default function CustomerDetailPage() {
               </div>
             ) : (
               <>
-                <div
-                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-                >
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table
-                      className="w-full"
-                      style={{
-                        borderCollapse: "separate",
-                        borderSpacing: "0 8px",
-                      }}
-                    >
-                      <thead style={{ background: color.surface.tableHeader }}>
-                        <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                          {[
-                            "QuickList Name",
-                            "Total Members",
-                            "Created Date",
-                            "Status",
-                          ].map((header) => (
-                            <th
-                              key={header}
-                              className="px-6 py-3"
-                              style={{ color: color.surface.tableHeaderText }}
-                            >
-                              {header}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedQuicklists.map((quicklist: any) => (
-                          <tr key={quicklist.id} className="transition-colors">
-                            <td
-                              className="px-6 py-4 font-semibold text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {quicklist.name}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {quicklist.recordCount || 0}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {quicklist.createdDate ? (
-                                <DateFormatter
-                                  date={quicklist.createdDate}
-                                  useLocale
-                                  year="numeric"
-                                  month="short"
-                                  day="numeric"
-                                />
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              <span className="text-sm font-medium text-gray-900">
-                                {quicklist.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className={`${tw.rounded} overflow-hidden`}>
+                  <Table<any>
+                    columns={[
+                      {
+                        id: "name",
+                        label: "QuickList Name",
+                        visible: true,
+                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+                      },
+                      {
+                        id: "recordCount",
+                        label: "Total Members",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.recordCount || 0}</span>,
+                      },
+                      {
+                        id: "createdDate",
+                        label: "Created Date",
+                        visible: true,
+                        render: (_, row) => (
+                          row.createdDate ? (
+                            <DateFormatter date={row.createdDate} useLocale year="numeric" month="short" day="numeric" />
+                          ) : (
+                            <span className="text-sm text-gray-900">—</span>
+                          )
+                        ),
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm font-medium text-gray-900">{row.status}</span>,
+                      },
+                    ]}
+                    data={paginatedQuicklists}
+                    totalItems={quicklists.length}
+                    currentPage={quicklistPage}
+                    pageSize={pageSize}
+                    onPageChange={setQuicklistPage}
+                    style={{
+                      headerBackground: color.surface.tableHeader,
+                      headerTextColor: color.surface.tableHeaderText,
+                      rowBackground: color.surface.tablebodybg,
+                      rowSpacing: "0 8px",
+                    }}
+                  />
                 </div>
-                <Pagination
-                  currentPage={quicklistPage}
-                  pageSize={pageSize}
-                  totalItems={quicklists.length}
-                  onPageChange={setQuicklistPage}
-                />
+                {paginatedQuicklists.length > 0 && quicklists.length > 0 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={quicklistPage}
+                      pageSize={pageSize}
+                      totalItems={quicklists.length}
+                      onPageChange={setQuicklistPage}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -1899,82 +1765,49 @@ export default function CustomerDetailPage() {
               </div>
             ) : (
               <>
-                <div
-                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-                >
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table
-                      className="w-full"
-                      style={{
-                        borderCollapse: "separate",
-                        borderSpacing: "0 8px",
-                      }}
-                    >
-                      <thead style={{ background: color.surface.tableHeader }}>
-                        <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                          {["Campaign Name", "Type", "Participation Date", "Status"].map(
-                            (header) => (
-                              <th
-                                key={header}
-                                className="px-6 py-3"
-                                style={{ color: color.surface.tableHeaderText }}
-                              >
-                                {header}
-                              </th>
-                            ),
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {campaigns.map((campaign: any) => (
-                          <tr key={campaign.id} className="transition-colors">
-                            <td
-                              className="px-6 py-4 font-semibold text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {campaign.name}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {campaign.type}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {campaign.participationDate ? (
-                                <DateFormatter
-                                  date={campaign.participationDate}
-                                  useLocale
-                                  year="numeric"
-                                  month="short"
-                                  day="numeric"
-                                />
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {campaign.status}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className={`${tw.rounded} overflow-hidden`}>
+                  <Table<any>
+                    columns={[
+                      {
+                        id: "name",
+                        label: "Campaign Name",
+                        visible: true,
+                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+                      },
+                      {
+                        id: "type",
+                        label: "Type",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
+                      },
+                      {
+                        id: "participationDate",
+                        label: "Participation Date",
+                        visible: true,
+                        render: (_, row) => (
+                          row.participationDate ? (
+                            <DateFormatter date={row.participationDate} useLocale year="numeric" month="short" day="numeric" />
+                          ) : (
+                            <span className="text-sm text-gray-900">—</span>
+                          )
+                        ),
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
+                      },
+                    ]}
+                    data={campaigns}
+                    totalItems={campaigns.length}
+                    style={{
+                      headerBackground: color.surface.tableHeader,
+                      headerTextColor: color.surface.tableHeaderText,
+                      rowBackground: color.surface.tablebodybg,
+                      rowSpacing: "0 8px",
+                    }}
+                  />
                 </div>
               </>
             )}
@@ -1999,83 +1832,57 @@ export default function CustomerDetailPage() {
             ) : (
               <>
                 {/* Table */}
-                <div
-                  className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-                >
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table
-                      className="w-full"
-                      style={{
-                        borderCollapse: "separate",
-                        borderSpacing: "0 8px",
-                      }}
-                    >
-                      <thead style={{ background: color.surface.tableHeader }}>
-                        <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                          {["List Name", "Subscribed Date", "Status"].map(
-                            (header) => (
-                              <th
-                                key={header}
-                                className="px-6 py-3"
-                                style={{ color: color.surface.tableHeaderText }}
-                              >
-                                {header}
-                              </th>
-                            ),
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedLists.map((list) => (
-                          <tr key={list.id} className="transition-colors">
-                            <td
-                              className="px-6 py-4 font-semibold text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {list.name}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {list.subscribedDate ? (
-                                <DateFormatter
-                                  date={list.subscribedDate}
-                                  useLocale
-                                  year="numeric"
-                                  month="short"
-                                  day="numeric"
-                                />
-                              ) : (
-                                "—"
-                              )}
-                            </td>
-                            <td
-                              className="px-6 py-4 text-sm text-gray-900"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              {list.status === "active"
-                                ? "Active"
-                                : "Unsubscribed"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className={`${tw.rounded} overflow-hidden`}>
+                  <Table<any>
+                    columns={[
+                      {
+                        id: "name",
+                        label: "List Name",
+                        visible: true,
+                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+                      },
+                      {
+                        id: "subscribedDate",
+                        label: "Subscribed Date",
+                        visible: true,
+                        render: (_, row) => (
+                          row.subscribedDate ? (
+                            <DateFormatter date={row.subscribedDate} useLocale year="numeric" month="short" day="numeric" />
+                          ) : (
+                            <span className="text-sm text-gray-900">—</span>
+                          )
+                        ),
+                      },
+                      {
+                        id: "status",
+                        label: "Status",
+                        visible: true,
+                        render: (_, row) => <span className="text-sm text-gray-900">{row.status === "active" ? "Active" : "Unsubscribed"}</span>,
+                      },
+                    ]}
+                    data={paginatedLists}
+                    totalItems={lists.length}
+                    currentPage={listPage}
+                    pageSize={pageSize}
+                    onPageChange={setListPage}
+                    style={{
+                      headerBackground: color.surface.tableHeader,
+                      headerTextColor: color.surface.tableHeaderText,
+                      rowBackground: color.surface.tablebodybg,
+                      rowSpacing: "0 8px",
+                    }}
+                  />
                 </div>
-                <Pagination
-                  currentPage={listPage}
-                  pageSize={pageSize}
-                  totalItems={lists.length}
-                  onPageChange={setListPage}
-                />
+                {paginatedLists.length > 0 && lists.length > 0 && (
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={listPage}
+                      pageSize={pageSize}
+                      totalItems={lists.length}
+                      onPageChange={setListPage}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -2094,104 +1901,71 @@ export default function CustomerDetailPage() {
               </p>
             </div>
 
-            <div
-              className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-            >
-              <div className="hidden lg:block overflow-x-auto">
-                <table
-                  className="w-full"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                      {["Subject", "Channel", "Sent Date", "Status"].map(
-                        (header) => (
-                          <th
-                            key={header}
-                            className="px-6 py-3"
-                            style={{ color: color.surface.tableHeaderText }}
-                          >
-                            {header}
-                          </th>
-                        ),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      {
-                        id: "comm-1",
-                        subject: "Welcome to our service",
-                        channel: "Email",
-                        date: "2026-04-08",
-                        status: "Delivered",
-                      },
-                      {
-                        id: "comm-2",
-                        subject: "Your account activation",
-                        channel: "SMS",
-                        date: "2026-04-08",
-                        status: "Opened",
-                      },
-                      {
-                        id: "comm-3",
-                        subject: "Special offer just for you",
-                        channel: "Push",
-                        date: "2026-04-07",
-                        status: "Clicked",
-                      },
-                      {
-                        id: "comm-4",
-                        subject: "Weekly newsletter",
-                        channel: "Email",
-                        date: "2026-04-06",
-                        status: "Delivered",
-                      },
-                    ].map((comm) => (
-                      <tr key={comm.id} className="transition-colors">
-                        <td
-                          className="px-6 py-4 font-semibold text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {comm.subject}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {comm.channel}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          <DateFormatter
-                            date={comm.date}
-                            useLocale
-                            year="numeric"
-                            month="short"
-                            day="numeric"
-                          />
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {comm.status}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className={`${tw.rounded} overflow-hidden`}>
+              <Table<any>
+                columns={[
+                  {
+                    id: "subject",
+                    label: "Subject",
+                    visible: true,
+                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.subject}</span>,
+                  },
+                  {
+                    id: "channel",
+                    label: "Channel",
+                    visible: true,
+                    render: (_, row) => <span className="text-sm text-gray-900">{row.channel}</span>,
+                  },
+                  {
+                    id: "date",
+                    label: "Sent Date",
+                    visible: true,
+                    render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
+                  },
+                  {
+                    id: "status",
+                    label: "Status",
+                    visible: true,
+                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
+                  },
+                ]}
+                data={[
+                  {
+                    id: "comm-1",
+                    subject: "Welcome to our service",
+                    channel: "Email",
+                    date: "2026-04-08",
+                    status: "Delivered",
+                  },
+                  {
+                    id: "comm-2",
+                    subject: "Your account activation",
+                    channel: "SMS",
+                    date: "2026-04-08",
+                    status: "Opened",
+                  },
+                  {
+                    id: "comm-3",
+                    subject: "Special offer just for you",
+                    channel: "Push",
+                    date: "2026-04-07",
+                    status: "Clicked",
+                  },
+                  {
+                    id: "comm-4",
+                    subject: "Weekly newsletter",
+                    channel: "Email",
+                    date: "2026-04-06",
+                    status: "Delivered",
+                  },
+                ]}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
             </div>
           </div>
         )}
@@ -2208,116 +1982,77 @@ export default function CustomerDetailPage() {
               </p>
             </div>
 
-            <div
-              className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-            >
-              <div className="hidden lg:block overflow-x-auto">
-                <table
-                  className="w-full"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                      {[
-                        "Transaction ID",
-                        "Product",
-                        "Amount",
-                        "Date",
-                        "Status",
-                      ].map((header) => (
-                        <th
-                          key={header}
-                          className="px-6 py-3"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      {
-                        id: "TXN-001",
-                        product: "Premium Data Bundle",
-                        amount: 50.0,
-                        date: "2026-04-08",
-                        status: "Completed",
-                      },
-                      {
-                        id: "TXN-002",
-                        product: "Voice Minutes",
-                        amount: 25.0,
-                        date: "2026-04-05",
-                        status: "Completed",
-                      },
-                      {
-                        id: "TXN-003",
-                        product: "International Roaming",
-                        amount: 75.0,
-                        date: "2026-03-28",
-                        status: "Completed",
-                      },
-                      {
-                        id: "TXN-004",
-                        product: "Monthly Plan",
-                        amount: 100.0,
-                        date: "2026-03-09",
-                        status: "Completed",
-                      },
-                    ].map((purchase) => (
-                      <tr key={purchase.id} className="transition-colors">
-                        <td
-                          className="px-6 py-4 font-semibold text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {purchase.id}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {purchase.product}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          <CurrencyFormatter amount={purchase.amount} />
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          <DateFormatter
-                            date={purchase.date}
-                            useLocale
-                            year="numeric"
-                            month="short"
-                            day="numeric"
-                          />
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {purchase.status}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className={`${tw.rounded} overflow-hidden`}>
+              <Table<any>
+                columns={[
+                  {
+                    id: "id",
+                    label: "Transaction ID",
+                    visible: true,
+                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.id}</span>,
+                  },
+                  {
+                    id: "product",
+                    label: "Product",
+                    visible: true,
+                    render: (_, row) => <span className="text-sm text-gray-900">{row.product}</span>,
+                  },
+                  {
+                    id: "amount",
+                    label: "Amount",
+                    visible: true,
+                    render: (_, row) => <CurrencyFormatter amount={row.amount} />,
+                  },
+                  {
+                    id: "date",
+                    label: "Date",
+                    visible: true,
+                    render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
+                  },
+                  {
+                    id: "status",
+                    label: "Status",
+                    visible: true,
+                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
+                  },
+                ]}
+                data={[
+                  {
+                    id: "TXN-001",
+                    product: "Premium Data Bundle",
+                    amount: 50.0,
+                    date: "2026-04-08",
+                    status: "Completed",
+                  },
+                  {
+                    id: "TXN-002",
+                    product: "Voice Minutes",
+                    amount: 25.0,
+                    date: "2026-04-05",
+                    status: "Completed",
+                  },
+                  {
+                    id: "TXN-003",
+                    product: "International Roaming",
+                    amount: 75.0,
+                    date: "2026-03-28",
+                    status: "Completed",
+                  },
+                  {
+                    id: "TXN-004",
+                    product: "Monthly Plan",
+                    amount: 100.0,
+                    date: "2026-03-09",
+                    status: "Completed",
+                  },
+                ]}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
             </div>
           </div>
         )}
@@ -2358,95 +2093,61 @@ export default function CustomerDetailPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Redemption History
               </h3>
-              <div
-                className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-              >
-                <div className="hidden lg:block overflow-x-auto">
-                  <table
-                    className="w-full"
-                    style={{
-                      borderCollapse: "separate",
-                      borderSpacing: "0 8px",
-                    }}
-                  >
-                    <thead style={{ background: color.surface.tableHeader }}>
-                      <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                        {["Reward Name", "Points", "Redeemed Date"].map(
-                          (header) => (
-                            <th
-                              key={header}
-                              className="px-6 py-3"
-                              style={{ color: color.surface.tableHeaderText }}
-                            >
-                              {header}
-                            </th>
-                          ),
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        {
-                          id: "reward-1",
-                          name: "Data Bonus 5GB",
-                          points: 500,
-                          date: "2026-04-05",
-                        },
-                        {
-                          id: "reward-2",
-                          name: "Free Minutes 100",
-                          points: 300,
-                          date: "2026-03-28",
-                        },
-                        {
-                          id: "reward-3",
-                          name: "Discount Voucher",
-                          points: 400,
-                          date: "2026-03-15",
-                        },
-                        {
-                          id: "reward-4",
-                          name: "Cashback 2000",
-                          points: 2000,
-                          date: "2026-03-09",
-                        },
-                      ].map((reward) => (
-                        <tr key={reward.id} className="transition-colors">
-                          <td
-                            className="px-6 py-4 font-semibold text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {reward.name}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {reward.points.toLocaleString()}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <DateFormatter
-                              date={reward.date}
-                              useLocale
-                              year="numeric"
-                              month="short"
-                              day="numeric"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className={`${tw.rounded} overflow-hidden`}>
+                <Table<any>
+                  columns={[
+                    {
+                      id: "name",
+                      label: "Reward Name",
+                      visible: true,
+                      render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+                    },
+                    {
+                      id: "points",
+                      label: "Points",
+                      visible: true,
+                      render: (_, row) => <span className="text-sm text-gray-900">{row.points.toLocaleString()}</span>,
+                    },
+                    {
+                      id: "date",
+                      label: "Redeemed Date",
+                      visible: true,
+                      render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
+                    },
+                  ]}
+                  data={[
+                    {
+                      id: "reward-1",
+                      name: "Data Bonus 5GB",
+                      points: 500,
+                      date: "2026-04-05",
+                    },
+                    {
+                      id: "reward-2",
+                      name: "Free Minutes 100",
+                      points: 300,
+                      date: "2026-03-28",
+                    },
+                    {
+                      id: "reward-3",
+                      name: "Discount Voucher",
+                      points: 400,
+                      date: "2026-03-15",
+                    },
+                    {
+                      id: "reward-4",
+                      name: "Cashback 2000",
+                      points: 2000,
+                      date: "2026-03-09",
+                    },
+                  ]}
+                  style={{
+                    headerBackground: color.surface.tableHeader,
+                    headerTextColor: color.surface.tableHeaderText,
+                    rowBackground: color.surface.tablebodybg,
+                    rowSpacing: "0 8px",
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -2573,112 +2274,77 @@ export default function CustomerDetailPage() {
               </p>
             </div>
 
-            <div
-              className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-            >
-              <div className="hidden lg:block overflow-x-auto">
-                <table
-                  className="w-full"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                      {["Ticket ID", "Type", "Subject", "Status", "Date"].map(
-                        (header) => (
-                          <th
-                            key={header}
-                            className="px-6 py-3"
-                            style={{ color: color.surface.tableHeaderText }}
-                          >
-                            {header}
-                          </th>
-                        ),
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      {
-                        id: "TKT-1001",
-                        type: "Support",
-                        subject: "Billing inquiry",
-                        status: "Resolved",
-                        date: "2026-04-06",
-                      },
-                      {
-                        id: "TKT-1002",
-                        type: "Technical",
-                        subject: "Network connectivity issue",
-                        status: "In Progress",
-                        date: "2026-04-08",
-                      },
-                      {
-                        id: "TKT-1003",
-                        type: "Complaint",
-                        subject: "Service quality",
-                        status: "Resolved",
-                        date: "2026-03-30",
-                      },
-                      {
-                        id: "TKT-1004",
-                        type: "Support",
-                        subject: "Account verification",
-                        status: "Resolved",
-                        date: "2026-03-25",
-                      },
-                    ].map((interaction) => (
-                      <tr key={interaction.id} className="transition-colors">
-                        <td
-                          className="px-6 py-4 font-semibold text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {interaction.id}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {interaction.type}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {interaction.subject}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {interaction.status}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          <DateFormatter
-                            date={interaction.date}
-                            useLocale
-                            year="numeric"
-                            month="short"
-                            day="numeric"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className={`${tw.rounded} overflow-hidden`}>
+              <Table<any>
+                columns={[
+                  {
+                    id: "id",
+                    label: "Ticket ID",
+                    visible: true,
+                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.id}</span>,
+                  },
+                  {
+                    id: "type",
+                    label: "Type",
+                    visible: true,
+                    render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
+                  },
+                  {
+                    id: "subject",
+                    label: "Subject",
+                    visible: true,
+                    render: (_, row) => <span className="text-sm text-gray-900">{row.subject}</span>,
+                  },
+                  {
+                    id: "status",
+                    label: "Status",
+                    visible: true,
+                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
+                  },
+                  {
+                    id: "date",
+                    label: "Date",
+                    visible: true,
+                    render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
+                  },
+                ]}
+                data={[
+                  {
+                    id: "TKT-1001",
+                    type: "Support",
+                    subject: "Billing inquiry",
+                    status: "Resolved",
+                    date: "2026-04-06",
+                  },
+                  {
+                    id: "TKT-1002",
+                    type: "Technical",
+                    subject: "Network connectivity issue",
+                    status: "In Progress",
+                    date: "2026-04-08",
+                  },
+                  {
+                    id: "TKT-1003",
+                    type: "Complaint",
+                    subject: "Service quality",
+                    status: "Resolved",
+                    date: "2026-03-30",
+                  },
+                  {
+                    id: "TKT-1004",
+                    type: "Support",
+                    subject: "Account verification",
+                    status: "Resolved",
+                    date: "2026-03-25",
+                  },
+                ]}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
             </div>
           </div>
         )}

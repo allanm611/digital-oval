@@ -43,6 +43,7 @@ import AssignPermissionsModal from "../components/AssignPermissionsModal";
 import RoleHierarchyChip from "../components/RoleHierarchyChip";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 type TabType = "roles" | "permissions" | "assign";
 
@@ -680,204 +681,169 @@ export default function TeamRolesPermissionsPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto border border-gray-200 rounded-lg">
-              <table
-                className="w-full min-w-[800px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Role Name
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Code
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Level
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Data Access
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Users
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedRoles.map((role) => (
-                    <tr key={role.id} className="transition-colors">
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {role.name}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-mono"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {role.code}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {role.role_level}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {role.data_access_level || "—"}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {role.current_user_count || 0}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {role.is_active ? "Active" : "Inactive"}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleEditRole(role)}
-                            // disabled={role.is_system_role}
-                            className={`p-1.5 rounded transition-colors ${
-                              // role.is_system_role
-                              //   ? "opacity-50 cursor-not-allowed text-gray-400"
-                              //   :
-                              "text-gray-600"
-                            }`}
-                            title={
-                              // role.is_system_role
-                              //   ? "Cannot modify system roles"
-                              //   :
-                              "Edit"
-                            }
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleCloneRole(role)}
-                            disabled={cloningRoleId === role.id}
-                            className={`p-1.5 rounded transition-colors ${
-                              cloningRoleId === role.id
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-gray-600"
-                            }`}
-                            title="Clone"
-                          >
-                            {cloningRoleId === role.id ? (
-                              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                            ) : (
-                              <Copy className="w-4 h-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleToggleRoleActive(role)}
-                            disabled={
-                              togglingRoleId === role.id ||
-                              (role.is_active &&
-                                (role.is_system_role || role.is_default))
-                            }
-                            className={`p-1.5 rounded transition-colors ${
-                              togglingRoleId === role.id ||
-                              (role.is_active &&
-                                (role.is_system_role || role.is_default))
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-gray-600"
-                            }`}
-                            title={
-                              role.is_active
-                                ? role.is_system_role
-                                  ? "Cannot deactivate system roles"
-                                  : role.is_default
-                                    ? "Cannot deactivate default roles"
-                                    : "Deactivate"
-                                : "Reactivate"
-                            }
-                          >
-                            {togglingRoleId === role.id ? (
-                              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                            ) : role.is_active ? (
-                              <PowerOff className="w-4 h-4" />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteRole(role)}
-                            disabled={isDeleting}
-                            className={`p-1.5 rounded transition-colors ${
-                              isDeleting
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-red-600"
-                            }`}
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className={`${tw.rounded} overflow-hidden`}>
+              <Table<Role>
+                columns={[
+                  {
+                    id: "name",
+                    label: "Role Name",
+                    visible: true,
+                    render: (value) => (
+                      <span className="font-medium text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "code",
+                    label: "Code",
+                    visible: true,
+                    render: (value) => (
+                      <span className="font-mono text-sm text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "role_level",
+                    label: "Level",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "data_access_level",
+                    label: "Data Access",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">{value || "—"}</span>
+                    ),
+                  },
+                  {
+                    id: "current_user_count",
+                    label: "Users",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">{value || 0}</span>
+                    ),
+                  },
+                  {
+                    id: "is_active",
+                    label: "Status",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">
+                        {value ? "Active" : "Inactive"}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "actions",
+                    label: "Actions",
+                    visible: true,
+                    sortable: false,
+                    render: (_, role) => (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleEditRole(role)}
+                          className="p-1.5 text-gray-600 rounded transition-colors hover:bg-gray-100"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleCloneRole(role)}
+                          disabled={cloningRoleId === role.id}
+                          className={`p-1.5 rounded transition-colors ${
+                            cloningRoleId === role.id
+                              ? "opacity-50 cursor-not-allowed text-gray-400"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          title="Clone"
+                        >
+                          {cloningRoleId === role.id ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleToggleRoleActive(role)}
+                          disabled={
+                            togglingRoleId === role.id ||
+                            (role.is_active &&
+                              (role.is_system_role || role.is_default))
+                          }
+                          className={`p-1.5 rounded transition-colors ${
+                            togglingRoleId === role.id ||
+                            (role.is_active &&
+                              (role.is_system_role || role.is_default))
+                              ? "opacity-50 cursor-not-allowed text-gray-400"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          title={
+                            role.is_active
+                              ? role.is_system_role
+                                ? "Cannot deactivate system roles"
+                                : role.is_default
+                                  ? "Cannot deactivate default roles"
+                                  : "Deactivate"
+                              : "Reactivate"
+                          }
+                        >
+                          {togglingRoleId === role.id ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                          ) : role.is_active ? (
+                            <PowerOff className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRole(role)}
+                          disabled={isDeleting}
+                          className={`p-1.5 rounded transition-colors ${
+                            isDeleting
+                              ? "opacity-50 cursor-not-allowed text-gray-400"
+                              : "text-red-600 hover:bg-red-50"
+                          }`}
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={paginatedRoles}
+                totalItems={filteredRoles.length}
+                currentPage={rolesPaginationModel.page + 1}
+                pageSize={rolesPaginationModel.pageSize}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
               {/* Pagination Controls */}
               {filteredRoles.length > 0 && (
-                <Pagination
-                  currentPage={rolesPaginationModel.page + 1}
-                  pageSize={rolesPaginationModel.pageSize}
-                  totalItems={filteredRoles.length}
-                  onPageChange={(page) =>
-                    setRolesPaginationModel({
-                      page: page - 1,
-                      pageSize: rolesPaginationModel.pageSize,
-                    })
-                  }
-                  onPageSizeChange={(pageSize) =>
-                    setRolesPaginationModel({
-                      page: 0,
-                      pageSize,
-                    })
-                  }
-                />
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={rolesPaginationModel.page + 1}
+                    pageSize={rolesPaginationModel.pageSize}
+                    totalItems={filteredRoles.length}
+                    onPageChange={(page) =>
+                      setRolesPaginationModel({
+                        page: page - 1,
+                        pageSize: rolesPaginationModel.pageSize,
+                      })
+                    }
+                    onPageSizeChange={(pageSize) =>
+                      setRolesPaginationModel({
+                        page: 0,
+                        pageSize,
+                      })
+                    }
+                  />
+                </div>
               )}
             </div>
           )}
@@ -923,155 +889,135 @@ export default function TeamRolesPermissionsPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto border border-gray-200 rounded-lg">
-              <table
-                className="w-full min-w-[800px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Permission Name
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Code
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Action
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Sensitive
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Requires MFA
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedPermissions.map((permission) => (
-                    <tr key={permission.id} className="transition-colors">
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {permission.name}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-mono"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {permission.code}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {permission.action}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {permission.is_sensitive ? "Yes" : "No"}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {permission.requires_mfa ? "Yes" : "No"}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {permission.is_active ? "Active" : "Inactive"}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleEditPermission(permission)}
-                            className="p-1.5 text-gray-600 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleTogglePermissionActive(permission)
-                            }
-                            disabled={deactivatingPermissionId === permission.id}
-                            className={`p-1.5 rounded transition-colors ${
-                              deactivatingPermissionId === permission.id
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-gray-600"
-                            }`}
-                            title={
-                              permission.is_active ? "Deactivate" : "Reactivate"
-                            }
-                          >
-                            {deactivatingPermissionId === permission.id ? (
-                              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-                            ) : permission.is_active ? (
-                              <PowerOff className="w-4 h-4" />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className={`${tw.rounded} overflow-hidden`}>
+              <Table<Permission>
+                columns={[
+                  {
+                    id: "name",
+                    label: "Permission Name",
+                    visible: true,
+                    render: (value) => (
+                      <span className="font-medium text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "code",
+                    label: "Code",
+                    visible: true,
+                    render: (value) => (
+                      <span className="font-mono text-sm text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "action",
+                    label: "Action",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "is_sensitive",
+                    label: "Sensitive",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">
+                        {value ? "Yes" : "No"}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "requires_mfa",
+                    label: "Requires MFA",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">
+                        {value ? "Yes" : "No"}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "is_active",
+                    label: "Status",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">
+                        {value ? "Active" : "Inactive"}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "actions",
+                    label: "Actions",
+                    visible: true,
+                    sortable: false,
+                    render: (_, permission) => (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleEditPermission(permission)}
+                          className="p-1.5 text-gray-600 rounded transition-colors hover:bg-gray-100"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleTogglePermissionActive(permission)
+                          }
+                          disabled={deactivatingPermissionId === permission.id}
+                          className={`p-1.5 rounded transition-colors ${
+                            deactivatingPermissionId === permission.id
+                              ? "opacity-50 cursor-not-allowed text-gray-400"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }`}
+                          title={
+                            permission.is_active ? "Deactivate" : "Reactivate"
+                          }
+                        >
+                          {deactivatingPermissionId === permission.id ? (
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                          ) : permission.is_active ? (
+                            <PowerOff className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={paginatedPermissions}
+                totalItems={filteredPermissions.length}
+                currentPage={permissionsPaginationModel.page + 1}
+                pageSize={permissionsPaginationModel.pageSize}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
               {/* Pagination Controls */}
               {filteredPermissions.length > 0 && (
-                <Pagination
-                  currentPage={permissionsPaginationModel.page + 1}
-                  pageSize={permissionsPaginationModel.pageSize}
-                  totalItems={filteredPermissions.length}
-                  onPageChange={(page) =>
-                    setPermissionsPaginationModel({
-                      page: page - 1,
-                      pageSize: permissionsPaginationModel.pageSize,
-                    })
-                  }
-                  onPageSizeChange={(pageSize) =>
-                    setPermissionsPaginationModel({
-                      page: 0,
-                      pageSize,
-                    })
-                  }
-                />
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={permissionsPaginationModel.page + 1}
+                    pageSize={permissionsPaginationModel.pageSize}
+                    totalItems={filteredPermissions.length}
+                    onPageChange={(page) =>
+                      setPermissionsPaginationModel({
+                        page: page - 1,
+                        pageSize: permissionsPaginationModel.pageSize,
+                      })
+                    }
+                    onPageSizeChange={(pageSize) =>
+                      setPermissionsPaginationModel({
+                        page: 0,
+                        pageSize,
+                      })
+                    }
+                  />
+                </div>
               )}
             </div>
           )}

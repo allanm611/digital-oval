@@ -32,6 +32,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { connectionProfileService } from "../services/connectionProfileService";
 import {
@@ -119,6 +120,101 @@ export default function ConnectionProfilesPage() {
   const [pageSize, setPageSize] = useState(20);
   const [totalProfiles, setTotalProfiles] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+
+  // Table columns definition
+  const defaultColumns: TableColumn<ConnectionProfileType>[] = [
+    {
+      id: "profile_name",
+      label: "Name",
+      visible: true,
+      render: (value, profile) => (
+        <button
+          type="button"
+          onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}`)}
+          className={`${tw.tableFirstColumn} text-sm`}
+        >
+          {value || profile.code}
+        </button>
+      ),
+    },
+    {
+      id: "profile_code",
+      label: "Code",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">{value || "—"}</span>
+      ),
+    },
+    {
+      id: "connection_type",
+      label: "Type",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">{value || "—"}</span>
+      ),
+    },
+    {
+      id: "environment",
+      label: "Environment",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">{value || "—"}</span>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, profile) => (
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}`)}
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            aria-label="View"
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <PermissionGate permission="connection-profiles.update">
+            <button
+              type="button"
+              onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}/edit`)}
+              className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+              aria-label="Edit"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "connection-profiles-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
 
   const openFiltersPanel = () => setShowFiltersPanel(true);
 
@@ -844,192 +940,31 @@ export default function ConnectionProfilesPage() {
         ) : filteredProfiles.length === 0 ? (
           renderEmptyState()
         ) : (
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table
-              className="w-full min-w-[1000px] text-sm"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr className="text-left text-sm uppercase tracking-wide text-black">
-                  {isSelectionMode && (
-                    <th
-                      className="px-3 py-3 text-sm font-medium whitespace-nowrap"
-                      style={{ borderTopLeftRadius: "0.375rem" }}
-                    >
-                      <div
-                        className="flex items-center gap-2 cursor-pointer"
-                        onClick={() => {
-                          if (selectedProfileIds.size > 0 && selectedProfileIds.size === filteredProfiles.length) {
-                            setSelectedProfileIds(new Set());
-                          } else {
-                            setSelectedProfileIds(
-                              new Set(filteredProfiles.map((p) => p.id)),
-                            );
-                          }
-                        }}
-                      >
-                        <Checkbox
-                          id="select-all-profiles"
-                          checked={
-                            selectedProfileIds.size > 0 &&
-                            selectedProfileIds.size === filteredProfiles.length
-                          }
-                          onChange={() => {
-                            if (selectedProfileIds.size > 0 && selectedProfileIds.size === filteredProfiles.length) {
-                              setSelectedProfileIds(new Set());
-                            } else {
-                              setSelectedProfileIds(
-                                new Set(filteredProfiles.map((p) => p.id)),
-                              );
-                            }
-                          }}
-                        />
-                      </div>
-                    </th>
-                  )}
-                  <th
-                    className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium whitespace-nowrap"
-                    style={{
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Profile Name
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium whitespace-nowrap">
-                    Code
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium whitespace-nowrap">
-                    Type
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium whitespace-nowrap">
-                    Environment
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium whitespace-nowrap">
-                    Classification
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium whitespace-nowrap">
-                    Status
-                  </th>
-                  <th
-                    className="px-4 sm:px-6 py-3 sm:py-4 text-right text-sm font-medium whitespace-nowrap"
-                    style={{ borderTopRightRadius: "0.375rem" }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProfiles.map((profile) => {
-                  const isSelected = selectedProfileIds.has(profile.id);
-                  return (
-                    <tr
-                      key={profile.id}
-                      className="transition-colors text-sm"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {isSelectionMode && (
-                        <td
-                          className="px-3 py-3 whitespace-nowrap"
-                          style={{
-                            borderTopLeftRadius: "0.375rem",
-                            borderBottomLeftRadius: "0.375rem",
-                          }}
-                        >
-                          <div
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => toggleProfileSelection(profile.id)}
-                          >
-                            <Checkbox
-                              id={`profile-${profile.id}`}
-                              checked={isSelected}
-                              onChange={() => toggleProfileSelection(profile.id)}
-                            />
-                          </div>
-                        </td>
-                      )}
-                      <td
-                        className="px-4 sm:px-6 py-4 whitespace-nowrap"
-                        style={{
-                          ...(!isSelectionMode && {
-                            borderTopLeftRadius: "0.375rem",
-                            borderBottomLeftRadius: "0.375rem",
-                          }),
-                        }}
-                      >
-                        <span className="font-medium text-black">
-                          {profile.profile_name}
-                        </span>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-black">
-                        {profile.profile_code}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-black">
-                        {profile.connection_type}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-black">
-                        {profile.environment}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-black">
-                        {profile.data_classification}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(profile)}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-4 whitespace-nowrap text-right"
-                        style={{
-                          borderTopRightRadius: "0.375rem",
-                          borderBottomRightRadius: "0.375rem",
-                        }}
-                      >
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleView(profile.id)}
-                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4 text-black" />
-                          </button>
-                          <PermissionGate permission="connection-profiles.update">
-                            <button
-                              onClick={() => handleEdit(profile.id)}
-                              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                              title="Edit"
-                            >
-                              <Edit className="w-4 h-4 text-black" />
-                            </button>
-                          </PermissionGate>
-                          <PermissionGate permission="connection-profiles.update">
-                            <button
-                              onClick={(e) => handleToggleActive(profile, e)}
-                              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                              title={
-                                profile.is_active ? "Deactivate" : "Activate"
-                              }
-                            >
-                              {profile.is_active ? (
-                                <PowerOff className="w-4 h-4 text-red-600" />
-                              ) : (
-                                <Play className="w-4 h-4 text-black" />
-                              )}
-                            </button>
-                          </PermissionGate>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<ConnectionProfileType>
+              columns={columns}
+              data={filteredProfiles}
+              totalItems={filteredProfiles.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={loadingProfiles}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
             {/* Pagination Controls */}
             {filteredProfiles.length > 0 && (
               <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
                 totalItems={filteredProfiles.length}
-                onPageChange={setCurrentPage}
+                onPageChange={tableHandlePageChange}
               />
             )}
           </div>

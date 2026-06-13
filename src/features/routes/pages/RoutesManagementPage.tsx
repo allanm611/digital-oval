@@ -457,6 +457,7 @@ export default function RoutesManagementPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              getRowId={(row) => `${row.id}-${row.channel}`}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

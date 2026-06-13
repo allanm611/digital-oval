@@ -21,6 +21,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { jobTypeService } from "../services/jobTypeService";
 import { CreateJobTypePayload, JobType } from "../types/job";
 
@@ -421,6 +422,101 @@ export default function JobTypesPage() {
   const [viewingJobType, setViewingJobType] = useState<JobType | null>(null);
   const [isLoadingView, setIsLoadingView] = useState(false);
 
+  // Table columns definition
+  const defaultColumns: TableColumn<JobType>[] = [
+    {
+      id: "name",
+      label: "Job Type",
+      visible: true,
+      render: (value) => (
+        <div className="flex items-center">
+          <div>
+            <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+              {value}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-lg`}>
+          {value || "No description"}
+        </div>
+      ),
+    },
+    {
+      id: "code",
+      label: "Code",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-900 font-medium">{value}</span>
+      ),
+    },
+    {
+      id: "created_at",
+      label: "Created",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">
+          <DateFormatter date={value as string} useUserTimezone />
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, jobType) => (
+        <div className="flex items-center justify-end space-x-2">
+          <button
+            onClick={() => handleView(jobType)}
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            aria-label="View job type"
+            title="View"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleEdit(jobType)}
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            aria-label="Edit job type"
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <PermissionGate permission="job-types.delete">
+            <button
+              onClick={() => handleDeleteClick(jobType)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              aria-label="Delete job type"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "job-types-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({
     onDelete: async (id) => {
       const numId = typeof id === "string" ? parseInt(id) : id;
@@ -558,10 +654,10 @@ export default function JobTypesPage() {
   }, [jobTypes]);
 
   const paginatedJobTypes = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+    const startIndex = (tableCurrentPage - 1) * tablePageSize;
+    const endIndex = startIndex + tablePageSize;
     return filteredJobTypes.slice(startIndex, endIndex);
-  }, [filteredJobTypes, currentPage]);
+  }, [filteredJobTypes, tableCurrentPage, tablePageSize]);
 
   const handleCreate = () => {
     setEditingJobType(null);
@@ -758,162 +854,34 @@ export default function JobTypesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    Job Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Code
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Created
-                  </th>
-                  <th
-                    className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {paginatedJobTypes.map((jobType) => (
-                  <tr key={jobType.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center">
-                        <div>
-                          <div
-                            className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
-                          >
-                            {jobType.name}
-                          </div>
-                          {/* <div className="mt-1 text-xs text-gray-500">
-                            ID: {jobType.id}
-                          </div> */}
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-lg`}>
-                        {jobType.description || "No description"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-900 font-medium">
-                        {jobType.code}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-600">
-                        <DateFormatter date={jobType.created_at} useUserTimezone />
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-right"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => handleView(jobType)}
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                          aria-label="View job type"
-                          title="View"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(jobType)}
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                          aria-label="Edit job type"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <PermissionGate permission="job-types.delete">
-                          <button
-                            onClick={() => handleDeleteClick(jobType)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                            aria-label="Delete job type"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<JobType>
+              columns={columns}
+              data={paginatedJobTypes}
+              totalItems={filteredJobTypes.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
           </div>
         )}
 
         {/* Pagination */}
         {!isLoading && filteredJobTypes.length > 0 && (
           <Pagination
-            currentPage={currentPage}
-            pageSize={PAGE_SIZE}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
             totalItems={filteredJobTypes.length}
-            onPageChange={setCurrentPage}
+            onPageChange={tableHandlePageChange}
           />
         )}
         </div>

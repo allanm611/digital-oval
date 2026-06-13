@@ -28,6 +28,7 @@ import {
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import FetchControlsModal from "../components/FetchControlsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -72,6 +73,69 @@ export default function EtlFileRegistryPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Table columns definition
+  const defaultColumns: TableColumn<EtlFileRegistryRowType>[] = [
+    {
+      id: "file_name",
+      label: "File Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} text-sm`}>
+          {value || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "file_category",
+      label: "Category",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">{value || "—"}</span>
+      ),
+    },
+    {
+      id: "processing_status",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">{getStatusBadge(value)}</span>
+      ),
+    },
+    {
+      id: "record_count",
+      label: "Records",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">
+          {value ? <NumberFormatter value={Number(value)} /> : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "created_at",
+      label: "Created",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">
+          <DateFormatter date={value as string} useUserTimezone />
+        </span>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "etl-files-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
 
   // Load stats
   const loadStats = useCallback(async () => {
@@ -412,7 +476,7 @@ export default function EtlFileRegistryPage() {
       </div>
 
       {/* Table */}
-      <div className={`${tw.rounded} border border-gray-200`}>
+      <div>
         {isLoadingFiles ? (
           <div className="flex flex-col items-center justify-center py-20">
             <LoadingSpinner variant="modern" size="lg" color="primary" />
@@ -433,138 +497,24 @@ export default function EtlFileRegistryPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[1000px] text-sm"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr className="text-left text-xs uppercase tracking-wide text-black">
-                  <th className="px-6 py-4 font-medium">
-                    {t.etl.fileNameHeader}
-                  </th>
-                  <th className="px-6 py-4 font-medium">
-                    {t.etl.categoryHeader}
-                  </th>
-                  <th className="px-6 py-4 font-medium">
-                    {t.etl.statusHeader}
-                  </th>
-                  <th className="px-6 py-4 font-medium">Total Rows</th>
-                  <th className="px-6 py-4 font-medium">
-                    {t.etl.rowsProcessedHeader}
-                  </th>
-                  <th className="px-6 py-4 font-medium">{t.etl.sizeHeader}</th>
-                  <th className="px-6 py-4 font-medium">
-                    {t.etl.updatedHeader}
-                  </th>
-                  {/* <th className="px-6 py-4 text-right font-medium">{t.etl.actionsHeader}</th> */}
-                </tr>
-              </thead>
-              <tbody>
-                {displayedFiles.map((file) => (
-                  <tr key={file.id} className="transition-colors text-sm">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        className="font-semibold text-black hover:text-gray-700 transition-colors"
-                      >
-                        {file.file_name}
-                      </button>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm font-medium">
-                        {file.file_category || "—"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {getStatusBadge(file.processing_status || "pending")}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-sm font-medium">
-                        {file.rows_parsed
-                          ? file.rows_parsed.toLocaleString()
-                          : "—"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-sm">
-                        {file.rows_inserted ?? 0} / {file.rows_parsed ?? 0}
-                      </div>
-                      {file.rows_failed ? (
-                        <p className="text-xs text-red-600">
-                          {file.rows_failed} failed
-                        </p>
-                      ) : null}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {file.data_size_mb
-                        ? `${Number(file.data_size_mb).toFixed(2)} MB`
-                        : "—"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-sm">
-                        {file.updated_at
-                          ? <DateFormatter date={new Date(file.updated_at)} useUserTimezone />
-                          : "—"}
-                      </div>
-                    </td>
-                    {/* <td
-                      className="px-6 py-4 text-right"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          title={t.etl.viewDetails}
-                          className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
-                        >
-                          <Eye size={16} />
-                        </button>
-                        {file.processing_status === "failed" && (
-                          <button
-                            type="button"
-                            onClick={() => handleReprocess(file)}
-                            title={t.etl.reprocessFileAction}
-                            className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
-                          >
-                            <RefreshCw size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </td> */}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<EtlFileRegistryRowType>
+              columns={columns}
+              data={displayedFiles}
+              totalItems={totalCount}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoadingFiles}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
           </div>
         )}
       </div>
@@ -572,10 +522,10 @@ export default function EtlFileRegistryPage() {
       {/* Pagination */}
       {!isLoadingFiles && files.length > 0 && (
         <Pagination
-          currentPage={page}
-          pageSize={PAGE_SIZE}
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
           totalItems={totalCount}
-          onPageChange={setPage}
+          onPageChange={tableHandlePageChange}
         />
       )}
 

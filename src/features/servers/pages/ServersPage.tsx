@@ -36,6 +36,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useNavigate } from "react-router-dom";
@@ -82,6 +83,190 @@ export default function ServersPage() {
   } | null>(null);
   const userId = user?.user_id;
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
+
+  // Table columns definition
+  const defaultColumns: TableColumn<ServerType>[] = [
+    {
+      id: "select",
+      label: "Select",
+      visible: isSelectionMode,
+      sortable: false,
+      render: (_, server) => (
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => toggleServerSelection(server.id)}
+        >
+          <Checkbox
+            id={`row-${server.id}`}
+            checked={selectedServerIds.has(server.id)}
+            onChange={() => toggleServerSelection(server.id)}
+            aria-label={`Select ${server.name}`}
+            className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+          />
+        </div>
+      ),
+    },
+    {
+      id: "name",
+      label: "Server",
+      visible: true,
+      render: (value, server) => (
+        <button
+          type="button"
+          onClick={() => navigate(`/dashboard/servers/${server.id}`)}
+          className={`${tw.tableFirstColumn} text-sm text-black whitespace-nowrap`}
+        >
+          {value}
+        </button>
+      ),
+    },
+    {
+      id: "code",
+      label: "Code",
+      visible: true,
+      render: (value) => (
+        <p className="text-sm text-black whitespace-nowrap">{value || "—"}</p>
+      ),
+    },
+    {
+      id: "environment",
+      label: "Environment",
+      visible: true,
+      render: (value) => (
+        <div className="whitespace-nowrap">
+          {value ? String(value).replace(/_/g, " ") : "—"}
+        </div>
+      ),
+    },
+    {
+      id: "host",
+      label: "Endpoint",
+      visible: true,
+      render: (value, server) => (
+        <p className="text-sm text-black whitespace-nowrap">
+          {`${server.protocol}://${server.host}${
+            server.port ? `:${server.port}` : ""
+          }${server.base_path || ""}`.replace(/\/+$/, "")}
+        </p>
+      ),
+    },
+    {
+      id: "health_check_enabled",
+      label: "Health",
+      visible: true,
+      render: (_, server) => renderHealthBadge(server),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm whitespace-nowrap text-black">
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, server) => (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={() => navigate(`/dashboard/servers/${server.id}`)}
+            className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
+            aria-label={`View ${server.name}`}
+            title="View details"
+          >
+            <Eye size={16} />
+          </button>
+          <PermissionGate permission="servers.update">
+            <button
+              type="button"
+              onClick={(e) => handleEdit(server, e)}
+              className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
+              aria-label={`Edit ${server.name}`}
+              title="Edit server"
+            >
+              <Edit size={16} />
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="servers.update">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuId(openMenuId === server.id ? null : server.id);
+                }}
+                className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-gray-600 transition-colors hover:bg-gray-100`}
+                aria-label="More actions"
+                title="More actions"
+              >
+                <MoreVertical size={16} />
+              </button>
+              {openMenuId === server.id && (
+                <div
+                  ref={menuRef}
+                  className={`absolute right-0 top-full mt-1 ${tw.rounded} border border-gray-200 bg-white shadow-lg z-40 min-w-max`}
+                >
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleHealthToggle(server, e);
+                      setOpenMenuId(null);
+                    }}
+                    disabled={actionState?.id === server.id && actionState?.action === "health"}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t last:rounded-b disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {actionState?.id === server.id && actionState?.action === "health" ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <HeartPulse size={14} />
+                    )}
+                    {server.health_check_enabled ? "Disable health checks" : "Enable health checks"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeprecationToggle(server, e);
+                      setOpenMenuId(null);
+                    }}
+                    disabled={actionState?.id === server.id && actionState?.action === "deprecate"}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t last:rounded-b disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-t border-gray-100"
+                  >
+                    {actionState?.id === server.id && actionState?.action === "deprecate" ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Archive size={14} />
+                    )}
+                    {server.is_deprecated ? "Restore" : "Archive"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </PermissionGate>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "servers-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
 
   const [healthStats, setHealthStats] = useState<ServerHealthStats | null>(
     null,
@@ -334,10 +519,10 @@ export default function ServersPage() {
   }, [totalCount]);
 
   useEffect(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    const slice = filteredServers.slice(start, start + PAGE_SIZE);
+    const start = (tableCurrentPage - 1) * tablePageSize;
+    const slice = filteredServers.slice(start, start + tablePageSize);
     setVisibleServers(slice);
-  }, [filteredServers, page]);
+  }, [filteredServers, tableCurrentPage, tablePageSize]);
 
   const visibleIds = useMemo(
     () => visibleServers.map((server) => server.id),
@@ -783,7 +968,7 @@ export default function ServersPage() {
         </div>
       )}
 
-      <div className={`${tw.rounded} border border-gray-200`}>
+      <div className={`${tw.rounded}`}>
         {isLoadingServers ? (
           <div className="flex flex-col items-center justify-center py-20">
             <LoadingSpinner variant="modern" size="lg" color="primary" />
@@ -804,281 +989,34 @@ export default function ServersPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[900px] text-sm"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr className="text-left text-sm uppercase tracking-wide text-black">
-                  {isSelectionMode && (
-                    <th
-                      className="px-3 py-3 text-sm font-medium"
-                      style={{
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 cursor-pointer" onClick={toggleSelectAllVisible}>
-                        <Checkbox
-                          ref={headerCheckboxRef}
-                          id="select-all-servers"
-                          className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
-                          checked={allVisibleSelected}
-                          onChange={toggleSelectAllVisible}
-                          aria-label="Select visible servers" />
-                      </div>
-                    </th>
-                  )}
-                  <th
-                    className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium"
-                    style={{
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Server
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium">
-                    Code
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium">
-                    Environment
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium">
-                    Endpoint
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium">
-                    Health
-                  </th>
-                  <th className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium">
-                    Status
-                  </th>
-                  <th
-                    className="px-4 sm:px-6 py-3 sm:py-4 text-right text-sm font-medium"
-                    style={{
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleServers.map((server) => {
-                  const activationLoading = isServerActionInFlight(server.id, [
-                    "activate",
-                    "deactivate",
-                  ]);
-                  const healthLoading = isServerActionInFlight(server.id, [
-                    "health",
-                  ]);
-                  const deprecateLoading = isServerActionInFlight(server.id, [
-                    "deprecate",
-                  ]);
-
-                  return (
-                    <tr key={server.id} className="transition-colors text-sm">
-                      {isSelectionMode && (
-                        <td
-                          className="px-3 py-3"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                            borderTopLeftRadius: "0.375rem",
-                            borderBottomLeftRadius: "0.375rem",
-                          }}
-                        >
-                          <div className="flex items-center gap-2 cursor-pointer" onClick={(e) => {
-                            e.stopPropagation();
-                            toggleServerSelection(server.id);
-                          }}>
-                            <Checkbox
-                              id={`row-${server.id}`}
-                              checked={selectedServerIds.has(server.id)}
-                              onChange={(event) => {
-                                event.stopPropagation();
-                                toggleServerSelection(server.id);
-                              }}
-                              aria-label={`Select ${server.name}`}
-                              className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-                          </div>
-                        </td>
-                      )}
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm whitespace-nowrap"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          ...(!isSelectionMode && {
-                            borderTopLeftRadius: "0.375rem",
-                            borderBottomLeftRadius: "0.375rem",
-                          }),
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/dashboard/servers/${server.id}`)
-                          }
-                          className={`${tw.tableFirstColumn} text-sm text-black whitespace-nowrap`}
-                        >
-                          {server.name}
-                        </button>
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black whitespace-nowrap"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <p className="text-sm text-black whitespace-nowrap">
-                          {server.code || "—"}
-                        </p>
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-black text-sm whitespace-nowrap"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="whitespace-nowrap">
-                          {server.environment
-                            ? String(server.environment).replace(/_/g, " ")
-                            : "—"}
-                        </div>
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black whitespace-nowrap"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <p className="text-sm text-black whitespace-nowrap">
-                          {`${server.protocol}://${server.host}${
-                            server.port ? `:${server.port}` : ""
-                          }${server.base_path || ""}`.replace(/\/+$/, "")}
-                        </p>
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {renderHealthBadge(server)}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm whitespace-nowrap text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {server.is_active ? "Active" : "Inactive"}
-                      </td>
-                      <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-right"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopRightRadius: "0.375rem",
-                          borderBottomRightRadius: "0.375rem",
-                        }}
-                      >
-                        <div className="flex items-center justify-end gap-1">
-                          {/* View Details Button */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(`/dashboard/servers/${server.id}`)
-                            }
-                            className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
-                            aria-label={`View ${server.name}`}
-                            title="View details"
-                          >
-                            <Eye size={16} />
-                          </button>
-
-                          {/* Edit Button */}
-                          <PermissionGate permission="servers.update">
-                            <button
-                              type="button"
-                              onClick={(e) => handleEdit(server, e)}
-                              className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
-                              aria-label={`Edit ${server.name}`}
-                              title="Edit server"
-                            >
-                              <Edit size={16} />
-                            </button>
-                          </PermissionGate>
-
-                          {/* Actions Menu */}
-                          <PermissionGate permission="servers.update">
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuId(openMenuId === server.id ? null : server.id);
-                                }}
-                                className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-gray-600 transition-colors hover:bg-gray-100`}
-                                aria-label="More actions"
-                                title="More actions"
-                              >
-                                <MoreVertical size={16} />
-                              </button>
-
-                              {openMenuId === server.id && (
-                                <div
-                                  ref={menuRef}
-                                  className={`absolute right-0 top-full mt-1 ${tw.rounded} border border-gray-200 bg-white shadow-lg z-40 min-w-max`}
-                                >
-                                  {/* Disable/Enable Health Checks */}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleHealthToggle(server, e);
-                                      setOpenMenuId(null);
-                                    }}
-                                    disabled={actionState?.id === server.id && actionState?.action === "health"}
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t last:rounded-b disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                  >
-                                    {actionState?.id === server.id && actionState?.action === "health" ? (
-                                      <Loader2 size={14} className="animate-spin" />
-                                    ) : (
-                                      <HeartPulse size={14} />
-                                    )}
-                                    {server.health_check_enabled ? "Disable health checks" : "Enable health checks"}
-                                  </button>
-
-                                  {/* Archive/Restore */}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeprecationToggle(server, e);
-                                      setOpenMenuId(null);
-                                    }}
-                                    disabled={actionState?.id === server.id && actionState?.action === "deprecate"}
-                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors first:rounded-t last:rounded-b disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border-t border-gray-100"
-                                  >
-                                    {actionState?.id === server.id && actionState?.action === "deprecate" ? (
-                                      <Loader2 size={14} className="animate-spin" />
-                                    ) : (
-                                      <Archive size={14} />
-                                    )}
-                                    {server.is_deprecated ? "Restore" : "Archive"}
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </PermissionGate>
-
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<ServerType>
+              columns={columns}
+              data={visibleServers}
+              totalItems={totalCount}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoadingServers}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
           </div>
         )}
       </div>
 
       {!isLoadingServers && filteredServers.length > 0 && (
         <Pagination
-          currentPage={page}
-          pageSize={PAGE_SIZE}
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
           totalItems={totalCount}
-          onPageChange={(newPage) => setPage(newPage)}
+          onPageChange={tableHandlePageChange}
         />
       )}
 

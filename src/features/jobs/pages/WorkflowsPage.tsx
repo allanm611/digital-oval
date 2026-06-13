@@ -20,6 +20,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -367,6 +368,116 @@ export default function WorkflowsPage() {
     }
   };
 
+  // Table columns definition
+  const defaultColumns: TableColumn<Workflow>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm font-semibold text-gray-900`}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "workflow_type",
+      label: "Type",
+      visible: true,
+      render: (value) => (
+        <div className="text-sm text-gray-600">
+          {value || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-black font-medium">
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "created_at",
+      label: "Created",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-600">
+          {value ? new Date(value as string).toLocaleDateString() : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, workflow) => (
+        <div className="flex items-center justify-end space-x-2">
+          <button
+            onClick={() => handleView(workflow)}
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            title="View"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleEdit(workflow)}
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={async () => {
+              setRowLoading({ id: workflow.id, action: "clone" });
+              await handleClone(workflow);
+              setRowLoading((prev) =>
+                prev?.id === workflow.id ? null : prev,
+              );
+            }}
+            disabled={
+              rowLoading?.id === workflow.id &&
+              rowLoading?.action === "clone"
+            }
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50`}
+            title="Clone"
+          >
+            {rowLoading?.id === workflow.id &&
+            rowLoading?.action === "clone" ? (
+              <LoadingSpinner />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </button>
+          <button
+            onClick={() => handleDeleteWorkflow(workflow)}
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "workflows-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
   return (
     <>
       <div className="overflow-x-auto">
@@ -619,216 +730,37 @@ export default function WorkflowsPage() {
           <p className="text-gray-500">No workflows found</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table
-            className="w-full"
-            style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-          >
-            <thead>
-              <tr>
-                {isSelectionMode && (
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
-                      <Checkbox
-                        id="select-all-workflows"
-                        checked={
-                          selectedWorkflows.size === workflows.length &&
-                          workflows.length > 0
-                        }
-                        onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-                    </div>
-                  </th>
-                )}
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                    ...(!isSelectionMode && {
-                      borderTopLeftRadius: "0.375rem",
-                    }),
-                  }}
-                >
-                  Name
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Type
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                  }}
-                >
-                  Created
-                </th>
-                <th
-                  className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
-                  style={{
-                    color: color.surface.tableHeaderText,
-                    backgroundColor: color.surface.tableHeader,
-                    borderTopRightRadius: "0.375rem",
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {workflows.map((workflow) => (
-                <tr key={workflow.id} className="transition-colors">
-                  {isSelectionMode && (
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleToggleSelection(workflow.id)}>
-                        <Checkbox
-                          id={`row-${workflow.id}`}
-                          checked={selectedWorkflows.has(workflow.id)}
-                          onChange={() => handleToggleSelection(workflow.id)}
-                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-                      </div>
-                    </td>
-                  )}
-                  <td
-                    className="px-6 py-4"
-                    style={{
-                      backgroundColor: color.surface.tablebodybg,
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    <div className="text-sm font-semibold text-gray-900">
-                      {workflow.name}
-                    </div>
-                  </td>
-                  <td
-                    className="px-6 py-4"
-                    style={{ backgroundColor: color.surface.tablebodybg }}
-                  >
-                    <div className="text-sm text-gray-600">
-                      {workflow.workflow_type || "—"}
-                    </div>
-                  </td>
-                  <td
-                    className="px-6 py-4"
-                    style={{ backgroundColor: color.surface.tablebodybg }}
-                  >
-                    <span className="text-sm text-black font-medium">
-                      {workflow.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td
-                    className="px-6 py-4"
-                    style={{ backgroundColor: color.surface.tablebodybg }}
-                  >
-                    <span className="text-sm text-gray-600">
-                      <DateFormatter date={workflow.created_at} useUserTimezone />
-                    </span>
-                  </td>
-                  <td
-                    className="px-6 py-4 text-right"
-                    style={{
-                      backgroundColor: color.surface.tablebodybg,
-                      borderTopRightRadius: "0.375rem",
-                      borderBottomRightRadius: "0.375rem",
-                    }}
-                  >
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => handleView(workflow)}
-                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                        aria-label="View workflow"
-                        title="View"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(workflow)}
-                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                        aria-label="Edit workflow"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={async () => {
-                          setRowLoading({ id: workflow.id, action: "clone" });
-                          await handleClone(workflow);
-                          setRowLoading((prev) =>
-                            prev?.id === workflow.id ? null : prev,
-                          );
-                        }}
-                        disabled={
-                          rowLoading?.id === workflow.id &&
-                          rowLoading?.action === "clone"
-                        }
-                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50`}
-                        aria-label="Clone workflow"
-                        title="Clone"
-                      >
-                        {rowLoading?.id === workflow.id &&
-                        rowLoading?.action === "clone" ? (
-                          <LoadingSpinner />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteWorkflow(workflow)}
-                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                        aria-label="Delete workflow"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <>
+          <Table<Workflow>
+            columns={columns}
+            data={workflows}
+            totalItems={totalCount}
+            currentPage={page}
+            pageSize={pageSize}
+            isLoading={isLoading}
+            onPageChange={setPage}
+            onSort={handleSort}
+            sortConfigs={sortConfigs}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
+
           {/* Pagination */}
           {workflows.length > 0 && (
-            <Pagination
-              currentPage={page}
-              pageSize={pageSize}
-              totalItems={totalCount}
-              onPageChange={setPage}
-            />
+            <div className="mt-4">
+              <Pagination
+                currentPage={page}
+                pageSize={pageSize}
+                totalItems={totalCount}
+                onPageChange={setPage}
+              />
+            </div>
           )}
-        </div>
+        </>
       )}
       </div>
 

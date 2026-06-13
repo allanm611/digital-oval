@@ -50,6 +50,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import type { ScheduledJob } from "../types/scheduledJob";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 const STEP_TYPE_OPTIONS: Array<{ label: string; value: StepType | "" }> = [
   { label: "All Types", value: "" },
@@ -1254,255 +1255,183 @@ export default function JobWorkflowStepsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  {isSelectionMode && (
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
-                        <Checkbox
-                          id="select-all-steps"
-                          checked={
-                            filteredSteps.length > 0 &&
-                            selectedSteps.size === filteredSteps.length
-                          }
-                          onChange={handleSelectAll}
-                        />
-                      </div>
-                    </th>
-                  )}
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Step Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Job
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Step Order
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredSteps.map((step) => (
-                  <tr key={step.id} className="transition-colors">
-                    {isSelectionMode && (
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        <div
-                          className="flex items-center gap-2 cursor-pointer"
-                          onClick={() => handleSelectStep(step.id)}
-                        >
-                          <Checkbox
-                            id={`step-${step.id}`}
-                            checked={selectedSteps.has(step.id)}
-                            onChange={() => handleSelectStep(step.id)}
-                          />
-                        </div>
-                      </td>
-                    )}
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        ...(!isSelectionMode && {
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }),
-                      }}
-                    >
-                      <div className="flex items-center">
-                        <div>
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<JobWorkflowStep>
+              columns={[
+                ...(isSelectionMode
+                  ? [
+                      {
+                        id: "select",
+                        label: (
                           <div
-                            className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={handleSelectAll}
                           >
-                            {step.step_name}
+                            <Checkbox
+                              id="select-all-steps"
+                              checked={
+                                filteredSteps.length > 0 &&
+                                selectedSteps.size === filteredSteps.length
+                              }
+                              onChange={handleSelectAll}
+                            />
                           </div>
-                          {/* <div className="mt-1 text-xs text-gray-500">
-                            Code: {step.step_code}
-                          </div> */}
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {jobMap[step.job_id]?.name || `Job #${step.job_id}`}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {step.step_order}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {getStepTypeLabel(step.step_type)}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-black"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {step.is_active ? "Active" : "Inactive"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-right"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-end space-x-2">
+                        ),
+                        visible: true,
+                        sortable: false,
+                        render: (_, step) => (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={() => handleSelectStep(step.id)}
+                          >
+                            <Checkbox
+                              id={`step-${step.id}`}
+                              checked={selectedSteps.has(step.id)}
+                              onChange={() => handleSelectStep(step.id)}
+                            />
+                          </div>
+                        ),
+                      } as TableColumn<JobWorkflowStep>,
+                    ]
+                  : []),
+                {
+                  id: "step_name",
+                  label: "Step Name",
+                  visible: true,
+                  render: (value) => (
+                    <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                      {value}
+                    </div>
+                  ),
+                },
+                {
+                  id: "job_id",
+                  label: "Job",
+                  visible: true,
+                  render: (value) => (
+                    <div className={`text-sm ${tw.textSecondary}`}>
+                      {jobMap[value as number]?.name || `Job #${value}`}
+                    </div>
+                  ),
+                },
+                {
+                  id: "step_order",
+                  label: "Step Order",
+                  visible: true,
+                  render: (value) => (
+                    <div className={`text-sm ${tw.textSecondary}`}>{value}</div>
+                  ),
+                },
+                {
+                  id: "step_type",
+                  label: "Type",
+                  visible: true,
+                  render: (value) => (
+                    <div className={`text-sm ${tw.textSecondary}`}>
+                      {getStepTypeLabel(value as StepType)}
+                    </div>
+                  ),
+                },
+                {
+                  id: "is_active",
+                  label: "Status",
+                  visible: true,
+                  render: (value) => (
+                    <span className="text-sm text-black">
+                      {value ? "Active" : "Inactive"}
+                    </span>
+                  ),
+                },
+                {
+                  id: "actions",
+                  label: "Actions",
+                  visible: true,
+                  sortable: false,
+                  render: (_, step) => (
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/job-workflow-steps/${step.id}${
+                              jobIdFilter ? `?job_id=${jobIdFilter}` : ""
+                            }`,
+                          )
+                        }
+                        className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                        aria-label="View details"
+                        title="View details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <PermissionGate permission="job-workflow-steps.update">
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/job-workflow-steps/${step.id}${
-                                jobIdFilter ? `?job_id=${jobIdFilter}` : ""
+                              `/dashboard/job-workflow-steps/create?operation=edit&id=${step.id}${
+                                jobIdFilter ? `&job_id=${jobIdFilter}` : ""
                               }`,
                             )
                           }
                           className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
-                          aria-label="View details"
-                          title="View details"
+                          aria-label="Edit step"
+                          title="Edit step"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </button>
-                        <PermissionGate permission="job-workflow-steps.update">
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/job-workflow-steps/create?operation=edit&id=${step.id}${
-                                  jobIdFilter ? `&job_id=${jobIdFilter}` : ""
-                                }`,
-                              )
-                            }
-                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
-                            aria-label="Edit step"
-                            title="Edit step"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                        <div
-                          className="relative"
-                          ref={(el) => {
-                            if (el) actionMenuRefs.current[step.id] = el;
-                          }}
+                      </PermissionGate>
+                      <div
+                        className="relative"
+                        ref={(el) => {
+                          if (el) actionMenuRefs.current[step.id] = el;
+                        }}
+                      >
+                        <button
+                          onClick={(e) => handleActionMenuToggle(step.id, e)}
+                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                          aria-label="More actions"
+                          title="More actions"
                         >
-                          <button
-                            onClick={(e) => handleActionMenuToggle(step.id, e)}
-                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
-                            aria-label="More actions"
-                            title="More actions"
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                        </div>
-                        {jobIdFilter && (
-                          <button
-                            onClick={async () => {
-                              setValidateLoadingId(Number(jobIdFilter));
-                              await handleValidateIntegrity(
-                                Number(jobIdFilter),
-                              );
-                              setValidateLoadingId((prev) =>
-                                prev === Number(jobIdFilter) ? null : prev,
-                              );
-                            }}
-                            disabled={validateLoadingId === Number(jobIdFilter)}
-                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
-                            aria-label="Validate workflow integrity"
-                            title="Validate workflow integrity"
-                          >
-                            {validateLoadingId === Number(jobIdFilter) ? (
-                              <LoadingSpinner />
-                            ) : (
-                              <Workflow className="w-4 h-4" />
-                            )}
-                          </button>
-                        )}
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {jobIdFilter && (
+                        <button
+                          onClick={async () => {
+                            setValidateLoadingId(Number(jobIdFilter));
+                            await handleValidateIntegrity(
+                              Number(jobIdFilter),
+                            );
+                            setValidateLoadingId((prev) =>
+                              prev === Number(jobIdFilter) ? null : prev,
+                            );
+                          }}
+                          disabled={validateLoadingId === Number(jobIdFilter)}
+                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
+                          aria-label="Validate workflow integrity"
+                          title="Validate workflow integrity"
+                        >
+                          {validateLoadingId === Number(jobIdFilter) ? (
+                            <LoadingSpinner />
+                          ) : (
+                            <Workflow className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+              data={filteredSteps}
+              totalItems={filteredSteps.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
           </div>
         )}
 

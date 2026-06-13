@@ -21,6 +21,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 interface AssignPermissionsModalProps {
   isOpen: boolean;
@@ -653,217 +654,194 @@ export default function AssignPermissionsModal({
               <LoadingSpinner />
             </div>
           ) : (
-            <div className="overflow-x-auto border border-gray-200 rounded-lg">
-              <table
-                className="w-full min-w-[800px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    {isSelectionMode && (
-                      <th
-                        className="px-4 py-3 sm:py-4 text-left"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        <div className="flex items-center gap-2 cursor-pointer" onClick={toggleSelectAllVisible}>
-                          <Checkbox
-                            ref={headerCheckboxRef}
-                            id="select-all-permissions"
-                            checked={allVisibleSelected}
-                            onChange={toggleSelectAllVisible}
-                            aria-label="Select all visible permissions"
-                            className="cursor-pointer w-4 h-4" />
-                        </div>
-                      </th>
-                    )}
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Permission Name
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Code
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Action
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Sensitive
-                    </th>
-                    <th
-                      className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Assign/Unassign
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedPermissions.map((permission) => {
-                    const isAssigned = assignedIds.has(permission.id);
-                    const isToggling = isTogglingPermission === permission.id;
-                    const isSelected = selectedPermissionIds.has(permission.id);
-
-                    return (
-                      <tr key={permission.id} className="transition-colors">
-                        {isSelectionMode && (
-                          <td
-                            className="px-4 py-3 sm:py-4 text-sm"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
+            <div className={`${tw.rounded} overflow-hidden`}>
+              <Table<Permission>
+                columns={[
+                  ...(isSelectionMode
+                    ? [
+                        {
+                          id: "select",
+                          label: (
                             <div
                               className="flex items-center gap-2 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                togglePermissionSelection(permission.id);
-                              }}
+                              onClick={toggleSelectAllVisible}
                             >
                               <Checkbox
-                                id={`row-${permission.id}`}
-                                checked={isSelected}
-                                disabled={isAssigned}
-                                onChange={(e) => {
+                                ref={headerCheckboxRef}
+                                id="select-all-permissions"
+                                checked={allVisibleSelected}
+                                onChange={toggleSelectAllVisible}
+                                aria-label="Select all visible permissions"
+                                className="cursor-pointer w-4 h-4"
+                              />
+                            </div>
+                          ),
+                          visible: true,
+                          sortable: false,
+                          render: (_, permission) => {
+                            const isAssigned = assignedIds.has(permission.id);
+                            const isSelected = selectedPermissionIds.has(permission.id);
+                            return (
+                              <div
+                                className="flex items-center gap-2 cursor-pointer"
+                                onClick={(e) => {
                                   e.stopPropagation();
                                   togglePermissionSelection(permission.id);
                                 }}
-                                aria-label={`Select ${permission.name}`}
-                                className={`cursor-pointer w-4 h-4 ${
-                                  isAssigned
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
-                                }`} />
-                              {isAssigned && (
-                                <span
-                                  className="ml-2 text-xs font-medium"
-                                  style={{ color: color.primary.accent }}
-                                >
-                                  (Already assigned)
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                        )}
-                        <td
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 font-medium"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {permission.name}
-                        </td>
-                        <td
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-mono"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {permission.code}
-                        </td>
-                        <td
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {permission.action}
-                        </td>
-                        <td
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          <span
-                            className={`text-sm font-medium ${
-                              permission.is_sensitive
-                                ? "text-red-600"
-                                : "text-gray-600"
-                            }`}
+                              >
+                                <Checkbox
+                                  id={`row-${permission.id}`}
+                                  checked={isSelected}
+                                  disabled={isAssigned}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    togglePermissionSelection(permission.id);
+                                  }}
+                                  aria-label={`Select ${permission.name}`}
+                                  className={`cursor-pointer w-4 h-4 ${
+                                    isAssigned ? "opacity-50 cursor-not-allowed" : ""
+                                  }`}
+                                />
+                                {isAssigned && (
+                                  <span
+                                    className="ml-2 text-xs font-medium"
+                                    style={{ color: color.primary.accent }}
+                                  >
+                                    (Already assigned)
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          },
+                        } as TableColumn<Permission>,
+                      ]
+                    : []),
+                  {
+                    id: "name",
+                    label: "Permission Name",
+                    visible: true,
+                    render: (value) => (
+                      <span className="font-medium text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "code",
+                    label: "Code",
+                    visible: true,
+                    render: (value) => (
+                      <span className="font-mono text-sm text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "action",
+                    label: "Action",
+                    visible: true,
+                    render: (value) => (
+                      <span className="text-sm text-gray-900">{value}</span>
+                    ),
+                  },
+                  {
+                    id: "is_sensitive",
+                    label: "Sensitive",
+                    visible: true,
+                    render: (value) => (
+                      <span
+                        className={`text-sm font-medium ${
+                          value ? "text-red-600" : "text-gray-600"
+                        }`}
+                      >
+                        {value ? "Yes" : "No"}
+                      </span>
+                    ),
+                  },
+                  {
+                    id: "assign",
+                    label: "Assign/Unassign",
+                    visible: true,
+                    sortable: false,
+                    render: (_, permission) => {
+                      const isAssigned = assignedIds.has(permission.id);
+                      const isToggling = isTogglingPermission === permission.id;
+                      return (
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => handleTogglePermission(permission)}
+                            disabled={isToggling || isAssigned}
+                            className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                            style={{
+                              backgroundColor: color.primary.action,
+                            }}
+                            title={
+                              isAssigned ? "Already assigned" : "Click to assign"
+                            }
                           >
-                            {permission.is_sensitive ? "Yes" : "No"}
-                          </span>
-                        </td>
-                        <td
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-center"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          <div className="inline-flex items-center gap-2">
-                            {/* Assign Button - Action style (filled) */}
-                            <button
-                              onClick={() => handleTogglePermission(permission)}
-                              disabled={isToggling || isAssigned}
-                              className={`px-4 py-2 text-sm font-medium rounded-md  transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0`}
-                              style={{
-                                backgroundColor: color.primary.action,
-                              }}
-                              title={
-                                isAssigned
-                                  ? "Already assigned"
-                                  : "Click to assign"
-                              }
-                            >
-                              {isToggling && !isAssigned ? (
-                                <LoadingSpinner />
-                              ) : (
-                                "Assign"
-                              )}
-                            </button>
-
-                            {/* Unassign Button - Bordered style */}
-                            <button
-                              onClick={() => handleTogglePermission(permission)}
-                              disabled={isToggling || !isAssigned}
-                              className="px-4 py-2 text-sm font-medium rounded-md border transition-colors bg-transparent disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                              style={{
-                                borderColor: isAssigned
-                                  ? color.primary.action
-                                  : "#D1D5DB",
-                                color: isAssigned
-                                  ? color.primary.action
-                                  : "#9CA3AF",
-                              }}
-                              title={
-                                isAssigned
-                                  ? "Click to unassign"
-                                  : "Not assigned"
-                              }
-                            >
-                              {isToggling && isAssigned ? (
-                                <LoadingSpinner />
-                              ) : (
-                                "Unassign"
-                              )}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                            {isToggling && !isAssigned ? (
+                              <LoadingSpinner />
+                            ) : (
+                              "Assign"
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleTogglePermission(permission)}
+                            disabled={isToggling || !isAssigned}
+                            className="px-4 py-2 text-sm font-medium rounded-md border transition-colors bg-transparent disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                            style={{
+                              borderColor: isAssigned
+                                ? color.primary.action
+                                : "#D1D5DB",
+                              color: isAssigned
+                                ? color.primary.action
+                                : "#9CA3AF",
+                            }}
+                            title={
+                              isAssigned
+                                ? "Click to unassign"
+                                : "Not assigned"
+                            }
+                          >
+                            {isToggling && isAssigned ? (
+                              <LoadingSpinner />
+                            ) : (
+                              "Unassign"
+                            )}
+                          </button>
+                        </div>
+                      );
+                    },
+                  },
+                ]}
+                data={paginatedPermissions}
+                totalItems={filteredPermissions.length}
+                currentPage={permissionsPaginationModel.page + 1}
+                pageSize={permissionsPaginationModel.pageSize}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
               {/* Pagination Controls */}
               {filteredPermissions.length > 0 && (
-                <Pagination
-                  currentPage={permissionsPaginationModel.page + 1}
-                  pageSize={permissionsPaginationModel.pageSize}
-                  totalItems={filteredPermissions.length}
-                  onPageChange={(page) =>
-                    setPermissionsPaginationModel({
-                      page: page - 1,
-                      pageSize: permissionsPaginationModel.pageSize,
-                    })
-                  }
-                  onPageSizeChange={(pageSize) =>
-                    setPermissionsPaginationModel({
-                      page: 0,
-                      pageSize,
-                    })
-                  }
-                />
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={permissionsPaginationModel.page + 1}
+                    pageSize={permissionsPaginationModel.pageSize}
+                    totalItems={filteredPermissions.length}
+                    onPageChange={(page) =>
+                      setPermissionsPaginationModel({
+                        page: page - 1,
+                        pageSize: permissionsPaginationModel.pageSize,
+                      })
+                    }
+                    onPageSizeChange={(pageSize) =>
+                      setPermissionsPaginationModel({
+                        page: 0,
+                        pageSize,
+                      })
+                    }
+                  />
+                </div>
               )}
             </div>
           )}

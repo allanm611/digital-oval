@@ -30,6 +30,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import Input from "../../../shared/components/ui/Input";
 import SelectJobTypeModal from "../components/SelectJobTypeModal";
 import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -105,10 +106,135 @@ export default function ScheduledJobsPage() {
   const [jobTypes, setJobTypes] = useState<Array<{ id: number; name: string }>>(
     [],
   );
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
 
+  // Table columns definition
+  const defaultColumns: TableColumn<ScheduledJob>[] = [
+    {
+      id: "select",
+      label: "Select",
+      visible: isSelectionMode,
+      sortable: false,
+      render: (_, job) => (
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => handleSelectJob(job.id)}
+        >
+          <Checkbox
+            id={`job-${job.id}`}
+            checked={selectedJobs.has(job.id)}
+            onChange={() => handleSelectJob(job.id)}
+          />
+        </div>
+      ),
+    },
+    {
+      id: "name",
+      label: "Job Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "code",
+      label: "Code",
+      visible: true,
+      render: (value) => (
+        <div className="text-sm text-gray-600">{value}</div>
+      ),
+    },
+    {
+      id: "job_type_id",
+      label: "Type",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary}`}>
+          {value && jobTypeMap[value as number]
+            ? jobTypeMap[value as number]
+            : value
+            ? `Type #${value}`
+            : "—"}
+        </div>
+      ),
+    },
+    {
+      id: "schedule_type",
+      label: "Schedule",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} capitalize`}>
+          {(value as string).replace("_", " ")}
+        </div>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-gray-900 font-medium">{value}</span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, job) => (
+        <div className="flex items-center justify-end space-x-2">
+          <button
+            onClick={() =>
+              navigate(`/dashboard/scheduled-jobs/${job.id}`, {
+                state: { parentLabel: "Scheduled Jobs" },
+              })
+            }
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            aria-label="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <PermissionGate permission="jobs.update">
+            <button
+              onClick={() =>
+                navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)
+              }
+              className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+              aria-label="Edit job"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="jobs.delete">
+            <button
+              onClick={() => {
+                setDeletingJob(job);
+                openDeleteConfirm(job.id, job.name || `Job #${job.id}`);
+              }}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              aria-label="Delete job"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "scheduled-jobs-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
 
   const fetchJobs = useCallback(
     async (overrideParams?: Partial<ScheduledJobSearchParams>) => {
@@ -364,7 +490,7 @@ export default function ScheduledJobsPage() {
 
   // Reset pagination when filters/search change
   useEffect(() => {
-    setCurrentPage(1);
+    tableHandlePageChange(1);
   }, [
     searchTerm,
     statusFilter,
@@ -376,14 +502,15 @@ export default function ScheduledJobsPage() {
     tenantFilter,
     jobCodeFilter,
     activeJobsFilter,
+    tableHandlePageChange,
   ]);
 
   // Paginate filtered jobs
   const paginatedJobs = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+    const startIndex = (tableCurrentPage - 1) * tablePageSize;
+    const endIndex = startIndex + tablePageSize;
     return filteredJobs.slice(startIndex, endIndex);
-  }, [filteredJobs, currentPage, pageSize]);
+  }, [filteredJobs, tableCurrentPage, tablePageSize]);
 
   // Bulk selection and batch operations
   const handleSelectJob = (jobId: number) => {
@@ -741,224 +868,31 @@ export default function ScheduledJobsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  {isSelectionMode && (
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
-                        <Checkbox
-                          id="select-all-jobs"
-                          checked={
-                            filteredJobs.length > 0 &&
-                            selectedJobs.size === filteredJobs.length
-                          }
-                          onChange={handleSelectAll}
-                        />
-                      </div>
-                    </th>
-                  )}
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Job Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Code
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Schedule
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<ScheduledJob>
+              columns={columns}
+              data={paginatedJobs}
+              totalItems={filteredJobs.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
-              <tbody>
-                {paginatedJobs.map((job) => (
-                  <tr key={job.id} className="transition-colors">
-                    {isSelectionMode && (
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        <div
-                          className="flex items-center gap-2 cursor-pointer"
-                          onClick={() => handleSelectJob(job.id)}
-                        >
-                          <Checkbox
-                            id={`job-${job.id}`}
-                            checked={selectedJobs.has(job.id)}
-                            onChange={() => handleSelectJob(job.id)}
-                          />
-                        </div>
-                      </td>
-                    )}
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        ...(!isSelectionMode && {
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }),
-                      }}
-                    >
-                      <div
-                        className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
-                      >
-                        {job.name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="text-sm text-gray-600">{job.code}</div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {job.job_type_id && jobTypeMap[job.job_type_id]
-                          ? jobTypeMap[job.job_type_id]
-                          : job.job_type_id
-                            ? `Type #${job.job_type_id}`
-                            : "—"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} capitalize`}>
-                        {job.schedule_type.replace("_", " ")}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-900 font-medium">
-                        {job.status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-right"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() =>
-                            navigate(`/dashboard/scheduled-jobs/${job.id}`, { state: { parentLabel: "Scheduled Jobs" } })
-                          }
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                          aria-label="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <PermissionGate permission="jobs.update">
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/scheduled-jobs/${job.id}/edit`,
-                              )
-                            }
-                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                            aria-label="Edit job"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                        <PermissionGate permission="jobs.delete">
-                          <button
-                            onClick={() => {
-                              setDeletingJob(job);
-                              openDeleteConfirm(job.id, job.name || `Job #${job.id}`);
-                            }}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                            aria-label="Delete job"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
             {paginatedJobs.length > 0 && filteredJobs.length > 0 && (
               <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
                 totalItems={filteredJobs.length}
-                onPageChange={setCurrentPage}
+                onPageChange={tableHandlePageChange}
               />
             )}
           </div>

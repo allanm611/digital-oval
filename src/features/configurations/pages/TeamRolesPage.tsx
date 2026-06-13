@@ -13,6 +13,7 @@ import { roleService, Role } from "../../roles/services/roleService";
 import RolesModal from "../components/RolesModal";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 export default function TeamRolesPage() {
   const { success: showSuccess, error: showError } = useToast();
@@ -22,14 +23,18 @@ export default function TeamRolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+
+  const { deleteConfirm, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({
+    onDelete: async () => {
+      await confirmDeleteRole();
+    },
+    itemLabel: "Role",
+  });
 
   const loadRoles = useCallback(async () => {
     setIsLoading(true);
@@ -41,7 +46,6 @@ export default function TeamRolesPage() {
       setRoles(data || []);
     } catch (error) {
       showError(extractBackendError(error, "Failed to load roles. Please try again."));
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -77,24 +81,20 @@ export default function TeamRolesPage() {
 
   const handleDeleteClick = (role: Role) => {
     setRoleToDelete(role);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(role.id, role.name);
   };
 
   const confirmDeleteRole = async () => {
     if (!roleToDelete) return;
 
-    setDeleting(roleToDelete.id);
     try {
       const userId = user?.user_id || 0;
       await roleService.deleteRole(roleToDelete.id, { userId });
       setRoles((prev) => prev.filter((r) => r.id !== roleToDelete.id));
       showSuccess("Role deleted successfully");
-      closeDeleteConfirm();
       setRoleToDelete(null);
     } catch (error) {
-      showError("Failed to delete role", extractBackendError(error, "Failed to delete role. Please try again."));;
-    } finally {
-      setDeleting(false);
+      showError("Failed to delete role", extractBackendError(error, "Failed to delete role. Please try again."));
     }
   };
 
@@ -125,8 +125,133 @@ export default function TeamRolesPage() {
       (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedRoles = filteredRoles.slice(startIndex, startIndex + pageSize);
+  // Table columns definition
+  const defaultColumns: TableColumn<Role>[] = [
+    {
+      id: "name",
+      label: "Name",
+      visible: true,
+      render: (value) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "code",
+      label: "Code",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} font-mono truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm ${value ? tw.success : tw.textMuted}`}>
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, role) => (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => handleOpenEditModal(role)}
+            className={`p-2 ${tw.rounded} transition-colors`}
+            style={{
+              color: color.primary.action,
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleToggleActive(role)}
+            disabled={toggling === role.id}
+            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            style={{
+              color: role.is_active ? color.primary.action : "inherit",
+              backgroundColor: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
+            title={role.is_active ? "Deactivate" : "Activate"}
+          >
+            {toggling === role.id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : role.is_active ? (
+              <Power className="w-4 h-4" />
+            ) : (
+              <PowerOff className="w-4 h-4 text-red-600" />
+            )}
+          </button>
+          <button
+            onClick={() => handleDeleteClick(role)}
+            disabled={deleting === role.id}
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Delete"
+          >
+            {deleting === role.id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4 text-red-600" />
+            )}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "team-roles-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Reset page when search changes
+  useEffect(() => {
+    tableHandlePageChange(1);
+  }, [searchTerm, tableHandlePageChange]);
+
+  const startIndex = (tableCurrentPage - 1) * tablePageSize;
+  const paginatedRoles = filteredRoles.slice(startIndex, startIndex + tablePageSize);
 
   return (
     <div className="space-y-6">
@@ -156,21 +281,14 @@ export default function TeamRolesPage() {
         <SearchInput
           placeholder="Search roles by name, code, or description..."
           value={searchTerm}
-          onChange={(value) => {
-            setSearchTerm(value);
-            setCurrentPage(1);
-          }}
+          onChange={setSearchTerm}
         />
       </div>
 
-      <div
-        className={`${tw.rounded} border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <LoadingSpinner variant="modern" size="lg" color="primary" className="mr-3" />
-            <span className={`${tw.textSecondary}`}>Loading roles...</span>
+            <LoadingSpinner />
           </div>
         ) : filteredRoles.length === 0 ? (
           <div className="text-center py-12">
@@ -192,181 +310,38 @@ export default function TeamRolesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[720px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Code
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRoles.map((role) => (
-                  <tr key={role.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className={`text-sm ${tw.textPrimary}`}>
-                        {role.name}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} font-mono`}>
-                        {role.code || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {role.description || "-"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {role.is_active ? "Active" : "Inactive"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-center"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => handleOpenEditModal(role)}
-                          className={`p-2 ${tw.rounded} transition-colors`}
-                          style={{
-                            color: color.primary.action,
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(role)}
-                          disabled={toggling === role.id}
-                          className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                          style={{
-                            color: role.is_active ? color.primary.action : "inherit",
-                            backgroundColor: "transparent",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                          }}
-                          title={role.is_active ? "Deactivate" : "Activate"}
-                        >
-                          {toggling === role.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : role.is_active ? (
-                            <Power className="w-4 h-4" />
-                          ) : (
-                            <PowerOff className="w-4 h-4 text-red-600" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(role)}
-                          disabled={deleting === role.id}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title="Delete"
-                        >
-                          {deleting === role.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <Table<Role>
+              columns={columns}
+              data={paginatedRoles}
+              totalItems={filteredRoles.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {!isLoading && paginatedRoles.length > 0 && filteredRoles.length > 0 && (
+              <div className="mt-4">
+                <Pagination
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
+                  totalItems={filteredRoles.length}
+                  onPageChange={tableHandlePageChange}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {!isLoading && filteredRoles.length > 0 && (
-        <Pagination
-          currentPage={currentPage}
-          pageSize={pageSize}
-          totalItems={filteredRoles.length}
-          onPageChange={setCurrentPage}
-        />
-      )}
 
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
@@ -374,10 +349,10 @@ export default function TeamRolesPage() {
           closeDeleteConfirm();
           setRoleToDelete(null);
         }}
-        onConfirm={confirmDeleteRole}
+        onConfirm={handleDelete}
         title="Delete Role"
         description="This action cannot be undone."
-        itemName={roleToDelete?.name || ""}
+        itemName={deleteConfirm.itemName || ""}
         isLoading={deleting}
       />
 

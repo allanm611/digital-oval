@@ -42,6 +42,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -538,6 +539,133 @@ export default function JobExecutionsPage() {
     }
   };
 
+  // Table columns definition
+  const defaultColumns: TableColumn<JobExecution>[] = [
+    {
+      id: "id",
+      label: "Execution ID",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm font-mono ${tw.textPrimary}`}>
+          {(value as string).substring(0, 8)}...
+        </div>
+      ),
+    },
+    {
+      id: "job_id",
+      label: "Job ID",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm font-medium ${tw.textSecondary}`}>
+          {value}
+        </div>
+      ),
+    },
+    {
+      id: "execution_status",
+      label: "Status",
+      visible: true,
+      render: (value) => (
+        <span className="text-sm text-black font-medium">
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "started_at",
+      label: "Started At",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary}`}>
+          {value ? new Date(value as string).toLocaleString() : "—"}
+        </div>
+      ),
+    },
+    {
+      id: "duration_seconds",
+      label: "Duration",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm ${tw.textSecondary}`}>
+          {formatDuration(value as number | null)}
+        </div>
+      ),
+    },
+    {
+      id: "triggered_by",
+      label: "Triggered By",
+      visible: true,
+      render: (value) => (
+        <div className={`text-sm capitalize ${tw.textSecondary}`}>
+          {value || "—"}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, execution) => (
+        <div className="flex items-center justify-end space-x-2">
+          <button
+            onClick={() =>
+              navigate(
+                `/dashboard/job-executions/${execution.id}`,
+              )
+            }
+            className={`p-2 ${tw.rounded} text-gray-600`}
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          {canWrite &&
+            execution.execution_status === "running" && (
+              <button
+                onClick={() => handleAction(execution, "abort")}
+                className={`p-2 ${tw.rounded} text-red-600`}
+                title="Abort execution"
+              >
+                <Ban className="w-4 h-4" />
+              </button>
+            )}
+          {canWrite &&
+            execution.execution_status === "failure" && (
+              <button
+                onClick={() => handleAction(execution, "retry")}
+                className={`p-2 ${tw.rounded} text-gray-600`}
+                title="Retry execution"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
+          {canWrite && !execution.archived && (
+            <button
+              onClick={() => handleAction(execution, "archive")}
+              className={`p-2 ${tw.rounded} text-gray-600`}
+              title="Archive execution"
+            >
+              <Archive className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "job-executions-table",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
+
   return (
     <>
       <div className="overflow-x-auto">
@@ -1018,264 +1146,37 @@ export default function JobExecutionsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  {isSelectionMode && (
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
-                        <Checkbox
-                          id="select-all-executions"
-                          checked={
-                            filteredExecutions.length > 0 &&
-                            selectedExecutions.size === filteredExecutions.length
-                          }
-                          onChange={handleSelectAll}
-                        />
-                      </div>
-                    </th>
-                  )}
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Execution ID
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Job ID
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Started At
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Duration
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Triggered By
-                  </th>
-                  <th
-                    className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
+          <>
+            <Table<JobExecution>
+              columns={columns}
+              data={filteredExecutions}
+              totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              isLoading={isLoading}
+              onPageChange={setCurrentPage}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
-              <tbody>
-                {filteredExecutions.map((execution) => (
-                  <tr key={execution.id} className="transition-colors">
-                    {isSelectionMode && (
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        <div
-                          className="flex items-center gap-2 cursor-pointer"
-                          onClick={() => handleSelectExecution(execution.id)}
-                        >
-                          <Checkbox
-                            id={`execution-${execution.id}`}
-                            checked={selectedExecutions.has(execution.id)}
-                            onChange={() => handleSelectExecution(execution.id)}
-                          />
-                        </div>
-                      </td>
-                    )}
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        ...(!isSelectionMode && {
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }),
-                      }}
-                    >
-                      <div className="flex items-center">
-                        <div>
-                          <div
-                            className={`text-sm font-mono ${tw.textPrimary}`}
-                          >
-                            {execution.id.substring(0, 8)}...
-                          </div>
-                          {/* {execution.trace_id && (
-                            <div className="mt-1 text-xs text-gray-500">
-                              Trace: {execution.trace_id.substring(0, 8)}...
-                            </div>
-                          )} */}
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div
-                        className={`text-sm font-medium ${tw.textSecondary}`}
-                      >
-                        {execution.job_id}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black font-medium">
-                        {execution.execution_status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        <DateFormatter date={execution.started_at} useUserTimezone includeTime />
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary}`}>
-                        {formatDuration(execution.duration_seconds)}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm capitalize ${tw.textSecondary}`}>
-                        {execution.triggered_by || "—"}
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-right"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/job-executions/${execution.id}`,
-                            )
-                          }
-                          className={`p-2 ${tw.rounded} text-gray-600`}
-                          aria-label="View details"
-                          title="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        {canWrite &&
-                          execution.execution_status === "running" && (
-                            <button
-                              onClick={() => handleAction(execution, "abort")}
-                              className={`p-2 ${tw.rounded} text-red-600`}
-                              aria-label="Abort execution"
-                              title="Abort execution"
-                            >
-                              <Ban className="w-4 h-4" />
-                            </button>
-                          )}
-                        {canWrite &&
-                          execution.execution_status === "failure" && (
-                            <button
-                              onClick={() => handleAction(execution, "retry")}
-                              className={`p-2 ${tw.rounded} text-gray-600`}
-                              aria-label="Retry execution"
-                              title="Retry execution"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                            </button>
-                          )}
-                        {canWrite && !execution.archived && (
-                          <button
-                            onClick={() => handleAction(execution, "archive")}
-                            className={`p-2 ${tw.rounded} text-gray-600`}
-                            aria-label="Archive execution"
-                            title="Archive execution"
-                          >
-                            <Archive className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
             {/* Pagination Controls */}
             {filteredExecutions.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
-                onPageChange={setCurrentPage}
-              />
+              <div className="mt-4">
+                <Pagination
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
 

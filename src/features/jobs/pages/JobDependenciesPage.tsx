@@ -47,6 +47,7 @@ import {
 import { ScheduledJob } from "../types/scheduledJob";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 const PAGE_SIZE = 20;
 
@@ -567,6 +568,14 @@ export default function JobDependenciesPage() {
   const [dependencyTypeFilter, setDependencyTypeFilter] =
     useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const { deleteConfirm, isDeleting: deleteConfirmIsDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({
+    onDelete: async (id) => {
+      // Handled by handleDeleteConfirm
+    },
+    itemLabel: "Dependency",
+  });
+
   // Advanced filters
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [filterId, setFilterId] = useState<number | "">("");
@@ -1164,7 +1173,7 @@ export default function JobDependenciesPage() {
 
   const handleDeleteClick = (dependency: JobDependency) => {
     setDeletingDependency(dependency);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(dependency.id, `Dependency ${dependency.id}`);
   };
 
   const handleDeleteConfirm = async () => {
@@ -2018,285 +2027,175 @@ export default function JobDependenciesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead>
-                <tr>
-                  {isSelectionMode && (
-                    <th
-                      className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                        borderTopLeftRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
-                        <Checkbox
-                          id="select-all-dependencies"
-                          checked={
-                            filteredDependencies.length > 0 &&
-                            selectedDependencyIds.size ===
-                              filteredDependencies.length
-                          }
-                          onChange={handleSelectAll}
-                        />
-                      </div>
-                    </th>
-                  )}
-                  {/* <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Job ID
-                  </th> */}
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      ...(!isSelectionMode && {
-                        borderTopLeftRadius: "0.375rem",
-                      }),
-                    }}
-                  >
-                    Job Name
-                  </th>
-                  {/* <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Depends On Job ID
-                  </th> */}
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Depends On Job Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Wait For
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Created
-                  </th>
-                  <th
-                    className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                      borderTopRightRadius: "0.375rem",
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {paginatedDependencies.map((dependency) => (
-                  <tr key={dependency.id} className="transition-colors">
-                    {isSelectionMode && (
-                      <td
-                        className="px-3 sm:px-6 py-3 sm:py-4"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<any>
+              columns={[
+                ...(isSelectionMode
+                  ? [
+                      {
+                        id: "select",
+                        label: (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={handleSelectAll}
+                          >
+                            <Checkbox
+                              id="select-all-dependencies"
+                              checked={
+                                filteredDependencies.length > 0 &&
+                                selectedDependencyIds.size ===
+                                  filteredDependencies.length
+                              }
+                              onChange={handleSelectAll}
+                            />
+                          </div>
+                        ),
+                        visible: true,
+                        sortable: false,
+                        render: (_, dependency) => (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={() => handleToggleSelection(dependency.id)}
+                          >
+                            <Checkbox
+                              id={`dependency-${dependency.id}`}
+                              checked={selectedDependencyIds.has(dependency.id)}
+                              onChange={() =>
+                                handleToggleSelection(dependency.id)
+                              }
+                            />
+                          </div>
+                        ),
+                      } as TableColumn<any>,
+                    ]
+                  : []),
+                {
+                  id: "job_id",
+                  label: "Job Name",
+                  visible: true,
+                  render: (value) => (
+                    <span className="text-sm text-gray-900">
+                      {jobsMap.get(value as number) || "Unknown Job"}
+                    </span>
+                  ),
+                },
+                {
+                  id: "depends_on_job_id",
+                  label: "Depends On Job Name",
+                  visible: true,
+                  render: (value) => (
+                    <span className="text-sm text-gray-900">
+                      {jobsMap.get(value as number) || "Unknown Job"}
+                    </span>
+                  ),
+                },
+                {
+                  id: "dependency_type",
+                  label: "Type",
+                  visible: true,
+                  render: (value) => (
+                    <span className="text-sm text-gray-900 capitalize">
+                      {value}
+                    </span>
+                  ),
+                },
+                {
+                  id: "wait_for_status",
+                  label: "Wait For",
+                  visible: true,
+                  render: (value) => (
+                    <span className="text-sm text-gray-900 capitalize">
+                      {value}
+                    </span>
+                  ),
+                },
+                {
+                  id: "is_active",
+                  label: "Status",
+                  visible: true,
+                  render: (value) => (
+                    <span className="text-sm text-black capitalize">
+                      {value ? "Active" : "Inactive"}
+                    </span>
+                  ),
+                },
+                {
+                  id: "created_at",
+                  label: "Created",
+                  visible: true,
+                  render: (value) => (
+                    <span className="text-sm text-gray-600">
+                      <DateFormatter date={value as string} />
+                    </span>
+                  ),
+                },
+                {
+                  id: "actions",
+                  label: "Actions",
+                  visible: true,
+                  sortable: false,
+                  render: (_, dependency) => (
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => handleView(dependency)}
+                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                        aria-label="View dependency"
+                        title="View"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <PermissionGate permission="job-dependencies.update">
+                        <button
+                          onClick={() => handleEdit(dependency)}
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          aria-label="Edit dependency"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      </PermissionGate>
+                      <PermissionGate permission="job-dependencies.delete">
+                        <button
+                          onClick={() => handleDeleteClick(dependency)}
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                          aria-label="Delete dependency"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </PermissionGate>
+                      <div
+                        className="relative"
+                        ref={(el) => {
+                          actionMenuRefs.current[dependency.id] = el;
                         }}
                       >
-                        <div
-                          className="flex items-center gap-2 cursor-pointer"
-                          onClick={() => handleToggleSelection(dependency.id)}
-                        >
-                          <Checkbox
-                            id={`dependency-${dependency.id}`}
-                            checked={selectedDependencyIds.has(dependency.id)}
-                            onChange={() => handleToggleSelection(dependency.id)}
-                          />
-                        </div>
-                      </td>
-                    )}
-                    {/* <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        ...(!isSelectionMode && {
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }),
-                      }}
-                    >
-                      <span className="text-sm text-gray-900 font-medium">
-                        {dependency.job_id}
-                      </span>
-                    </td> */}
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        ...(!isSelectionMode && {
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }),
-                      }}
-                    >
-                      <span className="text-sm text-gray-900">
-                        {jobsMap.get(dependency.job_id) || "Unknown Job"}
-                      </span>
-                    </td>
-                    {/* <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-900 font-medium">
-                        {dependency.depends_on_job_id}
-                      </span>
-                    </td> */}
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-900">
-                        {jobsMap.get(dependency.depends_on_job_id) ||
-                          "Unknown Job"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-900 capitalize">
-                        {dependency.dependency_type}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-900 capitalize">
-                        {dependency.wait_for_status}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-black capitalize">
-                        {dependency.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 whitespace-nowrap"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="text-sm text-gray-600">
-                        <DateFormatter date={dependency.created_at} />
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-right"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <div className="flex items-center justify-end space-x-2">
                         <button
-                          onClick={() => handleView(dependency)}
+                          onClick={(e) =>
+                            handleActionMenuToggle(dependency.id, e)
+                          }
                           className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                          aria-label="View dependency"
-                          title="View"
+                          aria-label="More actions"
+                          title="More"
                         >
-                          <Eye className="w-4 h-4" />
+                          <MoreHorizontal className="w-4 h-4" />
                         </button>
-                        <PermissionGate permission="job-dependencies.update">
-                          <button
-                            onClick={() => handleEdit(dependency)}
-                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                            aria-label="Edit dependency"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                        <PermissionGate permission="job-dependencies.delete">
-                          <button
-                            onClick={() => handleDeleteClick(dependency)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                            aria-label="Delete dependency"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                        <div
-                          className="relative"
-                          ref={(el) => {
-                            actionMenuRefs.current[dependency.id] = el;
-                          }}
-                        >
-                          <button
-                            onClick={(e) =>
-                              handleActionMenuToggle(dependency.id, e)
-                            }
-                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                            aria-label="More actions"
-                            title="More"
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                        </div>
                       </div>
-                    </td>
-                  </tr>
-                ))}
+                    </div>
+                  ),
+                },
+              ]}
+              data={paginatedDependencies}
+              totalItems={filteredDependencies.length}
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
 
                 {/* Render dropdown menus via portal outside the table */}
                 {filteredDependencies.map((dependency) => {
@@ -2529,21 +2428,21 @@ export default function JobDependenciesPage() {
                     );
                   }
                   return null;
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+              })}
+            </div>
+          )}
 
-        {/* Pagination */}
-        {!isLoading && !isLoadingJobsMap && filteredDependencies.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            pageSize={PAGE_SIZE}
-            totalItems={filteredDependencies.length}
-            onPageChange={setCurrentPage}
-          />
-        )}
+          {/* Pagination */}
+          {!isLoading && !isLoadingJobsMap && filteredDependencies.length > 0 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={PAGE_SIZE}
+                totalItems={filteredDependencies.length}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </div>
       </div>
 

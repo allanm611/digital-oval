@@ -54,6 +54,7 @@ import {
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import Radio from "../../../shared/components/ui/Radio";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 // Helper function to extract error messages from various error types
 const extractErrorMessage = (error: unknown): string => {
@@ -213,9 +214,15 @@ export default function UserManagementPage() {
 
   const { success, error: showError } = useToast();
   const { confirm } = useConfirm();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const { deleteConfirm, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({
+    onDelete: async () => {
+      // Delete logic handled by confirmDeleteUser
+    },
+    itemLabel: "User",
+  });
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectingRequest, setRejectingRequest] = useState<AccountRequestListItem | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -1183,7 +1190,7 @@ export default function UserManagementPage() {
       return;
     }
     setUserToDelete(user);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(user.id, `${user.first_name} ${user.last_name}`);
   };
 
   const handleConfirmDelete = async () => {
@@ -1370,6 +1377,259 @@ export default function UserManagementPage() {
     },
   ];
 
+  // Users table columns definition
+  const usersTableColumns: TableColumn<UserType>[] = [
+    {
+      id: "name",
+      label: "User",
+      visible: true,
+      render: (value, user) => (
+        <button
+          onClick={() => handleViewUser(user)}
+          className={`font-semibold text-sm sm:text-base transition-colors truncate`}
+          style={{ color: color.primary.accent }}
+          title={`${user.first_name} ${user.last_name}`}
+        >
+          {user.first_name} {user.last_name}
+        </button>
+      ),
+    },
+    {
+      id: "email_address",
+      label: "Email",
+      visible: true,
+      render: (value, user) => (
+        <div className={`text-sm ${tw.textMuted} truncate`} title={user.email_address || user.email}>
+          {user.email_address || user.email}
+        </div>
+      ),
+    },
+    {
+      id: "department",
+      label: "Department",
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+          {value || "N/A"}
+        </span>
+      ),
+    },
+    {
+      id: "role",
+      label: "Role",
+      visible: true,
+      render: (value, user) => (
+        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+          {getUserRoleName(user)}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      render: (value, user) => {
+        const normalizedStatus = normalizeStatus(user);
+        const userIsActive = normalizedStatus === "active";
+        const statusLabel = formatStatusLabel(normalizedStatus);
+        const statusColor = getStatusColorToken(normalizedStatus);
+        return (
+          <span
+            className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap`}
+            style={{
+              backgroundColor: userIsActive ? `${color.status.success}20` : `${statusColor}20`,
+              color: userIsActive ? color.status.success : statusColor,
+            }}
+          >
+            {statusLabel}
+          </span>
+        );
+      },
+    },
+    {
+      id: "created_at",
+      label: "Created",
+      visible: true,
+      render: (value) => (
+        <span className={`text-sm ${tw.textMuted} whitespace-nowrap`}>
+          {value ? new Date(value as string).toLocaleDateString() : "—"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, user) => {
+        const normalizedStatus = normalizeStatus(user);
+        const userIsActive = normalizedStatus === "active";
+        return (
+          <div className="flex items-center justify-center space-x-2">
+            <button
+              onClick={() => handleToggleStatus(user)}
+              disabled={loadingActions.toggling.has(user.id)}
+              className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{
+                color: userIsActive ? deactivateColor : activateColor,
+              }}
+              title={userIsActive ? t.userManagement.deactivateUserTitle : t.userManagement.activateUserTitle}
+            >
+              {loadingActions.toggling.has(user.id) ? (
+                <LoadingSpinner variant="modern" size="sm" color="primary" />
+              ) : userIsActive ? (
+                <Ban className="w-4 h-4" />
+              ) : (
+                <CheckCircle className="w-4 h-4" />
+              )}
+            </button>
+            <button
+              onClick={() => handleViewUser(user)}
+              className={`p-2 ${tw.rounded} transition-colors`}
+              style={{ color: color.primary.action, backgroundColor: "transparent" }}
+              title="View user details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <PermissionGate permission="users.update">
+              <button
+                onClick={() => handleEditUser(user)}
+                className={`p-2 ${tw.rounded} transition-colors`}
+                style={{ color: color.primary.action, backgroundColor: "transparent" }}
+                title="Edit user"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="users.delete">
+              <button
+                onClick={() => handleDeleteUser(user)}
+                disabled={loadingActions.deleting.has(user.id)}
+                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                title="Delete user"
+              >
+                {loadingActions.deleting.has(user.id) ? (
+                  <LoadingSpinner variant="modern" size="sm" color="primary" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </button>
+            </PermissionGate>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const {
+    columns: usersTableColumnsWithVisibility,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "user-management-table",
+    defaultColumns: usersTableColumns,
+    persistToLocalStorage: true,
+  });
+
+  // Account Requests table columns definition
+  const requestsTableColumns: TableColumn<AccountRequestListItem>[] = [
+    {
+      id: "name",
+      label: "User",
+      visible: true,
+      render: (value, request) => (
+        <button
+          onClick={() => handleViewRequest(request)}
+          className={`font-semibold text-sm transition-colors truncate`}
+          style={{ color: color.primary.accent }}
+          title={`${request.first_name} ${request.last_name}`}
+        >
+          {request.first_name} {request.last_name}
+        </button>
+      ),
+    },
+    {
+      id: "email",
+      label: "Email",
+      visible: true,
+      render: (value, request) => (
+        <div className={`text-sm ${tw.textMuted} truncate`} title={request.email_address || request.email}>
+          {request.email_address || request.email}
+        </div>
+      ),
+    },
+    {
+      id: "role",
+      label: "Role",
+      visible: true,
+      render: (value, request) => (
+        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+          {getPendingRequestRole(request)}
+        </span>
+      ),
+    },
+    {
+      id: "department",
+      label: "Department",
+      visible: true,
+      render: (value, request) => (
+        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+          {request.department || "N/A"}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, request) => (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => handleApproveRequest(request)}
+            disabled={loadingActions.approving.has(request.requestId || request.id || 0)}
+            className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Approve"
+          >
+            {loadingActions.approving.has(request.requestId || request.id || 0) ? (
+              <LoadingSpinner variant="modern" size="sm" color="primary" />
+            ) : (
+              <UserCheck className="w-4 h-4" />
+            )}
+          </button>
+          <button
+            onClick={() => handleRejectRequest(request)}
+            disabled={loadingActions.rejecting.has(request.requestId || request.id || 0)}
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            title="Reject"
+          >
+            {loadingActions.rejecting.has(request.requestId || request.id || 0) ? (
+              <LoadingSpinner variant="modern" size="sm" color="primary" />
+            ) : (
+              <UserX className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns: requestsTableColumnsWithVisibility,
+    currentPage: requestsTableCurrentPage,
+    pageSize: requestsTablePageSize,
+    handlePageChange: requestsTableHandlePageChange,
+    sortConfigs: requestsSortConfigs,
+    handleSort: requestsHandleSort,
+  } = useTable({
+    tableId: "account-requests-table",
+    defaultColumns: requestsTableColumns,
+    persistToLocalStorage: true,
+  });
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       (user.first_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1395,15 +1655,15 @@ export default function UserManagementPage() {
   });
 
   const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+    const startIndex = (tableCurrentPage - 1) * tablePageSize;
+    const endIndex = startIndex + tablePageSize;
     return filteredUsers.slice(startIndex, endIndex);
-  }, [filteredUsers, currentPage]);
+  }, [filteredUsers, tableCurrentPage, tablePageSize]);
 
   // Reset pagination when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterDepartment, filterRole, filterStatus]);
+    tableHandlePageChange(1);
+  }, [searchTerm, filterDepartment, filterRole, filterStatus, tableHandlePageChange]);
 
   const filteredRequests = accountRequests.filter((request) => {
     const firstName = (request.first_name ?? "").toLowerCase();
@@ -1417,6 +1677,18 @@ export default function UserManagementPage() {
       email.includes(needle)
     );
   });
+
+  // Pagination for requests
+  const paginatedRequests = useMemo(() => {
+    const startIndex = (requestsTableCurrentPage - 1) * requestsTablePageSize;
+    const endIndex = startIndex + requestsTablePageSize;
+    return filteredRequests.slice(startIndex, endIndex);
+  }, [filteredRequests, requestsTableCurrentPage, requestsTablePageSize]);
+
+  // Reset requests pagination when search changes
+  useEffect(() => {
+    requestsTableHandlePageChange(1);
+  }, [searchTerm, requestsTableHandlePageChange]);
 
   const getPendingRequestRole = useCallback(
     (request: AccountRequestListItem) => {
@@ -1803,290 +2075,60 @@ export default function UserManagementPage() {
             </div>
           ) : (
             <>
-              {/* Table with horizontal scroll */}
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full min-w-[800px]"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr>
-                      {isSelectionMode && (
-                        <th
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          <div className="flex items-center gap-2 cursor-pointer" onClick={handleSelectAll}>
-                            <Checkbox
-                              id="select-all-users"
-                              checked={
-                                  filteredUsers.length > 0 &&
-                                  selectedUsers.size === filteredUsers.length
-                                }
-                              onChange={handleSelectAll}
-                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-                          </div>
-                        </th>
-                      )}
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        User
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Email
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Department
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Role
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Status
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Created
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedUsers.map((user) => {
-                      const normalizedStatus = normalizeStatus(user);
-                      const userIsActive = normalizedStatus === "active";
-                      const statusLabel = formatStatusLabel(normalizedStatus);
-                      const statusColor = getStatusColorToken(normalizedStatus);
+              {/* Table Component */}
+              <Table<UserType>
+                columns={usersTableColumnsWithVisibility}
+                data={paginatedUsers}
+                totalItems={filteredUsers.length}
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
+                isLoading={!rolesReady || isLoading}
+                onPageChange={tableHandlePageChange}
+                onSort={handleSort}
+                sortConfigs={sortConfigs}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
 
-                      return (
-                        <tr key={user.id} className="transition-colors">
-                          {isSelectionMode && (
-                            <td
-                              className="px-4 sm:px-6 py-3 sm:py-4"
-                              style={{
-                                backgroundColor: color.surface.tablebodybg,
-                              }}
-                            >
-                              <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSelectUser(user.id)}>
-                                <Checkbox
-                                  id={`row-${user.id}`}
-                                  checked={selectedUsers.has(user.id)}
-                                  onChange={() => handleSelectUser(user.id)}
-                                  className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]" />
-                              </div>
-                            </td>
-                          )}
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <div>
-                              <button
-                                type="button"
-                                onClick={() => handleViewUser(user)}
-                                className="font-semibold text-sm sm:text-base text-gray-900 transition-colors truncate"
-                                style={{
-                                  color: "inherit",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.color =
-                                    color.primary.accent;
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.color =
-                                    "rgb(17, 24, 39)"; // gray-900
-                                }}
-                                title={`${user.first_name} ${user.last_name}`}
-                              >
-                                {user.first_name} {user.last_name}
-                              </button>
-                            </div>
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <div
-                              className={`text-sm ${tw.textMuted} truncate`}
-                              title={user.email_address || user.email}
-                            >
-                              {user.email_address || user.email}
-                            </div>
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <span
-                              className={`text-sm text-gray-900 whitespace-nowrap`}
-                            >
-                              {user.department || "N/A"}
-                            </span>
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <span
-                              className={`text-sm text-gray-900 whitespace-nowrap`}
-                            >
-                              {getUserRoleName(user)}
-                            </span>
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <span
-                              className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
-                                userIsActive
-                                  ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
-                                  : `bg-[${statusColor}]/10 text-[${statusColor}]`
-                              }`}
-                            >
-                              {statusLabel}
-                            </span>
-                          </td>
-                          <td
-                            className={`px-4 sm:px-6 py-3 sm:py-4 text-sm ${tw.textMuted} whitespace-nowrap`}
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <DateFormatter
-                              date={user.created_at}
-                              useLocale
-                              year="numeric"
-                              month="short"
-                              day="numeric"
-                            />
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <div className="flex items-center justify-center space-x-2">
-                              <button
-                                onClick={() => handleToggleStatus(user)}
-                                disabled={loadingActions.toggling.has(user.id)}
-                                className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                                style={{
-                                  color: userIsActive
-                                    ? deactivateColor
-                                    : activateColor,
-                                }}
-                                title={
-                                  loadingActions.toggling.has(user.id)
-                                    ? t.profile.saving
-                                    : userIsActive
-                                      ? t.userManagement.deactivateUserTitle
-                                      : t.userManagement.activateUserTitle
-                                }
-                              >
-                                {loadingActions.toggling.has(user.id) ? (
-                                  <LoadingSpinner
-                                    variant="modern"
-                                    size="sm"
-                                    color="primary"
-                                  />
-                                ) : userIsActive ? (
-                                  <Ban className="w-4 h-4" />
-                                ) : (
-                                  <CheckCircle className="w-4 h-4" />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => handleViewUser(user)}
-                                className={`p-2 ${tw.rounded} transition-colors`}
-                                style={{
-                                  color: color.primary.action,
-                                  backgroundColor: "transparent",
-                                }}
-                                title="View user details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              <PermissionGate permission="users.update">
-                                <button
-                                  onClick={() => {
-                                    setSelectedUser(user);
-                                    setIsModalOpen(true);
-                                  }}
-                                  className={`p-2 ${tw.rounded} transition-colors`}
-                                  style={{
-                                    color: color.primary.action,
-                                    backgroundColor: "transparent",
-                                  }}
-                                  title={t.userManagement.editUser}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                              </PermissionGate>
-                              <PermissionGate permission="users.delete">
-                                <button
-                                  onClick={() => handleDeleteUser(user)}
-                                  disabled={loadingActions.deleting.has(
-                                    user.id,
-                                  )}
-                                  className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                                  title={
-                                    loadingActions.deleting.has(user.id)
-                                      ? t.profile.saving
-                                      : t.userManagement.deleteUser
-                                  }
-                                >
-                                  {loadingActions.deleting.has(user.id) ? (
-                                    <LoadingSpinner
-                                      variant="modern"
-                                      size="sm"
-                                      color="primary"
-                                    />
-                                  ) : (
-                                    <Trash2 className="w-4 h-4" />
-                                  )}
-                                </button>
-                              </PermissionGate>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              {/* Pagination */}
+              {!isLoading && paginatedUsers.length > 0 && filteredUsers.length > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={tableCurrentPage}
+                    pageSize={tablePageSize}
+                    totalItems={filteredUsers.length}
+                    onPageChange={tableHandlePageChange}
+                  />
+                </div>
+              )}
+
+              {/* Old Selection Mode UI - Kept for batch operations */}
+              {isSelectionMode && selectedUsers.size > 0 && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">
+                      {selectedUsers.size} user(s) selected
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleCancelSelection}
+                        className={`px-4 py-2 text-sm font-medium rounded transition-colors`}
+                        style={{
+                          backgroundColor: color.border.default,
+                          color: color.surface.tableHeaderText,
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      {/* Add more batch operation buttons here */}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Mobile Cards - Hidden, using table with horizontal scroll instead */}
               <div className="hidden">
@@ -2230,14 +2272,6 @@ export default function UserManagementPage() {
                   );
                 })}
               </div>
-              {!isLoading && filteredUsers.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  pageSize={PAGE_SIZE}
-                  totalItems={filteredUsers.length}
-                  onPageChange={setCurrentPage}
-                />
-              )}
             </>
           )
         ) : activeTab === "requests" ? (
@@ -2252,54 +2286,62 @@ export default function UserManagementPage() {
             </div>
           ) : (
             <>
-              {/* Table with horizontal scroll */}
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full min-w-[600px]"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
+              {/* Simple Table Component Replacement - Requests table uses filtered data directly without pagination UI */}
+              <div className={`${tw.rounded} overflow-hidden`}>
+                {filteredRequests.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className={`${tw.textSecondary}`}>No pending requests matching filters</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Note: Requests table is shown without Table component due to complex status-based actions. Rendering filtered data directly. */}
+                    <div className="overflow-x-auto">
+                      <table
+                        className="w-full min-w-[600px]"
+                        style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
                       >
-                        User
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Email
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Requested Role
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Status
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Requested
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRequests.map((request, index) => {
+                        <thead style={{ background: color.surface.tableHeader }}>
+                          <tr>
+                            <th
+                              className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              User
+                            </th>
+                            <th
+                              className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              Email
+                            </th>
+                            <th
+                              className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              Requested Role
+                            </th>
+                            <th
+                              className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              Status
+                            </th>
+                            <th
+                              className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              Requested
+                            </th>
+                            <th
+                              className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedRequests.map((request, index) => {
                       const requestId = resolveAccountRequestId(request);
                       const requestKey =
                         requestId ??
@@ -2464,9 +2506,24 @@ export default function UserManagementPage() {
                           </td>
                         </tr>
                       );
-                    })}
-                  </tbody>
-                </table>
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination for Requests */}
+                    {filteredRequests.length > requestsTablePageSize && (
+                      <div className="mt-4">
+                        <Pagination
+                          currentPage={requestsTableCurrentPage}
+                          pageSize={requestsTablePageSize}
+                          totalItems={filteredRequests.length}
+                          onPageChange={requestsTableHandlePageChange}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* Mobile Cards - Hidden, using table with horizontal scroll instead */}
@@ -2603,11 +2660,7 @@ export default function UserManagementPage() {
         onConfirm={handleConfirmDelete}
         title="Delete User"
         description="Are you sure you want to delete this user? This action cannot be undone."
-        itemName={
-          userToDelete
-            ? `${userToDelete.first_name} ${userToDelete.last_name}`
-            : ""
-        }
+        itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
         confirmText="Delete User"
         cancelText="Cancel"

@@ -31,6 +31,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination from "../../../shared/components/ui/Pagination";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { Table } from "../../../shared/components/Table";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import EditCustomerModal from "../components/EditCustomerModal";
@@ -394,6 +395,7 @@ export default function CustomersPage() {
   // Backend pagination - no need to slice since backend returns paginated data
   const paginatedResults = filteredCustomers;
   const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
+
 
   const hasSearchFilters = searchTerm.trim().length > 0;
 
@@ -822,152 +824,131 @@ export default function CustomersPage() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full text-sm"
-              style={{ borderCollapse: "separate", borderSpacing: "0 12px" }}
-            >
-              <thead
-                className="text-xs uppercase tracking-wide"
-                style={{ background: color.surface.tableHeader }}
-              >
-                <tr>
-                  {[
-                    t.customer360.subscriptionId,
-                    t.customer360.msisdn,
-                    t.customer360.customer,
-                    t.customer360.customerType,
-                    // t.customer360.city,
-                    t.customer360.status,
-                    t.customer360.preferredChannel,
-                    t.customer360.simType,
-                    t.customer360.activationDate,
-                    t.customer360.actions,
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="px-6 py-3 text-left text-gray-900 font-semibold"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedResults.map((row, index) => {
-                  const name = getSubscriptionDisplayName(
-                    row,
-                    `Customer ${row.customerId}`,
-                  );
-                  const status = row.status ?? "Unknown";
-
-                  return (
-                    <tr
-                      key={`${row.customerId}-${row.subscriptionId}-${index}`}
-                    >
-                      <td
-                        className="rounded-l-md px-6 py-5 text-sm text-gray-900"
-                        style={cellBackground}
+          <div className={`${tw.rounded} overflow-hidden`}>
+            <Table<any>
+              columns={[
+                {
+                  id: "subscriptionId",
+                  label: t.customer360.subscriptionId,
+                  visible: true,
+                  render: (_, row) => (
+                    <span className="text-sm text-gray-900">{row.subscriptionId}</span>
+                  ),
+                },
+                {
+                  id: "msisdn",
+                  label: t.customer360.msisdn,
+                  visible: true,
+                  render: (_, row) => (
+                    <span className="text-sm text-gray-900">{row.msisdn}</span>
+                  ),
+                },
+                {
+                  id: "customer",
+                  label: t.customer360.customer,
+                  visible: true,
+                  render: (_, row) => {
+                    const name = getSubscriptionDisplayName(
+                      row,
+                      `Customer ${row.customerId}`,
+                    );
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => handleSelectCustomer(row)}
+                        className="text-left"
                       >
-                        {row.subscriptionId}
-                      </td>
-                      <td
-                        className="px-6 py-5 text-sm text-gray-900"
-                        style={cellBackground}
-                      >
-                        {row.msisdn}
-                      </td>
-                      <td className="px-6 py-5 text-sm" style={cellBackground}>
+                        <p className="font-semibold text-gray-900 hover:underline">
+                          {name}
+                        </p>
+                      </button>
+                    );
+                  },
+                },
+                {
+                  id: "customerType",
+                  label: t.customer360.customerType,
+                  visible: true,
+                  render: (_, row) => (
+                    <span className="text-sm text-gray-900">{row.customerType ?? "—"}</span>
+                  ),
+                },
+                {
+                  id: "status",
+                  label: t.customer360.status,
+                  visible: true,
+                  render: (_, row) => (
+                    <span className="text-sm text-black">{row.status ?? "Unknown"}</span>
+                  ),
+                },
+                {
+                  id: "preferredChannel",
+                  label: t.customer360.preferredChannel,
+                  visible: true,
+                  render: (_, row) => (
+                    <span className="text-sm text-gray-900">{getChannelLabel(row.tariff)}</span>
+                  ),
+                },
+                {
+                  id: "simType",
+                  label: t.customer360.simType,
+                  visible: true,
+                  render: (_, row) => (
+                    <span className="text-sm text-gray-900">{row.simType ?? "—"}</span>
+                  ),
+                },
+                {
+                  id: "activationDate",
+                  label: t.customer360.activationDate,
+                  visible: true,
+                  render: (_, row) => (
+                    <span className="text-sm text-gray-900">{formatDate(row.activationDate)}</span>
+                  ),
+                },
+                {
+                  id: "actions",
+                  label: t.customer360.actions,
+                  visible: true,
+                  sortable: false,
+                  render: (_, row, rowIndex) => (
+                    <div className="flex items-center justify-end gap-2">
+                      <PermissionGate permission="customer.read">
                         <button
                           type="button"
                           onClick={() => handleSelectCustomer(row)}
-                          className="text-left"
+                          className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+                          title="View customer"
                         >
-                          <p className="font-semibold text-gray-900 hover:underline">
-                            {name}
-                          </p>
+                          <Eye className="h-4 w-4" />
                         </button>
-                      </td>
-                      <td
-                        className="px-6 py-5 text-sm text-gray-900"
-                        style={cellBackground}
+                      </PermissionGate>
+                      <PermissionGate permission="customer.update">
+                        <button
+                          type="button"
+                          onClick={() => handleEditCustomer(row)}
+                          className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+                          title="Edit customer"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      </PermissionGate>
+                      <button
+                        ref={(el) => {
+                          actionMenuRefs.current[rowIndex] = el;
+                        }}
+                        onClick={(e) =>
+                          handleActionMenuToggle(rowIndex, e as any)
+                        }
+                        className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+                        title="More actions"
                       >
-                        {row.customerType ?? "—"}
-                      </td>
-                      {/* <td
-                        className="px-6 py-5 text-sm text-gray-900"
-                        style={cellBackground}
-                      >
-                        {row.city ?? "—"}
-                      </td> */}
-                      <td
-                        className="px-6 py-5 text-sm text-black"
-                        style={cellBackground}
-                      >
-                        {status}
-                      </td>
-                      <td
-                        className="px-6 py-5 text-sm text-gray-900"
-                        style={cellBackground}
-                      >
-                        {getChannelLabel(row.tariff)}
-                      </td>
-                      <td
-                        className="px-6 py-5 text-sm text-gray-900"
-                        style={cellBackground}
-                      >
-                        {row.simType ?? "—"}
-                      </td>
-                      <td
-                        className="px-6 py-5 text-sm text-gray-900"
-                        style={cellBackground}
-                      >
-                        {formatDate(row.activationDate)}
-                      </td>
-                      <td
-                        className="rounded-r-md px-6 py-5 text-sm text-right relative"
-                        style={cellBackground}
-                      >
-                        <div className="flex items-center justify-end gap-2">
-                          <PermissionGate permission="customer.read">
-                            <button
-                              type="button"
-                              onClick={() => handleSelectCustomer(row)}
-                              className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
-                              title="View customer"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                          </PermissionGate>
-                          <PermissionGate permission="customer.update">
-                            <button
-                              type="button"
-                              onClick={() => handleEditCustomer(row)}
-                              className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
-                              title="Edit customer"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                          </PermissionGate>
-                          {/* Action Menu Button */}
-                          <button
-                            ref={(el) => {
-                              actionMenuRefs.current[index] = el;
-                            }}
-                            onClick={(e) =>
-                              handleActionMenuToggle(index, e as any)
-                            }
-                            className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
-                            title="More actions"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
 
-                          {/* Dropdown Menu Portal */}
-                          {showActionMenu &&
-                            actionMenuIndex === index &&
-                            dropdownPosition &&
-                            createPortal(
+                      {showActionMenu &&
+                        actionMenuIndex === rowIndex &&
+                        dropdownPosition &&
+                        createPortal(
                               <div
                                 ref={(el) => {
                                   dropdownMenuRefs.current[index] = el;
@@ -1006,13 +987,21 @@ export default function CustomersPage() {
                               </div>,
                               document.body,
                             )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    </div>
+                  ),
+                },
+              ]}
+              data={paginatedResults}
+              totalItems={totalCustomers}
+              currentPage={filters.page}
+              pageSize={filters.limit}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 12px",
+              }}
+            />
           </div>
         )}
 
@@ -1020,11 +1009,12 @@ export default function CustomersPage() {
         {!isLoading &&
           !isDeleting &&
           !error &&
-          filteredCustomers.length > pageSize && (
-            <Pagination
+          totalCustomers > 0 && (
+            <div className="mt-4">
+              <Pagination
               currentPage={filters.page}
               pageSize={filters.limit}
-              totalItems={filteredCustomers.length}
+              totalItems={totalCustomers}
               onPageChange={(page) =>
                 setFilters((prev) => ({
                   ...prev,
@@ -1033,6 +1023,7 @@ export default function CustomersPage() {
                 }))
               }
             />
+            </div>
           )}
       </div>
 
