@@ -1,3 +1,14 @@
+## [1.4.7](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.6...v1.4.7) (2026-06-13)
+
+
+### Bug Fixes
+
+* fixed all pages to use the usedelete hook and also finished the theme on profile, adminsitraiton and configuraiton page ([b5e38a2](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/b5e38a2a4945ef8846befe8bd96399fd90f6adfb))
+* fixing the input error ([b445d8e](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/b445d8e6b62ac7e39888e9e1f04e6dece8863a27))
+* setting up app themes ([3819d32](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/3819d32d1b36e207b84d401b81afc29e982d5b60))
+* setup of the table component ([accfd1d](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/accfd1db512b52c89766134d7b9bbd3fdf0109c6))
+* the delete hook and also more pages converted to use the table compoent ([a0e28e9](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/a0e28e98b2f661dd857998026163e2caca6c96f0))
+
 ## [1.4.6](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.5...v1.4.6) (2026-06-05)
 
 
