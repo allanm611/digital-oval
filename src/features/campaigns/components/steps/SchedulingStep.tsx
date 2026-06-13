@@ -41,8 +41,8 @@ export default function SchedulingStep({
       <SchedulingComponent
         scheduling={formData.scheduling || {}}
         onSchedulingChange={handleSchedulingChange}
-        title={t("campaigns.scheduling.title")}
-        subtitle={t("campaigns.scheduling.subtitle")}
+        title={t.campaigns.scheduling.title}
+        subtitle={t.campaigns.scheduling.subtitle}
         showPreviewButton={true}
         onPreviewSchedule={handlePreviewSchedule}
       />

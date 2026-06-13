@@ -117,10 +117,10 @@ export default function ScheduledJobDetailsPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
 
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async (id) => await handleDelete() });
+
   const [job, setJob] = useState<ScheduledJob | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [newTag, setNewTag] = useState("");
@@ -302,7 +302,6 @@ export default function ScheduledJobDetailsPage() {
   const handleDelete = async () => {
     if (!job) return;
     try {
-      setIsDeleting(true);
       await scheduledJobService.deleteScheduledJob(job.id);
       showToast(
         t("scheduledJob.deleted", "Scheduled job deleted"),
@@ -314,7 +313,7 @@ export default function ScheduledJobDetailsPage() {
         err instanceof Error ? err.message : t("scheduledJob.deleteFailed", "Failed to delete scheduled job");
       showError(t("scheduledJob.unableToDelete", "Unable to delete scheduled job"), message, true);
     } finally {
-      setIsDeleting(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -655,7 +654,7 @@ export default function ScheduledJobDetailsPage() {
           </div>
 
           <button
-            onClick={() => openDeleteConfirm(item?.id || 0, item?.name || "")}
+            onClick={() => openDeleteConfirm(job?.id || 0, job?.name || "")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white bg-red-600`}
           >
             <Trash2 className="h-4 w-4" />

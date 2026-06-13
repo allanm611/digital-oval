@@ -19,11 +19,11 @@ export default function PushNotificationRouteDetailsPage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
+  const { deleteConfirm, isDeleting: deleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await confirmDeleteRoute() });
+
   const [route, setRoute] = useState<PushNotificationRoute | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     loadRoute();
@@ -46,14 +46,13 @@ export default function PushNotificationRouteDetailsPage() {
   };
 
   const handleDeleteClick = () => {
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(route?.id || 0, route?.name || "");
   };
 
   const confirmDeleteRoute = async () => {
     if (!route) return;
 
     try {
-      setDeleting(true);
       await pushNotificationRouteService.deleteRoute(route.id);
       success("Success", `"${route.name}" has been deleted successfully`);
       closeDeleteConfirm();
@@ -61,7 +60,7 @@ export default function PushNotificationRouteDetailsPage() {
     } catch (err) {
       showError("Error", "Failed to delete push notification route");
     } finally {
-      setDeleting(false);
+      closeDeleteConfirm();
     }
   };
 

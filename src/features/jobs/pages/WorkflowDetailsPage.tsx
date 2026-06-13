@@ -20,11 +20,11 @@ export default function WorkflowDetailsPage() {
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
 
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async (id) => await handleDelete() });
+
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isActive, setIsActive] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -117,7 +117,6 @@ export default function WorkflowDetailsPage() {
   const handleDelete = async () => {
     if (!id) return;
 
-    setIsDeleting(true);
     try {
       await workflowService.deleteWorkflow(Number(id));
       showToast("Workflow deleted", "Workflow has been deleted successfully.");
@@ -125,7 +124,7 @@ export default function WorkflowDetailsPage() {
     } catch (err) {
       showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
     } finally {
-      setIsDeleting(false);
+      closeDeleteConfirm();
     }
   };
 
@@ -266,7 +265,7 @@ export default function WorkflowDetailsPage() {
                 <PermissionGate permission="job-workflows.delete">
                   <button
                     onClick={() => {
-                      openDeleteConfirm(item?.id || 0, item?.name || "");
+                      openDeleteConfirm(workflow?.id || 0, workflow?.name || "");
                       setShowMenu(false);
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"

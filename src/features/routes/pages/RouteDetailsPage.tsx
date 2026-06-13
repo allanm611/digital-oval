@@ -19,10 +19,10 @@ export default function RouteDetailsPage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
+  const { deleteConfirm, isDeleting: deleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await handleDelete() });
+
   const [route, setRoute] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
 
   useEffect(() => {
@@ -106,14 +106,12 @@ export default function RouteDetailsPage() {
   };
 
   const handleDelete = () => {
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(route?.id || 0, route?.name || "");
   };
 
   const handleConfirmDelete = async () => {
     if (!route) return;
     try {
-      setDeleting(true);
-
       if (route.channel === "SMS") {
         await smsRouteService.deleteRoute(route.id);
       } else if (route.channel === "EMAIL") {
@@ -131,7 +129,6 @@ export default function RouteDetailsPage() {
     } catch (err) {
       showError("Error", extractBackendError(err, "Failed to delete route"));
     } finally {
-      setDeleting(false);
       closeDeleteConfirm();
     }
   };

@@ -273,8 +273,6 @@ export default function CreativeTemplatesPage() {
     persistToLocalStorage: true,
   });
 
-  );
-
   // Reset to page 1 when search changes
   useEffect(() => {
     tableHandlePageChange(1);

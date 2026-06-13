@@ -36,11 +36,11 @@ export default function JobWorkflowStepDetailsPage() {
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
 
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async (id) => await handleDelete() });
+
   const [step, setStep] = useState<JobWorkflowStep | null>(null);
   const [job, setJob] = useState<ScheduledJob | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
 
@@ -133,7 +133,6 @@ export default function JobWorkflowStepDetailsPage() {
   const handleDelete = async () => {
     if (!step) return;
     try {
-      setIsDeleting(true);
       await jobWorkflowStepService.deleteJobWorkflowStep(step.id);
       showToast(
         "Step deleted",
@@ -149,7 +148,6 @@ export default function JobWorkflowStepDetailsPage() {
         err instanceof Error ? err.message : "Failed to delete step";
       showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
-      setIsDeleting(false);
       closeDeleteConfirm();
     }
   };
@@ -333,7 +331,7 @@ export default function JobWorkflowStepDetailsPage() {
           </PermissionGate>
           <PermissionGate permission="job-workflow-steps.delete">
             <button
-              onClick={() => openDeleteConfirm(item?.id || 0, item?.name || "")}
+              onClick={() => openDeleteConfirm(step?.id || 0, step?.step_name || "")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
             >
               <Trash2 className="h-4 w-4" />

@@ -18,11 +18,12 @@ export default function TemplateSelector({
   onSelectTemplate,
   onCreateNew,
 }: TemplateSelectorProps) {
+  const { deleteConfirm, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => handleConfirmDelete() });
+
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] =
     useState<MessageTemplate | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
   const loadTemplates = useCallback(() => {
@@ -41,8 +42,9 @@ export default function TemplateSelector({
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const template = templates.find(t => t.id === id);
     setTemplateToDelete(id);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(template?.id || id, template?.name || "Template");
   };
 
   const handleConfirmDelete = () => {

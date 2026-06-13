@@ -32,8 +32,7 @@ export default function CategoryDetailsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await handleConfirmDelete() });
 
   const [category, setCategory] = useState<OfferCategoryType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -195,13 +194,12 @@ export default function CategoryDetailsPage() {
 
   const handleDeleteCategory = () => {
     if (!category) return;
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(category?.id || 0, category?.name || "");
   };
 
   const handleConfirmDelete = async () => {
     if (!category) return;
 
-    setIsDeleting(true);
     try {
       const response = await offerCategoryService.deleteCategory(category.id);
       if (response.success) {
@@ -215,7 +213,7 @@ export default function CategoryDetailsPage() {
       // Failed to delete category
       showError(t.categories.deleteError);
     } finally {
-      setIsDeleting(false);
+      closeDeleteConfirm();
     }
   };
 

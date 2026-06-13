@@ -16,11 +16,11 @@ export default function ComboTypeDetailsPage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await handleConfirmDelete() });
+
   const [comboType, setComboType] = useState<ComboType | null>(null);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -41,13 +41,12 @@ export default function ComboTypeDetailsPage() {
   }, [id, showError]);
 
   const handleDelete = () => {
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(comboType?.id || 0, comboType?.name || "");
   };
 
   const handleConfirmDelete = async () => {
     if (!comboType) return;
 
-    setIsDeleting(true);
     try {
       await comboTypeService.deleteComboType(comboType.id);
       success(
@@ -59,7 +58,6 @@ export default function ComboTypeDetailsPage() {
       console.error("Failed to delete:", err);
       showError("Cannot Delete Combo Type", extractBackendError(err, "Cannot Delete Combo Type. Please try again."));
     } finally {
-      setIsDeleting(false);
       closeDeleteConfirm();
     }
   };

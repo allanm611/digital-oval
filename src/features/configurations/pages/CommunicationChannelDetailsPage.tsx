@@ -30,12 +30,12 @@ export default function CommunicationChannelDetailsPage() {
     navigate("/dashboard/communication-channels", { replace: true });
   };
 
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await handleConfirmDelete() });
+
   const [channel, setChannel] = useState<CommunicationChannel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
   const loadChannel = useCallback(async () => {
@@ -127,13 +127,12 @@ export default function CommunicationChannelDetailsPage() {
 
   const handleDelete = () => {
     if (!channel) return;
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(channel?.id || 0, channel?.name || "");
   };
 
   const handleConfirmDelete = async () => {
     if (!channel) return;
 
-    setIsDeleting(true);
     try {
       await communicationChannelService.delete(channel.id);
       success(
@@ -148,7 +147,7 @@ export default function CommunicationChannelDetailsPage() {
         err instanceof Error ? err.message : "Failed to delete channel. Please try again.";
       showError("Cannot Delete Channel", extractBackendError(error, "Cannot Delete Channel. Please try again."));
     } finally {
-      setIsDeleting(false);
+      closeDeleteConfirm();
     }
   };
 
