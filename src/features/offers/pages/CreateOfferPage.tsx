@@ -399,10 +399,8 @@ function BasicInfoStep({
         />
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Offer Type *
-          </label>
           <TypeSelector
+            label="Offer Type"
             options={(offerTypes || [])
               .filter((type) => type.is_active !== false)
               .map((type) => ({
@@ -437,10 +435,8 @@ function BasicInfoStep({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Catalog *
-          </label>
           <MultiCategorySelector
+            label="Catalog"
             value={selectedCategoryIds}
             onChange={(ids) => {
               userInitiatedUpdateRef.current = true;
@@ -473,10 +469,8 @@ function BasicInfoStep({
 
         <div className="flex gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Communication Channel *
-            </label>
             <HeadlessSelect
+              label="Communication Channel"
               options={communicationChannels?.map((channel) => ({
                 value: String(channel.id),
                 label: channel.name,
@@ -518,10 +512,8 @@ function BasicInfoStep({
             );
             return selectedChannel?.name?.toUpperCase().includes("SMS") ? (
               <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  SMS Route
-                </label>
                 <HeadlessSelect
+                  label="SMS Route"
                   options={
                     smsRoutes?.map((route) => ({
                       value: String(route.id),
@@ -554,10 +546,8 @@ function BasicInfoStep({
             );
             return selectedChannel?.name?.toUpperCase() === "EMAIL" ? (
               <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Route
-                </label>
                 <HeadlessSelect
+                  label="Email Route"
                   options={
                     emailRoutes?.map((route: any) => ({
                       value: String(route.id),
@@ -590,10 +580,8 @@ function BasicInfoStep({
             );
             return selectedChannel?.name?.toUpperCase().includes("WHATSAPP") && whatsappRoutes ? (
               <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  WhatsApp Route
-                </label>
                 <HeadlessSelect
+                  label="WhatsApp Route"
                   options={
                     Array.isArray(whatsappRoutes) ? whatsappRoutes.map((route) => ({
                       value: String(route.id),
@@ -626,10 +614,8 @@ function BasicInfoStep({
             );
             return selectedChannel?.name?.toUpperCase().includes("USSD") && ussdRoutes ? (
               <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  USSD Route
-                </label>
                 <HeadlessSelect
+                  label="USSD Route"
                   options={
                     Array.isArray(ussdRoutes) ? ussdRoutes.map((route) => ({
                       value: String(route.id),
@@ -662,10 +648,8 @@ function BasicInfoStep({
             );
             return selectedChannel?.name?.toUpperCase().includes("PUSH") && pushRoutes ? (
               <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Push Notification Route
-                </label>
                 <HeadlessSelect
+                  label="Push Notification Route"
                   options={
                     Array.isArray(pushRoutes) ? pushRoutes.map((route) => ({
                       value: String(route.id),

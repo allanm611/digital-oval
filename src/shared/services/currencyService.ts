@@ -21,6 +21,7 @@ const SPECIAL_CURRENCY_SYMBOLS: Record<string, string> = {
   TZS: "TSh", // Tanzanian Shilling
   ETB: "Br", // Ethiopian Birr
   RWF: "RF", // Rwandan Franc
+  AMD: "֏", // Armenian Dram
 };
 
 // Get currency settings from localStorage or return defaults

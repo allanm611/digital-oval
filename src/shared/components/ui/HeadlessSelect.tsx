@@ -100,7 +100,7 @@ export default function HeadlessSelect({
               setIsOpen(!isOpen);
             }}
             className={`
-            relative w-full cursor-default py-2 px-3 pr-10 text-left transition-all duration-200 text-sm ${tw.rounded} border border-gray-200
+            w-full cursor-default py-2 px-4 text-left transition-all duration-200 text-sm ${tw.rounded} border border-gray-200
             ${
               disabled
                 ? "opacity-50 cursor-not-allowed"
@@ -116,22 +116,23 @@ export default function HeadlessSelect({
                 : { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
             }
           >
-            {" "}
-            <span
-              className="block text-sm"
-              style={{
-                color: selectedOption ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
-              }}
-            >
-              {selectedOption ? selectedOption.label : placeholder}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex-1 min-w-0">
+                <span
+                  className="block text-sm"
+                  style={{
+                    color: selectedOption ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+                  }}
+                >
+                  {selectedOption ? selectedOption.label : placeholder}
+                </span>
+              </div>
               <ChevronUpDownIcon
-                className="h-5 w-5"
+                className="h-5 w-5 flex-shrink-0 ml-2"
                 style={{ color: 'var(--c-text-secondary)' }}
                 aria-hidden="true"
               />
-            </span>
+            </div>
           </Listbox.Button>
         </div>
       </Listbox>
@@ -261,31 +262,28 @@ export default function HeadlessSelect({
             onClick={() => {
               setIsOpen(!isOpen);
             }}
-            className={`
-            relative w-full cursor-default py-3 px-3 pr-10 text-left transition-all duration-200 text-sm
-            ${error ? components.input.error : components.input.default}
-            ${
-              disabled
-                ? "bg-gray-50 text-gray-500 cursor-not-allowed opacity-50"
-                : ""
-            }
-            focus:outline-none focus:ring-0
-          `}
+            className={`w-full px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0 ${
+              disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+            } ${
+              error ? "border-red-300" : "border-gray-300"
+            }`}
           >
-            <span
-              className={`block text-sm ${
-                hasValue ? "text-gray-900" : "text-gray-500"
-              }`}
-            >
-              {selectedOption ? selectedOption.label : placeholder}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex-1 min-w-0">
+                <span
+                  className={`block text-sm ${
+                    hasValue ? "text-gray-900" : "text-gray-500"
+                  }`}
+                >
+                  {selectedOption && value ? selectedOption.label : (isOpen || hasValue || !label ? placeholder : "")}
+                </span>
+              </div>
               <ChevronUpDownIcon
-                className="h-5 w-5"
+                className="h-5 w-5 flex-shrink-0 ml-2"
                 style={{ color: 'var(--c-text-secondary)' }}
                 aria-hidden="true"
               />
-            </span>
+            </div>
           </Listbox.Button>
         </div>
       </Listbox>
@@ -398,15 +396,17 @@ export default function HeadlessSelect({
       )}
 
       {/* Floating Label */}
-      <label
-        className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium
-          ${hasValue
-            ? "top-0 -translate-y-1/2 bg-white px-1 text-gray-700"
-            : "top-1/2 -translate-y-1/2 text-gray-500"
-          }`}
-      >
-        {label}
-      </label>
+      {label && (
+        <label
+          className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium z-10
+            ${isOpen || hasValue
+              ? "top-0 -translate-y-1/2 bg-white px-1 text-gray-700"
+              : "top-1/2 -translate-y-1/2 text-gray-500"
+            }`}
+        >
+          {label}
+        </label>
+      )}
     </div>
   );
 }

@@ -141,7 +141,7 @@ export default function CreateCampaignPage() {
   const [formData, setFormData] = useState<CampaignFormData>({
     name: "",
     description: "",
-    objective: "acquisition",
+    objective: undefined,
     category_id: preselectedCategoryId,
     start_date: undefined,
     end_date: undefined,
@@ -551,9 +551,6 @@ export default function CreateCampaignPage() {
         }
         if (!(formData as any).line_of_business_id) {
           errors.line_of_business = "Line of Business is required";
-        }
-        if (!formData.description || !formData.description.trim()) {
-          errors.description = "Description is required";
         }
         if (!(formData as any).communication_policy) {
           errors.communication_policy = "Communication Policy is required";

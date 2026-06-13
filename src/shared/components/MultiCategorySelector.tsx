@@ -11,7 +11,9 @@ interface MultiCategorySelectorProps {
   value?: number[]; // Array of selected category IDs
   onChange: (categoryIds: number[]) => void;
   placeholder?: string;
+  label?: string; // Floating label (already supported but clarifying)
   disabled?: boolean;
+  hasError?: boolean; // Error state for styling
   allowCreate?: boolean;
   onCreateCategory?: () => void;
   onCategoryCreated?: (categoryId: number) => void;
@@ -25,7 +27,9 @@ export default function MultiCategorySelector({
   value = [],
   onChange,
   placeholder = "Select Catalogs",
+  label,
   disabled = false,
+  hasError = false,
   allowCreate = false,
   onCreateCategory,
   //   onCategoryCreated,
@@ -246,19 +250,19 @@ export default function MultiCategorySelector({
   //     return `${selectedCategories.length} catalogs selected`;
   //   };
 
+  const hasValue = (value && value.length > 0) || isFocused;
+
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <div className="flex">
+      <div className="flex relative">
         <button
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`flex-1 px-4 py-2 text-left border ${tw.rounded} text-sm transition-all ${
+          className={`flex-1 px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0 ${
             disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
           } ${
-            isFocused
-              ? "border-blue-500 ring-2 ring-blue-500/20"
-              : "border-gray-300"
+            hasError ? "border-red-300" : "border-gray-300"
           }`}
           style={{
             outline: "none",
@@ -309,7 +313,7 @@ export default function MultiCategorySelector({
                   )}
                 </div>
               ) : (
-                <span className="text-sm text-gray-500">{placeholder}</span>
+                <span className="text-sm text-gray-500">{isFocused || !label ? placeholder : ""}</span>
               )}
             </div>
             <ChevronDown
@@ -344,6 +348,19 @@ export default function MultiCategorySelector({
           </button>
         )}
       </div>
+
+      {/* Floating Label */}
+      {label && (
+        <label
+          className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium z-10
+            ${hasValue
+              ? "top-0 -translate-y-1/2 bg-white px-1 text-gray-700"
+              : "top-1/2 -translate-y-1/2 text-gray-500"
+            }`}
+        >
+          {label}
+        </label>
+      )}
 
       {isOpen && createPortal(
         <div

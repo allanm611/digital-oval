@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Input from "../../../../shared/components/ui/Input";
 import Textarea from "../../../../shared/components/ui/Textarea";
+import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import { ChevronDown, Search, Settings, X, Plus } from "lucide-react";
 import MultiCategorySelector from "../../../../shared/components/MultiCategorySelector";
 import { CreateCampaignRequest } from "../../types/campaign";
@@ -106,6 +107,7 @@ export default function CampaignDefinitionStep({
     useState<CommunicationPolicyConfiguration | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [budgetFocused, setBudgetFocused] = useState(false);
 
   const programDropdownRef = useRef<HTMLDivElement>(null);
   const objectiveDropdownRef = useRef<HTMLDivElement>(null);
@@ -481,19 +483,17 @@ export default function CampaignDefinitionStep({
         </p>
       </div>
       <div
-        className={`bg-white border border-gray-200 ${tw.rounded} p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6`}
+        className={`bg-white border border-gray-200 ${tw.rounded} p-4 md:p-6 lg:p-8 space-y-5 md:space-y-7`}
       >
         <h3 className="text-base font-medium text-gray-900 mb-4 md:mb-6 px-0">
           {tLanguage.campaigns.campaignDefinition.basicDetails}
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 px-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7 px-0">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {tLanguage.campaigns.campaignDefinition.campaignName}
-            </label>
             <Input
               type="text"
+              label={tLanguage.campaigns.campaignDefinition.campaignName}
               value={formData.name}
               onChange={(value) => {
                 setFormData({ ...formData, name: String(value) });
@@ -511,37 +511,28 @@ export default function CampaignDefinitionStep({
             )}
           </div>
 
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Campaign Catalog *
-            </label>
-            <div
-              className={
-                validationErrors.category_id
-                  ? `border border-red-300 ${tw.rounded}`
-                  : ""
-              }
-            >
-              <MultiCategorySelector
-                value={selectedCategoryIds}
-                onChange={(ids) => {
-                  setSelectedCategoryIds(ids);
-                  if (validationErrors.category_id && clearValidationErrors) {
-                    clearValidationErrors();
-                  }
-                }}
-                placeholder="Select catalog(s)"
-                entityType="campaign"
-                className="w-full"
-                allowCreate={true}
-                onCreateCategory={() => setShowCreateCatalogModal(true)}
-                onCategoryCreated={(categoryId) => {
-                  setSelectedCategoryIds([categoryId]);
-                  setCategoryRefreshTriggerState((prev) => prev + 1);
-                }}
-                refreshTrigger={categoryRefreshTriggerState}
-              />
-            </div>
+          <div>
+            <MultiCategorySelector
+              label="Campaign Catalog *"
+              value={selectedCategoryIds}
+              onChange={(ids) => {
+                setSelectedCategoryIds(ids);
+                if (validationErrors.category_id && clearValidationErrors) {
+                  clearValidationErrors();
+                }
+              }}
+              placeholder="Select catalog(s)"
+              entityType="campaign"
+              className="w-full"
+              allowCreate={true}
+              onCreateCategory={() => setShowCreateCatalogModal(true)}
+              onCategoryCreated={(categoryId) => {
+                setSelectedCategoryIds([categoryId]);
+                setCategoryRefreshTriggerState((prev) => prev + 1);
+              }}
+              refreshTrigger={categoryRefreshTriggerState}
+              hasError={!!validationErrors.category_id}
+            />
             {validationErrors.category_id && (
               <p className="mt-1 text-sm text-red-600">
                 {validationErrors.category_id}
@@ -594,128 +585,31 @@ export default function CampaignDefinitionStep({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Line of Business *
-            </label>
-            <div className="relative" ref={lineOfBusinessDropdownRef}>
-              <div className="flex">
-                <div className="flex-1">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIsLineOfBusinessDropdownOpen(!isLineOfBusinessDropdownOpen)
-                    }
-                    className={`w-full px-3 py-2 border ${tw.rounded} focus:ring-1 bg-white text-sm text-left flex items-center justify-between ${
-                      validationErrors?.line_of_business
-                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
-                    }`}
-                    style={{
-                      borderTopRightRadius: "0",
-                      borderBottomRightRadius: "0",
-                    }}
-                  >
-                  <span
-                    className={`text-sm ${
-                      (formData as { line_of_business_id?: number })
-                        .line_of_business_id
-                        ? "text-gray-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {(formData as { line_of_business_id?: number })
-                      .line_of_business_id
-                      ? linesOfBusiness.find(
-                          (lob) =>
-                            Number(lob.id) ===
-                            Number(
-                              (formData as { line_of_business_id?: number })
-                                .line_of_business_id
-                            )
-                        )?.name
-                      : lobLoading ? "Loading..." : "Select line of business"}
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                      isLineOfBusinessDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowCreateLineOfBusinessModal(true)}
-                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
-                  style={{ backgroundColor: color.primary.action }}
-                  title="Create new line of business"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              {isLineOfBusinessDropdownOpen && (
-                <div
-                  className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
-                >
-                    <div className="p-2">
-                      <div className="relative mb-2">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input type="text"
-                          value={lineOfBusinessSearchTerm}
-                          onChange={(value) =>
-                            setLineOfBusinessSearchTerm(String(value))
-                          }
-                          className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                          placeholder="Search line of business..."
-                        />
-                      </div>
-                    </div>
-                    <div className="py-1">
-                      {linesOfBusiness.length === 0 ? (
-                        <div className="px-4 py-2 text-sm text-gray-500">
-                          {lobLoading ? "Loading..." : "No line of business available"}
-                        </div>
-                      ) : (
-                        linesOfBusiness
-                          .filter((lob) => lob.is_active !== false)
-                          .filter(
-                            (lob) =>
-                              lob.name
-                                .toLowerCase()
-                                .includes(
-                                  lineOfBusinessSearchTerm.toLowerCase()
-                                ) ||
-                              (lob.description &&
-                                lob.description
-                                  .toLowerCase()
-                                  .includes(
-                                    lineOfBusinessSearchTerm.toLowerCase()
-                                  ))
-                          )
-                          .map((lob) => (
-                            <button
-                              key={lob.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  line_of_business_id: Number(lob.id),
-                                  line_of_business: lob.name,
-                                } as any);
-                                setIsLineOfBusinessDropdownOpen(false);
-                                setLineOfBusinessSearchTerm("");
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                            >
-                              <div className="font-medium">{lob.name}</div>
-                            </button>
-                          ))
-                      )}
-                    </div>
-                  </div>
-                )}
-            </div>
+            <HeadlessSelect
+              label="Line of Business *"
+              options={[
+                { value: "", label: "Select line of business", id: "empty" },
+                ...linesOfBusiness
+                  .filter((lob) => lob.is_active !== false)
+                  .map((lob) => ({
+                    value: String(lob.id),
+                    label: lob.name,
+                    id: lob.id,
+                  })),
+              ]}
+              value={String((formData as { line_of_business_id?: number }).line_of_business_id || "")}
+              onChange={(value) => {
+                const selected = linesOfBusiness.find((lob) => String(lob.id) === value);
+                setFormData({
+                  ...formData,
+                  line_of_business_id: value ? Number(value) : undefined,
+                  line_of_business: selected?.name,
+                } as any);
+              }}
+              searchable={true}
+              disabled={lobLoading}
+              error={!!validationErrors?.line_of_business}
+            />
             {validationErrors?.line_of_business && (
               <p className="mt-1 text-sm text-red-600">
                 {validationErrors.line_of_business}
@@ -724,130 +618,40 @@ export default function CampaignDefinitionStep({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Department
-            </label>
-            <div className="relative" ref={departmentDropdownRef}>
-              <div className="flex">
-                <div className="flex-1">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
-                    style={{
-                      borderTopRightRadius: "0",
-                      borderBottomRightRadius: "0",
-                    }}
-                  >
-                  <span
-                    className={`text-sm ${
-                      (formData as { department_id?: number }).department_id
-                        ? "text-gray-900"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {(formData as { department_id?: number }).department_id
-                      ? departmentsData.find(
-                          (dept) =>
-                            Number(dept.id) ===
-                            Number(
-                              (formData as { department_id?: number })
-                                .department_id
-                            )
-                        )?.name
-                      : "Select department (optional)"}
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                      isDepartmentDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowCreateDepartmentModal(true)}
-                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
-                  style={{ backgroundColor: color.primary.action }}
-                  title="Create new department"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              {isDepartmentDropdownOpen && (
-                  <div
-                    className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
-                  >
-                    <div className="p-2">
-                      <div className="relative mb-2">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input type="text"
-                          value={departmentSearchTerm}
-                          onChange={(value) =>
-                            setDepartmentSearchTerm(String(value))
-                          }
-                          className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                          placeholder="Search departments..."
-                        />
-                      </div>
-                    </div>
-                    <div className="py-1">
-                      {departmentsData.length === 0 ? (
-                        <div className="px-4 py-2 text-sm text-gray-500">
-                          {departmentsLoading ? "Loading departments..." : "No departments available"}
-                        </div>
-                      ) : (
-                        departmentsData
-                          .filter((dept) => dept.is_active !== false)
-                          .filter(
-                            (dept) =>
-                              dept.name
-                                .toLowerCase()
-                                .includes(departmentSearchTerm.toLowerCase()) ||
-                              (dept.description &&
-                                dept.description
-                                  .toLowerCase()
-                                  .includes(departmentSearchTerm.toLowerCase()))
-                          )
-                          .map((dept) => (
-                            <button
-                              key={dept.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  department_id: Number(dept.id),
-                                  department: dept.name,
-                                } as any);
-                                setIsDepartmentDropdownOpen(false);
-                                setDepartmentSearchTerm("");
-                              }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                            >
-                              <div className="font-medium">{dept.name}</div>
-                            </button>
-                          ))
-                      )}
-                    </div>
-                  </div>
-                )}
-            </div>
+            <HeadlessSelect
+              label="Department"
+              options={[
+                { value: "", label: "Select department (optional)", id: "empty" },
+                ...departmentsData
+                  .filter((dept) => dept.is_active !== false)
+                  .map((dept) => ({
+                    value: String(dept.id),
+                    label: dept.name,
+                    id: dept.id,
+                  })),
+              ]}
+              value={String((formData as { department_id?: number }).department_id || "")}
+              onChange={(value) => {
+                const selected = departmentsData.find((dept) => String(dept.id) === value);
+                setFormData({
+                  ...formData,
+                  department_id: value ? Number(value) : undefined,
+                  department: selected?.name,
+                } as any);
+              }}
+              searchable={true}
+              disabled={departmentsLoading}
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Campaign Tags
-            </label>
             <div className="space-y-2">
               <div className="flex">
                 <div className="flex-1">
                   <Input type="text"
+                    label="Campaign Tags"
                     value={tagInput}
                     onChange={(value) => setTagInput(String(value))}
                     onKeyPress={(e) => {
@@ -908,238 +712,57 @@ export default function CampaignDefinitionStep({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Program
-            </label>
-            <div className="relative" ref={programDropdownRef}>
-              <div className="flex">
-                <div className="flex-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsProgramDropdownOpen(!isProgramDropdownOpen)}
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
-                    style={{
-                      borderTopRightRadius: "0",
-                      borderBottomRightRadius: "0",
-                    }}
-                  >
-                    <span
-                      className={`text-sm ${
-                        (formData as { program_id?: number }).program_id
-                          ? "text-gray-900"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {(formData as { program_id?: number }).program_id
-                        ? programs.find(
-                            (p) =>
-                              Number(p.id) ===
-                              Number(
-                                (formData as { program_id?: number }).program_id
-                              )
-                          )?.name
-                        : "Select program (optional)"}
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-gray-400 transition-transform ${
-                        isProgramDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowCreateProgramModal(true)}
-                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
-                  style={{ backgroundColor: color.primary.action }}
-                  title="Create new program"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              {isProgramDropdownOpen && (
-                <div
-                  className={`absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
-                >
-                  <div className="p-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input type="text"
-                        value={programSearchTerm}
-                        onChange={(value) => setProgramSearchTerm(String(value))}
-                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                        placeholder="Search programs..."
-                      />
-                    </div>
-                  </div>
-                  <div className="py-1">
-                    {isLoadingPrograms ? (
-                      <div className="px-4 py-2 text-sm text-gray-500">
-                        Loading programs...
-                      </div>
-                    ) : programs.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-gray-500">
-                        No programs available
-                      </div>
-                    ) : (
-                      programs
-                        .filter(
-                          (program) =>
-                            (program?.name || "")
-                              .toLowerCase()
-                              .includes(programSearchTerm.toLowerCase()) ||
-                            (program?.description &&
-                              program.description
-                                .toLowerCase()
-                                .includes(programSearchTerm.toLowerCase()))
-                        )
-                        .map((program) => (
-                          <button
-                            key={program.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                program_id: Number(program.id),
-                              } as CreateCampaignRequest);
-                              setIsProgramDropdownOpen(false);
-                              setProgramSearchTerm("");
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                          >
-                            <div className="font-medium">{program.name}</div>
-                          </button>
-                        ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <HeadlessSelect
+              label="Program"
+              options={[
+                { value: "", label: "Select program (optional)", id: "empty" },
+                ...programs.map((program) => ({
+                  value: String(program.id),
+                  label: program.name,
+                  id: program.id,
+                })),
+              ]}
+              value={String((formData as { program_id?: number }).program_id || "")}
+              onChange={(value) => {
+                setFormData({
+                  ...formData,
+                  program_id: value ? Number(value) : undefined,
+                } as CreateCampaignRequest);
+              }}
+              searchable={true}
+              disabled={isLoadingPrograms}
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Primary Objective *
-            </label>
-            <div className="relative" ref={objectiveDropdownRef}>
-              <div className="flex">
-                <div className="flex-1">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIsObjectiveDropdownOpen(!isObjectiveDropdownOpen)
-                    }
-                    className={`w-full px-3 py-2 border ${
-                      tw.rounded
-                    } focus:ring-1 bg-white text-sm text-left flex items-center justify-between ${
-                      validationErrors.objective
-                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
-                    }`}
-                    style={{
-                      borderTopRightRadius: "0",
-                      borderBottomRightRadius: "0",
-                    }}
-                  >
-                  <span
-                    className={`text-sm ${
-                      formData.objective ? "text-gray-900" : "text-gray-500"
-                    }`}
-                  >
-                    {formData.objective && objectives.length > 0
-                      ? objectives.find(
-                          (o) => String(o.id) === String(formData.objective)
-                        )?.name || "Select objective"
-                      : objectivesLoading ? "Loading..." : "Select objective"}
-                  </span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                      isObjectiveDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowCreateObjectiveModal(true)}
-                  className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
-                  style={{ backgroundColor: color.primary.action }}
-                  title="Create new objective"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              {isObjectiveDropdownOpen && (
-                <div
-                  className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
-                >
-                    <div className="p-2">
-                      <div className="relative mb-2">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input type="text"
-                          value={objectiveSearchTerm}
-                          onChange={(value) => setObjectiveSearchTerm(String(value))}
-                          className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
-                          placeholder="Search objectives..."
-                        />
-                      </div>
-                    </div>
-                    <div className="py-1">
-                      {objectives.length === 0 ? (
-                        <div className="px-4 py-2 text-sm text-gray-500">
-                          {objectivesLoading ? "Loading objectives..." : "No objectives available"}
-                        </div>
-                      ) : (
-                        objectives
-                          .filter((objective) => objective.is_active !== false)
-                          .filter(
-                            (objective) =>
-                              objective.name
-                                .toLowerCase()
-                                .includes(objectiveSearchTerm.toLowerCase()) ||
-                              (objective.description &&
-                                objective.description
-                                  .toLowerCase()
-                                  .includes(objectiveSearchTerm.toLowerCase()))
-                          )
-                          .map((objective) => (
-                            <button
-                              key={objective.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  objective: String(objective.id),
-                                });
-                                setIsObjectiveDropdownOpen(false);
-                                setObjectiveSearchTerm("");
-                                if (
-                                  validationErrors.objective &&
-                                  clearValidationErrors
-                                ) {
-                                  clearValidationErrors();
-                                }
-                              }}
-                              className="w-full text-left px-4 py-3 text-sm text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                            >
-                              <div>
-                                <div className="font-medium">
-                                  {objective.name}
-                                </div>
-                              </div>
-                            </button>
-                          ))
-                      )}
-                    </div>
-                  </div>
-                )}
-            </div>
+            <HeadlessSelect
+              label="Primary Objective *"
+              options={[
+                { value: "", label: "Select objective", id: "empty" },
+                ...objectives
+                  .filter((objective) => objective.is_active !== false)
+                  .map((objective) => ({
+                    value: String(objective.id),
+                    label: objective.name,
+                    id: objective.id,
+                  })),
+              ]}
+              value={String(formData.objective || "")}
+              onChange={(value) => {
+                setFormData({
+                  ...formData,
+                  objective: value,
+                });
+                if (validationErrors.objective && clearValidationErrors) {
+                  clearValidationErrors();
+                }
+              }}
+              searchable={true}
+              disabled={objectivesLoading}
+              error={!!validationErrors.objective}
+            />
             {validationErrors.objective && (
               <p className="mt-1 text-sm text-red-600">
                 {validationErrors.objective}
@@ -1247,103 +870,41 @@ export default function CampaignDefinitionStep({
 
         {/* Communication Policy */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Communication Policy *
-          </label>
-          <div className="relative" ref={policyDropdownRef}>
-            <div className="flex">
-              <div className="flex-1">
-                <button
-                  type="button"
-                  onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
-                  className={`${
-                    components.input.default
-                  } w-full px-3 py-2 text-left flex items-center justify-between ${
-                    selectedPolicy ? "" : "text-gray-500"
-                  } ${
-                    validationErrors?.communication_policy
-                      ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                      : ""
-                  }`}
-                  style={{
-                    borderTopRightRadius: "0",
-                    borderBottomRightRadius: "0",
-                  }}
-                >
-              <span className="text-sm">
-                {selectedPolicy
-                  ? selectedPolicy.name
-                  : "Choose a communication policy"}
-              </span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform ${
-                    isPolicyDropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowCreatePolicyModal(true)}
-                className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border border-l-0 border-gray-300"
-                style={{ backgroundColor: color.primary.action }}
-                title="Create new communication policy"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-
-            {isPolicyDropdownOpen && (
-              <div
-                className={`absolute z-50 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPolicy(null);
-                    setFormData({
-                      ...formData,
-                      communication_policy: undefined,
-                    } as any);
-                    setIsPolicyDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-200"
-                >
-                  <div className="text-sm font-medium text-gray-700">
-                    No Policy
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Campaign will use system default settings
-                  </div>
-                </button>
-
-                <div className="max-h-48 overflow-y-auto">
-                  {communicationPolicies && Array.isArray(communicationPolicies) && communicationPolicies.filter((policy) => policy.is_active !== false).map((policy) => (
-                    <button
-                      key={policy.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedPolicy(policy);
-                        setFormData({
-                          ...formData,
-                          communication_policy: policy.name,
-                        } as any);
-                        setIsPolicyDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
-                        selectedPolicy?.id === policy.id ? "bg-blue-50" : ""
-                      }`}
-                    >
-                      <div className="text-sm font-medium text-gray-900">
-                        {policy.name}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <HeadlessSelect
+            label="Communication Policy *"
+            options={[
+              { value: "", label: "No Policy - Use system defaults", id: "empty" },
+              ...communicationPolicies
+                .filter((policy) => policy.is_active !== false)
+                .map((policy) => ({
+                  value: policy.name,
+                  label: policy.name,
+                  id: policy.id,
+                })),
+            ]}
+            value={selectedPolicy?.name || ""}
+            onChange={(value) => {
+              if (!value) {
+                setSelectedPolicy(null);
+                setFormData({
+                  ...formData,
+                  communication_policy: undefined,
+                } as any);
+              } else {
+                const policy = communicationPolicies.find((p) => p.name === value);
+                if (policy) {
+                  setSelectedPolicy(policy);
+                  setFormData({
+                    ...formData,
+                    communication_policy: policy.name,
+                  } as any);
+                }
+              }
+            }}
+            searchable={true}
+            disabled={policiesLoading}
+            error={!!validationErrors?.communication_policy}
+          />
           {/* Customization Toggle */}
           {selectedPolicy && (
             <div
@@ -1375,7 +936,7 @@ export default function CampaignDefinitionStep({
 
         <div>
           <Textarea
-            label={`${tLanguage.campaigns.campaignDefinition.campaignDescription} *`}
+            label={tLanguage.campaigns.campaignDefinition.campaignDescription}
             value={formData.description}
             onChange={(value) => {
               setFormData({ ...formData, description: value });
@@ -1395,40 +956,37 @@ export default function CampaignDefinitionStep({
         </div>
 
         {/* Budget Allocation */}
-        <div>
-          <div className="relative">
-            <span className="absolute left-3 top-8 -translate-y-1/2 text-gray-500 text-sm">
+        <div className="relative" onFocus={() => setBudgetFocused(true)} onBlur={() => setBudgetFocused(false)}>
+          {(budgetFocused || formData.budget_allocated) && (
+            <span
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm z-10 text-gray-500"
+            >
               {getCurrencySymbol()}
             </span>
-            <Input
-              label={t.campaigns.budgetAllocated}
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.budget_allocated || ""}
-              onChange={(value) => {
-                const budgetValue = String(value);
-                setFormData({
-                  ...formData,
-                  budget_allocated: budgetValue ? parseFloat(budgetValue) : undefined,
-                });
-                if (
-                  validationErrors.budget_allocated &&
-                  clearValidationErrors
-                ) {
-                  clearValidationErrors();
-                }
-              }}
-              className={`w-full pl-12 pr-3 py-2 border ${
-                tw.rounded
-              } focus:ring-1 text-sm ${
-                validationErrors.budget_allocated
-                  ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                  : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
-              }`}
-              placeholder="0.00"
-            />
-          </div>
+          )}
+          <Input
+            label={t.campaigns.budgetAllocated}
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.budget_allocated || ""}
+            onChange={(value) => {
+              const budgetValue = String(value);
+              setFormData({
+                ...formData,
+                budget_allocated: budgetValue ? parseFloat(budgetValue) : undefined,
+              });
+              if (
+                validationErrors.budget_allocated &&
+                clearValidationErrors
+              ) {
+                clearValidationErrors();
+              }
+            }}
+            hasError={!!validationErrors.budget_allocated}
+            className="w-full pl-12 pr-3 py-2"
+            placeholder="0.00"
+          />
           {validationErrors.budget_allocated && (
             <p className="mt-1 text-sm text-red-600">
               {validationErrors.budget_allocated}
@@ -1437,23 +995,25 @@ export default function CampaignDefinitionStep({
         </div>
 
         {/* Campaign Schedule */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7">
           <div>
-            <Input
-              label={tLanguage.campaigns.campaignDefinition.startDate}
-              type="text"
-              placeholder="mm/dd/yyyy, hh:mm"
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {tLanguage.campaigns.campaignDefinition.startDate}
+            </label>
+            <input
+              type="datetime-local"
               value={
                 formData.start_date
-                  ? new Date(formData.start_date).toISOString().slice(0, 16).replace('T', ' ')
+                  ? new Date(formData.start_date).toISOString().slice(0, 16)
                   : ""
               }
-              onChange={(value) => {
-                const dateValue = String(value)
-                  ? new Date(String(value)).toISOString()
+              onChange={(e) => {
+                const dateValue = e.target.value
+                  ? new Date(e.target.value).toISOString()
                   : undefined;
                 setFormData({ ...formData, start_date: dateValue });
               }}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-500 mt-1">
               When should this campaign start?
@@ -1461,25 +1021,30 @@ export default function CampaignDefinitionStep({
           </div>
 
           <div>
-            <Input
-              label={tLanguage.campaigns.campaignDefinition.endDate}
-              type="text"
-              placeholder="mm/dd/yyyy, hh:mm"
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {tLanguage.campaigns.campaignDefinition.endDate}
+            </label>
+            <input
+              type="datetime-local"
               value={
                 formData.end_date
-                  ? new Date(formData.end_date).toISOString().slice(0, 16).replace('T', ' ')
+                  ? new Date(formData.end_date).toISOString().slice(0, 16)
                   : ""
               }
-              onChange={(value) => {
-                const dateValue = String(value)
-                  ? new Date(String(value)).toISOString()
+              onChange={(e) => {
+                const dateValue = e.target.value
+                  ? new Date(e.target.value).toISOString()
                   : undefined;
                 setFormData({ ...formData, end_date: dateValue });
                 if (validationErrors.end_date && clearValidationErrors) {
                   clearValidationErrors();
                 }
               }}
-              hasError={!!validationErrors.end_date}
+              className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 ${
+                validationErrors.end_date
+                  ? "border-red-300 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+              }`}
             />
             {validationErrors.end_date ? (
               <p className="mt-1 text-sm text-red-600">

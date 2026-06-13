@@ -12,6 +12,7 @@ interface TypeSelectorProps {
   onCreate?: () => void;
   className?: string;
   error?: boolean;
+  label?: string;
 }
 
 export default function TypeSelector({
@@ -24,19 +25,20 @@ export default function TypeSelector({
   onCreate,
   className = "",
   error = false,
+  label,
 }: TypeSelectorProps) {
   return (
     <div className={`flex ${className}`}>
-      <div className="flex-1">
+      <div className="flex-1 relative">
         {allowCreate ? (
           <div
             style={{
               borderTopRightRadius: "0",
               borderBottomRightRadius: "0",
-              overflow: "hidden",
             }}
           >
             <HeadlessSelect
+              label={label}
               options={options}
               value={value}
               onChange={onChange}
@@ -49,6 +51,7 @@ export default function TypeSelector({
           </div>
         ) : (
           <HeadlessSelect
+            label={label}
             options={options}
             value={value}
             onChange={onChange}

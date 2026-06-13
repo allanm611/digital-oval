@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Edit,
@@ -11,6 +11,7 @@ import {
   BarChart3,
   DollarSign,
   XCircle,
+  Download,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Product } from "../types/product";
@@ -30,7 +31,9 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-import { Table } from "../../../shared/components/Table/Table";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
+import { button } from "../../../shared/utils/utils";
 
 interface ProductTableRow {
   id: string;
@@ -40,6 +43,8 @@ interface ProductTableRow {
   category: string;
   status: string;
   created: string;
+  is_active?: boolean;
+  product?: Product;
 }
 
 interface ProductFilters {
@@ -81,6 +86,153 @@ export default function ProductsPage() {
     name: string;
   } | null>(null);
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+
+  let defaultColumns: TableColumn<ProductTableRow>[] = [
+    {
+      id: "name",
+      label: "Product",
+      width: "200px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+      render: (_, row) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "productId",
+      label: "Product ID",
+      width: "150px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+    },
+    {
+      id: "daId",
+      label: "DA ID",
+      width: "140px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+    },
+    {
+      id: "category",
+      label: "Category",
+      width: "150px",
+      visible: true,
+      sortable: true,
+      filterConfig: {
+        type: "select",
+        options: categories.map(c => c.name)
+      },
+      render: (value: string) => (
+        <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}>
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      width: "120px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["Active", "Inactive"] },
+      render: (value: string) => {
+        const isActive = value === "Active";
+        const statusBadge = isActive
+          ? `bg-[${color.status.success}] text-[${color.status.success}]`
+          : `bg-[${color.surface.cards}] text-[${color.text.primary}]`;
+        return (
+          <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusBadge}`}>
+            {value}
+          </span>
+        );
+      },
+    },
+    {
+      id: "created",
+      label: "Created",
+      width: "150px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "date" },
+      render: (value: string) => <DateFormatter date={value} />,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      width: "180px",
+      visible: true,
+      sortable: false,
+      render: (_, row) => {
+        const isActive = row.is_active ?? false;
+        return (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => navigate(`/dashboard/products/${row.id}`)}
+              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+              title="View Details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <PermissionGate permission="products.update">
+              <button
+                onClick={() =>
+                  navigate(`/dashboard/products/${row.id}/edit`, {
+                    state: { returnTo: { pathname: "/dashboard/products" } },
+                  })
+                }
+                className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                title="Edit Product"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </PermissionGate>
+            <button
+              onClick={() => row.product && handleToggleStatus(row.product)}
+              disabled={loadingProductId === row.id || !row.product}
+              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              title={isActive ? "Deactivate" : "Activate"}
+            >
+              {loadingProductId === row.id ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+              ) : isActive ? (
+                <Pause className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </button>
+            <PermissionGate permission="products.delete">
+              <button
+                onClick={() => handleDelete(row.id)}
+                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
+                title="Delete Product"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </PermissionGate>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const {
+    columns,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+    expandedRowId,
+    setExpandedRowId,
+  } = useTable({
+    tableId: "products-table-v2",
+    defaultColumns,
+    persistToLocalStorage: true,
+  });
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteProduct } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -265,6 +417,182 @@ export default function ProductsPage() {
     openDeleteConfirm(productId, productName);
   };
 
+  // Populate defaultColumns after functions are defined
+  defaultColumns = [
+    {
+      id: "name",
+      label: "Product",
+      width: "200px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+      render: (_, row) => (
+        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      id: "productId",
+      label: "Product ID",
+      width: "150px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+    },
+    {
+      id: "daId",
+      label: "DA ID",
+      width: "140px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
+    },
+    {
+      id: "category",
+      label: "Category",
+      width: "150px",
+      visible: true,
+      sortable: true,
+      filterConfig: {
+        type: "select",
+        options: categories.map(c => c.name)
+      },
+      render: (value: string) => (
+        <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}>
+          {value}
+        </span>
+      ),
+    },
+    {
+      id: "status",
+      label: "Status",
+      width: "120px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "select", options: ["Active", "Inactive"] },
+      render: (value: string) => {
+        const isActive = value === "Active";
+        const statusBadge = isActive
+          ? `bg-[${color.status.success}] text-[${color.status.success}]`
+          : `bg-[${color.surface.cards}] text-[${color.text.primary}]`;
+        return (
+          <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusBadge}`}>
+            {value}
+          </span>
+        );
+      },
+    },
+    {
+      id: "created",
+      label: "Created",
+      width: "150px",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: "date" },
+      render: (value: string) => <DateFormatter date={value} />,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      width: "180px",
+      visible: true,
+      sortable: false,
+      render: (_, row) => {
+        const isActive = row.is_active ?? false;
+        return (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => navigate(`/dashboard/products/${row.id}`)}
+              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+              title="View Details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <PermissionGate permission="products.update">
+              <button
+                onClick={() =>
+                  navigate(`/dashboard/products/${row.id}/edit`, {
+                    state: { returnTo: { pathname: "/dashboard/products" } },
+                  })
+                }
+                className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                title="Edit Product"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </PermissionGate>
+            <button
+              onClick={() => row.product && handleToggleStatus(row.product)}
+              disabled={loadingProductId === row.id || !row.product}
+              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              title={isActive ? "Deactivate" : "Activate"}
+            >
+              {loadingProductId === row.id ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+              ) : isActive ? (
+                <Pause className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </button>
+            <PermissionGate permission="products.delete">
+              <button
+                onClick={() => handleDelete(row.id)}
+                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
+                title="Delete Product"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </PermissionGate>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const handleExportCSV = () => {
+    if (products.length === 0) {
+      showError("No products to export", "There are no products to export");
+      return;
+    }
+
+    const headers = ["ID", "Product Name", "Product ID", "DA ID", "Category", "Status", "Created"];
+    const rows = products.map((product) => {
+      const categoryName =
+        categories.find((cat) => cat.id === parseInt(product.category_id))?.name ||
+        "Uncategorized";
+      const status = product.is_active ? "Active" : "Inactive";
+      return [
+        product.id || "",
+        product.name || "",
+        product.product_id || product.id || "N/A",
+        product.da_id || "N/A",
+        categoryName,
+        status,
+        product.created_at || "",
+      ];
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `products_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6">
@@ -474,6 +802,24 @@ export default function ProductsPage() {
               className="text-sm"
             />
           </div>
+
+          {/* Export Button */}
+          <button
+            onClick={handleExportCSV}
+            className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium whitespace-nowrap`}
+            style={{
+              backgroundColor: button.action.background,
+              color: button.action.color,
+              border: button.action.border,
+              padding: `${button.action.paddingY} ${button.action.paddingX}`,
+              borderRadius: button.action.borderRadius,
+              fontSize: button.action.fontSize,
+            }}
+            title="Download as CSV"
+          >
+            <Download className="h-4 w-4" />
+            <span>Download CSV</span>
+          </button>
         </div>
       </div>
 
@@ -518,130 +864,7 @@ export default function ProductsPage() {
           <>
             <div className="overflow-x-auto">
               <Table<ProductTableRow>
-                columns={[
-                  {
-                    id: "name",
-                    label: "Product",
-                    width: "200px",
-                    visible: true,
-                    filterConfig: { type: "text" },
-                    render: (_, row) => (
-                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
-                        {row.name}
-                      </div>
-                    ),
-                  },
-                  {
-                    id: "productId",
-                    label: "Product ID",
-                    width: "150px",
-                    visible: true,
-                    filterConfig: { type: "text" },
-                  },
-                  {
-                    id: "daId",
-                    label: "DA ID",
-                    width: "140px",
-                    visible: true,
-                    filterConfig: { type: "text" },
-                  },
-                  {
-                    id: "category",
-                    label: "Category",
-                    width: "150px",
-                    visible: true,
-                    filterConfig: { type: "text" },
-                    render: (value: string) => (
-                      <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-[${color.primary.accent}]/10 text-black`}>
-                        {value}
-                      </span>
-                    ),
-                  },
-                  {
-                    id: "status",
-                    label: "Status",
-                    width: "120px",
-                    visible: true,
-                    filterConfig: { type: "multiselect", options: ["Active", "Inactive"] },
-                    render: (value: string) => {
-                      const isActive = value === "Active";
-                      const statusBadge = isActive
-                        ? `bg-[${color.status.success}] text-[${color.status.success}]`
-                        : `bg-[${color.surface.cards}] text-[${color.text.primary}]`;
-                      return (
-                        <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusBadge}`}>
-                          {value}
-                        </span>
-                      );
-                    },
-                  },
-                  {
-                    id: "created",
-                    label: "Created",
-                    width: "150px",
-                    visible: true,
-                    filterConfig: { type: "date" },
-                    render: (value: string) => <DateFormatter date={value} />,
-                  },
-                  {
-                    id: "actions",
-                    label: "Actions",
-                    width: "180px",
-                    visible: true,
-                    sortable: false,
-                    render: (_, row) => {
-                      const product = products.find((p) => p.id === row.id);
-                      if (!product) return null;
-                      return (
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => navigate(`/dashboard/products/${product.id}`)}
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <PermissionGate permission="products.update">
-                            <button
-                              onClick={() =>
-                                navigate(`/dashboard/products/${product.id}/edit`, {
-                                  state: { returnTo: { pathname: "/dashboard/products" } },
-                                })
-                              }
-                              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                              title="Edit Product"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          </PermissionGate>
-                          <button
-                            onClick={() => handleToggleStatus(product)}
-                            disabled={loadingProductId === product.id}
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={product.is_active ? "Deactivate" : "Activate"}
-                          >
-                            {loadingProductId === product.id ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                            ) : product.is_active ? (
-                              <Pause className="w-4 h-4" />
-                            ) : (
-                              <Play className="w-4 h-4" />
-                            )}
-                          </button>
-                          <PermissionGate permission="products.delete">
-                            <button
-                              onClick={() => handleDelete(product.id)}
-                              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
-                              title="Delete Product"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </PermissionGate>
-                        </div>
-                      );
-                    },
-                  },
-                ]}
+                columns={columns}
                 data={products.map((product) => {
                   const categoryName =
                     categories.find((cat) => cat.id === parseInt(product.category_id))?.name ||
@@ -655,12 +878,43 @@ export default function ProductsPage() {
                     category: categoryName,
                     status: status,
                     created: product.created_at,
+                    is_active: product.is_active,
+                    product: product,
                   };
                 })}
                 rowSpacing="0 8px"
                 totalItems={total}
                 currentPage={filters.page || 1}
                 pageSize={filters.pageSize || 10}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
+                expandedRowId={expandedRowId}
+                onExpandChange={setExpandedRowId}
+                expandedContent={(row) => {
+                  const product = products.find(p => p.id === row.id);
+                  return product ? (
+                    <div className="p-4 bg-gray-50 space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Product Name</p>
+                          <p className="text-sm text-gray-900">{product.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Category</p>
+                          <p className="text-sm text-gray-900">{categories.find(cat => cat.id === parseInt(product.category_id))?.name || "Uncategorized"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Price</p>
+                          <p className="text-sm text-gray-900">{product.price ? <CurrencyFormatter amount={Number(product.price)} /> : "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Created Date</p>
+                          <p className="text-sm text-gray-900">{product.created_at ? <DateFormatter date={product.created_at} useLocale year="numeric" month="short" day="numeric" /> : "—"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null;
+                }}
               />
             </div>
           </>
@@ -676,6 +930,16 @@ export default function ProductsPage() {
           onPageChange={(page) => handlePageChange(page)}
         />
       )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

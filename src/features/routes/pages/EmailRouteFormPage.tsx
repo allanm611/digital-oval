@@ -231,10 +231,8 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Gateway Configuration</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Gateway Configuration *
-              </label>
               <HeadlessSelect
+                label="Email Gateway Configuration"
                 options={gatewayConfigOptions}
                 value={String(formData.gateway_config_id || "")}
                 onChange={(value) => handleSelectChange("gateway_config_id", value)}
@@ -253,10 +251,8 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Status</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Route Status
-              </label>
               <HeadlessSelect
+                label="Route Status"
                 options={[
                   { value: "true", label: "Active" },
                   { value: "false", label: "Inactive" },

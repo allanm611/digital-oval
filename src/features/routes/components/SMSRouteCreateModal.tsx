@@ -212,10 +212,8 @@ export default function SMSRouteCreateModal({
 
           {/* Gateway Provider */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gateway Provider *
-            </label>
             <HeadlessSelect
+              label="Gateway Provider"
               options={SMS_GATEWAY_OPTIONS.map(opt => ({
                 value: opt.value,
                 label: opt.label

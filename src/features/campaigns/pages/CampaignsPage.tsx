@@ -24,6 +24,7 @@ import {
   AlertCircle,
   BarChart3,
   Copy,
+  Download,
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -160,6 +161,8 @@ export default function CampaignsPage() {
       id: "name",
       label: "Campaign Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value}>
           {value}
@@ -170,6 +173,11 @@ export default function CampaignsPage() {
       id: "category",
       label: "Category",
       visible: true,
+      sortable: true,
+      filterConfig: {
+        type: 'select',
+        options: categories.map(c => c.name)
+      },
       render: (value, campaign) => (
         <span className={`text-sm ${tw.textPrimary}`}>
           {campaign.category_id
@@ -182,6 +190,11 @@ export default function CampaignsPage() {
       id: "status",
       label: "Status",
       visible: true,
+      sortable: true,
+      filterConfig: {
+        type: 'select',
+        options: ['draft', 'scheduled', 'running', 'paused', 'completed']
+      },
       render: (value) => (
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-black`}>
           {value?.replace(/_/g, " ") || "Unknown"}
@@ -192,6 +205,7 @@ export default function CampaignsPage() {
       id: "offers",
       label: "Offers",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (value, campaign) => (
         <button
           onClick={async () => {
@@ -227,6 +241,7 @@ export default function CampaignsPage() {
       id: "segments",
       label: "Segments",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (value, campaign) => (
         <button
           onClick={async () => {
@@ -287,6 +302,7 @@ export default function CampaignsPage() {
       id: "created_on",
       label: "Created On",
       visible: false,
+      filterConfig: { type: 'date' },
       render: (value) =>
         value ? (
           <DateFormatter date={value} useUserTimezone className="text-sm" />
@@ -308,6 +324,7 @@ export default function CampaignsPage() {
       id: "updated_on",
       label: "Last Updated On",
       visible: false,
+      filterConfig: { type: 'date' },
       render: (value) =>
         value ? (
           <DateFormatter date={value} useUserTimezone className="text-sm" />
@@ -378,7 +395,7 @@ export default function CampaignsPage() {
     sortConfigs,
     handleSort,
   } = useTable({
-    tableId: "campaigns-table",
+    tableId: "campaigns-table-v2",
     defaultColumns,
     persistToLocalStorage: true,
   });
@@ -397,6 +414,42 @@ export default function CampaignsPage() {
     );
   };
 
+  const handleExportCSV = () => {
+    if (campaigns.length === 0) {
+      showToast("error", "No campaigns to export", "There are no campaigns to export");
+      return;
+    }
+
+    const headers = ["ID", "Campaign Name", "Category", "Status", "Offers", "Segments", "Created On"];
+    const rows = campaigns.map((campaign) => [
+      campaign.id || "",
+      campaign.name || "",
+      categoryMap[campaign.category_id] || "Uncategorized",
+      campaign.status || "",
+      campaign.offer_count ?? 0,
+      campaign.segment_count ?? 0,
+      campaign.created_on || "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `campaigns_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleAction = (params: CampaignActionParams) =>
     handleCampaignAction(params, {
@@ -1209,6 +1262,23 @@ export default function CampaignsPage() {
           <span>Filters</span>
         </button>
 
+        <button
+          onClick={handleExportCSV}
+          className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
+          style={{
+            backgroundColor: button.action.background,
+            color: button.action.color,
+            border: button.action.border,
+            padding: `${button.action.paddingY} ${button.action.paddingX}`,
+            borderRadius: button.action.borderRadius,
+            fontSize: button.action.fontSize,
+          }}
+          title="Download as CSV"
+        >
+          <Download className="h-4 w-4" />
+          <span>Download CSV</span>
+        </button>
+
       </div>
 
       {/* Table */}
@@ -1222,6 +1292,7 @@ export default function CampaignsPage() {
         onPageChange={tableHandlePageChange}
         onSort={handleSort}
         sortConfigs={sortConfigs}
+        onHideColumn={toggleColumn}
         onManageColumnsClick={() => setShowColumnPicker(true)}
         expandedRowId={expandedRowId}
         onExpandChange={setExpandedRowId}

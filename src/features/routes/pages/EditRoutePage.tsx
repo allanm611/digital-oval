@@ -300,10 +300,8 @@ export default function EditRoutePage() {
               </div>
 
               <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Route Name *
-                </label>
                 <Input
+                  label="Route Name"
                   value={formData.name}
                   onChange={(value) => {
                     setFormData({ ...formData, name: value });
@@ -312,7 +310,7 @@ export default function EditRoutePage() {
                   placeholder="Enter route name"
                   hasError={!!errors.name}
                   disabled={saving}
-                 
+
                 />
                 {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
               </div>
@@ -329,10 +327,8 @@ export default function EditRoutePage() {
 
             {/* Gateway Configuration */}
             <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                Gateway Configuration *
-              </label>
               <HeadlessSelect
+                label="Gateway Configuration"
                 value={String(formData.gateway_config_id)}
                 onChange={(value) => {
                   setFormData({ ...formData, gateway_config_id: Number(value) });
@@ -376,10 +372,8 @@ export default function EditRoutePage() {
               {formData.use_backup_on_failure && (
                 <>
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                      Backup Route
-                    </label>
                     <HeadlessSelect
+                      label="Backup Route"
                       value={String(formData.backup_route_id || 0)}
                       onChange={(value) => setFormData({ ...formData, backup_route_id: value ? Number(value) : undefined })}
                       options={[
@@ -394,16 +388,14 @@ export default function EditRoutePage() {
                   </div>
 
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                      Retry Attempts
-                    </label>
                     <Input
+                      label="Retry Attempts"
                       type="number"
                       value={String(formData.retry_attempts)}
                       onChange={(value) => setFormData({ ...formData, retry_attempts: Number(value) })}
                       placeholder="3"
                       min="0"
-                     
+
                       disabled={saving}
                     />
                   </div>

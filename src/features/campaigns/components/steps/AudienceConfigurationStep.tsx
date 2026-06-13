@@ -566,11 +566,10 @@ export default function AudienceConfigurationStep({
 
       {/* Step Order Field - appears after campaign type selected */}
       {formData.campaign_type && (
-        <div className="space-y-3 mb-6">
-          <label className={`block text-sm font-semibold ${tw.textPrimary}`}>
-            Step Order
-          </label>
-          <Input type="number"
+        <div className="mb-6">
+          <Input
+            type="number"
+            label="Step Order"
             min="1"
             value={formData.step_order ?? 1}
             onChange={(value) =>
@@ -579,7 +578,6 @@ export default function AudienceConfigurationStep({
                 step_order: Math.max(1, parseInt(String(value)) || 1),
               })
             }
-            className={`${components.input.default} w-full px-4 py-3`}
             placeholder="1"
           />
         </div>

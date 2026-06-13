@@ -23,7 +23,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   hasError = false,
   className = '',
   onKeyDown,
-  variant = 'medium',
+  variant = 'default',
   type = 'text',
   label,
   style = {},
@@ -31,8 +31,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
 
-  let paddingClass = 'px-3 py-2'; // default (medium)
-  if (variant === 'default') paddingClass = 'px-4 py-2';
+  let paddingClass = 'px-4 py-2'; // default
+  if (variant === 'medium') paddingClass = 'px-3 py-2';
   if (variant === 'compact') paddingClass = 'px-3 py-1';
 
   // Determine border color based on error state
@@ -102,7 +102,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full px-3 py-3 text-sm border ${borderClass} ${tw.rounded}
+        className={`w-full px-4 pt-2.5 pb-2.5 text-sm border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           ${className}`}
         style={inputStyle}

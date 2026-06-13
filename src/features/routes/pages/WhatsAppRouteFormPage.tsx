@@ -253,10 +253,8 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  WhatsApp Gateway Configuration *
-                </label>
                 <HeadlessSelect
+                  label="WhatsApp Gateway Configuration"
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
                     label: config.name,
@@ -302,10 +300,8 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Message Template Support
-                </label>
                 <HeadlessSelect
+                  label="Message Template Support"
                   options={MESSAGE_TEMPLATE_OPTIONS.map(opt => ({
                     value: opt.value,
                     label: opt.label
@@ -354,10 +350,8 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
               {formData.use_backup_on_failure && (
                 <div className="space-y-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Backup Route
-                    </label>
                     <HeadlessSelect
+                      label="Backup Route"
                       options={[
                         { value: "", label: "Select a backup route" },
                         ...(allRoutes

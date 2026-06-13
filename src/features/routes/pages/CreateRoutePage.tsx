@@ -274,10 +274,8 @@ export default function CreateRoutePage() {
             <div className="grid grid-cols-2 gap-4">
               {/* Channel Selection */}
               <div>
-                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                  Channel *
-                </label>
                 <HeadlessSelect
+                  label="Channel"
                   value={String(formData.channel_id || "")}
                   onChange={(value) => {
                     const selectedChannel = channels.find((c) => c.id === Number(value));
@@ -329,10 +327,8 @@ export default function CreateRoutePage() {
 
             {/* Gateway Configuration */}
             <div>
-              <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                Gateway Configuration *
-              </label>
               <HeadlessSelect
+                label="Gateway Configuration"
                 value={String(formData.gateway_config_id)}
                 onChange={(value) => {
                   setFormData({ ...formData, gateway_config_id: Number(value) });
@@ -376,10 +372,8 @@ export default function CreateRoutePage() {
               {formData.use_backup_on_failure && (
                 <>
                   <div>
-                    <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                      Backup Route
-                    </label>
                     <HeadlessSelect
+                      label="Backup Route"
                       value={String(formData.backup_route_id || 0)}
                       onChange={(value) => setFormData({ ...formData, backup_route_id: value ? Number(value) : undefined })}
                       options={[
@@ -415,10 +409,8 @@ export default function CreateRoutePage() {
             </h2>
             <div className="space-y-4">
               <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Platforms
-                </label>
                 <HeadlessSelect
+                  label="Platforms"
                   value={formData.platforms?.[0] || ""}
                   onChange={(value) => {
                     const platforms = formData.platforms || [];
@@ -442,10 +434,8 @@ export default function CreateRoutePage() {
               />
 
               <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Priority Level
-                </label>
                 <HeadlessSelect
+                  label="Priority Level"
                   value={formData.priorityLevel || "NORMAL"}
                   onChange={(value) => setFormData({ ...formData, priorityLevel: value })}
                   options={PRIORITY_LEVEL_OPTIONS}
@@ -481,10 +471,8 @@ export default function CreateRoutePage() {
               />
 
               <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Template Support
-                </label>
                 <HeadlessSelect
+                  label="Template Support"
                   value={formData.templateSupport || "false"}
                   onChange={(value) => setFormData({ ...formData, templateSupport: value })}
                   options={[
@@ -541,10 +529,8 @@ export default function CreateRoutePage() {
               />
 
               <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Encoding
-                </label>
                 <HeadlessSelect
+                  label="Encoding"
                   value={formData.encoding || "UTF-8"}
                   onChange={(value) => setFormData({ ...formData, encoding: value })}
                   options={ENCODING_OPTIONS}

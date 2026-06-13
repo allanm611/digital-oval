@@ -17,6 +17,7 @@ import {
   Filter,
   AlertCircle,
   Package,
+  Download,
 } from "lucide-react";
 import { Offer, SearchParams, OfferStatusEnum } from "../types/offer";
 import { offerService } from "../services/offerService";
@@ -43,6 +44,7 @@ import Radio from "../../../shared/components/ui/Radio";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 interface OfferTableRow {
   id: number;
@@ -86,6 +88,7 @@ export default function OffersPage() {
   );
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // Dropdown menu state
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
@@ -118,6 +121,8 @@ export default function OffersPage() {
       id: "name",
       label: "Offer",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm truncate`} title={row.name}>
           {row.name}
@@ -128,6 +133,11 @@ export default function OffersPage() {
       id: "category",
       label: "Category",
       visible: true,
+      sortable: true,
+      filterConfig: {
+        type: 'select',
+        options: categories.map(c => c.name)
+      },
       render: (_, row) => (
         <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium ${
           row.category === "Data Offers"
@@ -150,91 +160,88 @@ export default function OffersPage() {
       id: "status",
       label: "Status",
       visible: true,
-      render: (_, row) => {
-        const offer = offers.find((o) => o.id === row.id);
-        return offer ? getStatusBadge(offer.status) : null;
+      sortable: true,
+      filterConfig: {
+        type: 'select',
+        options: ['draft', 'active', 'paused', 'expired', 'archived']
       },
+      render: (value) => getStatusBadge(value),
     },
     {
       id: "approval",
       label: "Approval",
       visible: true,
-      render: (_, row) => {
-        const offer = offers.find((o) => o.id === row.id);
-        if (!offer) return null;
-        return getApprovalBadge(
-          offer.status === "approved"
-            ? "approved"
-            : offer.status === "rejected"
-              ? "rejected"
-              : "pending",
-        );
+      sortable: true,
+      filterConfig: {
+        type: 'select',
+        options: ['approved', 'rejected', 'pending']
       },
+      render: (value) => getApprovalBadge(value),
     },
     {
       id: "created",
       label: "Created",
       visible: true,
-      render: (_, row) => {
-        const offer = offers.find((o) => o.id === row.id);
-        return offer ? <DateFormatter date={offer.created_at} useUserTimezone /> : null;
-      },
+      sortable: true,
+      filterConfig: { type: 'date' },
+      render: (value) => <DateFormatter date={value} useUserTimezone />,
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
-      render: (_, row) => {
-        const offer = offers.find((o) => o.id === row.id);
-        if (!offer) return null;
-        return (
-          <div className="flex items-center justify-center space-x-2">
+      render: (_, row) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => handleViewOffer(row.id)}
+            className={`text-[${color.status.info}] hover:text-[${color.status.info}] p-1 rounded`}
+            title="View Details"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          <PermissionGate permission="offers.update">
             <button
-              onClick={() => offer.id && handleViewOffer(offer.id)}
-              className={`text-[${color.status.info}] hover:text-[${color.status.info}] p-1 rounded`}
-              title="View Details"
+              onClick={() => handleEditOffer(row.id)}
+              className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
+              title="Edit"
             >
-              <Eye className="h-4 w-4" />
+              <Edit className="h-4 w-4" />
             </button>
-            <PermissionGate permission="offers.update">
-              <button
-                onClick={() => offer.id && handleEditOffer(offer.id)}
-                className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
-                title="Edit"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-            </PermissionGate>
-            <div
-              className="relative"
-              ref={(el) => {
-                actionMenuRefs.current[offer.id!] = el;
-              }}
+          </PermissionGate>
+          <div
+            className="relative"
+            ref={(el) => {
+              actionMenuRefs.current[row.id] = el;
+            }}
+          >
+            <button
+              onClick={(e) => handleActionMenuToggle(row.id, e)}
+              className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
+              title="More Actions"
             >
-              <button
-                onClick={(e) => offer.id && handleActionMenuToggle(offer.id, e)}
-                className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
-                title="More Actions"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </div>
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
           </div>
-        );
-      },
+        </div>
+      ),
     },
   ];
 
   const {
     columns,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+    expandedRowId,
+    setExpandedRowId,
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
     sortConfigs,
     handleSort,
   } = useTable({
-    tableId: "offers-table",
+    tableId: "offers-table-v2",
     defaultColumns,
     persistToLocalStorage: true,
   });
@@ -614,6 +621,46 @@ export default function OffersPage() {
 
   const handleEditOffer = (id: number) => {
     navigate(`/dashboard/offers/${id}/edit`);
+  };
+
+  const handleExportCSV = () => {
+    if (filteredOffers.length === 0) {
+      showError("No offers to export", "There are no offers to export");
+      return;
+    }
+
+    const headers = ["ID", "Name", "Category", "Status", "Approval", "Created"];
+    const rows = filteredOffers.map((offer) => [
+      offer.id || "",
+      offer.name || "",
+      getCategoryName(offer.category_id),
+      offer.status || "",
+      offer.status === "approved"
+        ? "approved"
+        : offer.status === "rejected"
+          ? "rejected"
+          : "pending",
+      offer.created_at || "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `offers_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Calculate dropdown position
@@ -1337,6 +1384,23 @@ export default function OffersPage() {
           <Filter className="h-4 w-4" />
           <span>Filters</span>
         </button>
+
+        <button
+          onClick={handleExportCSV}
+          className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
+          style={{
+            backgroundColor: button.action.background,
+            color: button.action.color,
+            border: button.action.border,
+            padding: `${button.action.paddingY} ${button.action.paddingX}`,
+            borderRadius: button.action.borderRadius,
+            fontSize: button.action.fontSize,
+          }}
+          title="Download as CSV"
+        >
+          <Download className="h-4 w-4" />
+          <span>Download CSV</span>
+        </button>
       </div>
 
       {/* Offers Table */}
@@ -1389,6 +1453,35 @@ export default function OffersPage() {
                 onPageChange={tableHandlePageChange}
                 onSort={handleSort}
                 sortConfigs={sortConfigs}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
+                expandedRowId={expandedRowId}
+                onExpandChange={setExpandedRowId}
+                expandedContent={(row) => {
+                  const offer = filteredOffers.find(o => o.id === row.id);
+                  return offer ? (
+                    <div className="p-4 bg-gray-50 space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Description</p>
+                          <p className="text-sm text-gray-900">{offer.description || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Type</p>
+                          <p className="text-sm text-gray-900">{offer.offer_type || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Start Date</p>
+                          <p className="text-sm text-gray-900">{offer.start_date ? <DateFormatter date={offer.start_date} useLocale year="numeric" month="short" day="numeric" /> : "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">End Date</p>
+                          <p className="text-sm text-gray-900">{offer.end_date ? <DateFormatter date={offer.end_date} useLocale year="numeric" month="short" day="numeric" /> : "—"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null;
+                }}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -1837,6 +1930,16 @@ export default function OffersPage() {
           </div>,
           document.body,
         )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

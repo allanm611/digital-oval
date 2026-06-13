@@ -270,10 +270,8 @@ export default function CreateEditUSSDRoutePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  USSD Gateway Configuration *
-                </label>
                 <HeadlessSelect
+                  label="USSD Gateway Configuration"
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
                     label: config.name,
@@ -332,10 +330,8 @@ export default function CreateEditUSSDRoutePage() {
               {formData.use_backup_on_failure && (
                 <div className="space-y-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Backup Route
-                    </label>
                     <HeadlessSelect
+                      label="Backup Route"
                       options={[
                         { value: "", label: "Select a backup route" },
                         ...(allRoutes
@@ -404,10 +400,8 @@ export default function CreateEditUSSDRoutePage() {
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Encoding
-                </label>
                 <HeadlessSelect
+                  label="Encoding"
                   options={ENCODING_OPTIONS}
                   value={extendedFormData.encoding}
                   onChange={(value) => handleExtendedFieldChange("encoding", value as string)}

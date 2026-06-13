@@ -294,10 +294,8 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SMS Gateway Configuration *
-                </label>
                 <HeadlessSelect
+                  label="SMS Gateway Configuration"
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
                     label: config.name,
@@ -326,12 +324,10 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sender ID
-              </label>
               <div className="flex">
                 <div className="flex-1" style={{ borderTopRightRadius: "0", borderBottomRightRadius: "0", overflow: "hidden" }}>
                   <HeadlessSelect
+                    label="Sender ID"
                     options={[
                       { value: "", label: "Select Sender ID" },
                       ...(senderIds.map((sender) => ({
@@ -387,10 +383,8 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
               {formData.use_backup_on_failure && (
                 <div className="space-y-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Backup Route
-                    </label>
                     <HeadlessSelect
+                      label="Backup Route"
                       options={[
                         { value: "", label: "Select a backup route" },
                         ...(allRoutes

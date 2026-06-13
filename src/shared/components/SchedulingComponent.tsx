@@ -576,12 +576,10 @@ export default function SchedulingComponent({
 
             {/* Recur Every */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Recur Every
-              </label>
               <div className="flex items-center space-x-2">
                 <Input
                   type="number"
+                  label="Recur Every"
                   value={recurrenceInterval}
                   onChange={(value) =>
                     setRecurrenceInterval(Number(value))
@@ -636,11 +634,9 @@ export default function SchedulingComponent({
 
               {monthlyRule === "day_of_month" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Day Number
-                  </label>
                   <Input
                     type="number"
+                    label="Day Number"
                     value={monthlyDayOfMonth}
                     onChange={(value) =>
                       setMonthlyDayOfMonth(
@@ -879,11 +875,9 @@ export default function SchedulingComponent({
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hours
-                    </label>
                     <Input
                       type="number"
+                      label="Hours"
                       value={hoursBeforeBroadcast}
                       onChange={(value) =>
                         setHoursBeforeBroadcast(Number(value))

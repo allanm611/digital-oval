@@ -267,10 +267,8 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Push Gateway Configuration *
-                </label>
                 <HeadlessSelect
+                  label="Push Gateway Configuration"
                   options={gatewayConfigs.map((config) => ({
                     value: String(config.id),
                     label: config.name,
@@ -346,10 +344,8 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priority Level
-                </label>
                 <HeadlessSelect
+                  label="Priority Level"
                   options={PRIORITY_LEVEL_OPTIONS.map(opt => ({
                     value: opt.value,
                     label: opt.label
@@ -387,10 +383,8 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
               {formData.use_backup_on_failure && (
                 <div className="space-y-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Backup Route
-                    </label>
                     <HeadlessSelect
+                      label="Backup Route"
                       options={[
                         { value: "", label: "Select a backup route" },
                         ...(allRoutes

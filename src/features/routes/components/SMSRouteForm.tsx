@@ -157,10 +157,8 @@ export default function SMSRouteForm({
           {/* Row 2: Communication Channel and Gateway Provider */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Communication Channel *
-              </label>
               <HeadlessSelect
+                label="Communication Channel"
                 options={NOTIFICATION_CHANNEL_OPTIONS.map(opt => ({
                   value: opt.value,
                   label: opt.label
@@ -177,10 +175,8 @@ export default function SMSRouteForm({
             </div>
 
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Gateway Provider *
-              </label>
               <HeadlessSelect
+                label="Gateway Provider"
                 options={SMS_GATEWAY_OPTIONS.map(opt => ({
                   value: opt.value,
                   label: opt.label
