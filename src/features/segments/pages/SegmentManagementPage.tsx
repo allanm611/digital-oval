@@ -43,7 +43,7 @@ import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import ErrorState from "../../../shared/components/ui/ErrorState";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
@@ -89,7 +89,7 @@ export default function SegmentManagementPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [displayedCount, setDisplayedCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy] = useState<
     "id" | "name" | "type" | "category" | "created_at" | "updated_at"
@@ -1921,6 +1921,7 @@ export default function SegmentManagementPage() {
           pageSize={pageSize}
           totalItems={totalCount}
           onPageChange={setPage}
+          onPageSizeChange={setPageSize}
         />
       )}
 
@@ -2018,12 +2019,8 @@ export default function SegmentManagementPage() {
 
                 {/* Visibility Filter */}
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-3`}
-                  >
-                    Visibility
-                  </label>
                   <HeadlessSelect
+                    label="Visibility"
                     options={[
                       { value: "all", label: "All Visibility" },
                       { value: "public", label: "Public" },
@@ -2041,12 +2038,8 @@ export default function SegmentManagementPage() {
 
                 {/* Type Filter */}
                 <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-3`}
-                  >
-                    Segment Type
-                  </label>
                   <HeadlessSelect
+                    label="Segment Type"
                     options={[
                       { value: "all", label: "All Types" },
                       ...segmentTypes.map((type) => ({

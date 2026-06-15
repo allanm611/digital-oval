@@ -70,6 +70,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
 import { Product } from "../../products/types/product";
 import { Search, Check, FileText, Eye, Copy } from "lucide-react";
 import { productCategoryService } from "../../products/services/productCategoryService";
@@ -1817,16 +1818,12 @@ export default function OfferDetailsPage() {
           )}
 
           {/* Edit Button */}
-          <PermissionGate permission="offers.update">
-            <button
-              onClick={() => navigate(`/dashboard/offers/${id}/edit`)}
-              className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Edit className="w-4 h-4" />
-              Edit
-            </button>
-          </PermissionGate>
+          <FeatureActionButton
+            featureId="offers"
+            action="edit"
+            itemId={id}
+            variant="primary"
+          />
 
           {/* More Menu */}
           <div className="relative" ref={moreMenuRef}>

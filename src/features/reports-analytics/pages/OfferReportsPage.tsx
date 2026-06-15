@@ -27,7 +27,7 @@ import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper"
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency as formatCurrencyAmount } from "../../../shared/services/currencyService";
@@ -550,7 +550,7 @@ export default function OfferReportsPage() {
   });
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
-  const tablePageSize = 20;
+  const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
 
   const tableColumns: TableColumn<OfferTableRow>[] = [
     {
@@ -622,10 +622,10 @@ export default function OfferReportsPage() {
     },
   ];
 
-  const { columns: tableColumnsMemo } = useTable({
+  const { columns: tableColumnsMemo, handlePageSizeChange: tableHandlePageSizeChange } = useTable({
     tableId: "offer-reports-table",
     defaultColumns: tableColumns,
-    defaultPageSize: tablePageSize,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
   });
 
   // State for real offer data
@@ -1393,6 +1393,7 @@ export default function OfferReportsPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredRows.length}
                 onPageChange={setTablePage}
+                onPageSizeChange={setTablePageSize}
               />
             )}
           </>

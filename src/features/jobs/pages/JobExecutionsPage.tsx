@@ -24,7 +24,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import Input from "../../../shared/components/ui/Input";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
@@ -111,7 +111,7 @@ export default function JobExecutionsPage() {
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalExecutions, setTotalExecutions] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const filtersModalRef = useRef<HTMLDivElement>(null);
@@ -658,11 +658,13 @@ export default function JobExecutionsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "job-executions-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -1001,10 +1003,9 @@ export default function JobExecutionsPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Job ID
-                      </label>
-                      <Input type="number"
+                      <Input
+                        label="Job ID"
+                        type="number"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="Filter by job ID"
                         value={jobIdFilter}
@@ -1016,10 +1017,9 @@ export default function JobExecutionsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Days Back
-                      </label>
-                      <Input type="number"
+                      <Input
+                        label="Days Back"
+                        type="number"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="7"
                         value={daysBackFilter}
@@ -1029,30 +1029,27 @@ export default function JobExecutionsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Date
-                      </label>
-                      <Input type="date"
+                      <Input
+                        label="Start Date"
+                        type="date"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         value={startDateFilter}
                         onChange={(value) => setStartDateFilter(String(value))}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        End Date
-                      </label>
-                      <Input type="date"
+                      <Input
+                        label="End Date"
+                        type="date"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         value={endDateFilter}
                         onChange={(value) => setEndDateFilter(String(value))}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Correlation ID
-                      </label>
-                      <Input type="text"
+                      <Input
+                        label="Correlation ID"
+                        type="text"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="Filter by correlation ID"
                         value={correlationIdFilter}
@@ -1060,10 +1057,9 @@ export default function JobExecutionsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Trace ID
-                      </label>
-                      <Input type="text"
+                      <Input
+                        label="Trace ID"
+                        type="text"
                         className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                         placeholder="Filter by trace ID"
                         value={traceIdFilter}
@@ -1072,10 +1068,9 @@ export default function JobExecutionsPage() {
                     </div>
                     {quickFilter === "long-running" && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Threshold (minutes)
-                        </label>
-                        <Input type="number"
+                        <Input
+                          label="Threshold (minutes)"
+                          type="number"
                           className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                           placeholder="60"
                           value={longRunningThreshold}
@@ -1173,6 +1168,7 @@ export default function JobExecutionsPage() {
                   pageSize={pageSize}
                   totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
                   onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
                 />
               </div>
             )}

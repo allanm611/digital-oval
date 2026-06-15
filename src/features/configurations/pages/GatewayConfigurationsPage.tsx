@@ -8,7 +8,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
 import { emailGatewayConfigService, EMAIL_GATEWAY_DUMMY_DATA } from "../services/emailGatewayConfigService";
 import { smsGatewayConfigService, SMS_GATEWAY_DUMMY_DATA } from "../services/smsGatewayConfigService";
@@ -376,11 +376,13 @@ export default function GatewayConfigurationsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "gateway-configurations-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -455,6 +457,7 @@ export default function GatewayConfigurationsPage() {
               pageSize={tablePageSize}
               isLoading={false}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               getRowId={(row) => `${row.id}-${row.channel_type}`}
@@ -474,6 +477,7 @@ export default function GatewayConfigurationsPage() {
                   pageSize={tablePageSize}
                   totalItems={filteredConfigs.length}
                   onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
                 />
               </div>
             )}

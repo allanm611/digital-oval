@@ -26,7 +26,7 @@ import {
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency } from "../../../shared/services/currencyService";
@@ -463,7 +463,7 @@ export default function CampaignReportsPage() {
   });
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
-  const tablePageSize = 20;
+  const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
 
   const tableColumns: TableColumn<CampaignTableRow>[] = [
     {
@@ -586,10 +586,10 @@ export default function CampaignReportsPage() {
     },
   ];
 
-  const { columns: tableColumnsMemo } = useTable({
+  const { columns: tableColumnsMemo, handlePageSizeChange: tableHandlePageSizeChange } = useTable({
     tableId: "campaign-reports-table",
     defaultColumns: tableColumns,
-    defaultPageSize: tablePageSize,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
   });
 
   // State for real campaign data
@@ -1424,6 +1424,7 @@ export default function CampaignReportsPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredRows.length}
                 onPageChange={setTablePage}
+                onPageSizeChange={setTablePageSize}
               />
             )}
           </>

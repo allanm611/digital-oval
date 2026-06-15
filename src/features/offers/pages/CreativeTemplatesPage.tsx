@@ -6,7 +6,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -265,11 +265,13 @@ export default function CreativeTemplatesPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "creative-templates-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -352,6 +354,7 @@ export default function CreativeTemplatesPage() {
               pageSize={tablePageSize}
               isLoading={isLoading}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -369,6 +372,7 @@ export default function CreativeTemplatesPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredTemplates.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
 

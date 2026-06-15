@@ -12,7 +12,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { smsRouteService } from "../services/smsRouteService";
@@ -304,11 +304,13 @@ export default function RoutesManagementPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "routes-management-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -455,6 +457,7 @@ export default function RoutesManagementPage() {
               pageSize={tablePageSize}
               isLoading={loading}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               getRowId={(row) => `${row.id}-${row.channel}`}
@@ -473,6 +476,7 @@ export default function RoutesManagementPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredRoutes.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
           </>

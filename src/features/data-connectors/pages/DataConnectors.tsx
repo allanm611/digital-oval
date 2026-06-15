@@ -36,7 +36,7 @@ import {
 } from "../types/dataConnector";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
@@ -64,7 +64,7 @@ export default function DataConnectors() {
     "all" | "active" | "inactive"
   >("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(15);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalCount, setTotalCount] = useState(0);
 
   const defaultColumns: TableColumn<ProcessedDataConnector>[] = [
@@ -128,11 +128,13 @@ export default function DataConnectors() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "data-connectors-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -615,6 +617,7 @@ export default function DataConnectors() {
                 pageSize={pageSize}
                 totalItems={totalCount}
                 onPageChange={handlePageChange}
+                onPageSizeChange={setPageSize}
               />
             </div>
           )}

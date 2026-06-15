@@ -24,7 +24,7 @@ import {
 import { colors } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { Table } from "../../../shared/components/Table/Table";

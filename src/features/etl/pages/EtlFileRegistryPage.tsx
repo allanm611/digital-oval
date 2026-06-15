@@ -27,7 +27,7 @@ import {
 } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import FetchControlsModal from "../components/FetchControlsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -129,11 +129,13 @@ export default function EtlFileRegistryPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "etl-files-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -506,6 +508,7 @@ export default function EtlFileRegistryPage() {
               pageSize={tablePageSize}
               isLoading={isLoadingFiles}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -526,6 +529,7 @@ export default function EtlFileRegistryPage() {
           pageSize={tablePageSize}
           totalItems={totalCount}
           onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

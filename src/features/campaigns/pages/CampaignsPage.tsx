@@ -28,14 +28,14 @@ import {
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { getUserDisplayName, getUserDisplayNames } from "../../../shared/utils/userNameCache";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -346,27 +346,15 @@ export default function CampaignsPage() {
           >
             <Eye className="w-4 h-4" />
           </button>
-          <PermissionGate permission="campaigns.update">
-            <button
-              onClick={() => {
-                const isRejected = campaign.approval_status === "rejected" || campaign.status === "rejected";
-                navigate(`/dashboard/campaigns/${campaign.id}/edit`, {
-                  state: {
-                    campaign: campaign,
-                    isResubmit: isRejected,
-                  },
-                });
-              }}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
-              title={
-                campaign.approval_status === "rejected" || campaign.status === "rejected"
-                  ? "Edit & Resubmit"
-                  : "Edit"
-              }
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-          </PermissionGate>
+          <FeatureActionButton
+            featureId="campaigns"
+            action="edit"
+            itemId={campaign.id}
+            navigationState={{
+              campaign: campaign,
+              isResubmit: campaign.approval_status === "rejected" || campaign.status === "rejected",
+            }}
+          />
           <div className="relative" ref={(el) => {
             actionMenuRefs.current[campaign.id] = el;
           }}>
@@ -392,11 +380,13 @@ export default function CampaignsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "campaigns-table-v2",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -1196,9 +1186,7 @@ export default function CampaignsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-          <PermissionGate permission="campaigns.create">
-            <CreateButton route="/dashboard/campaigns/create" />
-          </PermissionGate>
+          <FeatureActionButton featureId="campaigns" action="create" />
         </div>
       </div>
 
@@ -1314,6 +1302,7 @@ export default function CampaignsPage() {
           pageSize={tablePageSize}
           totalItems={totalCampaigns}
           onPageChange={tableHandlePageChange}
+          onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
       {/* Action Menus */}
@@ -1691,10 +1680,8 @@ export default function CampaignsPage() {
                   <div className="space-y-6">
                     {/* Category Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Catalog
-                      </label>
                       <HeadlessSelect
+                        label="Catalog"
                         options={categoryOptions}
                         value={filters.categoryId}
                         onChange={(value) =>
@@ -1710,10 +1697,8 @@ export default function CampaignsPage() {
 
                     {/* Approval Status Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Approval Status
-                      </label>
                       <HeadlessSelect
+                        label="Approval Status"
                         options={approvalStatusOptions}
                         value={filters.approvalStatus}
                         onChange={(value) =>
@@ -1727,43 +1712,34 @@ export default function CampaignsPage() {
                     </div>
 
                     {/* Date Range Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Date Range
-                      </label>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">
-                            Start Date From
-                          </label>
-                          <Input
-                            type="date"
-                            value={filters.startDateFrom}
-                            onChange={(value) =>
-                              setFilters({
-                                ...filters,
-                                startDateFrom: String(value),
-                              })
-                            }
-                            className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-500 mb-1">
-                            Start Date To
-                          </label>
-                          <Input
-                            type="date"
-                            value={filters.startDateTo}
-                            onChange={(value) =>
-                              setFilters({
-                                ...filters,
-                                startDateTo: String(value),
-                              })
-                            }
-                            className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                          />
-                        </div>
+                    <div className="space-y-3">
+                      <div>
+                        <Input
+                          label="Start Date From"
+                          type="date"
+                          value={filters.startDateFrom}
+                          onChange={(value) =>
+                            setFilters({
+                              ...filters,
+                              startDateFrom: String(value),
+                            })
+                          }
+                          className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          label="Start Date To"
+                          type="date"
+                          value={filters.startDateTo}
+                          onChange={(value) =>
+                            setFilters({
+                              ...filters,
+                              startDateTo: String(value),
+                            })
+                          }
+                          className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                        />
                       </div>
                     </div>
                   </div>

@@ -42,7 +42,7 @@ import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper"
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import {
   PieChart,
   Pie,
@@ -1526,6 +1526,7 @@ export default function UserManagementPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
@@ -2084,6 +2085,7 @@ export default function UserManagementPage() {
                 pageSize={tablePageSize}
                 isLoading={!rolesReady || isLoading}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
                 onSort={handleSort}
                 sortConfigs={sortConfigs}
                 style={{
@@ -2102,6 +2104,7 @@ export default function UserManagementPage() {
                     pageSize={tablePageSize}
                     totalItems={filteredUsers.length}
                     onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
                   />
                 </div>
               )}

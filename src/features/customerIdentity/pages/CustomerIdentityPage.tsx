@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, AlertTriangle } from "lucide-react";
 import { tw, color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { customerIdentityService } from "../services/customerIdentityService";
 import { CustomerIdentityField } from "../types/customerIdentity";
@@ -185,6 +185,7 @@ export default function CustomerIdentityPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
@@ -300,6 +301,7 @@ export default function CustomerIdentityPage() {
                 pageSize={tablePageSize}
                 isLoading={isLoading}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
                 onSort={handleSort}
                 sortConfigs={sortConfigs}
                 style={{
@@ -315,6 +317,7 @@ export default function CustomerIdentityPage() {
               pageSize={tablePageSize}
               totalItems={filteredFields.length}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
             />
           </>
         )}

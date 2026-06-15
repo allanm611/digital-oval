@@ -11,7 +11,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import {
   communicationChannelService,
   CommunicationChannel,
@@ -172,11 +172,13 @@ export default function DNDBulkManagementPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "dnd-bulk-management-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -481,6 +483,7 @@ export default function DNDBulkManagementPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredSubscriptions.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
           </>

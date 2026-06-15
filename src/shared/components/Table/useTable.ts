@@ -1,13 +1,26 @@
 import { useState, useCallback, useEffect } from "react";
 import { TableColumn, UseTableProps, SortConfig } from "./types";
 
+const DEFAULT_PAGE_SIZE = 25;
+const PAGE_SIZE_STORAGE_KEY = "app-pagination-page-size";
+
 export function useTable<T = any>({
   tableId,
   defaultColumns,
-  defaultPageSize = 15,
+  defaultPageSize = DEFAULT_PAGE_SIZE,
   persistToLocalStorage = true,
 }: UseTableProps<T>) {
   const storageKey = `table-state:${tableId}`;
+
+  // Get initial page size from localStorage or use default
+  const getInitialPageSize = () => {
+    try {
+      const stored = localStorage.getItem(PAGE_SIZE_STORAGE_KEY);
+      return stored ? Number(stored) : defaultPageSize;
+    } catch (e) {
+      return defaultPageSize;
+    }
+  };
 
   // Initialize columns from localStorage or defaults
   const [columns, setColumns] = useState<TableColumn<T>[]>(() => {
@@ -32,7 +45,7 @@ export function useTable<T = any>({
 
   const [expandedRowId, setExpandedRowId] = useState<number | string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(defaultPageSize);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [sortConfigs, setSortConfigs] = useState<SortConfig[]>([]);
 
   // Save columns to localStorage when they change
@@ -87,6 +100,17 @@ export function useTable<T = any>({
   // Reset page to 1 (useful when filters change)
   const resetPage = useCallback(() => {
     setCurrentPage(1);
+  }, []);
+
+  // Handle page size change
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    try {
+      localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(newPageSize));
+    } catch (e) {
+      console.error("Failed to save page size preference:", e);
+    }
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when page size changes
   }, []);
 
   // Handle column sort
@@ -169,6 +193,7 @@ export function useTable<T = any>({
     pageSize,
     setCurrentPage,
     handlePageChange,
+    handlePageSizeChange,
     resetPage,
 
     // Sorting

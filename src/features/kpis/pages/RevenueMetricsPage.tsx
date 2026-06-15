@@ -5,7 +5,7 @@ import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { RevenueMetric } from "../types/revenueMetrics";
@@ -136,11 +136,13 @@ export default function RevenueMetricsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "revenue-metrics-table",
     defaultColumns: tableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -374,6 +376,7 @@ export default function RevenueMetricsPage() {
           pageSize={tablePageSize}
           totalItems={filteredMetrics.length}
           onPageChange={tableHandlePageChange}
+          onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

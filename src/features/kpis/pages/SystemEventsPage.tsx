@@ -4,7 +4,7 @@ import Input from "../../../shared/components/ui/Input";
 import { SystemEvent, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
@@ -111,6 +111,7 @@ export default function SystemEventsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
@@ -300,6 +301,7 @@ export default function SystemEventsPage() {
             pageSize={tablePageSize}
             isLoading={isLoading}
             onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
             onSort={handleSort}
             sortConfigs={sortConfigs}
             style={{
@@ -319,6 +321,7 @@ export default function SystemEventsPage() {
           pageSize={tablePageSize}
           totalItems={filteredEvents.length}
           onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
     </div>

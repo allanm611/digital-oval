@@ -25,7 +25,7 @@ import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper"
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw } from "../../../shared/utils/utils";
@@ -353,7 +353,7 @@ export default function SegmentReportsPage() {
   });
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
-  const tablePageSize = 20;
+  const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
 
   const tableColumns: TableColumn<SegmentRow>[] = [
     {
@@ -424,10 +424,10 @@ export default function SegmentReportsPage() {
     },
   ];
 
-  const { columns: tableColumnsMemo } = useTable({
+  const { columns: tableColumnsMemo, handlePageSizeChange: tableHandlePageSizeChange } = useTable({
     tableId: "segment-reports-table",
     defaultColumns: tableColumns,
-    defaultPageSize: tablePageSize,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
   });
 
   // Real segment data state
@@ -1253,6 +1253,7 @@ export default function SegmentReportsPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredRows.length}
                 onPageChange={setTablePage}
+                onPageSizeChange={setTablePageSize}
               />
             )}
           </>

@@ -1,6 +1,26 @@
 import { color, tw } from "../../utils/utils";
 import HeadlessSelect from "./HeadlessSelect";
 
+// Industry standard page sizes - used across all pagination
+export const PAGE_SIZE_OPTIONS = [
+  { label: "25", value: "25" },
+  { label: "50", value: "50" },
+  { label: "100", value: "100" },
+];
+
+export const DEFAULT_PAGE_SIZE = 25;
+export const PAGE_SIZE_STORAGE_KEY = "app-pagination-page-size";
+
+// Helper to get initial page size from localStorage or default
+export function getInitialPageSize(): number {
+  try {
+    const stored = localStorage.getItem(PAGE_SIZE_STORAGE_KEY);
+    return stored ? Number(stored) : DEFAULT_PAGE_SIZE;
+  } catch {
+    return DEFAULT_PAGE_SIZE;
+  }
+}
+
 interface PaginationProps {
   currentPage: number; // 1-indexed
   pageSize: number;
@@ -16,7 +36,7 @@ export default function Pagination({
   totalItems,
   onPageChange,
   onPageSizeChange,
-  showPageSizeSelector = false,
+  showPageSizeSelector = true,
 }: PaginationProps) {
   const totalPages = Math.ceil(totalItems / pageSize);
   const startItem = (currentPage - 1) * pageSize + 1;
@@ -41,15 +61,17 @@ export default function Pagination({
               <HeadlessSelect
                 value={String(pageSize)}
                 onChange={(value) => {
-                  onPageSizeChange(Number(value));
+                  const newSize = Number(value);
+                  // Save user preference to localStorage
+                  try {
+                    localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(newSize));
+                  } catch (e) {
+                    console.error("Failed to save page size preference:", e);
+                  }
+                  onPageSizeChange(newSize);
                   onPageChange(1);
                 }}
-                options={[
-                  { label: "10", value: "10" },
-                  { label: "20", value: "20" },
-                  { label: "50", value: "50" },
-                  { label: "100", value: "100" },
-                ]}
+                options={PAGE_SIZE_OPTIONS}
                 placeholder="Select page size"
                 className="w-auto min-w-[100px]"
               />

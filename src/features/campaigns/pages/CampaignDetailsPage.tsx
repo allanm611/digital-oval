@@ -35,6 +35,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Textarea from "../../../shared/components/ui/Textarea";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import {
@@ -1057,36 +1058,25 @@ export default function CampaignDetailsPage() {
 
           {/* Edit & Resubmit - For rejected campaigns */}
           {canShowCampaignButton(campaign, "resubmit") && (
-            <button
-              onClick={() =>
-                navigate(`/dashboard/campaigns/${id}/edit`, {
-                  state: { campaign: campaign },
-                })
-              }
-              className={`flex items-center gap-2 ${tw.button} text-sm`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Edit className="w-4 h-4" />
-              Edit & Resubmit
-            </button>
+            <FeatureActionButton
+              featureId="campaigns"
+              action="edit"
+              itemId={id}
+              variant="primary"
+              label="Edit & Resubmit"
+              navigationState={{ campaign: campaign }}
+            />
           )}
 
           {/* Edit Button - Hidden for Rejected Campaigns */}
           {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
-            <PermissionGate permission="campaigns.update">
-              <button
-                onClick={() =>
-                  navigate(`/dashboard/campaigns/${id}/edit`, {
-                    state: { campaign: campaign },
-                  })
-                }
-                className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Edit className="w-4 h-4" />
-                Edit
-              </button>
-            </PermissionGate>
+            <FeatureActionButton
+              featureId="campaigns"
+              action="edit"
+              itemId={id}
+              variant="primary"
+              navigationState={{ campaign: campaign }}
+            />
           )}
 
           <div className="relative" ref={moreMenuRef}>

@@ -22,7 +22,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import {
   Role,

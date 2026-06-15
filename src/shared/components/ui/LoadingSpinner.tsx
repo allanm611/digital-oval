@@ -21,21 +21,24 @@ export default function LoadingSpinner({
     xl: 'h-12 w-12'
   };
 
-  const colorClasses = {
-    primary: `text-[${color.primary.action}]`,
-    white: 'text-white',
-    muted: `text-[${color.text.muted}]`
+  const getSpinnerColor = () => {
+    if (spinnerColor === 'primary') return 'var(--c-primary-action)';
+    if (spinnerColor === 'white') return 'white';
+    return 'var(--c-text-muted)';
   };
+
+  const spinnerColorValue = getSpinnerColor();
 
   // Default spinner (modern sleek rotating circle)
   if (variant === 'default') {
     return (
       <div className={`${className}`}>
         <svg
-          className={`animate-spin ${sizeClasses[size]} ${colorClasses[spinnerColor]}`}
+          className={`animate-spin ${sizeClasses[size]}`}
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
+          style={{ color: spinnerColorValue }}
         >
           <circle
             className="opacity-20"
@@ -64,24 +67,21 @@ export default function LoadingSpinner({
         <div
           className={`${sizeClasses[size]} rounded-full animate-bounce`}
           style={{
-            backgroundColor: spinnerColor === 'primary' ? color.primary.action :
-              spinnerColor === 'white' ? 'white' : color.text.muted,
+            backgroundColor: spinnerColorValue,
             animationDelay: '0ms'
           }}
         />
         <div
           className={`${sizeClasses[size]} rounded-full animate-bounce`}
           style={{
-            backgroundColor: spinnerColor === 'primary' ? color.primary.action :
-              spinnerColor === 'white' ? 'white' : color.text.muted,
+            backgroundColor: spinnerColorValue,
             animationDelay: '150ms'
           }}
         />
         <div
           className={`${sizeClasses[size]} rounded-full animate-bounce`}
           style={{
-            backgroundColor: spinnerColor === 'primary' ? color.primary.action :
-              spinnerColor === 'white' ? 'white' : color.text.muted,
+            backgroundColor: spinnerColorValue,
             animationDelay: '300ms'
           }}
         />
@@ -95,8 +95,7 @@ export default function LoadingSpinner({
       <div
         className={`${sizeClasses[size]} rounded-full animate-pulse ${className}`}
         style={{
-          backgroundColor: spinnerColor === 'primary' ? color.primary.action :
-            spinnerColor === 'white' ? 'white' : color.text.muted
+          backgroundColor: spinnerColorValue
         }}
       />
     );
@@ -109,8 +108,7 @@ export default function LoadingSpinner({
         <div
           className={`${sizeClasses[size]} rounded-full animate-bounce`}
           style={{
-            backgroundColor: spinnerColor === 'primary' ? color.primary.action :
-              spinnerColor === 'white' ? 'white' : color.text.muted
+            backgroundColor: spinnerColorValue
           }}
         />
       </div>
@@ -122,10 +120,11 @@ export default function LoadingSpinner({
     return (
       <div className={`${className}`}>
         <svg
-          className={`animate-spin ${sizeClasses[size]} ${colorClasses[spinnerColor]}`}
+          className={`animate-spin ${sizeClasses[size]}`}
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
+          style={{ color: spinnerColorValue }}
         >
           <circle
             className="opacity-10"
@@ -155,20 +154,16 @@ export default function LoadingSpinner({
           <div
             className="absolute inset-0 rounded-full border-2 border-transparent"
             style={{
-              borderTopColor: spinnerColor === 'primary' ? color.primary.action :
-                spinnerColor === 'white' ? 'white' : color.text.muted,
-              borderRightColor: spinnerColor === 'primary' ? color.primary.action :
-                spinnerColor === 'white' ? 'white' : color.text.muted,
+              borderTopColor: spinnerColorValue,
+              borderRightColor: spinnerColorValue,
               opacity: 0.3
             }}
           />
           <div
             className="absolute inset-0 rounded-full border-2 border-transparent animate-spin"
             style={{
-              borderTopColor: spinnerColor === 'primary' ? color.primary.action :
-                spinnerColor === 'white' ? 'white' : color.text.muted,
-              borderRightColor: spinnerColor === 'primary' ? color.primary.action :
-                spinnerColor === 'white' ? 'white' : color.text.muted
+              borderTopColor: spinnerColorValue,
+              borderRightColor: spinnerColorValue
             }}
           />
         </div>
@@ -181,10 +176,11 @@ export default function LoadingSpinner({
     return (
       <div className={`${className}`}>
         <svg
-          className={`animate-spin ${sizeClasses[size]} ${colorClasses[spinnerColor]}`}
+          className={`animate-spin ${sizeClasses[size]}`}
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
+          style={{ color: spinnerColorValue }}
         >
           <circle
             className="opacity-5"

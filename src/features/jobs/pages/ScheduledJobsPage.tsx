@@ -25,7 +25,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import Input from "../../../shared/components/ui/Input";
 import SelectJobTypeModal from "../components/SelectJobTypeModal";
@@ -228,11 +228,13 @@ export default function ScheduledJobsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "scheduled-jobs-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -877,6 +879,7 @@ export default function ScheduledJobsPage() {
               pageSize={tablePageSize}
               isLoading={isLoading}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -893,6 +896,7 @@ export default function ScheduledJobsPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredJobs.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
           </div>

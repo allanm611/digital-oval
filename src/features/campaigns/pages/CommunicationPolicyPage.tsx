@@ -23,7 +23,7 @@ import { communicationPolicyService } from "../services/communicationPolicyServi
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 
 export default function CommunicationPolicyPage() {
   const navigate = useNavigate();
@@ -339,11 +339,13 @@ export default function CommunicationPolicyPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "communication-policies-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -461,6 +463,7 @@ export default function CommunicationPolicyPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredPolicies.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
 

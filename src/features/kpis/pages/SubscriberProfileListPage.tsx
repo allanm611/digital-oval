@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw } from "../../../shared/utils/utils";
@@ -109,6 +109,7 @@ export default function SubscriberProfileListPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
@@ -279,6 +280,7 @@ export default function SubscriberProfileListPage() {
             pageSize={tablePageSize}
             isLoading={isLoading}
             onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
             onSort={handleSort}
             sortConfigs={sortConfigs}
             style={{
@@ -298,6 +300,7 @@ export default function SubscriberProfileListPage() {
           pageSize={tablePageSize}
           totalItems={filteredProfiles.length}
           onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

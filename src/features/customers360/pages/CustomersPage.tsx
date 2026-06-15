@@ -30,7 +30,7 @@ import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
@@ -44,8 +44,6 @@ import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-
-const pageSize = 20;
 
 interface SearchParams {
   page: number;
@@ -84,7 +82,7 @@ export default function CustomersPage() {
   const [isTimeout, setIsTimeout] = useState(false);
   const [filters, setFilters] = useState<SearchParams>({
     page: 1,
-    limit: pageSize,
+    limit: getInitialPageSize(),
     offset: 0,
   });
   const [totalCustomers, setTotalCustomers] = useState(0);
@@ -196,6 +194,7 @@ export default function CustomersPage() {
   } = useTable({
     tableId: "customers-table-v2",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -1131,7 +1130,15 @@ export default function CustomersPage() {
                 setFilters((prev) => ({
                   ...prev,
                   page,
-                  offset: (page - 1) * pageSize,
+                  offset: (page - 1) * prev.limit,
+                }))
+              }
+              onPageSizeChange={(newPageSize) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  limit: newPageSize,
+                  page: 1,
+                  offset: 0,
                 }))
               }
             />

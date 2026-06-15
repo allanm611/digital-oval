@@ -29,7 +29,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
@@ -208,11 +208,13 @@ export default function ConnectionProfilesPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "connection-profiles-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -949,6 +951,7 @@ export default function ConnectionProfilesPage() {
               pageSize={tablePageSize}
               isLoading={loadingProfiles}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -965,6 +968,7 @@ export default function ConnectionProfilesPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredProfiles.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
           </div>

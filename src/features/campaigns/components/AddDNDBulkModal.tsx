@@ -291,11 +291,9 @@ export default function AddDNDBulkModal({
               <>
                 {/* Customer Selection */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Select Customer *
-                  </label>
                   <div className={errors.customer_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
+                      label="Select Customer *"
                       value={formData.customer_id}
                       onChange={(value) => {
                         setFormData({ ...formData, customer_id: value.toString() });
@@ -410,11 +408,9 @@ export default function AddDNDBulkModal({
 
             {/* DND Type */}
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                DND Type *
-              </label>
               <div className={errors.dnd_type_id ? "border border-red-500 rounded" : ""}>
                 <HeadlessSelect
+                  label="DND Type *"
                   value={formData.dnd_type_id}
                   onChange={(value) => {
                     setFormData({ ...formData, dnd_type_id: value.toString() });

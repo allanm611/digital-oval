@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import Input from "../../../shared/components/ui/Input";
 import { color, tw, zIndex, noteStyles, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -164,7 +164,7 @@ export default function JobWorkflowStepsPage() {
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalCount, setTotalCount] = useState(0);
 
   // Use click outside hook for filter modal
@@ -1442,6 +1442,7 @@ export default function JobWorkflowStepsPage() {
             pageSize={pageSize}
             totalItems={totalCount}
             onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
           />
         )}
         </div>
@@ -1581,24 +1582,20 @@ export default function JobWorkflowStepsPage() {
                   <div className="space-y-4">
                     {/* Step Code Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Step Code
-                      </label>
                       <Input
+                        label="Step Code"
                         type="text"
                         value={stepCodeFilter}
                         onChange={(value) => setStepCodeFilter(String(value))}
                         placeholder="Enter step code"
-                       
+
                       />
                     </div>
 
                     {/* Step Order Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Step Order
-                      </label>
                       <Input
+                        label="Step Order"
                         type="number"
                         value={stepOrderFilter || ""}
                         onChange={(value) =>
@@ -1607,7 +1604,7 @@ export default function JobWorkflowStepsPage() {
                           )
                         }
                         placeholder="Enter step order"
-                       
+
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         Use with Job ID for precise lookup
@@ -1616,26 +1613,22 @@ export default function JobWorkflowStepsPage() {
 
                     {/* Job ID Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Job ID
-                      </label>
                       <Input
+                        label="Job ID"
                         type="number"
                         value={jobIdFilter || ""}
                         onChange={(value) =>
                           setJobIdFilter(value ? Number(value) : "")
                         }
                         placeholder="Enter job ID"
-                       
+
                       />
                     </div>
 
                     {/* Critical Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Critical
-                      </label>
                       <HeadlessSelect
+                        label="Critical"
                         options={[
                           { value: "", label: "All" },
                           { value: "true", label: "Critical Only" },
@@ -1658,10 +1651,8 @@ export default function JobWorkflowStepsPage() {
 
                     {/* Parallel Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Parallel
-                      </label>
                       <HeadlessSelect
+                        label="Parallel"
                         options={[
                           { value: "", label: "All" },
                           { value: "true", label: "Parallel Only" },
@@ -1684,10 +1675,8 @@ export default function JobWorkflowStepsPage() {
 
                     {/* Active Filter */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Active Status
-                      </label>
                       <HeadlessSelect
+                        label="Active Status"
                         options={[
                           { value: "", label: "All" },
                           { value: "true", label: "Active Only" },

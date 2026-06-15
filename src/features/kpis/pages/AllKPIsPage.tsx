@@ -5,7 +5,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -231,11 +231,13 @@ export default function AllKPIsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "all-kpis-table",
     defaultColumns: tableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -432,6 +434,7 @@ export default function AllKPIsPage() {
           pageSize={tablePageSize}
           totalItems={filteredKPIs.length}
           onPageChange={tableHandlePageChange}
+          onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

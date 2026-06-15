@@ -33,7 +33,7 @@ import {
 import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -521,6 +521,7 @@ export default function QuickListsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
     expandedRowId,
@@ -528,6 +529,7 @@ export default function QuickListsPage() {
   } = useTable({
     tableId: "quicklists-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -592,6 +594,7 @@ export default function QuickListsPage() {
         pageSize={tablePageSize}
         isLoading={loading}
         onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
         onSort={handleSort}
         sortConfigs={sortConfigs}
         expandedRowId={expandedRowId}
@@ -625,6 +628,7 @@ export default function QuickListsPage() {
           pageSize={tablePageSize}
           totalItems={filteredAndPaginatedQuicklists.total}
           onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
 import { Edit, Trash2, Plus } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
@@ -99,11 +99,13 @@ function EmailRoutesListView() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "email-routes-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -201,6 +203,7 @@ function EmailRoutesListView() {
               pageSize={tablePageSize}
               isLoading={false}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -218,6 +221,7 @@ function EmailRoutesListView() {
                 pageSize={tablePageSize}
                 totalItems={filteredRoutes.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
           </>

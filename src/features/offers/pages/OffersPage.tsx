@@ -31,14 +31,14 @@ import { OfferCategoryType } from "../types/offerCategory";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Radio from "../../../shared/components/ui/Radio";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
@@ -74,7 +74,7 @@ export default function OffersPage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [filters, setFilters] = useState<SearchParams>({
     page: 1,
-    limit: 15,
+    limit: getInitialPageSize(),
     sortBy: "created_at",
     sortDirection: "DESC",
   });
@@ -200,15 +200,7 @@ export default function OffersPage() {
           >
             <Eye className="h-4 w-4" />
           </button>
-          <PermissionGate permission="offers.update">
-            <button
-              onClick={() => handleEditOffer(row.id)}
-              className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
-              title="Edit"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-          </PermissionGate>
+          <FeatureActionButton featureId="offers" action="edit" itemId={row.id} />
           <div
             className="relative"
             ref={(el) => {
@@ -238,11 +230,13 @@ export default function OffersPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "offers-table-v2",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -619,9 +613,6 @@ export default function OffersPage() {
     navigate(`/dashboard/offers/${id}`);
   };
 
-  const handleEditOffer = (id: number) => {
-    navigate(`/dashboard/offers/${id}/edit`);
-  };
 
   const handleExportCSV = () => {
     if (filteredOffers.length === 0) {
@@ -1298,9 +1289,7 @@ export default function OffersPage() {
             {t.pages.offersDescription}
           </p>
         </div>
-        <PermissionGate permission="offers.create">
-          <CreateButton route="/dashboard/offers/create" />
-        </PermissionGate>
+        <FeatureActionButton featureId="offers" action="create" />
       </div>
 
       {/* Offer Stats Cards */}
@@ -1498,6 +1487,7 @@ export default function OffersPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredOffers.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
 
@@ -1790,12 +1780,19 @@ export default function OffersPage() {
       {!loading && filteredOffers.length > 0 && (
         <Pagination
           currentPage={filters.page || 1}
-          pageSize={filters.limit || 15}
+          pageSize={filters.limit || 25}
           totalItems={totalOffers}
           onPageChange={(page) =>
             setFilters((prev) => ({
               ...prev,
               page,
+            }))
+          }
+          onPageSizeChange={(pageSize) =>
+            setFilters((prev) => ({
+              ...prev,
+              limit: pageSize,
+              page: 1,
             }))
           }
         />

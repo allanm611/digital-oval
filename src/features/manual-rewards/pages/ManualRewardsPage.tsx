@@ -17,9 +17,9 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
 import BackButton from "../../../shared/components/ui/BackButton";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
@@ -40,7 +40,7 @@ export default function ManualRewardsPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
 
   // Dummy stats (matching actual dummy data: 5 rewards, 1 scheduled)
   // Recipients: 125 + 250 + 350 + 80 + 200 = 1005
@@ -170,16 +170,15 @@ export default function ManualRewardsPage() {
           currentLabel="Manual Rewards"
         />
         <div className="flex items-center gap-3">
-          <PermissionGate permission="manual-rewards.create">
-            <CreateButton
-              route="/dashboard/manual-rewards/create"
-              navigationState={{
-                returnTo: {
-                  pathname: "/dashboard/manual-rewards",
-                },
-              }}
-            />
-          </PermissionGate>
+          <FeatureActionButton
+            featureId="manual-rewards"
+            action="create"
+            navigationState={{
+              returnTo: {
+                pathname: "/dashboard/manual-rewards",
+              },
+            }}
+          />
         </div>
       </div>
 
@@ -259,9 +258,7 @@ export default function ManualRewardsPage() {
               No manual rewards found
             </p>
             <div className="mt-4">
-              <PermissionGate permission="manual-rewards.create">
-                <CreateButton route="/dashboard/manual-rewards/create" />
-              </PermissionGate>
+              <FeatureActionButton featureId="manual-rewards" action="create" />
             </div>
           </div>
         ) : (
@@ -378,23 +375,16 @@ export default function ManualRewardsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <PermissionGate permission="manual-rewards.update">
-                          <button
-                            onClick={() =>
-                              navigate(`/dashboard/manual-rewards/${reward.id}/edit`, {
-                                state: {
-                                  returnTo: {
-                                    pathname: "/dashboard/manual-rewards",
-                                  },
-                                },
-                              })
-                            }
-                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
+                        <FeatureActionButton
+                          featureId="manual-rewards"
+                          action="edit"
+                          itemId={reward.id}
+                          navigationState={{
+                            returnTo: {
+                              pathname: "/dashboard/manual-rewards",
+                            },
+                          }}
+                        />
                         <PermissionGate permission="manual-rewards.delete">
                           <button
                             onClick={() => handleDelete(reward)}
@@ -421,6 +411,7 @@ export default function ManualRewardsPage() {
           pageSize={pageSize}
           totalItems={filteredRewards.length}
           onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
         />
       )}
 

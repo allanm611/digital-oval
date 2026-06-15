@@ -18,7 +18,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useToast } from "../../../contexts/ToastContext";
@@ -95,7 +95,7 @@ export default function WorkflowsPage() {
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalCount, setTotalCount] = useState(0);
   const [showWorkflowModal, setShowWorkflowModal] = useState(false);
   const [editingWorkflow, setEditingWorkflow] = useState<Workflow | null>(null);
@@ -470,11 +470,13 @@ export default function WorkflowsPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "workflows-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -757,6 +759,7 @@ export default function WorkflowsPage() {
                 pageSize={pageSize}
                 totalItems={totalCount}
                 onPageChange={setPage}
+                onPageSizeChange={setPageSize}
               />
             </div>
           )}

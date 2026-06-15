@@ -31,7 +31,7 @@ import {
 import ServerStatsCards from "../components/ServerStatsCards";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -260,11 +260,13 @@ export default function ServersPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "servers-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -998,6 +1000,7 @@ export default function ServersPage() {
               pageSize={tablePageSize}
               isLoading={isLoadingServers}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -1017,6 +1020,7 @@ export default function ServersPage() {
           pageSize={tablePageSize}
           totalItems={totalCount}
           onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

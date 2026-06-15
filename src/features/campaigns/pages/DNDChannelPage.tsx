@@ -19,7 +19,7 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { communicationChannelService, CommunicationChannel as ChannelData } from "../../../shared/services/communicationChannelService";
 import { dndService, DNDSubscription, DNDType } from "../services/dndService";
 import AddDNDMembersModal from "../components/AddDNDMembersModal";
@@ -196,11 +196,13 @@ export default function DNDChannelPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "dnd-channel-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -414,6 +416,7 @@ export default function DNDChannelPage() {
               pageSize={tablePageSize}
               isLoading={loadingDNDData}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -431,6 +434,7 @@ export default function DNDChannelPage() {
                 pageSize={tablePageSize}
                 totalItems={filteredSubscriptions.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
           </>

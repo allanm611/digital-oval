@@ -28,6 +28,7 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -256,30 +257,18 @@ export default function ProductDetailsPage() {
               </>
             )}
           </button>
-          <PermissionGate permission="products.update">
-            <button
-              onClick={() =>
-                navigate(`/dashboard/products/${id}/edit`, {
-                  state: {
-                    returnTo: returnTo || {
-                      pathname: `/dashboard/products/${id}`,
-                    },
-                  },
-                })
-              }
-              className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
-              style={{ backgroundColor: button.action.background }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLButtonElement).style.opacity = "0.9";
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLButtonElement).style.opacity = "1";
-              }}
-            >
-              <Edit className="w-4 h-4" />
-              Edit Product
-            </button>
-          </PermissionGate>
+          <FeatureActionButton
+            featureId="products"
+            action="edit"
+            itemId={id}
+            variant="primary"
+            label="Edit Product"
+            navigationState={{
+              returnTo: returnTo || {
+                pathname: `/dashboard/products/${id}`,
+              },
+            }}
+          />
           <PermissionGate permission="products.delete">
             <button
               onClick={handleDelete}

@@ -23,7 +23,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import Input from "../../../shared/components/ui/Input";
 import { PermissionGate } from "../../auth/components/PermissionGate";

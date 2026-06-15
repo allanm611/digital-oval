@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, Eye, LucideIcon } from "lucide-react";
 import { Table } from "../../../../shared/components/Table/Table";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
-import Pagination from "../../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../../shared/utils/utils";
@@ -77,7 +77,7 @@ export default function ConfigurationManagerAPI({
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
   const [isSaving, setIsSaving] = useState(false);
@@ -446,6 +446,7 @@ export default function ConfigurationManagerAPI({
           pageSize={pageSize}
           totalItems={filteredItems.length}
           onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
         />
       )}
 

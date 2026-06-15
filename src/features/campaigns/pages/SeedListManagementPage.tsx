@@ -18,6 +18,7 @@ import { buttons } from "../../../shared/utils/tokens";
 import { getButtonStyles } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 // Types
@@ -275,6 +276,7 @@ export default function SeedListManagementPage() {
   } = useTable({
     tableId: "seed-list-recipients-table",
     defaultColumns: recipientTableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -288,6 +290,7 @@ export default function SeedListManagementPage() {
   } = useTable({
     tableId: "seed-lists-table",
     defaultColumns: seedListTableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 

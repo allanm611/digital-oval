@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Product } from "../types/product";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
 import { ProductCategory } from "../types/productCategory";
 import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
@@ -26,7 +26,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -67,7 +67,7 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<ProductFilters>({
     page: 1,
-    pageSize: 10,
+    pageSize: getInitialPageSize(),
     sortBy: "created_at",
     sortDirection: "DESC",
   });
@@ -179,19 +179,12 @@ export default function ProductsPage() {
             >
               <Eye className="w-4 h-4" />
             </button>
-            <PermissionGate permission="products.update">
-              <button
-                onClick={() =>
-                  navigate(`/dashboard/products/${row.id}/edit`, {
-                    state: { returnTo: { pathname: "/dashboard/products" } },
-                  })
-                }
-                className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                title="Edit Product"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            </PermissionGate>
+            <FeatureActionButton
+              featureId="products"
+              action="edit"
+              itemId={row.id}
+              navigationState={{ returnTo: { pathname: "/dashboard/products" } }}
+            />
             <button
               onClick={() => row.product && handleToggleStatus(row.product)}
               disabled={loadingProductId === row.id || !row.product}
@@ -231,6 +224,7 @@ export default function ProductsPage() {
   } = useTable({
     tableId: "products-table-v2",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -509,19 +503,12 @@ export default function ProductsPage() {
             >
               <Eye className="w-4 h-4" />
             </button>
-            <PermissionGate permission="products.update">
-              <button
-                onClick={() =>
-                  navigate(`/dashboard/products/${row.id}/edit`, {
-                    state: { returnTo: { pathname: "/dashboard/products" } },
-                  })
-                }
-                className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                title="Edit Product"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            </PermissionGate>
+            <FeatureActionButton
+              featureId="products"
+              action="edit"
+              itemId={row.id}
+              navigationState={{ returnTo: { pathname: "/dashboard/products" } }}
+            />
             <button
               onClick={() => row.product && handleToggleStatus(row.product)}
               disabled={loadingProductId === row.id || !row.product}
@@ -607,9 +594,7 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <PermissionGate permission="products.create">
-            <CreateButton route="/dashboard/products/create" />
-          </PermissionGate>
+          <FeatureActionButton featureId="products" action="create" />
         </div>
       </div>
 
@@ -925,9 +910,10 @@ export default function ProductsPage() {
       {!loading && !error && (products.length > 0 || total > 0) && (
         <Pagination
           currentPage={filters.page || 1}
-          pageSize={filters.pageSize || 20}
+          pageSize={filters.pageSize || 25}
           totalItems={total}
           onPageChange={(page) => handlePageChange(page)}
+          onPageSizeChange={(pageSize) => setFilters(prev => ({ ...prev, pageSize, page: 1 }))}
         />
       )}
 

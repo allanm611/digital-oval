@@ -13,8 +13,8 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Input from "../../../shared/components/ui/Input";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import CreateButton from "../../../shared/components/ui/CreateButton";
-import Pagination from "../../../shared/components/ui/Pagination";
+import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -25,7 +25,6 @@ import { Table, useTable, type TableColumn } from "../../../shared/components/Ta
 import { jobTypeService } from "../services/jobTypeService";
 import { CreateJobTypePayload, JobType } from "../types/job";
 
-const PAGE_SIZE = 20;
 const codeRegex = /^[a-z][a-z0-9_]*$/;
 
 interface JobTypeModalProps {
@@ -509,11 +508,13 @@ export default function JobTypesPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "job-types-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -752,7 +753,7 @@ export default function JobTypesPage() {
             </p>
           </div>
           <PermissionGate permission="job-types.create">
-            <CreateButton onClick={handleCreate} />
+            <FeatureActionButton featureId="job-types" action="create" onClick={handleCreate} />
           </PermissionGate>
         </div>
 
@@ -848,9 +849,7 @@ export default function JobTypesPage() {
                 : "Create your first job type to get started."}
             </p>
             {!searchTerm && (
-              <PermissionGate permission="job-types.create">
-                <CreateButton onClick={handleCreate} className="mx-auto" />
-              </PermissionGate>
+              <FeatureActionButton featureId="job-types" action="create" onClick={handleCreate} className="mx-auto" />
             )}
           </div>
         ) : (
@@ -882,6 +881,7 @@ export default function JobTypesPage() {
             pageSize={tablePageSize}
             totalItems={filteredJobTypes.length}
             onPageChange={tableHandlePageChange}
+            onPageSizeChange={tableHandlePageSizeChange}
           />
         )}
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Edit, Trash2, X, LucideIcon } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
-import Pagination from "../../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../../contexts/ToastContext";
@@ -265,11 +265,13 @@ export default function ConfigurationManager({
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "configuration-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -393,6 +395,7 @@ export default function ConfigurationManager({
                 pageSize={tablePageSize}
                 totalItems={filteredItems.length}
                 onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
           </>

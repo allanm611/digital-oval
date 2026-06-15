@@ -14,6 +14,7 @@ import AddVIPMembersModal from "../components/AddVIPMembersModal";
 import { vipListService } from "../../../shared/services/vipListService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 
 // Types
@@ -260,6 +261,7 @@ export default function VIPListManagementPage() {
   } = useTable({
     tableId: "vip-customers-table",
     defaultColumns: vipCustomerTableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -273,6 +275,7 @@ export default function VIPListManagementPage() {
   } = useTable({
     tableId: "vip-lists-table",
     defaultColumns: vipListTableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 

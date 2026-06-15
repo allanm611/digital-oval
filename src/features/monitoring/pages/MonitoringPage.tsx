@@ -5,7 +5,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -108,11 +108,13 @@ export default function MonitoringPage() {
     currentPage: tableCurrentPage,
     pageSize: tablePageSize,
     handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
   } = useTable({
     tableId: "execution-monitoring-table",
     defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
@@ -372,6 +374,7 @@ export default function MonitoringPage() {
               pageSize={tablePageSize}
               isLoading={isLoading}
               onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               style={{
@@ -389,6 +392,7 @@ export default function MonitoringPage() {
                   pageSize={tablePageSize}
                   totalItems={filteredExecutions.length}
                   onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
                 />
               </div>
             )}
