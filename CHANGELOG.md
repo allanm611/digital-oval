@@ -1,3 +1,10 @@
+## [1.4.9](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.8...v1.4.9) (2026-06-15)
+
+
+### Bug Fixes
+
+* fixed paginaiton also created a button component for managing create and update buttons ([a49fdf6](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/a49fdf67d63f754d545437549cd6e4b12e8fee9e))
+
 ## [1.4.8](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.7...v1.4.8) (2026-06-13)
 
 
