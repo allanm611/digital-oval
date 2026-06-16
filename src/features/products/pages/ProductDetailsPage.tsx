@@ -24,11 +24,12 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -223,40 +224,14 @@ export default function ProductDetailsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton showBreadcrumb={true} currentLabel="Product Details" />
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleToggleStatus}
+          <ActivateDeactivateButton
+            isActive={product?.is_active || false}
+            onToggle={handleToggleStatus}
             disabled={isTogglingStatus}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit disabled:opacity-50 disabled:cursor-not-allowed`}
-            style={{
-              backgroundColor: button.secondaryAction.background,
-              color: "black",
-            }}
-            onMouseEnter={(e) => {
-              if (!isTogglingStatus) {
-                (e.target as HTMLButtonElement).style.opacity = "0.9";
-              }
-            }}
-            onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "1";
-            }}
+            isLoading={isTogglingStatus}
           >
-            {isTogglingStatus ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                {product.is_active ? "Deactivating..." : "Activating..."}
-              </>
-            ) : product.is_active ? (
-              <>
-                <PowerOff className="w-4 h-4" />
-                Deactivate
-              </>
-            ) : (
-              <>
-                <Power className="w-4 h-4" />
-                Activate
-              </>
-            )}
-          </button>
+            {product?.is_active ? "Deactivate" : "Activate"}
+          </ActivateDeactivateButton>
           <FeatureActionButton
             featureId="products"
             action="edit"

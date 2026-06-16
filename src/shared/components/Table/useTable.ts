@@ -48,6 +48,21 @@ export function useTable<T = any>({
   const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [sortConfigs, setSortConfigs] = useState<SortConfig[]>([]);
 
+  // Update columns when defaultColumns structure changes (not on every render)
+  useEffect(() => {
+    setColumns((prevColumns) => {
+      // Only update if column count changed or first columns don't match
+      if (prevColumns.length !== defaultColumns.length ||
+          prevColumns[0]?.id !== defaultColumns[0]?.id) {
+        return defaultColumns.map((col) => {
+          const prevCol = prevColumns.find((c) => c.id === col.id);
+          return prevCol ? { ...col, visible: prevCol.visible } : col;
+        });
+      }
+      return prevColumns;
+    });
+  }, [defaultColumns.length]);
+
   // Save columns to localStorage when they change
   useEffect(() => {
     if (!persistToLocalStorage) return;

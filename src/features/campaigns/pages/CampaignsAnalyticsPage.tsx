@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, AlertTriangle, CheckCircle, Target } from "lucide-react";
+import { TrendingUp, AlertTriangle, CheckCircle, Target, Download } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import {
   PieChart,
   Pie,
@@ -146,6 +149,116 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
   const [relationshipStats, setRelationshipStats] = useState<any>(null);
   const [uniqueCombinations, setUniqueCombinations] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; flow_count: number }>>([]);
   const [isLoadingFlowAnalytics, setIsLoadingFlowAnalytics] = useState(false);
+
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+
+  // Table columns for segment-offer combinations
+  const defaultColumns: TableColumn<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; flow_count: number }>[] = useMemo(() => [
+    {
+      id: "flow_count",
+      label: "Flows",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'number' },
+      render: (value) => <span className="font-medium">{value}</span>,
+    },
+    {
+      id: "campaign_name",
+      label: "Campaign",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (value, row) => (
+        <button
+          onClick={() => navigate(`/dashboard/campaigns/${row.campaign_id}`)}
+          className="hover:underline font-medium"
+          style={{ color: color.primary.accent }}
+        >
+          {value}
+        </button>
+      ),
+    },
+    {
+      id: "segment_id",
+      label: "Segment",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'number' },
+      render: (value) => (
+        <button
+          onClick={() => navigate(`/dashboard/segments/${value}`)}
+          className="hover:underline"
+          style={{ color: color.primary.accent }}
+        >
+          Segment {value}
+        </button>
+      ),
+    },
+    {
+      id: "offer_id",
+      label: "Offer",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'number' },
+      render: (value) => (
+        <button
+          onClick={() => navigate(`/dashboard/offers/${value}`)}
+          className="hover:underline"
+          style={{ color: color.primary.accent }}
+        >
+          Offer {value}
+        </button>
+      ),
+    },
+  ], [navigate]);
+
+  const {
+    columns,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "campaign-analytics-combinations-table",
+    defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
+
+  const handleExportCombinations = () => {
+    if (uniqueCombinations.length === 0) {
+      showError("No data to export", "There are no segment-offer combinations to export");
+      return;
+    }
+
+    const headers = ["Flows", "Campaign", "Segment ID", "Offer ID"];
+    const rows = uniqueCombinations.map((combo) => [
+      combo.flow_count,
+      combo.campaign_name,
+      combo.segment_id,
+      combo.offer_id,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `campaign-combinations_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -1416,73 +1529,78 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
             {/* Unique Combinations Table */}
             {uniqueCombinations.length > 0 && !isLoadingFlowAnalytics && (
-              <div className={tw.rounded}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Segment-Offer Combinations ({uniqueCombinations.length})
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
-                    <thead style={{ background: color.surface.tableHeader }}>
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                          Flows
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                          Campaign
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                          Segment
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                          Offer
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {uniqueCombinations.map((combo, idx) => (
-                        <tr key={idx} className="transition-colors">
-                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
-                            <span className="inline-flex items-center  text-sm font-medium">
-                              {combo.flow_count}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
-                            <button
-                              onClick={() => navigate(`/dashboard/campaigns/${combo.campaign_id}`)}
-                              className="hover:underline"
-                              style={{ color: color.primary.accent }}
-                            >
-                              {combo.campaign_name}
-                            </button>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
-                            <button
-                              onClick={() => navigate(`/dashboard/segments/${combo.segment_id}`)}
-                              className="hover:underline"
-                              style={{ color: color.primary.accent }}
-                            >
-                              Segment {combo.segment_id}
-                            </button>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
-                            <button
-                              onClick={() => navigate(`/dashboard/offers/${combo.offer_id}`)}
-                              className="hover:underline"
-                              style={{ color: color.primary.accent }}
-                            >
-                              Offer {combo.offer_id}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Segment-Offer Combinations ({uniqueCombinations.length})
+                  </h3>
+                  <button
+                    onClick={handleExportCombinations}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                    style={{
+                      backgroundColor: color.primary.action,
+                    }}
+                    title="Download as CSV"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Download CSV</span>
+                  </button>
                 </div>
-              </div>
+
+                <div className={tw.rounded}>
+                  <Table<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; flow_count: number }>
+                    columns={columns}
+                    data={uniqueCombinations}
+                    totalItems={uniqueCombinations.length}
+                    currentPage={1}
+                    pageSize={DEFAULT_PAGE_SIZE}
+                    isLoading={isLoadingFlowAnalytics}
+                    onHideColumn={toggleColumn}
+                    onManageColumnsClick={() => setShowColumnPicker(true)}
+                    onSort={handleSort}
+                    sortConfigs={sortConfigs}
+                    onPageChange={() => {}}
+                    style={{
+                      headerBackground: color.surface.tableHeader,
+                      headerTextColor: color.surface.tableHeaderText,
+                      rowBackground: color.surface.tablebodybg,
+                      rowSpacing: "0 8px",
+                    }}
+                  />
+                </div>
+
+                {uniqueCombinations.length > DEFAULT_PAGE_SIZE && (
+                  <div className="mt-6">
+                    <Pagination
+                      currentPage={1}
+                      pageSize={DEFAULT_PAGE_SIZE}
+                      totalItems={uniqueCombinations.length}
+                      onPageChange={() => {}}
+                      onPageSizeChange={() => {}}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
       )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults || (() => {})}
+      />
     </div>
   );
 }

@@ -17,7 +17,7 @@ import {
   UserMinus,
 } from "lucide-react";
 import { color, tw, components, zIndex } from "../../../shared/utils/utils";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -545,7 +545,7 @@ export default function QuickListsPage() {
         </div>
         <div className="flex items-center gap-3">
           <PermissionGate permission="quicklists.create">
-            <CreateButton onClick={() => setIsCreateModalOpen(true)} />
+            <FeatureActionButton featureId="quicklists" action="create" onClick={() => setIsCreateModalOpen(true)} />
           </PermissionGate>
         </div>
       </div>

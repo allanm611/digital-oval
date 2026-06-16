@@ -53,6 +53,15 @@ export interface AddVIPMemberRequest {
   added_by?: number;
 }
 
+export interface AuditTrailEntry {
+  id: number;
+  action: string;
+  user_id?: number;
+  user_name?: string;
+  timestamp: string;
+  details?: Record<string, any>;
+}
+
 const BASE_URL = buildApiUrl("/vip-lists");
 
 class VIPListService {
@@ -151,6 +160,14 @@ class VIPListService {
       } : {}),
     });
     return response;
+  }
+
+  async getAuditTrail(id: number) {
+    const data = await this.request<{
+      success: boolean;
+      data: AuditTrailEntry[];
+    }>(`/${id}/audit-trail`);
+    return data.data;
   }
 }
 

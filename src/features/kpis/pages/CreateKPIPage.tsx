@@ -198,8 +198,9 @@ export default function CreateKPIPage() {
           unit: "",
           operators: [],
           extractionLogic: kpi.extraction_logic || "",
-          default_value: "",
-          use_as_dynamic_variable: false,
+          default_value: kpi.default_value || "",
+          use_as_dynamic_variable: kpi.is_dynamic_variable || false,
+          tag: kpi.tag || "",
         });
       }
     } catch (err) {
@@ -265,7 +266,9 @@ export default function CreateKPIPage() {
         default_operator_id: formData.operators.length > 0 ? formData.operators[0] : null,
         is_computable: true,
         is_active: true,
-        tag: "kpi",
+        tag: formData.tag,
+        default_value: formData.default_value,
+        is_dynamic_variable: formData.use_as_dynamic_variable,
       };
 
       // Only include field_value for creation (not for updates)

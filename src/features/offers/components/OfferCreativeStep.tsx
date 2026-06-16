@@ -37,6 +37,9 @@ import { languageService, Language } from "../../configurations/services/languag
 import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
+  WhatsAppPhonePreview,
+  PushNotificationPreview,
+  USSDMenuPreview,
 } from "./CreativePreviewComponents";
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import RichTextEditor from "../../communications/components/RichTextEditor";
@@ -1065,7 +1068,20 @@ export default function OfferCreativeStep({
     setPreviewError(null);
     setPreviewResult(null);
 
+    // Build preview variables using default_value from variable definitions
+    const previewVars: Record<string, string | number | boolean> = {};
     const storedVars = selectedCreativeData.variables || {};
+
+    // Use default_value from variable definitions if available, otherwise use stored value
+    Object.keys(storedVars).forEach((key) => {
+      const varDef = storedVars[key];
+      // If variable definition has default_value, use it; otherwise use the stored value
+      if (typeof varDef === 'object' && varDef !== null && 'default_value' in varDef) {
+        previewVars[key] = (varDef as any).default_value ?? storedVars[key];
+      } else {
+        previewVars[key] = storedVars[key];
+      }
+    });
 
     // Check if creative has been saved (has numeric ID)
     // Saved creatives have numeric string IDs (e.g., "123"), unsaved have random strings (e.g., "abc123xyz")
@@ -1082,7 +1098,7 @@ export default function OfferCreativeStep({
     if (numericId !== null) {
       // Creative has been saved - use render endpoint
       try {
-        const overrides = storedVars; // Use stored variables as default
+        const overrides = previewVars; // Use preview variables with default values
         const response = await offerCreativeService.render(
           numericId,
           { variableOverrides: overrides },
@@ -1101,15 +1117,15 @@ export default function OfferCreativeStep({
         const clientPreview = {
           rendered_title: replaceVariables(
             selectedCreativeData.title || "",
-            storedVars,
+            previewVars,
           ),
           rendered_text_body: replaceVariables(
             selectedCreativeData.text_body || "",
-            storedVars,
+            previewVars,
           ),
           rendered_html_body: replaceVariables(
             selectedCreativeData.html_body || "",
-            storedVars,
+            previewVars,
           ),
         };
         setPreviewResult(clientPreview);
@@ -1119,15 +1135,15 @@ export default function OfferCreativeStep({
       const clientPreview = {
         rendered_title: replaceVariables(
           selectedCreativeData.title || "",
-          storedVars,
+          previewVars,
         ),
         rendered_text_body: replaceVariables(
           selectedCreativeData.text_body || "",
-          storedVars,
+          previewVars,
         ),
         rendered_html_body: replaceVariables(
           selectedCreativeData.html_body || "",
-          storedVars,
+          previewVars,
         ),
       };
       setPreviewResult(clientPreview);
@@ -1329,151 +1345,150 @@ export default function OfferCreativeStep({
                   </div> */}
 
                   {/* Locale Selection */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.offers.locale.label} <span className="text-red-500">*</span>
-                    </label>
-                    <TypeSelector
-                      value={editingCreative.locale || ""}
-                      onChange={(value) => {
-                        if (selectedCreativeData) {
-                          updateCreative(selectedCreativeData.id, {
-                            locale: value as Locale,
-                          });
-                          // Clear template selection when locale changes
-                          setSelectedTemplates((prev) => {
-                            const updated = { ...prev };
-                            delete updated[selectedCreativeData.id];
-                            return updated;
-                          });
-                        }
-                      }}
-                      options={[
-                        { label: "Select a language", value: "" },
-                        ...languageOptions.filter((opt) => !opt.isUsed),
-                      ]}
-                      placeholder={
-                        languageOptions.length === 0
-                          ? "No languages configured"
-                          : "Select a language"
+                  <HeadlessSelect
+                    label={t.offers.locale.label + " *"}
+                    value={editingCreative.locale || ""}
+                    onChange={(value) => {
+                      if (selectedCreativeData) {
+                        updateCreative(selectedCreativeData.id, {
+                          locale: value as Locale,
+                        });
+                        // Clear template selection when locale changes
+                        setSelectedTemplates((prev) => {
+                          const updated = { ...prev };
+                          delete updated[selectedCreativeData.id];
+                          return updated;
+                        });
                       }
-                      disabled={selectedCreativeData ? languageOptions.filter((opt) => !opt.isUsed).length === 0 : false}
-                      allowCreate={true}
-                      onCreate={() => setIsLanguageModalOpen(true)}
-                    />
-                  </div>
+                    }}
+                    options={[
+                      { label: "Select a language", value: "" },
+                      ...languageOptions.filter((opt) => !opt.isUsed),
+                    ]}
+                    placeholder={
+                      languageOptions.length === 0
+                        ? "No languages configured"
+                        : "Select a language"
+                    }
+                    disabled={selectedCreativeData ? languageOptions.filter((opt) => !opt.isUsed).length === 0 : false}
+                  />
 
                   {/* Template Selector */}
-                  <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Creative Template (Optional)
-                        </label>
-                        {selectedCreativeData && selectedTemplates[selectedCreativeData.id] && (
-                          <button
-                            onClick={handleClearTemplate}
-                            className="text-xs text-gray-500 underline"
-                          >
-                            Clear Template
-                          </button>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <TypeSelector
-                          value={
-                            selectedCreativeData && selectedTemplates[selectedCreativeData.id]
-                              ? selectedTemplates[
-                                  selectedCreativeData.id
-                                ]!.toString()
-                              : ""
+                  <div className="relative">
+                    {selectedCreativeData && selectedTemplates[selectedCreativeData.id] && (
+                      <button
+                        onClick={handleClearTemplate}
+                        className="absolute right-0 top-0 text-xs text-gray-500 underline z-10"
+                      >
+                        Clear
+                      </button>
+                    )}
+                    <HeadlessSelect
+                      label="Creative Template (Optional)"
+                      value={
+                        selectedCreativeData && selectedTemplates[selectedCreativeData.id]
+                          ? selectedTemplates[
+                              selectedCreativeData.id
+                            ]!.toString()
+                          : ""
+                      }
+                      onChange={(value) =>
+                        selectedCreativeData && handleTemplateSelect(value ? Number(value) : null)
+                      }
+                      options={[
+                        { value: "", label: "Select template" },
+                        ...availableTemplates.map((template) => {
+                          let languageLabel = "";
+                          if (
+                            template.locale &&
+                            languages &&
+                            Array.isArray(languages) &&
+                            languages.length > 0
+                          ) {
+                            const language = languages.find(
+                              (lang) =>
+                                lang &&
+                                lang.language_code &&
+                                lang.language_code === template.locale
+                            );
+                            if (language && language.name) {
+                              languageLabel = " (" + language.name + ")";
+                            }
                           }
-                          onChange={(value) =>
-                            selectedCreativeData && handleTemplateSelect(value ? Number(value) : null)
-                          }
-                          options={[
-                            { value: "", label: "Select template" },
-                            ...availableTemplates.map((template) => {
-                              let languageLabel = "";
-                              if (
-                                template.locale &&
-                                languages &&
-                                Array.isArray(languages) &&
-                                languages.length > 0
-                              ) {
-                                const language = languages.find(
-                                  (lang) =>
-                                    lang &&
-                                    lang.language_code &&
-                                    lang.language_code === template.locale
-                                );
-                                if (language && language.name) {
-                                  languageLabel = " (" + language.name + ")";
-                                }
-                              }
-                              return {
-                                value: template.id.toString(),
-                                label: template.name + languageLabel + (template.description ? " - " + template.description : ""),
-                              };
-                            }),
-                          ]}
-                          placeholder="Select a template to start with..."
-                          allowCreate={true}
-                          onCreate={() => setIsTemplateModalOpen(true)}
-                        />
-                        {selectedTemplates[selectedCreativeData.id] && (
-                          <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
-                            <FileText className="w-3 h-3" />
-                            <span>
-                              Template selected. You can customize the fields
-                              below.
-                            </span>
-                          </div>
-                        )}
+                          return {
+                            value: template.id.toString(),
+                            label: template.name + languageLabel + (template.description ? " - " + template.description : ""),
+                          };
+                        }),
+                      ]}
+                      placeholder="Select a template to start with..."
+                    />
+                    {selectedTemplates[selectedCreativeData?.id] && (
+                      <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                        <FileText className="w-3 h-3" />
+                        <span>
+                          Template selected. You can customize the fields
+                          below.
+                        </span>
                       </div>
-                    </div>
+                    )}
+                  </div>
 
                   {/* Sender ID (SMS) or Subject (Email) */}
                   <div className="space-y-4">
                     {/* Sender ID for SMS */}
                     {editingCreative.channel === "SMS" && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t.offers.senderId.label}
-                        </label>
-                        <HeadlessSelect
-                          value={editingCreative.title || ""}
-                          onChange={(value) =>
-                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                              title: value || "",
-                            })
-                          }
-                          options={[
-                            { label: t.offers.senderId.defaultPlaceholder, value: "" },
-                            ...(senderIds || [])
-                              .filter((senderId) => senderId.is_active)
-                              .map((senderId) => ({
-                                label: senderId.name,
-                                value: senderId.name,
-                              })),
-                          ]}
-                          placeholder={t.offers.senderId.defaultPlaceholder}
-                          className="w-full"
-                          zIndex={zIndex.popover}
-                          disabled={senderIdsLoading}
-                        />
-                      </div>
+                      <HeadlessSelect
+                        label={t.offers.senderId.label}
+                        value={editingCreative.title || ""}
+                        onChange={(value) =>
+                          selectedCreativeData && updateCreative(selectedCreativeData.id, {
+                            title: value || "",
+                          })
+                        }
+                        options={[
+                          { label: t.offers.senderId.defaultPlaceholder, value: "" },
+                          ...(senderIds || [])
+                            .filter((senderId) => senderId.is_active)
+                            .map((senderId) => ({
+                              label: senderId.name,
+                              value: senderId.name,
+                            })),
+                        ]}
+                        placeholder={t.offers.senderId.defaultPlaceholder}
+                        className="w-full"
+                        zIndex={zIndex.popover}
+                        disabled={senderIdsLoading}
+                      />
                     )}
 
-                    {/* Subject Line for Email */}
-                    {supportsHtmlBody(editingCreative.channel) && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t.offers.subjectLine.label} <span className="text-red-500">*</span>
-                        </label>
+                    {/* Title/Subject Line for all channels */}
+                    {(() => {
+                      const getTitleConfig = (channel: CreativeChannel) => {
+                        switch (channel) {
+                          case "Email":
+                            return { label: t.offers.subjectLine.label, placeholder: t.offers.subjectLine.placeholder, maxLength: 160 };
+                          case "SMS":
+                            return { label: "Message Title", placeholder: "Enter message title", maxLength: 60 };
+                          case "WhatsApp":
+                            return { label: "Message Title", placeholder: "Enter message title", maxLength: 100 };
+                          case "Push":
+                            return { label: "Notification Title", placeholder: "Enter notification title", maxLength: 65 };
+                          case "USSD":
+                            return { label: "Menu Title", placeholder: "Enter menu title", maxLength: 50 };
+                          default:
+                            return { label: "Title", placeholder: "Enter title", maxLength: 160 };
+                        }
+                      };
+
+                      const config = getTitleConfig(editingCreative.channel);
+
+                      return (
                         <Input
                           ref={titleInputRef}
-                          placeholder={t.offers.subjectLine.placeholder}
-                          maxLength={160}
+                          label={config.label + " *"}
+                          placeholder={config.placeholder}
+                          maxLength={config.maxLength}
                           value={editingCreative.title || ""}
                           onChange={(value) => {
                             setActiveField("title");
@@ -1493,10 +1508,9 @@ export default function OfferCreativeStep({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                         
                         />
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* SMS Route (for SMS channel only) - Moved to step 1 */}
                     {/* {selectedCreativeData.channel === "SMS" && (
@@ -1606,16 +1620,7 @@ export default function OfferCreativeStep({
                     </div>
 
                     {/* Message Body */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.messageBody.label}
-                        {editingCreative.channel === "SMS" && editingCreative.text_body?.trim() && (
-                          <span className="text-xs font-normal text-gray-500 ml-2">
-                            ({getCharacterInfo(editingCreative.title ? `${editingCreative.title}: ${editingCreative.text_body || ""}` : editingCreative.text_body || "").charCount} characters{getCharacterInfo(editingCreative.title ? `${editingCreative.title}: ${editingCreative.text_body || ""}` : editingCreative.text_body || "").segments > 1 ? `, ${getCharacterInfo(editingCreative.title ? `${editingCreative.title}: ${editingCreative.text_body || ""}` : editingCreative.text_body || "").segments} SMS` : ''})
-                          </span>
-                        )}
-                      </label>
-                      {selectedCreativeData && isRichTextMap[selectedCreativeData.id] ? (
+                    {selectedCreativeData && isRichTextMap[selectedCreativeData.id] ? (
                         <div
                           onClick={() => setActiveField("body")}
                           onFocus={() => setActiveField("body")}
@@ -1634,6 +1639,7 @@ export default function OfferCreativeStep({
                       ) : (
                         <Textarea
                           ref={bodyTextareaRef}
+                          label={t.offers.messageBody.label || "Message"}
                           value={editingCreative.text_body || ""}
                           onChange={(value) => {
                             setActiveField("body");
@@ -1659,30 +1665,29 @@ export default function OfferCreativeStep({
                         />
                       )}
 
-                      {variableError && (
-                        <div className="mt-3 text-sm text-red-700">
-                          {variableError}
-                        </div>
-                      )}
-
-                      {/* Preview Button and Info bar */}
-                      <div className="mt-4">
-                        <button
-                          onClick={handlePreview}
-                          disabled={!selectedCreativeData || (!editingCreative.title && !editingCreative.text_body && !editingCreative.html_body)}
-                          className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                        >
-                          <Eye className="w-4 h-4" />
-                          Preview
-                        </button>
+                    {variableError && (
+                      <div className="mt-3 text-sm text-red-700">
+                        {variableError}
                       </div>
+                    )}
+
+                    {/* Preview Button and Info bar */}
+                    <div className="mt-4">
+                      <button
+                        onClick={handlePreview}
+                        disabled={!selectedCreativeData || (!editingCreative.title && !editingCreative.text_body && !editingCreative.html_body)}
+                        className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                      >
+                        <Eye className="w-4 h-4" />
+                        Preview
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-          {/* Preview Panel - Right Column (1/3) */}
+            {/* Preview Panel - Right Column (1/3) */}
           {creatives.length > 0 && (
             <div className="lg:col-span-1">
               <div className="sticky top-4">
@@ -1752,8 +1757,50 @@ export default function OfferCreativeStep({
                     textBody={previewResult.rendered_text_body}
                   />
                 </div>
+              ) : editingCreative?.channel === "WhatsApp" ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                    WhatsApp Preview
+                  </h3>
+                  <WhatsAppPhonePreview
+                    message={
+                      previewResult.rendered_text_body ||
+                      previewResult.rendered_title ||
+                      ""
+                    }
+                    title={previewResult.rendered_title}
+                  />
+                </div>
+              ) : editingCreative?.channel === "Push" ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                    Push Notification Preview
+                  </h3>
+                  <PushNotificationPreview
+                    message={
+                      previewResult.rendered_text_body ||
+                      previewResult.rendered_title ||
+                      ""
+                    }
+                    title={previewResult.rendered_title}
+                  />
+                </div>
+              ) : editingCreative?.channel === "USSD" ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                    USSD Menu Preview
+                  </h3>
+                  <USSDMenuPreview
+                    message={
+                      previewResult.rendered_text_body ||
+                      previewResult.rendered_title ||
+                      ""
+                    }
+                    title={previewResult.rendered_title}
+                  />
+                </div>
               ) : (
-                // Fallback for other channels (Web, USSD, etc.)
+                // Fallback for other channels
                 <div className="space-y-4">
                   {previewResult.rendered_title && (
                     <div>

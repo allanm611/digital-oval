@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Product } from "../types/product";
-import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { ProductCategory } from "../types/productCategory";
 import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
@@ -185,20 +186,13 @@ export default function ProductsPage() {
               itemId={row.id}
               navigationState={{ returnTo: { pathname: "/dashboard/products" } }}
             />
-            <button
-              onClick={() => row.product && handleToggleStatus(row.product)}
+            <ActivateDeactivateButton
+              isActive={isActive}
+              onToggle={() => row.product && handleToggleStatus(row.product)}
               disabled={loadingProductId === row.id || !row.product}
-              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              isLoading={loadingProductId === row.id}
               title={isActive ? "Deactivate" : "Activate"}
-            >
-              {loadingProductId === row.id ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-              ) : isActive ? (
-                <Pause className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-            </button>
+            />
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
@@ -509,20 +503,13 @@ export default function ProductsPage() {
               itemId={row.id}
               navigationState={{ returnTo: { pathname: "/dashboard/products" } }}
             />
-            <button
-              onClick={() => row.product && handleToggleStatus(row.product)}
+            <ActivateDeactivateButton
+              isActive={isActive}
+              onToggle={() => row.product && handleToggleStatus(row.product)}
               disabled={loadingProductId === row.id || !row.product}
-              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              isLoading={loadingProductId === row.id}
               title={isActive ? "Deactivate" : "Activate"}
-            >
-              {loadingProductId === row.id ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-              ) : isActive ? (
-                <Pause className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-            </button>
+            />
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}

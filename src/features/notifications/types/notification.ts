@@ -140,3 +140,22 @@ export interface DeleteNotificationRuleResponse {
   success: boolean;
   message?: string;
 }
+
+// Event condition structure (from GET /notifications/event-conditions)
+export interface EventCondition {
+  id?: number;
+  name: string;
+  description?: string;
+  table_name: string;
+  action_type: string;
+  condition_criteria?: Record<string, any>;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Response from GET /notifications/event-conditions?tableName=X
+export interface GetEventConditionsResponse {
+  success: boolean;
+  data: EventCondition[];
+}

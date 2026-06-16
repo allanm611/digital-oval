@@ -1296,20 +1296,30 @@ class JobExecutionService {
     return this.normalizeExecutionResponse(response);
   }
 
+  async unarchiveJobExecution(id: string, userId?: number): Promise<JobExecution> {
+    const response = await this.request<
+      JobExecution | { success?: boolean; data?: JobExecution }
+    >(`/${id}/unarchive`, {
+      method: "PATCH",
+      body: userId ? JSON.stringify({ userId }) : undefined,
+    });
+    return this.normalizeExecutionResponse(response);
+  }
+
   // ==================== DELETE Endpoints ====================
 
   /**
    * Cleanup Archived Job Executions
    * DELETE /job-executions/cleanup-archived
    */
-  async cleanupArchivedJobExecutions(params?: {
-    olderThanDays?: number;
-  }): Promise<{ success: boolean }> {
-    const query = this.buildQueryString({
-      olderThanDays: params?.olderThanDays ?? 365,
-    });
-    return this.request<{ success: boolean }>(`/cleanup-archived${query}`, {
+  async cleanupArchivedJobExecutions(payload: {
+    userId: number;
+    olderThanDays: number;
+  }): Promise<{ success: boolean; deleted?: number }> {
+    return this.request<{ success: boolean; deleted?: number }>(`/cleanup-archived`, {
       method: "DELETE",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
     });
   }
 }

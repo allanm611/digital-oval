@@ -195,7 +195,8 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
           range_max: "",
           discrete_values: "",
           extractionLogic: "",
-          use_as_dynamic_variable: false,
+          use_as_dynamic_variable: data.is_dynamic_variable || false,
+          tag: data.tag || "usage_metric",
         });
       }
     } catch (err) {
@@ -245,6 +246,8 @@ export default function UsageMetricFormPage({ mode }: UsageMetricFormPageProps) 
         frequency: formData.frequency,
         unit: formData.unit || undefined,
         default_value: formData.default_value || undefined,
+        is_dynamic_variable: formData.use_as_dynamic_variable,
+        tag: formData.tag,
       };
 
       // Only include field_value for creation

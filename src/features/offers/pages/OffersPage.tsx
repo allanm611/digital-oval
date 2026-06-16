@@ -31,7 +31,7 @@ import { OfferCategoryType } from "../types/offerCategory";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";

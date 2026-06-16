@@ -20,7 +20,7 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
@@ -1807,7 +1807,7 @@ export default function JobDependenciesPage() {
               <span className="hidden sm:inline">Analytics</span>
             </button>
             <PermissionGate permission="job-dependencies.create">
-              <CreateButton onClick={handleCreate} />
+              <FeatureActionButton featureId="job-dependencies" action="create" onClick={handleCreate} />
             </PermissionGate>
           </div>
         </div>

@@ -1,8 +1,8 @@
 import { useLanguage } from "../../../contexts/LanguageContext";
-import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { notificationTypesConfig } from "../../configurations/configs/configurationPageConfigs";
+import { ConfigurationManagerAPI } from "../../configurations/components/ConfigurationManager";
+import { getNotificationTypesApiConfig } from "../../configurations/configs/configurationPageConfigs";
 
 export default function NotificationTypesPage() {
   const { t } = useLanguage();
-  return <TypeConfigurationPage config={notificationTypesConfig} />;
+  return <ConfigurationManagerAPI config={getNotificationTypesApiConfig(t)} />;
 }

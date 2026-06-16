@@ -19,19 +19,8 @@ export default function CampaignDetailsExpandedRow({
 
   useEffect(() => {
     if (campaign.objective) {
-      setObjectiveLoading(true);
-      campaignObjectiveService
-        .getCampaignObjectiveById(Number(campaign.objective))
-        .then((obj) => {
-          setObjectiveName(obj.name || obj.label || "—");
-        })
-        .catch((err) => {
-          console.error("Failed to fetch objective:", err);
-          setObjectiveName(String(campaign.objective));
-        })
-        .finally(() => {
-          setObjectiveLoading(false);
-        });
+      // Objective is already a string enum (e.g., "acquisition"), just format and display it
+      setObjectiveName(String(campaign.objective).replace(/_/g, " "));
     }
   }, [campaign.objective]);
 

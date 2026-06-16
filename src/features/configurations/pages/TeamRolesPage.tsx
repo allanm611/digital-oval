@@ -5,6 +5,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
@@ -191,30 +192,13 @@ export default function TeamRolesPage() {
           >
             <Edit className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => handleToggleActive(role)}
+          <ActivateDeactivateButton
+            isActive={role.is_active}
+            onToggle={() => handleToggleActive(role)}
             disabled={toggling === role.id}
-            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-            style={{
-              color: role.is_active ? color.primary.action : "inherit",
-              backgroundColor: "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
+            isLoading={toggling === role.id}
             title={role.is_active ? "Deactivate" : "Activate"}
-          >
-            {toggling === role.id ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : role.is_active ? (
-              <Power className="w-4 h-4" />
-            ) : (
-              <PowerOff className="w-4 h-4 text-red-600" />
-            )}
-          </button>
+          />
           <button
             onClick={() => handleDeleteClick(role)}
             disabled={deleting === role.id}

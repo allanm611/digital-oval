@@ -34,7 +34,7 @@ import {
 } from "../types/segment";
 import { Segment } from "../types/segment";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
@@ -772,7 +772,9 @@ export default function SegmentCategoriesPage() {
         </div>
 
         <PermissionGate permission="segment-catalog.create">
-          <CreateButton
+          <FeatureActionButton
+            featureId="segment-categories"
+            action="create"
             onClick={() => {
               setSelectedCategory(null);
               setIsCategoryModalOpen(true);

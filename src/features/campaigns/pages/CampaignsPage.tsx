@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
@@ -156,7 +156,7 @@ export default function CampaignsPage() {
   const [isLoadingModalData, setIsLoadingModalData] = useState(false);
 
   // Table columns with custom rendering
-  const defaultColumns: TableColumn<CampaignDisplay>[] = [
+  const defaultColumns: TableColumn<CampaignDisplay>[] = useMemo(() => [
     {
       id: "name",
       label: "Campaign Name",
@@ -178,13 +178,16 @@ export default function CampaignsPage() {
         type: 'select',
         options: categories.map(c => c.name)
       },
-      render: (value, campaign) => (
-        <span className={`text-sm ${tw.textPrimary}`}>
-          {campaign.category_id
-            ? categoryMap[campaign.category_id] || "Uncategorized"
-            : "Uncategorized"}
-        </span>
-      ),
+      render: (value, campaign) => {
+        const categoryName = campaign.category_id
+          ? categoryMap[campaign.category_id]
+          : campaign.category;
+        return (
+          <span className={`text-sm ${tw.textPrimary}`}>
+            {categoryName || "Uncategorized"}
+          </span>
+        );
+      },
     },
     {
       id: "status",
@@ -198,6 +201,21 @@ export default function CampaignsPage() {
       render: (value) => (
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-black`}>
           {value?.replace(/_/g, " ") || "Unknown"}
+        </span>
+      ),
+    },
+    {
+      id: "approval_status",
+      label: "Approval Status",
+      visible: true,
+      sortable: true,
+      filterConfig: {
+        type: 'select',
+        options: ['pending', 'approved', 'rejected']
+      },
+      render: (value) => (
+        <span className={`text-sm ${tw.textPrimary}`}>
+          {value?.replace(/_/g, " ") || "Pending"}
         </span>
       ),
     },
@@ -341,7 +359,7 @@ export default function CampaignsPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
-            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+            className={`group p-3 ${tw.rounded} ${tw.textMuted}`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -368,7 +386,7 @@ export default function CampaignsPage() {
         </div>
       ),
     },
-  ];
+  ], [categories, categoryMap]);
 
   const {
     columns,
@@ -614,13 +632,14 @@ export default function CampaignsPage() {
       setCategories(categoriesData as CampaignCategory[]);
     } catch (error) {
       console.error("Failed to load campaign catalogs:", error);
-      showToast(
-        "error",
-        "Failed to load Campaigns catalogs. Please try again.",
-      );
       setCategories([]);
     }
-  }, [showToast]);
+  }, []);
+
+  // Load categories on mount (only once)
+  useEffect(() => {
+    fetchCategories();
+  }, []); // Empty dependency - runs only once
 
   // Fetch campaigns from API
   const fetchCampaigns = useCallback(async () => {
@@ -718,8 +737,7 @@ export default function CampaignsPage() {
       );
       setAllCampaignsUnfiltered([]);
       setTotalCampaigns(0);
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading false on error
     }
   }, [selectedStatus, searchQuery, filters, showToast]);
 
@@ -729,7 +747,11 @@ export default function CampaignsPage() {
     const clientEndIndex = currentIndex + tablePageSize;
     const paginatedCampaigns = allCampaignsUnfiltered.slice(currentIndex, clientEndIndex);
     setCampaigns(paginatedCampaigns);
-  }, [tableCurrentPage, tablePageSize, allCampaignsUnfiltered]);
+    // Only set loading to false when we actually have campaigns to display
+    if (paginatedCampaigns.length > 0 || allCampaignsUnfiltered.length === 0) {
+      setIsLoading(false);
+    }
+  }, [tableCurrentPage, tablePageSize, allCampaignsUnfiltered, categories]);
 
   // Fetch campaign stats
   const fetchCampaignStats = useCallback(async () => {
@@ -783,10 +805,7 @@ export default function CampaignsPage() {
     }
   }, []);
 
-  // Fetch categories on component mount
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+
 
   // Fetch campaigns when filters change or when navigating back to this page
   useEffect(() => {
@@ -1234,7 +1253,8 @@ export default function CampaignsPage() {
           className=""
         />
 
-        <button
+        {/* Advanced Filters Modal - commented out, using table filters instead */}
+        {/* <button
           onClick={() => setShowAdvancedFilters(true)}
           className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
           style={{
@@ -1248,7 +1268,7 @@ export default function CampaignsPage() {
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
-        </button>
+        </button> */}
 
         <button
           onClick={handleExportCSV}
@@ -1628,8 +1648,8 @@ export default function CampaignsPage() {
         return null;
       })}
 
-      {/* Filters Side Modal */}
-      {showAdvancedFilters &&
+      {/* Filters Side Modal - commented out, using table filters instead */}
+      {/* {showAdvancedFilters &&
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
@@ -1651,7 +1671,7 @@ export default function CampaignsPage() {
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                {/* <div className="flex items-center justify-between p-6 border-b border-gray-200">
                   <h2 className="text-xl font-semibold text-gray-900">
                     Filter Campaigns
                   </h2>
@@ -1673,13 +1693,13 @@ export default function CampaignsPage() {
                       />
                     </svg>
                   </button>
-                </div>
+                </div> */}
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
+                {/* <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-6">
                     {/* Category Filter */}
-                    <div>
+                    {/* <div>
                       <HeadlessSelect
                         label="Catalog"
                         options={categoryOptions}
@@ -1693,10 +1713,10 @@ export default function CampaignsPage() {
                         placeholder="Select a catalog..."
                         searchable={true}
                       />
-                    </div>
+                    </div> */}
 
                     {/* Approval Status Filter */}
-                    <div>
+                    {/* <div>
                       <HeadlessSelect
                         label="Approval Status"
                         options={approvalStatusOptions}
@@ -1709,10 +1729,10 @@ export default function CampaignsPage() {
                         }
                         placeholder="Select approval status..."
                       />
-                    </div>
+                    </div> */}
 
                     {/* Date Range Filter */}
-                    <div className="space-y-3">
+                    {/* <div className="space-y-3">
                       <div>
                         <Input
                           label="Start Date From"
@@ -1741,12 +1761,12 @@ export default function CampaignsPage() {
                           className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                         />
                       </div>
-                    </div>
-                  </div>
-                </div>
+                    </div> */}
+                  {/* </div>
+                </div> */}
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-200 bg-#f9fafb">
+                {/* <div className="p-6 border-t border-gray-200 bg-#f9fafb">
                   <div className="flex space-x-3">
                     <button
                       onClick={() => {
@@ -1769,12 +1789,13 @@ export default function CampaignsPage() {
                       Apply Filters
                     </button>
                   </div>
-                </div>
-              </div>
+                </div> */}
+              {/* </div>
             </div>
           </div>,
           document.body,
-        )}
+        )
+      } */}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

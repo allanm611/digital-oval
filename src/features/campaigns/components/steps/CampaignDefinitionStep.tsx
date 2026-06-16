@@ -493,7 +493,7 @@ export default function CampaignDefinitionStep({
           <div>
             <Input
               type="text"
-              label={tLanguage.campaigns.campaignDefinition.campaignName}
+              label="Campaign Name *"
               value={formData.name}
               onChange={(value) => {
                 setFormData({ ...formData, name: String(value) });
@@ -650,7 +650,8 @@ export default function CampaignDefinitionStep({
             <div className="space-y-2">
               <div className="flex">
                 <div className="flex-1">
-                  <Input type="text"
+                  <Input
+                    type="text"
                     label="Campaign Tags"
                     value={tagInput}
                     onChange={(value) => setTagInput(String(value))}
@@ -908,7 +909,7 @@ export default function CampaignDefinitionStep({
           {/* Customization Toggle */}
           {selectedPolicy && (
             <div
-              className={`flex items-center justify-between px-3 py-2 mt-2 ${tw.surfaceCards} ${tw.rounded} border ${tw.borderMuted}`}
+              className={`flex items-center justify-between px-3 py-2 mt-2 ${tw.surfaceBackground} ${tw.rounded} border ${tw.borderMuted}`}
             >
               <span
                 className={`${tw.caption} ${tw.textSecondary} flex items-center gap-2`}
@@ -965,7 +966,7 @@ export default function CampaignDefinitionStep({
             </span>
           )}
           <Input
-            label={t.campaigns.budgetAllocated}
+            label="Budget Allocated"
             type="number"
             min="0"
             step="0.01"
@@ -997,61 +998,54 @@ export default function CampaignDefinitionStep({
         {/* Campaign Schedule */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {tLanguage.campaigns.campaignDefinition.startDate}
-            </label>
-            <input
+            <Input
               type="datetime-local"
+              label="Start Date *"
               value={
                 formData.start_date
                   ? new Date(formData.start_date).toISOString().slice(0, 16)
                   : ""
               }
-              onChange={(e) => {
-                const dateValue = e.target.value
-                  ? new Date(e.target.value).toISOString()
+              onChange={(value) => {
+                const dateValue = value
+                  ? new Date(String(value)).toISOString()
                   : undefined;
                 setFormData({ ...formData, start_date: dateValue });
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Select start date and time"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs mt-1 text-gray-500">
               When should this campaign start?
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {tLanguage.campaigns.campaignDefinition.endDate}
-            </label>
-            <input
+            <Input
               type="datetime-local"
+              label="End Date *"
               value={
                 formData.end_date
                   ? new Date(formData.end_date).toISOString().slice(0, 16)
                   : ""
               }
-              onChange={(e) => {
-                const dateValue = e.target.value
-                  ? new Date(e.target.value).toISOString()
+              onChange={(value) => {
+                const dateValue = value
+                  ? new Date(String(value)).toISOString()
                   : undefined;
                 setFormData({ ...formData, end_date: dateValue });
                 if (validationErrors.end_date && clearValidationErrors) {
                   clearValidationErrors();
                 }
               }}
-              className={`w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 ${
-                validationErrors.end_date
-                  ? "border-red-300 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-blue-500"
-              }`}
+              hasError={!!validationErrors.end_date}
+              placeholder="Select end date and time"
             />
             {validationErrors.end_date ? (
               <p className="mt-1 text-sm text-red-600">
                 {validationErrors.end_date}
               </p>
             ) : (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs mt-1 text-gray-500">
                 When should this campaign end?
               </p>
             )}

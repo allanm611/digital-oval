@@ -272,11 +272,9 @@ export default function AddDNDMembersModal({
               <>
                 {/* Customer Selection */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Select Customer *
-                  </label>
                   <div className={errors.customer_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
+                      label="Select Customer *"
                       value={formData.customer_id}
                       onChange={(value) => {
                         setFormData({ ...formData, customer_id: value.toString() });
@@ -391,11 +389,9 @@ export default function AddDNDMembersModal({
 
             {/* DND Type */}
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                DND Type *
-              </label>
               <div className={errors.dnd_type_id ? "border border-red-500 rounded" : ""}>
                 <HeadlessSelect
+                  label="DND Type *"
                   value={formData.dnd_type_id}
                   onChange={(value) => {
                     setFormData({ ...formData, dnd_type_id: value.toString() });
@@ -417,27 +413,23 @@ export default function AddDNDMembersModal({
             </div>
 
             {/* Duration */}
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                Duration
-              </label>
-              <HeadlessSelect
-                value={formData.duration}
-                onChange={(value) => {
-                  setFormData({ ...formData, duration: value.toString() });
-                }}
-                options={[
-                  { value: "0", label: "Never expires" },
-                  { value: "7", label: "7 days" },
-                  { value: "30", label: "30 days" },
-                  { value: "90", label: "90 days" },
-                  { value: "180", label: "180 days" },
-                  { value: "365", label: "1 year" },
-                  { value: "custom", label: "Custom date" },
-                ]}
-                placeholder="Select duration..."
-              />
-            </div>
+            <HeadlessSelect
+              label="Duration"
+              value={formData.duration}
+              onChange={(value) => {
+                setFormData({ ...formData, duration: value.toString() });
+              }}
+              options={[
+                { value: "0", label: "Never expires" },
+                { value: "7", label: "7 days" },
+                { value: "30", label: "30 days" },
+                { value: "90", label: "90 days" },
+                { value: "180", label: "180 days" },
+                { value: "365", label: "1 year" },
+                { value: "custom", label: "Custom date" },
+              ]}
+              placeholder="Select duration..."
+            />
 
             {/* Custom Duration Date */}
             {formData.duration === "custom" && (

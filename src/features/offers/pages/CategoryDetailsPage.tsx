@@ -15,6 +15,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import ActivateDeactivateButton from '../../../shared/components/ui/ActivateDeactivateButton';
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -292,26 +293,12 @@ export default function CategoryDetailsPage() {
           >
             Edit
           </button>
-          <button
-            onClick={handleToggleStatus}
-            className={`px-3 sm:px-4 py-2 ${
-              tw.rounded
-            } transition-colors font-medium text-sm sm:text-base whitespace-nowrap ${
-              category.is_active
-                ? "text-white border"
-                : "text-green-700 bg-green-100 border border-green-300 hover:bg-green-200"
-            }`}
-            style={
-              category.is_active
-                ? {
-                    backgroundColor: "#6B7280", // gray-500
-                    borderColor: "#6B7280",
-                  }
-                : {}
-            }
+          <ActivateDeactivateButton
+            isActive={category.is_active}
+            onToggle={handleToggleStatus}
           >
             {category.is_active ? "Deactivate" : "Activate"}
-          </button>
+          </ActivateDeactivateButton>
           {/* More Menu */}
           <div className="relative" ref={moreMenuRef}>
             <button

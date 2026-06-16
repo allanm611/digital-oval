@@ -10,7 +10,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   variant?: 'default' | 'medium' | 'compact'; 
-  type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time'; // default: text
+  type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local'; // default: text
   label?: string; // Floating label 
   style?: React.CSSProperties;
 }
@@ -89,12 +89,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   }
 
   // With floating label
+  // For date/time and number inputs, make text transparent when empty to show floating label clearly
+  const isDateTimeInput = ['date', 'time', 'datetime-local'].includes(type);
+  const isNumberInput = type === 'number';
+  const makeTransparent = (isDateTimeInput || isNumberInput) && !shouldFloatLabel;
+
+  const transparentStyle: React.CSSProperties = makeTransparent ? {
+    color: 'transparent',
+  } : {};
+
   return (
     <div className="relative w-full">
       <input
         ref={ref}
         type={type}
-        placeholder={shouldFloatLabel ? placeholder : ""}
+        placeholder={shouldFloatLabel ? placeholder : " "}
         value={value}
         onChange={(e) => {
           const newValue = type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value;
@@ -103,11 +112,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         disabled={disabled}
         onKeyDown={onKeyDown}
         className={`w-full px-4 pt-2.5 pb-2.5 text-sm border ${borderClass} ${tw.rounded}
-          transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
+          ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
           ${className}`}
-        style={inputStyle}
+        style={{
+          ...inputStyle,
+          ...transparentStyle,
+        }}
         {...rest}
-        onFocus={() => setIsFocused(true)}
+        onFocus={(e) => {
+          setIsFocused(true);
+          // Auto-select all text for number inputs so user can immediately type to replace
+          if (isNumberInput && value !== '') {
+            e.target.select();
+          }
+        }}
         onBlur={() => setIsFocused(false)}
       />
 

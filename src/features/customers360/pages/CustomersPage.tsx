@@ -475,7 +475,7 @@ export default function CustomersPage() {
 
   // Backend pagination - no need to slice since backend returns paginated data
   const paginatedResults = filteredCustomers;
-  const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalCustomers / filters.limit));
 
 
   const hasSearchFilters = searchTerm.trim().length > 0;

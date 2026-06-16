@@ -54,6 +54,7 @@ interface VIPCustomerTableRow {
   vipList: string;
   status: string;
   addedDate: string;
+  _full?: VIPCustomer;
 }
 
 interface VIPListTableRow {
@@ -64,6 +65,7 @@ interface VIPListTableRow {
   rowsImported: number;
   rowsFailed: number;
   status: string;
+  _full?: VIPList;
 }
 
 export default function VIPListManagementPage() {
@@ -149,13 +151,12 @@ export default function VIPListManagementPage() {
       visible: true,
       sortable: false,
       render: (_, row) => {
-        const customer = vipCustomers.find((c) => c.id === row.id);
-        if (!customer) return null;
+        if (!row._full) return null;
         return (
           <div className="flex items-center justify-center">
             <button
-              onClick={() => setMemberToRemove(customer)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              onClick={() => setMemberToRemove(row._full)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
               title="Remove from VIP List"
             >
               <Trash2 className="w-4 h-4" />
@@ -172,9 +173,12 @@ export default function VIPListManagementPage() {
       label: "List Name",
       visible: true,
       render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
+        <button
+          onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
+          className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm hover:underline font-medium`}
+        >
           {row.name}
-        </div>
+        </button>
       ),
     },
     {
@@ -192,10 +196,14 @@ export default function VIPListManagementPage() {
       label: "Customers",
       visible: true,
       render: (_, row) => {
-        const list = vipLists.find((l) => l.id === row.id);
+        if (!row._full) return <span>{row.members}</span>;
         return (
           <button
-            onClick={() => setSelectedListForMembers(list || null)}
+            onClick={() => {
+              setSelectedListForMembers(row._full);
+              setIsListMembersModalOpen(true);
+              loadListMembers(row._full.id);
+            }}
             className="text-sm font-medium transition-colors hover:underline"
             style={{ color: color.primary.accent, background: "none", border: "none", padding: "0", cursor: "pointer" }}
           >
@@ -234,13 +242,19 @@ export default function VIPListManagementPage() {
       visible: true,
       sortable: false,
       render: (_, row) => {
-        const list = vipLists.find((l) => l.id === row.id);
-        if (!list) return null;
+        if (!row._full) return null;
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
             <button
-              onClick={() => handleDeleteVIPList(list)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
+              className={`p-2 text-gray-300 hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
+              title="View details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDeleteVIPList(row._full)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
               title="Delete VIP List"
             >
               <Trash2 className="w-4 h-4" />
@@ -754,6 +768,7 @@ export default function VIPListManagementPage() {
                   vipList: customer.vip_list_name || "Default",
                   status: customer.status,
                   addedDate: customer.added_at,
+                  _full: customer,
                 }))}
                 totalItems={filteredCustomers.length}
                 currentPage={customerCurrentPage}
@@ -793,6 +808,7 @@ export default function VIPListManagementPage() {
                 rowsImported: list.rows_imported ?? 0,
                 rowsFailed: list.rows_failed ?? 0,
                 status: list.processing_status || list.status || "-",
+                _full: list,
               }))}
               totalItems={filteredLists.length}
               currentPage={vipListCurrentPage}
@@ -979,10 +995,7 @@ export default function VIPListManagementPage() {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handleViewCustomerDetail(customer)}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors"
-                                style={{
-                                  color: color.primary.action,
-                                }}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-700"
                                 title="View customer details"
                               >
                                 <Eye className="w-4 h-4" />

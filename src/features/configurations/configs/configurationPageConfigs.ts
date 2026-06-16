@@ -24,6 +24,7 @@ import {
 import type { ConfigurationType } from "../../../shared/services/configurationDataService";
 import { GATEWAY_KEY_OPTIONS, CHARACTER_SET_TYPE_OPTIONS } from "./ts";
 import { notificationTypeService } from "../../../shared/services/notificationTypeService";
+import { notificationService } from "../../notifications/services/notificationService";
 
 // Default modal width for configuration modals (32rem = ~512px)
 export const DEFAULT_MODAL_WIDTH = "32rem";
@@ -70,6 +71,7 @@ export interface TypeConfigurationPageConfig {
   descriptionMaxLength: number;
   statusLabel?: string;
   metadataField?: MetadataFieldConfig;
+  metadataFields?: any[];
   customFields?: CustomFieldConfig[];
   hideFields?: string[];
   deleteConfirmTitle: string;
@@ -2439,11 +2441,70 @@ export const notificationTypesConfig: TypeConfigurationPageConfig = {
       label: "Action Type",
       type: "select",
       required: true,
-      options: [
-        { value: "CREATE", label: "Create" },
-        { value: "UPDATE", label: "Update" },
-        { value: "DELETE", label: "Delete" },
-      ],
+      loadOptions: async (formData?: Record<string, any>) => {
+        try {
+          const tableName = formData?.table_name;
+          if (!tableName) {
+            console.log("No table selected yet, showing fallback options");
+            return [
+              { value: "CREATE", label: "Create" },
+              { value: "UPDATE", label: "Update" },
+              { value: "DELETE", label: "Delete" },
+            ];
+          }
+          console.log(`Fetching event conditions for table: ${tableName}`);
+          const response = await notificationService.getEventConditions(tableName);
+          const options = response.data.map((condition) => ({
+            value: condition.action_type,
+            label: condition.action_type,
+          }));
+          console.log(`Fetched options for ${tableName}:`, options);
+          return options;
+        } catch (error) {
+          console.error("Failed to load event conditions, using fallback:", error);
+          return [
+            { value: "CREATE", label: "Create" },
+            { value: "UPDATE", label: "Update" },
+            { value: "DELETE", label: "Delete" },
+          ];
+        }
+      },
+    },
+    {
+      key: "event_condition",
+      label: "Event Condition",
+      type: "select",
+      required: true,
+      placeholder: "Select an event condition",
+      row: 2,
+      loadOptions: async (formData?: Record<string, any>) => {
+        try {
+          const tableName = formData?.table_name;
+          const actionType = formData?.action_type;
+
+          if (!tableName || !actionType) {
+            console.log("Table or action type not selected, no event conditions available");
+            return [];
+          }
+
+          console.log(`Fetching event conditions for table: ${tableName}, action: ${actionType}`);
+          const response = await notificationService.getEventConditions(tableName);
+
+          // Filter event conditions by action_type
+          const options = response.data
+            .filter((condition) => condition.action_type === actionType)
+            .map((condition) => ({
+              value: condition.name,
+              label: condition.name,
+            }));
+
+          console.log(`Event conditions for ${tableName}/${actionType}:`, options);
+          return options;
+        } catch (error) {
+          console.error("Failed to load event conditions:", error);
+          return [];
+        }
+      },
     },
     {
       key: "message_template",
@@ -3328,6 +3389,12 @@ export function getVIPListsApiConfig(
   _t: (key: string) => string,
 ): APIConfigurationPageConfig {
   return vipListsConfig as APIConfigurationPageConfig;
+}
+
+export function getNotificationTypesApiConfig(
+  _t: (key: string) => string,
+): APIConfigurationPageConfig {
+  return notificationTypesConfig as APIConfigurationPageConfig;
 }
 
 export function getCommunicationChannelsApiConfig(

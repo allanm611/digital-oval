@@ -9,7 +9,7 @@ import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pag
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { kpiService } from "../services/kpiService";
@@ -334,7 +334,7 @@ export default function AllKPIsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <BackButton />
-        <CreateButton route="/dashboard/kpis/create" />
+        <FeatureActionButton featureId="kpi" action="create" />
       </div>
 <p className={`text-sm ${tw.textSecondary}`}>
             View all available KPIs across all categories
@@ -368,7 +368,7 @@ export default function AllKPIsPage() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
+            tableHandlePageChange(1);
           }}
           className="flex-1 min-w-[250px]"
         />

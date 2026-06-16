@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -9,7 +9,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { subscriberProfileService } from "../services/subscriberProfileService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
@@ -85,13 +85,13 @@ export default function SubscriberProfileListPage() {
           >
             <Eye className="w-4 h-4" style={{ color: color.primary.action }} />
           </button>
-          <button
-            onClick={() => handleEdit(row)}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
-            title="Edit"
-          >
-            <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
-          </button>
+          <FeatureActionButton
+            featureId="subscriber-profiles"
+            action="edit"
+            itemId={row.id}
+            variant="icon"
+            navigationState={{ parentLabel: "Subscriber Profiles" }}
+          />
           <button
             onClick={() => handleDeleteClick(row)}
             className="p-2 hover:bg-gray-100 rounded transition-colors"
@@ -161,9 +161,6 @@ export default function SubscriberProfileListPage() {
     navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}`, { state: { parentLabel: "Subscriber Profiles" } });
   };
 
-  const handleEdit = (profile: Profile) => {
-    navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}/edit`, { state: { parentLabel: "Subscriber Profiles" } });
-  };
 
   const handleDeleteClick = (profile: Profile) => {
     setProfileToDelete({ id: profile.id, name: profile.name });
@@ -229,7 +226,7 @@ export default function SubscriberProfileListPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <BackButton />
-        <CreateButton route="/dashboard/kpis/subscriber-profiles/create" />
+        <FeatureActionButton featureId="subscriber-profiles" action="create" />
       </div>
 
       <p className={`text-sm ${tw.textSecondary} mb-4`}>

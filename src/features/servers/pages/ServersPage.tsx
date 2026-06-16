@@ -20,7 +20,7 @@ import {
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { serverService } from "../services/serverService";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import {
   ServerCountByEnvironment,
   ServerCountByProtocol,
@@ -875,9 +875,7 @@ export default function ServersPage() {
                   : t.servers.selectServers}
               </button>
             </PermissionGate>
-            <PermissionGate permission="servers.create">
-              <CreateButton route="/dashboard/servers/new" />
-            </PermissionGate>
+            <FeatureActionButton featureId="servers" action="create" />
         </div>
       </div>
       <p className={`${tw.textSecondary} text-sm mt-1`}>

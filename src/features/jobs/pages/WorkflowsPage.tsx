@@ -13,6 +13,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";

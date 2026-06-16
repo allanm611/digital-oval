@@ -10,6 +10,7 @@ import {
   CreateNotificationRuleResponse,
   UpdateNotificationRuleResponse,
   DeleteNotificationRuleResponse,
+  GetEventConditionsResponse,
 } from "../types/notification";
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
@@ -273,6 +274,30 @@ class NotificationService {
       return data;
     } catch (error) {
       console.error("Failed to delete notification rule:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * GET /notifications/event-conditions?tableName=X - Get event conditions for a table
+   * Retrieves all event conditions available for a specific table
+   */
+  async getEventConditions(tableName: string): Promise<GetEventConditionsResponse> {
+    try {
+      const url = buildApiUrl(`/notifications/event-conditions?tableName=${tableName}`);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data: GetEventConditionsResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Failed to fetch event conditions for table ${tableName}:`, error);
       throw error;
     }
   }

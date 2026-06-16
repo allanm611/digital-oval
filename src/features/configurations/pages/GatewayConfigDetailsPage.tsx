@@ -12,6 +12,7 @@ import { pushGatewayConfigService } from "../services/pushGatewayConfigService";
 import { ussdGatewayConfigService } from "../services/ussdGatewayConfigService";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 
 type ChannelType = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH" | "USSD";
 
@@ -157,13 +158,12 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handleToggleActive}
-            className="text-xs font-semibold transition-all duration-200 flex items-center gap-2 w-fit"
-            style={getButtonStyles(button.secondaryAction)}
+          <ActivateDeactivateButton
+            isActive={config.is_active}
+            onToggle={handleToggleActive}
           >
             {config.is_active ? "Deactivate" : "Activate"}
-          </button>
+          </ActivateDeactivateButton>
           <button
             onClick={() =>
               navigate(`/dashboard/gateway-configurations/${config.id}/edit`)

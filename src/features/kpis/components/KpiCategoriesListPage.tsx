@@ -5,7 +5,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import Pagination from "../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -297,7 +297,7 @@ export default function KpiCategoriesListPage() {
             parentLabel="KPIs"
             currentLabel="KPI Categories"
           />
-          <CreateButton onClick={handleCreateCategory} />
+          <FeatureActionButton featureId="kpi-categories" action="create" onClick={handleCreateCategory} />
         </div>
       )}
       {!showBackButton && (
@@ -311,7 +311,7 @@ export default function KpiCategoriesListPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <CreateButton onClick={handleCreateCategory} />
+            <FeatureActionButton featureId="kpi-categories" action="create" onClick={handleCreateCategory} />
           </div>
         </div>
       )}

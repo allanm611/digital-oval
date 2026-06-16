@@ -22,7 +22,7 @@ import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog
 import { campaignService } from "../services/campaignService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { BackendCampaignType } from "../types/campaign";
@@ -804,7 +804,7 @@ export default function CampaignCategoriesPage() {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <PermissionGate permission="campaign-catalog.create">
-            <CreateButton onClick={handleCreateCategory} />
+            <FeatureActionButton featureId="campaign-categories" action="create" onClick={handleCreateCategory} />
           </PermissionGate>
         </div>
       </div>
@@ -931,7 +931,7 @@ export default function CampaignCategoriesPage() {
           </p>
           {!searchTerm && (
             <PermissionGate permission="campaign-catalog.create">
-              <CreateButton onClick={handleCreateCategory} />
+              <FeatureActionButton featureId="campaign-categories" action="create" onClick={handleCreateCategory} />
             </PermissionGate>
           )}
         </div>

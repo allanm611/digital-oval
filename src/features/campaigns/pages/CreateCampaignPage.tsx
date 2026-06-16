@@ -32,6 +32,7 @@ import {
 import { CreateCampaignRequest } from "../types/createCampaign";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
+import { controlGroupService } from "../../control-groups/services/controlGroupService";
 import {
   CampaignFlowConfig,
   CampaignFlowResponseData,
@@ -1111,6 +1112,30 @@ export default function CreateCampaignPage() {
                 include_exclude: segment.include_exclude || "include",
                 created_by: user?.user_id,
               });
+
+              // Save control group configuration if present
+              if (segment.control_group_config) {
+                try {
+                  const controlConfig = segment.control_group_config;
+                  const configPayload = {
+                    control_group_type: controlConfig.type || "none",
+                    config_method: controlConfig.control_group_method,
+                    percentage: controlConfig.percentage,
+                    fixed_number: controlConfig.fixed_number,
+                    advanced_params: controlConfig.advanced_params,
+                    control_group_id: controlConfig.selected_control_group_id,
+                  };
+
+                  await controlGroupService.updateSegmentControlConfig(
+                    createdCampaignIdValue,
+                    parseInt(segment.id),
+                    configPayload,
+                  );
+                } catch (controlGroupError) {
+                  console.error("Error saving segment control group config:", controlGroupError);
+                  showToast("warning", "Failed to save control group configuration for a segment");
+                }
+              }
             }
           } catch (segmentError) {
             console.error("Error saving segments:", segmentError);

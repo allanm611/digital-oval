@@ -116,27 +116,23 @@ export default function PolicyCustomizationPanel({
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
-              Period Type
-            </label>
-            <HeadlessSelect
-              value={maxConfig.type}
-              onChange={(value) =>
-                onConfigChange({
-                  ...maxConfig,
-                  type: value as "daily" | "weekly" | "monthly",
-                })
-              }
-              options={[
-                { label: "Daily Maximum", value: "daily" },
-                { label: "Weekly Maximum", value: "weekly" },
-                { label: "Monthly Maximum", value: "monthly" },
-              ]}
-              placeholder="Select period type"
-              className="w-full"
-            />
-          </div>
+          <HeadlessSelect
+            label="Period Type"
+            value={maxConfig.type}
+            onChange={(value) =>
+              onConfigChange({
+                ...maxConfig,
+                type: value as "daily" | "weekly" | "monthly",
+              })
+            }
+            options={[
+              { label: "Daily Maximum", value: "daily" },
+              { label: "Weekly Maximum", value: "weekly" },
+              { label: "Monthly Maximum", value: "monthly" },
+            ]}
+            placeholder="Select period type"
+            className="w-full"
+          />
           <div>
             <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
               Maximum Count
@@ -218,41 +214,31 @@ export default function PolicyCustomizationPanel({
                     variant="compact"
                   />
                 </div>
-                <div>
-                  <label
-                    className={`block ${tw.label} ${tw.textSecondary} mb-1`}
-                  >
-                    Type
-                  </label>
-                  <HeadlessSelect
-                    value={category.type}
-                    onChange={(value) => {
-                      const newCategories = [...dndConfig.categories];
-                      newCategories[index] = {
-                        ...category,
-                        type: value as DNDCategory["type"],
-                      };
-                      onConfigChange({
-                        ...dndConfig,
-                        categories: newCategories,
-                      });
-                    }}
-                    options={DND_CATEGORIES.map((cat) => ({
-                      label: cat.label,
-                      value: cat.type,
-                    }))}
-                    placeholder="Select type"
-                    className="w-full"
-                  />
-                </div>
+                <HeadlessSelect
+                  label="Type"
+                  value={category.type}
+                  onChange={(value) => {
+                    const newCategories = [...dndConfig.categories];
+                    newCategories[index] = {
+                      ...category,
+                      type: value as DNDCategory["type"],
+                    };
+                    onConfigChange({
+                      ...dndConfig,
+                      categories: newCategories,
+                    });
+                  }}
+                  options={DND_CATEGORIES.map((cat) => ({
+                    label: cat.label,
+                    value: cat.type,
+                  }))}
+                  placeholder="Select type"
+                  className="w-full"
+                />
                 <div className="flex items-end gap-2">
                   <div className="flex-1">
-                    <label
-                      className={`block ${tw.label} ${tw.textSecondary} mb-1`}
-                    >
-                      Status
-                    </label>
                     <HeadlessSelect
+                      label="Status"
                       value={category.status}
                       onChange={(value) => {
                         const newCategories = [...dndConfig.categories];
@@ -308,26 +294,22 @@ export default function PolicyCustomizationPanel({
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
-              Action
-            </label>
-            <HeadlessSelect
-              value={vipConfig.action}
-              onChange={(value) =>
-                onConfigChange({
-                  ...vipConfig,
-                  action: value as "include" | "exclude",
-                })
-              }
-              options={[
-                { label: "Include VIP List", value: "include" },
-                { label: "Exclude VIP List", value: "exclude" },
-              ]}
-              placeholder="Select action"
-              className="w-full"
-            />
-          </div>
+          <HeadlessSelect
+            label="Action"
+            value={vipConfig.action}
+            onChange={(value) =>
+              onConfigChange({
+                ...vipConfig,
+                action: value as "include" | "exclude",
+              })
+            }
+            options={[
+              { label: "Include VIP List", value: "include" },
+              { label: "Exclude VIP List", value: "exclude" },
+            ]}
+            placeholder="Select action"
+            className="w-full"
+          />
           <div>
             <label className={`block ${tw.label} ${tw.textSecondary} mb-2`}>
               Priority

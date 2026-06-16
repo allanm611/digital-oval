@@ -33,6 +33,7 @@ import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table } from "../../../shared/components/Table/Table";
 
 const CreateProductModalWrapper = lazy(
@@ -70,7 +71,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import { FeatureActionButton } from "../../../shared/components/FeatureActionButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { Product } from "../../products/types/product";
 import { Search, Check, FileText, Eye, Copy } from "lucide-react";
 import { productCategoryService } from "../../products/services/productCategoryService";

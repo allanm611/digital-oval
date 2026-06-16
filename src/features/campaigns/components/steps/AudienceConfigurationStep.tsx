@@ -1431,7 +1431,7 @@ function ControlGroupConfigModal({
                     <Checkbox id="setLimits"
                       checked={config.set_limits || false}
                       onChange={(value) =>
-                        setConfig({ ...config, set_limits: e.target.checked })
+                        setConfig({ ...config, set_limits: value })
                       }
                       className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157] rounded" />
                     <label

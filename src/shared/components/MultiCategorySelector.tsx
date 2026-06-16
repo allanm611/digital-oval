@@ -371,8 +371,11 @@ export default function MultiCategorySelector({
             left: `${dropdownPosition.left}px`,
             width: `${dropdownPosition.width}px`,
             zIndex: 9999,
+            backgroundColor: 'var(--c-surface-background)',
+            borderColor: 'var(--c-border-default)',
+            borderWidth: '1px',
           }}
-          className={`bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
+          className={`${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
         >
           <div className="p-2">
             <SearchInput
@@ -384,7 +387,7 @@ export default function MultiCategorySelector({
 
           <div className="max-h-48 overflow-y-auto">
             {isLoading ? (
-              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+              <div className="px-4 py-3 text-sm text-center" style={{ color: 'var(--c-text-secondary)' }}>
                 Loading...
               </div>
             ) : error ? (
@@ -392,7 +395,7 @@ export default function MultiCategorySelector({
                 {error}
               </div>
             ) : filteredCategories.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+              <div className="px-4 py-3 text-sm text-center" style={{ color: 'var(--c-text-secondary)' }}>
                 {searchTerm ? "No categories found" : "No categories available"}
               </div>
             ) : (
@@ -404,11 +407,21 @@ export default function MultiCategorySelector({
                       key={category.id}
                       type="button"
                       onClick={() => handleToggle(category.id)}
-                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center justify-between ${
-                        isSelected
-                          ? "bg-gray-50 text-gray-900"
-                          : "text-gray-900"
-                      }`}
+                      className={`w-full px-4 py-2 text-left text-sm flex items-center justify-between transition-colors`}
+                      style={{
+                        backgroundColor: isSelected ? 'var(--c-interactive-active)' : 'transparent',
+                        color: 'var(--c-text-primary)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.backgroundColor = 'var(--c-interactive-hover)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <Checkbox
@@ -419,7 +432,7 @@ export default function MultiCategorySelector({
                         <div className="flex-1 min-w-0">
                           <div className="truncate">{category.name}</div>
                           {category.description && (
-                            <div className="text-xs text-gray-500 mt-0.5 truncate">
+                            <div className="text-xs mt-0.5 truncate" style={{ color: 'var(--c-text-secondary)' }}>
                               {category.description}
                             </div>
                           )}
@@ -431,7 +444,7 @@ export default function MultiCategorySelector({
 
                 {/* Create New Category Option */}
                 {allowCreate && (
-                  <div className="border-t border-gray-200">
+                  <div style={{ borderTopColor: 'var(--c-border-default)', borderTopWidth: '1px' }}>
                     <button
                       type="button"
                       onClick={() => {
@@ -443,7 +456,14 @@ export default function MultiCategorySelector({
                         setIsOpen(false);
                         setSearchTerm("");
                       }}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 flex items-center"
+                      className="w-full px-4 py-2 text-left text-sm flex items-center transition-colors"
+                      style={{ color: 'var(--c-text-primary)' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'var(--c-interactive-hover)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Create new catalog

@@ -58,6 +58,15 @@ export interface AddSeedListMemberRequest {
   added_by?: number;
 }
 
+export interface AuditTrailEntry {
+  id: number;
+  action: string;
+  user_id?: number;
+  user_name?: string;
+  timestamp: string;
+  details?: Record<string, any>;
+}
+
 const BASE_URL = buildApiUrl("/seed-lists");
 
 class SeedListService {
@@ -157,6 +166,14 @@ class SeedListService {
       }),
     });
     return response;
+  }
+
+  async getAuditTrail(id: number) {
+    const data = await this.request<{
+      success: boolean;
+      data: AuditTrailEntry[];
+    }>(`/${id}/audit-trail`);
+    return data.data;
   }
 }
 

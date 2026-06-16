@@ -14,7 +14,7 @@ import {
   Filter,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -351,7 +351,7 @@ export default function ProgramsPage() {
           Manage marketing programs and initiatives. Define program details, budgets, timelines, and track spending to optimize your marketing efforts.
         </p>
         <div className="flex items-center gap-3">
-          <CreateButton onClick={handleCreateProgram} />
+          <FeatureActionButton featureId="programs" action="create" onClick={handleCreateProgram} />
         </div>
       </div>
 

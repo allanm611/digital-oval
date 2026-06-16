@@ -84,6 +84,7 @@ interface RecipientTableRow {
   email: string;
   seedList: string;
   status: string;
+  _full?: SeedListRecipient;
 }
 
 interface SeedListTableRow {
@@ -190,14 +191,13 @@ export default function SeedListManagementPage() {
       visible: true,
       sortable: false,
       render: (_, row) => {
-        const recipient = recipients.find((r) => r.id === row.id);
-        if (!recipient) return null;
+        if (!row._full) return null;
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
             <button
-              onClick={() => handleRemoveRecipient(recipient)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-              title={recipient.status === "active" ? "Remove from Seed List" : "Delete from Seed List"}
+              onClick={() => handleRemoveRecipient(row._full)}
+              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
+              title={row._full.status === "active" ? "Remove from Seed List" : "Delete from Seed List"}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -213,9 +213,12 @@ export default function SeedListManagementPage() {
       label: "List Name",
       visible: true,
       render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
+        <button
+          onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
+          className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm hover:underline font-medium`}
+        >
           {row.name}
-        </div>
+        </button>
       ),
     },
     {
@@ -248,7 +251,14 @@ export default function SeedListManagementPage() {
       visible: true,
       sortable: false,
       render: (_, row) => (
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
+            className={`p-2 text-gray-300 hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
           <button
             onClick={() =>
               handleDeleteList({
@@ -256,8 +266,8 @@ export default function SeedListManagementPage() {
                 name: row.name,
               })
             }
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-            title="Delete test list"
+            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
+            title="Delete seed list"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -1045,6 +1055,7 @@ export default function SeedListManagementPage() {
                     : undefined
                 ) || "-",
                 status: recipient.status,
+                _full: recipient,
               }))}
               totalItems={filteredRecipients.length}
               currentPage={recipientCurrentPage}
@@ -1506,7 +1517,7 @@ export default function SeedListManagementPage() {
                                     className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
                                     title="View user details"
                                   >
-                                    <Eye className="w-4 h-4" />
+                                    <Eye className="w-4 h-4" style={{ color: "inherit" }} />
                                   </button>
                                   <button
                                     onClick={() => handleRemoveMemberFromList(member)}

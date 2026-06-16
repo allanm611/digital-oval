@@ -44,7 +44,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Radio from "../../../shared/components/ui/Radio";
@@ -955,7 +955,7 @@ export default function ProductCatalogsPage() {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <PermissionGate permission="product-catalog.create">
-            <CreateButton onClick={() => setShowCreateModal(true)} />
+            <FeatureActionButton featureId="product-categories" action="create" onClick={() => setShowCreateModal(true)} />
           </PermissionGate>
         </div>
       </div>
@@ -1199,7 +1199,7 @@ export default function ProductCatalogsPage() {
           </p>
           {!searchTerm && (
             <PermissionGate permission="product-catalog.create">
-              <CreateButton onClick={() => setShowCreateModal(true)} />
+              <FeatureActionButton featureId="product-categories" action="create" onClick={() => setShowCreateModal(true)} />
             </PermissionGate>
           )}
         </div>

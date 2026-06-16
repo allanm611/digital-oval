@@ -515,10 +515,8 @@ export default function ComboTypeFormPage() {
                 <div className="border-t border-gray-200 p-4 space-y-3">
                   <div className="grid gap-3 md:grid-cols-4">
                     <div>
-                      <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                        Resource Type
-                      </label>
                       <HeadlessSelect
+                        label="Resource Type"
                         options={availableResourceTypes}
                         value={selectedResourceType}
                         onChange={(value: string | number) => {
@@ -549,10 +547,8 @@ export default function ComboTypeFormPage() {
                     </div>
 
                     <div>
-                      <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                        Unit
-                      </label>
                       <HeadlessSelect
+                        label="Unit"
                         options={validUnitsForSelected}
                         value={tempResourceData.unit}
                         onChange={(value: string | number) =>
@@ -573,10 +569,8 @@ export default function ComboTypeFormPage() {
                     {/* Utility Selection - show when Utility resource type is selected */}
                     {selectedResourceType === "utility" && (
                       <div>
-                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                          Utility *
-                        </label>
                         <HeadlessSelect
+                          label="Utility *"
                           options={getUtilitiesOptions()}
                           value={selectedUtility}
                           onChange={(value: string | number) => {
@@ -790,11 +784,9 @@ export default function ComboTypeFormPage() {
                       }`}
                     >
                       <div>
-                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                          Unit
-                        </label>
                         <Input
                           type="text"
+                          label="Unit"
                           value={editingCardResourceId === resource.id ? editingCardData.unit : resource.unit}
                           disabled={editingCardResourceId !== resource.id}
                           onChange={(value) =>
@@ -803,17 +795,15 @@ export default function ComboTypeFormPage() {
                               unit: String(value),
                             })
                           }
-                         
+
                           className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                         />
                       </div>
 
                       <div>
-                        <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                          Value
-                        </label>
                         <Input
                           type="text"
+                          label="Value"
                           value={editingCardResourceId === resource.id ? editingCardData.value : resource.value}
                           disabled={editingCardResourceId !== resource.id}
                           onChange={(value) =>
@@ -822,18 +812,16 @@ export default function ComboTypeFormPage() {
                               value: String(value),
                             })
                           }
-                         
+
                           className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                         />
                       </div>
 
                       {!comboSettings.sharedValidity && (
                         <div>
-                          <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                            Validity (Hours)
-                          </label>
                           <Input
                             type="number"
+                            label="Validity (Hours)"
                             value={editingCardResourceId === resource.id ? editingCardData.validityHours : resource.validityHours}
                             disabled={editingCardResourceId !== resource.id}
                             onChange={(value) =>
@@ -842,7 +830,7 @@ export default function ComboTypeFormPage() {
                                 validityHours: String(value),
                               })
                             }
-                           
+
                             className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                           />
                         </div>
@@ -850,11 +838,9 @@ export default function ComboTypeFormPage() {
 
                       {!comboSettings.sharedPrice && (
                         <div>
-                          <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                            Price
-                          </label>
                           <Input
                             type="number"
+                            label="Price"
                             value={editingCardResourceId === resource.id ? editingCardData.price : resource.price}
                             disabled={editingCardResourceId !== resource.id}
                             onChange={(value) =>
@@ -863,7 +849,7 @@ export default function ComboTypeFormPage() {
                                 price: String(value),
                               })
                             }
-                           
+
                             className={editingCardResourceId !== resource.id ? "bg-gray-50" : ""}
                           />
                         </div>

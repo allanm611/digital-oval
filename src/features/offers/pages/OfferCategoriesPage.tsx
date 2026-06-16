@@ -39,7 +39,7 @@ import {
 import { Offer, UpdateOfferRequest } from "../types/offer";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Radio from "../../../shared/components/ui/Radio";
@@ -1004,7 +1004,7 @@ function OfferCategoriesPage() {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <PermissionGate permission="offer-catalog.create">
-            <CreateButton onClick={handleCreateCategory} />
+            <FeatureActionButton featureId="offer-categories" action="create" onClick={handleCreateCategory} />
           </PermissionGate>
         </div>
       </div>
@@ -1265,7 +1265,7 @@ function OfferCategoriesPage() {
           </p>
           {!searchTerm && (
             <PermissionGate permission="offer-catalog.create">
-              <CreateButton onClick={handleCreateCategory} />
+              <FeatureActionButton featureId="offer-categories" action="create" onClick={handleCreateCategory} />
             </PermissionGate>
           )}
         </div>

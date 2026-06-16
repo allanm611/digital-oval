@@ -252,13 +252,11 @@ export default function AddPhoneModal({
 
             {/* DND Type Selector */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Select DND Type
-              </label>
               <p className="text-xs text-gray-500 mb-3">
                 Choose which type of messages this customer should NOT receive
               </p>
               <HeadlessSelect
+                label="Select DND Type"
                 value={String(selectedDndTypeId)}
                 onChange={(value) => setSelectedDndTypeId(Number(value))}
                 options={dndTypes.map((type) => ({

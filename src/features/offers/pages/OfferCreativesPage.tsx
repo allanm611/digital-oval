@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import OfferCreativeFormModal from "../components/OfferCreativeFormModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { offerCreativeService } from "../services/offerCreativeService";
@@ -144,7 +145,7 @@ export default function OfferCreativesPage() {
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage reusable creatives across different channels and locales
         </p>
-        <CreateButton onClick={handleCreate} />
+        <FeatureActionButton featureId="offer-creatives" action="create" onClick={handleCreate} />
       </div>
 
       {/* Search */}
@@ -180,7 +181,7 @@ export default function OfferCreativesPage() {
                 <p className={`${tw.textMuted} mb-6`}>
                   Create your first offer creative to get started.
                 </p>
-                <CreateButton onClick={handleCreate} />
+                <FeatureActionButton featureId="offer-creatives" action="create" onClick={handleCreate} />
               </>
             )}
           </div>
@@ -323,18 +324,13 @@ export default function OfferCreativesPage() {
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={(e) => handleToggleActive(e, creative)}
+                        <ActivateDeactivateButton
+                          isActive={creative.is_active}
+                          onToggle={(e) => handleToggleActive(e, creative)}
                           disabled={isTogglingActive === creative.id}
-                          className={`transition-opacity hover:opacity-75 disabled:opacity-50 ${
-                            creative.is_active
-                              ? "text-orange-500"
-                              : "text-green-600"
-                          }`}
+                          isLoading={isTogglingActive === creative.id}
                           title={creative.is_active ? "Deactivate" : "Activate"}
-                        >
-                          <Power className="w-4 h-4" />
-                        </button>
+                        />
                         <button
                           onClick={(e) => handleDelete(e, creative)}
                           className="text-red-600 hover:opacity-75 transition-opacity"

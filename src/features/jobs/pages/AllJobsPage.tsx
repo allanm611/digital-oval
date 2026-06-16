@@ -8,7 +8,7 @@ import {
   Filter,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
@@ -96,7 +96,7 @@ export default function AllJobsPage() {
                 <Filter className="h-4 w-4" />
                 {t.jobs.filter}
               </button>
-              <CreateButton route="/dashboard/scheduled-jobs/create" />
+              <FeatureActionButton featureId="scheduled-jobs" action="create" />
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function AllJobsPage() {
                 {searchQuery ? t.jobs.noJobsMatch : t.jobs.getStartedJob}
               </p>
               {!searchQuery && (
-                <CreateButton route="/dashboard/scheduled-jobs/create" />
+                <FeatureActionButton featureId="scheduled-jobs" action="create" />
               )}
             </div>
           ) : (

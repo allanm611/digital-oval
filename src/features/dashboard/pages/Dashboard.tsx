@@ -152,6 +152,18 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/SeedListManagementPage"
       ),
   ),
+  SeedListDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/SeedListDetailsPage"
+      ),
+  ),
+  VIPListDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/VIPListDetailsPage"
+      ),
+  ),
   CampaignBroadcastsPage: lazy(
     () =>
       import(
@@ -1503,8 +1515,16 @@ export default function Dashboard() {
             element={<CampaignPages.VIPListManagementPage />}
           />
           <Route
+            path="/vip-list-management/:id"
+            element={<CampaignPages.VIPListDetailsPage />}
+          />
+          <Route
             path="/seed-list-management"
             element={<CampaignPages.SeedListManagementPage />}
+          />
+          <Route
+            path="/seed-list-management/:id"
+            element={<CampaignPages.SeedListDetailsPage />}
           />
           <Route path="/etl" element={<EtlPages.EtlFileRegistryPage />} />
           <Route

@@ -9,6 +9,7 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { notificationTypeService, NotificationRule, CreateNotificationRuleRequest } from "../../../shared/services/notificationTypeService";
 import { notificationCategoryService } from "../../notifications/services/notificationCategoryService";
+import { notificationService } from "../../notifications/services/notificationService";
 
 interface NotificationTypeModalProps {
   isOpen: boolean;
@@ -33,13 +34,16 @@ export default function NotificationTypeModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingTables, setIsLoadingTables] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [isLoadingEventConditions, setIsLoadingEventConditions] = useState(false);
   const [tableOptions, setTableOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [categoryOptions, setCategoryOptions] = useState<Array<{ value: number | string; label: string }>>([]);
+  const [eventConditionOptions, setEventConditionOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     table_name: "",
     action_type: "",
+    event_condition: "",
     message_template: "",
     category_id: "",
   });
@@ -90,6 +94,30 @@ export default function NotificationTypeModal({
     }
   };
 
+  const loadEventConditions = async () => {
+    if (!formData.table_name || !formData.action_type) {
+      setEventConditionOptions([]);
+      return;
+    }
+
+    setIsLoadingEventConditions(true);
+    try {
+      const response = await notificationService.getEventConditions(formData.table_name);
+      const options = response.data
+        .filter((condition) => condition.action_type === formData.action_type)
+        .map((condition) => ({
+          value: String(condition.id || ""),
+          label: condition.display_name || condition.name || "",
+        }));
+      setEventConditionOptions(options);
+    } catch (error) {
+      console.error("Failed to load event conditions:", error);
+      setEventConditionOptions([]);
+    } finally {
+      setIsLoadingEventConditions(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       loadTables();
@@ -98,12 +126,17 @@ export default function NotificationTypeModal({
   }, [isOpen]);
 
   useEffect(() => {
+    loadEventConditions();
+  }, [formData.table_name, formData.action_type]);
+
+  useEffect(() => {
     if (editingRule) {
       setFormData({
         name: editingRule.name,
         description: editingRule.description || "",
         table_name: editingRule.table_name,
         action_type: editingRule.action_type,
+        event_condition: "",
         message_template: editingRule.message_template,
         category_id: editingRule.category_id || "",
       });
@@ -113,6 +146,7 @@ export default function NotificationTypeModal({
         description: "",
         table_name: "",
         action_type: "",
+        event_condition: "",
         message_template: "",
         category_id: "",
       });
@@ -144,16 +178,17 @@ export default function NotificationTypeModal({
 
     setIsSubmitting(true);
     try {
-      const payload: CreateNotificationRuleRequest = {
+      const payload: any = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         table_name: formData.table_name,
         action_type: formData.action_type,
+        event_condition: formData.event_condition,
         message_template: formData.message_template.trim(),
       };
 
       if (formData.category_id) {
-        payload.category_id = formData.category_id as any;
+        payload.category_id = formData.category_id;
       }
 
       if (editingRule) {
@@ -236,50 +271,42 @@ export default function NotificationTypeModal({
           {/* Table Name and Action Type on Same Line */}
           <div className="grid grid-cols-2 gap-4">
             {/* Table Name */}
-            <div className="space-y-1.5">
-              <label className={`text-sm font-medium ${tw.textPrimary}`}>
-                Table Name <span className="text-red-500">*</span>
-                {isLoadingTables && (
-                  <span className="ml-2 inline-flex items-center">
-                    <Loader2 className="w-3 h-3 animate-spin" style={{ color: color.primary.action }} />
-                  </span>
-                )}
-              </label>
-              <HeadlessSelect
-                options={tableOptions}
-                value={formData.table_name}
-                onChange={(value) => setFormData({ ...formData, table_name: String(value) })}
-                placeholder="Select a table..."
-                disabled={isLoadingTables}
-                searchable={true}
-              />
-            </div>
+            <HeadlessSelect
+              label="Table Name *"
+              options={tableOptions}
+              value={formData.table_name}
+              onChange={(value) => setFormData({ ...formData, table_name: String(value) })}
+              placeholder="Select a table..."
+              disabled={isLoadingTables}
+              searchable={true}
+            />
 
             {/* Action Type */}
-            <div className="space-y-1.5">
-              <label className={`text-sm font-medium ${tw.textPrimary}`}>
-                Action Type <span className="text-red-500">*</span>
-              </label>
-              <HeadlessSelect
-                options={ACTION_OPTIONS}
-                value={formData.action_type}
-                onChange={(value) => setFormData({ ...formData, action_type: String(value) })}
-                placeholder="Select an action..."
-              />
-            </div>
+            <HeadlessSelect
+              label="Action Type *"
+              options={ACTION_OPTIONS}
+              value={formData.action_type}
+              onChange={(value) => setFormData({ ...formData, action_type: String(value) })}
+              placeholder="Select an action..."
+            />
           </div>
 
-          {/* Category */}
-          <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Category
-              {isLoadingCategories && (
-                <span className="ml-2 inline-flex items-center">
-                  <Loader2 className="w-3 h-3 animate-spin" style={{ color: color.primary.action }} />
-                </span>
-              )}
-            </label>
+          {/* Event Condition and Category on Same Line */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Event Condition */}
             <HeadlessSelect
+              label="Event Condition"
+              options={eventConditionOptions}
+              value={formData.event_condition}
+              onChange={(value) => setFormData({ ...formData, event_condition: String(value) })}
+              placeholder="Select an event condition..."
+              disabled={isLoadingEventConditions || !formData.table_name || !formData.action_type}
+              searchable={true}
+            />
+
+            {/* Category */}
+            <HeadlessSelect
+              label="Category"
               options={categoryOptions}
               value={formData.category_id}
               onChange={(value) => setFormData({ ...formData, category_id: String(value) })}
@@ -290,16 +317,9 @@ export default function NotificationTypeModal({
           </div>
 
           {/* Message Template */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <Textarea
-                label="Message Template"
-                value={formData.message_template}
-                onChange={(value) => setFormData({ ...formData, message_template: value })}
-                placeholder="e.g., {actor_id} created {table_name} {record_id}"
-                rows={3}
-                required
-              />
+          <div className="relative">
+            <div className="flex items-center gap-1 mb-1">
+              <label className={`text-sm font-medium ${tw.textPrimary}`}>Message Template *</label>
               <div className="group relative cursor-help">
                 <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                 <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
@@ -307,6 +327,13 @@ export default function NotificationTypeModal({
                 </div>
               </div>
             </div>
+            <Textarea
+              value={formData.message_template}
+              onChange={(value) => setFormData({ ...formData, message_template: value })}
+              placeholder="e.g., {actor_id} created {table_name} {record_id}"
+              rows={3}
+              required
+            />
           </div>
 
           {/* Actions */}

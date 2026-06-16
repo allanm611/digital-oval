@@ -401,46 +401,36 @@ export default function ObjectiveModal({
               </div>
 
               {/* Status */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <HeadlessSelect
-                  options={statusOptions.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                  }))}
-                  value={formData.status}
-                  onChange={(value) => handleInputChange("status", value)}
-                  placeholder="Select status..."
-                  zIndex={zIndex.popover}
-                />
-              </div>
+              <HeadlessSelect
+                label="Status"
+                options={statusOptions.map((option) => ({
+                  value: option.value,
+                  label: option.label,
+                }))}
+                value={formData.status}
+                onChange={(value) => handleInputChange("status", value)}
+                placeholder="Select status..."
+                zIndex={zIndex.popover}
+              />
 
               {/* Priority Level */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priority Level
-                </label>
-                <HeadlessSelect
-                  options={priorityOptions.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                  }))}
-                  value={formData.priority_level}
-                  onChange={(value) =>
-                    handleInputChange("priority_level", value)
-                  }
-                  placeholder="Select priority level..."
-                />
-              </div>
+              <HeadlessSelect
+                label="Priority Level"
+                options={priorityOptions.map((option) => ({
+                  value: option.value,
+                  label: option.label,
+                }))}
+                value={formData.priority_level}
+                onChange={(value) =>
+                  handleInputChange("priority_level", value)
+                }
+                placeholder="Select priority level..."
+              />
 
               {/* Rank */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rank (1-5)
-                </label>
                 <HeadlessSelect
+                  label="Rank (1-5)"
                   options={rankOptions.map((option) => ({
                     value: option.value,
                     label: option.label,

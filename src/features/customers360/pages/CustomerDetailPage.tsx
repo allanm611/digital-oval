@@ -525,6 +525,7 @@ export default function CustomerDetailPage() {
     trend?: "up" | "down" | "neutral";
     trendPercent?: number;
     detailedInfo: string | React.ReactNode;
+    defaultValue?: string | number;
   };
 
   const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetric[]>([]);
@@ -553,6 +554,7 @@ export default function CustomerDetailPage() {
       value: "—",
       unit: metric.unit,
       description: metric.description,
+      defaultValue: (metric as any).default_value ?? 0,
       detailedInfo: (
         <div className="space-y-3">
           <p className="text-sm text-gray-900">{metric.description}</p>
@@ -1136,6 +1138,12 @@ export default function CustomerDetailPage() {
                           label: "Type",
                           visible: true,
                           render: (_, row) => <span className="text-sm text-gray-900">{revenueMetrics.find((m) => m.id === Number(row.id))?.field_type || "—"}</span>,
+                        },
+                        {
+                          id: "defaultValue",
+                          label: "Default Value",
+                          visible: true,
+                          render: (_, row) => <span className="text-sm text-gray-900">{row.defaultValue ?? 0}</span>,
                         },
                         {
                           id: "action",

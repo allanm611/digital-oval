@@ -10,6 +10,7 @@ import {
   MoreVertical,
   Loader2,
   Eye,
+  Clock,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -50,8 +51,9 @@ export default function ControlGroupsPage() {
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [isRunningScheduled, setIsRunningScheduled] = useState(false);
+  const deleteConfirm = useDeleteConfirm();
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -81,7 +83,7 @@ export default function ControlGroupsPage() {
 
   const handleDeleteClick = (id: number, name: string) => {
     setGroupToDelete({ id, name });
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    deleteConfirm.openDeleteConfirm(id, name);
   };
 
   const handleConfirmDelete = async () => {
@@ -93,13 +95,28 @@ export default function ControlGroupsPage() {
       setControlGroups(controlGroups.filter((g) => g.id !== groupToDelete.id));
       setTotalCount(Math.max(0, totalCount - 1));
       showSuccess("Control group deleted successfully");
-      closeDeleteConfirm();
+      deleteConfirm.closeDeleteConfirm();
       setGroupToDelete(null);
     } catch (error) {
       showError(extractBackendError(error, "Failed to delete control group. Please try again."));
       console.error(error);
     } finally {
       setIsDeleting(null);
+    }
+  };
+
+  const handleRunScheduled = async () => {
+    setIsRunningScheduled(true);
+    try {
+      const result = await controlGroupService.runScheduled();
+      showSuccess("Scheduled control groups processed successfully");
+      // Reload data to reflect any changes
+      loadData();
+    } catch (error) {
+      showError(extractBackendError(error, "Failed to run scheduled control groups. Please try again."));
+      console.error(error);
+    } finally {
+      setIsRunningScheduled(false);
     }
   };
 
@@ -151,19 +168,34 @@ export default function ControlGroupsPage() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-           
+
             showBreadcrumb={true}
-           
+
             currentLabel="Universal Control Groups"
           />
-          <button
-            onClick={() => navigate("/dashboard/control-groups/create")}
-            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90 w-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span>Create Control Group</span>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleRunScheduled}
+              disabled={isRunningScheduled}
+              className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90 w-auto disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: color.primary.accent }}
+            >
+              {isRunningScheduled ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Clock className="h-4 w-4 mr-2" />
+              )}
+              <span>{isRunningScheduled ? "Running..." : "Run Scheduled"}</span>
+            </button>
+            <button
+              onClick={() => navigate("/dashboard/control-groups/create")}
+              className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90 w-auto`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              <span>Create Control Group</span>
+            </button>
+          </div>
         </div>
         <p className="text-gray-600 text-sm">Create and manage control groups to measure campaign effectiveness and customer behavior</p>
       </div>
@@ -447,7 +479,7 @@ export default function ControlGroupsPage() {
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
         onClose={() => {
-          closeDeleteConfirm();
+          deleteConfirm.closeDeleteConfirm();
           setGroupToDelete(null);
         }}
         onConfirm={handleConfirmDelete}

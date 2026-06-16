@@ -158,26 +158,24 @@ export default function SchedulingStep({
           {/* Start Date/Time Input - Only show when datetime is selected */}
           {startType === "datetime" && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Start Date/Time
-              </label>
               <div className="flex items-center space-x-4">
-                <div className="relative">
+                <div className="relative flex-1">
                   <Input
                     type="date"
+                    label="Start Date *"
                     value={scheduling.start_date?.split("T")[0] || "2025-09-22"}
                     onChange={(value) =>
                       updateScheduling({
                         start_date: String(value) + "T08:00",
                       })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "140px", backgroundColor: "white" }}
+                    placeholder="Select date"
                   />
                 </div>
-                <div className="relative">
+                <div className="relative flex-1">
                   <Input
                     type="time"
+                    label="Start Time *"
                     value="08:00"
                     onChange={(value) =>
                       updateScheduling({
@@ -187,8 +185,7 @@ export default function SchedulingStep({
                             String(value) || "2025-09-22T" + String(value),
                       })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "100px", backgroundColor: "white" }}
+                    placeholder="Select time"
                   />
                 </div>
               </div>
@@ -234,20 +231,21 @@ export default function SchedulingStep({
           {endType === "at" && (
             <div className="mb-6">
               <div className="flex items-center space-x-4">
-                <div className="relative">
+                <div className="relative flex-1">
                   <Input
                     type="date"
+                    label="End Date *"
                     value={scheduling.end_date?.split("T")[0] || "2025-12-31"}
                     onChange={(value) =>
                       updateScheduling({ end_date: String(value) + "T23:59" })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "140px", backgroundColor: "white" }}
+                    placeholder="Select date"
                   />
                 </div>
-                <div className="relative">
+                <div className="relative flex-1">
                   <Input
                     type="time"
+                    label="End Time *"
                     value="23:59"
                     onChange={(value) =>
                       updateScheduling({
@@ -257,8 +255,7 @@ export default function SchedulingStep({
                             String(value) || "2025-12-31T" + String(value),
                       })
                     }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
-                    style={{ minWidth: "100px", backgroundColor: "white" }}
+                    placeholder="Select time"
                   />
                 </div>
               </div>
@@ -267,10 +264,8 @@ export default function SchedulingStep({
 
           {/* Time Zone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Time Zone
-            </label>
             <HeadlessSelect
+              label="Time Zone"
               value={scheduling.time_zone || getSettingsTimezone()}
               onChange={(value) =>
                 updateScheduling({ time_zone: value as string })
@@ -302,39 +297,34 @@ export default function SchedulingStep({
         <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* Recurrence Pattern */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Recurrence Pattern
-              </label>
-              <HeadlessSelect
-                value={recurrencePattern}
-                onChange={(value) => setRecurrencePattern(value as string)}
-                options={[
-                  { label: "Weeks", value: "Weeks" },
-                  { label: "Days", value: "Days" },
-                  { label: "Months", value: "Months" },
-                ]}
-                placeholder="Select pattern"
-                className="w-full"
-              />
-            </div>
+            <HeadlessSelect
+              label="Recurrence Pattern"
+              value={recurrencePattern}
+              onChange={(value) => setRecurrencePattern(value as string)}
+              options={[
+                { label: "Weeks", value: "Weeks" },
+                { label: "Days", value: "Days" },
+                { label: "Months", value: "Months" },
+              ]}
+              placeholder="Select pattern"
+              className="w-full"
+            />
 
             {/* Recur Every */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Recur Every
-              </label>
               <div className="flex items-center space-x-2">
-                <Input
-                  type="number"
-                  min="1"
-                  value={recurrenceInterval}
-                  onChange={(value) =>
-                    setRecurrenceInterval(Number(String(value)))
-                  }
-                  className={`w-16 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent text-center`}
-                />
-                <span className="text-sm text-gray-600">
+                <div className="flex-1">
+                  <Input
+                    type="number"
+                    label="Recur Every"
+                    min="1"
+                    value={recurrenceInterval}
+                    onChange={(value) =>
+                      setRecurrenceInterval(Number(String(value)))
+                    }
+                  />
+                </div>
+                <span className="text-sm text-gray-600 mt-5">
                   {recurrencePattern}
                 </span>
               </div>
@@ -342,14 +332,11 @@ export default function SchedulingStep({
 
             {/* Default Start Time */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Default Start Time
-              </label>
               <Input
                 type="time"
+                label="Default Start Time"
                 value={defaultStartTime}
                 onChange={(value) => setDefaultStartTime(String(value))}
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}
               />
             </div>
           </div>
@@ -460,10 +447,8 @@ export default function SchedulingStep({
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start broadcasts
-                  </label>
                   <HeadlessSelect
+                    label="Start broadcasts"
                     value={startBroadcastBefore}
                     onChange={(value) =>
                       setStartBroadcastBefore(value as string)
@@ -480,25 +465,20 @@ export default function SchedulingStep({
 
                 {startBroadcastBefore === "At" ? (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Time
-                    </label>
                     <Input
                       type="time"
+                      label="Time"
                       value="12:00"
                       onChange={(_e) => {
                         // Handle time change
                       }}
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}
                     />
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hours
-                    </label>
                     <Input
                       type="number"
+                      label="Hours"
                       min="0"
                       value={hoursBeforeBroadcast}
                       onChange={(value) =>

@@ -24,14 +24,22 @@ const PERMISSION_MAP: Record<string, Record<string, string>> = {
   'communication-channels': { create: 'communication_channels.create', edit: 'communication_channels.update' },
   'seed-lists': { create: 'seed_lists.create', edit: 'seed_lists.update' },
   'vip-lists': { create: 'vip_lists.create', edit: 'vip_lists.update' },
+  'scheduled-jobs': { create: 'jobs.create', edit: 'jobs.update' },
   'job-types': { create: 'jobs.create', edit: 'jobs.update' },
   'job-dependencies': { create: 'jobs.create', edit: 'jobs.update' },
   'offer-categories': { create: 'offers.create', edit: 'offers.update' },
   'product-categories': { create: 'products.create', edit: 'products.update' },
   'offer-creatives': { create: 'offers.create', edit: 'offers.update' },
-  'connection-profiles': { create: 'connection_profiles.create', edit: 'connection_profiles.update' },
+  'campaign-categories': { create: 'campaigns.create', edit: 'campaigns.update' },
+  'connection-profiles': { create: 'connection-profiles.create', edit: 'connection-profiles.update' },
+  kpi: { create: 'kpi.create', edit: 'kpi.update' },
   'kpi-categories': { create: 'kpi.create', edit: 'kpi.update' },
   'email-routes': { create: 'offers.create', edit: 'offers.update' },
+  servers: { create: 'servers.create', edit: 'servers.update' },
+  'subscriber-profiles': { create: 'kpi.create', edit: 'kpi.update' },
+  quicklists: { create: 'quicklists.create', edit: 'quicklists.update' },
+  programs: { create: 'campaigns.create', edit: 'campaigns.update' },
+  'segment-categories': { create: 'segments.create', edit: 'segments.update' },
 };
 
 const ROUTE_MAP: Record<string, string> = {
@@ -43,17 +51,25 @@ const ROUTE_MAP: Record<string, string> = {
   'communication-channels': '/dashboard/communication-channels',
   'seed-lists': '/dashboard/seed-lists',
   'vip-lists': '/dashboard/vip-lists',
+  'scheduled-jobs': '/dashboard/scheduled-jobs',
   'job-types': '/dashboard/job-types',
   'job-dependencies': '/dashboard/job-dependencies',
   'offer-categories': '/dashboard/offer-categories',
   'product-categories': '/dashboard/product-categories',
   'offer-creatives': '/dashboard/offer-creatives',
+  'campaign-categories': '/dashboard/campaign-categories',
   'connection-profiles': '/dashboard/connection-profiles',
+  kpi: '/dashboard/kpis',
   'kpi-categories': '/dashboard/kpi-categories',
   'email-routes': '/dashboard/email-routes',
+  servers: '/dashboard/servers',
+  'subscriber-profiles': '/dashboard/kpis/subscriber-profiles',
+  quicklists: '/dashboard/quicklists',
+  programs: '/dashboard/programs',
+  'segment-categories': '/dashboard/segment-categories',
 };
 
-export function FeatureActionButton({
+export default function FeatureActionButton({
   featureId,
   action,
   itemId,
@@ -81,7 +97,8 @@ export function FeatureActionButton({
 
   let route = baseRoute;
   if (action === 'create') {
-    route = `${baseRoute}/create`;
+    const createPath = ['connection-profiles', 'servers'].includes(featureId) ? '/new' : '/create';
+    route = `${baseRoute}${createPath}`;
   } else if (action === 'edit' && itemId) {
     route = `${baseRoute}/${itemId}/edit`;
   }

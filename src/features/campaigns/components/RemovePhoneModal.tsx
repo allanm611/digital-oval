@@ -409,14 +409,9 @@ export default function RemovePhoneModal({
                 </div>
 
                 {/* DND Type Selector */}
-                <div className="space-y-2">
-                  <label
-                    className="block text-sm font-medium"
-                    style={{ color: color.text.primary }}
-                  >
-                    Select DND Type to Remove
-                  </label>
+                <div>
                   <HeadlessSelect
+                    label="Select DND Type to Remove"
                     value={selectedDndType}
                     onChange={setSelectedDndType}
                     options={DND_TYPES.map((type) => ({

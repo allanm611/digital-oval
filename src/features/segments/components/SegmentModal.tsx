@@ -1079,12 +1079,8 @@ export default function SegmentModal({
                     </div>
 
                     <div>
-                      <label
-                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                      >
-                        Segment Catalog
-                      </label>
                       <MultiCategorySelector
+                        label="Segment Catalog"
                         value={selectedCategoryIds}
                         onChange={(ids) => {
                           isUserInteractionRef.current = true;
@@ -1111,11 +1107,6 @@ export default function SegmentModal({
                   </div>
 
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} `}
-                    >
-                      Map to Customer Identity Field *
-                    </label>
                     <p className={`text-xs ${tw.textSecondary} mb-2`}>
                       Select which customer field this segment represents
                     </p>
@@ -1128,6 +1119,7 @@ export default function SegmentModal({
                     ) : (
                       <>
                         <HeadlessSelect
+                          label="Map to Customer Identity Field *"
                           options={customerIdentityFields.map((field) => ({
                             value: field.field_value,
                             label: field.field_name,
@@ -1158,16 +1150,11 @@ export default function SegmentModal({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label
-                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                      >
-                        Tags
-                      </label>
                       <div className="space-y-3">
                         <div className="flex">
                           <div className="flex-1">
                             <Input
-                              label="Add Tag"
+                              label="Tags"
                               value={tagInput}
                               onChange={(value) => {
                                 setTagInput(value);
@@ -1258,12 +1245,8 @@ export default function SegmentModal({
                     </div>
 
                     <div>
-                      <label
-                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                      >
-                        Segment Type *
-                      </label>
                       <TypeSelector
+                        label="Segment Type *"
                         value={
                           formData.segment_type_id
                             ? String(formData.segment_type_id)

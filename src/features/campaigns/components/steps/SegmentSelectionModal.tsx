@@ -191,6 +191,7 @@ export default function SegmentSelectionModal({
             <div className="w-48">
               <div className="[&_button]:py-2 [&_li]:py-1.5">
                 <HeadlessSelect
+                  label="Filter"
                   options={filterOptions}
                   value={selectedFilter}
                   onChange={(value: string | number) =>

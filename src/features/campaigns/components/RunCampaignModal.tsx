@@ -8,6 +8,7 @@ import {
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { offerService } from "../../offers/services/offerService";
+import { controlGroupService } from "../../control-groups/services/controlGroupService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, components } from "../../../shared/utils/utils";
@@ -243,6 +244,25 @@ export default function RunCampaignModal({
       };
 
       const runResult = await campaignService.runCampaign(request);
+
+      // Generate control group members for each selected segment
+      for (const segment of selectedSegments) {
+        try {
+          const segmentId = typeof segment.segment_id === "string"
+            ? parseInt(segment.segment_id, 10)
+            : segment.segment_id;
+
+          await controlGroupService.generateSegmentMembers(
+            campaignId,
+            segmentId,
+            false, // Execute immediately, not dry run
+          );
+        } catch (controlGroupError) {
+          console.error("Error generating control group members:", controlGroupError);
+          // Don't fail the campaign run if control group generation fails
+          // Just log it as a warning
+        }
+      }
 
       showToast("success", interpolate(t.campaigns.run.startSuccess, { name: campaignName }));
       onSuccess?.(runResult?.data);

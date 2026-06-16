@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import BackButton from '../../../shared/components/ui/BackButton';
 import Input from '../../../shared/components/ui/Input';
 import SearchInput from '../../../shared/components/ui/SearchInput';
+import ActivateDeactivateButton from '../../../shared/components/ui/ActivateDeactivateButton';
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,7 +11,6 @@ import {
   CheckCircle,
   CheckSquare,
   Database,
-  Edit,
   Eye,
   Filter,
   Loader2,
@@ -30,7 +30,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -187,17 +187,12 @@ export default function ConnectionProfilesPage() {
           >
             <Eye className="w-4 h-4" />
           </button>
-          <PermissionGate permission="connection-profiles.update">
-            <button
-              type="button"
-              onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}/edit`)}
-              className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-              aria-label="Edit"
-              title="Edit"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-          </PermissionGate>
+          <FeatureActionButton
+            featureId="connection-profiles"
+            action="edit"
+            itemId={profile.id}
+            variant="icon"
+          />
         </div>
       ),
     },
@@ -754,9 +749,7 @@ export default function ConnectionProfilesPage() {
           : "Create your first connection profile to get started"}
       </p>
       {!profiles.length && (
-        <PermissionGate permission="connection-profiles.create">
-          <CreateButton route="/dashboard/connection-profiles/new" />
-        </PermissionGate>
+        <FeatureActionButton featureId="connection-profiles" action="create" />
       )}
     </div>
   );
@@ -819,9 +812,7 @@ export default function ConnectionProfilesPage() {
               <BarChart3 className="h-4 w-4" />
               Analytics
             </button>
-            <PermissionGate permission="connection-profiles.create">
-              <CreateButton route="/dashboard/connection-profiles/new" />
-            </PermissionGate>
+            <FeatureActionButton featureId="connection-profiles" action="create" />
           </div>
           </div>
         </div>

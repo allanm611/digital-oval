@@ -843,57 +843,47 @@ export default function ProductForm({
             </div>
 
             {/* Category */}
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                {t.products.form.productCategory}
-              </label>
-              <MultiCategorySelector
-                value={selectedCategoryIds}
-                onChange={onCategoryIdsChange}
-                placeholder="Select catalog(s)"
-                entityType="product"
-                refreshTrigger={refreshTrigger}
-                className="w-full"
-                allowCreate={true}
-                onCreateCategory={() => onShowCreateModal(true)}
-                onCategoryCreated={onCategoryCreated}
-              />
-            </div>
+            <MultiCategorySelector
+              label={t.products.form.productCategory}
+              value={selectedCategoryIds}
+              onChange={onCategoryIdsChange}
+              placeholder="Select catalog(s)"
+              entityType="product"
+              refreshTrigger={refreshTrigger}
+              className="w-full"
+              allowCreate={true}
+              onCreateCategory={() => onShowCreateModal(true)}
+              onCategoryCreated={onCategoryCreated}
+            />
 
             {/* Product Type */}
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                {t.products.form.productType}
-              </label>
-              <TypeSelector
-                options={productTypes
-                  .filter((pt) => pt.is_active !== false)
-                  .map((pt) => ({
-                    value: String(pt.id),
-                    label: pt.name,
-                  }))}
-                disabled={productTypesLoading}
-                value={
-                  formData.product_type_id
-                    ? String(formData.product_type_id)
-                    : ""
-                }
-                onChange={(value) =>
-                  onInputChange(
-                    "product_type_id" as keyof (
-                      | CreateProductRequest
-                      | UpdateProductRequest
-                    ),
-                    value ? Number(value) : undefined,
-                  )
-                }
-                placeholder={t.products.form.selectProductType}
-                allowCreate={true}
-                onCreate={() => setShowCreateTypeModal(true)}
-              />
-            </div>
+            <TypeSelector
+              label={t.products.form.productType}
+              options={productTypes
+                .filter((pt) => pt.is_active !== false)
+                .map((pt) => ({
+                  value: String(pt.id),
+                  label: pt.name,
+                }))}
+              disabled={productTypesLoading}
+              value={
+                formData.product_type_id
+                  ? String(formData.product_type_id)
+                  : ""
+              }
+              onChange={(value) =>
+                onInputChange(
+                  "product_type_id" as keyof (
+                    | CreateProductRequest
+                    | UpdateProductRequest
+                  ),
+                  value ? Number(value) : undefined,
+                )
+              }
+              placeholder={t.products.form.selectProductType}
+              allowCreate={true}
+              onCreate={() => setShowCreateTypeModal(true)}
+            />
 
             {/* Combo Type Selector - Only show when Combo is selected */}
             {isComboType && (
@@ -934,38 +924,37 @@ export default function ProductForm({
                 </div>
 
                 {/* Combo Type Selector */}
-                <div>
-                  <HeadlessSelect
-                    options={[
-                      { value: "", label: "Select a combo type" },
-                      ...comboTypes
-                        .filter((ct) => ct.is_active !== false)
-                        .map((ct) => ({
-                          value: String(ct.id),
-                          label: ct.name,
-                        })),
-                    ]}
-                    value={
-                      comboData.combo_type_id
-                        ? String(comboData.combo_type_id)
-                        : ""
-                    }
-                    onChange={(value) => {
-                      setComboData({
-                        ...comboData,
-                        combo_type_id: value
-                          ? parseInt(value as string, 10)
-                          : undefined,
-                        resources: [], // Reset resources when combo type changes
-                      });
-                      // Exit custom combo mode when selecting/deselecting
-                      setIsCustomComboMode(false);
-                    }}
-                    placeholder="Select a combo type"
-                    className="w-full"
-                    zIndex={zIndex.popover}
-                  />
-                </div>
+                <HeadlessSelect
+                  label="Combo Type"
+                  options={[
+                    { value: "", label: "Select a combo type" },
+                    ...comboTypes
+                      .filter((ct) => ct.is_active !== false)
+                      .map((ct) => ({
+                        value: String(ct.id),
+                        label: ct.name,
+                      })),
+                  ]}
+                  value={
+                    comboData.combo_type_id
+                      ? String(comboData.combo_type_id)
+                      : ""
+                  }
+                  onChange={(value) => {
+                    setComboData({
+                      ...comboData,
+                      combo_type_id: value
+                        ? parseInt(value as string, 10)
+                        : undefined,
+                      resources: [], // Reset resources when combo type changes
+                    });
+                    // Exit custom combo mode when selecting/deselecting
+                    setIsCustomComboMode(false);
+                  }}
+                  placeholder="Select a combo type"
+                  className="w-full"
+                  zIndex={zIndex.popover}
+                />
               </>
             )}
 
@@ -1196,81 +1185,69 @@ export default function ProductForm({
                           }`}
                         >
                           {/* Resource Type Dropdown */}
-                          <div>
-                            <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                              Resource Type
-                            </label>
-                            <HeadlessSelect
-                              value={selectedResourceType}
-                              onChange={(value) => {
-                                const newType = value as ProductUnit;
-                                setSelectedResourceType(newType);
-                                // Auto-populate resource_unit with first valid unit for this resource
-                                const validUnits = getValidUnitsForResource(newType);
-                                setTempResourceData({
-                                  resource_value: 0,
-                                  resource_unit: validUnits.length > 0 ? validUnits[0] : "",
-                                  validity_hours: undefined,
-                                  price: undefined,
-                                  daid_account: undefined,
-                                });
-                                // Reset utility selection if switching away from utility type
-                                if (newType !== "utility") {
-                                  setSelectedUtility("");
-                                }
-                              }}
-                              options={availableResourceTypeOptions}
-                              placeholder={
-                                availableResourceTypeOptions.length === 0
-                                  ? "All resources added"
-                                  : "Select resource"
+                          <HeadlessSelect
+                            label="Resource Type"
+                            value={selectedResourceType}
+                            onChange={(value) => {
+                              const newType = value as ProductUnit;
+                              setSelectedResourceType(newType);
+                              // Auto-populate resource_unit with first valid unit for this resource
+                              const validUnits = getValidUnitsForResource(newType);
+                              setTempResourceData({
+                                resource_value: 0,
+                                resource_unit: validUnits.length > 0 ? validUnits[0] : "",
+                                validity_hours: undefined,
+                                price: undefined,
+                                daid_account: undefined,
+                              });
+                              // Reset utility selection if switching away from utility type
+                              if (newType !== "utility") {
+                                setSelectedUtility("");
                               }
-                              className="w-full"
-                              disabled={availableResourceTypeOptions.length === 0}
-                            />
-                          </div>
+                            }}
+                            options={availableResourceTypeOptions}
+                            placeholder={
+                              availableResourceTypeOptions.length === 0
+                                ? "All resources added"
+                                : "Select resource"
+                            }
+                            className="w-full"
+                            disabled={availableResourceTypeOptions.length === 0}
+                          />
 
                           {/* Unit Dropdown */}
-                          <div>
-                            <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                              Unit
-                            </label>
-                            <HeadlessSelect
-                              value={tempResourceData.resource_unit}
-                              onChange={(value) => {
-                                setTempResourceData({
-                                  ...tempResourceData,
-                                  resource_unit: value as string,
-                                });
-                              }}
-                              options={comboUnitOptions}
-                              placeholder="Select unit"
-                              className="w-full"
-                            />
-                          </div>
+                          <HeadlessSelect
+                            label="Unit"
+                            value={tempResourceData.resource_unit}
+                            onChange={(value) => {
+                              setTempResourceData({
+                                ...tempResourceData,
+                                resource_unit: value as string,
+                              });
+                            }}
+                            options={comboUnitOptions}
+                            placeholder="Select unit"
+                            className="w-full"
+                          />
 
                           {/* Utility Selection - show when Utility resource type is selected */}
                           {selectedResourceType === "utility" && (
-                            <div>
-                              <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
-                                Utility *
-                              </label>
-                              <HeadlessSelect
-                                options={getUtilitiesOptions()}
-                                value={selectedUtility}
-                                onChange={(value: string | number) => {
-                                  const val = value as string;
-                                  if (val === "create-custom") {
-                                    setIsCreateUtilityModalOpen(true);
-                                    setSelectedUtility(""); // Reset selection
-                                  } else {
-                                    setSelectedUtility(val);
-                                  }
-                                }}
-                                placeholder="Select utility"
-                                className="w-full"
-                              />
-                            </div>
+                            <HeadlessSelect
+                              label="Utility *"
+                              options={getUtilitiesOptions()}
+                              value={selectedUtility}
+                              onChange={(value: string | number) => {
+                                const val = value as string;
+                                if (val === "create-custom") {
+                                  setIsCreateUtilityModalOpen(true);
+                                  setSelectedUtility(""); // Reset selection
+                                } else {
+                                  setSelectedUtility(val);
+                                }
+                              }}
+                              placeholder="Select utility"
+                              className="w-full"
+                            />
                           )}
 
                           {/* Resource Value */}
@@ -1681,41 +1658,33 @@ export default function ProductForm({
 
             {/* Scope & Unit */}
             <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                  Scope
-                </label>
+              <HeadlessSelect
+                label="Scope"
+                options={scopeOptions.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+                value={formData.scope || "segment"}
+                onChange={(value) =>
+                  onInputChange("scope", value as ProductScope)
+                }
+                placeholder="Select scope"
+                className="w-full"
+                zIndex={zIndex.popover}
+              />
+
+              {!isComboType && (
                 <HeadlessSelect
-                  options={scopeOptions.map((opt) => ({
-                    value: opt.value,
-                    label: opt.label,
-                  }))}
-                  value={formData.scope || "segment"}
+                  label="Unit"
+                  options={unitEnumOptions}
+                  value={formData.unit || ""}
                   onChange={(value) =>
-                    onInputChange("scope", value as ProductScope)
+                    onInputChange("unit", value as ProductUnit)
                   }
-                  placeholder="Select scope"
+                  placeholder="Select unit"
                   className="w-full"
                   zIndex={zIndex.popover}
                 />
-              </div>
-
-              {!isComboType && (
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                    Unit
-                  </label>
-                  <HeadlessSelect
-                    options={unitEnumOptions}
-                    value={formData.unit || ""}
-                    onChange={(value) =>
-                      onInputChange("unit", value as ProductUnit)
-                    }
-                    placeholder="Select unit"
-                    className="w-full"
-                    zIndex={zIndex.popover}
-                  />
-                </div>
               )}
             </div>
 

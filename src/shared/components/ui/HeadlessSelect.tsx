@@ -148,7 +148,7 @@ export default function HeadlessSelect({
                 left: `${dropdownPosition.left}px`,
                 width: `${dropdownPosition.width}px`,
                 zIndex: effectiveZIndex,
-                backgroundColor: 'var(--c-surface-cards)',
+                backgroundColor: 'var(--c-surface-background)',
                 borderColor: 'var(--c-border-default)',
                 borderWidth: '1px',
               }}
@@ -157,7 +157,7 @@ export default function HeadlessSelect({
                 <div
                   className={`sticky top-0 z-10 px-3 py-2 ${tw.rounded}`}
                   style={{
-                    backgroundColor: 'var(--c-surface-cards)',
+                    backgroundColor: 'var(--c-surface-background)',
                     borderBottomColor: 'var(--c-border-default)',
                     borderBottomWidth: '1px',
                   }}
@@ -299,7 +299,7 @@ export default function HeadlessSelect({
                 left: `${dropdownPosition.left}px`,
                 width: `${dropdownPosition.width}px`,
                 zIndex: effectiveZIndex,
-                backgroundColor: 'var(--c-surface-cards)',
+                backgroundColor: 'var(--c-surface-background)',
                 borderColor: 'var(--c-border-default)',
                 borderWidth: '1px',
               }}
@@ -308,7 +308,7 @@ export default function HeadlessSelect({
                 <div
                   className={`sticky top-0 z-10 px-3 py-2 ${tw.rounded}`}
                   style={{
-                    backgroundColor: 'var(--c-surface-cards)',
+                    backgroundColor: 'var(--c-surface-background)',
                     borderBottomColor: 'var(--c-border-default)',
                     borderBottomWidth: '1px',
                   }}

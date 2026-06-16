@@ -358,27 +358,23 @@ function IntervalConfigPanel({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Interval Type
-          </label>
-          <HeadlessSelect
-            value={localConfig.interval_type}
-            onChange={(value) =>
-              setLocalConfig({
-                ...localConfig,
-                interval_type: value as "hours" | "days" | "weeks",
-              })
-            }
-            options={[
-              { label: "Hours", value: "hours" },
-              { label: "Days", value: "days" },
-              { label: "Weeks", value: "weeks" },
-            ]}
-            placeholder="Select interval type"
-            className="w-full"
-          />
-        </div>
+        <HeadlessSelect
+          label="Interval Type"
+          value={localConfig.interval_type}
+          onChange={(value) =>
+            setLocalConfig({
+              ...localConfig,
+              interval_type: value as "hours" | "days" | "weeks",
+            })
+          }
+          options={[
+            { label: "Hours", value: "hours" },
+            { label: "Days", value: "days" },
+            { label: "Weeks", value: "weeks" },
+          ]}
+          placeholder="Select interval type"
+          className="w-full"
+        />
       </div>
 
       <div>
@@ -433,28 +429,24 @@ function ConditionConfigPanel({
     <div className={`bg-blue-50 border border-blue-300 ${tw.rounded} p-4 space-y-4`}>
       <h4 className="font-semibold text-gray-900">Configure Condition</h4>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Condition Type
-        </label>
-        <HeadlessSelect
-          value={localConfig.condition_type}
-          onChange={(value) =>
-            setLocalConfig({
-              ...localConfig,
-              condition_type: value as ConditionConfig["condition_type"],
-            })
-          }
-          options={[
-            { label: "Customer Attribute", value: "customer_attribute" },
-            { label: "Behavior", value: "behavior" },
-            { label: "Transaction", value: "transaction" },
-            { label: "Custom", value: "custom" },
-          ]}
-          placeholder="Select condition type"
-          className="w-full"
-        />
-      </div>
+      <HeadlessSelect
+        label="Condition Type"
+        value={localConfig.condition_type}
+        onChange={(value) =>
+          setLocalConfig({
+            ...localConfig,
+            condition_type: value as ConditionConfig["condition_type"],
+          })
+        }
+        options={[
+          { label: "Customer Attribute", value: "customer_attribute" },
+          { label: "Behavior", value: "behavior" },
+          { label: "Transaction", value: "transaction" },
+          { label: "Custom", value: "custom" },
+        ]}
+        placeholder="Select condition type"
+        className="w-full"
+      />
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -472,30 +464,26 @@ function ConditionConfigPanel({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Operator
-          </label>
-          <HeadlessSelect
-            value={localConfig.operator}
-            onChange={(value) =>
-              setLocalConfig({
-                ...localConfig,
-                operator: value as ConditionConfig["operator"],
-              })
-            }
-            options={[
-              { label: "Equals", value: "equals" },
-              { label: "Not Equals", value: "not_equals" },
-              { label: "Greater Than", value: "greater_than" },
-              { label: "Less Than", value: "less_than" },
-              { label: "Contains", value: "contains" },
-              { label: "Not Contains", value: "not_contains" },
-            ]}
-            placeholder="Select operator"
-            className="w-full"
-          />
-        </div>
+        <HeadlessSelect
+          label="Operator"
+          value={localConfig.operator}
+          onChange={(value) =>
+            setLocalConfig({
+              ...localConfig,
+              operator: value as ConditionConfig["operator"],
+            })
+          }
+          options={[
+            { label: "Equals", value: "equals" },
+            { label: "Not Equals", value: "not_equals" },
+            { label: "Greater Than", value: "greater_than" },
+            { label: "Less Than", value: "less_than" },
+            { label: "Contains", value: "contains" },
+            { label: "Not Contains", value: "not_contains" },
+          ]}
+          placeholder="Select operator"
+          className="w-full"
+        />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

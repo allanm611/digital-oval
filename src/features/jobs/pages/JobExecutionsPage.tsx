@@ -17,6 +17,7 @@ import {
   Ban,
   CheckSquare,
   Square,
+  MoreVertical,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Textarea from "../../../shared/components/ui/Textarea";
@@ -100,10 +101,16 @@ export default function JobExecutionsPage() {
     useState<JobExecution | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [actionType, setActionType] = useState<
-    "abort" | "archive" | "retry" | null
+    "abort" | "archive" | "unarchive" | "retry" | null
   >(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [daysBackInput, setDaysBackInput] = useState<number>(7);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   // Batch selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedExecutions, setSelectedExecutions] = useState<Set<string>>(
@@ -114,6 +121,9 @@ export default function JobExecutionsPage() {
   const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalExecutions, setTotalExecutions] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [showArchiveManagementModal, setShowArchiveManagementModal] = useState(false);
+  const [archiveOldDays, setArchiveOldDays] = useState<number>(30);
+  const [isArchiveManagementProcessing, setIsArchiveManagementProcessing] = useState(false);
   const filtersModalRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(filtersModalRef, () => {
@@ -121,6 +131,64 @@ export default function JobExecutionsPage() {
       setShowAdvancedFilters(false);
     }
   });
+
+  const handleMenuToggle = (executionId: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    if (openMenuId === executionId) {
+      setOpenMenuId(null);
+      setMenuPosition(null);
+    } else {
+      setOpenMenuId(executionId);
+
+      // Calculate menu position based on button
+      const button = event.currentTarget;
+      const rect = button.getBoundingClientRect();
+      const menuHeight = 100; // Approximate menu height
+      const padding = 8;
+
+      // Position below the button if enough space, otherwise above
+      let top = rect.bottom + padding;
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.top - menuHeight - padding;
+      }
+
+      // Position to the right, but adjust if it goes off-screen
+      let left = rect.right - 140; // Center-ish alignment
+      if (left + 140 > window.innerWidth) {
+        left = window.innerWidth - 140 - padding;
+      }
+      if (left < padding) {
+        left = padding;
+      }
+
+      setMenuPosition({ top, left });
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Check if clicked on a menu button
+      const isMenuButton = target.closest('[data-execution-menu-button]');
+      if (isMenuButton) return;
+
+      // Check if clicked inside the open menu
+      if (openMenuId && menuRefs.current[openMenuId]) {
+        const menuEl = menuRefs.current[openMenuId];
+        // Note: since we're using createPortal, we need to check differently
+        // Just close the menu on any outside click
+        if (!isMenuButton) {
+          setOpenMenuId(null);
+          setMenuPosition(null);
+        }
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [openMenuId]);
 
   const fetchExecutions = useCallback(
     async (overrideParams?: Partial<JobExecutionSearchParams>) => {
@@ -406,6 +474,7 @@ export default function JobExecutionsPage() {
           await Promise.all(
             executionIds.map((id) =>
               jobExecutionService.markJobExecutionAborted(id, {
+                userId: user.user_id,
                 reason: "Batch abort",
               }),
             ),
@@ -486,7 +555,7 @@ export default function JobExecutionsPage() {
 
   const handleAction = async (
     execution: JobExecution,
-    action: "abort" | "archive" | "retry",
+    action: "abort" | "archive" | "unarchive" | "retry",
   ) => {
     setSelectedExecution(execution);
     setActionType(action);
@@ -500,9 +569,18 @@ export default function JobExecutionsPage() {
     try {
       switch (actionType) {
         case "abort":
+          // Optimistic update
+          setExecutions((prev) =>
+            prev.map((exec) =>
+              exec.id === selectedExecution.id
+                ? { ...exec, execution_status: "aborted" as ExecutionStatus }
+                : exec,
+            ),
+          );
           await jobExecutionService.markJobExecutionAborted(
             selectedExecution.id,
             {
+              userId: user.user_id,
               reason: "User requested abort",
             },
           );
@@ -512,13 +590,44 @@ export default function JobExecutionsPage() {
           );
           break;
         case "archive":
+          // Optimistic update
+          setExecutions((prev) =>
+            prev.map((exec) =>
+              exec.id === selectedExecution.id
+                ? { ...exec, archived: true }
+                : exec,
+            ),
+          );
           await jobExecutionService.archiveJobExecution(selectedExecution.id, user?.user_id);
           showToast(
             "Execution Archived",
             "The execution has been archived successfully",
           );
           break;
+        case "unarchive":
+          // Optimistic update
+          setExecutions((prev) =>
+            prev.map((exec) =>
+              exec.id === selectedExecution.id
+                ? { ...exec, archived: false }
+                : exec,
+            ),
+          );
+          await jobExecutionService.unarchiveJobExecution(selectedExecution.id, user?.user_id);
+          showToast(
+            "Execution Unarchived",
+            "The execution has been unarchived successfully",
+          );
+          break;
         case "retry":
+          // Optimistic update
+          setExecutions((prev) =>
+            prev.map((exec) =>
+              exec.id === selectedExecution.id
+                ? { ...exec, execution_status: "pending" as ExecutionStatus }
+                : exec,
+            ),
+          );
           await jobExecutionService.retryFailedJobExecutions({
             jobId: selectedExecution.job_id,
             daysBack: daysBackInput,
@@ -531,127 +640,226 @@ export default function JobExecutionsPage() {
       setSelectedExecution(null);
       setActionType(null);
       setDaysBackInput(7);
-      fetchExecutions();
     } catch (err) {
+      // Rollback optimistic update on error
+      fetchExecutions();
       showError("Action Failed", extractBackendError(error, "Action Failed. Please try again."));
     } finally {
       setIsProcessingAction(false);
     }
   };
 
+  const handleArchiveOld = async () => {
+    if (!user?.user_id) return;
+    setIsArchiveManagementProcessing(true);
+    try {
+      await jobExecutionService.archiveOldJobExecutions({
+        olderThanDays: archiveOldDays,
+        userId: user.user_id,
+      });
+      showToast(
+        "Archive Old Executions",
+        `Executions older than ${archiveOldDays} days have been archived`,
+      );
+      setShowArchiveManagementModal(false);
+      setArchiveOldDays(30);
+      fetchExecutions();
+    } catch (err) {
+      showError(
+        "Archive Old Failed",
+        extractBackendError(error, "Failed to archive old executions. Please try again."),
+      );
+    } finally {
+      setIsArchiveManagementProcessing(false);
+    }
+  };
+
+  const handleCleanupArchived = async () => {
+    if (!user?.user_id) return;
+    setIsArchiveManagementProcessing(true);
+    try {
+      await jobExecutionService.cleanupArchivedJobExecutions({
+        userId: user.user_id,
+        olderThanDays: archiveOldDays,
+      });
+      showToast(
+        "Cleanup Archived",
+        `Archived executions older than ${archiveOldDays} days have been permanently deleted`,
+      );
+      setShowArchiveManagementModal(false);
+      setArchiveOldDays(30);
+      fetchExecutions();
+    } catch (err) {
+      showError(
+        "Cleanup Failed",
+        extractBackendError(error, "Failed to cleanup archived executions. Please try again."),
+      );
+    } finally {
+      setIsArchiveManagementProcessing(false);
+    }
+  };
+
   // Table columns definition
-  const defaultColumns: TableColumn<JobExecution>[] = [
-    {
-      id: "id",
-      label: "Execution ID",
-      visible: true,
-      render: (value) => (
-        <div className={`text-sm font-mono ${tw.textPrimary}`}>
-          {(value as string).substring(0, 8)}...
-        </div>
-      ),
-    },
-    {
-      id: "job_id",
-      label: "Job ID",
-      visible: true,
-      render: (value) => (
-        <div className={`text-sm font-medium ${tw.textSecondary}`}>
-          {value}
-        </div>
-      ),
-    },
-    {
-      id: "execution_status",
-      label: "Status",
-      visible: true,
-      render: (value) => (
-        <span className="text-sm text-black font-medium">
-          {value}
-        </span>
-      ),
-    },
-    {
-      id: "started_at",
-      label: "Started At",
-      visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary}`}>
-          {value ? new Date(value as string).toLocaleString() : "—"}
-        </div>
-      ),
-    },
-    {
-      id: "duration_seconds",
-      label: "Duration",
-      visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary}`}>
-          {formatDuration(value as number | null)}
-        </div>
-      ),
-    },
-    {
-      id: "triggered_by",
-      label: "Triggered By",
-      visible: true,
-      render: (value) => (
-        <div className={`text-sm capitalize ${tw.textSecondary}`}>
-          {value || "—"}
-        </div>
-      ),
-    },
-    {
-      id: "actions",
-      label: "Actions",
-      visible: true,
-      sortable: false,
-      render: (value, execution) => (
-        <div className="flex items-center justify-end space-x-2">
-          <button
-            onClick={() =>
-              navigate(
-                `/dashboard/job-executions/${execution.id}`,
-              )
-            }
-            className={`p-2 ${tw.rounded} text-gray-600`}
-            title="View details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          {canWrite &&
-            execution.execution_status === "running" && (
+  const defaultColumns = useMemo(
+    () =>
+      [
+        {
+          id: "id",
+          label: "Execution ID",
+          visible: true,
+          render: (value) => (
+            <div className={`text-sm font-mono ${tw.textPrimary}`}>
+              {(value as string).substring(0, 8)}...
+            </div>
+          ),
+        },
+        {
+          id: "job_id",
+          label: "Job ID",
+          visible: true,
+          render: (value) => (
+            <div className={`text-sm font-medium ${tw.textSecondary}`}>
+              {value}
+            </div>
+          ),
+        },
+        {
+          id: "execution_status",
+          label: "Status",
+          visible: true,
+          render: (value) => (
+            <span className="text-sm text-black font-medium">
+              {value}
+            </span>
+          ),
+        },
+        {
+          id: "started_at",
+          label: "Started At",
+          visible: true,
+          render: (value) => (
+            <div className={`text-sm ${tw.textSecondary}`}>
+              {value ? new Date(value as string).toLocaleString() : "—"}
+            </div>
+          ),
+        },
+        {
+          id: "duration_seconds",
+          label: "Duration",
+          visible: true,
+          render: (value) => (
+            <div className={`text-sm ${tw.textSecondary}`}>
+              {formatDuration(value as number | null)}
+            </div>
+          ),
+        },
+        {
+          id: "triggered_by",
+          label: "Triggered By",
+          visible: true,
+          render: (value) => (
+            <div className={`text-sm capitalize ${tw.textSecondary}`}>
+              {value || "—"}
+            </div>
+          ),
+        },
+        {
+          id: "actions",
+          label: "Actions",
+          visible: true,
+          sortable: false,
+          render: (value, execution) => (
+            <div className="flex items-center justify-end space-x-2">
               <button
-                onClick={() => handleAction(execution, "abort")}
-                className={`p-2 ${tw.rounded} text-red-600`}
-                title="Abort execution"
+                onClick={() =>
+                  navigate(
+                    `/dashboard/job-executions/${execution.id}`,
+                  )
+                }
+                className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                title="View details"
               >
-                <Ban className="w-4 h-4" />
+                <Eye className="w-4 h-4" />
               </button>
-            )}
-          {canWrite &&
-            execution.execution_status === "failure" && (
-              <button
-                onClick={() => handleAction(execution, "retry")}
-                className={`p-2 ${tw.rounded} text-gray-600`}
-                title="Retry execution"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            )}
-          {canWrite && !execution.archived && (
-            <button
-              onClick={() => handleAction(execution, "archive")}
-              className={`p-2 ${tw.rounded} text-gray-600`}
-              title="Archive execution"
-            >
-              <Archive className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      ),
-    },
-  ];
+              {canWrite && !execution.archived && (
+                <button
+                  onClick={() => handleAction(execution, "archive")}
+                  className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  title="Archive execution"
+                >
+                  <Archive className="w-4 h-4" />
+                </button>
+              )}
+              {canWrite && execution.archived && (
+                <button
+                  onClick={() => handleAction(execution, "unarchive")}
+                  className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  title="Unarchive execution"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              )}
+              {canWrite && (execution.execution_status === "running" || execution.execution_status === "failure") && (
+                <>
+                  <button
+                    ref={(el) => {
+                      if (el) menuRefs.current[execution.id] = el;
+                    }}
+                    data-execution-menu-button
+                    onClick={(e) => handleMenuToggle(execution.id, e)}
+                    className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                    title="More actions"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  {openMenuId === execution.id &&
+                    menuPosition &&
+                    createPortal(
+                      <div
+                        className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-lg z-50`}
+                        style={{
+                          top: `${menuPosition.top}px`,
+                          left: `${menuPosition.left}px`,
+                          width: "140px",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        {execution.execution_status === "running" && (
+                          <button
+                            onClick={() => {
+                              handleAction(execution, "abort");
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            Abort
+                          </button>
+                        )}
+                        {execution.execution_status === "failure" && (
+                          <button
+                            onClick={() => {
+                              handleAction(execution, "retry");
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            Retry
+                          </button>
+                        )}
+                      </div>,
+                      document.body,
+                    )}
+                </>
+              )}
+            </div>
+          ),
+        },
+      ] as TableColumn<JobExecution>[],
+    [canWrite, navigate],
+  );
 
   const {
     columns,
@@ -717,6 +925,20 @@ export default function JobExecutionsPage() {
                   <Square className="h-4 w-4" />
                 )}
                 {isSelectionMode ? "Exit Selection" : "Select Executions"}
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="job-executions.write">
+              <button
+                onClick={() => setShowArchiveManagementModal(true)}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                <Archive className="h-4 w-4" />
+                Manage Archive
               </button>
             </PermissionGate>
           </div>
@@ -1187,6 +1409,7 @@ export default function JobExecutionsPage() {
               <h3 className="text-lg font-semibold text-gray-900">
                 {actionType === "abort" && "Abort Execution"}
                 {actionType === "archive" && "Archive Execution"}
+                {actionType === "unarchive" && "Unarchive Execution"}
                 {actionType === "retry" && "Retry Execution"}
               </h3>
               <button
@@ -1206,6 +1429,8 @@ export default function JobExecutionsPage() {
                 "Are you sure you want to abort this execution?"}
               {actionType === "archive" &&
                 "Are you sure you want to archive this execution?"}
+              {actionType === "unarchive" &&
+                "Are you sure you want to unarchive this execution?"}
               {actionType === "retry" &&
                 "This will retry all failed executions for this job. Continue?"}
             </p>
@@ -1252,6 +1477,84 @@ export default function JobExecutionsPage() {
                 }}
               >
                 {isProcessingAction ? "Processing..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Management Modal */}
+      {showArchiveManagementModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div
+            className={`bg-white ${tw.rounded} shadow-xl p-6 w-full max-w-md`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Manage Archive
+              </h3>
+              <button
+                onClick={() => {
+                  setShowArchiveManagementModal(false);
+                  setArchiveOldDays(30);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Archive Executions Older Than (Days)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={archiveOldDays}
+                  onChange={(e) => setArchiveOldDays(Number(e.target.value))}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="30"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Archive all executions older than {archiveOldDays} day(s)
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleArchiveOld}
+                  disabled={isArchiveManagementProcessing}
+                  className={`w-full ${tw.rounded} px-4 py-2 text-sm font-medium text-white transition-colors`}
+                  style={{
+                    backgroundColor: isArchiveManagementProcessing ? "#9ca3af" : color.primary.action,
+                  }}
+                >
+                  {isArchiveManagementProcessing ? "Processing..." : "Archive Old Executions"}
+                </button>
+                <button
+                  onClick={handleCleanupArchived}
+                  disabled={isArchiveManagementProcessing}
+                  className={`w-full ${tw.rounded} px-4 py-2 text-sm font-medium border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isArchiveManagementProcessing ? "Processing..." : "Delete Archived Executions"}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowArchiveManagementModal(false);
+                  setArchiveOldDays(30);
+                }}
+                disabled={isArchiveManagementProcessing}
+                className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
+              >
+                Close
               </button>
             </div>
           </div>

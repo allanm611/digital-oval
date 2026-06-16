@@ -285,15 +285,13 @@ export default function OfferRewardStep({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Reward Type
-                      </label>
                       {loadingRewardTypes ? (
                         <div className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} bg-gray-50 text-gray-500`}>
                           Loading reward types...
                         </div>
                       ) : (
                         <HeadlessSelect
+                          label="Reward Type"
                           options={rewardTypes.map((type) => ({
                             value: type.reward_key,
                             label: type.name,
@@ -471,10 +469,8 @@ export default function OfferRewardStep({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Bundle Subscription Track
-                  </label>
                   <HeadlessSelect
+                    label="Bundle Subscription Track"
                     options={BUNDLE_TRACKS.map((track) => ({
                       value: track,
                       label: track,
@@ -493,10 +489,8 @@ export default function OfferRewardStep({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Reward Type
-                    </label>
                     <HeadlessSelect
+                      label="Reward Type"
                       options={REWARD_RULE_TYPES.map((type) => ({
                         value: type.value,
                         label: type.label,
@@ -545,41 +539,31 @@ export default function OfferRewardStep({
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Error Group
-                    </label>
-                    <Input
-                      type="text"
-                      value={editingRule.error_group}
-                      onChange={(value) =>
-                        setEditingRule({
-                          ...editingRule,
-                          error_group: String(value),
-                        })
-                      }
-                      placeholder="e.g., Low balance Failure [01]"
-                     
-                    />
-                  </div>
+                  <Input
+                    label="Error Group"
+                    type="text"
+                    value={editingRule.error_group}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        error_group: String(value),
+                      })
+                    }
+                    placeholder="e.g., Low balance Failure [01]"
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Failure Text
-                    </label>
-                    <Input
-                      type="text"
-                      value={editingRule.failure_text}
-                      onChange={(value) =>
-                        setEditingRule({
-                          ...editingRule,
-                          failure_text: String(value),
-                        })
-                      }
-                      placeholder="Enter failure message..."
-                     
-                    />
-                  </div>
+                  <Input
+                    label="Failure Text"
+                    type="text"
+                    value={editingRule.failure_text}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        failure_text: String(value),
+                      })
+                    }
+                    placeholder="Enter failure message..."
+                  />
                 </div>
 
                 <div

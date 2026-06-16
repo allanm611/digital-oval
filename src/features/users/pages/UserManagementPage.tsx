@@ -19,6 +19,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Textarea from "../../../shared/components/ui/Textarea";
 import BackButton from "../../../shared/components/ui/BackButton";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { useNavigate } from "react-router-dom";
 import { userService } from "../../users/services/userService";
 import { accountService } from "../../account/services/accountService";
@@ -1466,23 +1467,13 @@ export default function UserManagementPage() {
         const userIsActive = normalizedStatus === "active";
         return (
           <div className="flex items-center justify-center space-x-2">
-            <button
-              onClick={() => handleToggleStatus(user)}
+            <ActivateDeactivateButton
+              isActive={userIsActive}
+              onToggle={() => handleToggleStatus(user)}
               disabled={loadingActions.toggling.has(user.id)}
-              className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{
-                color: userIsActive ? deactivateColor : activateColor,
-              }}
+              isLoading={loadingActions.toggling.has(user.id)}
               title={userIsActive ? t.userManagement.deactivateUserTitle : t.userManagement.activateUserTitle}
-            >
-              {loadingActions.toggling.has(user.id) ? (
-                <LoadingSpinner variant="modern" size="sm" color="primary" />
-              ) : userIsActive ? (
-                <Ban className="w-4 h-4" />
-              ) : (
-                <CheckCircle className="w-4 h-4" />
-              )}
-            </button>
+            />
             <button
               onClick={() => handleViewUser(user)}
               className={`p-2 ${tw.rounded} transition-colors`}

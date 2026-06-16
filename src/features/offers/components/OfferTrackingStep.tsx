@@ -390,47 +390,46 @@ export default function OfferTrackingStep({
               <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}>
                 <div className="space-y-6">
                   {/* Source Selection Dropdown */}
-                  <div>
-                    <HeadlessSelect
-                      options={[
-                        { value: "", label: "Select a tracking source..." },
-                        { value: "custom", label: "Create Custom" },
-                        ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
-                          value: source.id,
-                          label: source.name,
-                        })),
-                      ]}
-                      value=""
-                      onChange={(value) => {
-                        if (value && selectedSourceData) {
-                          if (value === "custom") {
-                            // Clear current source for custom creation
+                  <HeadlessSelect
+                    label="Select Tracking Source"
+                    options={[
+                      { value: "", label: "Select a tracking source..." },
+                      { value: "custom", label: "Create Custom" },
+                      ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
+                        value: source.id,
+                        label: source.name,
+                      })),
+                    ]}
+                    value=""
+                    onChange={(value) => {
+                      if (value && selectedSourceData) {
+                        if (value === "custom") {
+                          // Clear current source for custom creation
+                          updateTrackingSource(selectedSourceData.id, {
+                            name: "",
+                            rules: [],
+                          });
+                        } else {
+                          // Load pre-created source into current card
+                          const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
+                            (s) => s.id === value
+                          );
+                          if (preCreated) {
                             updateTrackingSource(selectedSourceData.id, {
-                              name: "",
-                              rules: [],
+                              name: preCreated.name,
+                              type: preCreated.type,
+                              rules: preCreated.rules.map((rule) => ({
+                                ...rule,
+                                id: generateId(),
+                              })),
                             });
-                          } else {
-                            // Load pre-created source into current card
-                            const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
-                              (s) => s.id === value
-                            );
-                            if (preCreated) {
-                              updateTrackingSource(selectedSourceData.id, {
-                                name: preCreated.name,
-                                type: preCreated.type,
-                                rules: preCreated.rules.map((rule) => ({
-                                  ...rule,
-                                  id: generateId(),
-                                })),
-                              });
-                            }
                           }
                         }
-                      }}
-                      placeholder="Select a tracking source..."
-                      className="w-full text-sm"
-                    />
-                  </div>
+                      }
+                    }}
+                    placeholder="Select a tracking source..."
+                    className="w-full text-sm"
+                  />
 
                   {/* Source Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -449,10 +448,8 @@ export default function OfferTrackingStep({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Type
-                      </label>
                       <HeadlessSelect
+                        label="Type"
                         options={TRACKING_TYPES.map((type) => ({
                           value: type.value,
                           label: type.label,
@@ -661,10 +658,8 @@ export default function OfferTrackingStep({
                 />
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Parameter
-                  </label>
                   <HeadlessSelect
+                    label="Parameter"
                     options={PARAMETERS.map((param) => ({
                       value: param,
                       label: param,
@@ -683,10 +678,8 @@ export default function OfferTrackingStep({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Condition
-                  </label>
                   <HeadlessSelect
+                    label="Condition"
                     options={CONDITIONS.map((condition) => ({
                       value: condition.value,
                       label: condition.label,

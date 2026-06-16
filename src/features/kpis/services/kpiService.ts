@@ -32,6 +32,8 @@ export interface KPIProfile {
   updated_by?: number;
   created_at?: string;
   updated_at?: string;
+  default_value?: string | number;
+  is_dynamic_variable?: boolean;
 }
 
 class KPIService {

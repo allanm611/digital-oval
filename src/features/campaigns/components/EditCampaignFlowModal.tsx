@@ -115,88 +115,64 @@ export default function EditCampaignFlowModal({
             {/* Campaign ID and Campaign Type on same line */}
             <div className="grid grid-cols-2 gap-4">
               {/* Campaign ID - Read Only Input */}
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Campaign ID
-                </label>
-                <Input type="text"
-                  readOnly
-                  value={campaignId || selectedFlow?.campaign_id || ""}
-                  className={`w-full px-4 py-2 border ${tw.rounded} text-sm ${tw.textSecondary} bg-gray-50`}
-                  style={{ borderColor: color.border.default }}
-                />
-              </div>
+              <Input
+                type="text"
+                label="Campaign ID"
+                readOnly
+                value={campaignId || selectedFlow?.campaign_id || ""}
+                style={{ borderColor: color.border.default }}
+              />
 
               {/* Campaign Type - Read Only Input */}
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Campaign Type
-                </label>
-                <Input type="text"
-                  readOnly
-                  value={flowTypeLabel}
-                  className={`w-full px-4 py-2 border ${tw.rounded} text-sm ${tw.textSecondary} bg-gray-50`}
-                  style={{ borderColor: color.border.default }}
-                />
-              </div>
+              <Input
+                type="text"
+                label="Campaign Type"
+                readOnly
+                value={flowTypeLabel}
+                style={{ borderColor: color.border.default }}
+              />
             </div>
 
             {/* Core Selection */}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Segment
-                  </label>
-                  <HeadlessSelect
-                    value={String(editedFlow.segment_id || "")}
-                    onChange={(value) =>
-                      setEditedFlow({
-                        ...editedFlow,
-                        segment_id: parseInt(value) || 0,
-                      })
-                    }
-                    options={[
-                      { value: "", label: "Select Segment" },
-                      ...activeSegments.map((seg) => ({
-                        value: String(seg.id),
-                        label: seg.name,
-                      })),
-                    ]}
-                    disabled={isLoadingActiveData}
-                  />
-                </div>
+                <HeadlessSelect
+                  label="Segment"
+                  value={String(editedFlow.segment_id || "")}
+                  onChange={(value) =>
+                    setEditedFlow({
+                      ...editedFlow,
+                      segment_id: parseInt(value) || 0,
+                    })
+                  }
+                  options={[
+                    { value: "", label: "Select Segment" },
+                    ...activeSegments.map((seg) => ({
+                      value: String(seg.id),
+                      label: seg.name,
+                    })),
+                  ]}
+                  disabled={isLoadingActiveData}
+                />
 
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Offer
-                  </label>
-                  <HeadlessSelect
-                    value={String(editedFlow.offer_id || "")}
-                    onChange={(value) =>
-                      setEditedFlow({
-                        ...editedFlow,
-                        offer_id: parseInt(value) || 0,
-                      })
-                    }
-                    options={[
-                      { value: "", label: "Select Offer" },
-                      ...activeOffers.map((offer) => ({
-                        value: String(offer.id),
-                        label: offer.name,
-                      })),
-                    ]}
-                    disabled={isLoadingActiveData}
-                  />
-                </div>
+                <HeadlessSelect
+                  label="Offer"
+                  value={String(editedFlow.offer_id || "")}
+                  onChange={(value) =>
+                    setEditedFlow({
+                      ...editedFlow,
+                      offer_id: parseInt(value) || 0,
+                    })
+                  }
+                  options={[
+                    { value: "", label: "Select Offer" },
+                    ...activeOffers.map((offer) => ({
+                      value: String(offer.id),
+                      label: offer.name,
+                    })),
+                  ]}
+                  disabled={isLoadingActiveData}
+                />
               </div>
 
               <div>
@@ -240,55 +216,43 @@ export default function EditCampaignFlowModal({
             {/* Execution Settings */}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Step Order
-                  </label>
-                  <Input type="number"
-                    min="1"
-                    value={editedFlow.step_order || 1}
-                    onChange={(value) =>
-                      setEditedFlow({
-                        ...editedFlow,
-                        step_order: parseInt(String(value)) || 1,
-                      })
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                </div>
+                <Input
+                  type="number"
+                  label="Step Order"
+                  min="1"
+                  value={editedFlow.step_order ?? ""}
+                  onChange={(value) =>
+                    setEditedFlow({
+                      ...editedFlow,
+                      step_order: value !== "" ? parseInt(String(value)) : undefined,
+                    })
+                  }
+                  placeholder="1"
+                />
 
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Wait Interval (hours)
-                  </label>
-                  <Input type="number"
-                    min="0"
-                    value={editedFlow.wait_interval_hours || 0}
-                    onChange={(value) =>
-                      setEditedFlow({
-                        ...editedFlow,
-                        wait_interval_hours: parseInt(String(value)) || 0,
-                      })
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                </div>
+                <Input
+                  type="number"
+                  label="Wait Interval (hours)"
+                  min="0"
+                  value={editedFlow.wait_interval_hours ?? ""}
+                  onChange={(value) =>
+                    setEditedFlow({
+                      ...editedFlow,
+                      wait_interval_hours: value !== "" ? parseInt(String(value)) : undefined,
+                    })
+                  }
+                  placeholder="0"
+                />
               </div>
 
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Bucket Allocation
-                  {editedFlow.flow_type === "AB_TEST" && (
-                    <span className="text-red-600 ml-1">*</span>
-                  )}
-                </label>
-                <Input type="text"
+                <Input
+                  type="text"
+                  label={
+                    editedFlow.flow_type === "AB_TEST"
+                      ? "Bucket Allocation *"
+                      : "Bucket Allocation"
+                  }
                   placeholder="e.g., 50-50"
                   value={editedFlow.bucket_allocation || ""}
                   onChange={(value) =>
@@ -297,12 +261,10 @@ export default function EditCampaignFlowModal({
                       bucket_allocation: String(value),
                     })
                   }
-                  className={`w-full px-3 py-2 border ${
+                  hasError={
                     editedFlow.flow_type === "AB_TEST" &&
                     !editedFlow.bucket_allocation
-                      ? "border-red-500 bg-red-50"
-                      : "border-gray-300"
-                  } ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  }
                 />
                 {editedFlow.flow_type === "AB_TEST" &&
                   !editedFlow.bucket_allocation && (
@@ -315,26 +277,20 @@ export default function EditCampaignFlowModal({
 
             {/* Advanced Fields */}
             <div className="space-y-4">
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Offer Creative
-                </label>
-                <HeadlessSelect
-                  value={String(editedFlow.offer_creative_id || "")}
-                  onChange={(value) =>
-                    setEditedFlow({
-                      ...editedFlow,
-                      offer_creative_id: parseInt(value) || undefined,
-                    })
-                  }
-                  options={[
-                    { value: "", label: "Select Creative" },
-                    // Add creative options here when available from API
-                  ]}
-                />
-              </div>
+              <HeadlessSelect
+                label="Offer Creative"
+                value={String(editedFlow.offer_creative_id || "")}
+                onChange={(value) =>
+                  setEditedFlow({
+                    ...editedFlow,
+                    offer_creative_id: parseInt(value) || undefined,
+                  })
+                }
+                options={[
+                  { value: "", label: "Select Creative" },
+                  // Add creative options here when available from API
+                ]}
+              />
             </div>
 
             {/* Status */}

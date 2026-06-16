@@ -272,11 +272,9 @@ export default function AddVIPMembersModal({
               <>
                 {/* Customer Selection */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Select Customer *
-                  </label>
                   <div className={errors.customer_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
+                      label="Select Customer *"
                       value={formData.customer_id}
                       onChange={(value) => {
                         setFormData({ ...formData, customer_id: value.toString() });
@@ -394,11 +392,9 @@ export default function AddVIPMembersModal({
 
             {/* VIP List Selection - Last Field */}
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                Select VIP List *
-              </label>
               <div className={errors.vip_list_id ? "border border-red-500 rounded" : ""}>
                 <HeadlessSelect
+                  label="Select VIP List *"
                   value={formData.vip_list_id}
                   onChange={(value) => {
                     setFormData({ ...formData, vip_list_id: value.toString() });

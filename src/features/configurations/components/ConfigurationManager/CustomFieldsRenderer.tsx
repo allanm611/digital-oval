@@ -35,12 +35,12 @@ export default function CustomFieldsRenderer({
     useEffect(() => {
       if (field.type === "select" && field.loadOptions && !field.options) {
         setIsLoadingOptions(true);
-        field.loadOptions()
+        field.loadOptions(formData)
           .then((opts) => setLoadedOptions(opts))
           .catch(() => setLoadedOptions([]))
           .finally(() => setIsLoadingOptions(false));
       }
-    }, [field]);
+    }, [field, formData]);
 
     const shouldShow = field.condition ? field.condition(formData) : true;
     if (!shouldShow) return null;

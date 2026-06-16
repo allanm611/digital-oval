@@ -174,6 +174,8 @@ export default function CreateSubscriberProfilePage() {
         data_source: formData.data_source,
         frequency: formData.frequency,
         default_value: formData.default_value || undefined,
+        is_dynamic_variable: formData.use_as_dynamic_variable,
+        tag: formData.tag,
       };
 
       // TODO: Implement API call for subscriber profile creation/update

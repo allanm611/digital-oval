@@ -404,6 +404,7 @@ export default function ProductSelector({
                   <div className="w-48">
                     <div className="[&_button]:py-2 [&_li]:py-1.5">
                       <HeadlessSelect
+                        label="Filter"
                         options={categories}
                         value={selectedCategory}
                         onChange={(value: string | number) =>
