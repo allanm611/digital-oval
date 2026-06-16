@@ -4,6 +4,7 @@ import { tw, color } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CharacterSet } from "../../configurations/types/characterSetType";
 
 interface CharacterSetFormModalProps {
@@ -103,36 +104,6 @@ export default function CharacterSetFormModal({
     }));
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -202,42 +173,32 @@ export default function CharacterSetFormModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Message Type */}
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Message Type
-                <span className="text-red-600">*</span>
-              </label>
-              <select
-                name="message_type"
+              <HeadlessSelect
+                label="Message Type*"
+                options={MESSAGE_TYPE_OPTIONS}
                 value={formData.message_type}
-                onChange={handleSelectChange}
-                className="w-full px-3 py-2 border border-gray-300 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {MESSAGE_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    message_type: value as typeof formData.message_type,
+                  }))
+                }
+              />
             </div>
 
             {/* Character Set Type */}
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Character Set Type
-                <span className="text-red-600">*</span>
-              </label>
-              <select
-                name="character_set_type"
+              <HeadlessSelect
+                label="Character Set Type*"
+                options={CHARSET_TYPE_OPTIONS}
                 value={formData.character_set_type}
-                onChange={handleSelectChange}
-                className="w-full px-3 py-2 border border-gray-300 bg-white rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {CHARSET_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    character_set_type: value as typeof formData.character_set_type,
+                  }))
+                }
+              />
             </div>
 
             {/* Character Set Size */}

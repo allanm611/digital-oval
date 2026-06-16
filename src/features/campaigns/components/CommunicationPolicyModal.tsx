@@ -319,10 +319,7 @@ export default function CommunicationPolicyModal({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Days of Week
-          </label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2" data-label="Days of Week">
             {DAYS_OF_WEEK.map((day) => (
               <div
                 key={day.value}
@@ -399,18 +396,6 @@ export default function CommunicationPolicyModal({
           </button>
         </div>
 
-        {/* Column Headers - only show when there are periods */}
-        {maxCommPeriods.length > 0 && (
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Period
-            </label>
-            <label className="block text-sm font-medium text-gray-700">
-              Maximum Count
-            </label>
-            <div className="w-8" /> {/* Spacer for delete button */}
-          </div>
-        )}
 
         <div className="space-y-2">
           {maxCommPeriods.map((period, index) => (
@@ -424,6 +409,7 @@ export default function CommunicationPolicyModal({
                   style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
+                    label="Period"
                     value={period.type}
                     onChange={(value) => {
                       setMaxCommPeriods((prev) =>
@@ -535,18 +521,6 @@ export default function CommunicationPolicyModal({
           </button>
         </div>
 
-        {/* Column Headers - only show when there are categories */}
-        {dndConfig.categories.length > 0 && (
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Type
-            </label>
-            <label className="block text-sm font-medium text-gray-700">
-              Value
-            </label>
-            <div className="w-8" /> {/* Spacer for delete button */}
-          </div>
-        )}
 
         <div className="space-y-2">
           {dndConfig.categories.map((category, index) => (
@@ -560,6 +534,7 @@ export default function CommunicationPolicyModal({
                   style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
+                    label="Type"
                     value={category.type}
                     onChange={(value) => {
                       const newCategories = [...dndConfig.categories];
@@ -589,6 +564,7 @@ export default function CommunicationPolicyModal({
                   style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
+                    label="Value"
                     value={category.value || "allowed"}
                     onChange={(value) => {
                       const newCategories = [...dndConfig.categories];
@@ -668,21 +644,6 @@ export default function CommunicationPolicyModal({
           </button>
         </div>
 
-        {/* Column Headers - only show when there are rows */}
-        {vipListRows.length > 0 && (
-          <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-4">
-            <label className="block text-sm font-medium text-gray-700">
-              VIP List
-            </label>
-            <label className="block text-sm font-medium text-gray-700">
-              Action
-            </label>
-            <label className="block text-sm font-medium text-gray-700">
-              Priority
-            </label>
-            <div className="w-8" /> {/* Spacer for delete button */}
-          </div>
-        )}
 
         <div className="space-y-2">
           {vipListRows.map((row, index) => (
@@ -697,6 +658,7 @@ export default function CommunicationPolicyModal({
                   style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
+                    label="VIP List"
                     value={row.vipListId}
                     onChange={(value) => {
                       setVipListRows((prev) =>
@@ -724,6 +686,7 @@ export default function CommunicationPolicyModal({
                   style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
+                    label="Action"
                     value={row.action}
                     onChange={(value) => {
                       setVipListRows((prev) =>
@@ -926,10 +889,8 @@ export default function CommunicationPolicyModal({
 
               {/* Communication Channels */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Communication Channels <span className="text-red-500">*</span>
-                </label>
                 <MultiCategorySelector
+                  label="Communication Channels *"
                   value={selectedChannelIds}
                   onChange={setSelectedChannelIds}
                   placeholder="Select channels..."

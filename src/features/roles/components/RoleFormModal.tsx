@@ -336,10 +336,8 @@ export default function RoleFormModal({
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data Access Level (Optional)
-              </label>
               <HeadlessSelect
+                label="Data Access Level (Optional)"
                 options={[{ value: "", label: "None" }, ...DATA_ACCESS_LEVELS]}
                 value={formData.data_access_level}
                 onChange={(value) =>
@@ -348,16 +346,15 @@ export default function RoleFormModal({
                     data_access_level: (value as DataAccessLevel | ""),
                   }))
                 }
+                className="w-full"
               />
             </div>
           </div>
 
           {/* Parent Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Parent Role (Optional)
-            </label>
             <HeadlessSelect
+              label="Parent Role (Optional)"
               options={[
                 { value: "", label: "None" },
                 ...availableParentRoles.map((r) => ({
@@ -373,6 +370,7 @@ export default function RoleFormModal({
                 }))
               }
               error={!!errors.parent_role_id}
+              className="w-full"
             />
             {errors.parent_role_id && (
               <p className="mt-1 text-sm text-red-600">{errors.parent_role_id}</p>

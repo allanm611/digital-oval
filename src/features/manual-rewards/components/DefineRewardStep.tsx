@@ -522,12 +522,8 @@ export default function DefineRewardStep({
         {/* Bundle Track (only for bundle type) */}
         {rewardType === "bundle" && (
           <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.manualRewards.bundleTrackLabel}
-            </label>
             <HeadlessSelect
+              label={t.manualRewards.bundleTrackLabel}
               options={BUNDLE_TRACKS.map((track) => ({
                 value: track,
                 label: track,
@@ -550,10 +546,8 @@ export default function DefineRewardStep({
         {/* Communication Channel, SMS Route, and Email Route */}
         <div className="flex gap-4 mb-6">
           <div className="flex-1">
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-              Communication Channel <span className="text-red-500">*</span>
-            </label>
             <HeadlessSelect
+              label="Communication Channel *"
               value={selectedChannel}
               onChange={(value) => {
                 setSelectedChannel(value as Channel);
@@ -572,10 +566,8 @@ export default function DefineRewardStep({
           {/* SMS Route (for SMS variants) */}
           {selectedChannel && selectedChannel.toUpperCase().includes("SMS") && (
             <div className="flex-1">
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-                SMS Route <span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="SMS Route *"
                 options={[
                   { value: "", label: "Select SMS Route" },
                   ...(smsRoutes || [])
@@ -598,10 +590,8 @@ export default function DefineRewardStep({
           {/* Email Route (for Email channel only) */}
           {selectedChannel && selectedChannel.toUpperCase() === "EMAIL" && (
             <div className="flex-1">
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-                Email Route <span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="Email Route *"
                 options={[
                   { value: "", label: "Select Email Route" },
                   ...(emailRoutes || []).map((route: any) => ({

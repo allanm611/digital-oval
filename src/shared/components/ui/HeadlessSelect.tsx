@@ -275,7 +275,7 @@ export default function HeadlessSelect({
                     hasValue ? "text-gray-900" : "text-gray-500"
                   }`}
                 >
-                  {selectedOption && value ? selectedOption.label : (isOpen || hasValue || !label ? placeholder : "")}
+                  {selectedOption && value ? selectedOption.label : placeholder}
                 </span>
               </div>
               <ChevronUpDownIcon

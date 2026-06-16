@@ -414,13 +414,11 @@ export default function CreateKPIPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Field Category <span className="text-red-500">*</span>
-              </label>
               {loadingCategories ? (
                 <div className="p-2 text-sm text-gray-500">Loading categories...</div>
               ) : (
                 <HeadlessSelect
+                  label="Field Category *"
                   options={categories && categories.length > 0 ? categories.map((cat) => ({ label: cat.name, value: cat.id?.toString() || "" })) : []}
                   value={formData.field_category_id ? formData.field_category_id.toString() : ""}
                   onChange={(value) => handleSelectChange("field_category_id", value)}
@@ -431,10 +429,8 @@ export default function CreateKPIPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Field Type <span className="text-red-500">*</span>
-                </label>
                 <HeadlessSelect
+                  label="Field Type *"
                   options={FIELD_TYPE_OPTIONS}
                   value={formData.field_type}
                   onChange={(value) => handleSelectChange("field_type", value)}
@@ -479,10 +475,8 @@ export default function CreateKPIPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tag
-                </label>
                 <HeadlessSelect
+                  label="Tag"
                   options={[
                     { label: "Revenue Metric", value: "revenue_metric" },
                     { label: "Usage Metric", value: "usage_metric" },
@@ -541,10 +535,8 @@ export default function CreateKPIPage() {
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Validation Configuration</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Validation Strategy <span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="Validation Strategy *"
                 options={VALIDATION_STRATEGY_OPTIONS}
                 value={formData.validation_strategy}
                 onChange={(value) => handleSelectChange("validation_strategy", value)}
@@ -612,10 +604,8 @@ export default function CreateKPIPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data Source <span className="text-red-500">*</span>
-                </label>
                 <HeadlessSelect
+                  label="Data Source *"
                   options={DATA_SOURCE_OPTIONS}
                   value={formData.data_source}
                   onChange={(value) => handleSelectChange("data_source", value)}
@@ -624,10 +614,8 @@ export default function CreateKPIPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data Latency <span className="text-red-500">*</span>
-                </label>
                 <HeadlessSelect
+                  label="Data Latency *"
                   options={DATA_LATENCY_OPTIONS}
                   value={formData.data_latency}
                   onChange={(value) => handleSelectChange("data_latency", value)}
@@ -637,10 +625,8 @@ export default function CreateKPIPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Source Table <span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="Source Table *"
                 options={tables}
                 value={formData.source_table}
                 onChange={(value) => handleSelectChange("source_table", value)}
@@ -652,10 +638,8 @@ export default function CreateKPIPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                How is this KPI calculated? <span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="How is this KPI calculated? *"
                 options={CALCULATION_TYPE_OPTIONS}
                 value={formData.calculationType}
                 onChange={(value) => handleSelectChange("calculationType", value)}

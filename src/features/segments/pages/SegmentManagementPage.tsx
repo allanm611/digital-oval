@@ -33,7 +33,6 @@ import { segmentTypeService } from "../services/segmentTypeService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import CreateButton from "../../../shared/components/ui/CreateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 import SegmentModal from "../components/SegmentModal";

@@ -94,6 +94,7 @@ export default function CustomFieldsRenderer({
 
             {field.type === "select" && selectOptions.length > 0 && (
               <HeadlessSelect
+                label={`${field.label}${field.required ? " *" : ""}`}
                 options={
                   selectOptions as Array<{
                     value: string | number;

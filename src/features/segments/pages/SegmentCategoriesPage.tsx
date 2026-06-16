@@ -907,7 +907,9 @@ export default function SegmentCategoriesPage() {
           </p>
           {!searchTerm && (
             <PermissionGate permission="segment-catalog.create">
-              <CreateButton
+              <FeatureActionButton
+                featureId="segment-categories"
+                action="create"
                 onClick={() => {
                   setSelectedCategory(null);
                   setIsCategoryModalOpen(true);

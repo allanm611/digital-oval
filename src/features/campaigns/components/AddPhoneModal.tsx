@@ -251,10 +251,7 @@ export default function AddPhoneModal({
             </div>
 
             {/* DND Type Selector */}
-            <div className="space-y-2">
-              <p className="text-xs text-gray-500 mb-3">
-                Choose which type of messages this customer should NOT receive
-              </p>
+            <div>
               <HeadlessSelect
                 label="Select DND Type"
                 value={String(selectedDndTypeId)}
@@ -267,6 +264,9 @@ export default function AddPhoneModal({
                 className="w-full"
                 zIndex={zIndex.popover}
               />
+              <p className="text-xs text-gray-500 mt-2">
+                Choose which type of messages this customer should NOT receive
+              </p>
             </div>
 
             {/* Type Description */}

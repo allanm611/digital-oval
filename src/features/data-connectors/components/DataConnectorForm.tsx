@@ -137,11 +137,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
 
         {/* Form Content */}
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-          <div className="p-6 space-y-2">
-            <h3 className="text-sm font-semibold text-black">
-              Basic Information
-            </h3>
-
+          <div className="p-6 space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Input
@@ -157,10 +153,8 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Type <span className="text-red-500">*</span>
-                </label>
                 <HeadlessSelect
+                  label="Type *"
                   options={connectorTypes.map((type) => ({
                     value: type,
                     label: getConnectorDisplayName(type),
@@ -168,6 +162,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
                   value={formData.type}
                   onChange={(value) => handleTypeChange(value as DataConnectorType)}
                   placeholder="Select option"
+                  className="w-full"
                 />
               </div>
             </div>

@@ -142,10 +142,8 @@ export default function CharacterSetFormPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message Type *
-              </label>
               <HeadlessSelect
+                label="Message Type *"
                 value={messageType}
                 onChange={(value) => setMessageType(String(value || ""))}
                 options={MESSAGE_TYPE_OPTIONS}
@@ -154,10 +152,8 @@ export default function CharacterSetFormPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Character Set Type *
-              </label>
               <HeadlessSelect
+                label="Character Set Type *"
                 value={characterSetType}
                 onChange={(value) => setCharacterSetType(String(value || ""))}
                 options={CHARACTER_SET_TYPE_OPTIONS}

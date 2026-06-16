@@ -278,10 +278,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Protocol<span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="Protocol *"
                 options={[
                   { value: "http", label: "HTTP" },
                   { value: "https", label: "HTTPS" },
@@ -300,7 +298,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                   }))
                 }
                 placeholder="Select protocol"
-                className="mt-1"
+                className="w-full"
               />
             </div>
 
@@ -318,10 +316,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Environment
-              </label>
               <HeadlessSelect
+                label="Environment"
                 options={[
                   { value: "dev", label: "DEV" },
                   { value: "staging", label: "STAGING" },
@@ -336,7 +332,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                   }))
                 }
                 placeholder="Select environment"
-                className="mt-1"
+                className="w-full"
               />
             </div>
 
@@ -535,13 +531,6 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               </div>
             )}
             <div>
-              <label className="text-sm font-medium text-gray-700">
-                Metadata
-              </label>
-              <p className="text-xs text-gray-500 mb-1">
-                Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;:
-                &quot;value&quot;&#x7D;).
-              </p>
               <Textarea
                 label="Metadata"
                 value={form.metadata}
@@ -550,6 +539,10 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 rows={3}
                 placeholder='{"key": "value"}'
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;:
+                &quot;value&quot;&#x7D;).
+              </p>
             </div>
           </div>
         </div>

@@ -296,59 +296,39 @@ export default function EtlFetchControlsPage() {
           <h2 className={`${tw.textPrimary} font-semibold`}>
             {t.etl.fetchFilesForSpecificTime}
           </h2>
-          <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.etl.categoryLabel}
-            </label>
-            <HeadlessSelect
-              options={categoryOptions}
-              value={byTimeCategory}
-              onChange={(v) => setByTimeCategory(String(v))}
-              placeholder={t.etl.selectCategory}
-            />
-          </div>
+          <HeadlessSelect
+            label={t.etl.categoryLabel}
+            options={categoryOptions}
+            value={byTimeCategory}
+            onChange={(v) => setByTimeCategory(String(v))}
+            placeholder={t.etl.selectCategory}
+            className="w-full"
+          />
           <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                {t.etl.monthLabel}
-              </label>
-              <HeadlessSelect
-                options={monthOptions}
-                value={byTimeMonth}
-                onChange={(v) => setByTimeMonth(String(v))}
-                placeholder={t.etl.monthLabel}
-              />
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                {t.etl.dayLabel}
-              </label>
-              <HeadlessSelect
-                options={dayOptions}
-                value={byTimeDay}
-                onChange={(v) => setByTimeDay(String(v))}
-                placeholder={t.etl.dayLabel}
-              />
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                {t.etl.hourLabel}
-              </label>
-              <HeadlessSelect
-                options={hourOptions}
-                value={byTimeHour}
-                onChange={(v) => setByTimeHour(String(v))}
-                placeholder={t.etl.hourLabel}
-              />
-            </div>
+            <HeadlessSelect
+              label={t.etl.monthLabel}
+              options={monthOptions}
+              value={byTimeMonth}
+              onChange={(v) => setByTimeMonth(String(v))}
+              placeholder={t.etl.monthLabel}
+              className="w-full"
+            />
+            <HeadlessSelect
+              label={t.etl.dayLabel}
+              options={dayOptions}
+              value={byTimeDay}
+              onChange={(v) => setByTimeDay(String(v))}
+              placeholder={t.etl.dayLabel}
+              className="w-full"
+            />
+            <HeadlessSelect
+              label={t.etl.hourLabel}
+              options={hourOptions}
+              value={byTimeHour}
+              onChange={(v) => setByTimeHour(String(v))}
+              placeholder={t.etl.hourLabel}
+              className="w-full"
+            />
           </div>
           <div className="flex justify-center">
             <button
@@ -401,22 +381,28 @@ export default function EtlFetchControlsPage() {
             </h3>
             <div className="grid grid-cols-3 gap-4">
               <HeadlessSelect
+                label={t.etl.monthLabel}
                 options={monthOptions}
                 value={byRangeStartMonth}
                 onChange={(v) => setByRangeStartMonth(String(v))}
                 placeholder={t.etl.monthLabel}
+                className="w-full"
               />
               <HeadlessSelect
+                label={t.etl.dayLabel}
                 options={dayOptions}
                 value={byRangeStartDay}
                 onChange={(v) => setByRangeStartDay(String(v))}
                 placeholder={t.etl.dayLabel}
+                className="w-full"
               />
               <HeadlessSelect
+                label={t.etl.hourLabel}
                 options={hourOptions}
                 value={byRangeStartHour}
                 onChange={(v) => setByRangeStartHour(String(v))}
                 placeholder={t.etl.hourLabel}
+                className="w-full"
               />
             </div>
           </div>
@@ -427,22 +413,28 @@ export default function EtlFetchControlsPage() {
             </h3>
             <div className="grid grid-cols-3 gap-4">
               <HeadlessSelect
+                label={t.etl.monthLabel}
                 options={monthOptions}
                 value={byRangeEndMonth}
                 onChange={(v) => setByRangeEndMonth(String(v))}
                 placeholder={t.etl.monthLabel}
+                className="w-full"
               />
               <HeadlessSelect
+                label={t.etl.dayLabel}
                 options={dayOptions}
                 value={byRangeEndDay}
                 onChange={(v) => setByRangeEndDay(String(v))}
                 placeholder={t.etl.dayLabel}
+                className="w-full"
               />
               <HeadlessSelect
+                label={t.etl.hourLabel}
                 options={hourOptions}
                 value={byRangeEndHour}
                 onChange={(v) => setByRangeEndHour(String(v))}
                 placeholder={t.etl.hourLabel}
+                className="w-full"
               />
             </div>
           </div>

@@ -428,7 +428,7 @@ export default function ProgramsPage() {
                 : "Create your first program to get started."}
             </p>
             {!searchTerm && (
-              <CreateButton onClick={handleCreateProgram} className="mx-auto" />
+              <FeatureActionButton featureId="programs" action="create" onClick={handleCreateProgram} className="mx-auto" />
             )}
           </div>
         ) : (

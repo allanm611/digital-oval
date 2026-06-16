@@ -280,45 +280,36 @@ export default function CreativeTemplateFormModal({
 
           {/* Channel and Locale */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Channel
-                <span className="text-red-600">*</span>
-              </label>
-              <HeadlessSelect
-                value={formData.primaryChannel}
-                onChange={(value) => setFormData((prev) => ({ ...prev, primaryChannel: value as any }))}
-                options={channelOptions.map((opt) => ({ value: opt.value, label: opt.label }))}
-                placeholder="Select a channel"
-                zIndex={zIndex.popover}
-              />
-            </div>
+            <HeadlessSelect
+              label="Channel *"
+              value={formData.primaryChannel}
+              onChange={(value) => setFormData((prev) => ({ ...prev, primaryChannel: value as any }))}
+              options={channelOptions.map((opt) => ({ value: opt.value, label: opt.label }))}
+              placeholder="Select a channel"
+              zIndex={zIndex.popover}
+            />
 
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Language
-              </label>
-              <HeadlessSelect
-                value={
-                  formData.locale
-                    ? languages.find((lang) => lang.language_code === formData.locale)?.id?.toString() || ""
-                    : ""
-                }
-                onChange={(value) => {
-                  const selectedLang = languages.find((lang) => lang.id === parseInt(value));
-                  setFormData((prev) => ({
-                    ...prev,
-                    locale: selectedLang?.language_code || "",
-                  }));
-                }}
-                options={[
-                  { value: "", label: "Select a language" },
-                  ...languages.map((lang) => ({ value: lang.id.toString(), label: lang.name }))
-                ]}
-                placeholder="Select a language"
-                zIndex={zIndex.popover}
-              />
-            </div>
+            <HeadlessSelect
+              label="Language"
+              value={
+                formData.locale
+                  ? languages.find((lang) => lang.language_code === formData.locale)?.id?.toString() || ""
+                  : ""
+              }
+              onChange={(value) => {
+                const selectedLang = languages.find((lang) => lang.id === parseInt(value));
+                setFormData((prev) => ({
+                  ...prev,
+                  locale: selectedLang?.language_code || "",
+                }));
+              }}
+              options={[
+                { value: "", label: "Select a language" },
+                ...languages.map((lang) => ({ value: lang.id.toString(), label: lang.name }))
+              ]}
+              placeholder="Select a language"
+              zIndex={zIndex.popover}
+            />
           </div>
 
           {/* Title */}

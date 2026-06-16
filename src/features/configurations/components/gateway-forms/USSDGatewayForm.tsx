@@ -76,30 +76,25 @@ export default function USSDGatewayForm({
         <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                USSD Provider *
-              </label>
-              <HeadlessSelect
-                value={formData.provider_type}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, provider_type: value }))
-                }
-                options={USSD_PROVIDERS}
-                disabled={isLoading}
-              />
-            </div>
+            <HeadlessSelect
+              label="USSD Provider *"
+              value={formData.provider_type}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, provider_type: value }))
+              }
+              options={USSD_PROVIDERS}
+              disabled={isLoading}
+              className="w-full"
+            />
 
-            <div>
-              <Input
-                label="Configuration Name *"
-                placeholder="e.g., Infobip Production"
-                value={formData.name}
-                onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
+            <Input
+              label="Configuration Name *"
+              placeholder="e.g., Infobip Production"
+              value={formData.name}
+              onChange={(value) => setFormData((prev) => ({ ...prev, name: value }))}
 
-                disabled={isLoading}
-              />
-            </div>
+              disabled={isLoading}
+            />
           </div>
 
           <Textarea
@@ -157,29 +152,23 @@ export default function USSDGatewayForm({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Request Method
-              </label>
-              <HeadlessSelect
-                options={REQUEST_METHOD_OPTIONS}
-                value={formData.credentials.request_method || "POST"}
-                onChange={(value) => updateCredential("request_method", value)}
-                disabled={isLoading}
-              />
-            </div>
+            <HeadlessSelect
+              label="Request Method"
+              options={REQUEST_METHOD_OPTIONS}
+              value={formData.credentials.request_method || "POST"}
+              onChange={(value) => updateCredential("request_method", value)}
+              disabled={isLoading}
+              className="w-full"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Request Format
-              </label>
-              <HeadlessSelect
-                options={REQUEST_FORMAT_OPTIONS}
-                value={formData.credentials.request_format || "JSON"}
-                onChange={(value) => updateCredential("request_format", value)}
-                disabled={isLoading}
-              />
-            </div>
+            <HeadlessSelect
+              label="Request Format"
+              options={REQUEST_FORMAT_OPTIONS}
+              value={formData.credentials.request_format || "JSON"}
+              onChange={(value) => updateCredential("request_format", value)}
+              disabled={isLoading}
+              className="w-full"
+            />
           </div>
         </div>
       </div>

@@ -35,7 +35,7 @@ import { color, tw, zIndex, noteStyles, button, getButtonStyles } from "../../..
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
@@ -992,12 +992,15 @@ export default function JobWorkflowStepsPage() {
               </button>
             </PermissionGate>
             <PermissionGate permission="job-workflow-steps.create">
-              <CreateButton
-                route={
-                  jobIdFilter
+              <FeatureActionButton
+                featureId="job-workflow-steps"
+                action="create"
+                onClick={() => {
+                  const route = jobIdFilter
                     ? `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
-                    : "/dashboard/job-workflow-steps/create"
-                }
+                    : "/dashboard/job-workflow-steps/create";
+                  navigate(route);
+                }}
               />
             </PermissionGate>
             {jobIdFilter && (
@@ -1778,23 +1781,19 @@ export default function JobWorkflowStepsPage() {
                     </div>
 
                     {/* Failure Action Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Failure Action
-                      </label>
-                      <HeadlessSelect
-                        options={FAILURE_ACTION_OPTIONS.map((opt) => ({
-                          value: opt.value,
-                          label: opt.label,
-                        }))}
-                        value={failureActionFilter}
-                        onChange={(value) =>
-                          setFailureActionFilter(value as FailureAction | "")
-                        }
-                        placeholder="All Actions"
-                        className="w-full"
-                      />
-                    </div>
+                    <HeadlessSelect
+                      label="Failure Action"
+                      options={FAILURE_ACTION_OPTIONS.map((opt) => ({
+                        value: opt.value,
+                        label: opt.label,
+                      }))}
+                      value={failureActionFilter}
+                      onChange={(value) =>
+                        setFailureActionFilter(value as FailureAction | "")
+                      }
+                      placeholder="All Actions"
+                      className="w-full"
+                    />
 
                     {/* Parallel Group ID Filter */}
                     <div>

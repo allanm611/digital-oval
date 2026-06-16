@@ -10,7 +10,7 @@ import {
   Plus,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Pagination from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { communicationService } from "../../communications/services/communicationService";
@@ -268,8 +268,9 @@ export default function ManualBroadcastListsPage() {
         />
         {/* <PermissionGate permission="manual-communications.create"> */}
         <div className="flex items-center gap-3">
-          <CreateButton
-            route="/dashboard/manual-communications/create"
+          <FeatureActionButton
+            featureId="manual-communications"
+            action="create"
             navigationState={{
               returnTo: {
                 pathname: "/dashboard/manual-communications",

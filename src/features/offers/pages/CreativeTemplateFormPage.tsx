@@ -230,25 +230,21 @@ export default function CreativeTemplateFormPage() {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Channel *</label>
-              <HeadlessSelect
-                value={channel}
-                onChange={(value) => setChannel(String(value || ""))}
-                options={channelOptions}
-                placeholder="Select a channel"
-              />
-            </div>
+            <HeadlessSelect
+              label="Channel *"
+              value={channel}
+              onChange={(value) => setChannel(String(value || ""))}
+              options={channelOptions}
+              placeholder="Select a channel"
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Locale</label>
-              <HeadlessSelect
-                value={locale}
-                onChange={(value) => setLocale(String(value || ""))}
-                options={languageOptions}
-                placeholder="Select a locale"
-              />
-            </div>
+            <HeadlessSelect
+              label="Locale"
+              value={locale}
+              onChange={(value) => setLocale(String(value || ""))}
+              options={languageOptions}
+              placeholder="Select a locale"
+            />
           </div>
 
           <Input

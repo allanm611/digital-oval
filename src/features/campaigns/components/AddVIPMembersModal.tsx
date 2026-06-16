@@ -367,7 +367,7 @@ export default function AddVIPMembersModal({
 
                 {/* MSISDN */}
                 <div>
-                    <Input
+                  <Input
                     label="MSISDN"
                     type="tel"
                     value={formData.external_msisdn}

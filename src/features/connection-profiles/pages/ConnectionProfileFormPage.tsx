@@ -604,9 +604,6 @@ export default function ConnectionProfileFormPage({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Connection Type *
-              </label>
               {loadingConnectorTypes ? (
                 <div className="text-sm text-gray-500 py-2">
                   Loading connection types...
@@ -614,6 +611,7 @@ export default function ConnectionProfileFormPage({
               ) : (
                 <>
                   <HeadlessSelect
+                    label="Connection Type *"
                     options={connectorTypes.map((type) => ({
                       value: type,
                       label: type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " "),
@@ -651,6 +649,7 @@ export default function ConnectionProfileFormPage({
                       if (errors.connection_type) setErrors({ ...errors, connection_type: "" });
                     }}
                     placeholder="Select a connection type..."
+                    className="w-full"
                   />
                   {errors.connection_type && (
                     <p className="text-sm text-red-500 mt-1">{errors.connection_type}</p>
@@ -659,10 +658,8 @@ export default function ConnectionProfileFormPage({
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Environment *
-              </label>
               <HeadlessSelect
+                label="Environment *"
                 options={[
                   { value: "dev", label: "Development" },
                   { value: "staging", label: "Staging" },
@@ -677,19 +674,18 @@ export default function ConnectionProfileFormPage({
                   });
                   if (errors.environment) setErrors({ ...errors, environment: "" });
                 }}
+                className="w-full"
               />
               {errors.environment && (
                 <p className="text-sm text-red-500 mt-1">{errors.environment}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data Load Method *
-              </label>
               {/* <p className="text-xs text-gray-500 mb-2">
                 How new data is brought in.
               </p> */}
               <HeadlessSelect
+                label="Data Load Method *"
                 options={[
                   { value: "full", label: "Full" },
                   { value: "incremental", label: "Incremental" },
@@ -707,15 +703,13 @@ export default function ConnectionProfileFormPage({
                   });
                   if (errors.load_strategy) setErrors({ ...errors, load_strategy: "" });
                 }}
+                className="w-full"
               />
               {errors.load_strategy && (
                 <p className="text-sm text-red-500 mt-1">{errors.load_strategy}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Server
-              </label>
               {/* <p className="text-xs text-gray-500 mb-2">
                 Select the server endpoint for this connection.
               </p> */}
@@ -740,6 +734,7 @@ export default function ConnectionProfileFormPage({
 
               {!loadingServers && !serversError && servers.length > 0 && (
                 <HeadlessSelect
+                  label="Server"
                   options={servers.map((server) => ({
                     value: String(server.id),
                     label: `${server.name} (${server.host}${
@@ -754,7 +749,7 @@ export default function ConnectionProfileFormPage({
                     })
                   }
                   placeholder="Select a server..."
-                  className="mt-1"
+                  className="w-full"
                 />
               )}
             </div>
@@ -1132,10 +1127,8 @@ export default function ConnectionProfileFormPage({
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data Classification *
-              </label>
               <HeadlessSelect
+                label="Data Classification *"
                 options={[
                   { value: "public", label: "Public" },
                   { value: "internal", label: "Internal" },
@@ -1151,6 +1144,7 @@ export default function ConnectionProfileFormPage({
                   });
                   if (errors.data_classification) setErrors({ ...errors, data_classification: "" });
                 }}
+                className="w-full"
               />
               {errors.data_classification && (
                 <p className="text-sm text-red-500 mt-1">{errors.data_classification}</p>

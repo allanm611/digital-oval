@@ -309,10 +309,8 @@ export default function TargetAudienceStep({
 
         {/* List Type */}
         <div>
-          <label className="text-sm font-medium text-gray-900 block mb-1">
-            List Type
-          </label>
           <HeadlessSelect
+            label="List Type"
             options={listTypeOptions}
             value={listType}
             onChange={(value) => {
@@ -327,10 +325,8 @@ export default function TargetAudienceStep({
 
         {/* Input Method */}
         <div>
-          <label className="text-sm font-medium text-gray-900 block mb-1">
-            Input Method *
-          </label>
           <HeadlessSelect
+            label="Input Method *"
             options={inputMethodOptions}
             value={inputMethod}
             onChange={(value) => {

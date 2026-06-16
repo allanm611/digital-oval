@@ -1388,7 +1388,7 @@ export default function UserManagementPage() {
         <button
           onClick={() => handleViewUser(user)}
           className={`font-semibold text-sm sm:text-base transition-colors truncate`}
-          style={{ color: color.primary.accent }}
+          style={{ color: 'var(--c-text-primary)' }}
           title={`${user.first_name} ${user.last_name}`}
         >
           {user.first_name} {user.last_name}
@@ -1410,7 +1410,7 @@ export default function UserManagementPage() {
       label: "Department",
       visible: true,
       render: (value) => (
-        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+        <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
           {value || "N/A"}
         </span>
       ),
@@ -1420,7 +1420,7 @@ export default function UserManagementPage() {
       label: "Role",
       visible: true,
       render: (value, user) => (
-        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+        <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
           {getUserRoleName(user)}
         </span>
       ),
@@ -1431,15 +1431,12 @@ export default function UserManagementPage() {
       visible: true,
       render: (value, user) => {
         const normalizedStatus = normalizeStatus(user);
-        const userIsActive = normalizedStatus === "active";
         const statusLabel = formatStatusLabel(normalizedStatus);
-        const statusColor = getStatusColorToken(normalizedStatus);
         return (
           <span
-            className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap`}
+            className={`text-sm whitespace-nowrap`}
             style={{
-              backgroundColor: userIsActive ? `${color.status.success}20` : `${statusColor}20`,
-              color: userIsActive ? color.status.success : statusColor,
+              color: 'var(--c-text-primary)',
             }}
           >
             {statusLabel}
@@ -1536,7 +1533,7 @@ export default function UserManagementPage() {
         <button
           onClick={() => handleViewRequest(request)}
           className={`font-semibold text-sm transition-colors truncate`}
-          style={{ color: color.primary.accent }}
+          style={{ color: 'var(--c-text-primary)' }}
           title={`${request.first_name} ${request.last_name}`}
         >
           {request.first_name} {request.last_name}
@@ -1558,7 +1555,7 @@ export default function UserManagementPage() {
       label: "Role",
       visible: true,
       render: (value, request) => (
-        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+        <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
           {getPendingRequestRole(request)}
         </span>
       ),
@@ -1568,7 +1565,7 @@ export default function UserManagementPage() {
       label: "Department",
       visible: true,
       render: (value, request) => (
-        <span className={`text-sm text-gray-900 whitespace-nowrap`}>
+        <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
           {request.department || "N/A"}
         </span>
       ),
@@ -1778,7 +1775,12 @@ export default function UserManagementPage() {
           return (
             <div
               key={stat.name}
-              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+              className={`${tw.rounded} p-4 sm:p-6 shadow-sm`}
+              style={{
+                backgroundColor: 'var(--c-surface-background)',
+                borderColor: 'var(--c-border-default)',
+                borderWidth: '1px',
+              }}
             >
               <div className="flex items-center justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-2 min-w-0">
@@ -1786,17 +1788,17 @@ export default function UserManagementPage() {
                     className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600 truncate">
+                  <p className="text-sm font-medium truncate" style={{ color: 'var(--c-text-secondary)' }}>
                     {stat.name}
                   </p>
                 </div>
                 {stat.badge && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] sm:text-[11px] font-medium bg-yellow-100 text-yellow-800 flex-shrink-0">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] sm:text-[11px] font-medium flex-shrink-0" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#b45309' }}>
                     {stat.badge}
                   </span>
                 )}
               </div>
-              <p className="mt-2 sm:mt-3 text-2xl sm:text-3xl font-bold text-gray-900">
+              <p className="mt-2 sm:mt-3 text-2xl sm:text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                 {stat.value}
               </p>
             </div>
@@ -1818,14 +1820,13 @@ export default function UserManagementPage() {
           }
         }
       `}</style>
-      <div className="user-management-tabs flex gap-1 border-b border-gray-200 overflow-x-auto">
+      <div className="user-management-tabs flex gap-1 overflow-x-auto" style={{ borderBottomColor: 'var(--c-border-default)', borderBottomWidth: '1px' }}>
         <button
           onClick={() => setActiveTab("users")}
-          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
-            activeTab === "users"
-              ? "text-black"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0`}
+          style={{
+            color: activeTab === "users" ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+          }}
         >
           <Users className="w-4 h-4 flex-shrink-0" />
           <span className="whitespace-nowrap">{t.userManagement.users}</span>
@@ -1834,6 +1835,7 @@ export default function UserManagementPage() {
             style={{
               backgroundColor:
                 activeTab === "users" ? color.primary.accent : color.text.muted,
+              color: 'white',
             }}
           >
             {users.length}
@@ -1847,11 +1849,10 @@ export default function UserManagementPage() {
         </button>
         <button
           onClick={() => setActiveTab("requests")}
-          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
-            activeTab === "requests"
-              ? "text-black"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0`}
+          style={{
+            color: activeTab === "requests" ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+          }}
         >
           <span className="whitespace-nowrap">
             {t.userManagement.pendingRequests}
@@ -1863,6 +1864,7 @@ export default function UserManagementPage() {
                 activeTab === "requests"
                   ? color.primary.accent
                   : color.text.muted,
+              color: 'white',
             }}
           >
             {accountRequests.length}

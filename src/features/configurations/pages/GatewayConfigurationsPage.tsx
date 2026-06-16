@@ -6,7 +6,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
@@ -347,21 +347,24 @@ export default function GatewayConfigurationsPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/${config.channel_type}/details`)}
-            className={`p-2 rounded hover:bg-green-50 transition ${tw.link}`}
+            className={`p-2 rounded transition`}
+            style={{ color: 'var(--c-text-secondary)' }}
             title="View details"
           >
             <Eye size={18} />
           </button>
           <button
             onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/edit`)}
-            className={`p-2 rounded hover:bg-blue-50 transition ${tw.link}`}
+            className={`p-2 rounded transition`}
+            style={{ color: 'var(--c-text-secondary)' }}
             title="Edit configuration"
           >
             <Edit size={18} />
           </button>
           <button
             onClick={() => handleDeleteClick(config)}
-            className="p-2 rounded hover:bg-red-50 transition text-red-600"
+            className="p-2 rounded transition"
+            style={{ color: 'var(--c-text-danger)' }}
             title="Delete configuration"
           >
             <Trash2 size={18} />
@@ -403,12 +406,14 @@ export default function GatewayConfigurationsPage() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <BackButton
-           
+
             showBreadcrumb={true}
-           
+
             currentLabel="Gateway Configurations"
           />
-          <CreateButton
+          <FeatureActionButton
+            featureId="gateway-configurations"
+            action="create"
             onClick={() => navigate("/dashboard/gateway-configurations/create")}
           />
         </div>
@@ -440,7 +445,9 @@ export default function GatewayConfigurationsPage() {
                 : "Create your first gateway configuration to get started"}
             </p>
             {!searchTerm && (
-              <CreateButton
+              <FeatureActionButton
+                featureId="gateway-configurations"
+                action="create"
                 onClick={() => navigate("/dashboard/gateway-configurations/create")}
                 className="mx-auto"
               />

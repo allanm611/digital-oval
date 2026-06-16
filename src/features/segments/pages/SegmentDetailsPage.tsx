@@ -2050,9 +2050,6 @@ export default function SegmentDetailsPage() {
 
             {/* Update Parent Section */}
             <div className="pt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parent Segment
-              </label>
               {isLoadingParents ? (
                 <div className="text-sm text-gray-500">
                   Loading parent segments...
@@ -2060,6 +2057,7 @@ export default function SegmentDetailsPage() {
               ) : (
                 <div className="relative z-40">
                   <HeadlessSelect
+                    label="Parent Segment"
                     value={editParentId ? String(editParentId) : ""}
                     onChange={(value) => {
                       setEditParentId(value ? Number(value) : null);

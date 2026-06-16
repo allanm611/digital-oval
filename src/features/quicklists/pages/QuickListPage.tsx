@@ -23,7 +23,7 @@ import {
 } from "../../quicklists/types/quicklist";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
@@ -289,7 +289,7 @@ export default function QuickListPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CreateButton onClick={openCreateModal} />
+          <FeatureActionButton featureId="quicklists" action="create" onClick={openCreateModal} />
         </div>
       </div>
 
@@ -353,7 +353,7 @@ export default function QuickListPage() {
                 : "No QuickLists yet. Create your first QuickList to get started."}
             </p>
             {!searchQuery && (
-              <CreateButton onClick={openCreateModal} className="mx-auto" />
+              <FeatureActionButton featureId="quicklists" action="create" onClick={openCreateModal} className="mx-auto" />
             )}
           </div>
         ) : (

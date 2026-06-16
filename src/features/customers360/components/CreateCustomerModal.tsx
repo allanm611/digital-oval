@@ -912,12 +912,8 @@ export default function CreateCustomerModal({
                     )}
                   </div>
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Gender
-                    </label>
                     <HeadlessSelect
+                      label="Gender"
                       options={GENDER_OPTIONS}
                       value={formData.gender}
                       onChange={(value) =>
@@ -970,12 +966,8 @@ export default function CreateCustomerModal({
                     />
                   </div>
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Language Preference
-                    </label>
                     <HeadlessSelect
+                      label="Language Preference"
                       options={LANGUAGE_OPTIONS}
                       value={formData.languagePreference}
                       onChange={(value) =>
@@ -1040,12 +1032,8 @@ export default function CreateCustomerModal({
                 </div>
 
                 <div className="mt-4">
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Country
-                  </label>
                   <HeadlessSelect
+                    label="Country"
                     options={COUNTRY_OPTIONS}
                     value={formData.countryCode}
                     onChange={(value) =>
@@ -1067,12 +1055,8 @@ export default function CreateCustomerModal({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Customer Tier
-                    </label>
                     <HeadlessSelect
+                      label="Customer Tier"
                       options={CUSTOMER_TIER_OPTIONS}
                       value={formData.customerTier}
                       onChange={(value) =>
@@ -1085,12 +1069,8 @@ export default function CreateCustomerModal({
                     />
                   </div>
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Preferred Channel
-                    </label>
                     <HeadlessSelect
+                      label="Preferred Channel"
                       options={PREFERRED_CHANNEL_OPTIONS}
                       value={formData.preferredChannel}
                       onChange={(value) =>
@@ -1106,12 +1086,8 @@ export default function CreateCustomerModal({
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label
-                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Timezone
-                    </label>
                     <HeadlessSelect
+                      label="Timezone"
                       options={timezoneList
                         .filter((tz) => tz && tz.value && tz.label)
                         .map((tz) => ({
@@ -1415,10 +1391,8 @@ export default function CreateCustomerModal({
                         return (
                           <div key={field} className="flex items-end gap-3">
                             <div className="flex-1">
-                              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
-                                {label}
-                              </label>
                               <HeadlessSelect
+                                label={label}
                                 options={[
                                   { value: "-1", label: "Select column..." },
                                   ...importPreview.headers

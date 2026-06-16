@@ -8,6 +8,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { CreateWorkflowPayload, UpdateWorkflowPayload } from "../types/workflow";
@@ -22,6 +23,8 @@ export default function CreateWorkflowPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [workflowTypes, setWorkflowTypes] = useState<string[]>([]);
+  const [isLoadingTypes, setIsLoadingTypes] = useState(true);
   const [formData, setFormData] = useState<CreateWorkflowPayload>({
     name: "",
     description: null,
@@ -30,6 +33,21 @@ export default function CreateWorkflowPage() {
     created_by: user?.user_id ?? null,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const loadWorkflowTypes = async () => {
+      try {
+        const types = await workflowService.getWorkflowTypes(true);
+        setWorkflowTypes(types);
+      } catch (err) {
+        console.error("Failed to load workflow types:", err);
+        setWorkflowTypes([]);
+      } finally {
+        setIsLoadingTypes(false);
+      }
+    };
+    loadWorkflowTypes();
+  }, []);
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -162,16 +180,25 @@ export default function CreateWorkflowPage() {
             />
 
             <div>
-              <Input
+              <HeadlessSelect
                 label={t.common.type}
-                placeholder={t.workflows.enterWorkflowType}
+                options={[
+                  { value: "", label: "Select a type..." },
+                  ...workflowTypes.map((type) => ({
+                    value: type,
+                    label: type,
+                  })),
+                ]}
                 value={formData.workflow_type || ""}
                 onChange={(val) =>
                   setFormData({
                     ...formData,
-                    workflow_type: val || null,
+                    workflow_type: val ? String(val) : null,
                   })
                 }
+                placeholder={t.workflows.enterWorkflowType}
+                disabled={isLoadingTypes}
+                className="w-full"
               />
             </div>
           </div>

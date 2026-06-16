@@ -8,7 +8,7 @@ import { useToast } from "../../../../contexts/ToastContext";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../../shared/components/ui/BackButton";
-import CreateButton from "../../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../../shared/components/FeatureActionButton";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmModal";
@@ -323,7 +323,7 @@ export default function ConfigurationManager({
       <div className="flex items-start justify-between gap-4">
         <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
         <div className="flex items-center gap-3 w-auto ml-auto">
-          <CreateButton onClick={handleCreateItem} />
+          <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} label={config.createButtonText} />
         </div>
       </div>
 
@@ -364,7 +364,7 @@ export default function ConfigurationManager({
                 : `${t.genericConfig.createFirstItem}`}
             </p>
             {!searchTerm && (
-              <CreateButton onClick={handleCreateItem} className="mx-auto" />
+              <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} className="mx-auto" label={config.createButtonText} />
             )}
           </div>
         ) : (

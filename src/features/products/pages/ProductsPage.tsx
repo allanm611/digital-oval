@@ -364,12 +364,15 @@ export default function ProductsPage() {
 
   const handleToggleStatus = async (product: Product) => {
     setLoadingProductId(product.id);
+    const newActiveStatus = !product.is_active;
+
     try {
-      // Optimistic update - update UI immediately
-      const updatedProduct = { ...product, is_active: !product.is_active };
-      setProducts(
-        products.map((p) => (p.id === product.id ? updatedProduct : p)),
-      );
+      // Optimistic update - just toggle the status, don't remove from table
+      const updatedProduct = { ...product, is_active: newActiveStatus };
+      setProducts((prev) => {
+        const updated = prev.map((p) => (p.id === product.id ? updatedProduct : p));
+        return updated;
+      });
 
       if (product.is_active) {
         await productService.deactivateProduct(Number(product.id));
@@ -386,11 +389,12 @@ export default function ProductsPage() {
       }
     } catch (err) {
       console.error("Failed to update product status:", err);
-      showError("Failed to update product status", extractBackendError(error, "Failed to update product status. Please try again."));
+      const errorMessage = err instanceof Error ? err.message : "Failed to update product status. Please try again.";
+      showError("Failed to update product status", errorMessage);
       // Revert optimistic update on error
-      setProducts(
-        products.map((p) =>
-          p.id === product.id ? { ...p, is_active: !product.is_active } : p,
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === product.id ? { ...p, is_active: !newActiveStatus } : p,
         ),
       );
     } finally {
@@ -828,7 +832,7 @@ export default function ProductsPage() {
             </p>
             <div className="mx-auto">
               <PermissionGate permission="products.create">
-                <CreateButton route="/dashboard/products/create" />
+                <FeatureActionButton featureId="products" action="create" />
               </PermissionGate>
             </div>
           </div>

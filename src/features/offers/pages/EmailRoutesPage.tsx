@@ -4,7 +4,6 @@ import { Edit, Trash2, Plus } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
-import CreateButton from "../../../shared/components/ui/CreateButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";

@@ -1412,7 +1412,7 @@ export default function OffersPage() {
               <p className={`${tw.textSecondary}`}>No offers found</p>
               <div className="mt-4">
                 <PermissionGate permission="offers.create">
-                  <CreateButton route="/dashboard/offers/create" />
+                  <FeatureActionButton featureId="offers" action="create" />
                 </PermissionGate>
               </div>
             </div>

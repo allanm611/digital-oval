@@ -349,7 +349,7 @@ export default function KpiCategoriesListPage() {
                 : "Create your first KPI category"}
             </p>
             {!searchTerm && (
-              <CreateButton onClick={handleCreateCategory} className="mx-auto" />
+              <FeatureActionButton featureId="kpi-categories" action="create" onClick={handleCreateCategory} className="mx-auto" />
             )}
           </div>
         ) : (

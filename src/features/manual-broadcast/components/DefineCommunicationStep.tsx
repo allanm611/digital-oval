@@ -769,10 +769,8 @@ export default function DefineCommunicationStep({
       <div className="p-5">
         <div className="flex gap-4 mb-6">
           <div className="flex-1">
-            <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-              {t.manualBroadcast.channelLabel} <span className="text-red-500">*</span>
-            </label>
             <HeadlessSelect
+              label={`${t.manualBroadcast.channelLabel} *`}
               value={selectedChannel}
               onChange={(value) => setSelectedChannel(value as Channel)}
               options={channels.map((channel) => ({
@@ -787,12 +785,8 @@ export default function DefineCommunicationStep({
           {/* SMS Route Selection - Show only when SMS variant is selected */}
           {selectedChannel && selectedChannel.toUpperCase().includes("SMS") && (
             <div className="flex-1">
-              <label
-                className={`text-sm font-medium ${tw.textPrimary} mb-3 block`}
-              >
-                SMS Route <span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="SMS Route *"
                 options={[
                   { value: "", label: "Select SMS Route" },
                   ...(smsRoutes || [])
@@ -819,12 +813,8 @@ export default function DefineCommunicationStep({
           {/* Email Route Selection - Show only when EMAIL is selected */}
           {selectedChannel && selectedChannel.toUpperCase() === "EMAIL" && (
             <div className="flex-1">
-              <label
-                className={`text-sm font-medium ${tw.textPrimary} mb-3 block`}
-              >
-                Email Route <span className="text-red-500">*</span>
-              </label>
               <HeadlessSelect
+                label="Email Route *"
                 options={[
                   { value: "", label: "Select Email Route" },
                   ...(emailRoutes || []).map((route: any) => ({

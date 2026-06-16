@@ -225,78 +225,58 @@ function JobDependencyModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Job ID (Dependent Job)
-            </label>
-            {isLoadingJobs ? (
-              <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                <LoadingSpinner size="sm" />
-                Loading jobs...
-              </div>
-            ) : (
+          {isLoadingJobs ? (
+            <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+              <LoadingSpinner size="sm" />
+              Loading jobs...
+            </div>
+          ) : (
+            <>
               <HeadlessSelect
+                label="Job ID (Dependent Job)"
                 options={jobOptions}
                 value={jobId ? jobId.toString() : ""}
                 onChange={(value) => setJobId(value ? Number(value) : "")}
                 placeholder="Select a job"
-                className="mt-1"
+                className="w-full"
               />
-            )}
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Depends On Job ID
-            </label>
-            {isLoadingJobs ? (
-              <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                <LoadingSpinner size="sm" />
-                Loading jobs...
-              </div>
-            ) : (
               <HeadlessSelect
+                label="Depends On Job ID"
                 options={jobOptions}
                 value={dependsOnJobId ? dependsOnJobId.toString() : ""}
                 onChange={(value) =>
                   setDependsOnJobId(value ? Number(value) : "")
                 }
                 placeholder="Select a job this depends on"
-                className="mt-1"
+                className="w-full"
               />
-            )}
-          </div>
+            </>
+          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Dependency Type
-            </label>
-            <HeadlessSelect
-              options={[
-                { value: "blocking", label: "Blocking" },
-                { value: "optional", label: "Optional" },
-                { value: "cross_day", label: "Cross Day" },
-                { value: "conditional", label: "Conditional" },
-              ]}
-              value={dependencyType}
-              onChange={(value) => setDependencyType(value as DependencyType)}
-              className="mt-1"
-            />
-          </div>
+          <HeadlessSelect
+            label="Dependency Type"
+            options={[
+              { value: "blocking", label: "Blocking" },
+              { value: "optional", label: "Optional" },
+              { value: "cross_day", label: "Cross Day" },
+              { value: "conditional", label: "Conditional" },
+            ]}
+            value={dependencyType}
+            onChange={(value) => setDependencyType(value as DependencyType)}
+            className="w-full"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Wait For Status
-            </label>
-            <HeadlessSelect
-              options={[
-                { value: "success", label: "Success" },
-                { value: "failure", label: "Failure" },
-                { value: "partial_success", label: "Partial Success" },
-                { value: "pending", label: "Pending" },
-                { value: "queued", label: "Queued" },
-                { value: "running", label: "Running" },
-                { value: "aborted", label: "Aborted" },
+          <HeadlessSelect
+            label="Wait For Status"
+            options={[
+              { value: "success", label: "Success" },
+              { value: "failure", label: "Failure" },
+              { value: "partial_success", label: "Partial Success" },
+              { value: "pending", label: "Pending" },
+              { value: "queued", label: "Queued" },
+              { value: "running", label: "Running" },
+              { value: "aborted", label: "Aborted" },
                 { value: "timeout", label: "Timeout" },
                 { value: "skipped", label: "Skipped" },
                 { value: "cancelled", label: "Cancelled" },
@@ -305,7 +285,6 @@ function JobDependencyModal({
               onChange={(value) => setWaitForStatus(value as WaitForStatus)}
               className="mt-1"
             />
-          </div>
 
           <Input
             label="Max Wait Minutes (0-1440, optional)"
@@ -2022,7 +2001,7 @@ export default function JobDependenciesPage() {
             </p>
             {!searchTerm && (
               <PermissionGate permission="job-dependencies.create">
-                <CreateButton onClick={handleCreate} className="mx-auto" />
+                <FeatureActionButton featureId="job-dependencies" action="create" onClick={handleCreate} className="mx-auto" />
               </PermissionGate>
             )}
           </div>
@@ -4173,87 +4152,75 @@ export default function JobDependenciesPage() {
                     />
 
                     {/* Dependency Type Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Dependency Type
-                      </label>
-                      <HeadlessSelect
-                        options={[
-                          { value: "", label: "All Types" },
-                          { value: "blocking", label: "Blocking" },
-                          { value: "optional", label: "Optional" },
-                          { value: "cross_day", label: "Cross Day" },
-                          { value: "conditional", label: "Conditional" },
-                        ]}
-                        value={filterDependencyType}
-                        onChange={(value) =>
-                          setFilterDependencyType(value as string)
-                        }
-                        placeholder="All Types"
-                        className="w-full"
-                      />
-                    </div>
+                    <HeadlessSelect
+                      label="Dependency Type"
+                      options={[
+                        { value: "", label: "All Types" },
+                        { value: "blocking", label: "Blocking" },
+                        { value: "optional", label: "Optional" },
+                        { value: "cross_day", label: "Cross Day" },
+                        { value: "conditional", label: "Conditional" },
+                      ]}
+                      value={filterDependencyType}
+                      onChange={(value) =>
+                        setFilterDependencyType(value as string)
+                      }
+                      placeholder="All Types"
+                      className="w-full"
+                    />
 
                     {/* Wait For Status Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Wait For Status
-                      </label>
-                      <HeadlessSelect
-                        options={[
-                          { value: "", label: "All Statuses" },
-                          { value: "success", label: "Success" },
-                          { value: "failure", label: "Failure" },
-                          { value: "completed", label: "Completed" },
-                          { value: "any", label: "Any" },
-                          // {
-                          //   value: "partial_success",
-                          //   label: "Partial Success",
-                          // },
-                          // { value: "pending", label: "Pending" },
-                          // { value: "queued", label: "Queued" },
-                          // { value: "running", label: "Running" },
-                          // { value: "aborted", label: "Aborted" },
-                          // { value: "timeout", label: "Timeout" },
-                          // { value: "skipped", label: "Skipped" },
-                          // { value: "cancelled", label: "Cancelled" },
-                        ]}
-                        value={filterWaitForStatus}
-                        onChange={(value) =>
-                          setFilterWaitForStatus(value as string)
-                        }
-                        placeholder="All Statuses"
-                        className="w-full"
-                      />
-                    </div>
+                    <HeadlessSelect
+                      label="Wait For Status"
+                      options={[
+                        { value: "", label: "All Statuses" },
+                        { value: "success", label: "Success" },
+                        { value: "failure", label: "Failure" },
+                        { value: "completed", label: "Completed" },
+                        { value: "any", label: "Any" },
+                        // {
+                        //   value: "partial_success",
+                        //   label: "Partial Success",
+                        // },
+                        // { value: "pending", label: "Pending" },
+                        // { value: "queued", label: "Queued" },
+                        // { value: "running", label: "Running" },
+                        // { value: "aborted", label: "Aborted" },
+                        // { value: "timeout", label: "Timeout" },
+                        // { value: "skipped", label: "Skipped" },
+                        // { value: "cancelled", label: "Cancelled" },
+                      ]}
+                      value={filterWaitForStatus}
+                      onChange={(value) =>
+                        setFilterWaitForStatus(value as string)
+                      }
+                      placeholder="All Statuses"
+                      className="w-full"
+                    />
 
                     {/* Is Active Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Active Status
-                      </label>
-                      <HeadlessSelect
-                        options={[
-                          { value: "", label: "All" },
-                          { value: "true", label: "Active" },
-                          { value: "false", label: "Inactive" },
-                        ]}
-                        value={
-                          filterIsActive === ""
-                            ? ""
-                            : filterIsActive === true
-                              ? "true"
-                              : "false"
-                        }
-                        onChange={(value) =>
-                          setFilterIsActive(
-                            value === "" ? "" : value === "true" ? true : false,
-                          )
-                        }
-                        placeholder="All"
-                        className="w-full"
-                      />
-                    </div>
+                    <HeadlessSelect
+                      label="Active Status"
+                      options={[
+                        { value: "", label: "All" },
+                        { value: "true", label: "Active" },
+                        { value: "false", label: "Inactive" },
+                      ]}
+                      value={
+                        filterIsActive === ""
+                          ? ""
+                          : filterIsActive === true
+                            ? "true"
+                            : "false"
+                      }
+                      onChange={(value) =>
+                        setFilterIsActive(
+                          value === "" ? "" : value === "true" ? true : false,
+                        )
+                      }
+                      placeholder="All"
+                      className="w-full"
+                    />
 
                     {/* Lookback Days Min Filter */}
                     <Input

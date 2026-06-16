@@ -200,15 +200,14 @@ export default function RolesModal({
           />
 
           {/* Data Access Level */}
-          <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Data Access Level
-            </label>
+          <div>
             <HeadlessSelect
+              label="Data Access Level"
               options={DATA_ACCESS_LEVELS}
               value={formData.data_access_level}
               onChange={(value) => setFormData({ ...formData, data_access_level: String(value) })}
               placeholder="Select access level..."
+              className="w-full"
             />
           </div>
 

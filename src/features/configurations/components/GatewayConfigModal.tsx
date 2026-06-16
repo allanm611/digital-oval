@@ -149,17 +149,13 @@ export default function GatewayConfigModal({
 
         <div className="space-y-6">
           {!editingConfig && (
-            <div>
-              <label className={`block text-sm font-semibold ${color.text}`}>
-                Communication Channel
-              </label>
-              <HeadlessSelect
-                value={selectedChannel}
-                onChange={setSelectedChannel}
-                options={CHANNEL_OPTIONS}
-                className="w-full mt-2"
-              />
-            </div>
+            <HeadlessSelect
+              label="Communication Channel"
+              value={selectedChannel}
+              onChange={setSelectedChannel}
+              options={CHANNEL_OPTIONS}
+              className="w-full"
+            />
           )}
 
           {modalChannel === "EMAIL" && (

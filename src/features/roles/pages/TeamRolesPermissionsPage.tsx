@@ -23,7 +23,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import {
   Role,
   Permission,
@@ -592,7 +592,9 @@ export default function TeamRolesPermissionsPage() {
             </button>
           )}
           {activeTab !== "assign" && (
-            <CreateButton
+            <FeatureActionButton
+              featureId="team-roles"
+              action="create"
               onClick={
                 activeTab === "roles" ? handleCreateRole : handleCreatePermission
               }

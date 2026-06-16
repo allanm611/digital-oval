@@ -27,7 +27,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Input from "../../../shared/components/ui/Input";
 import SelectJobTypeModal from "../components/SelectJobTypeModal";
 import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
@@ -652,7 +652,7 @@ export default function ScheduledJobsPage() {
             </button>
           </PermissionGate>
           <PermissionGate permission="jobs.create">
-            <CreateButton onClick={() => setIsSelectTypeModalOpen(true)} />
+            <FeatureActionButton featureId="scheduled-jobs" action="create" onClick={() => setIsSelectTypeModalOpen(true)} />
           </PermissionGate>
           </div>
         </div>
@@ -962,26 +962,22 @@ export default function ScheduledJobsPage() {
                 <div className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-4">
                     {/* Job Type Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Job Type
-                      </label>
-                      <HeadlessSelect
-                        options={[
-                          { value: "", label: t.jobs.allJobTypes },
-                          ...jobTypes.map((type) => ({
-                            value: type.id.toString(),
-                            label: type.name,
-                          })),
-                        ]}
-                        value={jobTypeFilter ? jobTypeFilter.toString() : ""}
-                        onChange={(value) =>
-                          setJobTypeFilter(value ? Number(value) : "")
-                        }
-                        placeholder={t.jobs.allJobTypes}
-                        className="w-full"
-                      />
-                    </div>
+                    <HeadlessSelect
+                      label="Job Type"
+                      options={[
+                        { value: "", label: t.jobs.allJobTypes },
+                        ...jobTypes.map((type) => ({
+                          value: type.id.toString(),
+                          label: type.name,
+                        })),
+                      ]}
+                      value={jobTypeFilter ? jobTypeFilter.toString() : ""}
+                      onChange={(value) =>
+                        setJobTypeFilter(value ? Number(value) : "")
+                      }
+                      placeholder={t.jobs.allJobTypes}
+                      className="w-full"
+                    />
 
                     {/* Owner Filter */}
                     <div>
@@ -1016,27 +1012,23 @@ export default function ScheduledJobsPage() {
                     </div>
 
                     {/* Schedule Type Filter */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Schedule Type
-                      </label>
-                      <HeadlessSelect
-                        options={[
-                          { value: "", label: "All Schedule Types" },
-                          { value: "cron", label: "Custom Schedule" },
-                          { value: "interval", label: "Repeat Regularly" },
-                          { value: "event_driven", label: "Event Driven" },
-                          { value: "manual", label: "Manual" },
-                          { value: "dependency_based", label: "Dependency Based" },
-                        ]}
-                        value={scheduleTypeFilter}
-                        onChange={(value) =>
-                          setScheduleTypeFilter(value as string)
-                        }
-                        placeholder="All Schedule Types"
-                        className="w-full"
-                      />
-                    </div>
+                    <HeadlessSelect
+                      label="Schedule Type"
+                      options={[
+                        { value: "", label: "All Schedule Types" },
+                        { value: "cron", label: "Custom Schedule" },
+                        { value: "interval", label: "Repeat Regularly" },
+                        { value: "event_driven", label: "Event Driven" },
+                        { value: "manual", label: "Manual" },
+                        { value: "dependency_based", label: "Dependency Based" },
+                      ]}
+                      value={scheduleTypeFilter}
+                      onChange={(value) =>
+                        setScheduleTypeFilter(value as string)
+                      }
+                      placeholder="All Schedule Types"
+                      className="w-full"
+                    />
 
                     {/* Connection Profile Filter */}
                     <div>

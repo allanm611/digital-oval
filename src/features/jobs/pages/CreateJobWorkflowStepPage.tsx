@@ -613,10 +613,8 @@ export default function CreateJobWorkflowStepPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepType} *
-                    </label>
                     <HeadlessSelect
+                      label={`${t.jobs.jobWorkflow.stepType} *`}
                       options={getStepTypes(t).map((type) => ({
                         value: type.value,
                         label: type.label,
@@ -668,10 +666,8 @@ export default function CreateJobWorkflowStepPage() {
                 </h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.job} <span className="text-red-500">*</span>
-                    </label>
                     <HeadlessSelect
+                      label={`${t.jobs.jobWorkflow.job} *`}
                       options={[
                         { value: "", label: t.jobs.jobWorkflow.selectJob },
                         ...jobs.map((job) => ({
@@ -759,10 +755,8 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t.jobs.jobWorkflow.stepType} <span className="text-red-500">*</span>
-                    </label>
                     <HeadlessSelect
+                      label={`${t.jobs.jobWorkflow.stepType} *`}
                       options={getStepTypes(t).map((type) => ({
                         value: type.value,
                         label: type.label,
@@ -853,10 +847,8 @@ export default function CreateJobWorkflowStepPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        {t.jobs.jobWorkflow.onFailureAction}
-                      </label>
                       <HeadlessSelect
+                        label={t.jobs.jobWorkflow.onFailureAction}
                         options={getFailureActions(t).map((action) => ({
                           value: action.value,
                           label: action.label,

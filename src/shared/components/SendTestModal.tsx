@@ -129,14 +129,12 @@ export default function SendTestModal({
 
         {/* Recipient Input */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {getRecipientLabel()} *
-          </label>
           <Input
+            label={getRecipientLabel() + " *"}
             placeholder={getRecipientPlaceholder()}
             value={recipient}
             onChange={(value) => setRecipient(value)}
-           
+
           />
         </div>
 

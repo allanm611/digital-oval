@@ -611,7 +611,7 @@ export default function AssignPermissionsModal({
                         : "Assign selected permissions to role"
                     }
                     className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                    style={{ backgroundColor: color.primary.action }}
+                    style={{ backgroundColor: color.primary.action, color: 'white' }}
                   >
                     {isAssigning && <LoadingSpinner />}
                     <Plus size={14} />
@@ -637,6 +637,7 @@ export default function AssignPermissionsModal({
                     className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{
                       backgroundColor: color.status.danger || "#dc2626",
+                      color: 'white',
                     }}
                   >
                     {isRemoving && <LoadingSpinner />}

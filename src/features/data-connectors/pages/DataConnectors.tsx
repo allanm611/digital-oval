@@ -26,7 +26,7 @@ import {
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import DataConnectorForm from "../components/DataConnectorForm";
 import {
   CreateDataConnectorRequest,
@@ -323,7 +323,9 @@ export default function DataConnectors() {
           currentLabel="Data Connectors"
         />
         <PermissionGate permission="servers.create">
-          <CreateButton
+          <FeatureActionButton
+            featureId="data-connectors"
+            action="create"
             onClick={() => {
               setEditingConnector(null);
               setShowCreateModal(true);

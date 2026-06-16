@@ -12,7 +12,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../../shared/components/ui/BackButton";
-import CreateButton from "../../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../../shared/components/FeatureActionButton";
 import { useBackendConfigurationData } from "../../../../shared/hooks/useBackendConfigurationData";
 import ConfigurationModal from "./ConfigurationModal";
 import { ConfigurationPageConfig, ConfigurationItem, MetadataField } from "./ConfigurationManager";
@@ -283,7 +283,7 @@ export default function ConfigurationManagerAPI({
             parentLabel={(config as any).parentLabel}
             currentLabel={config.title}
           />
-          {!config.disableCreate && <CreateButton onClick={handleCreateItem} />}
+          {!config.disableCreate && <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} />}
         </div>
       )}
       {!showBackButton && (
@@ -296,7 +296,7 @@ export default function ConfigurationManagerAPI({
           </div>
           {!config.disableCreate && (
             <div className="flex gap-3">
-              <CreateButton onClick={handleCreateItem} />
+              <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} />
             </div>
           )}
         </div>
@@ -341,7 +341,7 @@ export default function ConfigurationManagerAPI({
                 : `${t.genericConfig.createFirstItem}`}
             </p>
             {!searchTerm && !config.disableCreate && (
-              <CreateButton onClick={handleCreateItem} className="mx-auto" />
+              <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} className="mx-auto" />
             )}
           </div>
         ) : (

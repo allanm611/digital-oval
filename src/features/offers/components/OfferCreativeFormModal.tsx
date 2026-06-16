@@ -444,10 +444,8 @@ export default function OfferCreativeFormModal({
         <div className="space-y-4">
             {/* Offer Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Offer *
-              </label>
               <HeadlessSelect
+                label="Offer *"
                 value={formData.offer_id ? String(formData.offer_id) : ""}
                 onChange={(value) => setFormData((prev) => ({ ...prev, offer_id: value ? Number(value) : undefined }))}
                 options={offers.map((offer) => ({ value: String(offer.id), label: offer.name }))}
@@ -462,89 +460,75 @@ export default function OfferCreativeFormModal({
 
             {/* Channel & Locale */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Channel
-                </label>
-                <HeadlessSelect
-                  value={formData.channel}
-                  onChange={(value) => {
-                    setFormData((prev) => ({ ...prev, channel: value as CreativeChannel }));
-                    setSelectedTemplate(null);
-                  }}
-                  options={channels
-                    .filter((ch) => ch.is_active)
-                    .map((ch) => ({ value: ch.name, label: ch.name }))}
-                  placeholder="Select a channel"
-                  zIndex={zIndex.popover}
-                  disabled={channelsLoading}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Locale / Language
-                </label>
-                <TypeSelector
-                  options={
-                    languages.length > 0
-                      ? languages
-                          .filter((lang) => lang.is_active)
-                          .map((lang) => ({
-                            label: lang.name,
-                            value: lang.id,
-                          }))
-                      : COMMON_LOCALES.map((locale) => ({
-                          label: locale,
-                          value: locale,
+              <HeadlessSelect
+                label="Channel"
+                value={formData.channel}
+                onChange={(value) => {
+                  setFormData((prev) => ({ ...prev, channel: value as CreativeChannel }));
+                  setSelectedTemplate(null);
+                }}
+                options={channels
+                  .filter((ch) => ch.is_active)
+                  .map((ch) => ({ value: ch.name, label: ch.name }))}
+                placeholder="Select a channel"
+                zIndex={zIndex.popover}
+                disabled={channelsLoading}
+              />
+              <TypeSelector
+                label="Locale / Language"
+                options={
+                  languages.length > 0
+                    ? languages
+                        .filter((lang) => lang.is_active)
+                        .map((lang) => ({
+                          label: lang.name,
+                          value: lang.id,
                         }))
-                  }
-                  value={selectedLanguageId}
-                  onChange={(value) => {
-                    setSelectedLanguageId(value);
-                    if (languages.length > 0) {
-                      const selectedLang = languages.find((l) => l.id === value);
-                      if (selectedLang) {
-                        setFormData((prev) => ({ ...prev, locale: selectedLang.language_code }));
-                      }
-                    } else {
-                      setFormData((prev) => ({ ...prev, locale: String(value) }));
+                    : COMMON_LOCALES.map((locale) => ({
+                        label: locale,
+                        value: locale,
+                      }))
+                }
+                value={selectedLanguageId}
+                onChange={(value) => {
+                  setSelectedLanguageId(value);
+                  if (languages.length > 0) {
+                    const selectedLang = languages.find((l) => l.id === value);
+                    if (selectedLang) {
+                      setFormData((prev) => ({ ...prev, locale: selectedLang.language_code }));
                     }
-                  }}
-                  placeholder="Select language"
-                  allowCreate={true}
-                  onCreate={() => setIsLanguageModalOpen(true)}
-                />
-              </div>
+                  } else {
+                    setFormData((prev) => ({ ...prev, locale: String(value) }));
+                  }
+                }}
+                placeholder="Select language"
+                allowCreate={true}
+                onCreate={() => setIsLanguageModalOpen(true)}
+              />
             </div>
 
             {/* Creative Template */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Creative Template (Optional)
-              </label>
-              <TypeSelector
-                options={[
-                  { label: "Select a template", value: "" },
-                  ...templates
-                    .filter((t) => t.is_active && t.channel === formData.channel)
-                    .map((t) => ({ value: String(t.id), label: t.name }))
-                ]}
-                value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
-                onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
-                placeholder="Select template..."
-                disabled={templatesLoading || !formData.channel}
-                allowCreate={true}
-                onCreate={() => setIsTemplateModalOpen(true)}
-              />
-            </div>
+            <TypeSelector
+              label="Creative Template (Optional)"
+              options={[
+                { label: "Select a template", value: "" },
+                ...templates
+                  .filter((t) => t.is_active && t.channel === formData.channel)
+                  .map((t) => ({ value: String(t.id), label: t.name }))
+              ]}
+              value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
+              onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
+              placeholder="Select template..."
+              disabled={templatesLoading || !formData.channel}
+              allowCreate={true}
+              onCreate={() => setIsTemplateModalOpen(true)}
+            />
 
             {/* Sender ID (SMS) or Subject (Email/Web) */}
             {formData.channel?.toUpperCase() === "SMS" ? (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sender ID
-                </label>
                 <HeadlessSelect
+                  label="Sender ID"
                   value={formData.title || ""}
                   onChange={(value) => setFormData((prev) => ({ ...prev, title: value || "" }))}
                   options={[
@@ -586,26 +570,22 @@ export default function OfferCreativeFormModal({
 
             {/* SMS Route */}
             {formData.channel?.toUpperCase() === "SMS" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SMS Route
-                </label>
-                <HeadlessSelect
-                  value={formData.sms_route || ""}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, sms_route: value }))}
-                  options={
-                    smsRoutes
-                      ?.filter((route) => route.is_active)
-                      .map((route) => ({
-                        value: route.id?.toString() || "",
-                        label: route.name,
-                      })) || []
-                  }
-                  placeholder="Select SMS Route"
-                  zIndex={zIndex.popover}
-                  disabled={smsRoutesLoading}
-                />
-              </div>
+              <HeadlessSelect
+                label="SMS Route"
+                value={formData.sms_route || ""}
+                onChange={(value) => setFormData((prev) => ({ ...prev, sms_route: value }))}
+                options={
+                  smsRoutes
+                    ?.filter((route) => route.is_active)
+                    .map((route) => ({
+                      value: route.id?.toString() || "",
+                      label: route.name,
+                    })) || []
+                }
+                placeholder="Select SMS Route"
+                zIndex={zIndex.popover}
+                disabled={smsRoutesLoading}
+              />
             )}
 
             {/* Message Content Toolbar */}

@@ -752,14 +752,8 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
             <div>
-              <label
-                htmlFor="country"
-                className="block text-sm font-semibold mb-2.5"
-                style={{ color: 'var(--c-text-primary)' }}
-              >
-                {t.settings.country}
-              </label>
               <HeadlessSelect
+                label={t.settings.country}
                 value={settings.country}
                 onChange={(value) => handleCountryChange(value as string)}
                 options={countryOptions}
@@ -823,14 +817,8 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
             <div>
-              <label
-                htmlFor="language"
-                className="block text-sm font-semibold mb-2.5"
-                style={{ color: 'var(--c-text-primary)' }}
-              >
-                {t.settings.language}
-              </label>
               <HeadlessSelect
+                label={t.settings.language}
                 value={settings.language}
                 onChange={(value) => handleLanguageChange(value as string)}
                 options={languageOptions}
@@ -839,14 +827,8 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="timezone"
-                className="block text-sm font-semibold mb-2.5"
-                style={{ color: 'var(--c-text-primary)' }}
-              >
-                {t.settings.timezone}
-              </label>
               <HeadlessSelect
+                label={t.settings.timezone}
                 value={settings.timezone}
                 onChange={(value) => handleTimezoneChange(value as string)}
                 options={timezoneOptions}
@@ -885,14 +867,8 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="date-format"
-              className="block text-sm font-semibold mb-2.5"
-              style={{ color: 'var(--c-text-primary)' }}
-            >
-              Format
-            </label>
             <HeadlessSelect
+              label="Format"
               value={settings.date_format}
               onChange={(value) => handleDateFormatChange(value as string)}
               options={dateFormatOptions}
@@ -941,14 +917,8 @@ export default function SettingsPage() {
 
           <div className="space-y-6">
             <div>
-              <label
-                htmlFor="currency"
-                className="block text-sm font-semibold mb-2.5"
-                style={{ color: 'var(--c-text-primary)' }}
-              >
-                {t.settings.currency}
-              </label>
               <HeadlessSelect
+                label={t.settings.currency}
                 value={settings.currency}
                 onChange={(value) => handleCurrencyChange(value as string)}
                 options={currencyOptions}
@@ -958,14 +928,8 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="number-format"
-                className="block text-sm font-semibold mb-2.5"
-                style={{ color: 'var(--c-text-primary)' }}
-              >
-                {t.settings.numberFormatting}
-              </label>
               <HeadlessSelect
+                label={t.settings.numberFormatting}
                 value={settings.number_formatting}
                 onChange={(value) => handleNumberFormatChange(value as string)}
                 options={numberFormatOptions}
@@ -1041,14 +1005,8 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="character-set"
-              className="block text-sm font-semibold mb-2.5"
-              style={{ color: 'var(--c-text-primary)' }}
-            >
-              Encoding
-            </label>
             <HeadlessSelect
+              label="Encoding"
               value={settings.character_set}
               onChange={(value) => handleCharacterSetChange(value as string)}
               options={characterSetOptions}
@@ -1085,14 +1043,8 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="sender-id"
-              className="block text-sm font-semibold mb-2.5"
-              style={{ color: 'var(--c-text-primary)' }}
-            >
-              Sender ID
-            </label>
             <HeadlessSelect
+              label="Sender ID"
               value={settings.default_sender_id}
               onChange={(value) => handleSenderIdChange(value as string)}
               options={senderIdOptions}
@@ -1174,14 +1126,8 @@ export default function SettingsPage() {
               <div className={!hasRoutes ? "" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
                 {/* Communication Channel */}
                 <div>
-                  <label
-                    htmlFor="communication-channel"
-                    className="block text-sm font-semibold mb-2.5"
-                    style={{ color: 'var(--c-text-primary)' }}
-                  >
-                    Channel
-                  </label>
                   <HeadlessSelect
+                    label="Channel"
                     value={settings.default_communication_channel}
                     onChange={(value) =>
                       handleCommunicationChannelChange(value as string)
@@ -1194,14 +1140,8 @@ export default function SettingsPage() {
                 {/* Route - only show if routes available */}
                 {hasRoutes && (
                   <div>
-                    <label
-                      htmlFor="route"
-                      className="block text-sm font-semibold mb-2.5"
-                      style={{ color: 'var(--c-text-primary)' }}
-                    >
-                      {routeType} Route
-                    </label>
                     <HeadlessSelect
+                      label={`${routeType} Route`}
                       options={
                         routesList?.map((route: any) => ({
                           value: String(route.id),
@@ -1392,10 +1332,8 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2.5" style={{ color: 'var(--c-text-primary)' }}>
-              Theme
-            </label>
             <HeadlessSelect
+              label="Theme"
               value={settings.theme}
               onChange={(value) => handleThemeChange(value as "light" | "dark" | "system")}
               options={[

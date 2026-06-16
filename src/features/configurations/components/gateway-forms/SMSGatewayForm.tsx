@@ -66,32 +66,26 @@ export default function SMSGatewayForm({
         <div className="space-y-4">
           <div className={`grid ${mode === "create" ? "grid-cols-2" : "grid-cols-1"} gap-4`}>
             {mode === "create" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Communication Channel *
-                </label>
-                <HeadlessSelect
-                  options={channelOptions}
-                  value={selectedChannel || ""}
-                  onChange={(value) => onChannelChange?.(value as string)}
-                  disabled={isLoading}
-                />
-              </div>
+              <HeadlessSelect
+                label="Communication Channel *"
+                options={channelOptions}
+                value={selectedChannel || ""}
+                onChange={(value) => onChannelChange?.(value as string)}
+                disabled={isLoading}
+                className="w-full"
+              />
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SMS Provider *
-              </label>
-              <HeadlessSelect
-                value={formData.provider_type}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, provider_type: value }))
-                }
-                options={SMS_GATEWAY_OPTIONS}
-                disabled={isLoading}
-              />
-            </div>
+            <HeadlessSelect
+              label="SMS Provider *"
+              value={formData.provider_type}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, provider_type: value }))
+              }
+              options={SMS_GATEWAY_OPTIONS}
+              disabled={isLoading}
+              className="w-full"
+            />
           </div>
 
           <Input

@@ -413,23 +413,25 @@ export default function AddDNDMembersModal({
             </div>
 
             {/* Duration */}
-            <HeadlessSelect
-              label="Duration"
-              value={formData.duration}
-              onChange={(value) => {
-                setFormData({ ...formData, duration: value.toString() });
-              }}
-              options={[
-                { value: "0", label: "Never expires" },
-                { value: "7", label: "7 days" },
-                { value: "30", label: "30 days" },
-                { value: "90", label: "90 days" },
-                { value: "180", label: "180 days" },
-                { value: "365", label: "1 year" },
-                { value: "custom", label: "Custom date" },
-              ]}
-              placeholder="Select duration..."
-            />
+            <div>
+              <HeadlessSelect
+                label="Duration"
+                value={formData.duration}
+                onChange={(value) => {
+                  setFormData({ ...formData, duration: value.toString() });
+                }}
+                options={[
+                  { value: "0", label: "Never expires" },
+                  { value: "7", label: "7 days" },
+                  { value: "30", label: "30 days" },
+                  { value: "90", label: "90 days" },
+                  { value: "180", label: "180 days" },
+                  { value: "365", label: "1 year" },
+                  { value: "custom", label: "Custom date" },
+                ]}
+                placeholder="Select duration..."
+              />
+            </div>
 
             {/* Custom Duration Date */}
             {formData.duration === "custom" && (

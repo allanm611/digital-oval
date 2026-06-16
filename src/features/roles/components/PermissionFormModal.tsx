@@ -287,10 +287,8 @@ export default function PermissionFormModal({
           {/* Action and Resource Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Action *
-              </label>
               <HeadlessSelect
+                label="Action *"
                 options={AVAILABLE_ACTIONS}
                 value={formData.action}
                 onChange={(value) =>
@@ -300,6 +298,7 @@ export default function PermissionFormModal({
                   }))
                 }
                 error={!!errors.action}
+                className="w-full"
               />
               {errors.action && (
                 <p className="mt-1 text-sm text-red-600">{errors.action}</p>

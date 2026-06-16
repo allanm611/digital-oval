@@ -433,9 +433,6 @@ export default function AddDNDBulkModal({
 
             {/* Channels */}
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                Channels *
-              </label>
               <MultiCategorySelector
                 value={formData.selected_channels}
                 onChange={(channelIds) => {
@@ -454,27 +451,23 @@ export default function AddDNDBulkModal({
             </div>
 
             {/* Duration */}
-            <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                Duration
-              </label>
-              <HeadlessSelect
-                value={formData.duration}
-                onChange={(value) => {
-                  setFormData({ ...formData, duration: value.toString() });
-                }}
-                options={[
-                  { value: "0", label: "Never expires" },
-                  { value: "7", label: "7 days" },
-                  { value: "30", label: "30 days" },
-                  { value: "90", label: "90 days" },
-                  { value: "180", label: "180 days" },
-                  { value: "365", label: "1 year" },
-                  { value: "custom", label: "Custom date" },
-                ]}
-                placeholder="Select duration..."
-              />
-            </div>
+            <HeadlessSelect
+              label="Duration"
+              value={formData.duration}
+              onChange={(value) => {
+                setFormData({ ...formData, duration: value.toString() });
+              }}
+              options={[
+                { value: "0", label: "Never expires" },
+                { value: "7", label: "7 days" },
+                { value: "30", label: "30 days" },
+                { value: "90", label: "90 days" },
+                { value: "180", label: "180 days" },
+                { value: "365", label: "1 year" },
+                { value: "custom", label: "Custom date" },
+              ]}
+              placeholder="Select duration..."
+            />
 
             {/* Custom Duration Date */}
             {formData.duration === "custom" && (

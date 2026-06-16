@@ -32,7 +32,7 @@ export default function ActivateDeactivateButton({
           title={title || (isActive ? "Deactivate" : "Activate")}
         >
           {isLoading ? (
-            <div className="absolute left-0.5 h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <span
               className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${

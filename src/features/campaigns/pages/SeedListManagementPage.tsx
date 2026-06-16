@@ -1194,11 +1194,9 @@ export default function SeedListManagementPage() {
                   <>
                     {/* User Selection */}
                     <div>
-                      <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                        Select User *
-                      </label>
                       <div className={errors.user_id ? "border border-red-500 rounded" : ""}>
                         <HeadlessSelect
+                          label="Select User *"
                           value={formData.user_id}
                           onChange={(value) => {
                             setFormData({ ...formData, user_id: value.toString() });
@@ -1316,11 +1314,9 @@ export default function SeedListManagementPage() {
 
                 {/* Test List Selection */}
                 <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Select Seed List *
-                  </label>
                   <div className={errors.list_id ? "border border-red-500 rounded" : ""}>
                     <HeadlessSelect
+                      label="Select Seed List *"
                       value={formData.list_id}
                       onChange={(value) => {
                         setFormData({ ...formData, list_id: value.toString() });
@@ -1345,31 +1341,27 @@ export default function SeedListManagementPage() {
                 </div>
 
                 {/* Line of Business */}
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
-                    Line of Business
-                  </label>
-                  <HeadlessSelect
-                    value={formData.line_of_business_id}
-                    onChange={(value) => {
-                      setFormData({ ...formData, line_of_business_id: value.toString() });
-                      // Validation commented out - optional field
-                      // if (errors.line_of_business_id) {
-                      //   setErrors({ ...errors, line_of_business_id: undefined });
-                      // }
-                    }}
-                    options={[
-                      { value: "", label: "Select Line of Business" },
-                      ...linesOfBusiness.map((lob) => ({
-                        value: lob.id.toString(),
-                        label: lob.name,
-                      })),
-                    ]}
-                    placeholder="Select Line of Business"
-                    disabled={linesOfBusinessLoading}
-                    zIndex={zIndex.popover}
-                  />
-                </div>
+                <HeadlessSelect
+                  label="Line of Business"
+                  value={formData.line_of_business_id}
+                  onChange={(value) => {
+                    setFormData({ ...formData, line_of_business_id: value.toString() });
+                    // Validation commented out - optional field
+                    // if (errors.line_of_business_id) {
+                    //   setErrors({ ...errors, line_of_business_id: undefined });
+                    // }
+                  }}
+                  options={[
+                    { value: "", label: "Select Line of Business" },
+                    ...linesOfBusiness.map((lob) => ({
+                      value: lob.id.toString(),
+                      label: lob.name,
+                    })),
+                  ]}
+                  placeholder="Select Line of Business"
+                  disabled={linesOfBusinessLoading}
+                  zIndex={zIndex.popover}
+                />
               </div>
 
               {/* Action Buttons */}

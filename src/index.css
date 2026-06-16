@@ -2498,7 +2498,7 @@ Satoshi
 
   --c-input-disabled-bg: #f3f4f6;
   --c-input-bg: #ffffff;
-  --c-icon-color: #ffffff;
+  --c-icon-color: #252829;
   --c-text-on-light: #111827;
   --c-toggle-active: #252829;
 }
@@ -2548,7 +2548,7 @@ Satoshi
 
   --c-input-disabled-bg: #4b5563;
   --c-input-bg: #394247;
-  --c-icon-color: #ffffff;
+  --c-icon-color: #f9fafb;
   --c-text-on-light: #111827;
   --c-toggle-active: #ffffff;
 }

@@ -198,10 +198,8 @@ export default function LanguageModal({
 
           {/* Country */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Country
-            </label>
             <HeadlessSelect
+              label="Country"
               options={countryOptions}
               value={formData.country}
               onChange={handleCountryChange}
@@ -227,9 +225,6 @@ export default function LanguageModal({
 
           {/* Character Set */}
           <div className="space-y-1.5">
-            <label className={`text-sm font-medium ${tw.textPrimary}`}>
-              Character Set
-            </label>
             {isLoadingCharacterSets ? (
               <div className="flex items-center justify-center py-2">
                 <Loader2 className="w-4 h-4 animate-spin" style={{ color: color.primary.action }} />
@@ -237,6 +232,7 @@ export default function LanguageModal({
               </div>
             ) : (
               <HeadlessSelect
+                label="Character Set"
                 options={characterSetOptions}
                 value={formData.character_set}
                 onChange={(value) => setFormData({ ...formData, character_set: String(value) })}

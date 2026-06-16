@@ -65,7 +65,7 @@ export default function MonitoringPage() {
       label: "Status",
       visible: true,
       render: (value) => (
-        <span className="text-sm px-2 py-1 rounded" style={{ backgroundColor: getStatusColor(value) + "20", color: getStatusColor(value) }}>
+        <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
           {value}
         </span>
       ),
@@ -95,7 +95,7 @@ export default function MonitoringPage() {
       sortable: false,
       render: (_, execution) => (
         <div className="flex items-center justify-center gap-2">
-          <button onClick={() => handleRetry(execution)} className={`p-2 ${tw.rounded} text-blue-600 hover:bg-blue-50`} title="Retry">
+          <button onClick={() => handleRetry(execution)} className={`p-2 ${tw.rounded} transition-colors`} style={{ color: 'var(--c-text-primary)' }} title="Retry">
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
@@ -289,13 +289,13 @@ export default function MonitoringPage() {
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>{stat.name}</p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
+              <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                 {stat.value}
               </p>
               {stat.subtitle && (
-                <p className="mt-1 text-xs text-gray-600">{stat.subtitle}</p>
+                <p className="mt-1 text-xs" style={{ color: 'var(--c-text-secondary)' }}>{stat.subtitle}</p>
               )}
             </div>
           );
@@ -354,8 +354,8 @@ export default function MonitoringPage() {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <AlertTriangle className="w-12 h-12 text-red-400 mb-4" />
-            <p className="text-red-600 font-medium">{error}</p>
+            <AlertTriangle className="w-12 h-12 mb-4" style={{ color: 'var(--c-text-danger)' }} />
+            <p className="font-medium" style={{ color: 'var(--c-text-danger)' }}>{error}</p>
             <button
               onClick={loadExecutions}
               className="mt-4 px-4 py-2 text-sm font-medium text-white rounded transition-all"

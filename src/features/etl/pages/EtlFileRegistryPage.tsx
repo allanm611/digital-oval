@@ -664,25 +664,19 @@ export default function EtlFileRegistryPage() {
             </div>
 
             {/* File Category */}
-            <div>
-              <label
-                className={`text-sm font-medium ${tw.textPrimary} block mb-2`}
-              >
-                File Category
-              </label>
-              <HeadlessSelect
-                options={[
-                  { value: "CDR", label: "CDR" },
-                  { value: "TDR", label: "TDR" },
-                ]}
-                value={uploadCategory}
-                onChange={(val) =>
-                  setUploadCategory((val as "CDR" | "TDR") || "CDR")
-                }
-                placeholder="Select category"
-                className="w-full"
-              />
-            </div>
+            <HeadlessSelect
+              label="File Category"
+              options={[
+                { value: "CDR", label: "CDR" },
+                { value: "TDR", label: "TDR" },
+              ]}
+              value={uploadCategory}
+              onChange={(val) =>
+                setUploadCategory((val as "CDR" | "TDR") || "CDR")
+              }
+              placeholder="Select category"
+              className="w-full"
+            />
 
             {/* File Preview */}
             {uploadPreview && uploadPreview.rows.length > 0 && (

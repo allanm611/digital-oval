@@ -198,10 +198,8 @@ export default function SelectCustomersStep({
 
         {/* List Type */}
         <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            List Type *
-          </label>
           <HeadlessSelect
+            label="List Type *"
             options={listTypeOptions}
             value={listType}
             onChange={(value) => {
@@ -217,12 +215,8 @@ export default function SelectCustomersStep({
 
         {/* Input Method */}
         <div>
-          <label
-            className={`block text-sm font-medium ${tw.textPrimary} mb-2.5`}
-          >
-            {t.manualRewards.inputMethodLabel}
-          </label>
           <HeadlessSelect
+            label={t.manualRewards.inputMethodLabel}
             options={[
               { value: "file", label: t.manualRewards.inputMethodUpload },
               { value: "manual", label: t.manualRewards.inputMethodManual },

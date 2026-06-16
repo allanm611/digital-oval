@@ -547,10 +547,8 @@ export default function CreateQuickListModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-black mb-1 block">
-                  File Delimiter
-                </label>
                 <HeadlessSelect
+                  label="File Delimiter"
                   value={form.file_delimiter}
                   onChange={(value) =>
                     handleInputChange("file_delimiter", value as string)
@@ -575,10 +573,8 @@ export default function CreateQuickListModal({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-black mb-1 block">
-                  Upload Type
-                </label>
                 <HeadlessSelect
+                  label="Upload Type"
                   value={form.upload_type}
                   onChange={(value) =>
                     handleInputChange("upload_type", String(value))
@@ -943,12 +939,6 @@ export default function CreateQuickListModal({
 
                   {/* Customer Identity Field Mapping Dropdown */}
                   <div className="mt-4">
-                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-0`}>
-                      Map to Customer Identity Field *
-                    </label>
-                    <p className={`text-xs ${tw.textSecondary} mb-2`}>
-                      Select which customer field this column represents
-                    </p>
                     {customerIdentityFields.length === 0 ? (
                       <div className="p-3 rounded border" style={{ borderColor: color.primary.accent, backgroundColor: color.surface.background }}>
                         <p className="text-xs" style={{ color: color.text.primary }}>
@@ -958,6 +948,7 @@ export default function CreateQuickListModal({
                     ) : (
                       <>
                         <HeadlessSelect
+                          label="Map to Customer Identity Field *"
                           options={customerIdentityFields.map((field) => ({
                             value: field.field_value,
                             label: field.field_name,

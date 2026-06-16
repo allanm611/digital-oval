@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X, List, Check, Loader2 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import CreateButton from "../../../shared/components/ui/CreateButton";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
@@ -185,7 +185,7 @@ export default function QuickListPickerModal({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <CreateButton onClick={() => setShowCreateModal(true)} />
+              <FeatureActionButton featureId="quicklists" action="create" onClick={() => setShowCreateModal(true)} />
               <button
                 onClick={onClose}
                 className="p-2 transition-colors"

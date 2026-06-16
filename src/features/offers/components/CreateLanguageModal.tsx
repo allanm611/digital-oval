@@ -241,16 +241,15 @@ export default function CreateLanguageModal({
           {/* Country and Character Set */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Country <span className="text-red-600">*</span>
-              </label>
               <HeadlessSelect
+                label="Country"
                 value={formData.country}
                 onChange={(value) => handleSelectChange("country", value)}
                 options={COUNTRIES_LIST}
                 placeholder="Search or select a country"
                 zIndex={zIndex.popover}
                 searchable={true}
+                required
               />
               {errors.country && (
                 <p className="mt-1 text-sm text-red-600">{errors.country}</p>
@@ -258,10 +257,8 @@ export default function CreateLanguageModal({
             </div>
 
             <div>
-              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                Character Set <span className="text-red-600">*</span>
-              </label>
               <HeadlessSelect
+                label="Character Set"
                 value={formData.character_set}
                 onChange={(value) => handleSelectChange("character_set", value)}
                 options={characterSets.map((cs) => ({
@@ -271,6 +268,7 @@ export default function CreateLanguageModal({
                 placeholder="Select character set"
                 zIndex={zIndex.popover}
                 disabled={loadingCharacterSets}
+                required
               />
               {errors.character_set && (
                 <p className="mt-1 text-sm text-red-600">{errors.character_set}</p>
