@@ -31,6 +31,7 @@ export default function AllKPIsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingKpiId, setTogglingKpiId] = useState<string | null>(null);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   useEffect(() => {
     loadAllKPIs();
@@ -201,14 +202,14 @@ export default function AllKPIsPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleViewDetails(row)}
-            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate(`/dashboard/kpis/${extractNumericId(row.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
-            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -221,8 +222,7 @@ export default function AllKPIsPage() {
           />
           <button
             onClick={() => handleDeleteClick(row)}
-            className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
-            style={{ color: "#DC2626" }}
+            className={`p-1 icon-delete ${tw.rounded} transition-colors`}
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />
@@ -254,6 +254,10 @@ export default function AllKPIsPage() {
 
   const extractNumericId = (kpiId: string): string => {
     return kpiId.split("-")[1] || kpiId;
+  };
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
   };
 
   const handleViewDetails = (kpi: typeof allKPIs[0]) => {
@@ -426,6 +430,11 @@ export default function AllKPIsPage() {
               sortConfigs={sortConfigs}
               expandedRowId={expandedRowId}
               onExpandChange={setExpandedRowId}
+              expandedContent={(row) => (
+                <KPIDetailsExpandedRow kpi={row} colSpan={columns.filter((c) => c.visible).length} />
+              )}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -433,17 +442,6 @@ export default function AllKPIsPage() {
                 rowSpacing: "0 8px",
               }}
             />
-
-            {expandedRowId && filteredKPIs.map((kpi) => {
-              if (kpi.id === expandedRowId) {
-                return (
-                  <div key={`expanded-${kpi.id}`} className="overflow-hidden">
-                    <KPIDetailsExpandedRow kpi={kpi} colSpan={columns.filter((c) => c.visible).length} />
-                  </div>
-                );
-              }
-              return null;
-            })}
           </>
         )}
       </div>

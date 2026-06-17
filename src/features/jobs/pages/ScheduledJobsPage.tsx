@@ -143,7 +143,7 @@ export default function ScheduledJobsPage() {
       label: "Code",
       visible: true,
       render: (value) => (
-        <div className={`p-2 icon-edit ${tw.rounded} text-sm `}>{value}</div>
+        <div className="text-sm">{value}</div>
       ),
     },
     {
@@ -191,7 +191,7 @@ export default function ScheduledJobsPage() {
                 state: { parentLabel: "Scheduled Jobs" },
               })
             }
-            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
             aria-label="View details"
           >
             <Eye className="w-4 h-4" />
@@ -201,7 +201,7 @@ export default function ScheduledJobsPage() {
               onClick={() =>
                 navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)
               }
-              className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+              className={`p-2 icon-edit ${tw.rounded} transition-colors`}
               aria-label="Edit job"
             >
               <Edit className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function ScheduledJobsPage() {
                 setDeletingJob(job);
                 openDeleteConfirm(job.id, job.name || `Job #${job.id}`);
               }}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
               aria-label="Delete job"
             >
               <Trash2 className="w-4 h-4" />

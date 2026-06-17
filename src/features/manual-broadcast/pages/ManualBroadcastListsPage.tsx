@@ -50,11 +50,20 @@ export default function ManualBroadcastListsPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [broadcastToDelete, setBroadcastToDelete] =
     useState<ManualBroadcast | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [expandedRowId, setExpandedRowId] = useState<string | number | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteBroadcast } = useDeleteConfirm({
+    onDelete: async (id) => {
+      const numId = typeof id === "string" ? parseInt(id) : id;
+      setAllBroadcasts((prev) => prev.filter((b) => b.id !== numId));
+      setBroadcasts((prev) => prev.filter((b) => b.id !== numId));
+      await communicationService.deleteExecution(numId);
+    },
+    itemLabel: "Broadcast",
+  });
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -215,7 +224,6 @@ export default function ManualBroadcastListsPage() {
     if (!broadcastToDelete) return;
 
     try {
-      setIsDeleting(true);
       await communicationService.deleteCommunication(broadcastToDelete.id);
       showToast(
         `Broadcast "${broadcastToDelete.source_name}" deleted successfully!`,
@@ -225,10 +233,12 @@ export default function ManualBroadcastListsPage() {
       await loadBroadcasts(pagination.page);
     } catch (err) {
       console.error("Failed to delete broadcast:", err);
-      showError("Failed to delete broadcast", extractBackendError(error, "Failed to delete broadcast. Please try again."));
-    } finally {
-      setIsDeleting(false);
+      showError("Failed to delete broadcast", extractBackendError(err, "Failed to delete broadcast. Please try again."));
     }
+  };
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
   };
 
   const uniqueChannels = new Set(broadcasts.flatMap(b => b.channels)).size;
@@ -271,7 +281,7 @@ export default function ManualBroadcastListsPage() {
       render: (value, broadcast) => (
         <button
           onClick={() => handleViewDetails(broadcast)}
-          className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
           title={broadcast.source_name}
         >
           {broadcast.source_name}
@@ -499,6 +509,11 @@ export default function ManualBroadcastListsPage() {
               sortConfigs={sortConfigs}
               expandedRowId={expandedRowId}
               onExpandChange={setExpandedRowId}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
+              expandedContent={(broadcast) => (
+                <ManualBroadcastDetailsExpandedRow broadcast={broadcast} colSpan={columns.filter((c) => c.visible).length} />
+              )}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -506,17 +521,6 @@ export default function ManualBroadcastListsPage() {
                 rowSpacing: "0 8px",
               }}
             />
-
-            {expandedRowId && broadcasts.map((broadcast) => {
-              if (broadcast.id === expandedRowId) {
-                return (
-                  <div key={`expanded-${broadcast.id}`} className="overflow-hidden">
-                    <ManualBroadcastDetailsExpandedRow broadcast={broadcast} colSpan={columns.filter((c) => c.visible).length} />
-                  </div>
-                );
-              }
-              return null;
-            })}
 
             {/* Pagination */}
             {broadcasts.length > 0 && pagination.total > 0 && (

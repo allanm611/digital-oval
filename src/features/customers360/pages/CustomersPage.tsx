@@ -43,6 +43,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
+import CustomerDetailsExpandedRow from "../components/CustomerDetailsExpandedRow";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 interface SearchParams {
@@ -118,6 +119,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>([]);
   const [allCustomers, setAllCustomers] = useState<CustomerSubscriptionRecord[]>([]);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   const defaultColumns: TableColumn<any>[] = [
     {
@@ -639,6 +641,10 @@ export default function CustomersPage() {
     }
   };
 
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
+
   const handleEditCustomer = (customer: CustomerSubscriptionRecord) => {
     // Open edit modal with customer data
     setEditingCustomer(customer);
@@ -1094,24 +1100,12 @@ export default function CustomersPage() {
               onManageColumnsClick={() => setShowColumnPicker(true)}
               expandedRowId={expandedRowId}
               onExpandChange={setExpandedRowId}
-              expandedContent={(row) => (
-                <div className="p-4 bg-gray-50 space-y-3">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600">Name</p>
-                      <p className="text-sm text-gray-900">{getSubscriptionDisplayName(row, `Customer ${row.customerId}`)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600">Email</p>
-                      <p className="text-sm text-gray-900">{row.email || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600">City</p>
-                      <p className="text-sm text-gray-900">{row.city || "—"}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              expandedContent={(row) => {
+                const fullCustomer = customers.find(c => c.id === row.id);
+                return <CustomerDetailsExpandedRow customer={fullCustomer || row} colSpan={columns.filter(c => c.visible).length} />;
+              }}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
             />
           </div>
         )}

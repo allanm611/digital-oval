@@ -89,6 +89,7 @@ export default function OffersPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   // Dropdown menu state
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
@@ -138,21 +139,9 @@ export default function OffersPage() {
         type: 'select',
         options: categories.map(c => c.name)
       },
-      render: (_, row) => (
-        <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium ${
-          row.category === "Data Offers"
-            ? `bg-[${color.status.info}]/10 text-[${color.status.info}]`
-            : row.category === "Voice Offers"
-              ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
-              : row.category === "Combo Offers"
-                ? `bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`
-                : row.category === "Loyalty Rewards"
-                  ? `bg-[${color.status.warning}]/10 text-[${color.status.warning}]`
-                  : row.category === "Promotional"
-                    ? `bg-[${color.primary.action}]/10 text-[${color.primary.action}]`
-                    : `bg-[${color.surface.cards}] text-[${color.text.primary}]`
-        }`}>
-          {row.category}
+      render: (value) => (
+        <span className={`text-sm`} style={{ color: 'var(--c-text-primary)' }}>
+          {value}
         </span>
       ),
     },
@@ -195,7 +184,7 @@ export default function OffersPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleViewOffer(row.id)}
-            className={`text-[${color.status.info}] hover:text-[${color.status.info}] p-1 rounded`}
+            className={`p-1 rounded icon-edit`}
             title="View Details"
           >
             <Eye className="h-4 w-4" />
@@ -798,6 +787,10 @@ export default function OffersPage() {
     }
   }, [showActionMenu]);
 
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
+
   const handleDeleteOffer = (id: number, name: string) => {
     openDeleteConfirm(id, name);
     setShowActionMenu(null);
@@ -1144,7 +1137,8 @@ export default function OffersPage() {
       case OfferStatusEnum.DRAFT:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className={`text-sm`}
+            style={{ color: 'var(--c-text-primary)' }}
           >
             draft
           </span>
@@ -1152,7 +1146,7 @@ export default function OffersPage() {
       case OfferStatusEnum.ACTIVE:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.success}] text-[${color.status.success}]`}
+            className="{`text-sm`}" style={{ color: "var(--c-text-primary)" }}
           >
             active
           </span>
@@ -1160,7 +1154,7 @@ export default function OffersPage() {
       case OfferStatusEnum.PAUSED:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.warning}] text-[${color.status.warning}]`}
+            className="{`text-sm`}" style={{ color: "var(--c-text-primary)" }}
           >
             paused
           </span>
@@ -1168,7 +1162,7 @@ export default function OffersPage() {
       case OfferStatusEnum.EXPIRED:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.danger}] text-[${color.status.danger}]`}
+            className="{`text-sm`}" style={{ color: "var(--c-text-primary)" }}
           >
             expired
           </span>
@@ -1176,7 +1170,7 @@ export default function OffersPage() {
       case OfferStatusEnum.ARCHIVED:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className="{`text-sm`}" style={{ color: "var(--c-text-primary)" }}
           >
             archived
           </span>
@@ -1184,7 +1178,7 @@ export default function OffersPage() {
       default:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className="{`text-sm`}" style={{ color: "var(--c-text-primary)" }}
           >
             {status}
           </span>
@@ -1197,7 +1191,7 @@ export default function OffersPage() {
       case "pending":
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.warning}]/10 text-[${color.status.warning}]`}
+            className="text-sm" style={{ color: "var(--c-text-primary)" }}
           >
             pending
           </span>
@@ -1205,7 +1199,7 @@ export default function OffersPage() {
       case "approved":
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.success}]/10 text-[${color.status.success}]`}
+            className="text-sm" style={{ color: "var(--c-text-primary)" }}
           >
             approved
           </span>
@@ -1213,7 +1207,7 @@ export default function OffersPage() {
       case "rejected":
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.status.danger}]/10 text-[${color.status.danger}]`}
+            className="text-sm" style={{ color: "var(--c-text-primary)" }}
           >
             rejected
           </span>
@@ -1221,7 +1215,7 @@ export default function OffersPage() {
       default:
         return (
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
+            className="{`text-sm`}" style={{ color: "var(--c-text-primary)" }}
           >
             {status}
           </span>
@@ -1449,28 +1443,86 @@ export default function OffersPage() {
                 expandedContent={(row) => {
                   const offer = filteredOffers.find(o => o.id === row.id);
                   return offer ? (
-                    <div className="p-4 bg-gray-50 space-y-3">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Description</p>
-                          <p className="text-sm text-gray-900">{offer.description || "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Type</p>
-                          <p className="text-sm text-gray-900">{offer.offer_type || "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Start Date</p>
-                          <p className="text-sm text-gray-900">{offer.start_date ? <DateFormatter date={offer.start_date} useLocale year="numeric" month="short" day="numeric" /> : "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">End Date</p>
-                          <p className="text-sm text-gray-900">{offer.end_date ? <DateFormatter date={offer.end_date} useLocale year="numeric" month="short" day="numeric" /> : "—"}</p>
-                        </div>
+                    <div style={{ backgroundColor: color.surface.tablebodybg }} className="px-6 py-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {offer.description && (
+                          <div className="flex flex-col gap-1">
+                            <label className={`text-xs font-medium ${tw.textMuted}`}>
+                              Description
+                            </label>
+                            <div className={`text-sm ${tw.textPrimary} break-words`}>
+                              {offer.description}
+                            </div>
+                          </div>
+                        )}
+
+                        {offer.code && (
+                          <div className="flex flex-col gap-1">
+                            <label className={`text-xs font-medium ${tw.textMuted}`}>
+                              Offer Code
+                            </label>
+                            <div className={`text-sm ${tw.textPrimary} font-mono`}>
+                              {offer.code}
+                            </div>
+                          </div>
+                        )}
+
+                        {offer.offer_type && (
+                          <div className="flex flex-col gap-1">
+                            <label className={`text-xs font-medium ${tw.textMuted}`}>
+                              Offer Type
+                            </label>
+                            <div className={`text-sm ${tw.textPrimary} capitalize`}>
+                              {offer.offer_type || "—"}
+                            </div>
+                          </div>
+                        )}
+
+                        {offer.valid_from && (
+                          <div className="flex flex-col gap-1">
+                            <label className={`text-xs font-medium ${tw.textMuted}`}>
+                              Valid From
+                            </label>
+                            <div className={`text-sm ${tw.textPrimary}`}>
+                              <DateFormatter date={new Date(offer.valid_from)} useUserTimezone />
+                            </div>
+                          </div>
+                        )}
+
+                        {offer.valid_to && (
+                          <div className="flex flex-col gap-1">
+                            <label className={`text-xs font-medium ${tw.textMuted}`}>
+                              Valid To
+                            </label>
+                            <div className={`text-sm ${tw.textPrimary}`}>
+                              <DateFormatter date={new Date(offer.valid_to)} useUserTimezone />
+                            </div>
+                          </div>
+                        )}
+
+                        {offer.product_ids && offer.product_ids.length > 0 && (
+                          <div className="flex flex-col gap-1">
+                            <label className={`text-xs font-medium ${tw.textMuted}`}>
+                              Linked Products ({offer.product_ids.length})
+                            </label>
+                            <div className="flex flex-wrap gap-1">
+                              {offer.product_ids.map((productId) => (
+                                <span
+                                  key={productId}
+                                  className={`inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full`}
+                                >
+                                  Product ID: {productId}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : null;
                 }}
+                onFilteredCountChange={handleFilteredCountChange}
+                clearFiltersKey={clearFiltersKey}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -1775,28 +1827,6 @@ export default function OffersPage() {
           </>
         )}
       </div>
-
-      {/* Pagination */}
-      {!loading && filteredOffers.length > 0 && (
-        <Pagination
-          currentPage={filters.page || 1}
-          pageSize={filters.limit || 25}
-          totalItems={totalOffers}
-          onPageChange={(page) =>
-            setFilters((prev) => ({
-              ...prev,
-              page,
-            }))
-          }
-          onPageSizeChange={(pageSize) =>
-            setFilters((prev) => ({
-              ...prev,
-              limit: pageSize,
-              page: 1,
-            }))
-          }
-        />
-      )}
 
       {/* Advanced Filters Side Modal */}
       {(showAdvancedFilters || isClosingModal) &&

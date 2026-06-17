@@ -36,6 +36,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
+import QuickListDetailsExpandedRow from "../components/QuickListDetailsExpandedRow";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
@@ -83,6 +84,7 @@ export default function QuickListsPage() {
   );
   const [selectedQuicklistForCustomer, setSelectedQuicklistForCustomer] =
     useState<QuickList | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
   const actionMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const dropdownMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -268,6 +270,10 @@ export default function QuickListsPage() {
 
   const handleViewDetails = (quicklist: QuickList) => {
     navigate(`/dashboard/quick-lists/${quicklist.id}`);
+  };
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
   };
 
   const handleDelete = (quicklist: QuickList) => {
@@ -599,6 +605,8 @@ export default function QuickListsPage() {
         sortConfigs={sortConfigs}
         expandedRowId={expandedRowId}
         onExpandChange={setExpandedRowId}
+        onFilteredCountChange={handleFilteredCountChange}
+        clearFiltersKey={clearFiltersKey}
         style={{
           headerBackground: color.surface.tableHeader,
           headerTextColor: color.surface.tableHeaderText,
@@ -606,18 +614,7 @@ export default function QuickListsPage() {
           rowSpacing: "0 8px",
         }}
         expandedContent={(quicklist) => (
-          <div className={`px-6 py-4 ${tw.textPrimary}`}>
-            {quicklist.description && (
-              <div className="mb-2">
-                <span className="text-sm font-medium">Description: </span>
-                <span className="text-sm">{quicklist.description}</span>
-              </div>
-            )}
-            <div>
-              <span className="text-sm font-medium">Upload Type: </span>
-              <span className="text-sm">{quicklist.upload_type}</span>
-            </div>
-          </div>
+          <QuickListDetailsExpandedRow quicklist={quicklist} colSpan={columns.filter(c => c.visible).length} />
         )}
       />
 

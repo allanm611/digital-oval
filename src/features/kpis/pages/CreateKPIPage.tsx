@@ -16,6 +16,9 @@ import { kpiService } from "../services/kpiService";
 import { kpiCategoryService } from "../services/kpiCategoryService";
 import { notificationTypeService } from "../../../shared/services/notificationTypeService";
 import { OPERATORS as OPERATORS_MAP, getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
+import { jobTypeService } from "../../jobs/services/jobTypeService";
+import { scheduledJobService } from "../../jobs/services/scheduledJobService";
+import { JobType } from "../../jobs/types/job";
 
 const FIELD_TYPE_OPTIONS = [
   { label: "Number", value: "number" },
@@ -58,6 +61,11 @@ const VALIDATION_STRATEGY_OPTIONS = [
   { label: "Pattern", value: "pattern" },
 ];
 
+const SCHEDULE_TYPE_OPTIONS = [
+  { label: "Manual", value: "manual" },
+  { label: "Cron", value: "cron" },
+];
+
 const getOperatorData = (fieldType: string) => {
   const filteredOperators = getOperatorsForFieldType(fieldType);
   return filteredOperators.map((op) => ({
@@ -79,8 +87,10 @@ export default function CreateKPIPage() {
   const [saving, setSaving] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingTables, setLoadingTables] = useState(true);
+  const [loadingJobTypes, setLoadingJobTypes] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
   const [tables, setTables] = useState<any[]>([]);
+  const [jobTypes, setJobTypes] = useState<JobType[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     field_value: "",
@@ -101,12 +111,16 @@ export default function CreateKPIPage() {
     use_as_dynamic_variable: false,
     tag: "" as string,
     display_order: 0,
+    job_type_id: "" as string | number,
+    schedule_type: "manual" as "manual" | "cron",
+    cron_expression: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     loadCategories();
+    loadJobTypes();
     if (isEditMode && id) {
       loadTablesAndKPI();
     } else {
@@ -172,6 +186,21 @@ export default function CreateKPIPage() {
       setTables([]);
     } finally {
       setLoadingTables(false);
+    }
+  };
+
+  const loadJobTypes = async () => {
+    try {
+      const response = await jobTypeService.listJobTypes({ limit: 100 });
+      const kpiJobTypes = (response.data || []).filter(
+        (job: JobType) => job.code?.toLowerCase().includes("kpi")
+      );
+      setJobTypes(kpiJobTypes);
+    } catch (err) {
+      console.error("Failed to load job types:", err);
+      setJobTypes([]);
+    } finally {
+      setLoadingJobTypes(false);
     }
   };
 
@@ -294,6 +323,41 @@ export default function CreateKPIPage() {
         await kpiService.createKPI(kpiPayload);
         success("Success", `${formData.kpiType} KPI created successfully`);
       }
+
+      // Create scheduled job if job_type_id is set (optional)
+      if (formData.job_type_id && !isEditMode) {
+        try {
+          const scheduledJobPayload: any = {
+            name: `KPI: ${formData.name}`,
+            code: formData.field_value || `kpi_${formData.name.toLowerCase().replace(/\s+/g, '_')}`,
+            job_type_id: Number(formData.job_type_id),
+            schedule_type: formData.schedule_type,
+            is_active: true,
+            max_concurrent_executions: 1,
+            metadata: {
+              kpi_name: formData.name,
+              created_from_kpi: true,
+            },
+          };
+
+          if (formData.schedule_type === "cron" && formData.cron_expression) {
+            scheduledJobPayload.cron_expression = formData.cron_expression;
+          }
+
+          await scheduledJobService.createScheduledJob(scheduledJobPayload);
+          success(
+            "Scheduled Job Created",
+            `Scheduled job "${scheduledJobPayload.name}" created successfully`
+          );
+        } catch (jobErr) {
+          console.error("Failed to create scheduled job:", jobErr);
+          showError(
+            "Warning",
+            "KPI created successfully, but failed to create scheduled job. You can create it manually later."
+          );
+        }
+      }
+
       navigate("/dashboard/kpis/all");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to create KPI";
@@ -702,6 +766,68 @@ export default function CreateKPIPage() {
               {formData.calculationType === "computed" && "Write SQL formula/query - e.g., SUM(charges), COUNT(*), current-previous"}
               {formData.calculationType === "static" && "Fixed constant value - no SQL needed"}
             </p>
+          </div>
+        </div>
+
+        {/* Scheduling Section */}
+        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
+          <h3 className="text-lg font-semibold mb-4">Scheduling</h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Job Type Dropdown */}
+              <div>
+                {loadingJobTypes ? (
+                  <div className="p-2 text-sm text-gray-500">Loading job types...</div>
+                ) : (
+                  <HeadlessSelect
+                    label="Job Type"
+                    options={jobTypes.map((job) => ({
+                      label: job.name,
+                      value: job.id,
+                    }))}
+                    value={formData.job_type_id}
+                    onChange={(value) =>
+                      setFormData({ ...formData, job_type_id: value })
+                    }
+                  />
+                )}
+              </div>
+
+              {/* Schedule Type Dropdown */}
+              <div>
+                <HeadlessSelect
+                  label="Schedule Type"
+                  options={SCHEDULE_TYPE_OPTIONS}
+                  value={formData.schedule_type}
+                  onChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      schedule_type: value as "manual" | "cron",
+                      cron_expression: "",
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Cron Expression Input - Only show if cron is selected */}
+            {formData.schedule_type === "cron" && (
+              <div>
+                <Input
+                  label="Cron Expression"
+                  type="text"
+                  name="cron_expression"
+                  placeholder="e.g., 0 2 * * *"
+                  value={formData.cron_expression}
+                  onChange={handleInputChange('cron_expression')}
+                  hasError={!!errors.cron_expression}
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Format: minute hour day month weekday. E.g., "0 2 * * *" runs at 2 AM daily.
+                </p>
+                {errors.cron_expression && <p className="text-red-500 text-xs mt-1">{errors.cron_expression}</p>}
+              </div>
+            )}
           </div>
         </div>
 

@@ -35,6 +35,7 @@ import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { button } from "../../../shared/utils/utils";
+import ProductDetailsExpandedRow from "../components/ProductDetailsExpandedRow";
 
 interface ProductTableRow {
   id: string;
@@ -88,6 +89,7 @@ export default function ProductsPage() {
   } | null>(null);
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   let defaultColumns: TableColumn<ProductTableRow>[] = [
     {
@@ -142,17 +144,11 @@ export default function ProductsPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["Active", "Inactive"] },
-      render: (value: string) => {
-        const isActive = value === "Active";
-        const statusBadge = isActive
-          ? `bg-[${color.status.success}] text-[${color.status.success}]`
-          : `bg-[${color.surface.cards}] text-[${color.text.primary}]`;
-        return (
-          <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusBadge}`}>
-            {value}
-          </span>
-        );
-      },
+      render: (value: string) => (
+        <span className="text-xs sm:text-sm font-medium text-black">
+          {value}
+        </span>
+      ),
     },
     {
       id: "created",
@@ -403,6 +399,10 @@ export default function ProductsPage() {
     }
   };
 
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
+
   const handleDelete = (productId: string) => {
     const product = products.find((p) => p.id === productId);
     const productName = product?.name || `Product #${productId}`;
@@ -464,17 +464,11 @@ export default function ProductsPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["Active", "Inactive"] },
-      render: (value: string) => {
-        const isActive = value === "Active";
-        const statusBadge = isActive
-          ? `bg-[${color.status.success}] text-[${color.status.success}]`
-          : `bg-[${color.surface.cards}] text-[${color.text.primary}]`;
-        return (
-          <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusBadge}`}>
-            {value}
-          </span>
-        );
-      },
+      render: (value: string) => (
+        <span className="text-xs sm:text-sm font-medium text-black">
+          {value}
+        </span>
+      ),
     },
     {
       id: "created",
@@ -870,28 +864,11 @@ export default function ProductsPage() {
                 expandedContent={(row) => {
                   const product = products.find(p => p.id === row.id);
                   return product ? (
-                    <div className="p-4 bg-gray-50 space-y-3">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Product Name</p>
-                          <p className="text-sm text-gray-900">{product.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Category</p>
-                          <p className="text-sm text-gray-900">{categories.find(cat => cat.id === parseInt(product.category_id))?.name || "Uncategorized"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Price</p>
-                          <p className="text-sm text-gray-900">{product.price ? <CurrencyFormatter amount={Number(product.price)} /> : "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Created Date</p>
-                          <p className="text-sm text-gray-900">{product.created_at ? <DateFormatter date={product.created_at} useLocale year="numeric" month="short" day="numeric" /> : "—"}</p>
-                        </div>
-                      </div>
-                    </div>
+                    <ProductDetailsExpandedRow product={product} categories={categories} colSpan={columns.filter(c => c.visible).length} />
                   ) : null;
                 }}
+                onFilteredCountChange={handleFilteredCountChange}
+                clearFiltersKey={clearFiltersKey}
               />
             </div>
           </>

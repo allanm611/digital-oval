@@ -1003,36 +1003,14 @@ export default function SegmentManagementPage() {
         ),
       },
       {
-        id: "tags",
-        label: "Tags",
+        id: "last_computed_at",
+        label: "Last Computed",
         visible: true,
-        filterConfig: {
-          type: 'multiselect',
-          options: allTags
-        },
-        render: (value, segment) => (
-          <div className="flex flex-wrap gap-1">
-            {segment.tags && segment.tags.length > 0 ? (
-              <>
-                {segment.tags.slice(0, 2).map((tag) => (
-                  <span
-                    key={tag}
-                    className={`inline-flex items-center px-2 py-1 bg-[${color.primary.accent}]/10 text-black text-xs font-medium rounded-full`}
-                  >
-                    <Tag className="w-3 h-3 mr-1" />
-                    {tag}
-                  </span>
-                ))}
-                {segment.tags.length > 2 && (
-                  <span className={`inline-flex items-center px-2 py-1 text-xs font-medium ${tw.textMuted}`}>
-                    +{segment.tags.length - 2} more
-                  </span>
-                )}
-              </>
-            ) : (
-              <span className={`text-xs ${tw.textMuted}`}>No tags</span>
-            )}
-          </div>
+        filterConfig: { type: 'date' },
+        render: (value) => (
+          <span className="text-sm text-black">
+            {value ? <DateFormatter date={new Date(value as string)} useUserTimezone /> : "—"}
+          </span>
         ),
       },
       {
@@ -1305,8 +1283,7 @@ export default function SegmentManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      {analyticsData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Segments */}
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -1424,7 +1401,6 @@ export default function SegmentManagementPage() {
             )}
           </div>
         </div>
-      )}
 
       {/* Search and Filters */}
       <div className={``}>
@@ -1663,6 +1639,12 @@ export default function SegmentManagementPage() {
               clearFiltersKey={clearFiltersKey}
               expandedRowId={expandedRowId}
               onExpandChange={setExpandedRowId}
+              expandedContent={(row) => {
+                const segment = filteredSegments.find(s => s.id === row.id);
+                return segment ? (
+                  <SegmentDetailsExpandedRow segment={segment} colSpan={segmentColumns.filter((c) => c.visible).length} />
+                ) : null;
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1670,17 +1652,6 @@ export default function SegmentManagementPage() {
                 rowSpacing: "0 8px",
               }}
             />
-
-            {expandedRowId && filteredSegments.map((segment) => {
-              if (segment.id === expandedRowId) {
-                return (
-                  <div key={`expanded-${segment.id}`} className="overflow-hidden">
-                    <SegmentDetailsExpandedRow segment={segment} colSpan={segmentColumns.filter((c) => c.visible).length} />
-                  </div>
-                );
-              }
-              return null;
-            })}
 
             {/* Render dropdown menus via portal outside the table */}
             {filteredSegments.map((segment) => {

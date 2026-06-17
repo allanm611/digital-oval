@@ -24,6 +24,8 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import ManualRewardDetailsExpandedRow from "../components/ManualRewardDetailsExpandedRow";
 
 export default function ManualRewardsPage() {
   const navigate = useNavigate();
@@ -37,6 +39,8 @@ export default function ManualRewardsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [selectedType, setSelectedType] = useState<string>("");
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -109,6 +113,106 @@ export default function ManualRewardsPage() {
       failed: "Failed",
     };
     return labels[status];
+  };
+
+  const tableColumns: TableColumn<ManualReward>[] = [
+    {
+      id: "name",
+      label: "Reward",
+      visible: true,
+      filterConfig: { type: "text" },
+      render: (_, reward) => (
+        <button
+          onClick={() => handleViewDetails(reward.id)}
+          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+          title={reward.name}
+        >
+          {reward.name}
+        </button>
+      ),
+    },
+    {
+      id: "rewardType",
+      label: "Type",
+      visible: true,
+      filterConfig: { type: "select", options: ["bundle", "points", "discount", "cashback"] },
+      render: (_, reward) => <span className="text-sm">{getRewardTypeLabel(reward.rewardType)}</span>,
+    },
+    {
+      id: "rewardValue",
+      label: "Value",
+      visible: true,
+      filterConfig: { type: "text" },
+      render: (_, reward) => <span className="text-sm">{reward.rewardValue}</span>,
+    },
+    {
+      id: "recipientCount",
+      label: "Recipients",
+      visible: true,
+      filterConfig: { type: "number" },
+      render: (_, reward) => <span className="text-sm">{reward.recipientCount.toLocaleString()}</span>,
+    },
+    {
+      id: "status",
+      label: "Status",
+      visible: true,
+      filterConfig: { type: "select", options: ["applied", "scheduled", "pending", "failed"] },
+      render: (_, reward) => <span className="text-sm">{getStatusLabel(reward.status)}</span>,
+    },
+    {
+      id: "createdAt",
+      label: "Created",
+      visible: true,
+      filterConfig: { type: "date" },
+      render: (_, reward) => <span className="text-sm"><DateFormatter date={reward.createdAt} /></span>,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (_, reward) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => handleViewDetails(reward.id)}
+            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <FeatureActionButton
+            featureId="manual-rewards"
+            action="edit"
+            itemId={reward.id}
+            navigationState={{
+              returnTo: {
+                pathname: "/dashboard/manual-rewards",
+              },
+            }}
+          />
+          <PermissionGate permission="manual-rewards.delete">
+            <button
+              onClick={() => handleDelete(reward)}
+              className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </PermissionGate>
+        </div>
+      ),
+    },
+  ];
+
+  const { columns } = useTable({
+    tableId: "manual-rewards-table",
+    defaultColumns: tableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
   };
 
   // Filter rewards based on search and filters
@@ -262,145 +366,28 @@ export default function ManualRewardsPage() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ backgroundColor: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Reward
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Value
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Recipients
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Created
-                  </th>
-                  <th
-                    className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRewards.map((reward) => (
-                  <tr key={reward.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4 text-sm"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => handleViewDetails(reward.id)}
-                          className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                          title={reward.name}
-                        >
-                          {reward.name}
-                        </button>
-                      </div>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-gray-600"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {getRewardTypeLabel(reward.rewardType)}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-gray-600"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {reward.rewardValue}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-gray-600"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {reward.recipientCount.toLocaleString()}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className="inline-flex px-2 py-1 text-sm font-medium rounded text-black">
-                        {getStatusLabel(reward.status)}
-                      </span>
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-gray-600"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <DateFormatter date={reward.createdAt} />
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm font-medium"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => handleViewDetails(reward.id)}
-                          className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                          title="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <FeatureActionButton
-                          featureId="manual-rewards"
-                          action="edit"
-                          itemId={reward.id}
-                          navigationState={{
-                            returnTo: {
-                              pathname: "/dashboard/manual-rewards",
-                            },
-                          }}
-                        />
-                        <PermissionGate permission="manual-rewards.delete">
-                          <button
-                            onClick={() => handleDelete(reward)}
-                            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </PermissionGate>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table<ManualReward>
+            columns={columns}
+            data={paginatedRewards}
+            totalItems={filteredRewards.length}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            expandedRowId={expandedRowId}
+            onExpandChange={setExpandedRowId}
+            onFilteredCountChange={handleFilteredCountChange}
+            clearFiltersKey={clearFiltersKey}
+            expandedContent={(reward) => (
+              <ManualRewardDetailsExpandedRow reward={reward} colSpan={columns.filter((c) => c.visible).length} />
+            )}
+            style={{
+              headerBackground: color.surface.tableHeader,
+              headerTextColor: color.surface.tableHeaderText,
+              rowBackground: color.surface.tablebodybg,
+              rowSpacing: "0 8px",
+            }}
+          />
         )}
       </div>
 

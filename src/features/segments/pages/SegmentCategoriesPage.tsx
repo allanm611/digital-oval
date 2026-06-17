@@ -949,7 +949,7 @@ export default function SegmentCategoriesPage() {
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1039,7 +1039,7 @@ export default function SegmentCategoriesPage() {
                 </button>
                 <button
                   onClick={() => handleDeleteCategory(category)}
-                  className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                  className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4 " />

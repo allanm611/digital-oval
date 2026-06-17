@@ -13,6 +13,7 @@ import { revenueMetricService } from "../services/revenueMetricService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
+import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
 
 export default function RevenueMetricsPage() {
   const navigate = useNavigate();
@@ -26,12 +27,15 @@ export default function RevenueMetricsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   const tableColumns: TableColumn<RevenueMetric>[] = [
     {
       id: "name",
       label: "Metric Name",
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <div className={`text-sm ${tw.tableFirstColumn} font-medium text-black`}>
           {row.name}
@@ -42,6 +46,7 @@ export default function RevenueMetricsPage() {
       id: "category",
       label: "Category",
       visible: true,
+      filterConfig: { type: "select", options: ["Data Revenue", "Voice Revenue", "SMS Revenue", "Bundle Revenue", "Other Revenue"] },
       render: (_, row) => (
         <span className="text-sm text-black">
           {row.category
@@ -54,6 +59,7 @@ export default function RevenueMetricsPage() {
       id: "field_type",
       label: "Type",
       visible: true,
+      filterConfig: { type: "select", options: ["Decimal", "Numeric"] },
       render: (_, row) => (
         <span className="text-sm text-black">
           {row.field_type === "decimal" ? "Decimal" : "Numeric"}
@@ -64,6 +70,7 @@ export default function RevenueMetricsPage() {
       id: "description",
       label: "Description",
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <span className="text-sm text-black truncate max-w-xs" title={row.description}>
           {row.description || "—"}
@@ -74,6 +81,7 @@ export default function RevenueMetricsPage() {
       id: "is_active",
       label: "Status",
       visible: true,
+      filterConfig: { type: "select", options: ["Active", "Inactive"] },
       render: (_, row) => (
         <span className="text-sm text-black">
           {row.is_active ? "Active" : "Inactive"}
@@ -101,7 +109,7 @@ export default function RevenueMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-delete ${tw.rounded} text-black disabled:opacity-60`}
+            className={`p-2 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -113,7 +121,7 @@ export default function RevenueMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-delete ${tw.rounded} text-black disabled:opacity-60`}
+            className={`p-2 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="Edit metric"
           >
             <Edit className="w-4 h-4" />
@@ -121,7 +129,7 @@ export default function RevenueMetricsPage() {
           <button
             onClick={() => handleDeleteClick(row)}
             disabled={deleting === row.id}
-            className={`p-2 text-red-600 ${tw.rounded} disabled:opacity-60`}
+            className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
             title="Delete metric"
           >
             <Trash2 className="w-4 h-4" />
@@ -165,6 +173,10 @@ export default function RevenueMetricsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
   };
 
   const handleDeleteClick = (metric: RevenueMetric) => {
@@ -360,6 +372,13 @@ export default function RevenueMetricsPage() {
             onPageChange={tableHandlePageChange}
             onSort={handleSort}
             sortConfigs={sortConfigs}
+            expandedRowId={expandedRowId}
+            onExpandChange={setExpandedRowId}
+            expandedContent={(row) => (
+              <KPIDetailsExpandedRow kpi={row} colSpan={columns.filter((c) => c.visible).length} />
+            )}
+            onFilteredCountChange={handleFilteredCountChange}
+            clearFiltersKey={clearFiltersKey}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

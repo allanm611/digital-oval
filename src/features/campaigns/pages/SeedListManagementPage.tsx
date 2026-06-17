@@ -196,7 +196,7 @@ export default function SeedListManagementPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => handleRemoveRecipient(row._full)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
+              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
               title={row._full.status === "active" ? "Remove from Seed List" : "Delete from Seed List"}
             >
               <Trash2 className="w-4 h-4" />
@@ -254,7 +254,7 @@ export default function SeedListManagementPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
-            className={`p-2 text-gray-300 hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
+            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -266,7 +266,7 @@ export default function SeedListManagementPage() {
                 name: row.name,
               })
             }
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
             title="Delete seed list"
           >
             <Trash2 className="w-4 h-4" />
@@ -1506,7 +1506,7 @@ export default function SeedListManagementPage() {
                                     onClick={() => {
                                       navigate(`/dashboard/user-management/${member.customer_id}`);
                                     }}
-                                    className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                                    className={`p-2 icon-edit ${tw.rounded} transition-colors`}
                                     title="View user details"
                                   >
                                     <Eye className="w-4 h-4" style={{ color: "inherit" }} />

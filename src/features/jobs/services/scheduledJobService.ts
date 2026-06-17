@@ -184,20 +184,44 @@ class ScheduledJobService {
     await this.request<void>(`/${id}`, { method: "DELETE" });
   }
 
-  async activateScheduledJob(id: number) {
-    return this.request<ScheduledJob>(`/${id}/activate`, { method: "PATCH" });
+  async activateScheduledJob(id: number, updated_by?: number) {
+    return this.request<ScheduledJob>(`/${id}/activate`, {
+      method: "PATCH",
+      ...(updated_by !== undefined && {
+        body: JSON.stringify({ updated_by }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    });
   }
 
-  async deactivateScheduledJob(id: number) {
-    return this.request<ScheduledJob>(`/${id}/deactivate`, { method: "PATCH" });
+  async deactivateScheduledJob(id: number, updated_by?: number) {
+    return this.request<ScheduledJob>(`/${id}/deactivate`, {
+      method: "PATCH",
+      ...(updated_by !== undefined && {
+        body: JSON.stringify({ updated_by }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    });
   }
 
-  async pauseScheduledJob(id: number) {
-    return this.request<ScheduledJob>(`/${id}/pause`, { method: "PATCH" });
+  async pauseScheduledJob(id: number, updated_by?: number) {
+    return this.request<ScheduledJob>(`/${id}/pause`, {
+      method: "PATCH",
+      ...(updated_by !== undefined && {
+        body: JSON.stringify({ updated_by }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    });
   }
 
-  async archiveScheduledJob(id: number) {
-    return this.request<ScheduledJob>(`/${id}/archive`, { method: "PATCH" });
+  async archiveScheduledJob(id: number, updated_by?: number) {
+    return this.request<ScheduledJob>(`/${id}/archive`, {
+      method: "PATCH",
+      ...(updated_by !== undefined && {
+        body: JSON.stringify({ updated_by }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    });
   }
 
   async getCountByStatus(skipCache?: boolean) {

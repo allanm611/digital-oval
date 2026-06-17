@@ -13,6 +13,7 @@ import FeatureActionButton from "../../../shared/components/FeatureActionButton"
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { subscriberProfileService } from "../services/subscriberProfileService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
 
 interface Profile {
   id: number;
@@ -32,6 +33,8 @@ export default function SubscriberProfileListPage() {
   const [profileToDelete, setProfileToDelete] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [toggling, setToggling] = useState<number | null>(null);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   const tableColumns: TableColumn<Profile>[] = [
 
@@ -39,6 +42,7 @@ export default function SubscriberProfileListPage() {
       id: "name",
       label: "Field Name",
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
           {row.name}
@@ -49,6 +53,7 @@ export default function SubscriberProfileListPage() {
       id: "dataSource",
       label: "Category",
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <span className={`text-sm ${tw.textSecondary}`}>
           {row.dataSource}
@@ -59,6 +64,7 @@ export default function SubscriberProfileListPage() {
       id: "is_active",
       label: "Status",
       visible: true,
+      filterConfig: { type: "select", options: ["Active", "Inactive"] },
       render: (_, row) => (
         <span className={`text-sm font-medium ${tw.textSecondary} text-center block`}>
           {row.is_active ? "Active" : "Inactive"}
@@ -71,7 +77,7 @@ export default function SubscriberProfileListPage() {
       visible: true,
       sortable: false,
       render: (_, row) => (
-        <div className="flex gap-1 justify-center">
+        <div className="flex gap-1 justify-center items-center">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleActive(row)}
@@ -80,10 +86,10 @@ export default function SubscriberProfileListPage() {
           />
           <button
             onClick={() => handleViewDetails(row)}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            className={`p-2 icon-edit rounded transition-colors`}
             title="View details"
           >
-            <Eye className="w-4 h-4" style={{ color: color.primary.action }} />
+            <Eye className="w-4 h-4" />
           </button>
           <FeatureActionButton
             featureId="subscriber-profiles"
@@ -94,10 +100,10 @@ export default function SubscriberProfileListPage() {
           />
           <button
             onClick={() => handleDeleteClick(row)}
-            className="p-2 hover:bg-gray-100 rounded transition-colors"
+            className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
             title="Delete"
           >
-            <Trash2 className="w-4 h-4 text-red-500" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -161,6 +167,9 @@ export default function SubscriberProfileListPage() {
     navigate(`/dashboard/kpis/subscriber-profiles/${profile.id}`, { state: { parentLabel: "Subscriber Profiles" } });
   };
 
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
 
   const handleDeleteClick = (profile: Profile) => {
     setProfileToDelete({ id: profile.id, name: profile.name });
@@ -280,6 +289,13 @@ export default function SubscriberProfileListPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
             onSort={handleSort}
             sortConfigs={sortConfigs}
+            expandedRowId={expandedRowId}
+            onExpandChange={setExpandedRowId}
+            expandedContent={(row) => (
+              <KPIDetailsExpandedRow kpi={row} colSpan={columns.filter((c) => c.visible).length} />
+            )}
+            onFilteredCountChange={handleFilteredCountChange}
+            clearFiltersKey={clearFiltersKey}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

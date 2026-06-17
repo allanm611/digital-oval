@@ -261,13 +261,13 @@ export default function KPIsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
-                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+                            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+                            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
@@ -334,13 +334,13 @@ export default function KPIsPage() {
                     </div>
                     <div className="flex items-center gap-2 justify-end">
                       <button
-                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+                        className={`p-1 icon-edit ${tw.rounded} transition-colors`}
                         title="View"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        className={`p-1 ${tw.rounded} ${tw.textMuted} hover:text-gray-900 transition-colors`}
+                        className={`p-1 icon-edit ${tw.rounded} transition-colors`}
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />

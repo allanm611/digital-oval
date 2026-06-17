@@ -158,7 +158,7 @@ export default function VIPListManagementPage() {
           <div className="flex items-center justify-center">
             <button
               onClick={() => setMemberToRemove(row._full)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
+              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
               title="Remove from VIP List"
             >
               <Trash2 className="w-4 h-4" />
@@ -249,14 +249,14 @@ export default function VIPListManagementPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
-              className={`p-2 text-gray-300 hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
+              className={`p-2 icon-edit ${tw.rounded} transition-colors`}
               title="View details"
             >
               <Eye className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDeleteVIPList(row._full)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ${tw.rounded} transition-colors`}
+              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
               title="Delete VIP List"
             >
               <Trash2 className="w-4 h-4" />

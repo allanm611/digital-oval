@@ -218,7 +218,7 @@ function JobDependencyModal({
           <button
             type="button"
             onClick={onClose}
-            className={`p-2 icon-edit ${tw.rounded} text-gray-400 hover:`}
+            className="text-gray-400 hover:text-gray-600"
           >
             ✕
           </button>
@@ -2117,7 +2117,7 @@ export default function JobDependenciesPage() {
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleView(dependency)}
-                        className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                        className={`p-2 icon-edit ${tw.rounded} transition-colors`}
                         aria-label="View dependency"
                         title="View"
                       >
@@ -2126,7 +2126,7 @@ export default function JobDependenciesPage() {
                       <PermissionGate permission="job-dependencies.update">
                         <button
                           onClick={() => handleEdit(dependency)}
-                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          className={`p-2 icon-edit ${tw.rounded} transition-colors`}
                           aria-label="Edit dependency"
                           title="Edit"
                         >
@@ -2136,7 +2136,7 @@ export default function JobDependenciesPage() {
                       <PermissionGate permission="job-dependencies.delete">
                         <button
                           onClick={() => handleDeleteClick(dependency)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                          className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                           aria-label="Delete dependency"
                           title="Delete"
                         >
@@ -2394,7 +2394,8 @@ export default function JobDependenciesPage() {
                               handleDeleteAllForJobClick(dependency.job_id);
                               setShowActionMenu(null);
                             }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                            className="w-full flex items-center px-4 py-3 text-sm transition-colors"
+                            style={{ color: '#821637' }}
                           >
                             <Trash2 className="w-4 h-4 mr-4 flex-shrink-0" />
                             <span className="truncate">

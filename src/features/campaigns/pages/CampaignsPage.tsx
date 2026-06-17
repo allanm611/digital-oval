@@ -84,6 +84,7 @@ export default function CampaignsPage() {
   const filterRef = useRef<HTMLDivElement>(null);
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
   const [campaignToDelete, setCampaignToDelete] = useState<{
     id: number;
     name: string;
@@ -359,7 +360,7 @@ export default function CampaignsPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
-            className={`group p-3 ${tw.rounded} ${tw.textMuted}`}
+            className={`group p-3 ${tw.rounded} icon-edit`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -378,7 +379,7 @@ export default function CampaignsPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(campaign.id, e)}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+              className={`group p-3 ${tw.rounded} icon-edit hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -420,6 +421,10 @@ export default function CampaignsPage() {
     setAllCampaignsUnfiltered((prev) =>
       prev.map((c) => (c.id === campaignId ? { ...c, ...typedUpdates } : c)),
     );
+  };
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
   };
 
   const handleExportCSV = () => {
@@ -1304,6 +1309,8 @@ export default function CampaignsPage() {
         onManageColumnsClick={() => setShowColumnPicker(true)}
         expandedRowId={expandedRowId}
         onExpandChange={setExpandedRowId}
+        onFilteredCountChange={handleFilteredCountChange}
+        clearFiltersKey={clearFiltersKey}
         style={{
           headerBackground: color.surface.tableHeader,
           headerTextColor: color.surface.tableHeaderText,
@@ -1634,9 +1641,9 @@ export default function CampaignsPage() {
                   e.stopPropagation();
                   handleDeleteCampaign(campaign.id, campaign.name);
                 }}
-                className="w-full flex items-center px-4 py-3 text-sm text-red-600"
+                className={`w-full flex items-center px-4 py-3 text-sm icon-delete`}
               >
-                <Trash2 className="w-4 h-4 mr-4 text-red-600" />
+                <Trash2 className="w-4 h-4 mr-4" />
                 Delete Campaign
               </button>
             </PermissionGate>

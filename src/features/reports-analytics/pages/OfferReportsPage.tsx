@@ -551,6 +551,7 @@ export default function OfferReportsPage() {
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   const tableColumns: TableColumn<OfferTableRow>[] = [
     {
@@ -558,6 +559,7 @@ export default function OfferReportsPage() {
       label: "Offer Name",
       visible: true,
       sortable: true,
+      filterConfig: { type: "text" },
     },
     {
       id: "status",
@@ -898,6 +900,10 @@ export default function OfferReportsPage() {
       lastUpdatedDate: offer.updated_at ? new Date(offer.updated_at).getTime() : Date.now(),
     }));
   }, [offers]);
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
 
   const filteredRows = useMemo(() => {
     const query = tableQuery.trim().toLowerCase();
@@ -1380,6 +1386,8 @@ export default function OfferReportsPage() {
               currentPage={tablePage}
               pageSize={tablePageSize}
               onPageChange={setTablePage}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
               style={{
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,

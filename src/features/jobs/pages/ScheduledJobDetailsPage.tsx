@@ -324,30 +324,31 @@ export default function ScheduledJobDetailsPage() {
     setIsActionLoading(true);
     try {
       let updatedJob: ScheduledJob;
+      const userId = user?.id;
       switch (action) {
         case "activate":
-          updatedJob = await scheduledJobService.activateScheduledJob(job.id);
+          updatedJob = await scheduledJobService.activateScheduledJob(job.id, userId);
           showToast(
             t.scheduledJob?.["activated"] || "Job activated",
             t.scheduledJob?.["activatedSuccess"] || `"${job.name}" has been activated`
           );
           break;
         case "deactivate":
-          updatedJob = await scheduledJobService.deactivateScheduledJob(job.id);
+          updatedJob = await scheduledJobService.deactivateScheduledJob(job.id, userId);
           showToast(
             t.scheduledJob?.["deactivated"] || "Job deactivated",
             t.scheduledJob?.["deactivatedSuccess"] || `"${job.name}" has been deactivated`
           );
           break;
         case "pause":
-          updatedJob = await scheduledJobService.pauseScheduledJob(job.id);
+          updatedJob = await scheduledJobService.pauseScheduledJob(job.id, userId);
           showToast(
             t.scheduledJob?.["paused"] || "Job paused",
             t.scheduledJob?.["pausedSuccess"] || `"${job.name}" has been paused`
           );
           break;
         case "archive":
-          updatedJob = await scheduledJobService.archiveScheduledJob(job.id);
+          updatedJob = await scheduledJobService.archiveScheduledJob(job.id, userId);
           showToast(
             t.scheduledJob?.["archived"] || "Job archived",
             t.scheduledJob?.["archivedSuccess"] || `"${job.name}" has been archived`

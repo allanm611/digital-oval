@@ -354,6 +354,7 @@ export default function SegmentReportsPage() {
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   const tableColumns: TableColumn<SegmentRow>[] = [
     {
@@ -361,6 +362,7 @@ export default function SegmentReportsPage() {
       label: "Segment Name",
       visible: true,
       sortable: true,
+      filterConfig: { type: "text" },
     },
     {
       id: "memberCount",
@@ -499,6 +501,10 @@ export default function SegmentReportsPage() {
   useEffect(() => {
     fetchSegments();
   }, [fetchSegments]);
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
 
   const customDays = useMemo(
     () => getDaysBetween(appliedCustomRange.start, appliedCustomRange.end),
@@ -1240,6 +1246,8 @@ export default function SegmentReportsPage() {
               currentPage={tablePage}
               pageSize={tablePageSize}
               onPageChange={setTablePage}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
               style={{
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,

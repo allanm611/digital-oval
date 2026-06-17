@@ -19,6 +19,7 @@ import {
   VIPListConfig,
 } from "../types/communicationPolicyConfig";
 import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
+import CommunicationPolicyDetailsExpandedRow from "../components/CommunicationPolicyDetailsExpandedRow";
 import { communicationPolicyService } from "../services/communicationPolicyService";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
@@ -56,6 +57,8 @@ export default function CommunicationPolicyPage() {
     left: number;
     maxHeight: number;
   } | null>(null);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
   const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
@@ -236,6 +239,7 @@ export default function CommunicationPolicyPage() {
       id: "name",
       label: t.communicationPolicy.policy,
       visible: true,
+      filterConfig: { type: "text" },
       render: (value) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
           {value}
@@ -246,6 +250,7 @@ export default function CommunicationPolicyPage() {
       id: "description",
       label: "Description",
       visible: true,
+      filterConfig: { type: "text" },
       render: (value) => (
         <span
           className={`text-sm ${tw.textMuted} truncate`}
@@ -266,6 +271,7 @@ export default function CommunicationPolicyPage() {
       id: "type_code",
       label: t.communicationPolicy.type,
       visible: true,
+      filterConfig: { type: "select", options: ["EMAIL", "SMS", "PUSH", "INAPP"] },
       render: (value, policy) => (
         <span className={`text-sm ${tw.textSecondary}`}>
           {(policy as any).type_name || value}
@@ -276,6 +282,7 @@ export default function CommunicationPolicyPage() {
       id: "is_active",
       label: t.communicationPolicy.status,
       visible: true,
+      filterConfig: { type: "select", options: ["true", "false"] },
       render: (value) => (
         <span
           className={
@@ -348,6 +355,10 @@ export default function CommunicationPolicyPage() {
     defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
 
   const filteredPolicies = Array.isArray(policies) ? policies.filter(
     (policy) => {
@@ -448,6 +459,13 @@ export default function CommunicationPolicyPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              expandedRowId={expandedRowId}
+              onExpandChange={setExpandedRowId}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
+              expandedContent={(policy) => (
+                <CommunicationPolicyDetailsExpandedRow policy={policy} colSpan={columns.filter((c) => c.visible).length} />
+              )}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

@@ -962,11 +962,11 @@ export default function CampaignCategoriesPage() {
                     className={`p-2 ${tw.rounded} transition-colors`}
                     title="Edit"
                   >
-                    <Edit className="w-4 h-4 text-gray-600" />
+                    <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 ${tw.rounded} transition-colors`}
+                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1060,11 +1060,11 @@ export default function CampaignCategoriesPage() {
                   className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                   title="Edit"
                 >
-                  <Edit className="w-4 h-4 text-gray-600" />
+                  <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDeleteCategory(category)}
-                  className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                  className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4 " />

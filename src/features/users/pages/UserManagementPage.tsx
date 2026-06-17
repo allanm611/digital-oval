@@ -219,6 +219,7 @@ export default function UserManagementPage() {
   const [userToDelete, setUserToDelete] = useState<UserType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   const { deleteConfirm, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({
     onDelete: async () => {
@@ -1187,6 +1188,10 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
+
   const handleDeleteUser = (user: UserType) => {
     if (!authUser?.user_id) {
       showError("Unable to delete user", extractBackendError(error, "Unable to delete user. Please try again."));
@@ -2091,6 +2096,11 @@ export default function UserManagementPage() {
                 sortConfigs={sortConfigs}
                 expandedRowId={expandedRowId}
                 onExpandChange={setExpandedRowId}
+                onFilteredCountChange={handleFilteredCountChange}
+                clearFiltersKey={clearFiltersKey}
+                expandedContent={(user) => (
+                  <UserDetailsExpandedRow user={user} colSpan={usersTableColumnsWithVisibility.filter((c) => c.visible).length} />
+                )}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -2098,17 +2108,6 @@ export default function UserManagementPage() {
                   rowSpacing: "0 8px",
                 }}
               />
-
-              {expandedRowId && filteredUsers.map((user) => {
-                if (user.id === expandedRowId) {
-                  return (
-                    <div key={`expanded-${user.id}`} className="overflow-hidden">
-                      <UserDetailsExpandedRow user={user} colSpan={usersTableColumnsWithVisibility.filter((c) => c.visible).length} />
-                    </div>
-                  );
-                }
-                return null;
-              })}
 
               {/* Pagination */}
               {!isLoading && paginatedUsers.length > 0 && filteredUsers.length > 0 && (

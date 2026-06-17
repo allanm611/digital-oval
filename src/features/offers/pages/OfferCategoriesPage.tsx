@@ -1313,7 +1313,7 @@ function OfferCategoriesPage() {
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 icon-edit hover:bg-red-50 ${tw.rounded} transition-colors`}
+                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1508,7 +1508,7 @@ function OfferCategoriesPage() {
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 " />

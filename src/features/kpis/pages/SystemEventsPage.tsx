@@ -96,7 +96,7 @@ export default function SystemEventsPage() {
                 `/dashboard/kpis/system-events/${row.id}`,
               )
             }
-            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+            className={`group p-3 ${tw.rounded} icon-edit transition-all duration-300`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />

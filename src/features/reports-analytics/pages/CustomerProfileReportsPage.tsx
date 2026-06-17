@@ -492,6 +492,7 @@ export default function CustomerProfileReportsPage() {
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
   const [apiCustomers, setApiCustomers] = useState<
     CustomerSubscriptionRecord[]
   >([]);
@@ -508,6 +509,7 @@ export default function CustomerProfileReportsPage() {
       label: "Customer ID",
       visible: true,
       sortable: true,
+      filterConfig: { type: "text" },
     },
     {
       id: "email",
@@ -737,6 +739,10 @@ export default function CustomerProfileReportsPage() {
   const [isSearchingCustomer, setIsSearchingCustomer] =
     useState<boolean>(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
 
   // Convert API customers to CustomerRow format for table display (includes searched customers)
   const apiCustomerRows = useMemo(() => {
@@ -1896,6 +1902,8 @@ export default function CustomerProfileReportsPage() {
               currentPage={tablePage}
               pageSize={CUSTOMER_TABLE_PAGE_SIZE}
               onPageChange={setTablePage}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
               style={{
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,
