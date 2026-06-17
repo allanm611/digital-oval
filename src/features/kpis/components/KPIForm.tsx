@@ -14,6 +14,12 @@ const SCHEDULE_TYPE_OPTIONS = [
   { label: "Cron", value: "cron" },
 ];
 
+const CALCULATION_TYPE_OPTIONS = [
+  { label: "Value Set", value: "value_set" },
+  { label: "Computed", value: "computed" },
+  { label: "Static", value: "static" },
+];
+
 interface KPIFormData {
   name: string;
   field_value?: string;
@@ -38,6 +44,7 @@ interface KPIFormData {
   cron_expression?: string;
   data_latency?: string;
   is_computed?: boolean;
+  calculationType?: "value_set" | "computed" | "static";
 }
 
 interface KPIFormProps {
@@ -358,6 +365,18 @@ export default function KPIForm({
             {errors.source_table && <p className="text-red-500 text-xs mt-1">{errors.source_table}</p>}
           </div>
 
+          {type === "kpi" && (
+            <div>
+              <HeadlessSelect
+                label="How is this KPI calculated? *"
+                options={CALCULATION_TYPE_OPTIONS}
+                value={formData.calculationType || ""}
+                onChange={(value) => handleSelectChange("calculationType", value)}
+                disabled={saving}
+              />
+            </div>
+          )}
+
           {showFrequency && (
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
@@ -372,8 +391,8 @@ export default function KPIForm({
         </div>
       </div>
 
-      {/* Extraction Logic Section (only when is_computed is true for revenue/usage) */}
-      {(type === "revenue" || type === "usage") && formData.is_computed && (
+      {/* Extraction Logic Section (show when computed) */}
+      {(((type === "revenue" || type === "usage") && formData.is_computed) || (type === "kpi" && formData.calculationType === "computed")) && (
         <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-6`}>Extraction Logic</h2>
           <div className="space-y-6">

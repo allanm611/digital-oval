@@ -882,7 +882,15 @@ export default function ProductsPage() {
           pageSize={filters.pageSize || 25}
           totalItems={total}
           onPageChange={(page) => handlePageChange(page)}
-          onPageSizeChange={(pageSize) => setFilters(prev => ({ ...prev, pageSize, page: 1 }))}
+          onPageSizeChange={(pageSize) => {
+            // Save pageSize to localStorage (same as Pagination component)
+            try {
+              localStorage.setItem("app-pagination-page-size", String(pageSize));
+            } catch (e) {
+              console.error("Failed to save page size preference:", e);
+            }
+            setFilters(prev => ({ ...prev, pageSize, page: 1 }));
+          }}
         />
       )}
 
