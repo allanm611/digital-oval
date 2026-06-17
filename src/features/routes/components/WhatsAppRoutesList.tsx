@@ -154,7 +154,7 @@ export default function WhatsAppRoutesList() {
           />
           <button
             onClick={() => navigate(`/dashboard/whatsapp-routes/edit/${route.id}`)}
-            className={`p-2 ${tw.rounded} transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -175,7 +175,7 @@ export default function WhatsAppRoutesList() {
             className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ),

@@ -78,7 +78,7 @@ export default function DataConnectors() {
       id: "type",
       label: "Type",
       visible: true,
-      render: (value) => <span className="text-sm text-gray-600">{getConnectorDisplayName(value)}</span>,
+      render: (value) => <span className={`p-2 icon-edit ${tw.rounded} text-sm `}>{getConnectorDisplayName(value)}</span>,
     },
     {
       id: "description",
@@ -105,16 +105,16 @@ export default function DataConnectors() {
       sortable: false,
       render: (_, connector) => (
         <div className="flex items-center justify-end gap-2">
-          <button onClick={() => handleConnectorClick(connector)} className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100`} title="View">
+          <button onClick={() => handleConnectorClick(connector)} className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100`} title="View">
             <Eye className="w-4 h-4" />
           </button>
           <PermissionGate permission="data-connectors.update">
-            <button onClick={() => handleEdit(connector)} className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100`} title="Edit">
+            <button onClick={() => handleEdit(connector)} className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100`} title="Edit">
               <Edit className="w-4 h-4" />
             </button>
           </PermissionGate>
           <PermissionGate permission="data-connectors.delete">
-            <button onClick={() => handleDelete(connector)} className={`p-2 ${tw.rounded} text-red-600 hover:text-red-700 hover:bg-red-50`} title="Delete">
+            <button onClick={() => handleDelete(connector)} className={`p-2 icon-delete ${tw.rounded} text-red-600 hover:text-red-700 hover:bg-red-50`} title="Delete">
               <Trash2 className="w-4 h-4" />
             </button>
           </PermissionGate>

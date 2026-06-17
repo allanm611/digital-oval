@@ -100,7 +100,7 @@ export default function KpiCategoriesListPage() {
               togglingItemId === row.id ||
               (categoryToDelete?.id === row.id && isDeleting)
             }
-            className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Edit"
           >
             <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
@@ -111,7 +111,7 @@ export default function KpiCategoriesListPage() {
               togglingItemId === row.id ||
               (categoryToDelete?.id === row.id && isDeleting)
             }
-            className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             <Trash2 className="w-4 h-4" style={{ color: "#DC2626" }} />

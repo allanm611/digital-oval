@@ -203,10 +203,8 @@ export default function KpiCategoryModal({
 
             {/* Parent Category Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parent Category
-              </label>
               <HeadlessSelect
+                label="Parent Category"
                 value={formData.parent_category_id?.toString() || ""}
                 onChange={(value) =>
                   setFormData((prev) => ({
@@ -226,6 +224,7 @@ export default function KpiCategoryModal({
                     })),
                 ]}
                 placeholder="Select a parent category"
+                className="w-full"
               />
             </div>
 

@@ -1035,7 +1035,7 @@ export default function JobWorkflowStepsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Total Steps</p>
+            <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>Total Steps</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.totalSteps}
@@ -1360,7 +1360,7 @@ export default function JobWorkflowStepsPage() {
                             }`,
                           )
                         }
-                        className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                        className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
                         aria-label="View details"
                         title="View details"
                       >
@@ -1375,7 +1375,7 @@ export default function JobWorkflowStepsPage() {
                               }`,
                             )
                           }
-                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
                           aria-label="Edit step"
                           title="Edit step"
                         >
@@ -1390,7 +1390,7 @@ export default function JobWorkflowStepsPage() {
                       >
                         <button
                           onClick={(e) => handleActionMenuToggle(step.id, e)}
-                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
                           aria-label="More actions"
                           title="More actions"
                         >
@@ -1409,7 +1409,7 @@ export default function JobWorkflowStepsPage() {
                             );
                           }}
                           disabled={validateLoadingId === Number(jobIdFilter)}
-                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
+                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
                           aria-label="Validate workflow integrity"
                           title="Validate workflow integrity"
                         >

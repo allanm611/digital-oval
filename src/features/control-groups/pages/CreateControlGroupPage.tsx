@@ -440,17 +440,15 @@ export default function CreateControlGroupPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name *
-                    </label>
                     <Input
+                      label="Name *"
                       placeholder="Enter control group name"
                       value={controlGroupName}
                       onChange={(value) => {
                         setControlGroupName(value);
                         if (nameError) setNameError("");
                       }}
-                     
+
                       hasError={!!nameError}
                     />
                     {nameError && (
@@ -459,17 +457,15 @@ export default function CreateControlGroupPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Code *
-                    </label>
                     <Input
+                      label="Code *"
                       placeholder="Enter control group code"
                       value={controlGroupCode}
                       onChange={(value) => {
                         setControlGroupCode(value);
                         if (codeError) setCodeError("");
                       }}
-                     
+
                       hasError={!!codeError}
                     />
                     {codeError && (

@@ -495,7 +495,7 @@ export default function StepExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Total</p>
+            <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>Total</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.totalExecutions}
@@ -860,7 +860,7 @@ export default function StepExecutionsPage() {
                               `/dashboard/step-executions/${execution.id}`
                             )
                           }
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          className={`p-2 icon-edit ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="View step execution details"
                         >
                           <Eye className="w-4 h-4" />

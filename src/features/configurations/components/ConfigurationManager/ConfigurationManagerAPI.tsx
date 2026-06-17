@@ -392,10 +392,10 @@ export default function ConfigurationManagerAPI({
                             <button
                               onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
                               disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+                              className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
                               title={`View details for ${item.name}`}
                             >
-                              <Eye className="w-4 h-4 text-gray-600" />
+                              <Eye className="w-4 h-4" />
                             </button>
                           )}
 
@@ -403,7 +403,7 @@ export default function ConfigurationManagerAPI({
                             <button
                               onClick={() => handleEditItem(item)}
                               disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
+                              className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed`}
                               title={`Edit ${item.name}`}
                             >
                               <Edit className="w-4 h-4 text-gray-600" />
@@ -414,10 +414,10 @@ export default function ConfigurationManagerAPI({
                             <button
                               onClick={() => handleDeleteItem(item)}
                               disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 ${tw.rounded} transition-colors hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+                              className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
                               title={`Delete ${item.name}`}
                             >
-                              <Trash2 className="w-4 h-4 text-red-600" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           )}
                         </div>

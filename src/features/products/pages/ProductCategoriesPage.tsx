@@ -1243,7 +1243,7 @@ export default function ProductCatalogsPage() {
                       className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
                       title={t.productCatalogs.delete}
                     >
-                      <Trash2 className="w-4 h-4 text-red-600" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </PermissionGate>
                 </div>
@@ -1399,7 +1399,7 @@ export default function ProductCatalogsPage() {
                     className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
                     title="Delete"
                   >
-                    <Trash2 className="w-4 h-4 text-red-600" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </PermissionGate>
               </div>

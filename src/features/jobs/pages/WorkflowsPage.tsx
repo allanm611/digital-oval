@@ -386,7 +386,7 @@ export default function WorkflowsPage() {
       label: "Type",
       visible: true,
       render: (value) => (
-        <div className="text-sm text-gray-600">
+        <div className={`p-2 icon-edit ${tw.rounded} text-sm `}>
           {value || "—"}
         </div>
       ),
@@ -420,14 +420,14 @@ export default function WorkflowsPage() {
         <div className="flex items-center justify-end space-x-2">
           <button
             onClick={() => handleView(workflow)}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
             title="View"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleEdit(workflow)}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -444,7 +444,7 @@ export default function WorkflowsPage() {
               rowLoading?.id === workflow.id &&
               rowLoading?.action === "clone"
             }
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50`}
+            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50`}
             title="Clone"
           >
             {rowLoading?.id === workflow.id &&

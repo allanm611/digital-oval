@@ -177,7 +177,7 @@ export default function TeamRolesPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => handleOpenEditModal(role)}
-            className={`p-2 ${tw.rounded} transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -208,7 +208,7 @@ export default function TeamRolesPage() {
             {deleting === role.id ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Trash2 className="w-4 h-4 text-red-600" />
+              <Trash2 className="w-4 h-4" />
             )}
           </button>
         </div>

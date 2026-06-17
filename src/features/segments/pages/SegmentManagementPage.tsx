@@ -36,6 +36,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 import SegmentModal from "../components/SegmentModal";
+import SegmentDetailsExpandedRow from "../components/SegmentDetailsExpandedRow";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
@@ -97,6 +98,7 @@ export default function SegmentManagementPage() {
   const [sortConfigs, setSortConfigs] = useState<Array<{ columnId: string; direction: "asc" | "desc"; priority: number }>>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
@@ -1314,7 +1316,7 @@ export default function SegmentManagementPage() {
                 className="h-5 w-5"
                 style={{ color: color.primary.accent }}
               />
-              <p className="text-sm font-medium text-gray-600">
+              <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>
                 Total Segments
               </p>
             </div>
@@ -1659,6 +1661,8 @@ export default function SegmentManagementPage() {
               sortConfigs={sortConfigs}
               onFilteredCountChange={handleFilteredCountChange}
               clearFiltersKey={clearFiltersKey}
+              expandedRowId={expandedRowId}
+              onExpandChange={setExpandedRowId}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1666,6 +1670,17 @@ export default function SegmentManagementPage() {
                 rowSpacing: "0 8px",
               }}
             />
+
+            {expandedRowId && filteredSegments.map((segment) => {
+              if (segment.id === expandedRowId) {
+                return (
+                  <div key={`expanded-${segment.id}`} className="overflow-hidden">
+                    <SegmentDetailsExpandedRow segment={segment} colSpan={segmentColumns.filter((c) => c.visible).length} />
+                  </div>
+                );
+              }
+              return null;
+            })}
 
             {/* Render dropdown menus via portal outside the table */}
             {filteredSegments.map((segment) => {
@@ -1825,7 +1840,7 @@ export default function SegmentManagementPage() {
                       </button> */}
                       <button
                         onClick={() => handleViewSegment(segment.id)}
-                        className={`p-2 ${tw.rounded} text-gray-500 hover:bg-gray-100`}
+                        className={`p-2 icon-edit ${tw.rounded} text-gray-500 hover:bg-gray-100`}
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />

@@ -776,7 +776,7 @@ export default function JobExecutionsPage() {
                     `/dashboard/job-executions/${execution.id}`,
                   )
                 }
-                className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                className={`p-2 icon-edit ${tw.rounded} text-gray-600 hover:text-gray-900`}
                 title="View details"
               >
                 <Eye className="w-4 h-4" />

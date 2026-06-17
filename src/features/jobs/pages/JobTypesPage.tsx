@@ -211,7 +211,7 @@ function JobTypeModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className={`p-2 icon-edit ${tw.rounded} text-gray-400 hover:`}
           >
             ✕
           </button>
@@ -474,7 +474,7 @@ export default function JobTypesPage() {
         <div className="flex items-center justify-end space-x-2">
           <button
             onClick={() => handleView(jobType)}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
             aria-label="View job type"
             title="View"
           >
@@ -482,7 +482,7 @@ export default function JobTypesPage() {
           </button>
           <button
             onClick={() => handleEdit(jobType)}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
             aria-label="Edit job type"
             title="Edit"
           >

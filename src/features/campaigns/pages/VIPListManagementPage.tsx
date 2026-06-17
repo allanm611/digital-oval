@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -72,6 +73,7 @@ export default function VIPListManagementPage() {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [vipCustomers, setVipCustomers] = useState<VIPCustomer[]>([]);
   const [vipLists, setVipLists] = useState<VIPList[]>([]);
   const [loading, setLoading] = useState(true);
@@ -467,7 +469,7 @@ export default function VIPListManagementPage() {
 
     setIsRemovingMember(true);
     try {
-      await vipListService.removeMember(memberToRemove.vip_list_id, memberToRemove.id);
+      await vipListService.removeMember(memberToRemove.vip_list_id, memberToRemove.id, user?.user_id);
       showToast("Customer removed from VIP list successfully");
 
       setVipCustomers((prev) =>
@@ -995,7 +997,7 @@ export default function VIPListManagementPage() {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handleViewCustomerDetail(customer)}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-700"
+                                className={`p-2 icon-edit ${tw.rounded} inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors  hover:text-gray-700`}
                                 title="View customer details"
                               >
                                 <Eye className="w-4 h-4" />

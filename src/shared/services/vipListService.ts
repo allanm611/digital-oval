@@ -149,14 +149,14 @@ class VIPListService {
     return response;
   }
 
-  async removeMember(listId: number, memberId: number, removedBy?: number) {
+  async removeMember(listId: number, memberId: number, userId?: number) {
     const response = await this.request<{
       success: boolean;
       message?: string;
     }>(`/${listId}/members/${memberId}`, {
       method: "DELETE",
-      ...(typeof removedBy === "number" ? {
-        body: JSON.stringify({ removed_by: removedBy }),
+      ...(typeof userId === "number" ? {
+        body: JSON.stringify({ user_id: userId }),
       } : {}),
     });
     return response;

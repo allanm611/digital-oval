@@ -17,6 +17,7 @@ import { systemEventService } from "../services/systemEventService";
 import { type KPI } from "../types/kpi";
 import { type SystemEvent } from "../types/systemEvent";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
 
 export default function AllKPIsPage() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function AllKPIsPage() {
   const [kpiToDelete, setKpiToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingKpiId, setTogglingKpiId] = useState<string | null>(null);
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAllKPIs();
@@ -150,6 +152,7 @@ export default function AllKPIsPage() {
       id: "name",
       label: "KPI Name",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
           {row.name}
@@ -160,6 +163,7 @@ export default function AllKPIsPage() {
       id: "category",
       label: "Category",
       visible: true,
+      filterConfig: { type: 'select', options: ["Revenue Metric", "Usage Metric", "Subscriber Profile", "System Event"] },
       render: (_, row) => (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
           {row.category}
@@ -170,6 +174,7 @@ export default function AllKPIsPage() {
       id: "field_type",
       label: "Type",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <p className="text-sm text-gray-700">
           {row.field_type ? row.field_type.charAt(0).toUpperCase() + row.field_type.slice(1) : "-"}
@@ -180,6 +185,7 @@ export default function AllKPIsPage() {
       id: "is_active",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ["Active", "Inactive"] },
       render: (_, row) => (
         <span className="text-sm font-medium text-gray-900 text-center block">
           {row.is_active ? "Active" : "Inactive"}
@@ -407,23 +413,38 @@ export default function AllKPIsPage() {
             </p>
           </div>
         ) : (
-          <Table<typeof allKPIs[0]>
-            columns={columns}
-            data={filteredKPIs}
-            totalItems={filteredKPIs.length}
-            currentPage={tableCurrentPage}
-            pageSize={tablePageSize}
-            isLoading={isLoading}
-            onPageChange={tableHandlePageChange}
-            onSort={handleSort}
-            sortConfigs={sortConfigs}
-            style={{
-              headerBackground: color.surface.tableHeader,
-              headerTextColor: color.surface.tableHeaderText,
-              rowBackground: color.surface.tablebodybg,
-              rowSpacing: "0 8px",
-            }}
-          />
+          <>
+            <Table<typeof allKPIs[0]>
+              columns={columns}
+              data={filteredKPIs}
+              totalItems={filteredKPIs.length}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              isLoading={isLoading}
+              onPageChange={tableHandlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              expandedRowId={expandedRowId}
+              onExpandChange={setExpandedRowId}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {expandedRowId && filteredKPIs.map((kpi) => {
+              if (kpi.id === expandedRowId) {
+                return (
+                  <div key={`expanded-${kpi.id}`} className="overflow-hidden">
+                    <KPIDetailsExpandedRow kpi={kpi} colSpan={columns.filter((c) => c.visible).length} />
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </>
         )}
       </div>
 

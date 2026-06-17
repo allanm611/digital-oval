@@ -29,6 +29,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import UserModal from "../components/UserModal";
+import UserDetailsExpandedRow from "../components/UserDetailsExpandedRow";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ErrorState from "../../../shared/components/ui/ErrorState";
@@ -217,6 +218,7 @@ export default function UserManagementPage() {
   const { confirm } = useConfirm();
   const [userToDelete, setUserToDelete] = useState<UserType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
 
   const { deleteConfirm, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({
     onDelete: async () => {
@@ -1384,6 +1386,7 @@ export default function UserManagementPage() {
       id: "name",
       label: "User",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value, user) => (
         <button
           onClick={() => handleViewUser(user)}
@@ -1399,6 +1402,7 @@ export default function UserManagementPage() {
       id: "email_address",
       label: "Email",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value, user) => (
         <div className={`text-sm ${tw.textMuted} truncate`} title={user.email_address || user.email}>
           {user.email_address || user.email}
@@ -1409,6 +1413,7 @@ export default function UserManagementPage() {
       id: "department",
       label: "Department",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
           {value || "N/A"}
@@ -1419,6 +1424,7 @@ export default function UserManagementPage() {
       id: "role",
       label: "Role",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value, user) => (
         <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
           {getUserRoleName(user)}
@@ -1429,6 +1435,7 @@ export default function UserManagementPage() {
       id: "status",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive', 'pending'] },
       render: (value, user) => {
         const normalizedStatus = normalizeStatus(user);
         const statusLabel = formatStatusLabel(normalizedStatus);
@@ -1448,6 +1455,7 @@ export default function UserManagementPage() {
       id: "created_at",
       label: "Created",
       visible: true,
+      filterConfig: { type: 'date' },
       render: (value) => (
         <span className={`text-sm ${tw.textMuted} whitespace-nowrap`}>
           {value ? new Date(value as string).toLocaleDateString() : "—"}
@@ -1473,7 +1481,7 @@ export default function UserManagementPage() {
             />
             <button
               onClick={() => handleViewUser(user)}
-              className={`p-2 ${tw.rounded} transition-colors`}
+              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
               style={{ color: color.primary.action, backgroundColor: "transparent" }}
               title="View user details"
             >
@@ -1482,7 +1490,7 @@ export default function UserManagementPage() {
             <PermissionGate permission="users.update">
               <button
                 onClick={() => handleEditUser(user)}
-                className={`p-2 ${tw.rounded} transition-colors`}
+                className={`p-2 icon-delete ${tw.rounded} transition-colors`}
                 style={{ color: color.primary.action, backgroundColor: "transparent" }}
                 title="Edit user"
               >
@@ -2048,7 +2056,7 @@ export default function UserManagementPage() {
                   ? t.userManagement.noUsersFound
                   : t.userManagement.noUsers}
               </h3>
-              <p className="text-sm text-gray-600 mb-6">
+              <p className={`p-2 icon-edit ${tw.rounded} text-sm  mb-6`}>
                 {searchTerm
                   ? t.userManagement.tryAdjustingSearch
                   : t.userManagement.createFirstUser}
@@ -2081,6 +2089,8 @@ export default function UserManagementPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
                 onSort={handleSort}
                 sortConfigs={sortConfigs}
+                expandedRowId={expandedRowId}
+                onExpandChange={setExpandedRowId}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -2088,6 +2098,17 @@ export default function UserManagementPage() {
                   rowSpacing: "0 8px",
                 }}
               />
+
+              {expandedRowId && filteredUsers.map((user) => {
+                if (user.id === expandedRowId) {
+                  return (
+                    <div key={`expanded-${user.id}`} className="overflow-hidden">
+                      <UserDetailsExpandedRow user={user} colSpan={usersTableColumnsWithVisibility.filter((c) => c.visible).length} />
+                    </div>
+                  );
+                }
+                return null;
+              })}
 
               {/* Pagination */}
               {!isLoading && paginatedUsers.length > 0 && filteredUsers.length > 0 && (

@@ -23,6 +23,9 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import ManualBroadcastDetailsExpandedRow from "../components/ManualBroadcastDetailsExpandedRow";
+
 export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,6 +54,7 @@ export default function ManualBroadcastListsPage() {
   const [broadcastToDelete, setBroadcastToDelete] =
     useState<ManualBroadcast | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedRowId, setExpandedRowId] = useState<string | number | null>(null);
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -257,6 +261,127 @@ export default function ManualBroadcastListsPage() {
     },
   ];
 
+  // Define table columns
+  const broadcastColumns: TableColumn<ManualBroadcast>[] = [
+    {
+      id: "source_name",
+      label: "Name",
+      visible: true,
+      filterConfig: { type: 'text' },
+      render: (value, broadcast) => (
+        <button
+          onClick={() => handleViewDetails(broadcast)}
+          className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+          title={broadcast.source_name}
+        >
+          {broadcast.source_name}
+        </button>
+      ),
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      filterConfig: { type: 'text' },
+      render: (value) => (
+        <div className={`text-sm ${tw.textMuted} truncate max-w-xs`} title={value as string || ""}>
+          {value || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "channels",
+      label: "Channels",
+      visible: true,
+      filterConfig: { type: 'multiselect', options: ['SMS', 'EMAIL', 'PUSH', 'USSD'] },
+      render: (value) => (
+        <div className="text-sm text-black">
+          {Array.isArray(value) && value.length > 0 ? value.join(", ") : "-"}
+        </div>
+      ),
+    },
+    {
+      id: "source_type",
+      label: "Source Type",
+      visible: true,
+      filterConfig: { type: 'text' },
+      render: (value) => (
+        <span className={`text-sm capitalize`}>
+          {value || "-"}
+        </span>
+      ),
+    },
+    {
+      id: "schedule_type",
+      label: "Schedule Type",
+      visible: true,
+      filterConfig: { type: 'text' },
+      render: (value) => (
+        <span className={`text-sm capitalize`}>
+          {value || "-"}
+        </span>
+      ),
+    },
+    {
+      id: "created_at",
+      label: "Created",
+      visible: true,
+      filterConfig: { type: 'date' },
+      render: (value) => (
+        <span className={`text-sm ${tw.textMuted}`}>
+          <DateFormatter date={value as string} useUserTimezone />
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      render: (value, broadcast) => (
+        <div className="flex items-center justify-center space-x-2">
+          {broadcast.execution_id && (
+            <button
+              onClick={() => navigate(`/dashboard/manual-communications/${broadcast.execution_id}`)}
+              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
+              title="View"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+          )}
+          {broadcast.execution_id && (
+            <button
+              onClick={() => handleViewDetails(broadcast)}
+              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            onClick={() => handleDelete(broadcast)}
+            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const {
+    columns,
+    handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
+    sortConfigs,
+    handleSort,
+  } = useTable({
+    tableId: "manual-broadcasts-table",
+    defaultColumns: broadcastColumns,
+    persistToLocalStorage: true,
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -363,143 +488,35 @@ export default function ManualBroadcastListsPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table
-                className="w-full min-w-[900px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Channels
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Source Type
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Schedule Type
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Created At
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {broadcasts.map((broadcast) => (
-                    <tr key={broadcast.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => handleViewDetails(broadcast)}
-                            className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                            title={broadcast.source_name}
-                          >
-                            {broadcast.source_name}
-                          </button>
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-black truncate max-w-xs"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                        title={broadcast.description || ""}
-                      >
-                        {broadcast.description || "-"}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {broadcast.channels?.join(", ") || "-"}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-black capitalize"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {broadcast.source_type || "-"}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-black capitalize"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {broadcast.schedule_type || "-"}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-black hidden md:table-cell"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <DateFormatter date={broadcast.created_at} useUserTimezone />
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm font-medium"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center justify-center space-x-2">
-                          {broadcast.execution_id && (
-                            <button
-                              onClick={() => navigate(`/dashboard/manual-communications/${broadcast.execution_id}`)}
-                              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
-                              title="View"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
-                          {broadcast.execution_id && (
-                            <button
-                              onClick={() => handleViewDetails(broadcast)}
-                              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
-                              title="Edit"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(broadcast)}
-                            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table<ManualBroadcast>
+              columns={columns}
+              data={broadcasts}
+              totalItems={broadcasts.length}
+              currentPage={pagination.page}
+              pageSize={pagination.limit}
+              isLoading={loading}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              expandedRowId={expandedRowId}
+              onExpandChange={setExpandedRowId}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+
+            {expandedRowId && broadcasts.map((broadcast) => {
+              if (broadcast.id === expandedRowId) {
+                return (
+                  <div key={`expanded-${broadcast.id}`} className="overflow-hidden">
+                    <ManualBroadcastDetailsExpandedRow broadcast={broadcast} colSpan={columns.filter((c) => c.visible).length} />
+                  </div>
+                );
+              }
+              return null;
+            })}
 
             {/* Pagination */}
             {broadcasts.length > 0 && pagination.total > 0 && (

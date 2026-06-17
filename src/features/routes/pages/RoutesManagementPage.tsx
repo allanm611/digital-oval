@@ -275,14 +275,14 @@ export default function RoutesManagementPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/routes/${route.id}`)}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:bg-gray-100 transition-colors`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigateToEdit(route)}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:bg-gray-100 transition-colors`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />

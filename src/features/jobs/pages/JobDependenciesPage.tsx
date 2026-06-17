@@ -218,7 +218,7 @@ function JobDependencyModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className={`p-2 icon-edit ${tw.rounded} text-gray-400 hover:`}
           >
             ✕
           </button>
@@ -2117,7 +2117,7 @@ export default function JobDependenciesPage() {
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleView(dependency)}
-                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                        className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                         aria-label="View dependency"
                         title="View"
                       >
@@ -2126,7 +2126,7 @@ export default function JobDependenciesPage() {
                       <PermissionGate permission="job-dependencies.update">
                         <button
                           onClick={() => handleEdit(dependency)}
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="Edit dependency"
                           title="Edit"
                         >

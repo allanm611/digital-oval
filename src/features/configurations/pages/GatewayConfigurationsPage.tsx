@@ -364,7 +364,7 @@ export default function GatewayConfigurationsPage() {
           <button
             onClick={() => handleDeleteClick(config)}
             className="p-2 rounded transition"
-            style={{ color: 'var(--c-text-danger)' }}
+            
             title="Delete configuration"
           >
             <Trash2 size={18} />

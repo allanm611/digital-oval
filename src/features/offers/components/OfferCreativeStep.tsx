@@ -1259,7 +1259,7 @@ export default function OfferCreativeStep({
                           <div
                             className={`w-8 h-8 ${tw.rounded} flex items-center justify-center bg-gray-100`}
                           >
-                            <Icon className="w-4 h-4 text-gray-600" />
+                            <Icon className={`p-2 icon-edit ${tw.rounded} w-4 h-4 `} />
                           </div>
                           <div>
                             <div className="font-medium text-sm text-gray-900">

@@ -354,49 +354,44 @@ export default function SchedulingComponent({
           {/* Start Date/Time Input - Only show when datetime is selected */}
           {startType === "datetime" && scheduling && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Start Date/Time
-              </label>
               <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <Input
-                    type="date"
-                    value={
-                      scheduling.start_date
-                        ? scheduling.start_date.split("T")[0]
-                        : ""
+                <Input
+                  type="date"
+                  label="Start Date"
+                  value={
+                    scheduling.start_date
+                      ? scheduling.start_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (value) {
+                      updateScheduling({
+                        start_date: String(value) + "T08:00",
+                      });
                     }
-                    onChange={(value) => {
-                      if (value) {
-                        updateScheduling({
-                          start_date: String(value) + "T08:00",
-                        });
-                      }
-                    }}
-                    className="flex-1"
-                    variant="default"
-                    placeholder=""
-                  />
-                </div>
-                <div className="relative">
-                  <Input
-                    type="time"
-                    value="08:00"
-                    onChange={(value) => {
-                      if (value && scheduling.start_date) {
-                        updateScheduling({
-                          start_date:
-                            scheduling.start_date.split("T")[0] +
-                            "T" +
-                            String(value),
-                        });
-                      }
-                    }}
-                    className="flex-1"
-                    variant="default"
-                    placeholder=""
-                  />
-                </div>
+                  }}
+                  className="flex-1"
+                  variant="default"
+                  placeholder=""
+                />
+                <Input
+                  type="time"
+                  label="Start Time"
+                  value="08:00"
+                  onChange={(value) => {
+                    if (value && scheduling.start_date) {
+                      updateScheduling({
+                        start_date:
+                          scheduling.start_date.split("T")[0] +
+                          "T" +
+                          String(value),
+                      });
+                    }
+                  }}
+                  className="flex-1"
+                  variant="default"
+                  placeholder=""
+                />
               </div>
             </div>
           )}
@@ -434,43 +429,41 @@ export default function SchedulingComponent({
           {endType === "at" && scheduling && (
             <div className="mb-6">
               <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <Input
-                    type="date"
-                    value={
-                      scheduling.end_date
-                        ? scheduling.end_date.split("T")[0]
-                        : ""
+                <Input
+                  type="date"
+                  label="End Date"
+                  value={
+                    scheduling.end_date
+                      ? scheduling.end_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(value) => {
+                    if (value) {
+                      updateScheduling({ end_date: String(value) + "T23:59" });
                     }
-                    onChange={(value) => {
-                      if (value) {
-                        updateScheduling({ end_date: String(value) + "T23:59" });
-                      }
-                    }}
-                    className="flex-1"
-                    variant="default"
-                    placeholder=""
-                  />
-                </div>
-                <div className="relative">
-                  <Input
-                    type="time"
-                    value="23:59"
-                    onChange={(value) => {
-                      if (value && scheduling.end_date) {
-                        updateScheduling({
-                          end_date:
-                            scheduling.end_date.split("T")[0] +
-                            "T" +
-                            String(value),
-                        });
-                      }
-                    }}
-                    className="flex-1"
-                    variant="default"
-                    placeholder=""
-                  />
-                </div>
+                  }}
+                  className="flex-1"
+                  variant="default"
+                  placeholder=""
+                />
+                <Input
+                  type="time"
+                  label="End Time"
+                  value="23:59"
+                  onChange={(value) => {
+                    if (value && scheduling.end_date) {
+                      updateScheduling({
+                        end_date:
+                          scheduling.end_date.split("T")[0] +
+                          "T" +
+                          String(value),
+                      });
+                    }
+                  }}
+                  className="flex-1"
+                  variant="default"
+                  placeholder=""
+                />
               </div>
             </div>
           )}
@@ -596,11 +589,9 @@ export default function SchedulingComponent({
 
             {/* Default Start Time */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Default Start Time
-              </label>
               <Input
                 type="time"
+                label="Default Start Time"
                 value={defaultStartTime}
                 onChange={(value) => setDefaultStartTime(String(value))}
                 className="w-full"

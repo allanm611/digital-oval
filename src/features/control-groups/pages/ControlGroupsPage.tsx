@@ -404,7 +404,7 @@ export default function ControlGroupsPage() {
                                 `/dashboard/control-groups/${group.id}`
                               )
                             }
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
+                            className={`p-2 icon-edit ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
                             disabled={isDeleting === group.id}
                             title="View"
                           >
@@ -416,7 +416,7 @@ export default function ControlGroupsPage() {
                                 `/dashboard/control-groups/${group.id}/edit`
                               )
                             }
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
+                            className={`p-2 icon-edit ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
                             disabled={isDeleting === group.id}
                             title="Edit"
                           >
@@ -425,13 +425,13 @@ export default function ControlGroupsPage() {
                           <button
                             onClick={() => handleDeleteClick(group.id, group.name)}
                             disabled={isDeleting === group.id}
-                            className={`p-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80`}
+                            className={`p-2 icon-delete transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80`}
                             title="Delete"
                           >
                             {isDeleting === group.id ? (
                               <Loader2 className="h-4 w-4 animate-spin text-red-600" />
                             ) : (
-                              <Trash2 className="h-4 w-4 text-red-600" />
+                              <Trash2 className="h-4 w-4 " />
                             )}
                           </button>
                         </div>

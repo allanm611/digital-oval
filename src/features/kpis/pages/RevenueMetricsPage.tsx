@@ -101,7 +101,7 @@ export default function RevenueMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
+            className={`p-2 icon-delete ${tw.rounded} text-black disabled:opacity-60`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -113,7 +113,7 @@ export default function RevenueMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
+            className={`p-2 icon-delete ${tw.rounded} text-black disabled:opacity-60`}
             title="Edit metric"
           >
             <Edit className="w-4 h-4" />

@@ -263,15 +263,14 @@ export default function CreateEditTimezonePage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Region
-                </label>
                 <HeadlessSelect
+                  label="Region"
                   options={regions}
                   value={formData.region}
                   onChange={(value) => handleInputChange("region", value)}
                   placeholder="Select region"
                   disabled={saving}
+                  className="w-full"
                 />
               </div>
               <div>
@@ -286,10 +285,8 @@ export default function CreateEditTimezonePage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Countries
-              </label>
               <HeadlessMultiSelect
+                label="Countries"
                 options={countries}
                 value={formData.countries}
                 onChange={(value) => handleInputChange("countries", value)}
@@ -297,6 +294,7 @@ export default function CreateEditTimezonePage() {
                 disabled={saving}
                 searchable={true}
                 maxDisplayed={3}
+                className="w-full"
               />
             </div>
           </div>

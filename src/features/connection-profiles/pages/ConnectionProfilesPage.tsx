@@ -142,7 +142,7 @@ export default function ConnectionProfilesPage() {
       label: "Code",
       visible: true,
       render: (value) => (
-        <span className="text-sm text-gray-600">{value || "—"}</span>
+        <span className={`p-2 icon-edit ${tw.rounded} text-sm `}>{value || "—"}</span>
       ),
     },
     {
@@ -181,7 +181,7 @@ export default function ConnectionProfilesPage() {
           <button
             type="button"
             onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}`)}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-edit ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
             aria-label="View"
             title="View details"
           >

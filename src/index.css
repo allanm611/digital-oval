@@ -2501,6 +2501,8 @@ Satoshi
   --c-icon-color: #252829;
   --c-text-on-light: #111827;
   --c-toggle-active: #252829;
+  --c-icon-table-edit: #B1C5CE;
+  --c-icon-table-delete: #821637;
 }
 
 .dark,
@@ -2551,6 +2553,8 @@ Satoshi
   --c-icon-color: #f9fafb;
   --c-text-on-light: #111827;
   --c-toggle-active: #ffffff;
+  --c-icon-table-edit: #92A6B0;
+  --c-icon-table-delete: #FC9C9C;
 }
 
 /*
@@ -2724,6 +2728,15 @@ input[type="time"] {
   body {
     -ms-overflow-style: none; /* IE and Edge */
   }
+}
+
+/* Table Action Icons */
+.icon-delete {
+  color: #821637;
+}
+
+.icon-edit {
+  color: #394247;
 }
 
 /* Component Styles */

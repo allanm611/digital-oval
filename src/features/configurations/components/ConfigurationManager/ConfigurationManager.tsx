@@ -235,7 +235,7 @@ export default function ConfigurationManager({
           />
           <button
             onClick={() => handleEditItem(item)}
-            className={`p-2 ${tw.rounded} transition-colors`}
+            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -253,7 +253,7 @@ export default function ConfigurationManager({
             onClick={() => handleDeleteClick(item)}
             className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ),

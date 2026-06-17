@@ -323,6 +323,18 @@ export const colors = {
     accent: "#4FDFF3", // Accent borders
     muted: "#F3F4F6", // Subtle borders
   },
+
+  // Icons defines colors for icons across tables and UI
+  icons: {
+    tableEdit: {
+      light: "#B1C5CE", // Light mode color
+      dark: "#92A6B0", // Dark mode color
+    },
+    tableDelete: {
+      light: "#B1C5CE", // Light mode color
+      dark: "#92A6B0", // Dark mode color
+    },
+  },
 };
 
 export const fonts = {

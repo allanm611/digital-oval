@@ -175,7 +175,7 @@ export default function ProductsPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate(`/dashboard/products/${row.id}`)}
-              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+              className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
@@ -196,7 +196,8 @@ export default function ProductsPage() {
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
-                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
+                className={`p-2 icon-delete ${tw.rounded} transition-all duration-200`}
+              
                 title="Delete Product"
               >
                 <Trash2 className="w-4 h-4" />
@@ -496,7 +497,7 @@ export default function ProductsPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate(`/dashboard/products/${row.id}`)}
-              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+              className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
@@ -517,7 +518,7 @@ export default function ProductsPage() {
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
-                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
+                className={`p-2 icon-delete ${tw.rounded} transition-all duration-200`}
                 title="Delete Product"
               >
                 <Trash2 className="w-4 h-4" />
