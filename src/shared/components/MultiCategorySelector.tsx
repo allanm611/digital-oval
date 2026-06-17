@@ -44,11 +44,13 @@ export default function MultiCategorySelector({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [isAbove, setIsAbove] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const portalContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,12 +74,28 @@ export default function MultiCategorySelector({
   useEffect(() => {
     const updatePosition = () => {
       if (dropdownRef.current) {
-        const rect = dropdownRef.current.querySelector("button")?.getBoundingClientRect();
-        if (rect) {
+        const buttonRect = dropdownRef.current.querySelector("button")?.getBoundingClientRect();
+        if (buttonRect) {
+          const spaceBelow = window.innerHeight - buttonRect.bottom;
+          const spaceAbove = buttonRect.top;
+
+          // Use actual dropdown height if available, otherwise estimate
+          const dropdownHeight = portalContentRef.current?.scrollHeight || 250;
+          const GAP_BELOW = 4;
+          const GAP_ABOVE = 8;
+          const MIN_EDGE_PADDING = 8;
+
+          // Auto-flip: use above if not enough space below and sufficient space above
+          const shouldBeAbove =
+            spaceBelow < dropdownHeight + GAP_BELOW + MIN_EDGE_PADDING &&
+            spaceAbove - dropdownHeight > MIN_EDGE_PADDING;
+
+          setIsAbove(shouldBeAbove);
+          const gap = shouldBeAbove ? GAP_ABOVE : GAP_BELOW;
           setDropdownPosition({
-            top: rect.bottom + 4,
-            left: rect.left,
-            width: rect.width,
+            top: shouldBeAbove ? buttonRect.top - dropdownHeight - gap : buttonRect.bottom + gap,
+            left: buttonRect.left,
+            width: buttonRect.width,
           });
         }
       }
@@ -86,12 +104,13 @@ export default function MultiCategorySelector({
     if (isOpen) {
       // Calculate position immediately and also after a frame to ensure portal is rendered
       updatePosition();
-      requestAnimationFrame(() => {
+      const timer = requestAnimationFrame(() => {
         updatePosition();
       });
       window.addEventListener("scroll", updatePosition);
       window.addEventListener("resize", updatePosition);
       return () => {
+        cancelAnimationFrame(timer);
         window.removeEventListener("scroll", updatePosition);
         window.removeEventListener("resize", updatePosition);
       };
@@ -352,10 +371,10 @@ export default function MultiCategorySelector({
       {/* Floating Label */}
       {label && (
         <label
-          className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium z-10
+          className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium z-10
             ${hasValue
-              ? "top-0 -translate-y-1/2 bg-white px-1 text-gray-700"
-              : "top-1/2 -translate-y-1/2 text-gray-500"
+              ? "top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700"
+              : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
             }`}
         >
           {label}
@@ -364,7 +383,7 @@ export default function MultiCategorySelector({
 
       {isOpen && createPortal(
         <div
-          ref={portalRef}
+          ref={portalContentRef}
           style={{
             position: "fixed",
             top: `${dropdownPosition.top}px`,

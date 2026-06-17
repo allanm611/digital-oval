@@ -29,6 +29,7 @@ import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import type {
   RangeOption,
   DeliverySMSReportsResponse,

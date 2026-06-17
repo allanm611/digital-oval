@@ -111,7 +111,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full px-4 pt-2.5 pb-2.5 text-sm border ${borderClass} ${tw.rounded}
+        className={`w-full px-4 pt-3 pb-2 text-sm leading-tight border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
           ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
           ${className}`}
@@ -132,10 +132,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
 
       {/* Floating Label */}
       <label
-        className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium
+        className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
-            ? 'top-0 -translate-y-1/2 bg-white px-1 text-gray-700'
-            : 'top-1/2 -translate-y-1/2 text-gray-700'
+            ? 'top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700'
+            : 'top-1/2 -translate-y-1/2 text-sm text-gray-700'
           }
         `}
       >

@@ -1455,18 +1455,14 @@ export default function SegmentManagementPage() {
                 a.click();
                 window.URL.revokeObjectURL(url);
               }}
-              className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
               style={{
-                backgroundColor: button.secondaryAction.background,
-                color: button.secondaryAction.color,
-                border: button.secondaryAction.border,
-                padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
-                borderRadius: button.secondaryAction.borderRadius,
-                fontSize: button.secondaryAction.fontSize,
+                backgroundColor: color.primary.action,
+                color: "white",
               }}
             >
               <Download className="h-4 w-4" />
-              <span>Export</span>
+              <span>Download CSV</span>
             </button>
           </div>
         </div>

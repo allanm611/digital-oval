@@ -1352,7 +1352,7 @@ export default function OffersPage() {
           className=""
         />
 
-        <button
+        {/* <button
           onClick={() => setShowAdvancedFilters(true)}
           className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
           style={{
@@ -1366,7 +1366,7 @@ export default function OffersPage() {
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
-        </button>
+        </button> */}
 
         <button
           onClick={handleExportCSV}

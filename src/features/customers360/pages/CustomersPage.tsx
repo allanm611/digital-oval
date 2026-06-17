@@ -99,17 +99,16 @@ export default function CustomersPage() {
   const [customerTypeFilter, setCustomerTypeFilter] = useState("");
 
   // Action menu state
-  const [showActionMenu, setShowActionMenu] = useState(false);
-  const [actionMenuIndex, setActionMenuIndex] = useState<number | null>(null);
+  const [showActionMenuForId, setShowActionMenuForId] = useState<number | string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{
     top: number;
     left: number;
   } | null>(null);
+  const actionMenuRefs = useRef<Record<number | string, HTMLElement | null>>({});
+  const dropdownMenuRefs = useRef<Record<number | string, HTMLDivElement | null>>({});
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
   const [customerToCommunicate, setCustomerToCommunicate] =
     useState<CustomerSubscriptionRecord | null>(null);
-  const actionMenuRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const dropdownMenuRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Customer creation/edit modal state
   const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] =
@@ -121,70 +120,135 @@ export default function CustomersPage() {
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
-  const defaultColumns: TableColumn<any>[] = [
+  const defaultColumns: TableColumn<any>[] = useMemo(() => [
     {
       id: "subscriptionId",
-      label: "Subscription ID",
+      label: t.customer360.subscriptionId,
       visible: true,
       sortable: true,
       filterConfig: { type: "text" },
+      render: (_, row) => (
+        <span className="text-sm text-gray-900">{row.subscriptionId}</span>
+      ),
     },
     {
       id: "msisdn",
-      label: "MSISDN",
+      label: t.customer360.msisdn,
       visible: true,
       sortable: true,
       filterConfig: { type: "text" },
+      render: (_, row) => (
+        <span className="text-sm text-gray-900">{row.msisdn}</span>
+      ),
     },
     {
       id: "customer",
-      label: "Customer",
+      label: t.customer360.customer,
       visible: true,
       sortable: true,
       filterConfig: { type: "text" },
+      render: (_, row: any) => {
+        if (!row) return null;
+        const name = getSubscriptionDisplayName(row, `Customer ${row.customerId}`);
+        return <span className="text-sm text-gray-900">{name}</span>;
+      },
     },
     {
       id: "customerType",
-      label: "Customer Type",
+      label: t.customer360.customerType,
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["prepaid", "postpaid"] },
+      render: (_, row) => (
+        <span className="text-sm text-gray-900 capitalize">{row.customerType}</span>
+      ),
     },
     {
       id: "status",
-      label: "Status",
+      label: t.customer360.status,
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["active", "inactive", "suspended"] },
+      render: (_, row) => (
+        <span className="text-sm text-gray-900">{row.status ?? "Unknown"}</span>
+      ),
     },
     {
       id: "preferredChannel",
-      label: "Preferred Channel",
+      label: t.customer360.preferredChannel,
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["SMS", "USSD", "EMAIL", "PUSH"] },
+      render: (_, row: any) => {
+        if (!row) return null;
+        return <span className="text-sm text-gray-900">{getChannelLabel(row.tariff)}</span>;
+      },
     },
     {
       id: "simType",
-      label: "SIM Type",
+      label: t.customer360.simType,
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["KYC Verified", "Not Verified"] },
+      render: (_, row) => (
+        <span className="text-sm text-gray-900">{row.simType}</span>
+      ),
     },
     {
       id: "activationDate",
-      label: "Activation Date",
+      label: t.customer360.activationDate,
       visible: true,
       sortable: true,
       filterConfig: { type: "date" },
+      render: (_, row) => (
+        <span className="text-sm text-gray-900">
+          {formatDate(new Date(row.activationDate))}
+        </span>
+      ),
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.customer360.actions,
       visible: true,
       sortable: false,
+      render: (_, col, row: any) => (
+        <div className="flex items-center justify-end gap-2">
+          <PermissionGate permission="customer.read">
+            <button
+              type="button"
+              onClick={() => row && handleSelectCustomer(row)}
+              className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+              title="View customer"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="customer.update">
+            <button
+              type="button"
+              onClick={() => row && handleEditCustomer(row)}
+              className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+              title="Edit customer"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+          </PermissionGate>
+          <button
+            ref={(el) => {
+              if (row && el) {
+                actionMenuRefs.current[row.subscriptionId] = el;
+              }
+            }}
+            onClick={(e) => row && handleActionMenuToggle(row.subscriptionId, e)}
+            className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+            title="More actions"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        </div>
+      ),
     },
-  ];
+  ], [t, getChannelLabel, showActionMenuForId, dropdownPosition]);
 
   const {
     columns,
@@ -701,25 +765,74 @@ export default function CustomersPage() {
   const handleSendCommunication = (customer: CustomerSubscriptionRecord) => {
     setCustomerToCommunicate(customer);
     setIsCommunicateModalOpen(true);
-    setShowActionMenu(false);
+    setShowActionMenuForId(null);
     setActionMenuIndex(null);
   };
 
-  const handleActionMenuToggle = (index: number, event: React.MouseEvent) => {
+  // Close action menus when clicking outside
+  useEffect(() => {
+    const handleClickOutsideActionMenus = (event: MouseEvent) => {
+      const target = event.target as Node;
+      // Check if click is inside any action menu button
+      const clickedInsideButton = Object.values(actionMenuRefs.current).some(
+        (ref) => ref && ref.contains(target),
+      );
+
+      // Check if click is inside any dropdown menu (portal)
+      const clickedInsideDropdown = Object.values(
+        dropdownMenuRefs.current,
+      ).some((ref) => ref && ref.contains(target));
+
+      // Only close if clicked outside both button and dropdown
+      if (!clickedInsideButton && !clickedInsideDropdown) {
+        setShowActionMenuForId(null);
+        setDropdownPosition(null);
+      }
+    };
+
+    if (showActionMenuForId !== null) {
+      document.addEventListener("mousedown", handleClickOutsideActionMenus);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutsideActionMenus);
+      };
+    }
+  }, [showActionMenuForId]);
+
+  // Recalculate dropdown position on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (showActionMenuForId !== null && dropdownPosition) {
+        const button = actionMenuRefs.current[showActionMenuForId];
+        if (button) {
+          const buttonRect = button.getBoundingClientRect();
+          const top = buttonRect.bottom + 8;
+          const left = buttonRect.right - 200;
+          setDropdownPosition({ top, left });
+        }
+      }
+    };
+
+    if (showActionMenuForId !== null) {
+      window.addEventListener("resize", handleResize);
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }
+  }, [showActionMenuForId, dropdownPosition]);
+
+  const handleActionMenuToggle = (rowId: number | string, event: React.MouseEvent) => {
     event.stopPropagation();
-    if (actionMenuIndex === index && showActionMenu) {
-      setShowActionMenu(false);
-      setActionMenuIndex(null);
+    if (showActionMenuForId === rowId) {
+      setShowActionMenuForId(null);
       setDropdownPosition(null);
     } else {
       const button = event.currentTarget as HTMLElement;
       const rect = button.getBoundingClientRect();
-      const menuHeight = 120; // Approximate height for dropdown
+      const menuHeight = 120;
       const top = rect.bottom + 8;
-      const left = rect.right - 200; // Approximate menu width
+      const left = rect.right - 200;
 
-      setActionMenuIndex(index);
-      setShowActionMenu(true);
+      setShowActionMenuForId(rowId);
       setDropdownPosition({ top, left });
     }
   };
@@ -913,179 +1026,10 @@ export default function CustomersPage() {
         ) : (
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<any>
-              columns={[
-                {
-                  id: "subscriptionId",
-                  label: t.customer360.subscriptionId,
-                  visible: true,
-                  filterConfig: { type: "text" },
-                  render: (_, row) => (
-                    <span className="text-sm text-gray-900">{row.subscriptionId}</span>
-                  ),
-                },
-                {
-                  id: "msisdn",
-                  label: t.customer360.msisdn,
-                  visible: true,
-                  filterConfig: { type: "text" },
-                  render: (_, row) => (
-                    <span className="text-sm text-gray-900">{row.msisdn}</span>
-                  ),
-                },
-                {
-                  id: "customer",
-                  label: t.customer360.customer,
-                  visible: true,
-                  filterConfig: { type: "text" },
-                  render: (_, row) => {
-                    const name = getSubscriptionDisplayName(
-                      row,
-                      `Customer ${row.customerId}`,
-                    );
-                    return (
-                      <button
-                        type="button"
-                        onClick={() => handleSelectCustomer(row)}
-                        className="text-left"
-                      >
-                        <p className="font-semibold text-gray-900 hover:underline">
-                          {name}
-                        </p>
-                      </button>
-                    );
-                  },
-                },
-                {
-                  id: "customerType",
-                  label: t.customer360.customerType,
-                  visible: true,
-                  filterConfig: { type: "select", options: ["prepaid", "postpaid"] },
-                  render: (_, row) => (
-                    <span className="text-sm text-gray-900">{row.customerType ?? "—"}</span>
-                  ),
-                },
-                {
-                  id: "status",
-                  label: t.customer360.status,
-                  visible: true,
-                  filterConfig: { type: "select", options: ["active", "inactive", "suspended"] },
-                  render: (_, row) => (
-                    <span className="text-sm text-black">{row.status ?? "Unknown"}</span>
-                  ),
-                },
-                {
-                  id: "preferredChannel",
-                  label: t.customer360.preferredChannel,
-                  visible: true,
-                  filterConfig: { type: "select", options: ["SMS", "USSD", "EMAIL", "PUSH"] },
-                  render: (_, row) => (
-                    <span className="text-sm text-gray-900">{getChannelLabel(row.tariff)}</span>
-                  ),
-                },
-                {
-                  id: "simType",
-                  label: t.customer360.simType,
-                  visible: true,
-                  filterConfig: { type: "select", options: ["KYC Verified", "Not Verified"] },
-                  render: (_, row) => (
-                    <span className="text-sm text-gray-900">{row.simType ?? "—"}</span>
-                  ),
-                },
-                {
-                  id: "activationDate",
-                  label: t.customer360.activationDate,
-                  visible: true,
-                  filterConfig: { type: "date" },
-                  render: (_, row) => (
-                    <span className="text-sm text-gray-900">{formatDate(row.activationDate)}</span>
-                  ),
-                },
-                {
-                  id: "actions",
-                  label: t.customer360.actions,
-                  visible: true,
-                  sortable: false,
-                  render: (_, row, rowIndex) => (
-                    <div className="flex items-center justify-end gap-2">
-                      <PermissionGate permission="customer.read">
-                        <button
-                          type="button"
-                          onClick={() => handleSelectCustomer(row)}
-                          className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
-                          title="View customer"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                      </PermissionGate>
-                      <PermissionGate permission="customer.update">
-                        <button
-                          type="button"
-                          onClick={() => handleEditCustomer(row)}
-                          className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
-                          title="Edit customer"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      </PermissionGate>
-                      <button
-                        ref={(el) => {
-                          actionMenuRefs.current[rowIndex] = el;
-                        }}
-                        onClick={(e) =>
-                          handleActionMenuToggle(rowIndex, e as any)
-                        }
-                        className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
-                        title="More actions"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-
-                      {showActionMenu &&
-                        actionMenuIndex === rowIndex &&
-                        dropdownPosition &&
-                        createPortal(
-                              <div
-                                ref={(el) => {
-                                  dropdownMenuRefs.current[index] = el;
-                                }}
-                                style={{
-                                  position: "fixed",
-                                  top: `${dropdownPosition.top}px`,
-                                  left: `${dropdownPosition.left}px`,
-                                  zIndex: zIndex.popover,
-                                }}
-                                className={`${tw.rounded} border border-gray-200 bg-white shadow-lg py-1 w-56`}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={() => handleSendCommunication(row)}
-                                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 first:rounded-t flex items-center gap-2 transition-colors"
-                                >
-                                  <Send className="h-4 w-4" />
-                                  Send Communication
-                                </button>
-                                <PermissionGate permission="customer.delete">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      handleDeleteCustomer(row);
-                                      setShowActionMenu(false);
-                                      setActionMenuIndex(null);
-                                      setDropdownPosition(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 last:rounded-b flex items-center gap-2 transition-colors"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                    Delete
-                                  </button>
-                                </PermissionGate>
-                              </div>,
-                              document.body,
-                            )}
-                    </div>
-                  ),
-                },
-              ]}
+              columns={columns.map((col) => {
+                const defaultCol = defaultColumns.find(dc => dc.id === col.id);
+                return defaultCol ? { ...defaultCol, visible: col.visible } : col;
+              })}
               data={paginatedResults}
               totalItems={totalCustomers}
               currentPage={filters.page}
@@ -1140,6 +1084,59 @@ export default function CustomersPage() {
           )}
       </div>
 
+      {/* Render dropdown menus via portal */}
+      {allCustomers.map((customer) => {
+        if (showActionMenuForId === customer.subscriptionId && dropdownPosition) {
+          return createPortal(
+            <div
+              key={customer.subscriptionId}
+              ref={(el) => {
+                if (el) {
+                  dropdownMenuRefs.current[customer.subscriptionId] = el;
+                }
+              }}
+              className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 w-56`}
+              style={{
+                zIndex: zIndex.popover,
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  handleSendCommunication(customer);
+                  setShowActionMenuForId(null);
+                  setDropdownPosition(null);
+                }}
+                className="w-full flex items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Send className="h-4 w-4 mr-3" />
+                Send Communication
+              </button>
+              <PermissionGate permission="customer.delete">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleDeleteCustomer(customer);
+                    setShowActionMenuForId(null);
+                    setDropdownPosition(null);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4 mr-3" />
+                  Delete
+                </button>
+              </PermissionGate>
+            </div>,
+            document.body,
+          );
+        }
+        return null;
+      })}
+
       {/* Create/Edit customer modals */}
       <CreateCustomerModal
         isOpen={isCreateCustomerModalOpen}
@@ -1192,10 +1189,16 @@ export default function CustomersPage() {
       {/* Column Picker Modal */}
       <ColumnPickerModal
         isOpen={showColumnPicker}
-        columns={defaultColumns}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
-        onReorderColumns={reorderColumns}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
         onResetToDefaults={resetToDefaults}
       />
 

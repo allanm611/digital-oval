@@ -334,7 +334,7 @@ export function Table<T extends { id?: number | string } = any>({
                       background: headerBackground || color.surface.tableHeader,
                       position: 'sticky',
                       top: 0,
-                      zIndex: 20,
+                      zIndex: 10,
                       width: '60px',
                       minWidth: '60px',
                     }}
@@ -363,7 +363,7 @@ export function Table<T extends { id?: number | string } = any>({
                         background: headerBackground || color.surface.tableHeader,
                         position: 'sticky',
                         top: 0,
-                        zIndex: 20,
+                        zIndex: 10,
                         width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                         minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                       }}

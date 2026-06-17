@@ -14,6 +14,8 @@ import {
   Settings,
   Database,
   X,
+  Target,
+  Percent,
 } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Input from "../../../../shared/components/ui/Input";
@@ -432,39 +434,18 @@ export default function AudienceConfigurationStep({
         (g) => g.id === config.selected_control_group_id,
       );
       return selectedGroup
-        ? `Universal: ${selectedGroup.name}`
+        ? selectedGroup.name
         : "Universal Control Group";
     }
     return "No Control Group";
   };
 
   const getControlGroupColor = (config?: SegmentControlGroupConfig) => {
-    if (!config || config.type === "none") return "bg-gray-100 text-gray-700";
-    if (config.type === "with_control_group") {
-      if (config.control_group_method === "fixed_percentage")
-        return `text-white`;
-      if (config.control_group_method === "fixed_number") return `text-white`;
-      if (config.control_group_method === "advanced_parameters")
-        return `text-white`;
-      return `text-white`;
-    }
-    if (config.type === "multiple_control_group") return `text-white`;
-    return "bg-gray-100 text-gray-700";
+    return "text-gray-700"; // Plain text color
   };
 
   const getControlGroupBgColor = (config?: SegmentControlGroupConfig) => {
-    if (!config || config.type === "none") return "#f3f4f6";
-    if (config.type === "with_control_group") {
-      if (config.control_group_method === "fixed_percentage")
-        return color.primary.accent;
-      if (config.control_group_method === "fixed_number")
-        return color.status.success;
-      if (config.control_group_method === "advanced_parameters")
-        return color.status.warning;
-      return color.primary.accent;
-    }
-    if (config.type === "multiple_control_group") return color.primary.accent;
-    return "#f3f4f6";
+    return "transparent"; // No background color
   };
 
   return (
@@ -1296,7 +1277,9 @@ function ControlGroupConfigModal({
                 <Radio name="controlGroupType"
                   value="multiple_control_group"
                   checked={config.type === "multiple_control_group"}
-                  onChange={() => setConfig({ type: "multiple_control_group" })}
+                  onChange={() => {
+                    setConfig({ type: "multiple_control_group" });
+                  }}
                   className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
                 <div>
                   <div className="text-sm font-medium text-gray-900">
@@ -1410,13 +1393,14 @@ function ControlGroupConfigModal({
                       max="50"
                       step="0.1"
                       placeholder="23"
-                      value={config.percentage || 23}
-                      onChange={(value) =>
+                      value={config.percentage || ""}
+                      onChange={(value) => {
+                        const numValue = String(value).trim() === "" ? 0 : Number(String(value));
                         setConfig({
                           ...config,
-                          percentage: Number(String(value)),
-                        })
-                      }
+                          percentage: numValue,
+                        });
+                      }}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       {calculateControlGroupSize().toLocaleString()}{" "}
@@ -1427,7 +1411,7 @@ function ControlGroupConfigModal({
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 cursor-pointer">
                     <Checkbox id="setLimits"
                       checked={config.set_limits || false}
                       onChange={(value) =>
@@ -1436,7 +1420,7 @@ function ControlGroupConfigModal({
                       className="w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157] rounded" />
                     <label
                       htmlFor="setLimits"
-                      className="text-sm font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 cursor-pointer"
                     >
                       {t.campaigns.audienceConfiguration.setLimits}
                     </label>
@@ -1450,40 +1434,32 @@ function ControlGroupConfigModal({
 
                   {config.set_limits && (
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-1">
-                          {t.campaigns.audienceConfiguration.lowerLimit}
-                        </label>
-                        <Input type="number"
-                          min="0"
-                          value={config.lower_limit || ""}
-                          onChange={(value) =>
-                            setConfig({
-                              ...config,
-                              lower_limit: Number(String(value)),
-                            })
-                          }
-                          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
-                          placeholder="Lower limit"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-1">
-                          {t.campaigns.audienceConfiguration.upperLimit}
-                        </label>
-                        <Input type="number"
-                          min="0"
-                          value={config.upper_limit || ""}
-                          onChange={(value) =>
-                            setConfig({
-                              ...config,
-                              upper_limit: Number(String(value)),
-                            })
-                          }
-                          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
-                          placeholder="Upper limit"
-                        />
-                      </div>
+                      <Input type="number"
+                        min="0"
+                        label={t.campaigns.audienceConfiguration.lowerLimit}
+                        value={config.lower_limit || ""}
+                        onChange={(value) => {
+                          const numValue = String(value).trim() === "" ? 0 : Number(String(value));
+                          setConfig({
+                            ...config,
+                            lower_limit: numValue,
+                          });
+                        }}
+                        placeholder="0"
+                      />
+                      <Input type="number"
+                        min="0"
+                        label={t.campaigns.audienceConfiguration.upperLimit}
+                        value={config.upper_limit || ""}
+                        onChange={(value) => {
+                          const numValue = String(value).trim() === "" ? 0 : Number(String(value));
+                          setConfig({
+                            ...config,
+                            upper_limit: numValue,
+                          });
+                        }}
+                        placeholder="0"
+                      />
                     </div>
                   )}
                 </div>
@@ -1505,20 +1481,23 @@ function ControlGroupConfigModal({
                     min="1"
                     max={segment.customer_count || 0}
                     placeholder="10000"
-                    value={config.fixed_number || 10000}
-                    onChange={(value) =>
+                    value={config.fixed_number || ""}
+                    onChange={(value) => {
+                      const numValue = String(value).trim() === "" ? 0 : Number(String(value));
                       setConfig({
                         ...config,
-                        fixed_number: Number(String(value)),
-                      })
-                    }
+                        fixed_number: numValue,
+                      });
+                    }}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    {(
-                      ((config.fixed_number || 10000) /
-                        (segment.customer_count || 1)) *
-                      100
-                    ).toFixed(1)}
+                    {config.fixed_number && segment.customer_count
+                      ? (
+                          ((config.fixed_number) /
+                            (segment.customer_count || 1)) *
+                          100
+                        ).toFixed(1)
+                      : "0"}
                     % {t.campaigns.audienceConfiguration.ofTotalSegment}
                   </p>
                 </div>
@@ -1532,49 +1511,108 @@ function ControlGroupConfigModal({
                 {t.campaigns.audienceConfiguration.selectUniversalControlGroup}
               </h4>
 
-              <div
-                className={`border border-gray-300 ${tw.rounded} p-4 space-y-3`}
-              >
-                <SearchInput
-                  placeholder={
-                    t.campaigns.audienceConfiguration.searchControlGroups
-                  }
-                  value={searchTerm}
-                  onChange={(value) => setSearchTerm(value)}
-                />
+              <SearchInput
+                placeholder="Search control groups..."
+                value={searchTerm}
+                onChange={(value) => setSearchTerm(value)}
+              />
 
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {filteredControlGroups.map((group) => (
-                    <label
-                      key={group.id}
-                      className={`flex items-start space-x-3 p-3 border border-gray-200 ${tw.rounded} hover:bg-white cursor-pointer`}
+              {(() => {
+                const filteredGroups = availableControlGroups.filter((group) =>
+                  group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (group.description &&
+                    group.description.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+
+                if (filteredGroups.length === 0) {
+                  return (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-gray-500">
+                        {searchTerm ? "No control groups found" : "No control groups available"}
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    className={`border ${tw.rounded} overflow-hidden max-h-60 overflow-y-auto`}
+                    style={{ borderColor: color.border.default }}
+                  >
+                    <table
+                      className="w-full divide-y table-fixed"
+                      style={{ borderColor: color.border.default }}
                     >
-                      <Radio name="selectedControlGroup"
-                        value={group.id}
-                        checked={config.selected_control_group_id === group.id}
-                        onChange={(value) =>
-                          setConfig({
-                            ...config,
-                            selected_control_group_id: String(value),
-                          })
-                        }
-                        className="mt-1 w-4 h-4 text-[#588157] border-gray-300 focus:ring-[#588157]" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          {group.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {group.description}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {group.percentage}% control group • Created{" "}
-                          {group.created_at}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
+                      <thead style={{ backgroundColor: color.surface.cards }}>
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                            Select
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            Name
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
+                            Description
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                            Percentage
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody
+                        className="bg-white divide-y"
+                        style={{ borderColor: color.border.default }}
+                      >
+                        {filteredGroups.map((group) => {
+                          const isSelected = config.selected_control_group_id === group.id;
+                          return (
+                            <tr
+                              key={group.id}
+                              onClick={() =>
+                                setConfig({
+                                  ...config,
+                                  selected_control_group_id: group.id,
+                                })
+                              }
+                              className="cursor-pointer transition-colors hover:bg-gray-50"
+                            >
+                              <td className="px-4 py-3">
+                                <Radio
+                                  name="universalControlGroup"
+                                  value={group.id}
+                                  checked={isSelected}
+                                  onChange={() =>
+                                    setConfig({
+                                      ...config,
+                                      selected_control_group_id: group.id,
+                                    })
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-medium text-black truncate">
+                                  {group.name}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm text-gray-600 truncate">
+                                  {group.description || "-"}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="text-sm text-black">
+                                  {group.percentage}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -1591,7 +1629,7 @@ function ControlGroupConfigModal({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {t.campaigns.audienceConfiguration.confidenceLevel}
                     </label>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-4">
                       <input
                         type="range"
                         min="90"
@@ -1604,22 +1642,30 @@ function ControlGroupConfigModal({
                             confidence_level: Number(e.target.value),
                           })
                         }
-                        className="flex-1"
+                        className="flex-1 pointer-events-none"
+                        style={{
+                          accentColor: color.primary.action,
+                          WebkitAppearance: "none",
+                          appearance: "none",
+                          width: "100%",
+                          height: "6px",
+                          borderRadius: "3px",
+                          background: "linear-gradient(to right, #E5E7EB 0%, #E5E7EB 100%)",
+                          cursor: "pointer",
+                          outline: "none",
+                        }}
                       />
-                      <span className="text-sm font-medium text-gray-700 w-12">
+                      <span className="text-sm font-semibold text-gray-700 w-12">
                         {config.confidence_level || 95}%
                       </span>
                     </div>
-                    <p className="text-xs text-red-500 mt-1">
-                      {t.campaigns.audienceConfiguration.fieldRequired}
-                    </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {t.campaigns.audienceConfiguration.marginOfError}
                     </label>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-4">
                       <input
                         type="range"
                         min="1"
@@ -1632,15 +1678,23 @@ function ControlGroupConfigModal({
                             margin_of_error: Number(e.target.value),
                           })
                         }
-                        className="flex-1"
+                        className="flex-1 pointer-events-none"
+                        style={{
+                          accentColor: color.primary.action,
+                          WebkitAppearance: "none",
+                          appearance: "none",
+                          width: "100%",
+                          height: "6px",
+                          borderRadius: "3px",
+                          background: "linear-gradient(to right, #E5E7EB 0%, #E5E7EB 100%)",
+                          cursor: "pointer",
+                          outline: "none",
+                        }}
                       />
-                      <span className="text-sm font-medium text-gray-700 w-12">
+                      <span className="text-sm font-semibold text-gray-700 w-12">
                         {config.margin_of_error || 99}%
                       </span>
                     </div>
-                    <p className="text-xs text-red-500 mt-1">
-                      {t.campaigns.audienceConfiguration.fieldRequired}
-                    </p>
                   </div>
                 </div>
               </div>
@@ -1648,43 +1702,65 @@ function ControlGroupConfigModal({
 
           {/* Summary */}
           {config.type !== "none" && (
-            <div className={`${tw.rounded} p-4`}>
-              <h4 className="font-medium text-gray-900 mb-2">
+            <div className={`${tw.rounded} p-4 border border-gray-200 bg-gray-50`}>
+              <h4 className="font-semibold text-gray-900 mb-4">
                 {t.campaigns.audienceConfiguration.summary}
               </h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">
-                    {t.campaigns.audienceConfiguration.totalSegmentSize}
-                  </span>
-                  <span className="font-medium ml-2">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Total Segment Size */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-gray-600" />
+                    <span className="text-xs font-medium text-gray-600">
+                      {t.campaigns.audienceConfiguration.totalSegmentSize}
+                    </span>
+                  </div>
+                  <span className="text-lg font-semibold text-gray-900">
                     {(segment.customer_count || 0).toLocaleString()}
                   </span>
+                  <p className="text-xs text-gray-500 mt-1">Total audience</p>
                 </div>
-                <div>
-                  <span className="text-gray-500">
-                    {t.campaigns.audienceConfiguration.controlGroupSize}
-                  </span>
-                  <span className="font-medium ml-2">
+
+                {/* Control Group Size */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-gray-600" />
+                    <span className="text-xs font-medium text-gray-600">
+                      {t.campaigns.audienceConfiguration.controlGroupSize}
+                    </span>
+                  </div>
+                  <span className="text-lg font-semibold text-gray-900">
                     {calculateControlGroupSize().toLocaleString()}
                   </span>
+                  <p className="text-xs text-gray-500 mt-1">Control group</p>
                 </div>
-                <div>
-                  <span className="text-gray-500">
-                    {t.campaigns.audienceConfiguration.targetGroupSize}
-                  </span>
-                  <span className="font-medium ml-2">
+
+                {/* Target Group Size */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-gray-600" />
+                    <span className="text-xs font-medium text-gray-600">
+                      {t.campaigns.audienceConfiguration.targetGroupSize}
+                    </span>
+                  </div>
+                  <span className="text-lg font-semibold text-gray-900">
                     {(
                       (segment.customer_count || 0) -
                       calculateControlGroupSize()
                     ).toLocaleString()}
                   </span>
+                  <p className="text-xs text-gray-500 mt-1">Target audience</p>
                 </div>
-                <div>
-                  <span className="text-gray-500">
-                    {t.campaigns.audienceConfiguration.controlPercentage}
-                  </span>
-                  <span className="font-medium ml-2">
+
+                {/* Control Percentage */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Percent className="w-4 h-4 text-gray-600" />
+                    <span className="text-xs font-medium text-gray-600">
+                      {t.campaigns.audienceConfiguration.controlPercentage}
+                    </span>
+                  </div>
+                  <span className="text-lg font-semibold text-gray-900">
                     {config.type === "with_control_group" &&
                     config.control_group_method === "fixed_percentage"
                       ? `${config.percentage}%`
@@ -1713,6 +1789,7 @@ function ControlGroupConfigModal({
                               }%`
                             : "0%"}
                   </span>
+                  <p className="text-xs text-gray-500 mt-1">Of total audience</p>
                 </div>
               </div>
             </div>

@@ -784,46 +784,44 @@ export default function SegmentCategoriesPage() {
       </div>
 
       {/* Stats Cards */}
-      {catalogStatsCards.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {catalogStatsCards.map((stat) => {
-            const Icon = stat.icon;
-            const valueClass = stat.valueClass ?? "text-3xl";
-            const shouldMask = stat.loading ?? true;
-            const isNumeric = typeof stat.value === "number";
-            const displayValue =
-              statsLoading && shouldMask ? "..." : (isNumeric ? <NumberFormatter value={stat.value} /> : (stat.value ?? "..."));
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        {catalogStatsCards.map((stat) => {
+          const Icon = stat.icon;
+          const valueClass = stat.valueClass ?? "text-3xl";
+          const shouldMask = stat.loading ?? true;
+          const isNumeric = typeof stat.value === "number";
+          const displayValue =
+            statsLoading && shouldMask ? "..." : (isNumeric ? <NumberFormatter value={stat.value} /> : (stat.value ?? "..."));
 
-            return (
-              <div
-                key={stat.name}
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon
-                    className="h-5 w-5"
-                    style={{ color: color.primary.accent }}
-                  />
-                  <p className="text-sm font-medium text-gray-600">
-                    {stat.name}
-                  </p>
-                </div>
-                <p
-                  className={`mt-2 ${valueClass} font-bold text-gray-900`}
-                  title={stat.title}
-                >
-                  {displayValue}
+          return (
+            <div
+              key={stat.name}
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
+              <div className="flex items-center gap-2">
+                <Icon
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">
+                  {stat.name}
                 </p>
-                {stat.description && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    {stat.description}
-                  </p>
-                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+              <p
+                className={`mt-2 ${valueClass} font-bold text-gray-900`}
+                title={stat.title}
+              >
+                {displayValue}
+              </p>
+              {stat.description && (
+                <p className="mt-1 text-sm text-gray-500">
+                  {stat.description}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* Search and View Toggle */}
       <div className="flex items-center gap-4">

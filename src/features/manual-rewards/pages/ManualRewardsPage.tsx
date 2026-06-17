@@ -25,6 +25,7 @@ import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import ManualRewardDetailsExpandedRow from "../components/ManualRewardDetailsExpandedRow";
 
 export default function ManualRewardsPage() {
@@ -41,6 +42,7 @@ export default function ManualRewardsPage() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -204,7 +206,7 @@ export default function ManualRewardsPage() {
     },
   ];
 
-  const { columns } = useTable({
+  const { columns, toggleColumn, reorderColumns, resetToDefaults } = useTable({
     tableId: "manual-rewards-table",
     defaultColumns: tableColumns,
     defaultPageSize: DEFAULT_PAGE_SIZE,
@@ -378,6 +380,8 @@ export default function ManualRewardsPage() {
             onExpandChange={setExpandedRowId}
             onFilteredCountChange={handleFilteredCountChange}
             clearFiltersKey={clearFiltersKey}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             expandedContent={(reward) => (
               <ManualRewardDetailsExpandedRow reward={reward} colSpan={columns.filter((c) => c.visible).length} />
             )}
@@ -415,6 +419,21 @@ export default function ManualRewardsPage() {
         cancelText="Cancel"
       />
 
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

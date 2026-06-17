@@ -24,6 +24,7 @@ import { communicationPolicyService } from "../services/communicationPolicyServi
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 
 export default function CommunicationPolicyPage() {
@@ -59,6 +60,7 @@ export default function CommunicationPolicyPage() {
   } | null>(null);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
@@ -349,6 +351,9 @@ export default function CommunicationPolicyPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "communication-policies-table",
     defaultColumns,
@@ -463,6 +468,8 @@ export default function CommunicationPolicyPage() {
               onExpandChange={setExpandedRowId}
               onFilteredCountChange={handleFilteredCountChange}
               clearFiltersKey={clearFiltersKey}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               expandedContent={(policy) => (
                 <CommunicationPolicyDetailsExpandedRow policy={policy} colSpan={columns.filter((c) => c.visible).length} />
               )}
@@ -546,6 +553,22 @@ export default function CommunicationPolicyPage() {
         isLoading={isDeleting}
         confirmText={t.communicationPolicy.deletePolicy}
         cancelText={t.common.cancel}
+      />
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

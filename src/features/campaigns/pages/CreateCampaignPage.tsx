@@ -90,6 +90,7 @@ export default function CreateCampaignPage() {
   const { t } = useLanguage();
   const { data: objectives } = useBackendConfigurationData("campaignObjectives") || { data: [] };
   const { data: departments } = useBackendConfigurationData("departments") || { data: [] };
+  const { data: linesOfBusiness } = useBackendConfigurationData("lineOfBusiness") || { data: [] };
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -270,11 +271,32 @@ export default function CreateCampaignPage() {
           // Set form data with all available fields
           // If duplicating, prefix name with "Copy of "
 
-          // Map objective - backend returns name/id, store as ID from objectives list
+          // Map objective - backend returns name, find matching ID
           let objectiveValue = "acquisition";
           if (campaign?.objective) {
-            // Use objective as-is since backend already returns the ID
-            objectiveValue = String(campaign.objective);
+            // Try to find the objective ID by matching the name/value
+            const matchingObjective = objectives?.find(
+              (o: any) => o.name === campaign.objective || o.id === campaign.objective
+            );
+            objectiveValue = matchingObjective?.id || String(campaign.objective);
+          }
+
+          // Map department - find ID by matching name
+          let departmentId = undefined;
+          if (campaign?.department || campaign?.department_id) {
+            const matchingDept = departments?.find(
+              (d: any) => d.name === campaign.department || d.id === campaign.department_id
+            );
+            departmentId = matchingDept?.id || campaign?.department_id;
+          }
+
+          // Map line of business - find ID by matching name
+          let lineOfBusinessId = undefined;
+          if (campaign?.line_of_business || campaign?.line_of_business_id) {
+            const matchingLob = linesOfBusiness?.find(
+              (l: any) => l.name === campaign.line_of_business || l.id === campaign.line_of_business_id
+            );
+            lineOfBusinessId = matchingLob?.id || campaign?.line_of_business_id;
           }
 
           const newFormData: CampaignFormData = {
@@ -299,9 +321,9 @@ export default function CreateCampaignPage() {
             tags: (campaign?.tags || []).map((tag: any) =>
               typeof tag === "string" ? tag : tag?.name || String(tag),
             ),
-            department_id: campaign?.department_id || undefined,
+            department_id: departmentId,
             department: campaign?.department || undefined,
-            line_of_business_id: campaign?.line_of_business_id || undefined,
+            line_of_business_id: lineOfBusinessId,
             line_of_business: campaign?.line_of_business || undefined,
             communication_policy: campaign?.communication_policy || undefined,
             budget_allocated: campaign?.budget_allocated
@@ -311,6 +333,17 @@ export default function CreateCampaignPage() {
             // priority_rank: campaign?.priority_rank || undefined, // NOT ALLOWED
           };
           setFormData(newFormData);
+
+          // Load control group data from campaign
+          if (campaign?.control_group_enabled || campaign?.control_group_percentage) {
+            setControlGroup({
+              enabled: campaign.control_group_enabled || false,
+              percentage: campaign.control_group_percentage
+                ? parseFloat(String(campaign.control_group_percentage))
+                : 0,
+              id: campaign.control_group_id || undefined,
+            });
+          }
         }
 
         try {
@@ -329,6 +362,7 @@ export default function CreateCampaignPage() {
                   customer_count: segment.customer_count || 0,
                   criteria: {},
                   created_at: segment.created_at || new Date().toISOString(),
+                  control_group_config: segment.control_group_config,
                 } as CampaignSegment;
               })
               .filter((s): s is CampaignSegment => s !== null);

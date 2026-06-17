@@ -52,6 +52,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Extract types from API response type
 type ValueMatrixPoint = CustomerProfileReportsResponse["valueMatrix"][number];
@@ -493,6 +494,7 @@ export default function CustomerProfileReportsPage() {
   const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [apiCustomers, setApiCustomers] = useState<
     CustomerSubscriptionRecord[]
   >([]);
@@ -562,7 +564,7 @@ export default function CustomerProfileReportsPage() {
     },
   ];
 
-  const { columns: tableColumnsMemo } = useTable({
+  const { columns: tableColumnsMemo, toggleColumn, reorderColumns, resetToDefaults } = useTable({
     tableId: "customer-reports-table",
     defaultColumns: tableColumns,
     defaultPageSize: CUSTOMER_TABLE_PAGE_SIZE,
@@ -1904,6 +1906,8 @@ export default function CustomerProfileReportsPage() {
               onPageChange={setTablePage}
               onFilteredCountChange={handleFilteredCountChange}
               clearFiltersKey={clearFiltersKey}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,
@@ -1927,6 +1931,22 @@ export default function CustomerProfileReportsPage() {
           </>
         )}
       </section>
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={tableColumnsMemo.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = tableColumnsMemo.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

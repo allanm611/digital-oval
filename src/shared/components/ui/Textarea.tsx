@@ -85,10 +85,10 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
 
       {/* Floating Label */}
       <label
-        className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium
+        className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
-            ? 'top-0 -translate-y-1/2 bg-white px-1 text-gray-700'
-            : 'top-3 text-gray-700'
+            ? 'top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700'
+            : 'top-3 text-sm text-gray-700'
           }
         `}
       >

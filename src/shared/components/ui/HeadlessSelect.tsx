@@ -45,7 +45,9 @@ export default function HeadlessSelect({
     left: 0,
     width: 0,
   });
+  const [isAbove, setIsAbove] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -60,10 +62,24 @@ export default function HeadlessSelect({
     const updatePosition = () => {
       if (isOpen && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
 
-        // Always open downward - no flipping logic
+        // Use actual dropdown height if available, otherwise estimate conservatively
+        const dropdownHeight = dropdownRef.current?.scrollHeight || 200;
+        const GAP_BELOW = 4;
+        const GAP_ABOVE = 8; // Extra space when flipped above
+        const MIN_EDGE_PADDING = 8; // Minimum distance from viewport edges
+
+        // Auto-flip: use above if not enough space below and sufficient space above
+        const shouldBeAbove =
+          spaceBelow < dropdownHeight + GAP_BELOW + MIN_EDGE_PADDING &&
+          spaceAbove - dropdownHeight > MIN_EDGE_PADDING;
+
+        setIsAbove(shouldBeAbove);
+        const gap = shouldBeAbove ? GAP_ABOVE : GAP_BELOW;
         setDropdownPosition({
-          top: rect.bottom + 4,
+          top: shouldBeAbove ? rect.top - dropdownHeight - gap : rect.bottom + gap,
           left: Math.max(0, Math.min(rect.left, window.innerWidth - rect.width)),
           width: rect.width,
         });
@@ -71,10 +87,12 @@ export default function HeadlessSelect({
     };
 
     if (isOpen) {
-      updatePosition();
+      // Measure after render
+      const timer = requestAnimationFrame(updatePosition);
       window.addEventListener("scroll", updatePosition);
       window.addEventListener("resize", updatePosition);
       return () => {
+        cancelAnimationFrame(timer);
         window.removeEventListener("scroll", updatePosition);
         window.removeEventListener("resize", updatePosition);
       };
@@ -141,6 +159,7 @@ export default function HeadlessSelect({
         <>
           {createPortal(
             <div
+              ref={dropdownRef}
               className={`${tw.rounded} py-1 text-sm shadow-lg focus:outline-none max-h-80 overflow-auto pointer-events-auto`}
               style={{
                 position: "fixed",
@@ -292,6 +311,7 @@ export default function HeadlessSelect({
         <>
           {createPortal(
             <div
+              ref={dropdownRef}
               className={`${tw.rounded} py-1 text-sm shadow-lg focus:outline-none max-h-80 overflow-auto pointer-events-auto`}
               style={{
                 position: "fixed",
@@ -398,10 +418,10 @@ export default function HeadlessSelect({
       {/* Floating Label */}
       {label && (
         <label
-          className={`absolute left-3 transition-all duration-200 pointer-events-none text-sm font-medium z-10
+          className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium z-10
             ${isOpen || hasValue
-              ? "top-0 -translate-y-1/2 bg-white px-1 text-gray-700"
-              : "top-1/2 -translate-y-1/2 text-gray-500"
+              ? "top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700"
+              : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
             }`}
         >
           {label}

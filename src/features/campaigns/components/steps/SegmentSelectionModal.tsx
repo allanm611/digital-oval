@@ -156,25 +156,6 @@ export default function SegmentSelectionModal({
           >
             <X className="w-5 h-5" />
           </button>
-          {tempSelectedSegments.length > 0 && (
-            <div
-              className={`${tw.rounded} p-4 border border-gray-200 bg-white text-sm text-black`}
-            >
-              <div className="flex items-center justify-between">
-                <span>
-                  {tempSelectedSegments.length} segment
-                  {tempSelectedSegments.length !== 1 ? "s" : ""} selected (
-                  {totalSelectedCustomers.toLocaleString()} customers)
-                </span>
-                <button
-                  onClick={() => setTempSelectedSegments([])}
-                  className="text-black hover:opacity-70 transition-opacity"
-                >
-                  Clear All
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         <div

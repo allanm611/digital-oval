@@ -273,7 +273,7 @@ export default function ConfigurationManagerAPI({
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       {/* Breadcrumb */}
       {showBackButton && (
         <div className="flex items-center justify-between">
@@ -303,7 +303,7 @@ export default function ConfigurationManagerAPI({
       )}
 
       {/* Search */}
-      <div className="my-5">
+      <div className="mt-12 mb-5">
         <SearchInput
           placeholder={config.searchPlaceholder}
           value={searchTerm}

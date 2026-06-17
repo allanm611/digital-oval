@@ -37,6 +37,7 @@ import type { SegmentType } from "../../segments/types/segment";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Types
 type SegmentSummary = {
@@ -355,6 +356,7 @@ export default function SegmentReportsPage() {
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const tableColumns: TableColumn<SegmentRow>[] = [
     {
@@ -426,7 +428,7 @@ export default function SegmentReportsPage() {
     },
   ];
 
-  const { columns: tableColumnsMemo, handlePageSizeChange: tableHandlePageSizeChange } = useTable({
+  const { columns: tableColumnsMemo, handlePageSizeChange: tableHandlePageSizeChange, toggleColumn, reorderColumns, resetToDefaults } = useTable({
     tableId: "segment-reports-table",
     defaultColumns: tableColumns,
     defaultPageSize: DEFAULT_PAGE_SIZE,
@@ -1248,6 +1250,8 @@ export default function SegmentReportsPage() {
               onPageChange={setTablePage}
               onFilteredCountChange={handleFilteredCountChange}
               clearFiltersKey={clearFiltersKey}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,
@@ -1267,6 +1271,22 @@ export default function SegmentReportsPage() {
           </>
         )}
       </section>
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={tableColumnsMemo.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = tableColumnsMemo.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

@@ -506,9 +506,11 @@ export default function OfferSelectionModal({
         {tempSelectedOffers.length > 0 && (
           <div className="px-6 flex-shrink-0 my-3">
             <div
-              className={`${tw.rounded} p-4 border text-sm text-black bg-white`}
+              className={`${tw.rounded} p-4 border text-sm`}
               style={{
-                borderColor: color.border.default,
+                backgroundColor: `${color.primary.accent}15`,
+                borderColor: `${color.primary.accent}40`,
+                color: color.primary.accent,
               }}
             >
               <div className="flex items-center justify-between">
@@ -518,7 +520,8 @@ export default function OfferSelectionModal({
                 </span>
                 <button
                   onClick={() => setTempSelectedOffers([])}
-                  className="font-medium text-black hover:opacity-70 transition-opacity"
+                  className="font-medium hover:opacity-80 transition-opacity"
+                  style={{ color: color.primary.accent }}
                 >
                   Clear All
                 </button>

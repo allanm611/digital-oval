@@ -24,6 +24,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import ManualBroadcastDetailsExpandedRow from "../components/ManualBroadcastDetailsExpandedRow";
 
 export default function ManualBroadcastListsPage() {
@@ -54,6 +55,7 @@ export default function ManualBroadcastListsPage() {
     useState<ManualBroadcast | null>(null);
   const [expandedRowId, setExpandedRowId] = useState<string | number | null>(null);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteBroadcast } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -386,6 +388,9 @@ export default function ManualBroadcastListsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "manual-broadcasts-table",
     defaultColumns: broadcastColumns,
@@ -511,6 +516,8 @@ export default function ManualBroadcastListsPage() {
               onExpandChange={setExpandedRowId}
               onFilteredCountChange={handleFilteredCountChange}
               clearFiltersKey={clearFiltersKey}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               expandedContent={(broadcast) => (
                 <ManualBroadcastDetailsExpandedRow broadcast={broadcast} colSpan={columns.filter((c) => c.visible).length} />
               )}
@@ -550,6 +557,22 @@ export default function ManualBroadcastListsPage() {
         isLoading={isDeleting}
         confirmText="Delete Broadcast"
         cancelText="Cancel"
+      />
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

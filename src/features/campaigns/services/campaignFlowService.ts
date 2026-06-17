@@ -34,8 +34,6 @@ function cleanFlowData(flow: any) {
       delete cleaned[field];
     }
   });
-  // Always remove campaign_id since it's passed in the URL path, not the body
-  delete cleaned.campaign_id;
   return cleaned;
 }
 

@@ -394,7 +394,7 @@ export default function CampaignBroadcastsPage() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                total={filteredBroadcasts.length}
+                totalItems={filteredBroadcasts.length}
                 onPageChange={setCurrentPage}
               />
             )}

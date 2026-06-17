@@ -1388,19 +1388,19 @@ export default function CampaignDetailsPage() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Name
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>{campaign.name}</p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Code
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>{campaign.code}</p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Status
             </label>
             <div className="flex items-center flex-wrap gap-2">
@@ -1418,7 +1418,7 @@ export default function CampaignDetailsPage() {
             </div>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Approval Status
             </label>
             <div className="flex items-center flex-wrap gap-2">
@@ -1436,13 +1436,13 @@ export default function CampaignDetailsPage() {
             </div>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Category
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>{categoryName || "—"}</p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Objective
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1450,7 +1450,7 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Tags
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1478,7 +1478,7 @@ export default function CampaignDetailsPage() {
             </div>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Program ID
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1496,7 +1496,7 @@ export default function CampaignDetailsPage() {
         {/* Schedule Section */}
         <div className="mb-8">
           <h3
-            className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+            className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide mb-4`}
           >
             Schedule & Timeline
           </h3>
@@ -1562,7 +1562,7 @@ export default function CampaignDetailsPage() {
         {/* Targets & Performance Section */}
         <div>
           <h3
-            className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+            className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide mb-4`}
           >
             Targets & Performance
           </h3>
@@ -1672,7 +1672,7 @@ export default function CampaignDetailsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Created Date
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1688,7 +1688,7 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Created By
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1696,7 +1696,7 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Updated Date
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1712,7 +1712,7 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Updated By
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1720,7 +1720,7 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Approved Date
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1738,7 +1738,7 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
           <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+            <label className={`text-sm font-medium ${tw.textPrimary} block mb-1`}>
               Approved By
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
@@ -1825,7 +1825,7 @@ export default function CampaignDetailsPage() {
               style={{ borderColor: color.border.default }}
             >
               <h4
-                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+                className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide mb-4`}
               >
                 Core Details
               </h4>
@@ -1877,7 +1877,7 @@ export default function CampaignDetailsPage() {
               style={{ borderColor: color.border.default }}
             >
               <h4
-                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+                className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide mb-4`}
               >
                 Schedule & Timeline
               </h4>
@@ -1945,7 +1945,7 @@ export default function CampaignDetailsPage() {
               style={{ borderColor: color.border.default }}
             >
               <h4
-                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+                className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide mb-4`}
               >
                 Targets & Performance
               </h4>
@@ -2018,7 +2018,7 @@ export default function CampaignDetailsPage() {
                 style={{ borderColor: color.border.default }}
               >
                 <h4
-                  className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+                  className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide mb-4`}
                 >
                   Tags
                 </h4>

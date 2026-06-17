@@ -79,6 +79,7 @@ export default function CampaignSegmentsModal({
                     className={`px-3 py-1 text-sm font-medium  rounded transition-colors`}
                     style={{
                       backgroundColor: color.primary.action,
+                      color: "white",
                     }}
                   >
                     View

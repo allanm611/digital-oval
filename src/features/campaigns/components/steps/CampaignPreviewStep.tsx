@@ -229,8 +229,8 @@ export default function CampaignPreviewStep({
                   Start Date
                 </div>
                 <div className="text-sm font-medium text-gray-600">
-                  {formData.start_date ? (
-                    <DateFormatter date={formData.start_date} />
+                  {formData.scheduling?.start_date || formData.start_date ? (
+                    <DateFormatter date={formData.scheduling?.start_date || formData.start_date} />
                   ) : (
                     "Not scheduled"
                   )}
@@ -241,8 +241,8 @@ export default function CampaignPreviewStep({
                   End Date
                 </div>
                 <div className="text-sm font-medium text-gray-600">
-                  {formData.end_date ? (
-                    <DateFormatter date={formData.end_date} />
+                  {formData.scheduling?.end_date || formData.end_date ? (
+                    <DateFormatter date={formData.scheduling?.end_date || formData.end_date} />
                   ) : (
                     "Not scheduled"
                   )}
@@ -340,13 +340,23 @@ export default function CampaignPreviewStep({
                         </div>
                       </div>
                       <div>
-                        {segment.control_group_config ? (
-                          <div className="text-sm font-medium text-gray-700">
-                            {segment.control_group_config.control_group_method?.percentage || segment.control_group_config.percentage || "0"}%
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-400">—</div>
-                        )}
+                        {(() => {
+                          const config = segment.control_group_config;
+                          if (!config) return <div className="text-sm text-gray-400">—</div>;
+
+                          // Handle universal control group
+                          if (config.type === "multiple_control_group" && config.selected_control_group_id) {
+                            const universalGroups = formData.control_groups || [];
+                            const selectedGroup = universalGroups.find(g => g.id === config.selected_control_group_id);
+                            if (selectedGroup) {
+                              return <div className="text-sm font-medium text-gray-700">{selectedGroup.percentage}%</div>;
+                            }
+                          }
+
+                          // Handle other control group types
+                          const percentage = config.control_group_method?.percentage || config.percentage || "0";
+                          return <div className="text-sm font-medium text-gray-700">{percentage}%</div>;
+                        })()}
                       </div>
                       <div>
                         {(() => {
@@ -416,8 +426,8 @@ export default function CampaignPreviewStep({
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Start</span>
               <span className="font-medium text-gray-900">
-                {formData.start_date ? (
-                  <DateFormatter date={formData.start_date} />
+                {formData.scheduling?.start_date || formData.start_date ? (
+                  <DateFormatter date={formData.scheduling?.start_date || formData.start_date} />
                 ) : (
                   "Not scheduled"
                 )}
@@ -426,8 +436,8 @@ export default function CampaignPreviewStep({
             <div className="flex items-center justify-between">
               <span className="text-gray-500">End</span>
               <span className="font-medium text-gray-900">
-                {formData.end_date ? (
-                  <DateFormatter date={formData.end_date} />
+                {formData.scheduling?.end_date || formData.end_date ? (
+                  <DateFormatter date={formData.scheduling?.end_date || formData.end_date} />
                 ) : (
                   "Not scheduled"
                 )}
@@ -436,12 +446,12 @@ export default function CampaignPreviewStep({
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Estimated Duration</span>
               <span className="font-medium text-gray-900">
-                {formData.start_date && formData.end_date
+                {(formData.scheduling?.start_date || formData.start_date) && (formData.scheduling?.end_date || formData.end_date)
                   ? Math.max(
                       1,
                       Math.ceil(
-                        (new Date(formData.end_date).getTime() -
-                          new Date(formData.start_date).getTime()) /
+                        (new Date(formData.scheduling?.end_date || formData.end_date).getTime() -
+                          new Date(formData.scheduling?.start_date || formData.start_date).getTime()) /
                           (1000 * 60 * 60 * 24)
                       )
                     ) + " days"
@@ -513,7 +523,7 @@ export default function CampaignPreviewStep({
                 onClick={handleSendTest}
                 disabled={isTesting || getTestSeedLists().length === 0}
                 className={`w-auto px-4 py-2 rounded text-sm font-medium  transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{ backgroundColor: color.primary.action }}
+                style={{ backgroundColor: color.primary.action, color: "white" }}
               >
                 {isTesting ? (
                   <>

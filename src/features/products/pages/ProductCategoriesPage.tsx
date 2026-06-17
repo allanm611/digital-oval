@@ -377,7 +377,7 @@ export default function ProductCatalogsPage() {
     >
   >({});
   const [stats, setStats] = useState<CategoryStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Filter states
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -927,16 +927,6 @@ export default function ProductCatalogsPage() {
       loading: false,
     },
   ];
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner size="lg" variant="default" color="primary" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

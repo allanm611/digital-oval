@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, XCircle } from "lucide-react";
+import { X } from "lucide-react";
 import Textarea from "../../../shared/components/ui/Textarea";
 import { campaignService } from "../services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -103,14 +103,14 @@ export default function RejectCampaignModal({
 
           {/* Content */}
           <div className="p-6">
-            <p className={`text-sm ${tw.textSecondary} mb-2`}>
+            <p className={`text-sm ${tw.textSecondary} mb-6 flex items-center gap-1`}>
               You are about to reject the campaign:
-            </p>
-            <p className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
-              "{campaignName}"
+              <span className={`font-semibold ${tw.textPrimary} truncate`}>
+                "{campaignName}"
+              </span>
             </p>
 
-            <div className="mb-4">
+            <div>
               <Textarea
                 label="Rejection Reason"
                 value={rejectionReason}
@@ -120,22 +120,21 @@ export default function RejectCampaignModal({
                 disabled={isRejecting}
                 required
               />
-              <p className={`text-xs ${tw.textSecondary} mt-2`}>
+              <p className={`text-xs ${tw.textSecondary} mt-3`}>
                 This reason will be visible to the campaign owner
               </p>
             </div>
           </div>
 
           {/* Footer */}
-          <div
-            className="flex items-center justify-end gap-3 p-6 border-t"
-            style={{ borderColor: color.border.default }}
-          >
+          <div className="flex items-center justify-end gap-3 pt-2 pb-6 px-6">
             <button
               onClick={onClose}
               disabled={isRejecting}
-              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50`}
-              style={{ borderColor: color.border.default }}
+              className="disabled:opacity-50 transition-colors"
+              style={{
+                ...getButtonStyles(button.bordered),
+              }}
             >
               Cancel
             </button>
@@ -151,10 +150,7 @@ export default function RejectCampaignModal({
                   Rejecting...
                 </>
               ) : (
-                <>
-                  <XCircle className="w-4 h-4" />
-                  Reject Campaign
-                </>
+                "Reject Campaign"
               )}
             </button>
           </div>

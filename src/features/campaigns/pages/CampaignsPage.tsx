@@ -137,6 +137,16 @@ export default function CampaignsPage() {
     });
     return map;
   }, [categories]);
+
+  // Helper to get category name from category_id at render time
+  const getCategoryName = (categoryId: string | number | undefined): string => {
+    if (!categoryId) return "Uncategorized";
+    const category = categories.find(
+      (cat) => String(cat.id) === String(categoryId),
+    );
+    return category?.name || "Uncategorized";
+  };
+
   const [campaignStats, setCampaignStats] = useState<{
     total: number;
     active: number;
@@ -180,12 +190,10 @@ export default function CampaignsPage() {
         options: categories.map(c => c.name)
       },
       render: (value, campaign) => {
-        const categoryName = campaign.category_id
-          ? categoryMap[campaign.category_id]
-          : campaign.category;
+        const categoryName = getCategoryName(campaign.category_id);
         return (
-          <span className={`text-sm ${tw.textPrimary}`}>
-            {categoryName || "Uncategorized"}
+          <span className={`text-sm ${tw.textPrimary}`} title={categoryName || "No category assigned"}>
+            {categoryName}
           </span>
         );
       },
@@ -437,7 +445,7 @@ export default function CampaignsPage() {
     const rows = campaigns.map((campaign) => [
       campaign.id || "",
       campaign.name || "",
-      categoryMap[campaign.category_id] || "Uncategorized",
+      categoryMap[Number(campaign.category_id)] || "Uncategorized",
       campaign.status || "",
       campaign.offer_count ?? 0,
       campaign.segment_count ?? 0,
@@ -646,13 +654,14 @@ export default function CampaignsPage() {
     fetchCategories();
   }, []); // Empty dependency - runs only once
 
-  // Fetch campaigns from API
+  // Fetch campaigns from API with server-side pagination
   const fetchCampaigns = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      const API_LIMIT = 100; // Fetch all at once, client-side pagination for UI
-      const apiOffset = 0; // Always fetch from beginning
+      // Calculate offset based on current page
+      const apiOffset = (tableCurrentPage - 1) * tablePageSize;
+      const apiLimit = tablePageSize;
 
       // Check if any filters are applied
       const hasFilters =
@@ -668,7 +677,7 @@ export default function CampaignsPage() {
       if (hasFilters) {
         // Use superSearch when filters are applied
         const searchParams: CampaignSuperSearchQuery = {
-          limit: API_LIMIT,
+          limit: apiLimit,
           offset: apiOffset,
           skipCache: true,
         };
@@ -702,7 +711,7 @@ export default function CampaignsPage() {
       } else {
         // Use getCampaigns for basic list (no filters)
         response = await campaignService.getCampaigns({
-          limit: API_LIMIT,
+          limit: apiLimit,
           offset: apiOffset,
           skipCache: true,
         });
@@ -717,11 +726,25 @@ export default function CampaignsPage() {
       }
 
       // Service now normalizes all campaigns, so we can use them directly
-      const campaignsData: CampaignDisplay[] = response.data.map((campaign) => ({
-        ...campaign,
-        offer_count: campaign.offer_count ?? campaign.offers?.length ?? 0,
-        segment_count: campaign.segment_count ?? campaign.segments?.length ?? 0,
-      }));
+      const campaignsData: CampaignDisplay[] = response.data.map((campaign) => {
+        // Pre-compute category name to avoid closure issues in render function
+        let categoryName = "";
+        if (campaign.category_id && categories.length > 0) {
+          // Only look up if categories are loaded
+          const categoryId = Number(campaign.category_id);
+          const foundCategory = categories.find((c) => c.id === categoryId);
+          categoryName = foundCategory?.name || campaign.category || "";
+        } else if (campaign.category) {
+          // Fallback to original category field if no lookup available
+          categoryName = campaign.category;
+        }
+        return {
+          ...campaign,
+          category: categoryName, // Override with looked-up category name
+          offer_count: campaign.offer_count ?? campaign.offers?.length ?? 0,
+          segment_count: campaign.segment_count ?? campaign.segments?.length ?? 0,
+        };
+      });
 
       // Filter out archived campaigns when showing "all" status
       let campaignsToDisplay = campaignsData;
@@ -731,32 +754,24 @@ export default function CampaignsPage() {
         );
       }
 
-      // Store all filtered data
-      setAllCampaignsUnfiltered(campaignsToDisplay);
-      setTotalCampaigns(campaignsToDisplay.length);
+      // Use pagination.total from API response
+      const totalCount = (response as any).pagination?.total || campaignsToDisplay.length;
+
+      setCampaigns(campaignsToDisplay);
+      setTotalCampaigns(totalCount);
+      setIsLoading(false);
     } catch (error) {
       console.error("Failed to load campaigns list:", error);
       showToast(
         "error",
         "Failed to load campaigns. Please try again in a moment.",
       );
-      setAllCampaignsUnfiltered([]);
+      setCampaigns([]);
       setTotalCampaigns(0);
-      setIsLoading(false); // Set loading false on error
-    }
-  }, [selectedStatus, searchQuery, filters, showToast]);
-
-  // Handle pagination slicing (separate from data fetching)
-  useEffect(() => {
-    const currentIndex = (tableCurrentPage - 1) * tablePageSize;
-    const clientEndIndex = currentIndex + tablePageSize;
-    const paginatedCampaigns = allCampaignsUnfiltered.slice(currentIndex, clientEndIndex);
-    setCampaigns(paginatedCampaigns);
-    // Only set loading to false when we actually have campaigns to display
-    if (paginatedCampaigns.length > 0 || allCampaignsUnfiltered.length === 0) {
       setIsLoading(false);
     }
-  }, [tableCurrentPage, tablePageSize, allCampaignsUnfiltered, categories]);
+  }, [selectedStatus, searchQuery, filters, tableCurrentPage, tablePageSize, showToast]);
+
 
   // Fetch campaign stats
   const fetchCampaignStats = useCallback(async () => {
@@ -823,6 +838,7 @@ export default function CampaignsPage() {
     tableCurrentPage,
     tablePageSize,
     location.key,
+    categories, // Ensure categories are loaded before campaigns
   ]);
 
   // Fetch campaign stats when navigating to this page
@@ -996,44 +1012,27 @@ export default function CampaignsPage() {
     {
       value: "active",
       label: "Active",
-      count:
-        selectedStatus === "active"
-          ? totalCampaigns
-          : allCampaignsUnfiltered.filter((c) => c.status === "active").length,
+      count: selectedStatus === "active" ? totalCampaigns : campaignStats?.active ?? 0,
     },
     {
       value: "paused",
       label: "Paused",
-      count:
-        selectedStatus === "paused"
-          ? totalCampaigns
-          : allCampaignsUnfiltered.filter((c) => c.status === "paused").length,
+      count: selectedStatus === "paused" ? totalCampaigns : 0, // Paused count not available from stats API
     },
     {
       value: "completed",
       label: "Completed",
-      count:
-        selectedStatus === "completed"
-          ? totalCampaigns
-          : allCampaignsUnfiltered.filter((c) => c.status === "completed")
-              .length,
+      count: selectedStatus === "completed" ? totalCampaigns : 0, // Completed count not available from stats API
     },
     {
       value: "draft",
       label: "Draft",
-      count:
-        selectedStatus === "draft"
-          ? totalCampaigns
-          : allCampaignsUnfiltered.filter((c) => c.status === "draft").length,
+      count: selectedStatus === "draft" ? totalCampaigns : campaignStats?.draft ?? 0,
     },
     {
       value: "archived",
       label: "Archived",
-      count:
-        selectedStatus === "archived"
-          ? totalCampaigns
-          : allCampaignsUnfiltered.filter((c) => c.status === "archived")
-              .length,
+      count: selectedStatus === "archived" ? totalCampaigns : 0, // Archived count not available from stats API
     },
   ];
 
@@ -1296,31 +1295,31 @@ export default function CampaignsPage() {
 
       {/* Table */}
       <Table<CampaignDisplay>
-        columns={columns}
-        data={campaigns}
-        totalItems={totalCampaigns}
-        currentPage={tableCurrentPage}
-        pageSize={tablePageSize}
-        isLoading={isLoading}
-        onPageChange={tableHandlePageChange}
-        onSort={handleSort}
-        sortConfigs={sortConfigs}
-        onHideColumn={toggleColumn}
-        onManageColumnsClick={() => setShowColumnPicker(true)}
-        expandedRowId={expandedRowId}
-        onExpandChange={setExpandedRowId}
-        onFilteredCountChange={handleFilteredCountChange}
-        clearFiltersKey={clearFiltersKey}
-        style={{
-          headerBackground: color.surface.tableHeader,
-          headerTextColor: color.surface.tableHeaderText,
-          rowBackground: color.surface.tablebodybg,
-          rowSpacing: "0 8px",
-        }}
-        expandedContent={(campaign) => (
-          <CampaignDetailsExpandedRow campaign={campaign} colSpan={columns.filter((c) => c.visible).length} />
-        )}
-      />
+          columns={columns}
+          data={campaigns}
+          totalItems={totalCampaigns}
+          currentPage={tableCurrentPage}
+          pageSize={tablePageSize}
+          isLoading={isLoading}
+          onPageChange={tableHandlePageChange}
+          onSort={handleSort}
+          sortConfigs={sortConfigs}
+          onHideColumn={toggleColumn}
+          onManageColumnsClick={() => setShowColumnPicker(true)}
+          expandedRowId={expandedRowId}
+          onExpandChange={setExpandedRowId}
+          onFilteredCountChange={handleFilteredCountChange}
+          clearFiltersKey={clearFiltersKey}
+          style={{
+            headerBackground: color.surface.tableHeader,
+            headerTextColor: color.surface.tableHeaderText,
+            rowBackground: color.surface.tablebodybg,
+            rowSpacing: "0 8px",
+          }}
+          expandedContent={(campaign) => (
+            <CampaignDetailsExpandedRow campaign={campaign} colSpan={columns.filter((c) => c.visible).length} />
+          )}
+        />
 
       {/* Pagination */}
       {!isLoading && campaigns.length > 0 && totalCampaigns > 0 && (
