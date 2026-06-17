@@ -199,7 +199,7 @@ export default function ManualBroadcastListsPage() {
     } catch (err) {
       console.error("Failed to load broadcasts:", err);
       if (!loading) {
-        showError("Failed to load broadcasts", extractBackendError(error, "Failed to load broadcasts. Please try again."));
+        showError("Failed to load broadcasts", extractBackendError(err, "Failed to load broadcasts. Please try again."));
       }
     } finally {
       setLoading(false);
@@ -219,7 +219,7 @@ export default function ManualBroadcastListsPage() {
 
   const handleDelete = (broadcast: ManualBroadcast) => {
     setBroadcastToDelete(broadcast);
-    openDeleteConfirm(item?.id || 0, item?.name || "");
+    openDeleteConfirm(broadcast?.id || 0, broadcast?.source_name || "");
   };
 
   const handleConfirmDelete = async () => {

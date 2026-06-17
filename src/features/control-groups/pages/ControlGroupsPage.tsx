@@ -17,7 +17,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { controlGroupService } from "../services/controlGroupService";
@@ -33,7 +33,6 @@ export default function ControlGroupsPage() {
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
 
   const statusFilterOptions = [
@@ -53,15 +52,40 @@ export default function ControlGroupsPage() {
   const [groupToDelete, setGroupToDelete] = useState<{ id: number; name: string } | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isRunningScheduled, setIsRunningScheduled] = useState(false);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
+      const apiOffset = (page - 1) * pageSize;
+      const apiLimit = pageSize;
+
+      // Check if any filters are applied
+      const hasFilters =
+        searchTerm.trim() ||
+        (statusFilter !== "all") ||
+        (typeFilter !== "all");
+
+      // Build API parameters
+      const apiParams: Record<string, any> = {
+        limit: apiLimit,
+        offset: apiOffset,
+      };
+
+      if (searchTerm.trim()) {
+        apiParams.search = searchTerm.trim();
+      }
+
+      if (statusFilter !== "all") {
+        apiParams.isActive = statusFilter === "active";
+      }
+
+      if (typeFilter !== "all") {
+        apiParams.kind = typeFilter;
+      }
+
       const [groupsResponse, statsResponse] = await Promise.all([
-        controlGroupService.listControlGroups({
-          limit: pageSize,
-          offset: (page - 1) * pageSize,
-        }),
+        controlGroupService.listControlGroups(apiParams),
         controlGroupService.getStatistics(),
       ]);
 
@@ -74,7 +98,7 @@ export default function ControlGroupsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, showError]);
+  }, [page, pageSize, searchTerm, statusFilter, typeFilter, showError]);
 
   useEffect(() => {
     loadData();
@@ -119,20 +143,10 @@ export default function ControlGroupsPage() {
     }
   };
 
-  const filteredGroups = controlGroups.filter((group) => {
-    const matchesSearch =
-      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (group.description?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "active" && group.is_active) ||
-      (statusFilter === "inactive" && !group.is_active);
-    const matchesType =
-      typeFilter === "all" ||
-      (typeFilter === "universal" && group.kind === "universal") ||
-      (typeFilter === "standard" && group.kind === "standard");
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, typeFilter]);
 
   const getCustomerBaseLabel = (base: string) => {
     switch (base) {
@@ -285,7 +299,7 @@ export default function ControlGroupsPage() {
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner variant="modern" size="lg" color="primary" />
           </div>
-        ) : filteredGroups.length > 0 ? (
+        ) : controlGroups.length > 0 ? (
           <>
             <div className="overflow-x-auto">
               <table
@@ -345,13 +359,13 @@ export default function ControlGroupsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredGroups.map((group) => (
+                  {controlGroups.map((group) => (
                     <tr key={group.id} className="transition-colors">
                       <td
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className="font-semibold text-sm sm:text-base text-black">
+                        <div className={`${tw.tableFirstColumn} text-black`}>
                           {group.name}
                         </div>
                       </td>
@@ -441,15 +455,14 @@ export default function ControlGroupsPage() {
                 </tbody>
               </table>
             </div>
-            {totalCount > pageSize && (
-              <div className="px-6 py-4 border-t border-gray-200">
-                <Pagination
-                  currentPage={page}
-                  pageSize={pageSize}
-                  totalItems={totalCount}
-                  onPageChange={setPage}
-                />
-              </div>
+            {!isLoading && controlGroups.length > 0 && totalCount > 0 && (
+              <Pagination
+                currentPage={page}
+                pageSize={pageSize}
+                totalItems={totalCount}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
             )}
           </>
         ) : (

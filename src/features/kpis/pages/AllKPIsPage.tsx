@@ -200,6 +200,12 @@ export default function AllKPIsPage() {
       sortable: false,
       render: (_, row) => (
         <div className="flex items-center justify-center space-x-2">
+          <ActivateDeactivateButton
+            isActive={row.is_active ?? true}
+            onToggle={() => handleToggleStatus(row)}
+            disabled={togglingKpiId === row.id}
+            isLoading={togglingKpiId === row.id}
+          />
           <button
             onClick={() => handleViewDetails(row)}
             className={`p-1 icon-edit ${tw.rounded} transition-colors`}
@@ -214,12 +220,6 @@ export default function AllKPIsPage() {
           >
             <Edit className="w-4 h-4" />
           </button>
-          <ActivateDeactivateButton
-            isActive={row.is_active ?? true}
-            onToggle={() => handleToggleStatus(row)}
-            disabled={togglingKpiId === row.id}
-            isLoading={togglingKpiId === row.id}
-          />
           <button
             onClick={() => handleDeleteClick(row)}
             className={`p-1 icon-delete ${tw.rounded} transition-colors`}

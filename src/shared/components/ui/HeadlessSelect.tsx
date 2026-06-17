@@ -62,14 +62,34 @@ export default function HeadlessSelect({
     const updatePosition = () => {
       if (isOpen && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
+
+        // Find parent scrollable container (modal, sidebar, etc.)
+        let container = buttonRef.current.parentElement;
+        let containerRect = null;
+        let isInContainer = false;
+
+        while (container && container !== document.body) {
+          const style = window.getComputedStyle(container);
+          if (style.overflow === 'auto' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflowY === 'scroll') {
+            containerRect = container.getBoundingClientRect();
+            isInContainer = true;
+            break;
+          }
+          container = container.parentElement;
+        }
+
+        // Use container bounds if found, otherwise use viewport
+        const bottomBound = isInContainer && containerRect ? containerRect.bottom : window.innerHeight;
+        const topBound = isInContainer && containerRect ? containerRect.top : 0;
+
+        const spaceBelow = bottomBound - rect.bottom;
+        const spaceAbove = rect.top - topBound;
 
         // Use actual dropdown height if available, otherwise estimate conservatively
         const dropdownHeight = dropdownRef.current?.scrollHeight || 200;
         const GAP_BELOW = 4;
         const GAP_ABOVE = 8; // Extra space when flipped above
-        const MIN_EDGE_PADDING = 8; // Minimum distance from viewport edges
+        const MIN_EDGE_PADDING = 8; // Minimum distance from edges
 
         // Auto-flip: use above if not enough space below and sufficient space above
         const shouldBeAbove =

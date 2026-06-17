@@ -130,6 +130,7 @@ export default function CampaignsPage() {
   >([]);
   const [totalCampaigns, setTotalCampaigns] = useState(0);
   const [categories, setCategories] = useState<CampaignCategory[]>([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const categoryMap = useMemo(() => {
     const map: Record<number, string> = {};
     categories.forEach((category) => {
@@ -138,14 +139,6 @@ export default function CampaignsPage() {
     return map;
   }, [categories]);
 
-  // Helper to get category name from category_id at render time
-  const getCategoryName = (categoryId: string | number | undefined): string => {
-    if (!categoryId) return "Uncategorized";
-    const category = categories.find(
-      (cat) => String(cat.id) === String(categoryId),
-    );
-    return category?.name || "Uncategorized";
-  };
 
   const [campaignStats, setCampaignStats] = useState<{
     total: number;
@@ -190,7 +183,7 @@ export default function CampaignsPage() {
         options: categories.map(c => c.name)
       },
       render: (value, campaign) => {
-        const categoryName = getCategoryName(campaign.category_id);
+        const categoryName = (campaign as any).category_name || "Uncategorized";
         return (
           <span className={`text-sm ${tw.textPrimary}`} title={categoryName || "No category assigned"}>
             {categoryName}
@@ -395,7 +388,7 @@ export default function CampaignsPage() {
         </div>
       ),
     },
-  ], [categories, categoryMap]);
+  ], [categoryMap]);
 
   const {
     columns,
@@ -639,13 +632,15 @@ export default function CampaignsPage() {
   // Fetch Campaigns catalogs from API
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await campaignService.getCampaignCategories();
+      const response = await campaignService.getCampaignCategories({ skipCache: true });
       // Service now normalizes all categories, so we can use them directly
       const categoriesData = response?.data ?? [];
       setCategories(categoriesData as CampaignCategory[]);
+      setCategoriesLoaded(true);
     } catch (error) {
       console.error("Failed to load campaign catalogs:", error);
       setCategories([]);
+      setCategoriesLoaded(true);
     }
   }, []);
 
@@ -727,20 +722,9 @@ export default function CampaignsPage() {
 
       // Service now normalizes all campaigns, so we can use them directly
       const campaignsData: CampaignDisplay[] = response.data.map((campaign) => {
-        // Pre-compute category name to avoid closure issues in render function
-        let categoryName = "";
-        if (campaign.category_id && categories.length > 0) {
-          // Only look up if categories are loaded
-          const categoryId = Number(campaign.category_id);
-          const foundCategory = categories.find((c) => c.id === categoryId);
-          categoryName = foundCategory?.name || campaign.category || "";
-        } else if (campaign.category) {
-          // Fallback to original category field if no lookup available
-          categoryName = campaign.category;
-        }
         return {
           ...campaign,
-          category: categoryName, // Override with looked-up category name
+          category_id: campaign.category_id ?? undefined,
           offer_count: campaign.offer_count ?? campaign.offers?.length ?? 0,
           segment_count: campaign.segment_count ?? campaign.segments?.length ?? 0,
         };
@@ -757,7 +741,12 @@ export default function CampaignsPage() {
       // Use pagination.total from API response
       const totalCount = (response as any).pagination?.total || campaignsToDisplay.length;
 
-      setCampaigns(campaignsToDisplay);
+      // Normalize campaigns to include category names
+      const normalizedCampaigns = campaignsToDisplay.map(campaign => ({
+        ...campaign,
+        category_name: categories.find(cat => cat?.id && String(cat.id) === String(campaign.category_id))?.name || "Uncategorized"
+      }));
+      setCampaigns(normalizedCampaigns);
       setTotalCampaigns(totalCount);
       setIsLoading(false);
     } catch (error) {
@@ -770,7 +759,7 @@ export default function CampaignsPage() {
       setTotalCampaigns(0);
       setIsLoading(false);
     }
-  }, [selectedStatus, searchQuery, filters, tableCurrentPage, tablePageSize, showToast]);
+  }, [selectedStatus, searchQuery, filters, tableCurrentPage, tablePageSize, showToast, categories]);
 
 
   // Fetch campaign stats
@@ -829,6 +818,7 @@ export default function CampaignsPage() {
 
   // Fetch campaigns when filters change or when navigating back to this page
   useEffect(() => {
+    if (!categoriesLoaded) return; // Skip if categories haven't loaded yet
     fetchCampaigns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -838,7 +828,8 @@ export default function CampaignsPage() {
     tableCurrentPage,
     tablePageSize,
     location.key,
-    categories, // Ensure categories are loaded before campaigns
+    categories,
+    categoriesLoaded, // Only fetch campaigns after categories are loaded
   ]);
 
   // Fetch campaign stats when navigating to this page
@@ -1300,7 +1291,7 @@ export default function CampaignsPage() {
           totalItems={totalCampaigns}
           currentPage={tableCurrentPage}
           pageSize={tablePageSize}
-          isLoading={isLoading}
+          isLoading={isLoading || !categoriesLoaded}
           onPageChange={tableHandlePageChange}
           onSort={handleSort}
           sortConfigs={sortConfigs}

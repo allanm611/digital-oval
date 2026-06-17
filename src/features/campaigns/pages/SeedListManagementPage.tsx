@@ -1188,7 +1188,7 @@ export default function SeedListManagementPage() {
               </div>
 
               {/* Form Fields */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Existing User Mode */}
                 {formData.mode === "existing_user" && (
                   <>

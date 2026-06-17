@@ -2133,11 +2133,11 @@ export default function OfferDetailsPage() {
                       filterConfig: { type: "text" },
                       render: (value: string) => (
                         value ? (
-                          <div className={`text-sm ${tw.textMuted} truncate`} title={value}>
+                          <div className="text-sm text-gray-900 truncate" title={value}>
                             {value}
                           </div>
                         ) : (
-                          <span className={`text-sm ${tw.textMuted}`}>No description provided</span>
+                          <span className="text-sm text-gray-900">No description provided</span>
                         )
                       ),
                     },
@@ -2148,13 +2148,9 @@ export default function OfferDetailsPage() {
                       visible: true,
                       filterConfig: { type: "multiselect", options: ["Primary", "—"] },
                       render: (value: string) => (
-                        value === "Primary" ? (
-                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            Primary
-                          </span>
-                        ) : (
-                          <span className={`text-sm ${tw.textMuted}`}>—</span>
-                        )
+                        <span className="text-sm text-gray-900">
+                          {value}
+                        </span>
                       ),
                     },
                     {
@@ -2336,6 +2332,9 @@ export default function OfferDetailsPage() {
                       width: "120px",
                       visible: true,
                       filterConfig: { type: "multiselect", options: ["SMS", "Email", "Push", "Web"] },
+                      render: (value: string) => (
+                        <span className="text-sm text-gray-900">{value}</span>
+                      ),
                     },
                     {
                       id: "locale",
@@ -2343,6 +2342,9 @@ export default function OfferDetailsPage() {
                       width: "120px",
                       visible: true,
                       filterConfig: { type: "text" },
+                      render: (value: string) => (
+                        <span className="text-sm text-gray-900">{value}</span>
+                      ),
                     },
                     {
                       id: "status",
@@ -2351,15 +2353,9 @@ export default function OfferDetailsPage() {
                       visible: true,
                       filterConfig: { type: "multiselect", options: ["Active", "Inactive"] },
                       render: (value: string) => (
-                        value === "Active" ? (
-                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
-                            Inactive
-                          </span>
-                        )
+                        <span className="text-sm text-gray-900">
+                          {value}
+                        </span>
                       ),
                     },
                     {
@@ -2370,9 +2366,11 @@ export default function OfferDetailsPage() {
                       filterConfig: { type: "date" },
                       render: (value: string) => (
                         value ? (
-                          <DateFormatter date={value} includeTime />
+                          <span className="text-sm text-gray-900">
+                            <DateFormatter date={value} includeTime />
+                          </span>
                         ) : (
-                          "—"
+                          <span className="text-sm text-gray-900">—</span>
                         )
                       ),
                     },

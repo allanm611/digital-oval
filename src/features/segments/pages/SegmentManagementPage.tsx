@@ -451,60 +451,29 @@ export default function SegmentManagementPage() {
       setError("");
 
       let segmentData: Segment[] = [];
+      let totalCount = 0;
 
-      // Handle filter tabs - call appropriate API endpoint
-      if (filterTab === "active") {
-        const response = await segmentService.getActiveSegments();
-        segmentData = response.data || [];
-      } else if (filterTab === "empty") {
-        const response = await segmentService.getEmptySegments();
-        segmentData = response.data || [];
-      } else if (filterTab === "needs-refresh") {
-        const response = await segmentService.getSegmentsNeedingRefresh();
-        segmentData = response.data || [];
-      } else if (filterTab === "parents") {
-        const response = await segmentService.getParentSegments();
-        segmentData = response.data || [];
-      } else if (filterTab === "most-used") {
-        const response = await segmentService.getMostUsedSegments(100);
-        segmentData = response.data || [];
-      } else if (debouncedSearchTerm) {
-        // Use searchSegments endpoint if there's a search term
-        const searchResponse = await segmentService.searchSegments({
-          q: debouncedSearchTerm,
-          skipCache: true,
-        });
-        segmentData = searchResponse.data || [];
-      } else {
-        // Default: fetch all segments (making multiple API calls if needed)
-        const pageLimit = 100;
-        let currentPage = 1;
-        let hasMoreData = true;
+      // Use getSegments with offset-based pagination (limit + offset)
+      const apiOffset = (page - 1) * pageSize;
+      const response = await segmentService.getSegments({
+        search: debouncedSearchTerm || undefined,
+        type: typeFilter !== "all" ? (typeFilter as "static" | "dynamic" | "trigger") : undefined,
+        limit: pageSize,
+        offset: apiOffset,
+        skipCache: true,
+      });
 
-        while (hasMoreData) {
-          const filters: SegmentFilters = {
-            skipCache: true,
-          };
-          const response = await segmentService.getSegments(filters);
-          const responseData = response.data || [];
-
-          segmentData = [...segmentData, ...responseData];
-
-          if (responseData.length < pageLimit) {
-            hasMoreData = false;
-          } else {
-            currentPage++;
-          }
-        }
-      }
-
+      segmentData = response.data || [];
+      totalCount = response.pagination?.total || segmentData.length;
 
       setSegments(segmentData);
-      // Update allSegments for tag calculation
-      setAllSegments(segmentData);
+      // Update allSegments for tag calculation - fetch all for this
+      const allSegmentsResponse = await segmentService.getSegments({ skipCache: true });
+      setAllSegments(allSegmentsResponse.data || []);
+
       // Update pagination info
-      setTotalCount(segmentData.length);
-      setTotalPages(Math.ceil(segmentData.length / pageSize));
+      setTotalCount(totalCount);
+      setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (err: unknown) {
       const message =
         (err as Error).message || "Failed to load segments. Please try again.";
@@ -516,7 +485,7 @@ export default function SegmentManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearchTerm, filterTab, page, pageSize, showError]);
+  }, [debouncedSearchTerm, typeFilter, visibilityFilter, selectedTags, page, pageSize, showError]);
 
   useEffect(() => {
     loadSegments();
@@ -764,7 +733,7 @@ export default function SegmentManagementPage() {
   };
 
   const toggleSelectAllVisible = () => {
-    const visibleIds = filteredSegments.map((s) => s.id);
+    const visibleIds = segments.map((s) => s.id);
     if (visibleIds.length === 0) return;
 
     setSelectedSegmentIds((prev) => {
@@ -943,31 +912,14 @@ export default function SegmentManagementPage() {
     new Set(allSegments?.flatMap((s) => s.tags || []) || []),
   );
 
-  const filteredSegments = (segments || []).filter((segment) => {
-    const matchesSearch =
-      !searchTerm ||
-      (segment.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (segment.description || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    const matchesTags =
-      selectedTags.length === 0 ||
-      selectedTags.some((tag) => (segment.tags || []).includes(tag));
-
-    const matchesType = typeFilter === "all" || segment.type === typeFilter;
-
-    const matchesVisibility =
-      visibilityFilter === "all" ||
-      (visibilityFilter === "public" && segment.visibility === "public") ||
-      (visibilityFilter === "private" && segment.visibility === "private");
-
-    return matchesSearch && matchesTags && matchesType && matchesVisibility;
-  });
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, typeFilter, visibilityFilter, selectedTags]);
 
   const visibleIds = useMemo(
-    () => filteredSegments.map((segment) => segment.id),
-    [filteredSegments],
+    () => segments.map((segment) => segment.id),
+    [segments],
   );
 
   // Define table columns
@@ -1436,7 +1388,7 @@ export default function SegmentManagementPage() {
                 // Export filtered segments as CSV
                 const csvContent = [
                   ['Name', 'Type', 'Target', 'Visibility', 'Created At'].join(','),
-                  ...filteredSegments.map((segment) =>
+                  ...segments.map((segment) =>
                     [
                       segment.name,
                       segment.type,
@@ -1573,7 +1525,7 @@ export default function SegmentManagementPage() {
               onRetry={loadSegments}
             />
           </div>
-        ) : filteredSegments.length === 0 || totalCount === 0 ? (
+        ) : segments.length === 0 || totalCount === 0 ? (
           <div className="p-8 md:p-16 text-center">
             <div
               className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}
@@ -1582,14 +1534,14 @@ export default function SegmentManagementPage() {
                 No segments found
               </h3>
               <p className="text-sm text-gray-600 mb-8 max-w-md mx-auto">
-                {totalCount === 0 && filteredSegments.length > 0
+                {totalCount === 0 && segments.length > 0
                   ? "No results match your filters."
                   : searchTerm || selectedTags.length > 0
                     ? "No segments match your search criteria."
                     : "No segments have been created yet."}
               </p>
               <div className="flex gap-3 justify-center">
-                {totalCount === 0 && filteredSegments.length > 0 && (
+                {totalCount === 0 && segments.length > 0 && (
                   <button
                     onClick={() => {
                       setSearchTerm("");
@@ -1601,7 +1553,7 @@ export default function SegmentManagementPage() {
                     Clear Filters
                   </button>
                 )}
-                {!searchTerm && selectedTags.length === 0 && filteredSegments.length === 0 && (
+                {!searchTerm && selectedTags.length === 0 && segments.length === 0 && (
                   <button
                     onClick={handleCreateSegment}
                     className={`${tw.button} inline-flex items-center px-6 py-3`}
@@ -1618,8 +1570,8 @@ export default function SegmentManagementPage() {
             {/* Table Component */}
             <Table<Segment>
               columns={segmentColumns}
-              data={filteredSegments}
-              totalItems={filteredSegments.length}
+              data={segments}
+              totalItems={segments.length}
               currentPage={page}
               pageSize={pageSize}
               isLoading={isLoading}
@@ -1636,7 +1588,7 @@ export default function SegmentManagementPage() {
               expandedRowId={expandedRowId}
               onExpandChange={setExpandedRowId}
               expandedContent={(row) => {
-                const segment = filteredSegments.find(s => s.id === row.id);
+                const segment = segments.find(s => s.id === row.id);
                 return segment ? (
                   <SegmentDetailsExpandedRow segment={segment} colSpan={segmentColumns.filter((c) => c.visible).length} />
                 ) : null;
@@ -1650,7 +1602,7 @@ export default function SegmentManagementPage() {
             />
 
             {/* Render dropdown menus via portal outside the table */}
-            {filteredSegments.map((segment) => {
+            {segments.map((segment) => {
               if (showActionMenu === segment.id && dropdownPosition) {
                 return createPortal(
                   <div
@@ -1761,7 +1713,7 @@ export default function SegmentManagementPage() {
 
             {/* Mobile Cards */}
             <div className="lg:hidden space-y-4 p-4">
-              {filteredSegments.map((segment) => (
+              {segments.map((segment) => (
                 <div
                   key={segment.id}
                   className={`bg-white border ${tw.borderDefault} ${tw.rounded} p-4 shadow-sm hover:shadow-md transition-shadow`}
@@ -1896,7 +1848,7 @@ export default function SegmentManagementPage() {
       </div>
 
       {/* Pagination */}
-      {!isLoading && !error && displayedCount > 0 && (
+      {!isLoading && !error && segments.length > 0 && totalCount > 0 && (
         <Pagination
           currentPage={page}
           pageSize={pageSize}

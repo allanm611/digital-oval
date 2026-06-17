@@ -111,7 +111,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full px-4 pt-3 pb-2 text-sm leading-tight border ${borderClass} ${tw.rounded}
+        className={`w-full px-3 pt-3 pb-2 text-sm leading-tight border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
           ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
           ${className}`}

@@ -19,6 +19,7 @@ import { OPERATORS as OPERATORS_MAP, getOperatorsForFieldType } from "../../../s
 import { jobTypeService } from "../../jobs/services/jobTypeService";
 import { scheduledJobService } from "../../jobs/services/scheduledJobService";
 import { JobType } from "../../jobs/types/job";
+import { DATA_SOURCE_OPTIONS, DATA_LATENCY_OPTIONS, VALIDATION_STRATEGY_OPTIONS } from "../constants/formOptions";
 
 const FIELD_TYPE_OPTIONS = [
   { label: "Number", value: "number" },
@@ -30,35 +31,10 @@ const FIELD_TYPE_OPTIONS = [
   { label: "Boolean", value: "boolean" },
 ];
 
-const DATA_SOURCE_OPTIONS = [
-  { label: "Live", value: "Live" },
-  { label: "DB", value: "DB" },
-];
-
-
 const CALCULATION_TYPE_OPTIONS = [
   { label: "Value Set", value: "value_set" },
   { label: "Computed", value: "computed" },
   { label: "Static", value: "static" },
-];
-
-const DATA_LATENCY_OPTIONS = [
-  { label: "Real Time", value: "realtime" },
-  { label: "Near Real Time", value: "nrt" },
-  { label: "Hourly", value: "hourly" },
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
-  { label: "Monthly", value: "monthly" },
-  { label: "Manual", value: "manual" },
-  { label: "One Time", value: "onetime" },
-  { label: "Batch", value: "batch" },
-];
-
-const VALIDATION_STRATEGY_OPTIONS = [
-  { label: "None", value: "none" },
-  { label: "Range", value: "range" },
-  { label: "Discrete", value: "discrete" },
-  { label: "Pattern", value: "pattern" },
 ];
 
 const SCHEDULE_TYPE_OPTIONS = [
@@ -109,7 +85,7 @@ export default function CreateKPIPage() {
     extractionLogic: "",
     default_value: "" as string | number,
     use_as_dynamic_variable: false,
-    tag: "" as string,
+    tag: null as string | null,
     display_order: 0,
     job_type_id: "" as string | number,
     schedule_type: "manual" as "manual" | "cron",
@@ -211,25 +187,28 @@ export default function CreateKPIPage() {
       if (kpi && kpi.id) {
         // Map KPI data back to form fields
         setFormData({
-          name: kpi.field_name,
+          name: kpi.field_name || "",
           field_value: kpi.field_value || "",
           description: kpi.description || "",
           field_type: kpi.field_type?.toLowerCase() === "text" ? "text" : kpi.field_type?.toLowerCase() || "number",
           calculationType: kpi.is_computable ? "computed" : "value_set",
           data_source: "DB",
-          source_table: kpi.field_source_table,
+          source_table: kpi.field_source_table || "",
           data_latency: (kpi.data_latency || "daily") as any,
           validation_strategy: (kpi.validation_strategy || "none") as any,
           field_category_id: kpi.field_category_id || "",
           range_min: kpi.field_allowed_range_min?.toString() || "",
           range_max: kpi.field_allowed_range_max?.toString() || "",
           discrete_values: kpi.field_allowed_distinct_values?.join(", ") || "",
-          unit: "",
           operators: [],
           extractionLogic: kpi.extraction_logic || "",
           default_value: kpi.default_value || "",
           use_as_dynamic_variable: kpi.is_dynamic_variable || false,
-          tag: kpi.tag || "",
+          tag: kpi.tag || null,
+          display_order: kpi.display_order || 0,
+          job_type_id: kpi.job_type_id || "",
+          schedule_type: "manual",
+          cron_expression: "",
         });
       }
     } catch (err) {
@@ -287,22 +266,22 @@ export default function CreateKPIPage() {
         field_category_id: Number(formData.field_category_id),
         field_type: formData.field_type,
         field_pg_type: pgTypeMap[formData.field_type] || "numeric",
-        field_source_table: formData.source_table,
         description: formData.description,
         extraction_logic: formData.extractionLogic,
         data_latency: formData.data_latency,
         validation_strategy: formData.validation_strategy,
-        default_operator_id: formData.operators.length > 0 ? formData.operators[0] : null,
+        // default_operator_id: formData.operators.length > 0 ? formData.operators[0] : null,
         is_computable: true,
         is_active: true,
-        tag: formData.tag,
-        default_value: formData.default_value,
-        is_dynamic_variable: formData.use_as_dynamic_variable,
+        tag: formData.tag || null,
+        default_value: String(formData.default_value),
+        is_dynamic_variable: Boolean(formData.use_as_dynamic_variable),
       };
 
-      // Only include field_value for creation (not for updates)
+      // Only include field_value and field_source_table for creation (not for updates)
       if (!isEditMode) {
         kpiPayload.field_value = formData.field_value;
+        kpiPayload.field_source_table = formData.source_table;
       }
 
       // Add conditional validation fields
@@ -546,8 +525,8 @@ export default function CreateKPIPage() {
                     { label: "Usage Metric", value: "usage_metric" },
                     { label: "KPI", value: "kpi" },
                   ]}
-                  value={formData.tag}
-                  onChange={(value) => handleSelectChange("tag", value)}
+                  value={formData.tag || ""}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, tag: value || null }))}
                   placeholder="Select tag type"
                   disabled={saving}
                 />
@@ -582,8 +561,8 @@ export default function CreateKPIPage() {
 
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
-                checked={formData.use_as_dynamic_variable}
-                onChange={(e) => handleInputChange('use_as_dynamic_variable')(e.target.checked ? 1 : 0)}
+                checked={Boolean(formData.use_as_dynamic_variable)}
+                onChange={(e) => setFormData((prev) => ({ ...prev, use_as_dynamic_variable: e.target.checked }))}
                 disabled={saving}
                 style={{ accentColor: color.primary.accent }}
               />

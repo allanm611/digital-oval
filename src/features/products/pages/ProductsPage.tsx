@@ -169,6 +169,13 @@ export default function ProductsPage() {
         const isActive = row.is_active ?? false;
         return (
           <div className="flex items-center justify-center gap-2">
+            <ActivateDeactivateButton
+              isActive={isActive}
+              onToggle={() => row.product && handleToggleStatus(row.product)}
+              disabled={loadingProductId === row.id || !row.product}
+              isLoading={loadingProductId === row.id}
+              title={isActive ? "Deactivate" : "Activate"}
+            />
             <button
               onClick={() => navigate(`/dashboard/products/${row.id}`)}
               className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
@@ -182,18 +189,11 @@ export default function ProductsPage() {
               itemId={row.id}
               navigationState={{ returnTo: { pathname: "/dashboard/products" } }}
             />
-            <ActivateDeactivateButton
-              isActive={isActive}
-              onToggle={() => row.product && handleToggleStatus(row.product)}
-              disabled={loadingProductId === row.id || !row.product}
-              isLoading={loadingProductId === row.id}
-              title={isActive ? "Deactivate" : "Activate"}
-            />
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
                 className={`p-2 icon-delete ${tw.rounded} transition-all duration-200`}
-              
+
                 title="Delete Product"
               >
                 <Trash2 className="w-4 h-4" />

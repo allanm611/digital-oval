@@ -229,6 +229,7 @@ export default function ProductDetailsPage() {
             onToggle={handleToggleStatus}
             disabled={isTogglingStatus}
             isLoading={isTogglingStatus}
+            variant="button"
           >
             {product?.is_active ? "Deactivate" : "Activate"}
           </ActivateDeactivateButton>

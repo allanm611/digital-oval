@@ -48,7 +48,6 @@ export default function MultiCategorySelector({
   const [isFocused, setIsFocused] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const portalContentRef = useRef<HTMLDivElement>(null);
 
@@ -58,8 +57,8 @@ export default function MultiCategorySelector({
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node) &&
-        portalRef.current &&
-        !portalRef.current.contains(event.target as Node)
+        portalContentRef.current &&
+        !portalContentRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
         setSearchTerm("");
@@ -76,8 +75,27 @@ export default function MultiCategorySelector({
       if (dropdownRef.current) {
         const buttonRect = dropdownRef.current.querySelector("button")?.getBoundingClientRect();
         if (buttonRect) {
-          const spaceBelow = window.innerHeight - buttonRect.bottom;
-          const spaceAbove = buttonRect.top;
+          // Find parent scrollable container (modal, sidebar, etc.)
+          let container = dropdownRef.current.parentElement;
+          let containerRect = null;
+          let isInContainer = false;
+
+          while (container && container !== document.body) {
+            const style = window.getComputedStyle(container);
+            if (style.overflow === 'auto' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflowY === 'scroll') {
+              containerRect = container.getBoundingClientRect();
+              isInContainer = true;
+              break;
+            }
+            container = container.parentElement;
+          }
+
+          // Use container bounds if found, otherwise use viewport
+          const bottomBound = isInContainer && containerRect ? containerRect.bottom : window.innerHeight;
+          const topBound = isInContainer && containerRect ? containerRect.top : 0;
+
+          const spaceBelow = bottomBound - buttonRect.bottom;
+          const spaceAbove = buttonRect.top - topBound;
 
           // Use actual dropdown height if available, otherwise estimate
           const dropdownHeight = portalContentRef.current?.scrollHeight || 250;

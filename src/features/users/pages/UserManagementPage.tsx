@@ -38,6 +38,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
+import { departmentService } from "../../campaigns/services/departmentService";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { formatDate, formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
@@ -240,6 +241,9 @@ export default function UserManagementPage() {
   >({});
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
   const [reportsLoading, setReportsLoading] = useState(false);
+  const [departmentLookup, setDepartmentLookup] = useState<Record<string | number, string>>({});
+  const departmentLookupRef = useRef<Record<string | number, string>>({});
+  const [totalUserCount, setTotalUserCount] = useState(0);
 
   // Batch selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -273,10 +277,10 @@ export default function UserManagementPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.size === filteredUsers.length) {
+    if (selectedUsers.size === users.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
+      setSelectedUsers(new Set(users.map((user) => user.id)));
     }
   };
 
@@ -350,9 +354,13 @@ export default function UserManagementPage() {
     ({
       skipCache = false,
       searchTermOverride,
+      limit,
+      offset,
     }: {
       skipCache?: boolean;
       searchTermOverride?: string;
+      limit?: number;
+      offset?: number;
     } = {}) => {
       const query: Record<string, unknown> = {};
 
@@ -377,6 +385,15 @@ export default function UserManagementPage() {
         }
       }
 
+      // Add pagination parameters
+      if (limit) {
+        query.limit = limit;
+      }
+
+      if (offset !== undefined) {
+        query.offset = offset;
+      }
+
       if (skipCache) {
         query.skipCache = true;
       }
@@ -390,9 +407,13 @@ export default function UserManagementPage() {
     async ({
       skipCache = false,
       searchTermOverride,
+      limit,
+      offset,
     }: {
       skipCache?: boolean;
       searchTermOverride?: string;
+      limit?: number;
+      offset?: number;
     } = {}): Promise<PaginatedResponse<UserType>> => {
       const term = (searchTermOverride ?? searchTerm)?.trim();
 
@@ -405,7 +426,7 @@ export default function UserManagementPage() {
       // If there's a search term OR active filters, use searchUsers with combined params
       if (term || hasActiveFilters) {
         return userService.searchUsers(
-          buildSearchQuery({ skipCache, searchTermOverride: term }),
+          buildSearchQuery({ skipCache, searchTermOverride: term, limit, offset }),
         );
       }
 
@@ -414,6 +435,8 @@ export default function UserManagementPage() {
       if (skipCache) {
         baseQuery.skipCache = true;
       }
+      if (limit) baseQuery.limit = limit;
+      if (offset) baseQuery.offset = offset;
 
       return userService.getUsers(baseQuery);
     },
@@ -432,11 +455,17 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
+        // Calculate pagination parameters
+        const apiOffset = (tableCurrentPage - 1) * tablePageSize;
+        const apiLimit = tablePageSize;
+
         // Fetch users and onboarding requests in parallel
-        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, countByStatusResponse] = await Promise.allSettled([
+        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, countByStatusResponse, departmentsResponse] = await Promise.allSettled([
           fetchUsers({
             skipCache,
             searchTermOverride,
+            limit: apiLimit,
+            offset: apiOffset,
           }),
           userOnboardingService.getRecentlySubmittedRequests(skipCache, 100, 0),
           userOnboardingService.getUnderReviewRequests(skipCache, 100, 0),
@@ -444,6 +473,7 @@ export default function UserManagementPage() {
           userOnboardingService.getPendingApprovalRequests(skipCache, 100, 0),
           userOnboardingService.getRejectedOnboardingRequests(skipCache, 100, 0),
           userOnboardingService.getCountByStatus(skipCache),
+          departmentService.getDepartments(),
         ]);
 
         // Process users (from users endpoint)
@@ -469,8 +499,16 @@ export default function UserManagementPage() {
 
           setUsers(usersWithResolvedRoles);
 
-          const totalFromResponse =
+          // Capture total count for pagination - handle different response formats
+          const totalCount =
             (usersResponse.value.meta?.total as number | undefined) ??
+            (usersResponse.value.pagination?.total as number | undefined) ??
+            usersWithResolvedRoles.length ??
+            0;
+          setTotalUserCount(totalCount);
+
+          const totalFromResponse =
+            totalCount ??
             usersResponse.value.data.length;
 
           setUserSummary({
@@ -526,6 +564,25 @@ export default function UserManagementPage() {
         if (countByStatusResponse.status === "fulfilled" && countByStatusResponse.value.success) {
           setRequestCountByStatus(countByStatusResponse.value.data);
         }
+
+        // Process departments
+        if (departmentsResponse.status === "fulfilled") {
+          try {
+            const departments = departmentsResponse.value;
+            const mappedDepartments: Record<string | number, string> = {};
+            if (Array.isArray(departments)) {
+              departments.forEach((dept: any) => {
+                if (dept.id && dept.name) {
+                  mappedDepartments[dept.id] = dept.name;
+                }
+              });
+            }
+            setDepartmentLookup(mappedDepartments);
+            departmentLookupRef.current = mappedDepartments;
+          } catch (err) {
+            console.error("Failed to process departments", err);
+          }
+        }
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
@@ -546,9 +603,9 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
-        // Fetch users, onboarding requests, and roles in parallel
-        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, rolesResponse, countByStatusResponse] = await Promise.allSettled([
-          fetchUsers({ skipCache: false }),
+        // Fetch users, onboarding requests, roles, and departments in parallel
+        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, rolesResponse, countByStatusResponse, departmentsResponse] = await Promise.allSettled([
+          fetchUsers({ skipCache: false, limit: 25, offset: 0 }),
           userOnboardingService.getRecentlySubmittedRequests(true, 100, 0),
           userOnboardingService.getUnderReviewRequests(true, 100, 0),
           // userOnboardingService.getApproverPendingRequests(user?.user_id, true, 100, 0), // TODO: Use approver-specific pending when needed
@@ -560,6 +617,7 @@ export default function UserManagementPage() {
             skipCache: true,
           }),
           userOnboardingService.getCountByStatus(true),
+          departmentService.getDepartments(),
         ]);
 
         if (cancelled) return;
@@ -581,6 +639,27 @@ export default function UserManagementPage() {
           console.error("Failed to load roles", rolesResponse.reason);
         }
         setRolesReady(true);
+
+        // Process departments
+        if (departmentsResponse.status === "fulfilled") {
+          try {
+            const departments = departmentsResponse.value;
+            const mappedDepartments: Record<string | number, string> = {};
+            if (Array.isArray(departments)) {
+              departments.forEach((dept: any) => {
+                if (dept.id && dept.name) {
+                  mappedDepartments[dept.id] = dept.name;
+                }
+              });
+            }
+            setDepartmentLookup(mappedDepartments);
+            departmentLookupRef.current = mappedDepartments;
+          } catch (err) {
+            console.error("Failed to process departments", err);
+          }
+        } else if (departmentsResponse.status === "rejected") {
+          console.error("Failed to load departments", departmentsResponse.reason);
+        }
 
         // Process users (active users only)
         if (
@@ -776,6 +855,10 @@ export default function UserManagementPage() {
   useEffect(() => {
     roleLookupRef.current = roleLookup;
   }, [roleLookup]);
+
+  useEffect(() => {
+    departmentLookupRef.current = departmentLookup;
+  }, [departmentLookup]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -1395,7 +1478,7 @@ export default function UserManagementPage() {
       render: (value, user) => (
         <button
           onClick={() => handleViewUser(user)}
-          className={`font-semibold text-sm sm:text-base transition-colors truncate`}
+          className={`${tw.tableFirstColumn} font-semibold transition-colors truncate`}
           style={{ color: 'var(--c-text-primary)' }}
           title={`${user.first_name} ${user.last_name}`}
         >
@@ -1419,11 +1502,21 @@ export default function UserManagementPage() {
       label: "Department",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
-          {value || "N/A"}
-        </span>
-      ),
+      render: (value, user) => {
+        const dept = user.department;
+        if (!dept) return <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>N/A</span>;
+
+        // Check if it's a numeric ID (string that looks like a number)
+        const isNumericId = !isNaN(Number(dept));
+        // If it's numeric, look it up; otherwise display as-is (it's already a name)
+        const displayName = isNumericId ? departmentLookupRef.current[dept] : dept;
+
+        return (
+          <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
+            {displayName || dept || "N/A"}
+          </span>
+        );
+      },
     },
     {
       id: "role",
@@ -1632,40 +1725,16 @@ export default function UserManagementPage() {
     persistToLocalStorage: true,
   });
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      (user.first_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.last_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.email_address || user.email || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    const normalizedStatus = normalizeStatus(user);
-
-    const matchesDepartment =
-      filterDepartment === "all" ||
-      (user.department || "").toLowerCase() === filterDepartment.toLowerCase();
-    const matchesRole =
-      filterRole === "all" ||
-      getUserRoleName(user).toLowerCase() === filterRole.toLowerCase();
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "active" && normalizedStatus === "active") ||
-      (filterStatus === "inactive" && normalizedStatus !== "active");
-
-    return matchesSearch && matchesDepartment && matchesRole && matchesStatus;
-  });
-
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (tableCurrentPage - 1) * tablePageSize;
-    const endIndex = startIndex + tablePageSize;
-    return filteredUsers.slice(startIndex, endIndex);
-  }, [filteredUsers, tableCurrentPage, tablePageSize]);
 
   // Reset pagination when filters change
   useEffect(() => {
     tableHandlePageChange(1);
   }, [searchTerm, filterDepartment, filterRole, filterStatus, tableHandlePageChange]);
+
+  // Load users when page or pageSize changes
+  useEffect(() => {
+    loadData({ skipCache: true });
+  }, [tableCurrentPage, tablePageSize, loadData]);
 
   const filteredRequests = accountRequests.filter((request) => {
     const firstName = (request.first_name ?? "").toLowerCase();
@@ -1733,7 +1802,7 @@ export default function UserManagementPage() {
                 onClick={() => {
                   if (!isSelectionMode) {
                     setIsSelectionMode(true);
-                    setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
+                    setSelectedUsers(new Set(users.map((user) => user.id)));
                   } else {
                     setIsSelectionMode(false);
                     setSelectedUsers(new Set());
@@ -1936,7 +2005,7 @@ export default function UserManagementPage() {
                 "Status",
                 "Created",
               ]}
-              rows={filteredUsers.map((u) => [
+              rows={users.map((u) => [
                 `${u.first_name} ${u.last_name}`,
                 u.email_address || u.email || "N/A",
                 u.department || "N/A",
@@ -1950,7 +2019,7 @@ export default function UserManagementPage() {
               style={{ backgroundColor: color.primary.action }}
             />
 
-            <button
+            {/* <button
               onClick={() => setShowFiltersModal(true)}
               className={`flex items-center gap-2 rounded-md transition-colors font-medium`}
               style={{
@@ -1963,7 +2032,7 @@ export default function UserManagementPage() {
               title="Open filters"
             >
               Filters
-            </button>
+            </button> */}
           </div>
         </div>
       )}
@@ -2054,7 +2123,7 @@ export default function UserManagementPage() {
             />
           </div>
         ) : activeTab === "users" ? (
-          filteredUsers.length === 0 ? (
+          users.length === 0 ? (
             <div className="text-center py-12">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {searchTerm
@@ -2085,8 +2154,8 @@ export default function UserManagementPage() {
               {/* Table Component */}
               <Table<UserType>
                 columns={usersTableColumnsWithVisibility}
-                data={paginatedUsers}
-                totalItems={filteredUsers.length}
+                data={users}
+                totalItems={totalUserCount}
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
                 isLoading={!rolesReady || isLoading}
@@ -2110,16 +2179,14 @@ export default function UserManagementPage() {
               />
 
               {/* Pagination */}
-              {!isLoading && paginatedUsers.length > 0 && filteredUsers.length > 0 && (
-                <div className="mt-4">
-                  <Pagination
-                    currentPage={tableCurrentPage}
-                    pageSize={tablePageSize}
-                    totalItems={filteredUsers.length}
-                    onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
-                  />
-                </div>
+              {!isLoading && users.length > 0 && totalUserCount > 0 && (
+                <Pagination
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
+                  totalItems={totalUserCount}
+                  onPageChange={tableHandlePageChange}
+                  onPageSizeChange={tableHandlePageSizeChange}
+                />
               )}
 
               {/* Old Selection Mode UI - Kept for batch operations */}
@@ -2148,7 +2215,7 @@ export default function UserManagementPage() {
 
               {/* Mobile Cards - Hidden, using table with horizontal scroll instead */}
               <div className="hidden">
-                {filteredUsers.map((user) => {
+                {users.map((user) => {
                   const normalizedStatus = normalizeStatus(user);
                   const userIsActive = normalizedStatus === "active";
                   const statusLabel = formatStatusLabel(normalizedStatus);
@@ -2657,15 +2724,10 @@ export default function UserManagementPage() {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onUserSaved={(savedUser: UserType) => {
+        onUserSaved={() => {
           setIsModalOpen(false);
-          // Optimistically update user in list
-          if (savedUser && savedUser.id) {
-            setUsers((prev) =>
-              prev.map((u) => (u.id === savedUser.id ? savedUser : u)),
-            );
-          }
           setSelectedUser(null);
+          loadData({ skipCache: true });
         }}
       />
 

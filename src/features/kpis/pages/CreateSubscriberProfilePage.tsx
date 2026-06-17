@@ -1,57 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import CodeMirror from "@uiw/react-codemirror";
-import { sql as sqlLanguage } from "@codemirror/lang-sql";
 import BackButton from "../../../shared/components/ui/BackButton";
-import Input from "../../../shared/components/ui/Input";
-import Textarea from "../../../shared/components/ui/Textarea";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
-import Checkbox from "../../../shared/components/ui/Checkbox";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
-import { OPERATORS as OPERATORS_MAP, getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
+import KPIForm from "../components/KPIForm";
 import { kpiCategoryService } from "../services/kpiCategoryService";
 import { notificationTypeService } from "../../../shared/services/notificationTypeService";
-
-const DATA_SOURCE_OPTIONS = [
-  { label: "DB", value: "DB" },
-  { label: "Live", value: "Live" },
-  { label: "DB & Live", value: "DB & Live" },
-];
-
-const FREQUENCY_OPTIONS = [
-  { label: "Per Min", value: "Per Min" },
-  { label: "D-1", value: "D-1" },
-  { label: "Monthly", value: "Monthly" },
-];
-
-const FIELD_TYPE_OPTIONS = [
-  { label: "Text", value: "text" },
-  { label: "Numeric", value: "numeric" },
-  { label: "Decimal", value: "decimal" },
-  { label: "Boolean", value: "boolean" },
-];
-
-const VALIDATION_STRATEGY_OPTIONS = [
-  { label: "None", value: "none" },
-  { label: "Range", value: "range" },
-  { label: "Discrete", value: "discrete" },
-  { label: "Pattern", value: "pattern" },
-];
-
-const getOperatorData = (fieldType: string) => {
-  const filteredOperators = getOperatorsForFieldType(fieldType);
-  return filteredOperators.map((op) => ({
-    id: op.id,
-    name: op.label,
-    is_active: true,
-    created_at: "",
-    updated_at: "",
-  }));
-};
+import { subscriberProfileService } from "../services/subscriberProfileService";
+import {
+  FIELD_TYPE_OPTIONS,
+  DATA_SOURCE_OPTIONS,
+  DATA_LATENCY_OPTIONS,
+  VALIDATION_STRATEGY_OPTIONS,
+} from "../constants/formOptions";
 
 export default function CreateSubscriberProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -59,25 +21,24 @@ export default function CreateSubscriberProfilePage() {
   const { success, error: showError } = useToast();
 
   const mode = id ? "edit" : "create";
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingTables, setLoadingTables] = useState(true);
-  const [categoryOptions, setCategoryOptions] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [tables, setTables] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: "",
     field_value: "",
     description: "",
-    field_type: "text" as "text" | "numeric" | "decimal" | "boolean",
+    field_type: "text",
     category: "" as string | number,
     operators: [] as number[],
     source_table: "",
-    data_source: "DB" as "DB" | "Live" | "DB & Live",
-    frequency: "D-1" as "Per Min" | "D-1" | "Monthly",
+    data_source: "DB",
     default_value: "",
-    validation_strategy: "none" as "none" | "range" | "discrete" | "pattern",
+    validation_strategy: "none",
     range_min: "",
     range_max: "",
     discrete_values: "",
@@ -91,23 +52,23 @@ export default function CreateSubscriberProfilePage() {
 
   useEffect(() => {
     loadCategories();
-    loadTables();
-  }, []);
+    if (mode === "edit" && id) {
+      loadTablesAndProfile();
+    } else {
+      loadTables();
+    }
+  }, [mode, id]);
 
   const loadCategories = async () => {
     try {
-      setLoadingCategories(true);
       const categories = await kpiCategoryService.getKpiCategories();
-      // Filter for Customer 360 KPIs (parent_category_id = 60) and the parent itself
       const subscriberCategories = categories.filter(
         (cat: any) => cat.id === 60 || cat.parent_category_id === 60
       );
-      setCategoryOptions(
-        subscriberCategories.map((cat: any) => ({ label: cat.name, value: cat.id?.toString() || "" }))
-      );
+      setCategories(subscriberCategories);
     } catch (err) {
       console.error("Failed to load categories:", err);
-      setCategoryOptions([]);
+      setCategories([]);
     } finally {
       setLoadingCategories(false);
     }
@@ -133,6 +94,66 @@ export default function CreateSubscriberProfilePage() {
       setTables([]);
     } finally {
       setLoadingTables(false);
+    }
+  };
+
+  const loadTablesAndProfile = async () => {
+    try {
+      setLoadingTables(true);
+      const data = await notificationTypeService.getTables();
+      const tableList = Array.isArray(data) ? data : [];
+      setTables(
+        tableList.map((table: any, index: number) => {
+          const tableName = typeof table === "string" ? table : table.table_name || table.name || `Table ${index}`;
+          return {
+            id: index,
+            label: tableName,
+            value: tableName,
+          };
+        })
+      );
+      if (id) {
+        await loadProfile();
+      }
+    } catch (err) {
+      console.error("Failed to load tables:", err);
+      setTables([]);
+    } finally {
+      setLoadingTables(false);
+    }
+  };
+
+  const loadProfile = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const data = await subscriberProfileService.getProfileById(Number(id));
+      if (data) {
+        setFormData({
+          name: data.name,
+          field_value: data.field_value || "",
+          description: data.description,
+          field_type: data.field_type,
+          category: data.category,
+          operators: [...data.operators],
+          source_table: data.source_table,
+          data_source: data.data_source,
+          default_value: data.default_value || "",
+          validation_strategy: "none",
+          range_min: "",
+          range_max: "",
+          discrete_values: "",
+          extractionLogic: "",
+          use_as_dynamic_variable: data.is_dynamic_variable || false,
+          tag: data.tag || "kpi",
+          display_order: data.display_order || 0,
+        });
+      }
+    } catch (err) {
+      showError("Error", extractBackendError(err as any, "Error. Please try again."));
+      navigate("/dashboard/kpis/subscriber-profiles");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -169,405 +190,62 @@ export default function CreateSubscriberProfilePage() {
         description: formData.description,
         field_type: formData.field_type,
         category: formData.category,
-        default_operator_id: formData.operators.length > 0 ? formData.operators[0] : null,
         source_table: formData.source_table,
         data_source: formData.data_source,
-        frequency: formData.frequency,
-        default_value: formData.default_value || undefined,
+        default_value: String(formData.default_value),
         is_dynamic_variable: formData.use_as_dynamic_variable,
         tag: formData.tag,
       };
 
-      // TODO: Implement API call for subscriber profile creation/update
-      // if (mode === "edit" && id) {
-      //   await subscriberProfileService.updateProfile(Number(id), payload);
-      // } else {
-      //   await subscriberProfileService.createProfile(payload);
-      // }
+      if (mode === "create") {
+        payload.field_value = formData.field_value;
+        await subscriberProfileService.createProfile(payload);
+        success("Success", "Subscriber profile created successfully");
+      } else {
+        await subscriberProfileService.updateProfile(Number(id), payload);
+        success("Success", "Subscriber profile updated successfully");
+      }
 
-      success("Success", mode === "edit" ? "Profile updated successfully" : "Profile created successfully");
       navigate("/dashboard/kpis/subscriber-profiles");
     } catch (err) {
-      showError("Error", "Failed to save profile. Please try again.");
+      showError("Error", extractBackendError(err as any, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
   };
 
-  const handleInputChange = (fieldName: keyof typeof formData) => (value: string | number) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-
-    if (errors[fieldName]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[fieldName];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSelectChange = (name: string, value: string | undefined) => {
-    if (!value) return;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleOperatorChange = (operator: string, checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      operators: checked
-        ? [...prev.operators, operator]
-        : prev.operators.filter((o) => o !== operator),
-    }));
-
-    if (errors.operators) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.operators;
-        return newErrors;
-      });
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner variant="modern" size="xl" color="primary" />
+        <p className="text-gray-500 font-medium mt-4">Loading subscriber profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Subscriber Profile" : "Edit Subscriber Profile"} />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Section <span className="text-red-500">*</span>/}
-        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Information</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  placeholder="e.g., Account Type"
-                  value={formData.name}
-                  onChange={handleInputChange('name')}
-                  hasError={!!errors.name}
-                 
-                  disabled={saving}
-                />
-                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Field Value (Slug) <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  placeholder="e.g., p_account_type"
-                  value={formData.field_value}
-                  onChange={handleInputChange('field_value')}
-                 
-                  disabled={saving}
-                />
-              </div>
-            </div>
-
-            <div>
-              {loadingCategories ? (
-                <div className="p-2 text-sm text-gray-500">Loading categories...</div>
-              ) : (
-                <HeadlessSelect
-                  label="Category *"
-                  options={categoryOptions}
-                  value={formData.category ? formData.category.toString() : ""}
-                  onChange={(value) => handleSelectChange("category", value)}
-                  disabled={saving || loadingCategories}
-                />
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <HeadlessSelect
-                  label="Field Type *"
-                  options={FIELD_TYPE_OPTIONS}
-                  value={formData.field_type}
-                  onChange={(value) => handleSelectChange("field_type", value)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Default Value <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type={formData.field_type === "numeric" || formData.field_type === "decimal" ? "number" : "text"}
-                  placeholder={formData.field_type === "decimal" ? "e.g., 100.50" : formData.field_type === "numeric" ? "e.g., 100" : "e.g., Value"}
-                  value={formData.default_value}
-                  onChange={handleInputChange('default_value')}
-                  hasError={!!errors.default_value}
-                 
-                  disabled={saving}
-                  step={formData.field_type === "decimal" ? "0.01" : undefined}
-                />
-                {errors.default_value && <p className="text-red-500 text-xs mt-1">{errors.default_value}</p>}
-              </div>
-            </div>
-
-            <div>
-              <Textarea
-                label="Description"
-                value={formData.description}
-                onChange={(value) => handleTextareaChange({ target: { name: "description", value } } as any)}
-                placeholder="Describe this profile field..."
-                rows={3}
-                hasError={!!errors.description}
-                disabled={saving}
-              />
-              {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Display Order
-              </label>
-              <Input
-                type="number"
-                placeholder="e.g., 0"
-                value={formData.display_order}
-                onChange={handleInputChange('display_order')}
-               
-                disabled={saving}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Operators
-              </label>
-              <MultiCategorySelector
-                value={formData.operators}
-                onChange={(operatorIds) => setFormData((prev) => ({ ...prev, operators: operatorIds }))}
-                data={getOperatorData(formData.field_type)}
-                placeholder="Select operators..."
-                disabled={saving}
-              />
-              {errors.operators && <p className="text-red-500 text-xs mt-2">{errors.operators}</p>}
-            </div>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={formData.use_as_dynamic_variable}
-                onChange={(e) => handleInputChange('use_as_dynamic_variable')(e.target.checked ? 1 : 0)}
-                disabled={saving}
-                style={{ accentColor: color.primary.accent }}
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Use as dynamic variable
-              </span>
-            </label>
-          </div>
-        </div>
-
-        {/* Validation Configuration Section */}
-        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Validation Configuration</h2>
-          <div className="space-y-4">
-            <div>
-              <HeadlessSelect
-                label="Validation Strategy *"
-                options={VALIDATION_STRATEGY_OPTIONS}
-                value={formData.validation_strategy}
-                onChange={(value) => handleSelectChange("validation_strategy", value)}
-                disabled={saving}
-              />
-            </div>
-
-            {formData.validation_strategy === "range" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Min Value <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 0"
-                    value={formData.range_min}
-                    onChange={handleInputChange('range_min')}
-                    hasError={!!errors.range_min}
-                   
-                    disabled={saving}
-                  />
-                  {errors.range_min && <p className="text-red-500 text-xs mt-1">{errors.range_min}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max Value <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="e.g., 100"
-                    value={formData.range_max}
-                    onChange={handleInputChange('range_max')}
-                    hasError={!!errors.range_max}
-                   
-                    disabled={saving}
-                  />
-                  {errors.range_max && <p className="text-red-500 text-xs mt-1">{errors.range_max}</p>}
-                </div>
-              </div>
-            )}
-
-            {formData.validation_strategy === "discrete" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Allowed Values <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  placeholder="e.g., active, inactive, pending (comma-separated)"
-                  value={formData.discrete_values}
-                  onChange={handleInputChange('discrete_values')}
-                  hasError={!!errors.discrete_values}
-                 
-                  disabled={saving}
-                />
-                {errors.discrete_values && <p className="text-red-500 text-xs mt-1">{errors.discrete_values}</p>}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Data Source Configuration Section <span className="text-red-500">*</span>/}
-        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Data Source Configuration</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <HeadlessSelect
-                  label="Data Source *"
-                  options={DATA_SOURCE_OPTIONS}
-                  value={formData.data_source}
-                  onChange={(value) => handleSelectChange("data_source", value)}
-                  disabled={saving}
-                />
-              </div>
-
-              <div>
-                <HeadlessSelect
-                  label="Frequency *"
-                  options={FREQUENCY_OPTIONS}
-                  value={formData.frequency}
-                  onChange={(value) => handleSelectChange("frequency", value)}
-                  disabled={saving}
-                />
-              </div>
-            </div>
-
-            <div>
-              {loadingTables ? (
-                <div className="p-2 text-sm text-gray-500">Loading tables...</div>
-              ) : (
-                <HeadlessSelect
-                  label="Source Table *"
-                  options={tables}
-                  value={formData.source_table}
-                  onChange={(value) => handleSelectChange("source_table", value)}
-                  placeholder="Select a table"
-                  disabled={saving || loadingTables}
-                  searchable={true}
-                />
-              )}
-              {errors.source_table && <p className="text-red-500 text-xs mt-1">{errors.source_table}</p>}
-            </div>
-          </div>
-        </div>
-
-        {/* Extraction Logic Section <span className="text-red-500">*</span>/}
-        <div className={`${tw.rounded} bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Extraction Logic</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Logic Definition <span className="text-red-500">*</span>
-            </label>
-            <div
-              className={`border ${tw.rounded} overflow-hidden`}
-              style={{
-                borderColor: errors.extractionLogic ? "#ef4444" : tw.borderDefault,
-                minHeight: "200px",
-              }}
-            >
-              <CodeMirror
-                value={formData.extractionLogic}
-                height="200px"
-                extensions={[sqlLanguage()]}
-                onChange={(value) => handleTextareaChange({ target: { name: "extractionLogic", value } } as any)}
-                theme="light"
-                basicSetup={{
-                  lineNumbers: true,
-                  highlightActiveLineGutter: true,
-                  foldGutter: true,
-                  dropCursor: true,
-                  indentOnInput: true,
-                  bracketMatching: true,
-                  closeBrackets: true,
-                  autocompletion: true,
-                  searchKeymap: true,
-                }}
-                className="codemirror-editor"
-                placeholder="e.g., account_type (reference a field from your table)"
-              />
-            </div>
-            {errors.extractionLogic && <p className="text-red-500 text-xs mt-2">{errors.extractionLogic}</p>}
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard/kpis/subscriber-profiles")}
-            disabled={saving}
-            className="transition-colors disabled:opacity-60"
-            style={getButtonStyles(button.bordered)}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white rounded-md disabled:opacity-60"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            {saving ? (mode === "edit" ? "Updating..." : "Creating...") : (mode === "edit" ? "Update" : "Create")}
-          </button>
-        </div>
-      </form>
+      <KPIForm
+        mode={mode as "create" | "edit"}
+        type="profile"
+        formData={formData}
+        onFormDataChange={setFormData}
+        errors={errors}
+        loading={loading}
+        saving={saving}
+        categories={categories}
+        tables={tables}
+        loadingCategories={loadingCategories}
+        loadingTables={loadingTables}
+        fieldTypeOptions={FIELD_TYPE_OPTIONS}
+        dataSourceOptions={DATA_SOURCE_OPTIONS}
+        dataLatencyOptions={DATA_LATENCY_OPTIONS}
+        validationStrategyOptions={VALIDATION_STRATEGY_OPTIONS}
+        onCancel={() => navigate("/dashboard/kpis/subscriber-profiles")}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
