@@ -1,3 +1,10 @@
+## [1.4.10](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.9...v1.4.10) (2026-06-17)
+
+
+### Bug Fixes
+
+* applying floating labels on the remaining inputs ([d7d1958](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/d7d1958597c001c921b712e9426e8a9c22498f59))
+
 ## [1.4.9](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.8...v1.4.9) (2026-06-15)
 
 
