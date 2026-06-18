@@ -1,3 +1,10 @@
+## [1.4.12](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.11...v1.4.12) (2026-06-18)
+
+
+### Bug Fixes
+
+* fixed the filtering logic in the table compoent ([d121e00](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/d121e00e130f8e030480ad2f8f27268cd1450103))
+
 ## [1.4.11](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.10...v1.4.11) (2026-06-18)
 
 
