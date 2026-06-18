@@ -47,6 +47,7 @@ export default function DataConnectorDetailsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isSavingForm, setIsSavingForm] = useState(false);
   const [connectionProfiles, setConnectionProfiles] = useState<
     ConnectionProfileType[]
   >([]);
@@ -131,9 +132,11 @@ export default function DataConnectorDetailsPage() {
   const handleTestProfile = async (profileId: number) => {
     try {
       setTestingProfileId(profileId);
+
       const result = await connectionProfileService.testConnectionProfile(
         profileId,
       );
+
       setTestResults((prev) => ({ ...prev, [profileId]: result }));
 
       if (result.success) {
@@ -148,7 +151,8 @@ export default function DataConnectorDetailsPage() {
         error_details: err.message || "Connection test error",
       };
       setTestResults((prev) => ({ ...prev, [profileId]: errorResult }));
-      showError("Test failed", extractBackendError(error, "Test failed. Please try again."));
+
+      showError("Test failed", extractBackendError(err, "Test failed. Please try again."));
     } finally {
       setTestingProfileId(null);
     }
@@ -177,6 +181,7 @@ export default function DataConnectorDetailsPage() {
     if (!connector) return;
 
     try {
+      setIsSavingForm(true);
       // Get connection_profile_id from form or from the first attached profile
       let profileId = formData.connection_profile_id;
       if (!profileId && connectionProfiles.length > 0) {
@@ -200,14 +205,24 @@ export default function DataConnectorDetailsPage() {
         setShowEditModal(false);
       }
     } catch (err: any) {
-      showError("Save failed", extractBackendError(error, "Save failed. Please try again."));
+      showError("Save failed", extractBackendError(err, "Save failed. Please try again."));
+    } finally {
+      setIsSavingForm(false);
     }
   };
 
   const handleSelectConnectionProfile = async (
     profile: ConnectionProfileType
   ) => {
-    if (!connector) return;
+    if (!connector) {
+      showError("Error", "Connector not found");
+      return;
+    }
+
+    if (!profile) {
+      showError("Error", "Profile not selected");
+      return;
+    }
 
     try {
       const payload: UpdateDataConnectorRequest = {
@@ -222,21 +237,42 @@ export default function DataConnectorDetailsPage() {
         payload,
       );
 
-      if (updated) {
-        setConnector(updated);
-        // Reload the attached connection profile
-        const updatedProfile = await connectionProfileService.getProfile(
-          profile.id,
-          true
-        );
-        setConnectionProfiles([updatedProfile]);
-        success("Success", `Connected profile "${profile.profile_name}"`);
-        setShowSelectProfileModal(false);
+      if (!updated) {
+        showError("Error", "Failed to update connector");
+        return;
       }
+
+      // Reload the attached connection profile
+      const updatedProfile = await connectionProfileService.getProfile(
+        profile.id,
+        true
+      );
+
+      if (!updatedProfile) {
+        showError("Error", "Failed to reload profile after attachment");
+        return;
+      }
+
+      // Add to existing profiles instead of replacing
+      setConnectionProfiles((prev) => {
+        if (!prev) {
+          return [updatedProfile];
+        }
+
+        const exists = prev.some((p) => p.id === profile.id);
+        if (exists) {
+          return prev;
+        }
+
+        return [...prev, updatedProfile];
+      });
+
+      const profileName = profile.profile_name || profile.name || "Unknown";
+      success("Success", `Connected profile "${profileName}"`);
     } catch (err: any) {
       showError(
         "Failed to connect profile",
-        err.message || "Could not link connection profile"
+        extractBackendError(err, "Could not link connection profile")
       );
     }
   };
@@ -289,9 +325,9 @@ export default function DataConnectorDetailsPage() {
   return (
     <div className="">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-8">
         <BackButton
-         
+
           showBreadcrumb={true}
           currentLabel="Data Connector Details"
         />
@@ -542,7 +578,7 @@ export default function DataConnectorDetailsPage() {
       </div>
 
       {/* Connection Profiles - Full Width */}
-      <div>
+      <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
             Connection Profiles
@@ -635,7 +671,7 @@ export default function DataConnectorDetailsPage() {
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-sm ${(profile as any).is_active ? `text-green-600` : `text-gray-500`}`}>
+                        <span className={`text-sm ${tw.textPrimary}`}>
                           {(profile as any).is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
@@ -653,7 +689,7 @@ export default function DataConnectorDetailsPage() {
                           <button
                             onClick={() => handleTestProfile(profile.id)}
                             disabled={testingProfileId === profile.id}
-                            className="px-4 py-2 text-white rounded font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 text-white rounded font-semibold flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ backgroundColor: button.action.background }}
                           >
                             {testingProfileId === profile.id ? (
@@ -662,10 +698,7 @@ export default function DataConnectorDetailsPage() {
                                 Testing...
                               </>
                             ) : (
-                              <>
-                                <Play className="w-3 h-3" />
-                                Test
-                              </>
+                              "Test"
                             )}
                           </button>
                         </div>
@@ -705,6 +738,7 @@ export default function DataConnectorDetailsPage() {
         isOpen={showEditModal}
         onClose={handleFormClose}
         onSave={handleFormSave}
+        loading={isSavingForm}
       />
 
       {/* Select Connection Profile Modal */}

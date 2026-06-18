@@ -12,7 +12,6 @@ import type { ControlGroupApiModel, ControlGroupMember } from "../types/controlG
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination from "../../../shared/components/ui/Pagination";
 import AddMembersModal from "../components/AddMembersModal";
-import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ControlGroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -630,12 +629,12 @@ export default function ControlGroupDetailPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={deleteConfirm.id !== null}
-        onClose={() => closeDeleteConfirm()}
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         title="Delete Control Group"
         description="Are you sure you want to delete this control group? This action cannot be undone."
-        itemName={group.name}
+        itemName={group?.name || "Control Group"}
         isLoading={isDeleting}
         confirmText="Delete"
         cancelText="Cancel"

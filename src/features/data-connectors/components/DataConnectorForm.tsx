@@ -10,6 +10,7 @@ import { color, zIndex, button, getButtonStyles } from "../../../shared/utils/ut
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 
 interface DataConnectorFormProps {
   connector?: ProcessedDataConnector;
@@ -198,9 +199,17 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
             type="submit"
             disabled={loading}
             onClick={handleSubmit}
-            className="px-4 py-2 text-white rounded-md font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md"
+            className="px-4 py-2 text-white rounded-md font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md flex items-center justify-center"
             style={{ backgroundColor: color.primary.action }}
           >
+            {loading && (
+              <LoadingSpinner
+                variant="modern"
+                size="sm"
+                color="primary"
+                className="mr-2"
+              />
+            )}
             {loading ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update" : "Create")}
           </button>
         </div>

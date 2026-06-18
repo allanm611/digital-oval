@@ -8,6 +8,7 @@ import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrappe
 import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
 import type { SegmentConditionGroup, SegmentPayload, SourceLayer, LayerCondition, LayerColumnRef } from "../../segments/types/segment";
 import { convertConditionsToPayload } from "../../segments/utils/conditionPayloadBuilder";
+import { convertPayloadToConditions } from "../../segments/utils/payloadConverter";
 import SchedulingComponent from "../../../shared/components/SchedulingComponent";
 import type { SchedulingData } from "../../../shared/types/scheduling";
 import { useToast } from "../../../contexts/ToastContext";
@@ -93,6 +94,23 @@ export default function CreateControlGroupPage() {
       setSelectedCustomerBase(group.customer_source_type || "active_subscribers");
       setIsUniversal(group.is_universal || false);
       setIsActive(group.is_active !== false);
+
+      // Load segment conditions if it's a custom_conditions control group
+      if (group.customer_source_type === "custom_conditions" && group.custom_conditions) {
+        try {
+          const payload: SegmentPayload = {
+            layer_filters: group.custom_conditions.layer_filters,
+            source_layers: group.custom_conditions.source_layers,
+            unique_identifier: group.custom_conditions.unique_identifier,
+            limit: group.custom_conditions.limit,
+          };
+          const conditions = await convertPayloadToConditions(payload);
+          setSegmentConditions(conditions);
+        } catch (err) {
+          console.error("Failed to convert conditions:", err);
+          // Continue without conditions, user can define new ones
+        }
+      }
 
       if (group.start_date) {
         setScheduling({

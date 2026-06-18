@@ -40,7 +40,7 @@ import {
   SFTPConfig,
   FTPConfig,
   ConfigComponentProps,
-} from "../../../shared/components/ConnectorConfigComponents";
+} from "../../../shared/components/ConnectorConfigs";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 interface ConnectionProfileFormPageProps {
@@ -565,14 +565,14 @@ export default function ConnectionProfileFormPage({
         />
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Basic Information
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Input
                 label="Profile Name*"
@@ -947,7 +947,7 @@ export default function ConnectionProfileFormPage({
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Performance Settings
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Input
                 label="Records Per Batch*"
@@ -1125,7 +1125,7 @@ export default function ConnectionProfileFormPage({
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Data Governance
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <HeadlessSelect
                 label="Data Classification *"
@@ -1150,7 +1150,7 @@ export default function ConnectionProfileFormPage({
                 <p className="text-sm text-red-500 mt-1">{errors.data_classification}</p>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
                 setFormData({
                   ...formData,
@@ -1238,7 +1238,7 @@ export default function ConnectionProfileFormPage({
             <p className="text-xs text-gray-500 mb-4">
               Configure incremental sync settings for detecting changes.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Input
                   label="Sync Column Name"
@@ -1339,7 +1339,7 @@ export default function ConnectionProfileFormPage({
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Advanced Settings
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Input
                 label="Encryption Key Version"

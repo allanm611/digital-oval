@@ -15,6 +15,7 @@ import {
   MoreHorizontal,
   Send,
   Download,
+  ArrowLeft,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -103,6 +104,7 @@ export default function CustomersPage() {
   const [dropdownPosition, setDropdownPosition] = useState<{
     top: number;
     left: number;
+    maxHeight: number;
   } | null>(null);
   const actionMenuRefs = useRef<Record<number | string, HTMLElement | null>>({});
   const dropdownMenuRefs = useRef<Record<number | string, HTMLDivElement | null>>({});
@@ -766,7 +768,7 @@ export default function CustomersPage() {
     setCustomerToCommunicate(customer);
     setIsCommunicateModalOpen(true);
     setShowActionMenuForId(null);
-    setActionMenuIndex(null);
+    setDropdownPosition(null);
   };
 
   // Close action menus when clicking outside
@@ -801,13 +803,17 @@ export default function CustomersPage() {
   // Recalculate dropdown position on window resize
   useEffect(() => {
     const handleResize = () => {
-      if (showActionMenuForId !== null && dropdownPosition) {
+      if (showActionMenuForId !== null) {
         const button = actionMenuRefs.current[showActionMenuForId];
         if (button) {
           const buttonRect = button.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          const padding = 8;
+          const spaceBelow = viewportHeight - buttonRect.bottom - padding;
+          const maxHeight = Math.max(150, spaceBelow - 20);
           const top = buttonRect.bottom + 8;
-          const left = buttonRect.right - 200;
-          setDropdownPosition({ top, left });
+          const left = buttonRect.right - 224;
+          setDropdownPosition({ top, left, maxHeight });
         }
       }
     };
@@ -818,7 +824,7 @@ export default function CustomersPage() {
         window.removeEventListener("resize", handleResize);
       };
     }
-  }, [showActionMenuForId, dropdownPosition]);
+  }, [showActionMenuForId]);
 
   const handleActionMenuToggle = (rowId: number | string, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -828,12 +834,15 @@ export default function CustomersPage() {
     } else {
       const button = event.currentTarget as HTMLElement;
       const rect = button.getBoundingClientRect();
-      const menuHeight = 120;
+      const viewportHeight = window.innerHeight;
+      const padding = 8;
+      const spaceBelow = viewportHeight - rect.bottom - padding;
+      const maxHeight = Math.max(150, spaceBelow - 20);
       const top = rect.bottom + 8;
-      const left = rect.right - 200;
+      const left = rect.right - 224;
 
       setShowActionMenuForId(rowId);
-      setDropdownPosition({ top, left });
+      setDropdownPosition({ top, left, maxHeight });
     }
   };
 
@@ -1085,7 +1094,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Render dropdown menus via portal */}
-      {allCustomers.map((customer) => {
+      {customers.map((customer) => {
         if (showActionMenuForId === customer.subscriptionId && dropdownPosition) {
           return createPortal(
             <div
@@ -1095,11 +1104,16 @@ export default function CustomersPage() {
                   dropdownMenuRefs.current[customer.subscriptionId] = el;
                 }
               }}
-              className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 w-56`}
+              className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2`}
               style={{
                 zIndex: zIndex.popover,
                 top: `${dropdownPosition.top}px`,
                 left: `${dropdownPosition.left}px`,
+                width: '224px',
+                maxHeight: `${dropdownPosition.maxHeight}px`,
+                overflowY: "auto",
+                overflowX: "hidden",
+                overscrollBehavior: "contain",
               }}
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}

@@ -301,7 +301,7 @@ export default function HeadlessSelect({
             onClick={() => {
               setIsOpen(!isOpen);
             }}
-            className={`w-full px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0 ${
+            className={`w-full px-3 ${label ? 'pt-3 pb-2' : 'py-2'} text-left border ${tw.rounded} text-sm leading-tight transition-all focus:outline-none focus:ring-0 ${
               disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
             } ${
               error ? "border-red-300" : "border-gray-300"

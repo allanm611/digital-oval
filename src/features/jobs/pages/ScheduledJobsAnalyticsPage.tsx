@@ -340,7 +340,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
   }, [loadAnalytics]);
 
   return (
-    <div className="">
+    <div className="space-y-8">
       <BackButton showBreadcrumb={true} currentLabel="Scheduled Jobs Analytics" />
 
       {isLoading ? (
@@ -348,7 +348,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
           <LoadingSpinner />
         </div>
       ) : (
-        <div className="">
+        <div className="space-y-8">
           {slaCompliance && (
             <div className="grid gap-4 md:grid-cols-3">
               <div
@@ -404,7 +404,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             </div>
           )}
 
-          <div className="">
+          <div>
             {mostFailed.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -656,7 +656,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             )}
           </div>
 
-          <div className="">
+          <div className="mb-8">
             <div className="grid gap-6 md:grid-cols-2">
               {statusCounts.length > 0 && (
                 <div
@@ -786,7 +786,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
 
             {ownerCounts.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-8 mt-8`}
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Jobs by Owner
@@ -835,7 +835,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             )}
 
             {executionStats && Object.keys(executionStats).length > 0 && (
-              <div className="">
+              <div className="mb-8">
                 <div
                   className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
                 >
@@ -895,7 +895,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                 </div>
 
                 <div
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mt-8`}
                 >
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Performance Metrics
@@ -957,7 +957,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             {resourceUtilization &&
               Object.keys(resourceUtilization).length > 0 && (
                 <div
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-8`}
                 >
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Resource Utilization

@@ -52,6 +52,7 @@ export default function DataConnectors() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isSavingForm, setIsSavingForm] = useState(false);
   const [editingConnector, setEditingConnector] =
     useState<ProcessedDataConnector | null>(null);
   const [connectorToDelete, setConnectorToDelete] =
@@ -246,6 +247,7 @@ export default function DataConnectors() {
 
   const handleSaveConnector = async (formData: DataConnectorFormData) => {
     try {
+      setIsSavingForm(true);
       let savedConnector: ProcessedDataConnector;
 
       if (editingConnector) {
@@ -301,7 +303,9 @@ export default function DataConnectors() {
       setEditingConnector(null);
     } catch (err: any) {
       console.error(err);
-      showError("Save failed", extractBackendError(error, "Save failed. Please try again."));
+      showError("Save failed", extractBackendError(err, "Save failed. Please try again."));
+    } finally {
+      setIsSavingForm(false);
     }
   };
 
@@ -339,7 +343,6 @@ export default function DataConnectors() {
 
       {/* Stats Cards */}
       <div className="mt-6">
-      {statistics && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -354,7 +357,7 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {statistics?.total_connectors ?? connectors.length}
+              {statistics ? (statistics?.total_connectors ?? connectors.length) : "..."}
             </p>
           </div>
           <div
@@ -368,8 +371,7 @@ export default function DataConnectors() {
               <p className="text-sm font-medium text-gray-600">Active</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {statistics?.active_connectors ??
-                connectors.filter((c) => c.is_active).length}
+              {statistics ? (statistics?.active_connectors ?? connectors.filter((c) => c.is_active).length) : "..."}
             </p>
           </div>
           <div
@@ -385,11 +387,7 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {statistics?.total_connection_count ??
-                connectors.reduce(
-                  (sum, c) => sum + (c.connection_count || 0),
-                  0,
-                )}
+              {statistics ? (statistics?.total_connection_count ?? connectors.reduce((sum, c) => sum + (c.connection_count || 0), 0)) : "..."}
             </p>
           </div>
           <div
@@ -405,12 +403,10 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {statistics?.connectors_by_type?.length ??
-                new Set(connectors.map((c) => c.type)).size}
+              {statistics ? (statistics?.connectors_by_type?.length ?? new Set(connectors.map((c) => c.type)).size) : "..."}
             </p>
           </div>
         </div>
-      )}
       </div>
 
       {/* Controls */}
@@ -539,18 +535,6 @@ export default function DataConnectors() {
                 ),
               },
               {
-                id: "last_used",
-                label: "Last Used",
-                visible: true,
-                render: (value) => (
-                  <span className={tw.textPrimary}>
-                    {value
-                      ? <DateFormatter date={new Date(value)} useUserTimezone />
-                      : "--"}
-                  </span>
-                ),
-              },
-              {
                 id: "actions",
                 label: "Actions",
                 visible: true,
@@ -634,6 +618,7 @@ export default function DataConnectors() {
         onClose={handleCloseForm}
         onSave={handleSaveConnector}
         availableTypes={connectorTypes}
+        loading={isSavingForm}
       />
 
       <DeleteConfirmModal
