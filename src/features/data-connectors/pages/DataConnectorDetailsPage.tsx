@@ -73,21 +73,25 @@ export default function DataConnectorDetailsPage() {
 
       setConnector(data);
 
-      // Fetch the connection profile attached to this connector using its connection_profile_id
+      // Fetch all connection profiles attached to this connector
       setLoadingProfiles(true);
       try {
-        if (data.connection_profile_id) {
-          const profile = await connectionProfileService.getProfile(
-            data.connection_profile_id,
+        if (!connector) {
+          setConnectionProfiles([]);
+        } else {
+          const profiles = await connectionProfileService.getProfilesByDataConnector(
+            connector.id,
             true
           );
-          setConnectionProfiles([profile]);
-        } else {
-          setConnectionProfiles([]);
+          if (!profiles) {
+            setConnectionProfiles([]);
+          } else {
+            setConnectionProfiles(profiles);
+          }
         }
       } catch (profileError) {
-        console.error("Failed to fetch connection profile:", profileError);
-        // Don't fail the whole page load if profile can't be fetched
+        console.error("Failed to fetch connection profiles:", profileError);
+        // Don't fail the whole page load if profiles can't be fetched
         setConnectionProfiles([]);
       }
     } catch (err) {

@@ -59,9 +59,20 @@ export function useTable<T = any>({
           return prevCol ? { ...col, visible: prevCol.visible } : col;
         });
       }
+      // Update if any column's filterConfig options changed
+      const hasFilterConfigChanged = prevColumns.some((prevCol) => {
+        const newCol = defaultColumns.find((c) => c.id === prevCol.id);
+        return JSON.stringify(prevCol.filterConfig) !== JSON.stringify(newCol?.filterConfig);
+      });
+      if (hasFilterConfigChanged) {
+        return defaultColumns.map((col) => {
+          const prevCol = prevColumns.find((c) => c.id === col.id);
+          return prevCol ? { ...col, visible: prevCol.visible } : col;
+        });
+      }
       return prevColumns;
     });
-  }, [defaultColumns.length]);
+  }, [defaultColumns]);
 
   // Save columns to localStorage when they change
   useEffect(() => {

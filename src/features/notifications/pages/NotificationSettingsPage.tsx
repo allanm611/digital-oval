@@ -260,7 +260,7 @@ export default function NotificationSettingsPage() {
             </p>
           </div>
 
-          <div className="pr-4 py-4 bg-gray-50 rounded space-y-3">
+          <div className="pr-4 py-4 bg-gray-50 rounded space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {localSettings.in_app_sound_enabled ? (
@@ -274,25 +274,24 @@ export default function NotificationSettingsPage() {
               </div>
               <Checkbox
                 checked={localSettings.in_app_sound_enabled}
-                onChange={(checked) =>
-                  handleSettingChange("in_app_sound_enabled", checked)
+                onChange={() =>
+                  handleSettingChange("in_app_sound_enabled", !localSettings.in_app_sound_enabled)
                 }
                 id="sound-enabled"
               />
             </div>
 
             {localSettings.in_app_sound_enabled && (
-              <div className="space-y-6 ">
-                <label className="text-sm font-medium mt-6 text-gray-700">
-                  {t.notifications.settings.soundType}
-                </label>
+              <div className="space-y-6 mt-8">
                 <HeadlessSelect
+                  label={t.notifications.settings.soundType}
                   options={NOTIFICATION_SOUNDS}
                   value={localSettings.notification_sound}
                   onChange={(value) =>
                     handleSettingChange("notification_sound", value)
                   }
                   placeholder="Select sound..."
+                  className="w-full"
                 />
               </div>
             )}
@@ -311,6 +310,36 @@ export default function NotificationSettingsPage() {
         </div>
 
         <div className="space-y-4">
+          {/* Email Notifications */}
+          <div>
+            <div className="flex items-center justify-between pb-1 bg-gray-50 rounded">
+              <label htmlFor="email-enabled" className="text-sm font-medium text-gray-900">
+                {t.notifications.settings.emailNotifications}
+              </label>
+              <Checkbox
+                checked={localSettings.email_notifications_enabled}
+                onChange={() =>
+                  handleSettingChange("email_notifications_enabled", !localSettings.email_notifications_enabled)
+                }
+                id="email-enabled"
+              />
+            </div>
+            {localSettings.email_notifications_enabled && (
+              <div className="mt-4">
+                <HeadlessSelect
+                  label="Digest Frequency"
+                  options={EMAIL_DIGEST_OPTIONS}
+                  value={localSettings.email_digest_frequency}
+                  onChange={(value) =>
+                    handleSettingChange("email_digest_frequency", value)
+                  }
+                  placeholder="Select frequency..."
+                  className="w-full"
+                />
+              </div>
+            )}
+          </div>
+
           {/* SMS Alerts */}
           <div className="flex items-center justify-between pb-1 bg-gray-50 rounded">
             <label htmlFor="sms-enabled" className="text-sm font-medium text-gray-900">
@@ -318,8 +347,8 @@ export default function NotificationSettingsPage() {
             </label>
             <Checkbox
               checked={localSettings.sms_alerts_enabled}
-              onChange={(checked) =>
-                handleSettingChange("sms_alerts_enabled", checked)
+              onChange={() =>
+                handleSettingChange("sms_alerts_enabled", !localSettings.sms_alerts_enabled)
               }
               id="sms-enabled"
             />
@@ -332,39 +361,11 @@ export default function NotificationSettingsPage() {
             </label>
             <Checkbox
               checked={localSettings.desktop_notifications_enabled}
-              onChange={(checked) =>
-                handleSettingChange("desktop_notifications_enabled", checked)
+              onChange={() =>
+                handleSettingChange("desktop_notifications_enabled", !localSettings.desktop_notifications_enabled)
               }
               id="desktop-enabled"
             />
-          </div>
-
-          {/* Email Notifications */}
-          <div>
-            <div className="flex items-center justify-between pb-1 bg-gray-50 rounded">
-              <label htmlFor="email-enabled" className="text-sm font-medium text-gray-900">
-                {t.notifications.settings.emailNotifications}
-              </label>
-              <Checkbox
-                checked={localSettings.email_notifications_enabled}
-                onChange={(checked) =>
-                  handleSettingChange("email_notifications_enabled", checked)
-                }
-                id="email-enabled"
-              />
-            </div>
-            {localSettings.email_notifications_enabled && (
-              <div className="mt-3 ml-0">
-                <HeadlessSelect
-                  options={EMAIL_DIGEST_OPTIONS}
-                  value={localSettings.email_digest_frequency}
-                  onChange={(value) =>
-                    handleSettingChange("email_digest_frequency", value)
-                  }
-                  placeholder="Select frequency..."
-                />
-              </div>
-            )}
           </div>
         </div>
         </div>
@@ -403,51 +404,39 @@ export default function NotificationSettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* DND Days */}
                 <div>
-                  <label
-                    htmlFor="dnd-days"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    Apply To
-                  </label>
                   <HeadlessSelect
+                    label="Apply To"
                     value={dndSettings.dnd_days}
                     onChange={(value) => handleDNDDaysChange(value as string)}
                     options={DND_DAYS}
                     placeholder="Select days"
+                    className="w-full"
                   />
                 </div>
 
                 {/* DND Start Time */}
                 <div>
-                  <label
-                    htmlFor="dnd-start-time"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    Start Time (DND begins)
-                  </label>
-                  <input
-                    id="dnd-start-time"
+                  <Input
                     type="time"
+                    label="Start Time (DND begins)"
                     value={dndSettings.dnd_start_time}
-                    onChange={(e) => handleDNDStartTimeChange(e.target.value)}
-                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    onChange={(value) => handleDNDStartTimeChange(String(value))}
+                    className="w-full"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
 
                 {/* DND End Time */}
                 <div>
-                  <label
-                    htmlFor="dnd-end-time"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    End Time (DND ends)
-                  </label>
-                  <input
-                    id="dnd-end-time"
+                  <Input
                     type="time"
+                    label="End Time (DND ends)"
                     value={dndSettings.dnd_end_time}
-                    onChange={(e) => handleDNDEndTimeChange(e.target.value)}
-                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    onChange={(value) => handleDNDEndTimeChange(String(value))}
+                    className="w-full"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
               </div>

@@ -174,16 +174,16 @@ export default function CampaignsPage() {
       ),
     },
     {
-      id: "category",
+      id: "category_name",
       label: "Category",
       visible: true,
       sortable: true,
       filterConfig: {
         type: 'select',
-        options: categories.map(c => c.name)
+        options: categories?.filter(c => c?.name)?.map(c => c.name) || []
       },
       render: (value, campaign) => {
-        const categoryName = (campaign as any).category_name || "Uncategorized";
+        const categoryName = value || "Uncategorized";
         return (
           <span className={`text-sm ${tw.textPrimary}`} title={categoryName || "No category assigned"}>
             {categoryName}
@@ -222,7 +222,7 @@ export default function CampaignsPage() {
       ),
     },
     {
-      id: "offers",
+      id: "offer_count",
       label: "Offers",
       visible: true,
       filterConfig: { type: 'number' },
@@ -258,7 +258,7 @@ export default function CampaignsPage() {
       ),
     },
     {
-      id: "segments",
+      id: "segment_count",
       label: "Segments",
       visible: true,
       filterConfig: { type: 'number' },
@@ -312,6 +312,7 @@ export default function CampaignsPage() {
       id: "created_by",
       label: "Created By",
       visible: false,
+      filterConfig: { type: 'number' },
       render: (value) => (
         <span className={`text-sm ${tw.textPrimary}`}>
           {value ? userNamesCache.get(value) || "—" : "—"}
@@ -319,7 +320,7 @@ export default function CampaignsPage() {
       ),
     },
     {
-      id: "created_on",
+      id: "created_at",
       label: "Created On",
       visible: false,
       filterConfig: { type: 'date' },
@@ -331,18 +332,20 @@ export default function CampaignsPage() {
         ),
     },
     {
-      id: "updated_by",
-      label: "Last Updated By",
+      id: "start_date",
+      label: "Start Date",
       visible: false,
-      render: (value) => (
-        <span className={`text-sm ${tw.textPrimary}`}>
-          {value ? userNamesCache.get(value) || "—" : "—"}
-        </span>
-      ),
+      filterConfig: { type: 'date' },
+      render: (value) =>
+        value ? (
+          <DateFormatter date={value} useUserTimezone className="text-sm" />
+        ) : (
+          <span className={`text-sm ${tw.textMuted}`}>—</span>
+        ),
     },
     {
-      id: "updated_on",
-      label: "Last Updated On",
+      id: "end_date",
+      label: "End Date",
       visible: false,
       filterConfig: { type: 'date' },
       render: (value) =>
@@ -388,7 +391,7 @@ export default function CampaignsPage() {
         </div>
       ),
     },
-  ], [categoryMap]);
+  ], [categoryMap, categories]);
 
   const {
     columns,

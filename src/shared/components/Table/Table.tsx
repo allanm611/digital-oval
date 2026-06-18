@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect, MouseEvent } from "react";
-import { ChevronDown, ArrowUp, ArrowDown, MoreVertical, Filter, Search, Settings, Eye, EyeOff, X } from "lucide-react";
+import { ChevronDown, ArrowUp, ArrowDown, MoreVertical, Filter, Settings, Eye, EyeOff, X } from "lucide-react";
 import { TableProps, TableColumn, SortConfig } from "./types";
 import { tw, color } from "../../utils/utils";
 import { buttons } from "../../utils/tokens";
@@ -54,8 +54,6 @@ export function Table<T extends { id?: number | string } = any>({
   const [resizingColumn, setResizingColumn] = useState<string | null>(null);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
-  const [columnSearches, setColumnSearches] = useState<{ [columnId: string]: string }>({});
-  const [searchingColumn, setSearchingColumn] = useState<string | null>(null);
   const [columnFilters, setColumnFilters] = useState<{ [columnId: string]: any }>({});
   const [filteringColumn, setFilteringColumn] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -110,13 +108,12 @@ export function Table<T extends { id?: number | string } = any>({
   // Clear filters when clearFiltersKey changes
   useEffect(() => {
     setColumnFilters({});
-    setColumnSearches({});
   }, [clearFiltersKey]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     onPageChange?.(1);
-  }, [columnFilters, columnSearches, onPageChange]);
+  }, [columnFilters, onPageChange]);
 
   const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
     e.preventDefault();
@@ -154,20 +151,9 @@ export function Table<T extends { id?: number | string } = any>({
   const totalPages = Math.ceil(totalItems / pageSize);
   const currentIndex = (currentPage - 1) * pageSize;
 
-  // Apply column searches, filters, and sorting to data
+  // Apply filters and sorting to data
   const sortedData = useMemo(() => {
     let filtered = [...data];
-
-    // Apply column searches
-    Object.entries(columnSearches).forEach(([columnId, searchText]) => {
-      if (searchText.trim()) {
-        filtered = filtered.filter((row) => {
-          const value = row[columnId as keyof T];
-          const stringValue = String(value || '').toLowerCase();
-          return stringValue.includes(searchText.toLowerCase());
-        });
-      }
-    });
 
     // Apply column filters
     Object.entries(columnFilters).forEach(([columnId, filterValue]) => {
@@ -185,7 +171,7 @@ export function Table<T extends { id?: number | string } = any>({
           return stringValue.includes(String(filterValue).toLowerCase());
         } else if (filterType === 'number') {
           const numValue = Number(value) || 0;
-          if (filterValue && typeof filterValue === 'object' && filterValue.operator && filterValue.value !== undefined) {
+          if (filterValue && typeof filterValue === 'object' && filterValue.operator && filterValue.value !== undefined && filterValue.value !== '') {
             const filterNum = Number(filterValue.value);
             switch (filterValue.operator) {
               case '>': return numValue > filterNum;
@@ -244,7 +230,7 @@ export function Table<T extends { id?: number | string } = any>({
     });
 
     return sorted;
-  }, [data, sortConfigs, columnSearches, columnFilters, columns]);
+  }, [data, sortConfigs, columnFilters, columns]);
 
   // Notify parent of actual filtered count
   useEffect(() => {
@@ -294,28 +280,103 @@ export function Table<T extends { id?: number | string } = any>({
     );
   }
 
-  if (pageData.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-6">
-        <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>No data found</h3>
-        <p className={`${tw.textMuted} text-sm`}>Try adjusting your filters or search criteria.</p>
-      </div>
-    );
-  }
+  // Get filter display value
+  const getFilterDisplayValue = (columnId: string, filterValue: any): string => {
+    const column = columns.find(c => c.id === columnId);
+    const filterType = column?.filterConfig?.type;
+
+    if (filterType === 'text') {
+      return String(filterValue || '');
+    } else if (filterType === 'number') {
+      if (filterValue?.operator && filterValue?.value !== undefined) {
+        return `${filterValue.operator} ${filterValue.value}`;
+      }
+      return '';
+    } else if (filterType === 'date') {
+      if (Array.isArray(filterValue) && filterValue.length >= 2) {
+        return `${filterValue[0]} to ${filterValue[1]}`;
+      }
+      return String(filterValue || '');
+    } else if (filterType === 'select' || filterType === 'multiselect') {
+      if (Array.isArray(filterValue)) {
+        return filterValue.join(', ');
+      }
+      return String(filterValue || '');
+    }
+    return String(filterValue || '');
+  };
+
 
   return (
     <div className="space-y-4">
-      <div
-        ref={tableRef}
-        className={`${tw.rounded} ${tableWrapperClassName}`}
-        style={{
-          maxHeight: 'min(calc(100vh - 350px), 800px)',
-          minHeight: '300px',
-          overflowY: 'auto',
-          overflowX: 'auto',
-          userSelect: resizingColumn ? 'none' : 'auto',
-        }}
-      >
+      {Object.keys(columnFilters).length > 0 && (
+        <>
+          <div className="flex flex-wrap gap-2 items-center">
+            {Object.entries(columnFilters).map(([columnId, filterValue]) => {
+            const column = columns.find(c => c.id === columnId);
+            return (
+              <div
+                key={columnId}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                style={{
+                  backgroundColor: 'var(--c-surface-cards)',
+                  border: '1px solid var(--c-text-secondary)',
+                  color: 'var(--c-text-primary)',
+                }}
+              >
+                <span>
+                  {column?.label}: {getFilterDisplayValue(columnId, filterValue)}
+                </span>
+                <button
+                  onClick={() => {
+                    setColumnFilters(prev => {
+                      const next = { ...prev };
+                      delete next[columnId];
+                      return next;
+                    });
+                  }}
+                  className="hover:opacity-70 transition-opacity ml-1"
+                  title="Remove filter"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            );
+          })}
+          <button
+            onClick={() => setColumnFilters({})}
+            className="text-sm font-medium px-3 py-1.5 rounded"
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--c-text-primary)',
+              border: '1px solid var(--c-text-secondary)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+          >
+            Clear all
+          </button>
+          </div>
+        </>
+      )}
+
+      {pageData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-6">
+          <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>No data found</h3>
+          <p className={`${tw.textMuted} text-sm`}>Try adjusting your filters or search criteria.</p>
+        </div>
+      ) : (
+        <div
+          ref={tableRef}
+          className={`${tw.rounded} ${tableWrapperClassName}`}
+          style={{
+            maxHeight: 'min(calc(100vh - 350px), 800px)',
+            minHeight: '300px',
+            overflowY: 'auto',
+            overflowX: 'auto',
+            userSelect: resizingColumn ? 'none' : 'auto',
+          }}
+        >
         <table className={`w-full ${tableClassName}`} style={{ borderCollapse: "separate", borderSpacing: rowSpacing }}>
             {/* Header */}
             <thead
@@ -377,7 +438,11 @@ export function Table<T extends { id?: number | string } = any>({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onSort?.(col.id, false);
+                                if (sortConfig) {
+                                  onSort?.(col.id, false, sortConfig.direction === 'asc' ? 'desc' : undefined);
+                                } else {
+                                  onSort?.(col.id, false, 'asc');
+                                }
                               }}
                               className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/20"
                               title="Sort column"
@@ -519,19 +584,6 @@ export function Table<T extends { id?: number | string } = any>({
                                   Filter
                                 </button>
                               )}
-                              <button
-                                onClick={() => {
-                                  setSearchingColumn(col.id);
-                                  setOpenColumnMenu(null);
-                                }}
-                                className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
-                                style={{ color: 'var(--c-text-primary)' }}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                              >
-                                <Search size={16} style={{ color: 'var(--c-text-secondary)' }} />
-                                Search
-                              </button>
                             </>
                           )}
                           <button
@@ -647,81 +699,15 @@ export function Table<T extends { id?: number | string } = any>({
               })}
             </tbody>
           </table>
-      </div>
-
-      {searchingColumn && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Search {columns.find(c => c.id === searchingColumn)?.label}</h3>
-              <button
-                onClick={() => setSearchingColumn(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="mb-6">
-              <Input
-                type="text"
-                value={columnSearches[searchingColumn] || ''}
-                onChange={(value) => {
-                  setColumnSearches(prev => ({
-                    ...prev,
-                    [searchingColumn]: String(value)
-                  }));
-                }}
-                variant="medium"
-                label="Search text"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  setColumnSearches(prev => {
-                    const next = { ...prev };
-                    delete next[searchingColumn];
-                    return next;
-                  });
-                  setSearchingColumn(null);
-                }}
-                style={{
-                  background: buttons.bordered.background,
-                  color: buttons.bordered.color,
-                  border: buttons.bordered.border,
-                  padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
-                  borderRadius: buttons.bordered.borderRadius,
-                  fontSize: buttons.bordered.fontSize,
-                }}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => setSearchingColumn(null)}
-                style={{
-                  background: buttons.action.background,
-                  color: buttons.action.color,
-                  border: buttons.action.border,
-                  padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
-                  borderRadius: buttons.action.borderRadius,
-                  fontSize: buttons.action.fontSize,
-                }}
-                className="hover:opacity-90 transition-opacity font-medium"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
+        </div>
       )}
 
-      {filteringColumn && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="rounded-lg shadow-lg p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--c-surface-cards)' }}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold" style={{ color: 'var(--c-text-primary)' }}>Filter {columns.find(c => c.id === filteringColumn)?.label}</h3>
+      {filteringColumn && (() => {
+        return createPortal(
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="rounded-lg shadow-lg p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--c-surface-cards)' }}>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--c-text-primary)' }}>Filter {columns.find(c => c.id === filteringColumn)?.label}</h3>
               <button onClick={() => setFilteringColumn(null)} style={{ color: 'var(--c-text-muted)' }} className="hover:opacity-70 transition-opacity">
                 <X size={20} />
               </button>
@@ -757,13 +743,13 @@ export function Table<T extends { id?: number | string } = any>({
                             { value: '<=', label: 'Less than or equal' },
                             { value: '==', label: 'Equals' }
                           ]}
-                          value={currentFilter?.operator || '>'}
+                          value={currentFilter?.operator || ''}
                           onChange={(value) => {
                             setColumnFilters(prev => ({
                               ...prev,
                               [filteringColumn]: {
                                 operator: value,
-                                value: currentFilter?.value || 0
+                                value: currentFilter?.value ?? ''
                               }
                             }));
                           }}
@@ -773,15 +759,31 @@ export function Table<T extends { id?: number | string } = any>({
                       <div>
                         <Input
                           type="number"
-                          value={currentFilter?.value || ''}
+                          value={currentFilter?.value ?? ''}
                           onChange={(value) => {
-                            setColumnFilters(prev => ({
-                              ...prev,
-                              [filteringColumn]: {
-                                operator: currentFilter?.operator || '>',
-                                value: Number(value)
-                              }
-                            }));
+                            if (value !== '' && value !== null && value !== undefined) {
+                              setColumnFilters(prev => ({
+                                ...prev,
+                                [filteringColumn]: {
+                                  operator: currentFilter?.operator || '==',
+                                  value: Number(value)
+                                }
+                              }));
+                            } else if (currentFilter?.operator) {
+                              setColumnFilters(prev => ({
+                                ...prev,
+                                [filteringColumn]: {
+                                  operator: currentFilter.operator,
+                                  value: ''
+                                }
+                              }));
+                            } else {
+                              setColumnFilters(prev => {
+                                const next = { ...prev };
+                                delete next[filteringColumn];
+                                return next;
+                              });
+                            }
                           }}
                           variant="medium"
                           label="Value"
@@ -902,7 +904,8 @@ export function Table<T extends { id?: number | string } = any>({
           </div>
         </div>,
         document.body
-      )}
+        );
+      })()}
     </div>
   );
 }
