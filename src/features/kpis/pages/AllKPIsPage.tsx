@@ -12,6 +12,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { kpiService } from "../services/kpiService";
 import { systemEventService } from "../services/systemEventService";
 import { type KPI } from "../types/kpi";
@@ -242,6 +243,8 @@ export default function AllKPIsPage() {
     sortConfigs,
     handleSort,
     toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "all-kpis-table",
     defaultColumns: tableColumns,
@@ -472,6 +475,16 @@ export default function AllKPIsPage() {
         isLoading={isDeleting}
         confirmText="Delete KPI"
         cancelText="Cancel"
+      />
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

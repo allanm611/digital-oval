@@ -8,6 +8,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -149,6 +150,8 @@ export default function UsageMetricsPage() {
     sortConfigs,
     handleSort,
     toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "usage-metrics-table",
     defaultColumns: tableColumns,
@@ -434,6 +437,16 @@ export default function UsageMetricsPage() {
           </div>
         </div>
       )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

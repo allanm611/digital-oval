@@ -40,6 +40,7 @@ import QuickListDetailsExpandedRow from "../components/QuickListDetailsExpandedR
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
@@ -429,6 +430,8 @@ export default function QuickListsPage() {
       id: "name",
       label: t.quickList.name,
       visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
       render: (value, quicklist) => (
         <div>
           <button
@@ -454,6 +457,7 @@ export default function QuickListsPage() {
       id: "rows_imported",
       label: t.quickList.rowsImported,
       visible: true,
+      filterConfig: { type: "number" },
       render: (value) =>
         value != null ? (value as number).toLocaleString() : "N/A",
     },
@@ -461,6 +465,7 @@ export default function QuickListsPage() {
       id: "rows_failed",
       label: t.quickList.rowsFailed,
       visible: true,
+      filterConfig: { type: "number" },
       render: (value) =>
         value != null ? (value as number).toLocaleString() : "N/A",
     },
@@ -468,12 +473,14 @@ export default function QuickListsPage() {
       id: "processing_status",
       label: t.quickList.status,
       visible: true,
+      filterConfig: { type: "select", options: ["pending", "processing", "completed", "failed"] },
       render: (value) => (value as string || "N/A").replace(/_/g, " "),
     },
     {
       id: "created_at",
       label: t.quickList.createdAt,
       visible: true,
+      filterConfig: { type: "date" },
       render: (value) => (
         <DateFormatter
           date={value as string}
@@ -534,6 +541,8 @@ export default function QuickListsPage() {
     expandedRowId,
     setExpandedRowId,
     toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "quicklists-table",
     defaultColumns,
@@ -792,6 +801,21 @@ export default function QuickListsPage() {
           }}
         />
       )}
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

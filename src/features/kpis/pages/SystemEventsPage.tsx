@@ -9,6 +9,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -30,6 +31,7 @@ export default function SystemEventsPage() {
       id: "event_name",
       label: "Event Name",
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.event_name}>
           {row.event_name}
@@ -40,6 +42,7 @@ export default function SystemEventsPage() {
       id: "event_code",
       label: "Event Code",
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <span className="font-mono text-sm text-gray-900">
           {row.event_code}
@@ -50,6 +53,7 @@ export default function SystemEventsPage() {
       id: "category",
       label: "Category",
       visible: true,
+      filterConfig: { type: "select", options: ["Email", "SMS", "Campaign", "Other"] },
       render: (_, row) => (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
           {SYSTEM_EVENT_CATEGORIES.find(
@@ -62,6 +66,7 @@ export default function SystemEventsPage() {
       id: "event_description",
       label: "Description",
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <p className="text-sm text-gray-900 truncate max-w-xs" title={row.event_description}>
           {row.event_description}
@@ -72,6 +77,7 @@ export default function SystemEventsPage() {
       id: "source_table",
       label: "Source",
       visible: false,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <p className="text-sm text-gray-900">
           {row.source_table}
@@ -116,6 +122,8 @@ export default function SystemEventsPage() {
     sortConfigs,
     handleSort,
     toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "system-events-table",
     defaultColumns: tableColumns,
@@ -256,7 +264,7 @@ export default function SystemEventsPage() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
+            tableHandlePageChange(1);
           }}
           className="flex-1 min-w-[250px]"
         />
@@ -328,6 +336,16 @@ export default function SystemEventsPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

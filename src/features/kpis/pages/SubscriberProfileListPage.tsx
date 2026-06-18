@@ -11,6 +11,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { subscriberProfileService } from "../services/subscriberProfileService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
@@ -120,6 +121,8 @@ export default function SubscriberProfileListPage() {
     sortConfigs,
     handleSort,
     toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "subscriber-profiles-table",
     defaultColumns: tableColumns,
@@ -251,7 +254,7 @@ export default function SubscriberProfileListPage() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
+            tableHandlePageChange(1);
           }}
           className="flex-1 min-w-[250px]"
         />
@@ -329,6 +332,16 @@ export default function SubscriberProfileListPage() {
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         isLoading={isDeleting}
+      />
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );
