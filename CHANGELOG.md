@@ -1,3 +1,10 @@
+## [1.4.11](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.10...v1.4.11) (2026-06-18)
+
+
+### Bug Fixes
+
+* data connectors and connection profiles fixed ([685ff7b](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/685ff7bf58115bc8fb4dc0fa53a55f71b35d1aee))
+
 ## [1.4.10](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.9...v1.4.10) (2026-06-17)
 
 
