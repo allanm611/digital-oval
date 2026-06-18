@@ -107,6 +107,7 @@ export default function ScheduledJobsPage() {
   const [jobTypes, setJobTypes] = useState<Array<{ id: number; name: string }>>(
     [],
   );
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // Table columns definition
   const defaultColumns: TableColumn<ScheduledJob>[] = [
@@ -132,6 +133,8 @@ export default function ScheduledJobsPage() {
       id: "name",
       label: "Job Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
           {value}
@@ -142,6 +145,7 @@ export default function ScheduledJobsPage() {
       id: "code",
       label: "Code",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className="text-sm">{value}</div>
       ),
@@ -150,6 +154,7 @@ export default function ScheduledJobsPage() {
       id: "job_type_id",
       label: "Type",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary}`}>
           {value && jobTypeMap[value as number]
@@ -164,6 +169,7 @@ export default function ScheduledJobsPage() {
       id: "schedule_type",
       label: "Schedule",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} capitalize`}>
           {(value as string).replace("_", " ")}
@@ -174,6 +180,7 @@ export default function ScheduledJobsPage() {
       id: "status",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <span className="text-sm text-gray-900 font-medium">{value}</span>
       ),
@@ -232,6 +239,7 @@ export default function ScheduledJobsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "scheduled-jobs-table",
     defaultColumns,
@@ -754,7 +762,7 @@ export default function ScheduledJobsPage() {
       </div>
 
       <div className="space-y-4 mt-6">
-        <div className="flex gap-4">
+        <div className="flex gap-4 mb-6">
           <SearchInput
           placeholder="Search by name or code"
           value={searchTerm}
@@ -883,6 +891,8 @@ export default function ScheduledJobsPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

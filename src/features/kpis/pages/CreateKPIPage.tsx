@@ -239,12 +239,13 @@ export default function CreateKPIPage() {
       const type = getKPIType();
 
       const payload: any = {
-        name: formData.name,
+        field_name: formData.name,
         description: formData.description,
         field_type: formData.field_type,
-        category: formData.category,
-        source_table: formData.source_table,
-        data_source: formData.data_source,
+        field_pg_type: formData.field_type,
+        field_category_id: formData.category,
+        field_source_table: formData.source_table,
+        validation_strategy: formData.validation_strategy,
         default_value: String(formData.default_value),
         is_dynamic_variable: formData.use_as_dynamic_variable,
         tag: formData.tag,
@@ -307,11 +308,11 @@ export default function CreateKPIPage() {
         }
         if (mode === "create") {
           payload.field_value = formData.field_value;
-          await kpiService.createKpi(payload);
+          await kpiService.createKPI(payload);
           success("Success", "KPI created successfully");
           navigate("/dashboard/kpis");
         } else {
-          await kpiService.updateKpi(Number(id), payload);
+          await kpiService.updateKPI(Number(id), payload);
           success("Success", "KPI updated successfully");
           navigate("/dashboard/kpis");
         }

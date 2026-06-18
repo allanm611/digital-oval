@@ -33,6 +33,7 @@ export default function DNDBulkManagementPage() {
   const [channels, setChannels] = useState<CommunicationChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterChannel, setFilterChannel] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -175,6 +176,7 @@ export default function DNDBulkManagementPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "dnd-bulk-management-table",
     defaultColumns,
@@ -468,6 +470,8 @@ export default function DNDBulkManagementPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

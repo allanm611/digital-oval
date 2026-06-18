@@ -34,6 +34,7 @@ function EmailRoutesListView() {
   const [routes, setRoutes] = useState<EmailRoute[]>(hardcodedEmailRoutes as EmailRoute[]);
   const [searchTerm, setSearchTerm] = useState("");
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteRoute } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -55,6 +56,8 @@ function EmailRoutesListView() {
       id: "name",
       label: "Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
           {value}
@@ -65,6 +68,7 @@ function EmailRoutesListView() {
       id: "gateway_provider",
       label: "Provider",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
           {value}
@@ -75,6 +79,7 @@ function EmailRoutesListView() {
       id: "from_address",
       label: "From Address",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
           {value}
@@ -85,6 +90,7 @@ function EmailRoutesListView() {
       id: "isActive",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (value) => (
         <span className={`text-sm ${tw.textSecondary}`}>
           {value ? "Active" : "Inactive"}
@@ -101,6 +107,7 @@ function EmailRoutesListView() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "email-routes-table",
     defaultColumns,
@@ -202,9 +209,11 @@ function EmailRoutesListView() {
               pageSize={tablePageSize}
               isLoading={false}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

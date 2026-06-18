@@ -586,7 +586,7 @@ export default function CampaignReportsPage() {
     },
   ];
 
-  const { columns: tableColumnsMemo, handlePageSizeChange: tableHandlePageSizeChange } = useTable({
+  const { columns: tableColumnsMemo, handlePageSizeChange: tableHandlePageSizeChange, toggleColumn } = useTable({
     tableId: "campaign-reports-table",
     defaultColumns: tableColumns,
     defaultPageSize: DEFAULT_PAGE_SIZE,
@@ -596,6 +596,7 @@ export default function CampaignReportsPage() {
   const [campaigns, setCampaigns] = useState<CampaignDisplay[]>([]);
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
   const [campaignFetchError, setCampaignFetchError] = useState<string | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showOffersModal, setShowOffersModal] = useState(false);
   const [showSegmentsModal, setShowSegmentsModal] = useState(false);
   const [selectedCampaignForModal, setSelectedCampaignForModal] = useState<CampaignDisplay | null>(null);
@@ -1411,6 +1412,8 @@ export default function CampaignReportsPage() {
               currentPage={tablePage}
               pageSize={tablePageSize}
               onPageChange={setTablePage}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: colors.surface.tableHeader,
                 headerTextColor: colors.surface.tableHeaderText,

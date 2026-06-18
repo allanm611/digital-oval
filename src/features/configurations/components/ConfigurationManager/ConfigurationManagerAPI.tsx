@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, Eye, LucideIcon } from "lucide-react";
-import { Table } from "../../../../shared/components/Table/Table";
+import { Table, useTable, type TableColumn } from "../../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../../shared/components/ColumnPickerModal";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
@@ -58,6 +59,7 @@ interface ConfigurationTableRow {
   description: string;
   status: string;
   isActive: boolean;
+  _full?: ConfigurationItem;
 }
 
 interface ConfigurationManagerAPIProps {
@@ -86,6 +88,7 @@ export default function ConfigurationManagerAPI({
   const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [displayData, setDisplayData] = useState<ConfigurationItem[]>([]);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // If hook returns null (shouldn't happen), show error
   if (!backendConfig) {
@@ -156,7 +159,6 @@ export default function ConfigurationManagerAPI({
       setShowDeleteModal(false);
       setItemToDelete(null);
     } catch (err) {
-      console.error(`Error deleting ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.deleteErrorMessage;
       showError(t.genericConfig.error, errorMsg);
       // Revert optimistic update on error
@@ -188,7 +190,6 @@ export default function ConfigurationManagerAPI({
           : `${item.name} has been deactivated`
       );
     } catch (err) {
-      console.error(`Error updating ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.saveErrorMessage;
       showError(t.genericConfig.error, errorMsg);
       // Revert optimistic update on error
@@ -223,7 +224,6 @@ export default function ConfigurationManagerAPI({
       setIsModalOpen(false);
       setEditingItem(undefined);
     } catch (err) {
-      console.error(`Failed to save ${config.entityName}:`, err);
       showError(
         t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
         config.saveErrorMessage
@@ -234,6 +234,98 @@ export default function ConfigurationManagerAPI({
       setIsSaving(false);
     }
   };
+
+  // Table columns definition (after handlers are defined)
+  const defaultColumns: TableColumn<ConfigurationTableRow>[] = useMemo(() => [
+    { id: "name", label: config.entityName, width: "200px", visible: true, sortable: true, filterConfig: { type: "text" }, render: (_, row) => (
+      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} cursor-pointer`} onClick={() => onRowClick?.(row.name)}>
+        {row.name}
+      </div>
+    ) },
+    { id: "description", label: t.genericConfig.description, width: "300px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+        {row.description || t.genericConfig.noDescription}
+      </div>
+    ) },
+    { id: "status", label: config.statusLabel || t.genericConfig.status, width: "120px", visible: true, filterConfig: { type: "multiselect", options: ["Active", "Inactive"] }, render: (_, row) => (
+      <span className={`text-sm font-medium ${tw.textSecondary}`}>
+        {row.status}
+      </span>
+    ) },
+    {
+      id: "actions",
+      label: t.genericConfig.actions,
+      width: "150px",
+      visible: true,
+      sortable: false,
+      render: (_, row: any) => {
+        const item = row._full;
+        if (!item) return null;
+        return (
+          <div className="flex items-center justify-center space-x-2">
+            {config.enableActivateDeactivate && item && (
+              <ActivateDeactivateButton
+                isActive={item.isActive ?? true}
+                onToggle={() => handleToggleActive(item)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                isLoading={togglingItemId === item.id}
+                title={
+                  item.isActive
+                    ? `Deactivate ${item.name}`
+                    : `Activate ${item.name}`
+                }
+              />
+            )}
+
+            {config.detailsPath && item && (
+              <button
+                onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={`View details for ${item.name}`}
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+            )}
+
+            {item && (
+              <button
+                onClick={() => handleEditItem(item)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={`Edit ${item.name}`}
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
+
+            {!config.disableDelete && item && (
+              <button
+                onClick={() => handleDeleteItem(item)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={`Delete ${item.name}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        );
+      },
+    },
+  ], [config, t, displayData, togglingItemId, itemToDelete, isDeleting, onRowClick, tw, handleToggleActive, handleEditItem, handleDeleteItem]);
+
+  const {
+    columns,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+  } = useTable({
+    tableId: `configuration-${config.configType}-table`,
+    defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
 
   const filteredItems = useMemo(
     () =>
@@ -348,90 +440,17 @@ export default function ConfigurationManagerAPI({
           <>
             <div className="overflow-x-auto">
               <Table<ConfigurationTableRow>
-                columns={[
-                  { id: "name", label: config.entityName, width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} cursor-pointer`} onClick={() => onRowClick?.(row.name)}>
-                      {row.name}
-                    </div>
-                  ) },
-                  { id: "description", label: t.genericConfig.description, width: "300px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                      {row.description || t.genericConfig.noDescription}
-                    </div>
-                  ) },
-                  { id: "status", label: config.statusLabel || t.genericConfig.status, width: "120px", visible: true, filterConfig: { type: "multiselect", options: ["Active", "Inactive"] }, render: (_, row) => (
-                    <span className={`text-sm font-medium ${tw.textSecondary}`}>
-                      {row.status}
-                    </span>
-                  ) },
-                  {
-                    id: "actions",
-                    label: t.genericConfig.actions,
-                    width: "150px",
-                    visible: true,
-                    sortable: false,
-                    render: (_, row) => {
-                      const item = paginatedItems.find((i) => i.id === row.id);
-                      return (
-                        <div className="flex items-center justify-center space-x-2">
-                          {config.enableActivateDeactivate && item && (
-                            <ActivateDeactivateButton
-                              isActive={item.isActive ?? true}
-                              onToggle={() => handleToggleActive(item)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              isLoading={togglingItemId === item.id}
-                              title={
-                                item.isActive
-                                  ? `Deactivate ${item.name}`
-                                  : `Activate ${item.name}`
-                              }
-                            />
-                          )}
-
-                          {config.detailsPath && item && (
-                            <button
-                              onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                              title={`View details for ${item.name}`}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
-
-                          {item && (
-                            <button
-                              onClick={() => handleEditItem(item)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                              title={`Edit ${item.name}`}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          )}
-
-                          {!config.disableDelete && item && (
-                            <button
-                              onClick={() => handleDeleteItem(item)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                              title={`Delete ${item.name}`}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    },
-                  },
-                ]}
+                columns={columns}
                 data={paginatedItems.map((item) => ({
                   id: item.id,
                   name: item.name,
                   description: item.description || "",
                   status: item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive',
                   isActive: item.isActive ?? true,
+                  _full: item,
                 }))}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
                 rowSpacing="0 8px"
               />
             </div>
@@ -475,6 +494,21 @@ export default function ConfigurationManagerAPI({
         isLoading={isDeleting}
         confirmText={t.genericConfig.delete}
         cancelText={t.genericConfig.cancel}
+      />
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

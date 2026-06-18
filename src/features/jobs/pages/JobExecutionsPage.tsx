@@ -44,6 +44,7 @@ import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -124,6 +125,7 @@ export default function JobExecutionsPage() {
   const [showArchiveManagementModal, setShowArchiveManagementModal] = useState(false);
   const [archiveOldDays, setArchiveOldDays] = useState<number>(30);
   const [isArchiveManagementProcessing, setIsArchiveManagementProcessing] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const filtersModalRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(filtersModalRef, () => {
@@ -869,6 +871,9 @@ export default function JobExecutionsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "job-executions-table",
     defaultColumns,
@@ -1374,6 +1379,8 @@ export default function JobExecutionsPage() {
               onPageChange={setCurrentPage}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1560,6 +1567,21 @@ export default function JobExecutionsPage() {
           </div>
         </div>
       )}
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
     </>
   );

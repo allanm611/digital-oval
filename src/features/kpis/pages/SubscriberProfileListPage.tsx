@@ -29,6 +29,7 @@ export default function SubscriberProfileListPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -118,6 +119,7 @@ export default function SubscriberProfileListPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "subscriber-profiles-table",
     defaultColumns: tableColumns,
@@ -296,6 +298,8 @@ export default function SubscriberProfileListPage() {
             )}
             onFilteredCountChange={handleFilteredCountChange}
             clearFiltersKey={clearFiltersKey}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

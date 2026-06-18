@@ -249,6 +249,7 @@ export default function UserManagementPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [batchDepartmentValue, setBatchDepartmentValue] = useState<string>("");
   const allDepartmentsRef = useRef<string[]>([]);
   const allRolesRef = useRef<string[]>([]);
@@ -1623,6 +1624,7 @@ export default function UserManagementPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "user-management-table",
     defaultColumns: usersTableColumns,
@@ -2167,6 +2169,8 @@ export default function UserManagementPage() {
                 onExpandChange={setExpandedRowId}
                 onFilteredCountChange={handleFilteredCountChange}
                 clearFiltersKey={clearFiltersKey}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
                 expandedContent={(user) => (
                   <UserDetailsExpandedRow user={user} colSpan={usersTableColumnsWithVisibility.filter((c) => c.visible).length} />
                 )}

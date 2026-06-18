@@ -78,6 +78,16 @@ export const subscriberProfileService = {
     }
   },
 
+  // Create a new profile
+  createProfile: async (payload: any): Promise<any> => {
+    return await kpiService.createKPI(payload);
+  },
+
+  // Update an existing profile
+  updateProfile: async (id: number, payload: any): Promise<any> => {
+    return await kpiService.updateKPI(id, payload);
+  },
+
   // Toggle profile status
   toggleProfileStatus: async (id: number, isActive: boolean): Promise<void> => {
     const baseUrl = buildApiUrl("/profile-dictionary");

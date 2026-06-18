@@ -40,6 +40,7 @@ export default function MonitoringPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const defaultColumns: TableColumn<Execution>[] = [
     {
@@ -111,6 +112,7 @@ export default function MonitoringPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "execution-monitoring-table",
     defaultColumns,
@@ -377,6 +379,8 @@ export default function MonitoringPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

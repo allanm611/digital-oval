@@ -69,6 +69,7 @@ export default function EtlFileRegistryPage() {
   const [files, setFiles] = useState<EtlFileRegistryRowType[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [page, setPage] = useState(1);
@@ -132,6 +133,7 @@ export default function EtlFileRegistryPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "etl-files-table",
     defaultColumns,
@@ -511,6 +513,8 @@ export default function EtlFileRegistryPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

@@ -17,6 +17,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Types
 export interface VIPCustomer {
@@ -103,12 +104,15 @@ export default function VIPListManagementPage() {
     useState<VIPList | null>(null);
   const [listMembers, setListMembers] = useState<VIPCustomer[]>([]);
   const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState<"customers" | "lists" | null>(null);
 
   const vipCustomerTableColumns: TableColumn<VIPCustomerTableRow>[] = [
     {
       id: "name",
       label: "Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
           {row.name}
@@ -119,6 +123,7 @@ export default function VIPListManagementPage() {
       id: "email",
       label: "Email",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.email || "-"}</span>
       ),
@@ -127,6 +132,7 @@ export default function VIPListManagementPage() {
       id: "vipList",
       label: "VIP List",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.vipList || "Default"}</span>
       ),
@@ -135,6 +141,7 @@ export default function VIPListManagementPage() {
       id: "status",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (_, row) => (
         <span className="text-sm text-black capitalize">{row.status}</span>
       ),
@@ -143,6 +150,7 @@ export default function VIPListManagementPage() {
       id: "addedDate",
       label: "Added Date",
       visible: true,
+      filterConfig: { type: 'date' },
       render: (_, row) => (
         <DateFormatter date={row.addedDate} useUserTimezone />
       ),
@@ -174,6 +182,8 @@ export default function VIPListManagementPage() {
       id: "name",
       label: "List Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <button
           onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
@@ -187,6 +197,7 @@ export default function VIPListManagementPage() {
       id: "description",
       label: "Description",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <div className={`text-sm ${tw.textSecondary} max-w-md`}>
           {row.description || "No description"}
@@ -197,6 +208,7 @@ export default function VIPListManagementPage() {
       id: "members",
       label: "Customers",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => {
         if (!row._full) return <span>{row.members}</span>;
         return (
@@ -218,6 +230,7 @@ export default function VIPListManagementPage() {
       id: "rowsImported",
       label: "Rows Imported",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.rowsImported}</span>
       ),
@@ -226,6 +239,7 @@ export default function VIPListManagementPage() {
       id: "rowsFailed",
       label: "Rows Failed",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.rowsFailed}</span>
       ),
@@ -234,6 +248,7 @@ export default function VIPListManagementPage() {
       id: "status",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.status}</span>
       ),
@@ -274,6 +289,9 @@ export default function VIPListManagementPage() {
     handlePageChange: customerHandlePageChange,
     sortConfigs: customerSortConfigs,
     handleSort: customerHandleSort,
+    toggleColumn: toggleCustomerColumn,
+    reorderColumns: reorderCustomerColumns,
+    resetToDefaults: resetCustomerDefaults,
   } = useTable({
     tableId: "vip-customers-table",
     defaultColumns: vipCustomerTableColumns,
@@ -288,6 +306,9 @@ export default function VIPListManagementPage() {
     handlePageChange: vipListHandlePageChange,
     sortConfigs: vipListSortConfigs,
     handleSort: vipListHandleSort,
+    toggleColumn: toggleVipListColumn,
+    reorderColumns: reorderVipListColumns,
+    resetToDefaults: resetVipListDefaults,
   } = useTable({
     tableId: "vip-lists-table",
     defaultColumns: vipListTableColumns,
@@ -779,6 +800,8 @@ export default function VIPListManagementPage() {
                 onPageChange={customerHandlePageChange}
                 onSort={customerHandleSort}
                 sortConfigs={customerSortConfigs}
+                onHideColumn={toggleCustomerColumn}
+                onManageColumnsClick={() => setShowColumnPicker("customers")}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -819,6 +842,8 @@ export default function VIPListManagementPage() {
               onPageChange={vipListHandlePageChange}
               onSort={vipListHandleSort}
               sortConfigs={vipListSortConfigs}
+              onHideColumn={toggleVipListColumn}
+              onManageColumnsClick={() => setShowColumnPicker("lists")}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1020,6 +1045,40 @@ export default function VIPListManagementPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showColumnPicker === "customers" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={customerColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleCustomerColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = customerColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderCustomerColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetCustomerDefaults}
+        />
+      )}
+
+      {showColumnPicker === "lists" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={vipListColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleVipListColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = vipListColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderVipListColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetVipListDefaults}
+        />
       )}
     </div>
   );

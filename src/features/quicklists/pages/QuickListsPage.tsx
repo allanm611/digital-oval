@@ -59,6 +59,7 @@ export default function QuickListsPage() {
   const [allQuicklists, setAllQuicklists] = useState<QuickList[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [stats, setStats] = useState<QuickListStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -532,6 +533,7 @@ export default function QuickListsPage() {
     handleSort,
     expandedRowId,
     setExpandedRowId,
+    toggleColumn,
   } = useTable({
     tableId: "quicklists-table",
     defaultColumns,
@@ -607,6 +609,8 @@ export default function QuickListsPage() {
         onExpandChange={setExpandedRowId}
         onFilteredCountChange={handleFilteredCountChange}
         clearFiltersKey={clearFiltersKey}
+        onHideColumn={toggleColumn}
+        onManageColumnsClick={() => setShowColumnPicker(true)}
         style={{
           headerBackground: color.surface.tableHeader,
           headerTextColor: color.surface.tableHeaderText,

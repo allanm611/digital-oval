@@ -15,6 +15,7 @@ import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmMo
 import ConfigurationModal from "./ConfigurationModal";
 import { useDeleteConfirm } from "../../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../../shared/components/ColumnPickerModal";
 
 export interface ConfigurationItem {
   id: number | string;
@@ -86,6 +87,7 @@ export default function ConfigurationManager({
   const [isSaving, setIsSaving] = useState(false);
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteItem } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -162,7 +164,6 @@ export default function ConfigurationManager({
       setIsModalOpen(false);
       setEditingItem(undefined);
     } catch (err) {
-      console.error(`Failed to save ${config.entityName}:`, err);
       showError(
         t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
         config.saveErrorMessage
@@ -189,6 +190,8 @@ export default function ConfigurationManager({
       id: "name",
       label: config.entityName,
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
           {value}
@@ -199,6 +202,7 @@ export default function ConfigurationManager({
       id: "description",
       label: t.genericConfig.description,
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
           {value || t.genericConfig.noDescription}
@@ -209,6 +213,7 @@ export default function ConfigurationManager({
       id: "isActive",
       label: t.genericConfig.status,
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (value) => (
         <span className={`text-sm font-medium ${tw.textSecondary}`}>
           {value !== false ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
@@ -258,6 +263,9 @@ export default function ConfigurationManager({
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "configuration-table",
     defaultColumns,
@@ -370,6 +378,8 @@ export default function ConfigurationManager({
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -425,6 +435,21 @@ export default function ConfigurationManager({
         description={itemToDelete ? config.deleteConfirmMessage(itemToDelete.name) : ""}
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
+      />
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

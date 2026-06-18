@@ -21,6 +21,7 @@ export default function SystemEventsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [toggling, setToggling] = useState<number | null>(null);
   const [activeEvents, setActiveEvents] = useState<Set<number>>(new Set());
 
@@ -114,6 +115,7 @@ export default function SystemEventsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "system-events-table",
     defaultColumns: tableColumns,
@@ -304,6 +306,8 @@ export default function SystemEventsPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
             onSort={handleSort}
             sortConfigs={sortConfigs}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

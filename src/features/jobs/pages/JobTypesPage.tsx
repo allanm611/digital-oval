@@ -420,6 +420,7 @@ export default function JobTypesPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingJobType, setViewingJobType] = useState<JobType | null>(null);
   const [isLoadingView, setIsLoadingView] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // Table columns definition
   const defaultColumns: TableColumn<JobType>[] = [
@@ -427,6 +428,8 @@ export default function JobTypesPage() {
       id: "name",
       label: "Job Type",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className="flex items-center">
           <div>
@@ -441,6 +444,7 @@ export default function JobTypesPage() {
       id: "description",
       label: "Description",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} max-w-lg`}>
           {value || "No description"}
@@ -451,6 +455,7 @@ export default function JobTypesPage() {
       id: "code",
       label: "Code",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <span className="text-sm text-gray-900 font-medium">{value}</span>
       ),
@@ -459,6 +464,7 @@ export default function JobTypesPage() {
       id: "created_at",
       label: "Created",
       visible: true,
+      filterConfig: { type: 'date' },
       render: (value) => (
         <span className="text-sm text-gray-600">
           <DateFormatter date={value as string} useUserTimezone />
@@ -511,6 +517,7 @@ export default function JobTypesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "job-types-table",
     defaultColumns,
@@ -864,6 +871,8 @@ export default function JobTypesPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

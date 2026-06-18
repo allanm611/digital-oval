@@ -25,6 +25,7 @@ export default function UsageMetricsPage() {
   const [toggling, setToggling] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -147,6 +148,7 @@ export default function UsageMetricsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "usage-metrics-table",
     defaultColumns: tableColumns,
@@ -379,6 +381,8 @@ export default function UsageMetricsPage() {
             )}
             onFilteredCountChange={handleFilteredCountChange}
             clearFiltersKey={clearFiltersKey}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

@@ -98,6 +98,7 @@ export default function ConnectionProfilesPage() {
   });
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   const [closingFiltersPanel, setClosingFiltersPanel] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -127,6 +128,8 @@ export default function ConnectionProfilesPage() {
       id: "profile_name",
       label: "Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value, profile) => (
         <button
           type="button"
@@ -141,6 +144,7 @@ export default function ConnectionProfilesPage() {
       id: "profile_code",
       label: "Code",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <span className={`p-2 icon-edit ${tw.rounded} text-sm `}>{value || "—"}</span>
       ),
@@ -149,6 +153,7 @@ export default function ConnectionProfilesPage() {
       id: "connection_type",
       label: "Type",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <span className="text-sm text-gray-600">{value || "—"}</span>
       ),
@@ -157,6 +162,7 @@ export default function ConnectionProfilesPage() {
       id: "environment",
       label: "Environment",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <span className="text-sm text-gray-600">{value || "—"}</span>
       ),
@@ -165,6 +171,7 @@ export default function ConnectionProfilesPage() {
       id: "is_active",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (value) => (
         <span className="text-sm text-gray-600">
           {value ? "Active" : "Inactive"}
@@ -206,6 +213,7 @@ export default function ConnectionProfilesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "connection-profiles-table",
     defaultColumns,
@@ -945,6 +953,8 @@ export default function ConnectionProfilesPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

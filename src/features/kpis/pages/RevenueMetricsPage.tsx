@@ -25,6 +25,7 @@ export default function RevenueMetricsPage() {
   const [toggling, setToggling] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -147,6 +148,7 @@ export default function RevenueMetricsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "revenue-metrics-table",
     defaultColumns: tableColumns,
@@ -379,6 +381,8 @@ export default function RevenueMetricsPage() {
             )}
             onFilteredCountChange={handleFilteredCountChange}
             clearFiltersKey={clearFiltersKey}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

@@ -23,6 +23,7 @@ export default function NotificationTypesPage() {
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingRule, setEditingRule] = useState<NotificationRule | null>(null);
 
@@ -195,6 +196,7 @@ export default function NotificationTypesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "notification-types-table",
     defaultColumns,
@@ -283,6 +285,8 @@ export default function NotificationTypesPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

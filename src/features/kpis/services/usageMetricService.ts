@@ -41,6 +41,16 @@ export const usageMetricService = {
     }
   },
 
+  // Create a new metric
+  createMetric: async (payload: any): Promise<any> => {
+    return await kpiService.createKPI(payload);
+  },
+
+  // Update an existing metric
+  updateMetric: async (id: number, payload: any): Promise<any> => {
+    return await kpiService.updateKPI(id, payload);
+  },
+
   // Toggle metric status
   toggleMetricStatus: async (id: number, isActive: boolean): Promise<void> => {
     const baseUrl = buildApiUrl("/profile-dictionary");

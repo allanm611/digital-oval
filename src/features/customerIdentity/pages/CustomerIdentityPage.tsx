@@ -26,6 +26,7 @@ export default function CustomerIdentityPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedFieldType, setSelectedFieldType] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // Always skip cache on load and retry
   const loadFields = useCallback(async () => {
@@ -97,6 +98,8 @@ export default function CustomerIdentityPage() {
       id: "id",
       label: t.customerIdentity.id,
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <button
           type="button"
@@ -119,6 +122,8 @@ export default function CustomerIdentityPage() {
       id: "field_name",
       label: t.customerIdentity.fieldName,
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-gray-900 font-medium">
           {row.field_name}
@@ -129,6 +134,7 @@ export default function CustomerIdentityPage() {
       id: "field_type",
       label: t.customerIdentity.fieldType,
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-gray-700">
           {row.field_type || "—"}
@@ -139,6 +145,7 @@ export default function CustomerIdentityPage() {
       id: "source_table",
       label: t.customerIdentity.sourceTable,
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-gray-700">
           {row.source_table || "—"}
@@ -149,6 +156,7 @@ export default function CustomerIdentityPage() {
       id: "description",
       label: t.customerIdentity.descriptionLabel,
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-gray-600">
           {row.description || "—"}
@@ -188,6 +196,7 @@ export default function CustomerIdentityPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "customer-identity-table",
     defaultColumns: tableColumns,
@@ -304,6 +313,8 @@ export default function CustomerIdentityPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
                 onSort={handleSort}
                 sortConfigs={sortConfigs}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,

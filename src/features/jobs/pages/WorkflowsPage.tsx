@@ -103,6 +103,7 @@ export default function WorkflowsPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingWorkflow, setViewingWorkflow] = useState<Workflow | null>(null);
   const [isLoadingView, setIsLoadingView] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const fetchWorkflows = useCallback(async () => {
     setIsLoading(true);
@@ -474,6 +475,7 @@ export default function WorkflowsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "workflows-table",
     defaultColumns,
@@ -744,6 +746,8 @@ export default function WorkflowsPage() {
             onPageChange={setPage}
             onSort={handleSort}
             sortConfigs={sortConfigs}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

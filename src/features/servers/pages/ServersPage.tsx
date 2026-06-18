@@ -76,6 +76,7 @@ export default function ServersPage() {
   const [selectedServerIds, setSelectedServerIds] = useState<Set<number>>(
     () => new Set(),
   );
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
   const [actionState, setActionState] = useState<{
     id: number;
@@ -263,6 +264,7 @@ export default function ServersPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "servers-table",
     defaultColumns,
@@ -282,6 +284,7 @@ export default function ServersPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [isClosingFilters, setIsClosingFilters] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const defaultShowColumnPicker = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{
     top: number;
@@ -1001,6 +1004,8 @@ export default function ServersPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

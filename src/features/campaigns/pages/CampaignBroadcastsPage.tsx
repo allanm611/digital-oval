@@ -10,8 +10,9 @@ import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { broadcastService } from "../services/broadcastService";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { Table } from "../../../shared/components/Table/Table";
-import Pagination from "../../../shared/components/ui/Pagination";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 interface CampaignBroadcast {
   id: number;
@@ -160,6 +161,66 @@ export default function CampaignBroadcastsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+
+  // Table columns definition
+  const defaultColumns: TableColumn<BroadcastTableRow>[] = [
+    { id: "campaignName", label: "Campaign", width: "200px", visible: true, sortable: true, filterConfig: { type: "text" }, render: (_, row) => (
+      <div className="text-sm font-bold truncate">{row.campaignName}</div>
+    ) },
+    { id: "status", label: "Status", width: "140px", visible: true, filterConfig: { type: "multiselect", options: ["sent", "in_progress", "scheduled", "failed", "paused", "completed"] } },
+    { id: "sentDate", label: "Sent Date", width: "180px", visible: true, filterConfig: { type: "date" }, render: (_, row) => (
+      <DateFormatter date={row.sentDate} useUserTimezone />
+    ) },
+    { id: "channels", label: "Channels", width: "150px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+      <div className="flex gap-2 flex-wrap">
+        {row.channels.split(",").map((channel) => (
+          <span key={channel} className="text-sm">{channel}</span>
+        ))}
+      </div>
+    ) },
+    { id: "recipients", label: "Recipients", width: "140px", visible: true, filterConfig: { type: "number" } },
+    { id: "opened", label: "Opened", width: "100px", visible: true, filterConfig: { type: "number" } },
+    { id: "conversions", label: "Conversions", width: "130px", visible: true, filterConfig: { type: "number" } },
+    {
+      id: "actions",
+      label: "Actions",
+      width: "150px",
+      visible: true,
+      sortable: false,
+      render: (_, row) => {
+        const broadcast = filteredBroadcasts.find((b) => b.id === row.id);
+        return (
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast?.id}`)}
+              className="text-black hover:text-gray-700 transition-colors"
+              title="View Details"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            {broadcast?.status === "failed" && (
+              <button className="hover:opacity-80 transition-colors" title="Retry" style={{ color: "#EF4444" }}>
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
+
+  const {
+    columns,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+  } = useTable({
+    tableId: "campaign-broadcasts-table",
+    defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
 
   useEffect(() => {
     loadBroadcastStatistics();
@@ -329,54 +390,7 @@ export default function CampaignBroadcastsPage() {
           <>
             <div className="overflow-x-auto">
               <Table<BroadcastTableRow>
-                columns={[
-                  { id: "campaignName", label: "Campaign", width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <div className="text-sm font-bold truncate">{row.campaignName}</div>
-                  ) },
-                  { id: "status", label: "Status", width: "140px", visible: true, filterConfig: { type: "multiselect", options: ["sent", "in_progress", "scheduled", "failed", "paused", "completed"] } },
-                  { id: "sentDate", label: "Sent Date", width: "180px", visible: true, filterConfig: { type: "date" }, render: (_, row) => (
-                    <DateFormatter date={row.sentDate} useUserTimezone />
-                  ) },
-                  { id: "channels", label: "Channels", width: "150px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <div className="flex gap-2 flex-wrap">
-                      {row.channels.split(",").map((channel) => (
-                        <span key={channel} className="text-sm">{channel}</span>
-                      ))}
-                    </div>
-                  ) },
-                  { id: "recipients", label: "Recipients", width: "140px", visible: true, filterConfig: { type: "number" } },
-                  { id: "opened", label: "Opened", width: "100px", visible: true, filterConfig: { type: "number" } },
-                  { id: "conversions", label: "Conversions", width: "130px", visible: true, filterConfig: { type: "number" } },
-                  {
-                    id: "actions",
-                    label: "Actions",
-                    width: "150px",
-                    visible: true,
-                    sortable: false,
-                    render: (_, row) => {
-                      const broadcast = filteredBroadcasts.find((b) => b.id === row.id);
-                      return (
-                        <div className="flex items-center justify-center gap-3">
-                          <button
-                            onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast?.id}`)}
-                            className="text-black hover:text-gray-700 transition-colors"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          {broadcast?.status === "failed" && (
-                            <button className="hover:opacity-80 transition-colors" title="Retry" style={{ color: "#EF4444" }}>
-                              <RotateCcw className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button className="text-black hover:text-gray-700 transition-colors" title="Archive">
-                            <Archive className="w-4 h-4" />
-                          </button>
-                        </div>
-                      );
-                    },
-                  },
-                ]}
+                columns={columns}
                 data={paginatedBroadcasts.map((broadcast) => ({
                   id: broadcast.id,
                   campaignName: broadcast.campaign_name,
@@ -387,6 +401,8 @@ export default function CampaignBroadcastsPage() {
                   opened: broadcast.opened,
                   conversions: broadcast.conversions,
                 }))}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
                 rowSpacing="0 8px"
               />
             </div>
@@ -410,6 +426,21 @@ export default function CampaignBroadcastsPage() {
           </div>
         )}
       </div>
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

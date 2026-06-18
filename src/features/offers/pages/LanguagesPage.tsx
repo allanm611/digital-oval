@@ -45,6 +45,7 @@ export default function LanguagesPage() {
     left: number;
     maxHeight: number;
   } | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
@@ -55,7 +56,6 @@ export default function LanguagesPage() {
       setLanguages(data || []);
     } catch (error) {
       showError(extractBackendError(error, "Failed to load languages. Please try again."));
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -183,6 +183,8 @@ export default function LanguagesPage() {
       id: "name",
       label: "Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
           {value}
@@ -193,6 +195,8 @@ export default function LanguagesPage() {
       id: "language_code",
       label: "Code",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} font-mono truncate`} title={value ? String(value) : "-"}>
           {value || "-"}
@@ -203,6 +207,7 @@ export default function LanguagesPage() {
       id: "country",
       label: "Country",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "-"}>
           {value || "-"}
@@ -213,6 +218,7 @@ export default function LanguagesPage() {
       id: "is_active",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (value) => (
         <span className={`text-sm ${value ? "text-green-600" : "text-gray-500"}`}>
           {value ? "Active" : "Inactive"}
@@ -223,6 +229,7 @@ export default function LanguagesPage() {
       id: "description",
       label: "Description",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
           {value || "-"}
@@ -294,6 +301,7 @@ export default function LanguagesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "languages-table",
     defaultColumns,
@@ -392,9 +400,11 @@ export default function LanguagesPage() {
               pageSize={tablePageSize}
               isLoading={isLoading}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

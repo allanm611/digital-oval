@@ -53,6 +53,7 @@ export default function CreativeTemplatesPage() {
     left: number;
     maxHeight: number;
   } | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
@@ -268,6 +269,7 @@ export default function CreativeTemplatesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "creative-templates-table",
     defaultColumns,
@@ -357,6 +359,8 @@ export default function CreativeTemplatesPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

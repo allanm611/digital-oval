@@ -20,6 +20,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Types
 export interface SeedListRecipient {
@@ -149,12 +150,15 @@ export default function SeedListManagementPage() {
   const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
   const [memberToRemoveFromList, setMemberToRemoveFromList] = useState<SeedListRecipient | null>(null);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState<"recipients" | "lists" | null>(null);
 
   const recipientTableColumns: TableColumn<RecipientTableRow>[] = [
     {
       id: "name",
       label: "Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
           {row.name}
@@ -165,6 +169,7 @@ export default function SeedListManagementPage() {
       id: "email",
       label: "Email",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.email || "-"}</span>
       ),
@@ -173,6 +178,7 @@ export default function SeedListManagementPage() {
       id: "seedList",
       label: "Seed List",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.seedList || "-"}</span>
       ),
@@ -181,6 +187,7 @@ export default function SeedListManagementPage() {
       id: "status",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (_, row) => (
         <span className="text-sm text-black">{row.status}</span>
       ),
@@ -212,6 +219,8 @@ export default function SeedListManagementPage() {
       id: "name",
       label: "List Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <button
           onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
@@ -225,6 +234,7 @@ export default function SeedListManagementPage() {
       id: "description",
       label: "Description",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <div className={`text-sm ${tw.textSecondary} max-w-md`}>
           {row.description || "No description"}
@@ -235,6 +245,7 @@ export default function SeedListManagementPage() {
       id: "recipients",
       label: "Recipients",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => (
         <button
           onClick={() => handleOpenListMembersModal({ id: row.id, name: row.name })}
@@ -283,6 +294,9 @@ export default function SeedListManagementPage() {
     handlePageChange: recipientHandlePageChange,
     sortConfigs: recipientSortConfigs,
     handleSort: recipientHandleSort,
+    toggleColumn: toggleRecipientColumn,
+    reorderColumns: reorderRecipientColumns,
+    resetToDefaults: resetRecipientDefaults,
   } = useTable({
     tableId: "seed-list-recipients-table",
     defaultColumns: recipientTableColumns,
@@ -297,6 +311,9 @@ export default function SeedListManagementPage() {
     handlePageChange: seedListHandlePageChange,
     sortConfigs: seedListSortConfigs,
     handleSort: seedListHandleSort,
+    toggleColumn: toggleSeedListColumn,
+    reorderColumns: reorderSeedListColumns,
+    resetToDefaults: resetSeedListDefaults,
   } = useTable({
     tableId: "seed-lists-table",
     defaultColumns: seedListTableColumns,
@@ -1064,6 +1081,8 @@ export default function SeedListManagementPage() {
               onPageChange={recipientHandlePageChange}
               onSort={recipientHandleSort}
               sortConfigs={recipientSortConfigs}
+              onHideColumn={toggleRecipientColumn}
+              onManageColumnsClick={() => setShowColumnPicker("recipients")}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1116,6 +1135,8 @@ export default function SeedListManagementPage() {
                 onPageChange={seedListHandlePageChange}
                 onSort={seedListHandleSort}
                 sortConfigs={seedListSortConfigs}
+                onHideColumn={toggleSeedListColumn}
+                onManageColumnsClick={() => setShowColumnPicker("lists")}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -1545,6 +1566,40 @@ export default function SeedListManagementPage() {
           isLoading={isRemovingMember}
           confirmText="Remove"
           cancelText="Cancel"
+        />
+      )}
+
+      {showColumnPicker === "recipients" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={recipientColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleRecipientColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = recipientColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderRecipientColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetRecipientDefaults}
+        />
+      )}
+
+      {showColumnPicker === "lists" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={seedListColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleSeedListColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = seedListColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderSeedListColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetSeedListDefaults}
         />
       )}
     </div>

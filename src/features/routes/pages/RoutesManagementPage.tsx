@@ -47,6 +47,7 @@ export default function RoutesManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterChannel, setFilterChannel] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState<{
     id: number;
     channel: CommunicationChannel;
@@ -307,6 +308,7 @@ export default function RoutesManagementPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "routes-management-table",
     defaultColumns,
@@ -461,6 +463,8 @@ export default function RoutesManagementPage() {
               onSort={handleSort}
               sortConfigs={sortConfigs}
               getRowId={(row) => `${row.id}-${row.channel}`}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

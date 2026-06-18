@@ -37,6 +37,7 @@ export default function DNDChannelPage() {
   const [loadingDNDData, setLoadingDNDData] = useState(false);
   const [channelInfo, setChannelInfo] = useState<ChannelData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -199,6 +200,7 @@ export default function DNDChannelPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "dnd-channel-table",
     defaultColumns,
@@ -419,6 +421,8 @@ export default function DNDChannelPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

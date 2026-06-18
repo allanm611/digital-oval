@@ -51,6 +51,7 @@ export default function DataConnectors() {
   const [connectorTypes, setConnectorTypes] = useState<DataConnectorType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSavingForm, setIsSavingForm] = useState(false);
   const [editingConnector, setEditingConnector] =
@@ -132,6 +133,7 @@ export default function DataConnectors() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "data-connectors-table",
     defaultColumns,
@@ -588,6 +590,8 @@ export default function DataConnectors() {
             currentPage={currentPage}
             pageSize={pageSize}
             onPageChange={handlePageChange}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

@@ -212,12 +212,13 @@ export default function RevenueMetricFormPage() {
       setSaving(true);
 
       const payload: any = {
-        name: formData.name,
+        field_name: formData.name,
         description: formData.description,
         field_type: formData.field_type,
-        category: formData.category,
-        source_table: formData.source_table,
-        data_source: formData.data_source,
+        field_pg_type: formData.field_type,
+        field_category_id: formData.category,
+        field_source_table: formData.source_table,
+        validation_strategy: formData.validation_strategy,
         frequency: formData.frequency,
         default_value: String(formData.default_value),
         is_dynamic_variable: formData.use_as_dynamic_variable,

@@ -133,6 +133,7 @@ export default function GatewayConfigurationsPage() {
   const { t } = useLanguage();
   const [configs, setConfigs] = useState<UnifiedGatewayConfig[]>(buildInitialConfigs);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [configToDelete, setConfigToDelete] = useState<UnifiedGatewayConfig | null>(null);
 
@@ -382,6 +383,7 @@ export default function GatewayConfigurationsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "gateway-configurations-table",
     defaultColumns,
@@ -468,6 +470,8 @@ export default function GatewayConfigurationsPage() {
               onSort={handleSort}
               sortConfigs={sortConfigs}
               getRowId={(row) => `${row.id}-${row.channel_type}`}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
