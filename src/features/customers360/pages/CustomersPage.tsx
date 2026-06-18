@@ -202,7 +202,7 @@ export default function CustomersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "date" },
-      render: (_, row) => (
+      render: (value, row) => (
         <span className="text-sm text-gray-900">
           {formatDate(new Date(row.activationDate))}
         </span>
@@ -213,7 +213,7 @@ export default function CustomersPage() {
       label: t.customer360.actions,
       visible: true,
       sortable: false,
-      render: (_, col, row: any) => (
+      render: (_, row: any) => (
         <div className="flex items-center justify-end gap-2">
           <PermissionGate permission="customer.read">
             <button
@@ -241,7 +241,9 @@ export default function CustomersPage() {
                 actionMenuRefs.current[row.subscriptionId] = el;
               }
             }}
-            onClick={(e) => row && handleActionMenuToggle(row.subscriptionId, e)}
+            onClick={(e) => {
+              row && handleActionMenuToggle(row.subscriptionId, e);
+            }}
             className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
             title="More actions"
           >
@@ -1097,56 +1099,56 @@ export default function CustomersPage() {
       {customers.map((customer) => {
         if (showActionMenuForId === customer.subscriptionId && dropdownPosition) {
           return createPortal(
-            <div
-              key={customer.subscriptionId}
-              ref={(el) => {
-                if (el) {
-                  dropdownMenuRefs.current[customer.subscriptionId] = el;
-                }
-              }}
-              className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2`}
-              style={{
-                zIndex: zIndex.popover,
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-                width: '224px',
-                maxHeight: `${dropdownPosition.maxHeight}px`,
-                overflowY: "auto",
-                overflowX: "hidden",
-                overscrollBehavior: "contain",
-              }}
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  handleSendCommunication(customer);
-                  setShowActionMenuForId(null);
-                  setDropdownPosition(null);
+              <div
+                key={customer.subscriptionId}
+                ref={(el) => {
+                  if (el) {
+                    dropdownMenuRefs.current[customer.subscriptionId] = el;
+                  }
                 }}
-                className="w-full flex items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2`}
+                style={{
+                  zIndex: zIndex.popover,
+                  top: `${dropdownPosition.top}px`,
+                  left: `${dropdownPosition.left}px`,
+                  width: '224px',
+                  maxHeight: `${dropdownPosition.maxHeight}px`,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  overscrollBehavior: "contain",
+                }}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
               >
-                <Send className="h-4 w-4 mr-3" />
-                Send Communication
-              </button>
-              <PermissionGate permission="customer.delete">
                 <button
                   type="button"
                   onClick={() => {
-                    handleDeleteCustomer(customer);
+                    handleSendCommunication(customer);
                     setShowActionMenuForId(null);
                     setDropdownPosition(null);
                   }}
-                  className="w-full flex items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <Trash2 className="h-4 w-4 mr-3" />
-                  Delete
+                  <Send className="h-4 w-4 mr-3" />
+                  Send Communication
                 </button>
-              </PermissionGate>
-            </div>,
-            document.body,
-          );
+                <PermissionGate permission="customer.delete">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDeleteCustomer(customer);
+                      setShowActionMenuForId(null);
+                      setDropdownPosition(null);
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4 mr-3" />
+                    Delete
+                  </button>
+                </PermissionGate>
+              </div>,
+              document.body,
+            );
         }
         return null;
       })}

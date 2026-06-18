@@ -224,7 +224,7 @@ function JobDependencyModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {isLoadingJobs ? (
             <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
               <LoadingSpinner size="sm" />
@@ -417,8 +417,8 @@ function JobDependencyViewModal({
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Job ID
@@ -435,7 +435,7 @@ function JobDependencyViewModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Dependency Type
@@ -454,7 +454,7 @@ function JobDependencyViewModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Max Wait Minutes

@@ -29,6 +29,28 @@ const countries = getCountriesList().map((country) => ({
   label: country.name,
 }));
 
+const dstPatterns = [
+  { value: "first_sunday_march", label: "First Sunday in March" },
+  { value: "second_sunday_march", label: "Second Sunday in March" },
+  { value: "last_sunday_march", label: "Last Sunday in March" },
+  { value: "first_sunday_april", label: "First Sunday in April" },
+  { value: "last_sunday_april", label: "Last Sunday in April" },
+  { value: "first_sunday_september", label: "First Sunday in September" },
+  { value: "last_sunday_september", label: "Last Sunday in September" },
+  { value: "first_sunday_october", label: "First Sunday in October" },
+  { value: "last_sunday_october", label: "Last Sunday in October" },
+  { value: "first_sunday_november", label: "First Sunday in November" },
+  { value: "last_sunday_november", label: "Last Sunday in November" },
+  { value: "first_sunday_december", label: "First Sunday in December" },
+  { value: "last_saturday_september", label: "Last Saturday in September" },
+  { value: "second_sunday_september", label: "Second Sunday in September" },
+  { value: "third_sunday_march", label: "Third Sunday in March" },
+  { value: "third_sunday_october", label: "Third Sunday in October" },
+  { value: "second_sunday_october", label: "Second Sunday in October" },
+  { value: "first_monday_april", label: "First Monday in April" },
+  { value: "last_monday_september", label: "Last Monday in September" },
+];
+
 export default function CreateEditTimezonePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -50,7 +72,6 @@ export default function CreateEditTimezonePage() {
     dst_offset: "",
     dst_start_date: "",
     dst_end_date: "",
-    windows_tz_id: "",
     sort_order: "",
     description: "",
   });
@@ -78,7 +99,6 @@ export default function CreateEditTimezonePage() {
           dst_offset: tz.dst_offset || "",
           dst_start_date: tz.dst_start_date || "",
           dst_end_date: tz.dst_end_date || "",
-          windows_tz_id: tz.windows_tz_id || "",
           sort_order: tz.sort_order || "",
           description: tz.description || "",
         });
@@ -134,7 +154,6 @@ export default function CreateEditTimezonePage() {
         dst_offset: formData.dst_offset?.trim() || undefined,
         dst_start_date: formData.dst_start_date?.trim() || undefined,
         dst_end_date: formData.dst_end_date?.trim() || undefined,
-        windows_tz_id: formData.windows_tz_id?.trim() || undefined,
         sort_order: formData.sort_order ? Number(formData.sort_order) : undefined,
       };
 
@@ -174,11 +193,11 @@ export default function CreateEditTimezonePage() {
         {/* Basic Details Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Basic Details</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Input
-                  label="IANA Timezone ID"
+                  label="Timezone ID"
                   type="text"
                   value={formData.value}
                   onChange={(value) => handleInputChange("value", value)}
@@ -199,7 +218,7 @@ export default function CreateEditTimezonePage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Input
                   label="UTC Offset"
@@ -222,27 +241,15 @@ export default function CreateEditTimezonePage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Input
-                  label="Sort Order"
-                  type="number"
-                  value={formData.sort_order}
-                  onChange={(value) => handleInputChange("sort_order", value)}
-                  placeholder="Numeric order for dropdown"
-                  disabled={saving}
-                />
-              </div>
-              <div>
-                <Input
-                  label="Windows Timezone ID"
-                  type="text"
-                  value={formData.windows_tz_id}
-                  onChange={(value) => handleInputChange("windows_tz_id", value)}
-                  placeholder="e.g., Eastern Standard Time"
-                  disabled={saving}
-                />
-              </div>
+            <div>
+              <Input
+                label="Sort Order"
+                type="number"
+                value={formData.sort_order}
+                onChange={(value) => handleInputChange("sort_order", value)}
+                placeholder="Numeric order for dropdown"
+                disabled={saving}
+              />
             </div>
           </div>
           <div className="mt-4">
@@ -260,8 +267,8 @@ export default function CreateEditTimezonePage() {
         {/* Regional Information Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Regional Information</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <HeadlessSelect
                   label="Region"
@@ -303,7 +310,7 @@ export default function CreateEditTimezonePage() {
         {/* DST Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Daylight Saving Time (DST)</h2>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <label className="flex items-start gap-3 cursor-pointer">
               <Checkbox
                 id="uses_dst"
@@ -319,7 +326,7 @@ export default function CreateEditTimezonePage() {
             </label>
 
             {formData.uses_dst && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div>
                   <Input
                     label="DST Offset"
@@ -331,23 +338,25 @@ export default function CreateEditTimezonePage() {
                   />
                 </div>
                 <div>
-                  <Input
+                  <HeadlessSelect
                     label="DST Start Date"
-                    type="text"
+                    options={dstPatterns}
                     value={formData.dst_start_date}
                     onChange={(value) => handleInputChange("dst_start_date", value)}
-                    placeholder="e.g., Second Sunday in March"
+                    placeholder="Select when DST starts"
                     disabled={saving}
+                    className="w-full"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Input
+                  <HeadlessSelect
                     label="DST End Date"
-                    type="text"
+                    options={dstPatterns}
                     value={formData.dst_end_date}
                     onChange={(value) => handleInputChange("dst_end_date", value)}
-                    placeholder="e.g., First Sunday in November"
+                    placeholder="Select when DST ends"
                     disabled={saving}
+                    className="w-full"
                   />
                 </div>
               </div>
