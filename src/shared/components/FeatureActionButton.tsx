@@ -68,6 +68,7 @@ const ROUTE_MAP: Record<string, string> = {
   'segment-categories': '/dashboard/segment-categories',
   'manual-communications': '/dashboard/manual-communications',
   'data-connectors': '/dashboard/data-connectors',
+  'health-check': '/dashboard/health-check',
   'gateway-configurations': '/dashboard/gateway-configurations',
   'job-workflow-steps': '/dashboard/job-workflow-steps',
   'team-roles': '/dashboard/team-roles',

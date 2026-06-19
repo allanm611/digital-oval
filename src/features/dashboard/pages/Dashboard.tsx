@@ -761,6 +761,54 @@ const AdministrationPages = {
         /* webpackPrefetch: true */ "../../monitoring/pages/ExecutionDetailsPage"
       ),
   ),
+  TestingDashboardPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/TestingDashboardPageWrapper"
+      ),
+  ),
+  CreateHealthModulePage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/CreateModulePageWrapper"
+      ),
+  ),
+  AIInsightsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/AIInsightsPageWrapper"
+      ),
+  ),
+  HealthCheckNotificationsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/HealthCheckNotificationsPageWrapper"
+      ),
+  ),
+  ModuleSchedulePage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/ModuleSchedulePageWrapper"
+      ),
+  ),
+  ModuleLogsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/ModuleLogsPageWrapper"
+      ),
+  ),
+  ModuleDetailPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/ModuleDetailPageWrapper"
+      ),
+  ),
+  EditHealthModulePage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../testing/pages/EditModulePageWrapper"
+      ),
+  ),
 };
 
 // Other Pages - All routes preloaded for instant access
@@ -898,6 +946,38 @@ export default function Dashboard() {
           <Route
             path="/monitoring/:id"
             element={<AdministrationPages.ExecutionDetailsPage />}
+          />
+          <Route
+            path="/health-check"
+            element={<AdministrationPages.TestingDashboardPage />}
+          />
+          <Route
+            path="/health-check/create"
+            element={<AdministrationPages.CreateHealthModulePage />}
+          />
+          <Route
+            path="/health-check/insights"
+            element={<AdministrationPages.AIInsightsPage />}
+          />
+          <Route
+            path="/health-check/notifications"
+            element={<AdministrationPages.HealthCheckNotificationsPage />}
+          />
+          <Route
+            path="/health-check/:id/logs"
+            element={<AdministrationPages.ModuleLogsPage />}
+          />
+          <Route
+            path="/health-check/:id/edit"
+            element={<AdministrationPages.EditHealthModulePage />}
+          />
+          <Route
+            path="/health-check/:id/schedule"
+            element={<AdministrationPages.ModuleSchedulePage />}
+          />
+          <Route
+            path="/health-check/:id"
+            element={<AdministrationPages.ModuleDetailPage />}
           />
           <Route path="/campaigns" element={<CampaignPages.CampaignsPage />} />
           <Route
