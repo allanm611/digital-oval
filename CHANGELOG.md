@@ -1,3 +1,10 @@
+## [1.4.13](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.12...v1.4.13) (2026-06-20)
+
+
+### Bug Fixes
+
+* fixing the dark theme ([75106c6](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/75106c6d341c844557b9df7a3f03e71ca0fb2676))
+
 ## [1.4.12](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.11...v1.4.12) (2026-06-18)
 
 
