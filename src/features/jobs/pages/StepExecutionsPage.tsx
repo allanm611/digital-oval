@@ -860,7 +860,7 @@ export default function StepExecutionsPage() {
                               `/dashboard/step-executions/${execution.id}`
                             )
                           }
-                          className={`p-2 icon-edit ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          className={`p-2 icon-edit ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
                           aria-label="View step execution details"
                         >
                           <Eye className="w-4 h-4" />

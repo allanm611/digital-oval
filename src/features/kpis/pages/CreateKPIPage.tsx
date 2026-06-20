@@ -156,33 +156,41 @@ export default function CreateKPIPage() {
     if (!id) return;
     try {
       setLoading(true);
-      const kpi = await kpiService.getKpiById(Number(id));
+      const kpi = await kpiService.getKPIById(Number(id));
       if (kpi) {
-        setFormData({
-          name: kpi.name,
-          field_value: kpi.field_value || "",
-          description: kpi.description || "",
-          field_type: kpi.field_type || "number",
-          category: kpi.field_category_id || "",
-          operators: kpi.operators || [],
-          source_table: kpi.field_source_table || "",
+        if (!kpi) return;
+
+        const kpiData = kpi.data || kpi;
+        console.log("📋 Loaded KPI Data:", kpiData);
+
+        const newFormData = {
+          name: kpiData.field_name || kpiData.name || "",
+          field_value: kpiData.field_value || "",
+          description: kpiData.description || "",
+          field_type: kpiData.field_type || "number",
+          category: kpiData.field_category_id || "",
+          operators: kpiData.operators || [],
+          source_table: kpiData.field_source_table || "",
           data_source: "DB",
           frequency: "Per Min",
-          default_value: kpi.default_value || "",
-          validation_strategy: kpi.validation_strategy || "none",
-          range_min: kpi.field_allowed_range_min?.toString() || "",
-          range_max: kpi.field_allowed_range_max?.toString() || "",
-          discrete_values: kpi.field_allowed_distinct_values?.join(", ") || "",
-          extractionLogic: "",
-          use_as_dynamic_variable: kpi.is_dynamic_variable || false,
-          tag: kpi.tag || "kpi",
-          display_order: kpi.display_order || 0,
+          default_value: kpiData.default_value || "",
+          validation_strategy: kpiData.validation_strategy || "none",
+          range_min: kpiData.field_allowed_range_min?.toString() || "",
+          range_max: kpiData.field_allowed_range_max?.toString() || "",
+          discrete_values: kpiData.field_allowed_distinct_values?.join(", ") || "",
+          extractionLogic: kpiData.extraction_logic || "",
+          use_as_dynamic_variable: kpiData.is_dynamic_variable || false,
+          tag: kpiData.tag || null,
+          display_order: kpiData.display_order || 0,
           job_type_id: "",
           schedule_type: "manual",
           cron_expression: "",
-          data_latency: kpi.data_latency || "daily",
-          calculationType: kpi.is_computable ? "computed" : "value_set",
-        });
+          data_latency: kpiData.data_latency || "daily",
+          calculationType: kpiData.is_computable ? "computed" : "value_set",
+        };
+
+        console.log("✅ Form Data to Set:", newFormData);
+        setFormData(newFormData);
       }
     } catch (err) {
       showError("Error", extractBackendError(err as any, "Error loading KPI"));
@@ -212,17 +220,20 @@ export default function CreateKPIPage() {
     if (!formData.source_table.trim()) {
       newErrors.source_table = "Source table is required";
     }
-    if ((type === "revenue" || type === "usage") && formData.is_computed && !formData.extractionLogic.trim()) {
-      newErrors.extractionLogic = "Logic Definition is required for computed metrics";
-    }
-    if (type === "kpi" && formData.calculationType === "computed" && !formData.extractionLogic.trim()) {
-      newErrors.extractionLogic = "Logic Definition is required";
-    }
-    if (type === "profile" && !formData.extractionLogic.trim()) {
-      newErrors.extractionLogic = "Extraction logic is required";
-    }
 
     setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      console.error("❌ KPI Validation Errors:", newErrors);
+      console.log("📋 Form Data:", {
+        name: formData.name,
+        source_table: formData.source_table,
+        calculationType: formData.calculationType,
+        extractionLogic: formData.extractionLogic,
+        kpiType: type,
+      });
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -244,7 +255,6 @@ export default function CreateKPIPage() {
         field_type: formData.field_type,
         field_pg_type: formData.field_type,
         field_category_id: formData.category,
-        field_source_table: formData.source_table,
         validation_strategy: formData.validation_strategy,
         default_value: String(formData.default_value),
         is_dynamic_variable: formData.use_as_dynamic_variable,
@@ -254,6 +264,7 @@ export default function CreateKPIPage() {
 
       if (mode === "create") {
         payload.field_value = formData.field_value;
+        payload.field_source_table = formData.source_table;
       }
 
       // Handle different types
@@ -266,11 +277,11 @@ export default function CreateKPIPage() {
         if (mode === "create") {
           await revenueMetricService.createMetric(payload);
           success("Success", "Revenue metric created successfully");
-          navigate("/dashboard/kpis/revenue-metrics");
+          navigate("/dashboard/kpis");
         } else {
           await revenueMetricService.updateMetric(Number(id), payload);
           success("Success", "Revenue metric updated successfully");
-          navigate("/dashboard/kpis/revenue-metrics");
+          navigate("/dashboard/kpis");
         }
       } else if (type === "usage") {
         payload.frequency = formData.frequency;
@@ -281,11 +292,11 @@ export default function CreateKPIPage() {
         if (mode === "create") {
           await usageMetricService.createMetric(payload);
           success("Success", "Usage metric created successfully");
-          navigate("/dashboard/kpis/usage-metrics");
+          navigate("/dashboard/kpis");
         } else {
           await usageMetricService.updateMetric(Number(id), payload);
           success("Success", "Usage metric updated successfully");
-          navigate("/dashboard/kpis/usage-metrics");
+          navigate("/dashboard/kpis");
         }
       } else if (type === "profile") {
         payload.data_latency = formData.data_latency;
@@ -293,11 +304,11 @@ export default function CreateKPIPage() {
           payload.field_value = formData.field_value;
           await subscriberProfileService.createProfile(payload);
           success("Success", "Profile created successfully");
-          navigate("/dashboard/kpis/subscriber-profiles");
+          navigate("/dashboard/kpis");
         } else {
           await subscriberProfileService.updateProfile(Number(id), payload);
           success("Success", "Profile updated successfully");
-          navigate("/dashboard/kpis/subscriber-profiles");
+          navigate("/dashboard/kpis");
         }
       } else {
         // KPI type

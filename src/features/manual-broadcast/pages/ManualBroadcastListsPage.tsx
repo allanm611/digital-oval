@@ -307,7 +307,7 @@ export default function ManualBroadcastListsPage() {
       visible: true,
       filterConfig: { type: 'multiselect', options: ['SMS', 'EMAIL', 'PUSH', 'USSD'] },
       render: (value) => (
-        <div className="text-sm text-black">
+        <div className={`text-sm ${tw.textPrimary}`}>
           {Array.isArray(value) && value.length > 0 ? value.join(", ") : "-"}
         </div>
       ),
@@ -355,7 +355,8 @@ export default function ManualBroadcastListsPage() {
           {broadcast.execution_id && (
             <button
               onClick={() => navigate(`/dashboard/manual-communications/${broadcast.execution_id}`)}
-              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
+              className={`p-1 ${tw.rounded} transition-colors cursor-pointer`}
+              style={{ color: 'var(--c-icon-table-view)' }}
               title="View"
             >
               <Eye className="w-4 h-4" />
@@ -364,7 +365,8 @@ export default function ManualBroadcastListsPage() {
           {broadcast.execution_id && (
             <button
               onClick={() => handleViewDetails(broadcast)}
-              className={`p-1 ${tw.rounded} text-black hover:text-gray-800 transition-colors cursor-pointer`}
+              className={`p-1 ${tw.rounded} transition-colors cursor-pointer`}
+              style={{ color: 'var(--c-icon-table-edit)' }}
               title="Edit"
             >
               <Edit className="w-4 h-4" />
@@ -458,7 +460,7 @@ export default function ManualBroadcastListsPage() {
 
       {/* Broadcasts Table */}
       <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className={`${tw.rounded} overflow-hidden`}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">

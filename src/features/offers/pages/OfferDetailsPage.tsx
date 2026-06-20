@@ -2394,7 +2394,7 @@ export default function OfferDetailsPage() {
                                 className="p-1 hover:bg-gray-100 rounded transition-colors"
                                 title="View details"
                               >
-                                <Eye className="w-4 h-4 text-gray-600" />
+                                <Eye className="w-4 h-4" />
                               </button>
                             )}
                             <button

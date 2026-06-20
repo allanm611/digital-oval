@@ -177,7 +177,7 @@ function CategoryModal({
               </h2>
               <button
                 onClick={onClose}
-                className={`p-2 icon-edit icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
+                className={`p-2 icon-edit icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors flex-shrink-0`}
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -1284,7 +1284,7 @@ function OfferCategoriesPage() {
                 <div className="flex items-center space-x-1">
                   {/* <button
                     onClick={() => handleViewDetails(category)}
-                    className={`p-2 icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                    className={`p-2 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                     title="View Details"
                   >
                     <Eye className="w-4 h-4 " />
@@ -1304,10 +1304,10 @@ function OfferCategoriesPage() {
                   </PermissionGate>
                   <button
                     onClick={() => handleEditCategory(category)}
-                    className={`p-2 icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                    className={`p-2 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.edit}
                   >
-                    <Edit className="w-4 h-4 text-gray-600" />
+                    <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
@@ -1481,7 +1481,7 @@ function OfferCategoriesPage() {
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
                   {/* <button
                   onClick={() => handleViewDetails(category)}
-                  className={`p-2 icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                  className={`p-2 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                   title="View Details"
                 >
                   <Eye className="w-4 h-4 " />
@@ -1502,7 +1502,7 @@ function OfferCategoriesPage() {
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.edit}
                   >
-                    <Edit className="w-4 h-4 text-gray-600" />
+                    <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}

@@ -191,7 +191,6 @@ export default function CreateSubscriberProfilePage() {
         field_type: formData.field_type,
         field_pg_type: formData.field_type,
         field_category_id: formData.category,
-        field_source_table: formData.source_table,
         validation_strategy: formData.validation_strategy,
         default_value: String(formData.default_value),
         is_dynamic_variable: formData.use_as_dynamic_variable,
@@ -200,6 +199,7 @@ export default function CreateSubscriberProfilePage() {
 
       if (mode === "create") {
         payload.field_value = formData.field_value;
+        payload.field_source_table = formData.source_table;
         await subscriberProfileService.createProfile(payload);
         success("Success", "Subscriber profile created successfully");
       } else {

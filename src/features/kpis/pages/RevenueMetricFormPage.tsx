@@ -217,7 +217,6 @@ export default function RevenueMetricFormPage() {
         field_type: formData.field_type,
         field_pg_type: formData.field_type,
         field_category_id: formData.category,
-        field_source_table: formData.source_table,
         validation_strategy: formData.validation_strategy,
         frequency: formData.frequency,
         default_value: String(formData.default_value),
@@ -233,6 +232,7 @@ export default function RevenueMetricFormPage() {
 
       if (mode === "create") {
         payload.field_value = formData.field_value;
+        payload.field_source_table = formData.source_table;
         await revenueMetricService.createMetric(payload);
         success("Success", "Revenue metric created successfully");
       } else {

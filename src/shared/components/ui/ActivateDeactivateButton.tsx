@@ -56,9 +56,11 @@ export default function ActivateDeactivateButton({
         <button
           onClick={onToggle}
           disabled={disabled || isLoading}
-          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-            isActive ? "bg-[#252829] focus:ring-[#252829]" : "bg-gray-300 focus:ring-gray-300"
-          }`}
+          className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: isActive ? 'var(--c-toggle-active)' : '#d1d5db',
+            borderColor: isActive ? 'var(--c-toggle-active)' : '#d1d5db',
+          }}
           title={title || (isActive ? "Deactivate" : "Activate")}
         >
           {isLoading ? (
@@ -81,9 +83,11 @@ export default function ActivateDeactivateButton({
     <button
       onClick={onToggle}
       disabled={disabled || isLoading}
-      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-        isActive ? "bg-[#252829] focus:ring-[#252829]" : "bg-gray-300 focus:ring-gray-300"
-      }`}
+      className="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+      style={{
+        backgroundColor: isActive ? 'var(--c-toggle-active)' : 'var(--c-toggle-inactive)',
+        borderColor: isActive ? 'var(--c-toggle-active)' : 'var(--c-toggle-inactive)',
+      }}
       title={title || (isActive ? "Deactivate" : "Activate")}
     >
       {isLoading ? (

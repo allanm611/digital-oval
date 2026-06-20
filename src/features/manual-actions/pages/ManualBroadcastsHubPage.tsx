@@ -71,7 +71,7 @@ export default function ManualBroadcastsHubPage() {
               <div className="flex items-center gap-4">
                 <Icon
                   className="w-8 h-8 flex-shrink-0"
-                  style={{ color: color.primary.action }}
+                  style={{ color: 'var(--c-icon-color)' }}
                 />
                 <div className="flex-1">
                   <h3

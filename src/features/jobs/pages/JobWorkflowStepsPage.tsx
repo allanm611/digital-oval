@@ -1360,7 +1360,7 @@ export default function JobWorkflowStepsPage() {
                             }`,
                           )
                         }
-                        className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                        className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                         aria-label="View details"
                         title="View details"
                       >
@@ -1375,7 +1375,7 @@ export default function JobWorkflowStepsPage() {
                               }`,
                             )
                           }
-                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                          className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                           aria-label="Edit step"
                           title="Edit step"
                         >
@@ -1390,7 +1390,7 @@ export default function JobWorkflowStepsPage() {
                       >
                         <button
                           onClick={(e) => handleActionMenuToggle(step.id, e)}
-                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                          className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                           aria-label="More actions"
                           title="More actions"
                         >

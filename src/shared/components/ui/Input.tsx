@@ -43,6 +43,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   let inputStyle: React.CSSProperties = {
     backgroundColor: 'var(--c-input-bg)',
     color: 'var(--c-text-primary)',
+    accentColor: type === 'date' || type === 'time' ? 'var(--c-input-accent)' : undefined,
     ...style
   };
 

@@ -188,7 +188,7 @@ export default function ConnectionProfilesPage() {
           <button
             type="button"
             onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}`)}
-            className={`p-2 icon-edit ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 icon-edit ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
             aria-label="View"
             title="View details"
           >
