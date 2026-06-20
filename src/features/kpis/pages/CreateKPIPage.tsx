@@ -12,6 +12,7 @@ import { revenueMetricService } from "../services/revenueMetricService";
 import { usageMetricService } from "../services/usageMetricService";
 import { subscriberProfileService } from "../services/subscriberProfileService";
 import { jobTypeService } from "../../jobs/services/jobTypeService";
+import { scheduledJobService } from "../../jobs/services/scheduledJobService";
 import { DATA_SOURCE_OPTIONS, DATA_LATENCY_OPTIONS, FREQUENCY_OPTIONS, VALIDATION_STRATEGY_OPTIONS } from "../constants/formOptions";
 
 const FIELD_TYPE_OPTIONS = [
@@ -194,7 +195,7 @@ export default function CreateKPIPage() {
       }
     } catch (err) {
       showError("Error", extractBackendError(err as any, "Error loading KPI"));
-      navigate("/dashboard/kpis");
+      navigate("/dashboard/kpis/all");
     } finally {
       setLoading(false);
     }
@@ -267,7 +268,9 @@ export default function CreateKPIPage() {
         payload.field_source_table = formData.source_table;
       }
 
-      // Handle different types
+      // Create the KPI/metric first
+      let createdKpiId: number | undefined;
+
       if (type === "revenue") {
         payload.frequency = formData.frequency;
         payload.is_computable = formData.is_computed;
@@ -275,13 +278,13 @@ export default function CreateKPIPage() {
           payload.extraction_logic = formData.extractionLogic;
         }
         if (mode === "create") {
-          await revenueMetricService.createMetric(payload);
+          const created = await revenueMetricService.createMetric(payload);
+          createdKpiId = created.id;
           success("Success", "Revenue metric created successfully");
-          navigate("/dashboard/kpis");
         } else {
           await revenueMetricService.updateMetric(Number(id), payload);
+          createdKpiId = Number(id);
           success("Success", "Revenue metric updated successfully");
-          navigate("/dashboard/kpis");
         }
       } else if (type === "usage") {
         payload.frequency = formData.frequency;
@@ -290,25 +293,25 @@ export default function CreateKPIPage() {
           payload.extraction_logic = formData.extractionLogic;
         }
         if (mode === "create") {
-          await usageMetricService.createMetric(payload);
+          const created = await usageMetricService.createMetric(payload);
+          createdKpiId = created.id;
           success("Success", "Usage metric created successfully");
-          navigate("/dashboard/kpis");
         } else {
           await usageMetricService.updateMetric(Number(id), payload);
+          createdKpiId = Number(id);
           success("Success", "Usage metric updated successfully");
-          navigate("/dashboard/kpis");
         }
       } else if (type === "profile") {
         payload.data_latency = formData.data_latency;
         if (mode === "create") {
           payload.field_value = formData.field_value;
-          await subscriberProfileService.createProfile(payload);
+          const created = await subscriberProfileService.createProfile(payload);
+          createdKpiId = created.id;
           success("Success", "Profile created successfully");
-          navigate("/dashboard/kpis");
         } else {
           await subscriberProfileService.updateProfile(Number(id), payload);
+          createdKpiId = Number(id);
           success("Success", "Profile updated successfully");
-          navigate("/dashboard/kpis");
         }
       } else {
         // KPI type
@@ -319,15 +322,41 @@ export default function CreateKPIPage() {
         }
         if (mode === "create") {
           payload.field_value = formData.field_value;
-          await kpiService.createKPI(payload);
+          const created = await kpiService.createKPI(payload);
+          createdKpiId = created.id;
           success("Success", "KPI created successfully");
-          navigate("/dashboard/kpis");
         } else {
           await kpiService.updateKPI(Number(id), payload);
+          createdKpiId = Number(id);
           success("Success", "KPI updated successfully");
-          navigate("/dashboard/kpis");
         }
       }
+
+      // Create scheduled job if job_type_id is selected
+      if (formData.job_type_id && createdKpiId) {
+        try {
+          const schedulePayload: any = {
+            name: `${formData.name} - Scheduled Extraction`,
+            code: `kpi_${createdKpiId}_schedule`,
+            job_type_id: Number(formData.job_type_id),
+            schedule_type: formData.schedule_type || "manual",
+            is_active: true,
+          };
+
+          // Add cron expression only if schedule_type is cron
+          if (formData.schedule_type === "cron" && formData.cron_expression) {
+            schedulePayload.cron_expression = formData.cron_expression;
+          }
+
+          await scheduledJobService.createScheduledJob(schedulePayload);
+          success("Success", "Scheduled job created successfully");
+        } catch (scheduleErr) {
+          console.error("Failed to create scheduled job:", scheduleErr);
+          showError("Warning", "KPI created but scheduled job failed. Please create manually if needed.");
+        }
+      }
+
+      navigate("/dashboard/kpis/all");
     } catch (err) {
       showError("Error", extractBackendError(err as any, "Error saving KPI"));
     } finally {
@@ -372,7 +401,7 @@ export default function CreateKPIPage() {
           if (kpiType === "revenue") navigate("/dashboard/kpis/revenue-metrics");
           else if (kpiType === "usage") navigate("/dashboard/kpis/usage-metrics");
           else if (kpiType === "profile") navigate("/dashboard/kpis/subscriber-profiles");
-          else navigate("/dashboard/kpis");
+          else navigate("/dashboard/kpis/all");
         }}
         onSubmit={handleSubmit}
       />

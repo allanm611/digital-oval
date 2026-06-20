@@ -66,8 +66,9 @@ export default function AllKPIsPage() {
           is_active: kpi.is_active ?? true,
           field_value: kpi.field_value || "",
           default_value: kpi.default_value || "-",
+          display_order: kpi.display_order ?? 0,
         };
-      });
+      }).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
       // Add system events
       const systemEventKPIs: KPI[] = systemEventsData.map((event: SystemEvent) => ({
