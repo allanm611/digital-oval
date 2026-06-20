@@ -47,8 +47,9 @@ import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shar
 import ErrorState from "../../../shared/components/ui/ErrorState";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
-import { Table, type TableColumn } from "../../../shared/components/Table";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
@@ -175,6 +176,7 @@ export default function SegmentManagementPage() {
   const { success, error: showError, info: showInfo } = useToast();
   const [segmentToDelete, setSegmentToDelete] = useState<Segment | null>(null);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const [showSegmentColumnPicker, setShowSegmentColumnPicker] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteSegment } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -1068,6 +1070,18 @@ export default function SegmentManagementPage() {
     [computingSegmentId, color, tw, segmentTypes, allTags],
   );
 
+  const {
+    columns: segmentTableColumns,
+    toggleColumn: toggleSegmentColumn,
+    reorderColumns: reorderSegmentColumns,
+    resetToDefaults: resetSegmentDefaults,
+  } = useTable({
+    tableId: "segment-management-table",
+    defaultColumns: segmentColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
+
   const allVisibleSelected =
     visibleIds.length > 0 &&
     visibleIds.every((id) => selectedSegmentIds.has(id));
@@ -1569,7 +1583,7 @@ export default function SegmentManagementPage() {
           <>
             {/* Table Component */}
             <Table<Segment>
-              columns={segmentColumns}
+              columns={segmentTableColumns}
               data={segments}
               totalItems={segments.length}
               currentPage={page}
@@ -1590,9 +1604,11 @@ export default function SegmentManagementPage() {
               expandedContent={(row) => {
                 const segment = segments.find(s => s.id === row.id);
                 return segment ? (
-                  <SegmentDetailsExpandedRow segment={segment} colSpan={segmentColumns.filter((c) => c.visible).length} />
+                  <SegmentDetailsExpandedRow segment={segment} colSpan={segmentTableColumns.filter((c) => c.visible).length} />
                 ) : null;
               }}
+              onHideColumn={toggleSegmentColumn}
+              onManageColumnsClick={() => setShowSegmentColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -2210,6 +2226,21 @@ export default function SegmentManagementPage() {
         isLoading={isDeleting}
         confirmText="Delete Segment"
         cancelText="Cancel"
+      />
+
+      <ColumnPickerModal
+        isOpen={showSegmentColumnPicker}
+        columns={segmentTableColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowSegmentColumnPicker(false)}
+        onToggleColumn={toggleSegmentColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = segmentTableColumns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderSegmentColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetSegmentDefaults}
       />
     </div>
   );

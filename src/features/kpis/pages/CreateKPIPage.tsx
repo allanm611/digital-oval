@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import KPIForm from "../components/KPIForm";
 import { kpiService } from "../services/kpiService";
@@ -56,6 +57,7 @@ export default function CreateKPIPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { user } = useAuth();
 
   const mode = id ? "edit" : "create";
   const [loading, setLoading] = useState(mode === "edit");
@@ -341,6 +343,7 @@ export default function CreateKPIPage() {
             job_type_id: Number(formData.job_type_id),
             schedule_type: formData.schedule_type || "manual",
             is_active: true,
+            created_by: user?.user_id ?? null,
           };
 
           // Add cron expression only if schedule_type is cron

@@ -38,6 +38,7 @@ export default function NotificationTypeModal({
   const [tableOptions, setTableOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [categoryOptions, setCategoryOptions] = useState<Array<{ value: number | string; label: string }>>([]);
   const [eventConditionOptions, setEventConditionOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [eventConditionsMap, setEventConditionsMap] = useState<Record<string, any>>({});
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -103,20 +104,30 @@ export default function NotificationTypeModal({
     setIsLoadingEventConditions(true);
     try {
       const response = await notificationService.getEventConditions(formData.table_name);
-      const options = response.data
-        .filter((condition) => condition.action_type === formData.action_type)
-        .map((condition) => ({
-          value: String(condition.id || ""),
-          label: condition.display_name || condition.name || "",
-        }));
+      const filtered = response.data.filter((condition) => condition.action_type === formData.action_type);
+
+      const options = filtered.map((condition) => ({
+        value: String(condition.id),
+        label: condition.display_name || condition.name || "",
+      }));
+
+      // Store full conditions for lookup
+      const conditionMap: Record<string, any> = {};
+      filtered.forEach((condition) => {
+        const key = String(condition.id || condition.name);
+        conditionMap[key] = condition;
+      });
+      setEventConditionsMap(conditionMap);
       setEventConditionOptions(options);
     } catch (error) {
       console.error("Failed to load event conditions:", error);
       setEventConditionOptions([]);
+      setEventConditionsMap({});
     } finally {
       setIsLoadingEventConditions(false);
     }
   };
+
 
   useEffect(() => {
     if (isOpen) {
@@ -128,6 +139,7 @@ export default function NotificationTypeModal({
   useEffect(() => {
     loadEventConditions();
   }, [formData.table_name, formData.action_type]);
+
 
   useEffect(() => {
     if (editingRule) {
@@ -178,14 +190,27 @@ export default function NotificationTypeModal({
 
     setIsSubmitting(true);
     try {
+      // Extract event_condition from selected condition
+      let eventCondition: any = null;
+      if (formData.event_condition) {
+        const selectedCondition = eventConditionsMap[formData.event_condition];
+        if (selectedCondition && selectedCondition.event_condition) {
+          eventCondition = selectedCondition.event_condition;
+        }
+      }
+
       const payload: any = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         table_name: formData.table_name,
         action_type: formData.action_type,
-        event_condition: formData.event_condition,
         message_template: formData.message_template.trim(),
       };
+
+      // Only include event_condition if found from the selected condition
+      if (eventCondition !== null) {
+        payload.event_condition = eventCondition;
+      }
 
       if (formData.category_id) {
         payload.category_id = formData.category_id;

@@ -1754,10 +1754,10 @@ export default function JobDependenciesPage() {
                 className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
                 style={{
                   backgroundColor: isSelectionMode
-                    ? color.primary.action
+                    ? "var(--c-text-primary)"
                     : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: isSelectionMode ? "var(--c-surface-background)" : "var(--c-text-primary)",
+                  border: "1px solid var(--c-text-primary)",
                 }}
               >
                 {isSelectionMode ? (
@@ -1778,8 +1778,14 @@ export default function JobDependenciesPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-3 sm:px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-text-primary)",
+                border: "1px solid var(--c-text-primary)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
               <BarChart3 className="h-4 w-4" />

@@ -121,7 +121,19 @@ export default function ConfigurationModal({
       for (const field of config.metadataFields) {
         const shouldShow = field.condition ? field.condition(formData) : true;
         if (shouldShow) {
-          itemData[field.key] = formData[field.key];
+          let fieldValue = formData[field.key];
+
+          // Parse JSON strings for specific fields (event_condition)
+          if (field.key === "event_condition" && typeof fieldValue === "string" && fieldValue.trim()) {
+            try {
+              fieldValue = JSON.parse(fieldValue);
+            } catch (e) {
+              setError("Event Condition must be valid JSON (e.g., {} or {\"status\": \"approved\"})");
+              return;
+            }
+          }
+
+          itemData[field.key] = fieldValue;
         }
       }
     }

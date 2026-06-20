@@ -2472,39 +2472,11 @@ export const notificationTypesConfig: TypeConfigurationPageConfig = {
     },
     {
       key: "event_condition",
-      label: "Event Condition",
-      type: "select",
-      required: true,
-      placeholder: "Select an event condition",
+      label: "Event Condition (JSON Filter)",
+      type: "textarea",
+      required: false,
+      placeholder: 'e.g., {"status": "approved"} or {} for any change',
       row: 2,
-      loadOptions: async (formData?: Record<string, any>) => {
-        try {
-          const tableName = formData?.table_name;
-          const actionType = formData?.action_type;
-
-          if (!tableName || !actionType) {
-            console.log("Table or action type not selected, no event conditions available");
-            return [];
-          }
-
-          console.log(`Fetching event conditions for table: ${tableName}, action: ${actionType}`);
-          const response = await notificationService.getEventConditions(tableName);
-
-          // Filter event conditions by action_type
-          const options = response.data
-            .filter((condition) => condition.action_type === actionType)
-            .map((condition) => ({
-              value: condition.name,
-              label: condition.name,
-            }));
-
-          console.log(`Event conditions for ${tableName}/${actionType}:`, options);
-          return options;
-        } catch (error) {
-          console.error("Failed to load event conditions:", error);
-          return [];
-        }
-      },
     },
     {
       key: "message_template",
