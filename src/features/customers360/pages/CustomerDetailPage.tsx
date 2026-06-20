@@ -22,7 +22,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import Radio from "../../../shared/components/ui/Radio";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -48,7 +48,8 @@ import { customerService } from "../services/customerServices";
 import { revenueMetricService } from "../../kpis/services/revenueMetricService";
 import type { RevenueMetric } from "../../kpis/types/revenueMetrics";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-import { Table, type TableColumn } from "../../../shared/components/Table";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Extract types from API response
 type CustomerSegment = CustomerSearchResultsResponse["segments"][number];
@@ -511,6 +512,7 @@ export default function CustomerDetailPage() {
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
   const [kpiSearchTerm, setKpiSearchTerm] = useState<string>("");
   const [expandedKpi, setExpandedKpi] = useState<string | null>(null);
+  const [showKpiColumnPicker, setShowKpiColumnPicker] = useState(false);
   const { t } = useLanguage();
   const { success: showSuccess, error: showError } = useToast();
 
@@ -526,6 +528,7 @@ export default function CustomerDetailPage() {
     trendPercent?: number;
     detailedInfo: string | React.ReactNode;
     defaultValue?: string | number;
+    field_type?: string;
   };
 
   const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetric[]>([]);
@@ -546,15 +549,83 @@ export default function CustomerDetailPage() {
     loadRevenueMetrics();
   }, []);
 
-  const generateKpiData = (): KpiData[] =>
-    revenueMetrics.map((metric) => ({
+  const defaultKpiColumns: TableColumn<any>[] = [
+    {
+      id: "name",
+      label: "KPI Name",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
+    },
+    {
+      id: "category",
+      label: "Category",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (_, row) => <span className="text-sm text-gray-900">{row.category}</span>,
+    },
+    {
+      id: "type",
+      label: "Type",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (_, row) => <span className="text-sm text-gray-900">{row.field_type || "—"}</span>,
+    },
+    {
+      id: "defaultValue",
+      label: "Default Value",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (_, row) => <span className="text-sm text-gray-900">{row.defaultValue ?? 0}</span>,
+    },
+    {
+      id: "action",
+      label: "Action",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <button
+          onClick={() =>
+            navigate(
+              `/dashboard/kpis/revenue-metrics/${row.id}`,
+              { state: { parentLabel: "Customer Profile" } }
+            )
+          }
+          className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+          title="View details"
+        >
+          <Eye className="h-4 w-4" />
+        </button>
+      ),
+    },
+  ];
+
+  const {
+    columns: kpiColumns,
+    toggleColumn: toggleKpiColumn,
+    reorderColumns: reorderKpiColumns,
+    resetToDefaults: resetKpiDefaults,
+  } = useTable({
+    tableId: "customer-kpi-table",
+    defaultColumns: defaultKpiColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
+
+  const generateKpiData = (): KpiData[] => {
+    const kpiData = revenueMetrics.map((metric) => ({
       id: String(metric.id),
       name: metric.name,
       category: "Revenue",
       value: "—",
       unit: metric.unit,
       description: metric.description,
-      defaultValue: (metric as any).default_value ?? 0,
+      defaultValue: metric.default_value ?? "-",
+      field_type: metric.field_type,
       detailedInfo: (
         <div className="space-y-3">
           <p className="text-sm text-gray-900">{metric.description}</p>
@@ -570,6 +641,9 @@ export default function CustomerDetailPage() {
         </div>
       ),
     }));
+
+    return kpiData;
+  };
 
   const kpiList = generateKpiData();
 
@@ -609,6 +683,11 @@ export default function CustomerDetailPage() {
     eventDateFrom,
     eventDateTo,
   ]);
+
+  // Reset KPI pagination when search changes
+  useEffect(() => {
+    setKpiPage(1);
+  }, [kpiSearchTerm]);
 
   const { segments, offers, events, lists, quicklists, campaigns } = useMemo(() => {
     if (!selectedSubscription)
@@ -1075,7 +1154,8 @@ export default function CustomerDetailPage() {
                       {section.items.map(({ label, value }) => (
                         <div
                           key={`${section.title}-${label}`}
-                          className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                          className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                          style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                         >
                           <p className="text-xs uppercase text-gray-500">
                             {label}
@@ -1120,57 +1200,14 @@ export default function CustomerDetailPage() {
                 ) : (
                   <div className={`${tw.rounded} overflow-hidden`}>
                     <Table<any>
-                      columns={[
-                        {
-                          id: "name",
-                          label: "KPI Name",
-                          visible: true,
-                          render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                        },
-                        {
-                          id: "category",
-                          label: "Category",
-                          visible: true,
-                          render: (_, row) => <span className="text-sm text-gray-900">{row.category}</span>,
-                        },
-                        {
-                          id: "type",
-                          label: "Type",
-                          visible: true,
-                          render: (_, row) => <span className="text-sm text-gray-900">{revenueMetrics.find((m) => m.id === Number(row.id))?.field_type || "—"}</span>,
-                        },
-                        {
-                          id: "defaultValue",
-                          label: "Default Value",
-                          visible: true,
-                          render: (_, row) => <span className="text-sm text-gray-900">{row.defaultValue ?? 0}</span>,
-                        },
-                        {
-                          id: "action",
-                          label: "Action",
-                          visible: true,
-                          sortable: false,
-                          render: (_, row) => (
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/dashboard/kpis/revenue-metrics/${row.id}`,
-                                  { state: { parentLabel: "Customer Profile" } }
-                                )
-                              }
-                              className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
-                              title="View details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                          ),
-                        },
-                      ]}
+                      columns={kpiColumns}
                       data={paginatedKpis}
                       totalItems={filteredKpis.length}
                       currentPage={kpiPage}
                       pageSize={pageSize}
                       onPageChange={setKpiPage}
+                      onHideColumn={toggleKpiColumn}
+                      onManageColumnsClick={() => setShowKpiColumnPicker(true)}
                       style={{
                         headerBackground: color.surface.tableHeader,
                         headerTextColor: color.surface.tableHeaderText,
@@ -2174,7 +2211,8 @@ export default function CustomerDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {/* Email Preference */}
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <div className="flex items-center gap-3">
                       <Radio
@@ -2196,7 +2234,8 @@ export default function CustomerDetailPage() {
 
                   {/* SMS Preference */}
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <div className="flex items-center gap-3">
                       <Radio
@@ -2218,7 +2257,8 @@ export default function CustomerDetailPage() {
 
                   {/* Push Preference */}
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <div className="flex items-center gap-3">
                       <Radio
@@ -2247,7 +2287,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-md">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       Preferred Language
@@ -2369,7 +2410,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Status
@@ -2380,7 +2422,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Account Created
@@ -2397,7 +2440,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Last Login
@@ -2413,7 +2457,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Primary Device
@@ -2422,7 +2467,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       OS Version
@@ -2431,7 +2477,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       App Version
@@ -2447,7 +2494,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       Email Verified
@@ -2458,7 +2506,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       Phone Verified
@@ -2469,7 +2518,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       KYC Verified
@@ -2520,6 +2570,22 @@ export default function CustomerDetailPage() {
           isLoading={isDeleting}
           confirmText="Delete"
           cancelText="Cancel"
+        />
+
+        {/* KPI Column Picker Modal */}
+        <ColumnPickerModal
+          isOpen={showKpiColumnPicker}
+          columns={kpiColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowKpiColumnPicker(false)}
+          onToggleColumn={toggleKpiColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = kpiColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderKpiColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetKpiDefaults}
         />
       </div>
     </PermissionGate>

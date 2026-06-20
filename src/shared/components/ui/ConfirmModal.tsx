@@ -195,7 +195,11 @@ export default function ConfirmModal({
                 )
               }
               isLoading={isLoading}
-              cancelClassName={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 focus:outline-none focus:ring-0 focus:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              cancelClassName={`px-4 py-2 text-sm font-medium border bg-transparent ${tw.rounded} focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:text-white dark:border-white`}
+              cancelStyle={{
+                borderColor: "var(--c-bordered-button-color)",
+                color: "var(--c-bordered-button-color)",
+              }}
               confirmClassName={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 config.confirmButtonColor || ""
               }`}

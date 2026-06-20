@@ -82,14 +82,14 @@ export const ColumnPickerModal = ({
     <>
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+          <div className="rounded-lg shadow-lg w-full max-w-md p-6" style={{ backgroundColor: 'var(--c-surface-cards)' }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Customize Columns
               </h2>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600"
+                style={{ color: 'var(--c-text-secondary)' }}
               >
                 <X size={20} />
               </button>
@@ -100,7 +100,13 @@ export const ColumnPickerModal = ({
               placeholder="Search columns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 mb-4 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 mb-4 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                borderColor: 'var(--c-border-default)',
+                borderWidth: '1px',
+                backgroundColor: 'var(--c-input-bg)',
+                color: 'var(--c-text-primary)',
+              }}
             />
 
             <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
@@ -111,11 +117,27 @@ export const ColumnPickerModal = ({
                   onDragStart={() => handleDragStart(column.id)}
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(column.id)}
-                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                  className={`flex items-center gap-3 p-3 rounded-lg border transition-colors`}
+                  style={
                     draggedItem === column.id
-                      ? "bg-blue-50 border-blue-200"
-                      : "border-gray-200 hover:bg-gray-50"
-                  }`}
+                      ? {
+                          backgroundColor: 'var(--c-interactive-active)',
+                          borderColor: 'var(--c-border-accent)',
+                        }
+                      : {
+                          borderColor: 'var(--c-border-default)',
+                        }
+                  }
+                  onMouseEnter={(e) => {
+                    if (draggedItem !== column.id) {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (draggedItem !== column.id) {
+                      (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                    }
+                  }}
                 >
                   <GripVertical
                     size={16}
@@ -140,7 +162,18 @@ export const ColumnPickerModal = ({
             <div className="flex gap-2 pt-4">
               <button
                 onClick={handleReset}
-                className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 text-sm rounded-lg transition-colors"
+                style={{
+                  borderColor: 'var(--c-border-default)',
+                  borderWidth: '1px',
+                  color: 'var(--c-text-primary)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = '';
+                }}
               >
                 Reset to Defaults
               </button>

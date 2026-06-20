@@ -41,7 +41,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
@@ -1414,100 +1414,25 @@ export default function ProductCatalogsPage() {
         );
       })()}
 
-      {/* Create Catalog Modal */}
-      <CreateCategoryModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+      {/* Create/Edit Catalog Modal */}
+      <CategoryModal
+        isOpen={showCreateModal || !!editingCatalog}
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingCatalog(null);
+          setEditName("");
+          setEditDescription("");
+        }}
         onCategoryCreated={handleCategoryCreated}
+        onCategoryUpdated={async () => {
+          setEditingCatalog(null);
+          setEditName("");
+          setEditDescription("");
+          await loadCategories(true);
+        }}
+        entityType="product"
+        category={editingCatalog}
       />
-
-      {/* Edit Catalog Modal */}
-      {editingCatalog &&
-        createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div
-              className={`bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 border border-gray-100`}
-            >
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  {t.productCatalogs.editModalTitle}
-                </h2>
-                <button
-                  onClick={() => {
-                    setEditingCatalog(null);
-                    setEditName("");
-                    setEditDescription("");
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {t.common.close}
-                </button>
-              </div>
-
-              <div className="p-6 space-y-8">
-                <Input
-                  type="text"
-                  label={t.productCatalogs.catalogNameLabel}
-                  value={editName}
-                  onChange={(value) => setEditName(String(value))}
-                  required
-                />
-
-                <Textarea
-                  label={t.productCatalogs.description}
-                  value={editDescription}
-                  onChange={(value) => setEditDescription(value)}
-                  rows={3}
-                />
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingCatalog(null);
-                      setEditName("");
-                      setEditDescription("");
-                    }}
-                    className={`px-4 py-2 ${tw.rounded} transition-colors text-sm`}
-                    style={{
-                      background: "transparent",
-                      color: color.primary.action,
-                      border: `1px solid ${color.primary.action}`,
-                    }}
-                  >
-                    {t.productCatalogs.cancel}
-                  </button>
-                  <button
-                    onClick={handleUpdateCatalog}
-                    disabled={!editName.trim() || isUpdating}
-                    className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2`}
-                    style={{ backgroundColor: color.primary.action }}
-                    onMouseEnter={(e) => {
-                      if (!e.currentTarget.disabled) {
-                        (e.target as HTMLButtonElement).style.backgroundColor =
-                          color.primary.action;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.target as HTMLButtonElement).style.backgroundColor =
-                        color.primary.action;
-                    }}
-                  >
-                    {isUpdating ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        {t.productCatalogs.saving}
-                      </>
-                    ) : (
-                      <>{t.productCatalogs.update}</>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
 
       <ProductsModal
         isOpen={isProductsModalOpen}

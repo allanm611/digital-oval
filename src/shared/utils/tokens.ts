@@ -546,8 +546,8 @@ export const buttons = {
 
   bordered: {
     background: "transparent",
-    color: colors.primary.action,
-    border: `1px solid ${colors.primary.action}`,
+    color: "var(--c-bordered-button-color)",
+    border: "1px solid var(--c-bordered-button-color)",
     paddingY: "0.5rem", // py-2
     paddingX: "1rem", // px-4
     borderRadius: "0.375rem", // rounded-md

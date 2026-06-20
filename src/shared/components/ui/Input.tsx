@@ -9,9 +9,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hasError?: boolean;
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  variant?: 'default' | 'medium' | 'compact'; 
+  variant?: 'default' | 'medium' | 'compact';
   type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local'; // default: text
-  label?: string; // Floating label 
+  label?: string; // Floating label
+  labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
   style?: React.CSSProperties;
 }
 
@@ -26,6 +27,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   variant = 'default',
   type = 'text',
   label,
+  labelBgColor,
   style = {},
   ...rest
 }, ref) => {
@@ -36,12 +38,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   if (variant === 'compact') paddingClass = 'px-3 py-1';
 
   // Determine border color based on error state
-  const borderClass = hasError ? 'border-red-500' : 'border-gray-200';
+  const borderClass = hasError ? 'border-red-500' : 'border-gray-300';
 
   // Determine background based on disabled/readOnly state
   const isReadOnly = rest.readOnly;
   let inputStyle: React.CSSProperties = {
-    backgroundColor: 'var(--c-input-bg)',
+    backgroundColor: labelBgColor || 'var(--c-input-bg)',
     color: 'var(--c-text-primary)',
     accentColor: type === 'date' || type === 'time' ? 'var(--c-input-accent)' : undefined,
     ...style
@@ -56,7 +58,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     };
   } else if (isReadOnly) {
     inputStyle = {
-      backgroundColor: 'var(--c-input-bg)',
+      backgroundColor: labelBgColor || 'var(--c-input-bg)',
       color: 'var(--c-text-primary)',
       cursor: 'default',
       ...style
@@ -135,10 +137,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       <label
         className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
-            ? 'top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700'
-            : 'top-1/2 -translate-y-1/2 text-sm text-gray-700'
+            ? 'top-0 -translate-y-1/2 px-1 text-xs'
+            : 'top-1/2 -translate-y-1/2 text-sm'
           }
         `}
+        style={
+          shouldFloatLabel
+            ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+            : { color: 'var(--c-text-secondary)' }
+        }
       >
         {label}
       </label>

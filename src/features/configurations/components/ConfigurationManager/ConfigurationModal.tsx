@@ -272,7 +272,7 @@ export default function ConfigurationModal({
             <button
               type="button"
               onClick={onClose}
-              className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+              className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80 dark:text-white dark:border-white"
               style={getButtonStyles(button.bordered)}
             >
               {t.genericConfig.cancel}

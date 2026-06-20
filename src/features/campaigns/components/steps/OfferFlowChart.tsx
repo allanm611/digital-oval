@@ -395,7 +395,11 @@ function IntervalConfigPanel({
       <div className="flex justify-end space-x-3">
         <button
           onClick={onCancel}
-          className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
+          className={`px-4 py-2 border text-sm font-medium ${tw.rounded} transition-colors dark:text-white dark:border-white`}
+          style={{
+            borderColor: "var(--c-bordered-button-color)",
+            color: "var(--c-bordered-button-color)",
+          }}
         >
           Cancel
         </button>
@@ -525,7 +529,11 @@ function ConditionConfigPanel({
       <div className="flex justify-end space-x-3">
         <button
           onClick={onCancel}
-          className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
+          className={`px-4 py-2 border text-sm font-medium ${tw.rounded} transition-colors dark:text-white dark:border-white`}
+          style={{
+            borderColor: "var(--c-bordered-button-color)",
+            color: "var(--c-bordered-button-color)",
+          }}
         >
           Cancel
         </button>

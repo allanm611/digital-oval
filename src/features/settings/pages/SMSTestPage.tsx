@@ -359,7 +359,7 @@ export default function SMSTestPage() {
               </h2>
 
               {/* Channel Selection */}
-              <div className="mb-4">
+              <div className="mb-6">
                 {isLoadingChannels ? (
                   <div className="flex items-center gap-2 text-gray-500">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -374,6 +374,7 @@ export default function SMSTestPage() {
                     onChange={setChannel}
                     options={channels}
                     placeholder="Select a channel..."
+                    labelBgColor="var(--c-primary-background)"
                   />
                 )}
               </div>
@@ -395,6 +396,7 @@ export default function SMSTestPage() {
                   }
                   value={msisdn}
                   onChange={setMsisdn}
+                  labelBgColor="var(--c-primary-background)"
                 />
               </div>
 
@@ -420,6 +422,7 @@ export default function SMSTestPage() {
                           label: sender.name,
                         }))}
                       placeholder="Select a Sender ID..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -447,6 +450,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select an email route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -474,6 +478,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select a route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -501,6 +506,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select a WhatsApp route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -528,6 +534,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select an app..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -555,6 +562,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select a USSD route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -568,6 +576,7 @@ export default function SMSTestPage() {
                     placeholder="e.g., *123#"
                     value={ussdCode}
                     onChange={setUssdCode}
+                    labelBgColor="var(--c-primary-background)"
                   />
                 </div>
               )}
@@ -589,6 +598,7 @@ export default function SMSTestPage() {
                     }
                     rows={5}
                     hasError={!!messageError}
+                    labelBgColor="var(--c-primary-background)"
                   />
                   {messageError ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">

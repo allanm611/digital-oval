@@ -9,4 +9,5 @@ export interface KPI {
   field_type?: string;
   is_active?: boolean;
   field_value?: string;
+  default_value?: string | number;
 }

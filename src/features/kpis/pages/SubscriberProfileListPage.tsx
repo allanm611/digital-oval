@@ -22,6 +22,7 @@ interface Profile {
   description?: string;
   dataSource: string;
   is_active?: boolean;
+  default_value?: string;
 }
 
 export default function SubscriberProfileListPage() {
@@ -70,6 +71,17 @@ export default function SubscriberProfileListPage() {
       render: (_, row) => (
         <span className={`text-sm font-medium ${tw.textSecondary} text-center block`}>
           {row.is_active ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+    {
+      id: "default_value",
+      label: "Default Value",
+      visible: true,
+      filterConfig: { type: "text" },
+      render: (_, row) => (
+        <span className={`text-sm ${tw.textSecondary}`}>
+          {row.default_value}
         </span>
       ),
     },
@@ -148,6 +160,7 @@ export default function SubscriberProfileListPage() {
         description: profile.description || "",
         dataSource: profile.data_source || "DB",
         is_active: profile.is_active ?? true,
+        default_value: profile.default_value || "-",
       }));
       setProfiles(mappedProfiles);
     } catch (err) {

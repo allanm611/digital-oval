@@ -7,6 +7,8 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { darkTheme, darkSyntaxHighlight } from "../../../shared/utils/codemirrorThemes";
 import { JobType } from "../../jobs/types/job";
 
 const SCHEDULE_TYPE_OPTIONS = [
@@ -101,6 +103,7 @@ export default function KPIForm({
   onCancel,
   onSubmit,
 }: KPIFormProps) {
+  const { isDark } = useTheme();
   const handleInputChange = (fieldName: keyof KPIFormData) => (value: string | number | boolean) => {
     onFormDataChange({ ...formData, [fieldName]: value });
   };
@@ -225,13 +228,14 @@ export default function KPIForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Operators</label>
             <MultiCategorySelector
+              label="Operators"
               value={formData.operators}
               onChange={(operatorIds) => onFormDataChange({ ...formData, operators: operatorIds })}
               data={getOperatorData(formData.field_type)}
               placeholder="Select operators..."
               disabled={saving}
+              hasError={!!errors.operators}
             />
             {errors.operators && <p className="text-red-500 text-xs mt-2">{errors.operators}</p>}
           </div>
@@ -400,11 +404,14 @@ export default function KPIForm({
               <label className="block text-sm font-medium text-gray-700 mb-2">Logic Definition *</label>
               <CodeMirror
                 value={formData.extractionLogic}
-                extensions={[sqlLanguage()]}
+                extensions={[
+                  sqlLanguage(),
+                  ...(isDark ? [darkSyntaxHighlight] : []),
+                ]}
                 onChange={(value) => onFormDataChange({ ...formData, extractionLogic: value })}
                 height="200px"
                 className={`border ${errors.extractionLogic ? "border-red-500" : tw.borderDefault} ${tw.rounded}`}
-                theme="light"
+                theme={isDark ? darkTheme : "light"}
                 style={{
                   borderColor: errors.extractionLogic ? "#ef4444" : "inherit",
                 }}

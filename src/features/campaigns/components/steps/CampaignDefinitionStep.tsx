@@ -22,7 +22,7 @@ import { useTranslation, useLanguage } from "../../../../contexts/LanguageContex
 import { getCurrencySymbol } from "../../../../shared/services/currencyService";
 import { useBackendCampaignTypeData } from "../../../../shared/hooks/useBackendCampaignTypeData";
 import { useBackendConfigurationData } from "../../../../shared/hooks/useBackendConfigurationData";
-import CreateCategoryModal from "../../../../shared/components/CreateCategoryModal";
+import CategoryModal from "../../../../shared/components/CategoryModal";
 import TypeSelector from "../../../../shared/components/TypeSelector";
 import ProgramModal from "../ProgramModal";
 import ConfigurationModal from "../../../configurations/components/ConfigurationManager/ConfigurationModal";
@@ -1066,7 +1066,7 @@ export default function CampaignDefinitionStep({
       />
 
       {/* Create Catalog Modal */}
-      <CreateCategoryModal
+      <CategoryModal
         isOpen={showCreateCatalogModal}
         onClose={() => setShowCreateCatalogModal(false)}
         entityType="campaign"

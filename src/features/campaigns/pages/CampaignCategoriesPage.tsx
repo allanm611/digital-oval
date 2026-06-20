@@ -12,6 +12,7 @@ import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -159,11 +160,11 @@ function CategoryModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 ${tw.rounded} transition-colors`}
+              className={`px-4 py-2 ${tw.rounded} transition-colors dark:text-white dark:border-white`}
               style={{
                 background: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-bordered-button-color)",
+                border: `1px solid var(--c-bordered-button-color)`,
               }}
             >
               Cancel
@@ -1096,8 +1097,14 @@ export default function CampaignCategoriesPage() {
           setEditingCategory(undefined);
         }}
         category={editingCategory}
-        onSave={handleCategorySaved}
-        isSaving={isSaving}
+        onCategoryUpdated={async () => {
+          setEditingCategory(undefined);
+          await loadCategories(true);
+        }}
+        onCategoryCreated={async () => {
+          await loadCategories(true);
+        }}
+        entityType="campaign"
       />
 
       {/* Campaigns Modal */}
@@ -1162,7 +1169,11 @@ export default function CampaignCategoriesPage() {
                   setShowPrimaryCategoryModal(false);
                   setPrimaryCategoryItemId(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium border rounded-md transition-colors dark:text-white dark:border-white"
+                style={{
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 Cancel
               </button>

@@ -9,7 +9,7 @@ import {
   ComboProductData,
 } from "../types/product";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
-import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import CreateProductTypeModal from "./CreateProductTypeModal";
@@ -1772,7 +1772,7 @@ export default function ProductForm({
       </form>
 
       {/* Create Catalog Modal */}
-      <CreateCategoryModal
+      <CategoryModal
         isOpen={showCreateModal}
         onClose={() => onShowCreateModal(false)}
         onCategoryCreated={onCategoryCreated}

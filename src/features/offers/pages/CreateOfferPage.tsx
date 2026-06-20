@@ -74,7 +74,7 @@ import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
 } from "../components/CreativePreviewComponents";
-import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import CreateOfferTypeModal from "../components/CreateOfferTypeModal";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 
@@ -710,7 +710,7 @@ function BasicInfoStep({
       </div>
 
       {/* Create Catalog Modal */}
-      <CreateCategoryModal
+      <CategoryModal
         isOpen={showCreateCatalogModal}
         onClose={() => setShowCreateCatalogModal(false)}
         entityType="offer"

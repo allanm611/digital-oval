@@ -65,6 +65,7 @@ export default function AllKPIsPage() {
           field_type: kpi.field_type || "",
           is_active: kpi.is_active ?? true,
           field_value: kpi.field_value || "",
+          default_value: kpi.default_value || "-",
         };
       });
 
@@ -193,6 +194,15 @@ export default function AllKPIsPage() {
         <span className="text-sm font-medium text-gray-900 text-center block">
           {row.is_active ? "Active" : "Inactive"}
         </span>
+      ),
+    },
+    {
+      id: "default_value",
+      label: "Default Value",
+      visible: true,
+      filterConfig: { type: 'text' },
+      render: (_, row) => (
+        <p className="text-sm text-gray-700">{row.default_value}</p>
       ),
     },
     {

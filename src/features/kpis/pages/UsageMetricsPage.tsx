@@ -91,6 +91,17 @@ export default function UsageMetricsPage() {
       ),
     },
     {
+      id: "default_value",
+      label: "Default Value",
+      visible: true,
+      filterConfig: { type: "text" },
+      render: (_, row) => (
+        <span className="text-sm text-black">
+          {row.default_value || "—"}
+        </span>
+      ),
+    },
+    {
       id: "actions",
       label: "Actions",
       visible: true,

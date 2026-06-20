@@ -18,6 +18,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -216,11 +217,11 @@ function CategoryModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`px-4 py-2 ${tw.rounded} transition-colors`}
+                  className={`px-4 py-2 ${tw.rounded} transition-colors dark:text-white dark:border-white`}
                   style={{
                     background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
+                    color: "var(--c-bordered-button-color)",
+                    border: `1px solid var(--c-bordered-button-color)`,
                   }}
                 >
                   {t.offerCatalogs.cancel}
@@ -1538,7 +1539,10 @@ function OfferCategoriesPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         category={editingCategory}
-        onSave={handleCategorySaved}
+        onCategoryUpdated={async () => {
+          await loadCategories(true);
+        }}
+        entityType="offer"
       />
 
       <OffersModal

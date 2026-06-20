@@ -12,6 +12,7 @@ interface MultiCategorySelectorProps {
   onChange: (categoryIds: number[]) => void;
   placeholder?: string;
   label?: string; // Floating label (already supported but clarifying)
+  labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
   disabled?: boolean;
   hasError?: boolean; // Error state for styling
   allowCreate?: boolean;
@@ -28,6 +29,7 @@ export default function MultiCategorySelector({
   onChange,
   placeholder = "Select Catalogs",
   label,
+  labelBgColor,
   disabled = false,
   hasError = false,
   allowCreate = false,
@@ -297,12 +299,12 @@ export default function MultiCategorySelector({
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={`flex-1 px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0 ${
-            disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-          } ${
             hasError ? "border-red-300" : "border-gray-300"
           }`}
           style={{
             outline: "none",
+            backgroundColor: disabled ? 'var(--c-input-disabled-bg)' : (labelBgColor || 'var(--c-input-bg)'),
+            cursor: disabled ? 'not-allowed' : 'pointer',
             borderTopRightRadius: allowCreate ? "0" : undefined,
             borderBottomRightRadius: allowCreate ? "0" : undefined,
           }}
@@ -391,9 +393,14 @@ export default function MultiCategorySelector({
         <label
           className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium z-10
             ${hasValue
-              ? "top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700"
-              : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              ? "top-0 -translate-y-1/2 px-1 text-xs"
+              : "top-1/2 -translate-y-1/2 text-sm"
             }`}
+          style={
+            hasValue
+              ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+              : { color: 'var(--c-text-secondary)' }
+          }
         >
           {label}
         </label>

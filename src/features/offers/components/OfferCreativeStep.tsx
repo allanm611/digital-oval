@@ -1059,97 +1059,55 @@ export default function OfferCreativeStep({
     return { charCount, segments, isUnicode, remaining: Math.max(0, remaining) };
   };
 
-  // Handle preview button click
-  const handlePreview = async () => {
+  // Handle preview button click - client-side only
+  const handlePreview = () => {
     if (!selectedCreativeData) return;
 
     setIsPreviewOpen(true);
-    setPreviewLoading(true);
     setPreviewError(null);
-    setPreviewResult(null);
 
-    // Build preview variables using default_value from variable definitions
+    // Extract all variable placeholders from the creative content
+    const variableRegex = /\{\{([^}]+)\}\}/g;
     const previewVars: Record<string, string | number | boolean> = {};
-    const storedVars = selectedCreativeData.variables || {};
 
-    // Use default_value from variable definitions if available, otherwise use stored value
-    Object.keys(storedVars).forEach((key) => {
-      const varDef = storedVars[key];
-      // If variable definition has default_value, use it; otherwise use the stored value
-      if (typeof varDef === 'object' && varDef !== null && 'default_value' in varDef) {
-        previewVars[key] = (varDef as any).default_value ?? storedVars[key];
-      } else {
-        previewVars[key] = storedVars[key];
+    // Build preview variables by extracting placeholders from all content
+    const contentToPreview = [
+      selectedCreativeData.title || "",
+      selectedCreativeData.text_body || "",
+      selectedCreativeData.html_body || "",
+    ].join(" ");
+
+    let match;
+    while ((match = variableRegex.exec(contentToPreview)) !== null) {
+      const variablePath = match[1].trim();
+      if (!previewVars[variablePath]) {
+        // Check if variable exists in stored variables and has default_value (from backend)
+        const storedVar = (selectedCreativeData.variables || {})[variablePath];
+        if (storedVar && typeof storedVar === 'object' && 'default_value' in storedVar) {
+          previewVars[variablePath] = (storedVar as any).default_value;
+        } else {
+          // Fallback to 0 until backend adds default_value field
+          previewVars[variablePath] = 0;
+        }
       }
-    });
-
-    // Check if creative has been saved (has numeric ID)
-    // Saved creatives have numeric string IDs (e.g., "123"), unsaved have random strings (e.g., "abc123xyz")
-    const creativeId = selectedCreativeData.id;
-    const numericId =
-      typeof creativeId === "number"
-        ? creativeId
-        : !isNaN(Number(creativeId)) &&
-            Number(creativeId) > 0 &&
-            String(Number(creativeId)) === String(creativeId)
-          ? Number(creativeId)
-          : null;
-
-    if (numericId !== null) {
-      // Creative has been saved - use render endpoint
-      try {
-        const overrides = previewVars; // Use preview variables with default values
-        const response = await offerCreativeService.render(
-          numericId,
-          { variableOverrides: overrides },
-          true, // Skip cache
-        );
-
-        const rendered = response.data;
-        setPreviewResult(rendered);
-      } catch (err) {
-        // Failed to render creative
-        setPreviewError(
-          err instanceof Error ? err.message : "Failed to render creative",
-        );
-
-        // Fallback to client-side preview
-        const clientPreview = {
-          rendered_title: replaceVariables(
-            selectedCreativeData.title || "",
-            previewVars,
-          ),
-          rendered_text_body: replaceVariables(
-            selectedCreativeData.text_body || "",
-            previewVars,
-          ),
-          rendered_html_body: replaceVariables(
-            selectedCreativeData.html_body || "",
-            previewVars,
-          ),
-        };
-        setPreviewResult(clientPreview);
-      }
-    } else {
-      // Creative not saved yet - use client-side preview
-      const clientPreview = {
-        rendered_title: replaceVariables(
-          selectedCreativeData.title || "",
-          previewVars,
-        ),
-        rendered_text_body: replaceVariables(
-          selectedCreativeData.text_body || "",
-          previewVars,
-        ),
-        rendered_html_body: replaceVariables(
-          selectedCreativeData.html_body || "",
-          previewVars,
-        ),
-      };
-      setPreviewResult(clientPreview);
     }
 
-    setPreviewLoading(false);
+    // Client-side preview with variable replacement using default values
+    const clientPreview = {
+      rendered_title: replaceVariables(
+        selectedCreativeData.title || "",
+        previewVars,
+      ),
+      rendered_text_body: replaceVariables(
+        selectedCreativeData.text_body || "",
+        previewVars,
+      ),
+      rendered_html_body: replaceVariables(
+        selectedCreativeData.html_body || "",
+        previewVars,
+      ),
+    };
+    setPreviewResult(clientPreview);
   };
 
   return (

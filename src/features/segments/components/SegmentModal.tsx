@@ -20,7 +20,7 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
-import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import CreateSegmentTypeModal from "./CreateSegmentTypeModal";
 import { useMessageVariableFields } from "../../manual-broadcast/hooks/useMessageVariableFields";
 import { convertConditionsToPayload } from "../utils/conditionPayloadBuilder";
@@ -1637,7 +1637,7 @@ export default function SegmentModal({
             )}
 
             {/* Create Catalog Modal */}
-            <CreateCategoryModal
+            <CategoryModal
               isOpen={showCreateCatalogModal}
               onClose={() => setShowCreateCatalogModal(false)}
               entityType="segment"

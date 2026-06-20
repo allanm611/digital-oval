@@ -2506,6 +2506,7 @@ Satoshi
   --c-bordered-button-color: #000000;
   --c-icon-table-edit: #5F6F77;
   --c-icon-table-delete: #821637;
+  --c-readonly-field-bg: #f9fafb;
 }
 
 .dark,
@@ -2556,11 +2557,12 @@ Satoshi
   --c-input-accent: #ffffff;
   --c-icon-color: #f9fafb;
   --c-text-on-light: #111827;
-  --c-toggle-active: #92A6B0;
+  --c-toggle-active: #22282A;
   --c-toggle-inactive: #d1d5db;
   --c-bordered-button-color: #ffffff;
   --c-icon-table-edit: #D1DCE1;
   --c-icon-table-delete: #FC9C9C;
+  --c-readonly-field-bg: #394247;
 }
 
 /*
@@ -2606,6 +2608,15 @@ Satoshi
 .dark .text-gray-500,
 [color-mode="dark"] .text-gray-500 {
   color: var(--c-text-muted) !important;
+}
+
+.dark .hover\:bg-gray-50:hover,
+[color-mode="dark"] .hover\:bg-gray-50:hover,
+.dark .hover\:bg-blue-50:hover,
+[color-mode="dark"] .hover\:bg-blue-50:hover,
+.dark .hover\:bg-gray-100:hover,
+[color-mode="dark"] .hover\:bg-gray-100:hover {
+  background-color: var(--c-interactive-hover) !important;
 }
 
 .dark .border-gray-100,

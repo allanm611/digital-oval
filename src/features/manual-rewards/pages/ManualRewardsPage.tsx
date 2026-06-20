@@ -353,7 +353,7 @@ export default function ManualRewardsPage() {
       </div>
 
       {/* Table */}
-      <div className={` ${tw.rounded} border overflow-hidden`}>
+      <div className={`${tw.rounded} overflow-hidden`}>
         {filteredRewards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Gift

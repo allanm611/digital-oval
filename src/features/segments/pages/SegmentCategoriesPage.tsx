@@ -17,6 +17,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
@@ -52,211 +53,6 @@ const parseSegmentCatalogTag = (tag?: string): number | null => {
   const parsed = Number(value);
   return Number.isNaN(parsed) ? null : parsed;
 };
-
-interface CategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  category?: SegmentCategory;
-  onSave: (category: { name: string; description?: string }) => Promise<void>;
-}
-
-function CategoryModal({
-  isOpen,
-  onClose,
-  category,
-  onSave,
-}: CategoryModalProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [nameValidationError, setNameValidationError] = useState("");
-  const [isCheckingName, setIsCheckingName] = useState(false);
-
-  useEffect(() => {
-    if (category) {
-      setFormData({
-        name: category.name,
-        description: category.description || "",
-      });
-    } else {
-      setFormData({ name: "", description: "" });
-    }
-    setError("");
-    setNameValidationError("");
-  }, [category, isOpen]);
-
-  // Debounce name validation
-  useEffect(() => {
-    if (!formData.name.trim()) {
-      setNameValidationError("");
-      return;
-    }
-
-    // Don't validate if name hasn't changed (for edit mode)
-    if (category && formData.name === category.name) {
-      setNameValidationError("");
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsCheckingName(true);
-      try {
-        const result = await segmentService.checkSegmentCategoryName(
-          formData.name.trim()
-        );
-        // If exists is true, it means the name is taken
-        if (result.data?.exists) {
-          setNameValidationError("This catalog name is already in use");
-        } else {
-          setNameValidationError("");
-        }
-      } catch (err) {
-        // On error, allow submission (don't block user)
-        setNameValidationError("");
-      } finally {
-        setIsCheckingName(false);
-      }
-    }, 500); // Debounce 500ms
-
-    return () => clearTimeout(timer);
-  }, [formData.name, category]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setError("Catalog name is required");
-      return;
-    }
-
-    if (nameValidationError) {
-      setError(nameValidationError);
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const categoryData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-      };
-
-      await onSave(categoryData);
-      onClose();
-    } catch (err) {
-      console.error("Failed to save category:", err);
-      // Extract actual backend error message and bypass silent mode
-      const errorMessage = err instanceof Error ? err.message : "Please try again later.";
-      showError("Failed to save category", extractBackendError(error, "Failed to save category. Please try again."));
-      setError(""); // Clear error state
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return isOpen
-    ? createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div
-            className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex-1 min-w-0">
-                {category
-                  ? "Edit Segment Catalog"
-                  : "Create New Segment Catalog"}
-              </h2>
-              <button
-                onClick={onClose}
-                className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-              <div className="space-y-8">
-                <div>
-                  <Input
-                    label="Segment Catalog Name"
-                    value={formData.name}
-                    onChange={(value) =>
-                      setFormData((prev) => ({ ...prev, name: value }))
-                    }
-                    hasError={!!nameValidationError}
-                  />
-                  {nameValidationError && (
-                    <p className="mt-1 text-sm text-red-600">{nameValidationError}</p>
-                  )}
-                  {isCheckingName && (
-                    <p className="mt-1 text-sm text-gray-500">Checking availability...</p>
-                  )}
-                </div>
-
-                <Textarea
-                  label="Description"
-                  rows={3}
-                  value={formData.description}
-                  onChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className={`px-4 py-2 ${tw.rounded} transition-colors`}
-                  style={{
-                    background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading || !!nameValidationError || isCheckingName}
-                  className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ backgroundColor: color.primary.action }}
-                  onMouseEnter={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      (e.target as HTMLButtonElement).style.backgroundColor =
-                        color.primary.action;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor =
-                      color.primary.action;
-                  }}
-                >
-                  {isLoading
-                    ? category
-                      ? "Updating..."
-                      : "Creating..."
-                    : isCheckingName
-                      ? "Checking..."
-                      : category
-                        ? "Update"
-                        : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body,
-      )
-    : null;
-}
 
 interface SegmentsModalProps {
   isOpen: boolean;
@@ -1072,7 +868,14 @@ export default function SegmentCategoriesPage() {
           setSelectedCategory(null);
         }}
         category={selectedCategory || undefined}
-        onSave={selectedCategory ? handleUpdateCategory : handleCreateCategory}
+        onCategoryUpdated={async () => {
+          setSelectedCategory(null);
+          await loadCategories(true);
+        }}
+        onCategoryCreated={async () => {
+          await loadCategories(true);
+        }}
+        entityType="segment"
       />
 
       <SegmentsModal

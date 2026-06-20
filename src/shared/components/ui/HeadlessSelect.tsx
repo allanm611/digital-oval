@@ -22,6 +22,7 @@ interface HeadlessSelectProps {
   searchable?: boolean;
   zIndex?: number;
   label?: string;
+  labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
 }
 
 export default function HeadlessSelect({
@@ -35,6 +36,7 @@ export default function HeadlessSelect({
   searchable = false,
   zIndex,
   label,
+  labelBgColor,
 }: HeadlessSelectProps) {
   // Always use popover z-index by default so dropdowns appear above modals
   const effectiveZIndex = zIndex ?? zIndexTokens.popover;
@@ -148,10 +150,10 @@ export default function HeadlessSelect({
           `}
             style={
               error
-                ? { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
                 : disabled
                 ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)' }
-                : { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                : { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
             }
           >
             <div className="flex items-center justify-between w-full">
@@ -302,10 +304,13 @@ export default function HeadlessSelect({
               setIsOpen(!isOpen);
             }}
             className={`w-full px-3 ${label ? 'pt-3 pb-2' : 'py-2'} text-left border ${tw.rounded} text-sm leading-tight transition-all focus:outline-none focus:ring-0 ${
-              disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-            } ${
               error ? "border-red-300" : "border-gray-300"
             }`}
+            style={
+              disabled
+                ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)' }
+                : { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+            }
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex-1 min-w-0">
@@ -440,9 +445,14 @@ export default function HeadlessSelect({
         <label
           className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium z-10
             ${isOpen || hasValue
-              ? "top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700"
-              : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              ? "top-0 -translate-y-1/2 px-1 text-xs"
+              : "top-1/2 -translate-y-1/2 text-sm"
             }`}
+          style={
+            isOpen || hasValue
+              ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+              : { color: 'var(--c-text-secondary)' }
+          }
         >
           {label}
         </label>

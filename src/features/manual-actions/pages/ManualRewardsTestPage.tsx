@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { AlertCircle, CheckCircle, Loader, ChevronDown } from "lucide-react";
-import { Listbox } from "@headlessui/react";
+import { AlertCircle, CheckCircle, Loader } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -365,10 +365,7 @@ export default function ManualRewardsTestPage() {
               </h2>
 
               {/* Communication Channel */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Communication Channel *
-                </label>
+              <div className="mb-6">
                 {isLoadingChannels ? (
                   <div className="flex items-center gap-2 text-gray-500">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -377,51 +374,27 @@ export default function ManualRewardsTestPage() {
                 ) : channels.length === 0 ? (
                   <p className="text-sm text-gray-500">No channels available</p>
                 ) : (
-                  <Listbox value={channel} onChange={setChannel}>
-                    <div className="relative">
-                      <Listbox.Button
-                        className={`relative w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-left bg-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-200`}
-                      >
-                        <span className="flex items-center justify-between">
-                          <span>
-                            {channels.find((c) => c.value === channel)?.label ||
-                              "Select a channel..."}
-                          </span>
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
-                        </span>
-                      </Listbox.Button>
-                      <Listbox.Options
-                        className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg`}
-                      >
-                        {channels.map((ch) => (
-                          <Listbox.Option
-                            key={ch.value}
-                            value={ch.value}
-                            className={({ selected }) =>
-                              `relative px-4 py-2 text-sm cursor-pointer text-gray-700 ${
-                                selected ? "font-semibold" : ""
-                              }`
-                            }
-                          >
-                            {ch.label}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </div>
-                  </Listbox>
+                  <HeadlessSelect
+                    label="Communication Channel *"
+                    value={channel}
+                    onChange={setChannel}
+                    options={channels}
+                    placeholder="Select a channel..."
+                    labelBgColor="var(--c-primary-background)"
+                  />
                 )}
               </div>
 
               {/* Recipient Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {channelCategory === "EMAIL"
-                    ? "Recipient Email *"
-                    : channelCategory === "PUSH"
-                    ? "User ID *"
-                    : "Recipient *"}
-                </label>
+              <div className="mb-6">
                 <Input
+                  label={
+                    channelCategory === "EMAIL"
+                      ? "Recipient Email *"
+                      : channelCategory === "PUSH"
+                      ? "User ID *"
+                      : "Recipient *"
+                  }
                   placeholder={
                     channel === "EMAIL"
                       ? "e.g., user@example.com"
@@ -429,15 +402,13 @@ export default function ManualRewardsTestPage() {
                   }
                   value={recipient}
                   onChange={setRecipient}
+                  labelBgColor="var(--c-primary-background)"
                 />
               </div>
 
               {/* Sender ID Selection - SMS/USSD only */}
               {(channelCategory === "SMS" || channelCategory === "USSD") && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sender ID
-                  </label>
+                <div className="mb-6">
                   {isLoadingSenderIds ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -446,55 +417,26 @@ export default function ManualRewardsTestPage() {
                   ) : senderIds.length === 0 ? (
                     <p className="text-sm text-gray-500">No Sender IDs available</p>
                   ) : (
-                    <Listbox
-                      value={selectedSenderId}
+                    <HeadlessSelect
+                      label="Sender ID"
+                      value={selectedSenderId || ""}
                       onChange={setSelectedSenderId}
-                    >
-                      <div className="relative">
-                        <Listbox.Button
-                          className={`relative w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-left bg-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-200`}
-                        >
-                          <span className="flex items-center justify-between">
-                            <span>
-                              {selectedSenderId
-                                ? senderIds.find((s) => s.id === selectedSenderId)?.name ||
-                                  "Select a Sender ID..."
-                                : "Select a Sender ID..."}
-                            </span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options
-                          className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg`}
-                        >
-                          {senderIds
-                            .filter((sender) => sender.is_active)
-                            .map((sender) => (
-                              <Listbox.Option
-                                key={sender.id}
-                                value={sender.id}
-                                className={({ selected }) =>
-                                  `relative px-4 py-2 text-sm cursor-pointer text-gray-700 ${
-                                    selected ? "font-semibold" : ""
-                                  }`
-                                }
-                              >
-                                {sender.name}
-                              </Listbox.Option>
-                            ))}
-                        </Listbox.Options>
-                      </div>
-                    </Listbox>
+                      options={senderIds
+                        .filter((sender) => sender.is_active)
+                        .map((sender) => ({
+                          value: sender.id,
+                          label: sender.name,
+                        }))}
+                      placeholder="Select a Sender ID..."
+                      labelBgColor="var(--c-primary-background)"
+                    />
                   )}
                 </div>
               )}
 
               {/* Email Route Selection - EMAIL only */}
               {channelCategory === "EMAIL" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Route *
-                  </label>
+                <div className="mb-6">
                   {isLoadingEmailRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -503,55 +445,26 @@ export default function ManualRewardsTestPage() {
                   ) : emailRoutes.length === 0 ? (
                     <p className="text-sm text-gray-500">No email routes available</p>
                   ) : (
-                    <Listbox
-                      value={selectedEmailRoute}
+                    <HeadlessSelect
+                      label="Email Route *"
+                      value={selectedEmailRoute || ""}
                       onChange={setSelectedEmailRoute}
-                    >
-                      <div className="relative">
-                        <Listbox.Button
-                          className={`relative w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-left bg-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-200`}
-                        >
-                          <span className="flex items-center justify-between">
-                            <span>
-                              {selectedEmailRoute
-                                ? emailRoutes.find((r) => r.id === selectedEmailRoute)?.name ||
-                                  "Select an email route..."
-                                : "Select an email route..."}
-                            </span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options
-                          className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg`}
-                        >
-                          {emailRoutes
-                            .filter((route) => route.is_active)
-                            .map((route) => (
-                              <Listbox.Option
-                                key={route.id}
-                                value={route.id}
-                                className={({ selected }) =>
-                                  `relative px-4 py-2 text-sm cursor-pointer text-gray-700 ${
-                                    selected ? "font-semibold" : ""
-                                  }`
-                                }
-                              >
-                                {route.name}
-                              </Listbox.Option>
-                            ))}
-                        </Listbox.Options>
-                      </div>
-                    </Listbox>
+                      options={emailRoutes
+                        .filter((route) => route.is_active)
+                        .map((route) => ({
+                          value: route.id,
+                          label: route.name,
+                        }))}
+                      placeholder="Select an email route..."
+                      labelBgColor="var(--c-primary-background)"
+                    />
                   )}
                 </div>
               )}
 
               {/* WhatsApp Route Selection - WHATSAPP only */}
               {channelCategory === "WHATSAPP" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    WhatsApp Route *
-                  </label>
+                <div className="mb-6">
                   {isLoadingWhatsappRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -560,55 +473,26 @@ export default function ManualRewardsTestPage() {
                   ) : whatsappRoutes.length === 0 ? (
                     <p className="text-sm text-gray-500">No WhatsApp routes available</p>
                   ) : (
-                    <Listbox
-                      value={selectedWhatsappRoute}
+                    <HeadlessSelect
+                      label="WhatsApp Route *"
+                      value={selectedWhatsappRoute || ""}
                       onChange={setSelectedWhatsappRoute}
-                    >
-                      <div className="relative">
-                        <Listbox.Button
-                          className={`relative w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-left bg-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-200`}
-                        >
-                          <span className="flex items-center justify-between">
-                            <span>
-                              {selectedWhatsappRoute
-                                ? whatsappRoutes.find((r) => r.id === selectedWhatsappRoute)?.name ||
-                                  "Select a WhatsApp route..."
-                                : "Select a WhatsApp route..."}
-                            </span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options
-                          className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg`}
-                        >
-                          {whatsappRoutes
-                            .filter((route) => route.is_active)
-                            .map((route) => (
-                              <Listbox.Option
-                                key={route.id}
-                                value={route.id}
-                                className={({ selected }) =>
-                                  `relative px-4 py-2 text-sm cursor-pointer text-gray-700 ${
-                                    selected ? "font-semibold" : ""
-                                  }`
-                                }
-                              >
-                                {route.name}
-                              </Listbox.Option>
-                            ))}
-                        </Listbox.Options>
-                      </div>
-                    </Listbox>
+                      options={whatsappRoutes
+                        .filter((route) => route.is_active)
+                        .map((route) => ({
+                          value: route.id,
+                          label: route.name,
+                        }))}
+                      placeholder="Select a WhatsApp route..."
+                      labelBgColor="var(--c-primary-background)"
+                    />
                   )}
                 </div>
               )}
 
               {/* SMS Route Selection - SMS only */}
               {channelCategory === "SMS" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SMS Route
-                  </label>
+                <div className="mb-6">
                   {isLoadingRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -617,55 +501,26 @@ export default function ManualRewardsTestPage() {
                   ) : smsRoutes.length === 0 ? (
                     <p className="text-sm text-gray-500">No routes available</p>
                   ) : (
-                    <Listbox
-                      value={selectedRoute}
+                    <HeadlessSelect
+                      label="SMS Route"
+                      value={selectedRoute || ""}
                       onChange={setSelectedRoute}
-                    >
-                      <div className="relative">
-                        <Listbox.Button
-                          className={`relative w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-left bg-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-200`}
-                        >
-                          <span className="flex items-center justify-between">
-                            <span>
-                              {selectedRoute
-                                ? smsRoutes.find((r) => r.id === selectedRoute)?.name ||
-                                  "Select a route..."
-                                : "Select a route..."}
-                            </span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options
-                          className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg`}
-                        >
-                          {smsRoutes
-                            .filter((route) => route.is_active)
-                            .map((route) => (
-                              <Listbox.Option
-                                key={route.id}
-                                value={route.id}
-                                className={({ selected }) =>
-                                  `relative px-4 py-2 text-sm cursor-pointer text-gray-700 ${
-                                    selected ? "font-semibold" : ""
-                                  }`
-                                }
-                              >
-                                {route.name}
-                              </Listbox.Option>
-                            ))}
-                        </Listbox.Options>
-                      </div>
-                    </Listbox>
+                      options={smsRoutes
+                        .filter((route) => route.is_active)
+                        .map((route) => ({
+                          value: route.id,
+                          label: route.name,
+                        }))}
+                      placeholder="Select a route..."
+                      labelBgColor="var(--c-primary-background)"
+                    />
                   )}
                 </div>
               )}
 
               {/* Push Notification App Selection - PUSH only */}
               {channelCategory === "PUSH" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    App Selection *
-                  </label>
+                <div className="mb-6">
                   {isLoadingPushRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -674,55 +529,26 @@ export default function ManualRewardsTestPage() {
                   ) : pushRoutes.length === 0 ? (
                     <p className="text-sm text-gray-500">No apps available</p>
                   ) : (
-                    <Listbox
-                      value={selectedPushRoute}
+                    <HeadlessSelect
+                      label="App Selection *"
+                      value={selectedPushRoute || ""}
                       onChange={setSelectedPushRoute}
-                    >
-                      <div className="relative">
-                        <Listbox.Button
-                          className={`relative w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-left bg-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-200`}
-                        >
-                          <span className="flex items-center justify-between">
-                            <span>
-                              {selectedPushRoute
-                                ? pushRoutes.find((r) => r.id === selectedPushRoute)?.name ||
-                                  "Select an app..."
-                                : "Select an app..."}
-                            </span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options
-                          className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg`}
-                        >
-                          {pushRoutes
-                            .filter((route) => route.is_active)
-                            .map((route) => (
-                              <Listbox.Option
-                                key={route.id}
-                                value={route.id}
-                                className={({ selected }) =>
-                                  `relative px-4 py-2 text-sm cursor-pointer text-gray-700 ${
-                                    selected ? "font-semibold" : ""
-                                  }`
-                                }
-                              >
-                                {route.name}
-                              </Listbox.Option>
-                            ))}
-                        </Listbox.Options>
-                      </div>
-                    </Listbox>
+                      options={pushRoutes
+                        .filter((route) => route.is_active)
+                        .map((route) => ({
+                          value: route.id,
+                          label: route.name,
+                        }))}
+                      placeholder="Select an app..."
+                      labelBgColor="var(--c-primary-background)"
+                    />
                   )}
                 </div>
               )}
 
               {/* USSD Route Selection - USSD only */}
               {channelCategory === "USSD" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    USSD Route *
-                  </label>
+                <div className="mb-6">
                   {isLoadingUssdRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -731,59 +557,32 @@ export default function ManualRewardsTestPage() {
                   ) : ussdRoutes.length === 0 ? (
                     <p className="text-sm text-gray-500">No USSD routes available</p>
                   ) : (
-                    <Listbox
-                      value={selectedUssdRoute}
+                    <HeadlessSelect
+                      label="USSD Route *"
+                      value={selectedUssdRoute || ""}
                       onChange={setSelectedUssdRoute}
-                    >
-                      <div className="relative">
-                        <Listbox.Button
-                          className={`relative w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-left bg-white text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-all duration-200`}
-                        >
-                          <span className="flex items-center justify-between">
-                            <span>
-                              {selectedUssdRoute
-                                ? ussdRoutes.find((r) => r.id === selectedUssdRoute)?.name ||
-                                  "Select a USSD route..."
-                                : "Select a USSD route..."}
-                            </span>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          </span>
-                        </Listbox.Button>
-                        <Listbox.Options
-                          className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg`}
-                        >
-                          {ussdRoutes
-                            .filter((route) => route.is_active)
-                            .map((route) => (
-                              <Listbox.Option
-                                key={route.id}
-                                value={route.id}
-                                className={({ selected }) =>
-                                  `relative px-4 py-2 text-sm cursor-pointer text-gray-700 ${
-                                    selected ? "font-semibold" : ""
-                                  }`
-                                }
-                              >
-                                {route.name}
-                              </Listbox.Option>
-                            ))}
-                        </Listbox.Options>
-                      </div>
-                    </Listbox>
+                      options={ussdRoutes
+                        .filter((route) => route.is_active)
+                        .map((route) => ({
+                          value: route.id,
+                          label: route.name,
+                        }))}
+                      placeholder="Select a USSD route..."
+                      labelBgColor="var(--c-primary-background)"
+                    />
                   )}
                 </div>
               )}
 
               {/* USSD Code Input - USSD only */}
               {channelCategory === "USSD" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    USSD Code *
-                  </label>
+                <div className="mb-6">
                   <Input
+                    label="USSD Code *"
                     placeholder="e.g., *123#"
                     value={ussdCode}
                     onChange={setUssdCode}
+                    labelBgColor="var(--c-primary-background)"
                   />
                 </div>
               )}
@@ -805,6 +604,7 @@ export default function ManualRewardsTestPage() {
                     }
                     rows={5}
                     hasError={!!descriptionError}
+                    labelBgColor="var(--c-primary-background)"
                   />
                   {descriptionError ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">

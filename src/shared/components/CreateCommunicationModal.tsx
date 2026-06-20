@@ -1387,11 +1387,11 @@ export default function CreateCommunicationModal({
           <button
             onClick={handleClose}
             disabled={sending}
-            className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50`}
+            className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 dark:text-white dark:border-white`}
             style={{
               background: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
+              color: "var(--c-bordered-button-color)",
+              border: `1px solid var(--c-bordered-button-color)`,
             }}
           >
             Cancel
