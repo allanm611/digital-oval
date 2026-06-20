@@ -3489,6 +3489,21 @@ input[type="time"] {
   }
 }
 
+/* Loader/Spinner Colors - Dark Mode Override */
+.dark .border-gray-600,
+[color-mode="dark"] .border-gray-600,
+.dark .border-gray-900,
+[color-mode="dark"] .border-gray-900,
+.dark .border-gray-400,
+[color-mode="dark"] .border-gray-400 {
+  border-color: #ffffff !important;
+}
+
+.dark .animate-spin,
+[color-mode="dark"] .animate-spin {
+  color: #ffffff !important;
+}
+
 /* Global Checkbox and Radio Styling - Accent Color Indicator */
 input[type="checkbox"],
 input[type="radio"] {

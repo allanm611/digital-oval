@@ -116,22 +116,21 @@ export default function ConfirmModal({
         <div
           className={`relative w-full max-w-md transform overflow-hidden ${
             tw.rounded
-          } bg-white shadow-2xl transition-all duration-300 ${
+          } shadow-2xl transition-all duration-300 ${
             isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
           }`}
+          style={{ backgroundColor: "var(--c-surface-background)" }}
         >
           {/* Header */}
           <div
-            className={`px-6 pt-6 pb-4 ${config.bgColor || "bg-white"} ${
-              config.borderColor
-            } border-b`}
+            className={`px-6 pt-6 pb-4 border-b`}
+            style={{ backgroundColor: "var(--c-surface-background)", borderColor: "var(--c-border-default)" }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div
-                  className={`p-2 rounded-full ${
-                    config.bgColor || "bg-transparent"
-                  }`}
+                  className="p-2 rounded-full"
+                  style={{ backgroundColor: "transparent" }}
                 >
                   <IconComponent
                     className={`w-6 h-6 ${config.iconColor || ""}`}
@@ -142,7 +141,7 @@ export default function ConfirmModal({
                     }
                   />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+                <h3 className="text-lg font-semibold" style={{ color: "var(--c-text-primary)" }}>{title}</h3>
               </div>
               <button
                 onClick={onClose}
@@ -156,7 +155,7 @@ export default function ConfirmModal({
 
           {/* Content */}
           <div className="px-6 py-4">
-            <p className="text-gray-700 leading-relaxed">{message}</p>
+            <p className="leading-relaxed" style={{ color: "var(--c-text-primary)" }}>{message}</p>
           </div>
 
           {/* Actions */}

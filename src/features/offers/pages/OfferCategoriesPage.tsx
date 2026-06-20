@@ -105,150 +105,6 @@ interface BasicOffer {
   [key: string]: unknown;
 }
 
-interface CategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  category?: OfferCategoryType;
-  onSave: (category: { name: string; description?: string }) => Promise<void>;
-}
-
-function CategoryModal({
-  isOpen,
-  onClose,
-  category,
-  onSave,
-}: CategoryModalProps) {
-  const { t } = useLanguage();
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [formError, setFormError] = useState("");
-
-  useEffect(() => {
-    if (category) {
-      setFormData({
-        name: category.name,
-        description: category.description || "",
-      });
-    } else {
-      setFormData({ name: "", description: "" });
-    }
-    setFormError("");
-  }, [category, isOpen]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setFormError(t.offerCatalogs.catalogNameRequired);
-      return;
-    }
-
-    setIsLoading(true);
-    setFormError("");
-
-    try {
-      const categoryData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-      };
-
-      await onSave(categoryData); // Wait for save to complete
-      onClose(); // Only close after save succeeds
-    } catch (err) {
-      console.error("Failed to save category:", err);
-      setFormError(t.offerCatalogs.saveFailed);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return isOpen
-    ? createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div
-            className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex-1 min-w-0">
-                {category
-                  ? t.offerCatalogs.editModalTitle
-                  : t.offerCatalogs.createModalTitle}
-              </h2>
-              <button
-                onClick={onClose}
-                className={`p-2 icon-edit icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors flex-shrink-0`}
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-              <div className="space-y-8">
-                <Input
-                  type="text"
-                  label={t.offerCatalogs.catalogNameLabel}
-                  value={formData.name}
-                  onChange={(value) =>
-                    setFormData((prev) => ({ ...prev, name: String(value) }))
-                  }
-                  required
-                />
-
-                <Textarea
-                  label={t.offerCatalogs.description}
-                  value={formData.description}
-                  onChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: value,
-                    }))
-                  }
-                  rows={3}
-                />
-              </div>
-
-              {formError && (
-                <p className="text-sm text-red-600 mt-4">{formError}</p>
-              )}
-
-              <div className="flex items-center justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className={`px-4 py-2 ${tw.rounded} transition-colors dark:text-white dark:border-white`}
-                  style={{
-                    background: "transparent",
-                    color: "var(--c-bordered-button-color)",
-                    border: `1px solid var(--c-bordered-button-color)`,
-                  }}
-                >
-                  {t.offerCatalogs.cancel}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  {isLoading
-                    ? category
-                      ? "Updating..."
-                      : "Creating..."
-                    : category
-                      ? t.offerCatalogs.update
-                      : t.offerCatalogs.create}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body,
-      )
-    : null;
-}
-
 interface OffersModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1539,6 +1395,9 @@ function OfferCategoriesPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         category={editingCategory}
+        onCategoryCreated={async () => {
+          await loadCategories(true);
+        }}
         onCategoryUpdated={async () => {
           await loadCategories(true);
         }}

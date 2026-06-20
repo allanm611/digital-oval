@@ -16,7 +16,8 @@ export default function Footer({ className = "" }: FooterProps) {
       style={{
         backgroundColor: color.gradients.sidebar.bottom,
         zIndex: 100,
-        position: "relative",
+        position: "sticky",
+        bottom: 0,
       }}
     >
       <div className="px-5 lg:px-8">
