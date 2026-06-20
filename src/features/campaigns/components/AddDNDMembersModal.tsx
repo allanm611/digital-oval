@@ -266,7 +266,7 @@ export default function AddDNDMembersModal({
           </div>
 
           {/* Form Fields */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Existing Customer Mode */}
             {formData.mode === "existing_customer" && (
               <>

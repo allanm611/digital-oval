@@ -15,7 +15,7 @@ interface SelectConnectionProfileModalProps {
   onClose: () => void;
   onSelect: (profile: ConnectionProfileType) => void;
   dataConnectorType: DataConnectorType;
-  currentProfileId?: number;
+  attachedProfileIds?: number[];
 }
 
 export default function SelectConnectionProfileModal({
@@ -23,14 +23,13 @@ export default function SelectConnectionProfileModal({
   onClose,
   onSelect,
   dataConnectorType,
-  currentProfileId,
+  attachedProfileIds = [],
 }: SelectConnectionProfileModalProps) {
   const { error: showError } = useToast();
   const [profiles, setProfiles] = useState<ConnectionProfileType[]>([]);
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [hoveredProfileId, setHoveredProfileId] = useState<number | null>(null);
   const [selectedProfiles, setSelectedProfiles] = useState<ConnectionProfileType[]>([]);
 
   useEffect(() => {
@@ -38,6 +37,13 @@ export default function SelectConnectionProfileModal({
       loadProfiles();
     }
   }, [isOpen, dataConnectorType]);
+
+  useEffect(() => {
+    if (isOpen && profiles.length > 0) {
+      const attachedProfiles = profiles.filter(p => attachedProfileIds?.includes(p.id));
+      setSelectedProfiles(attachedProfiles);
+    }
+  }, [isOpen, profiles, attachedProfileIds]);
 
   const loadProfiles = async () => {
     try {
@@ -70,7 +76,8 @@ export default function SelectConnectionProfileModal({
       onClick={onClose}
     >
       <div
-        className={`${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col bg-white`}
+        className={`${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        style={{ backgroundColor: "var(--c-surface-background)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -188,8 +195,7 @@ export default function SelectConnectionProfileModal({
                   style={{ borderColor: color.border.muted }}
                 >
                   {filteredProfiles.map((profile) => {
-                    const isSelected = currentProfileId === profile.id;
-                    const isHovered = hoveredProfileId === profile.id;
+                    const isSelected = selectedProfiles.some(p => p && p.id === profile.id);
 
                     return (
                       <tr
@@ -197,22 +203,18 @@ export default function SelectConnectionProfileModal({
                         onClick={() => {
                           if (!profile) return;
 
-                          const isSelected = selectedProfiles.some(p => p && p.id === profile.id);
-                          if (isSelected) {
+                          const isCurrentlySelected = selectedProfiles.some(p => p && p.id === profile.id);
+                          if (isCurrentlySelected) {
                             setSelectedProfiles(selectedProfiles.filter(p => p && p.id !== profile.id));
                           } else {
                             setSelectedProfiles([...selectedProfiles, profile]);
                           }
                         }}
-                        onMouseEnter={() => setHoveredProfileId(profile.id)}
-                        onMouseLeave={() => setHoveredProfileId(null)}
-                        className="cursor-pointer transition-colors"
+                        className="cursor-pointer"
                         style={{
-                          backgroundColor: selectedProfiles.some(p => p.id === profile.id)
+                          backgroundColor: isSelected
                             ? `${color.primary.accent}15`
-                            : isHovered
-                              ? color.interactive.hover
-                              : "white",
+                            : "var(--c-surface-background)",
                         }}
                       >
                         <td className="px-4 py-4">
@@ -220,12 +222,12 @@ export default function SelectConnectionProfileModal({
                             {profile && (
                               <Checkbox
                                 id={`profile-${profile.id}`}
-                                checked={selectedProfiles.some(p => p && p.id === profile.id)}
+                                checked={isSelected}
                                 onChange={() => {
                                   if (!profile) return;
 
-                                  const isSelected = selectedProfiles.some(p => p && p.id === profile.id);
-                                  if (isSelected) {
+                                  const isCurrentlySelected = selectedProfiles.some(p => p && p.id === profile.id);
+                                  if (isCurrentlySelected) {
                                     setSelectedProfiles(selectedProfiles.filter(p => p && p.id !== profile.id));
                                   } else {
                                     setSelectedProfiles([...selectedProfiles, profile]);

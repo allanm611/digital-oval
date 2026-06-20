@@ -244,7 +244,7 @@ export default function NotificationTypeModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Name */}
           <div className="space-y-1.5">
             <Input
@@ -317,23 +317,21 @@ export default function NotificationTypeModal({
           </div>
 
           {/* Message Template */}
-          <div className="relative">
-            <div className="flex items-center gap-1 mb-1">
-              <label className={`text-sm font-medium ${tw.textPrimary}`}>Message Template *</label>
-              <div className="group relative cursor-help">
-                <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
-                  Use placeholders: {"{record_id}"}, {"{actor_id}"}, {"{table_name}"}, {"{action_type}"}
-                </div>
-              </div>
-            </div>
+          <div className="space-y-1.5 relative">
             <Textarea
+              label="Message Template *"
               value={formData.message_template}
               onChange={(value) => setFormData({ ...formData, message_template: value })}
               placeholder="e.g., {actor_id} created {table_name} {record_id}"
               rows={3}
               required
             />
+            <div className="group absolute top-2 right-3 cursor-pointer" title="">
+              <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
+                Use placeholders: {"{record_id}"}, {"{actor_id}"}, {"{table_name}"}, {"{action_type}"}
+              </div>
+            </div>
           </div>
 
           {/* Actions */}

@@ -58,8 +58,8 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           resize-none
-          ${bgClass}
           ${className}`}
+        style={bgStyle}
         {...rest}
       />
     );

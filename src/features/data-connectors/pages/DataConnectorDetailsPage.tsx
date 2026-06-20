@@ -76,11 +76,11 @@ export default function DataConnectorDetailsPage() {
       // Fetch all connection profiles attached to this connector
       setLoadingProfiles(true);
       try {
-        if (!connector) {
+        if (!data) {
           setConnectionProfiles([]);
         } else {
           const profiles = await connectionProfileService.getProfilesByDataConnector(
-            connector.id,
+            data.id,
             true
           );
           if (!profiles) {
@@ -96,7 +96,7 @@ export default function DataConnectorDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to load data connector:", err);
-      showError("Failed to load data connector", extractBackendError(error, "Failed to load data connector. Please try again."));
+      showError("Failed to load data connector", extractBackendError(err, "Failed to load data connector. Please try again."));
     } finally {
       setLoading(false);
       setLoadingProfiles(false);
@@ -171,7 +171,7 @@ export default function DataConnectorDetailsPage() {
       success("Deleted", "Connector removed");
       navigate("/dashboard/data-connectors");
     } catch (err: any) {
-      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
+      showError("Delete failed", extractBackendError(err, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -751,7 +751,7 @@ export default function DataConnectorDetailsPage() {
         onClose={() => setShowSelectProfileModal(false)}
         onSelect={handleSelectConnectionProfile}
         dataConnectorType={connector.type}
-        currentProfileId={connectionProfiles[0]?.id}
+        attachedProfileIds={connectionProfiles.map(p => p.id)}
       />
     </div>
   );

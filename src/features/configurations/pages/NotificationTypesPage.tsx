@@ -156,17 +156,7 @@ export default function NotificationTypesPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleOpenEditModal(rule)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
-            style={{
-              color: color.primary.action,
-              backgroundColor: "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
+            className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -174,7 +164,7 @@ export default function NotificationTypesPage() {
           <button
             onClick={() => handleDeleteClick(rule)}
             disabled={isDeleting && deleteConfirm.id === rule.id}
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-2 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             {isDeleting && deleteConfirm.id === rule.id ? (
