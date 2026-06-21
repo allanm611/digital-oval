@@ -799,7 +799,11 @@ export default function SegmentConditionsBuilder({
           {conditions.map((group, groupIndex) => (
         <div key={group.id}>
           <div
-            className={`border border-gray-200 ${tw.rounded} p-4 bg-gray-50`}
+            className={`border ${tw.rounded} p-4`}
+            style={{
+              borderColor: "var(--c-border-default)",
+              backgroundColor: "var(--c-surface-background)",
+            }}
           >
             {/* Group Header */}
             <div className="flex items-center justify-between mb-4">
@@ -836,7 +840,7 @@ export default function SegmentConditionsBuilder({
               <button
                 type="button"
                 onClick={() => removeConditionGroup(group.id)}
-                className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors"
+                className="p-1 rounded transition-colors icon-delete"
                 title="Remove Group"
               >
                 <Trash2 className="w-4 h-4" />
@@ -851,7 +855,7 @@ export default function SegmentConditionsBuilder({
                     key={condition.id}
                     className={`p-3 ${tw.rounded} transition-colors`}
                     style={{
-                      backgroundColor: color.surface.background,
+                      backgroundColor: "var(--c-surface-background)",
                     }}
                   >
                     {/* Line 1: Type + Category + Field */}
@@ -1100,7 +1104,7 @@ export default function SegmentConditionsBuilder({
                           onClick={() =>
                             removeCondition(group.id, condition.id)
                           }
-                          className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors flex-shrink-0 ml-auto"
+                          className="p-1 rounded transition-colors flex-shrink-0 ml-auto icon-delete"
                           title="Remove Condition"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1174,7 +1178,7 @@ export default function SegmentConditionsBuilder({
           className={`${tw.rounded} p-4 border flex flex-col`}
           style={{
             borderColor: sqlPreviewError ? "#ef4444" : tw.borderDefault,
-            backgroundColor: "#ffffff",
+            backgroundColor: "var(--c-surface-background)",
             height: "calc(100vh - 350px)",
           }}
         >

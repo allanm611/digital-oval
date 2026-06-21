@@ -831,11 +831,11 @@ export default function CreateCustomerModal({
         </div>
 
         {/* Content */}
-        <form className="p-6 space-y-4" ref={formContainerRef}>
+        <form className="p-6 space-y-6" ref={formContainerRef}>
           {/* Single Customer Tab */}
           {activeTab === "single" && (
             <>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <Input
                     label="Phone Number (MSISDN)"
@@ -1140,7 +1140,7 @@ export default function CreateCustomerModal({
 
               {/* Real-time Validation Feedback */}
               {bulkText.trim() && (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-5">
                   {/* Status Text */}
                   <p className="text-sm font-medium text-gray-700">
                     <span className="text-green-600">
@@ -1376,7 +1376,7 @@ export default function CreateCustomerModal({
                   <div>
                     <h3 className={`font-medium mb-2 ${tw.textPrimary}`}>Map Your Columns</h3>
                     <p className={`text-sm ${tw.textSecondary} mb-3`}>Select which column contains each required field:</p>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-5">
                       {[
                         { field: "firstName", label: "First Name *" },
                         { field: "lastName", label: "Last Name *" },
@@ -1521,7 +1521,7 @@ export default function CreateCustomerModal({
 
               {/* Import Preview */}
               {importPreview && mappingConfirmed && (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-5">
                   {/* Status Text */}
                   <p className="text-sm font-medium text-gray-700">
                     <span className="text-green-600">

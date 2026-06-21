@@ -169,14 +169,14 @@ export default function ConfigurationManagerAPI({
   };
 
   const handleToggleActive = async (item: ConfigurationItem) => {
-    const newActive = !(item.isActive ?? true);
+    const newActive = !((item.is_active ?? item.isActive) ?? true);
     setTogglingItemId(item.id as number);
     const previousData = displayData;
 
-    // Optimistic update: toggle active state immediately
+    // Optimistic update: toggle active state immediately (update both is_active and isActive)
     setDisplayData((prev) =>
       prev.map((i) =>
-        i.id === item.id ? { ...i, isActive: newActive } : i
+        i.id === item.id ? { ...i, isActive: newActive, is_active: newActive } : i
       )
     );
 
@@ -265,12 +265,12 @@ export default function ConfigurationManagerAPI({
           <div className="flex items-center justify-center space-x-2">
             {config.enableActivateDeactivate && item && (
               <ActivateDeactivateButton
-                isActive={item.isActive ?? true}
+                isActive={(item.is_active ?? item.isActive) ?? true}
                 onToggle={() => handleToggleActive(item)}
                 disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
                 isLoading={togglingItemId === item.id}
                 title={
-                  item.isActive
+                  (item.is_active ?? item.isActive)
                     ? `Deactivate ${item.name}`
                     : `Activate ${item.name}`
                 }
@@ -445,8 +445,8 @@ export default function ConfigurationManagerAPI({
                   id: item.id,
                   name: item.name,
                   description: item.description || "",
-                  status: item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive',
-                  isActive: item.isActive ?? true,
+                  status: (item.is_active ?? item.isActive ?? true) ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive',
+                  isActive: item.is_active ?? item.isActive ?? true,
                   _full: item,
                 }))}
                 onHideColumn={toggleColumn}

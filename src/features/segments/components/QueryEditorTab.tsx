@@ -3,6 +3,8 @@ import { Copy, ChevronDown, ChevronRight } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
 import { sql as sqlLanguage } from "@codemirror/lang-sql";
 import { color, tw } from "../../../shared/utils/utils";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { darkTheme, darkSyntaxHighlight } from "../../../shared/utils/codemirrorThemes";
 
 interface QueryEditorTabProps {
   sql: string;
@@ -55,6 +57,7 @@ interface ColumnButtonProps {
 }
 
 function ColumnButton({ column, onCopy }: ColumnButtonProps) {
+  const { isDark } = useTheme();
   return (
     <button
       type="button"
@@ -64,7 +67,7 @@ function ColumnButton({ column, onCopy }: ColumnButtonProps) {
     >
       <span
         className="truncate"
-        style={{ color: "#4b5563" }}
+        style={{ color: isDark ? "#ffffff" : "#4b5563" }}
       >
         {column}
       </span>
@@ -85,6 +88,7 @@ export default function QueryEditorTab({
   previewError,
   // onPreview,
 }: QueryEditorTabProps) {
+  const { isDark } = useTheme();
   const [expandedTables, setExpandedTables] = useState<string[]>([
     "subscribers",
   ]);
@@ -102,12 +106,12 @@ export default function QueryEditorTab({
   };
 
   return (
-    <div className="flex gap-6 h-full min-h-0 overflow-hidden">
+    <div className="flex gap-6 h-full min-h-0 overflow-hidden" style={{ backgroundColor: "var(--c-surface-background)" }}>
       {/* Left Panel - Schema Browser (DBeaver style) */}
       <div
         className={`w-72 flex-shrink-0 overflow-y-scroll h-full`}
         style={{
-          backgroundColor: "#f9fafb",
+          backgroundColor: "var(--c-surface-background)",
           borderRight: `1px solid ${tw.borderDefault}`,
         }}
       >
@@ -139,7 +143,7 @@ export default function QueryEditorTab({
 
                 {/* Columns */}
                 {expandedTables.includes(table.name) && (
-                  <div className="pl-6" style={{ backgroundColor: "#ffffff" }}>
+                  <div className="pl-6" style={{ backgroundColor: "var(--c-surface-background)" }}>
                     {table.columns.map((column) => (
                       <ColumnButton
                         key={column}
@@ -156,7 +160,7 @@ export default function QueryEditorTab({
       </div>
 
       {/* Right Panel - SQL Editor */}
-      <div className="flex-1 flex flex-col gap-3 min-h-0 p-4 overflow-hidden" style={{ backgroundColor: color.surface.cards }}>
+      <div className="flex-1 flex flex-col gap-3 min-h-0 p-4 overflow-hidden" style={{ backgroundColor: "var(--c-surface-background)" }}>
         {/* SQL Editor with CodeMirror */}
         <div className="flex-1 flex flex-col gap-2 min-h-0">
           <label className={`block text-sm font-medium ${tw.textPrimary}`}>
@@ -165,7 +169,7 @@ export default function QueryEditorTab({
           <div
             className={`flex-1 border overflow-hidden`}
             style={{
-              backgroundColor: color.surface.cards,
+              backgroundColor: "var(--c-surface-background)",
               borderColor: previewError ? "#ef4444" : tw.borderDefault,
               minHeight: "320px",
             }}
@@ -173,9 +177,9 @@ export default function QueryEditorTab({
             <CodeMirror
               value={sql}
               height="100%"
-              extensions={[sqlLanguage()]}
+              extensions={[sqlLanguage(), isDark ? darkSyntaxHighlight : undefined].filter(Boolean)}
               onChange={(value) => onSqlChange(value)}
-              theme="light"
+              theme={isDark ? darkTheme : "light"}
               basicSetup={{
                 lineNumbers: true,
                 highlightActiveLineGutter: true,

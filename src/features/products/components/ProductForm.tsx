@@ -342,13 +342,13 @@ export default function ProductForm({
         Array.isArray(selectedComboType.combo_resources)
       ) {
         selectedComboType.combo_resources.forEach((apiResource: any) => {
-          // Map API resource_type to form resource_unit (keeping it as-is since it's already in correct format)
-          const resourceType: ProductUnit = apiResource.resource_unit as ProductUnit;
+          // Map API fields to form fields (unit -> resource_unit, unit_value -> resource_value, resource_type stays same)
+          const resourceType: ProductUnit = apiResource.unit as ProductUnit;
 
           resources.push({
-            resource_type: resourceType,
-            resource_unit: apiResource.resource_unit,
-            resource_value: apiResource.resource_value,
+            resource_type: apiResource.resource_type,
+            resource_unit: apiResource.unit,
+            resource_value: apiResource.unit_value,
           });
         });
       }
@@ -1742,9 +1742,15 @@ export default function ProductForm({
                 onClick={onCancel}
                 className={`px-6 py-2.5 ${tw.rounded} text-sm font-medium transition-colors`}
                 style={{
-                  background: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  backgroundColor: 'transparent',
+                  color: 'var(--c-text-primary)',
+                  border: '1px solid var(--c-text-primary)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
                 Cancel

@@ -332,6 +332,16 @@ function normalizeApiResponse(type: string, data: any[]): any[] {
           normalized.isActive = normalized.is_active;
         }
         break;
+
+      case "productTypes":
+      case "segmentTypes":
+      case "campaignTypes":
+      case "offerTypes":
+        // Convert is_active to isActive
+        if (normalized.is_active !== undefined) {
+          normalized.isActive = normalized.is_active;
+        }
+        break;
     }
 
     return normalized;

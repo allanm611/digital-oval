@@ -1339,7 +1339,7 @@ export default function SegmentModal({
                         border: `1px solid ${
                           fieldErrors.conditions ? "#ef4444" : tw.borderDefault
                         }`,
-                        backgroundColor: color.surface.cards,
+                        backgroundColor: "transparent",
                       }}
                     >
                       <SegmentConditionsBuilder
@@ -1384,9 +1384,15 @@ export default function SegmentModal({
                   onClick={onClose}
                   className={`px-6 py-2 ${tw.rounded} transition-colors text-sm`}
                   style={{
-                    background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
+                    backgroundColor: 'transparent',
+                    color: 'var(--c-text-primary)',
+                    border: '1px solid var(--c-text-primary)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
                   Cancel
@@ -1605,11 +1611,17 @@ export default function SegmentModal({
                         setShowConfirmModal(false);
                         setPendingQueries(null);
                       }}
-                      className={`px-5 py-2.5 ${tw.rounded} text-sm font-medium transition-colors hover:bg-gray-100`}
+                      className={`px-5 py-2.5 ${tw.rounded} text-sm font-medium transition-colors`}
                       style={{
-                        backgroundColor: "white",
-                        border: `1px solid ${color.border.default}`,
-                        color: color.text.primary,
+                        backgroundColor: 'transparent',
+                        border: '1px solid var(--c-text-primary)',
+                        color: 'var(--c-text-primary)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
                       Cancel

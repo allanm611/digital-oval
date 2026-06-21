@@ -554,7 +554,7 @@ export default function CustomerIdentityConditionRow({
           <button
             type="button"
             onClick={() => removeCondition(groupId, condition.id)}
-            className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors flex-shrink-0"
+            className="p-1 rounded transition-colors flex-shrink-0 icon-delete"
             title="Remove Condition"
           >
             <Trash2 className="w-4 h-4" />

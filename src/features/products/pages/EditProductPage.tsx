@@ -174,8 +174,8 @@ export default function EditProductPage() {
       if (combo_data?.resources?.length) {
         finalUpdateData.resources = combo_data.resources.map((resource: any) => ({
           resource_type: resource.resource_type,
-          resource_unit: resource.unit?.toLowerCase(),
-          resource_value: resource.unit_value,
+          resource_unit: resource.resource_unit?.toLowerCase(),
+          resource_value: resource.resource_value,
           ...(resource.validity_hours !== undefined && { validity_hours: resource.validity_hours }),
           ...(resource.price !== undefined && { price: resource.price }),
           ...(resource.daid_account && { daid_account: resource.daid_account }),
