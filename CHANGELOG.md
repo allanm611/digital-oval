@@ -1,3 +1,10 @@
+## [1.4.14](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.13...v1.4.14) (2026-06-23)
+
+
+### Bug Fixes
+
+* add icons on catalogs, floating labels in create communciaiton modal, fixes in manual communicaitons, integration of add and remove endpoints of quicklists, preview on manual communicaitons on a quicklist ([c7c52d3](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/c7c52d34ae1ba9094444c6a09a2059d22964ce5e))
+
 ## [1.4.13](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.12...v1.4.13) (2026-06-20)
 
 
