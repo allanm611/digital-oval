@@ -35,8 +35,12 @@ export interface Offer {
   offer_type_label?: string; // Backend field - string label of offer type
   category_id?: number;
   communication_channel_id?: number; // Communication channel for the offer
+  route?: string | number; // Route for the selected communication channel
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   email_route_id?: number; // Email route ID (only used when channel is EMAIL)
+  whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
+  ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
+  push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -69,8 +73,12 @@ export interface CreateOfferRequest {
   offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: string | number;
   communication_channel_id?: number; // Communication channel for the offer
+  route?: string | number; // Route for the selected communication channel
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   email_route_id?: number; // Email route ID (only used when channel is EMAIL)
+  whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
+  ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
+  push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -96,8 +104,12 @@ export interface UpdateOfferRequest {
   offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: string | number;
   communication_channel_id?: number; // Communication channel for the offer
+  route?: string | number; // Route for the selected communication channel
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   email_route_id?: number; // Email route ID (only used when channel is EMAIL)
+  whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
+  ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
+  push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;

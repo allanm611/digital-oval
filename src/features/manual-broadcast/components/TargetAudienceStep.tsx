@@ -9,6 +9,7 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import QuickListPickerModal from "../../segments/components/QuickListPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
+import AudiencePreviewModal from "./AudiencePreviewModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { CreateQuickListRequest } from "../../quicklists/types/quicklist";
 
@@ -47,6 +48,7 @@ export default function TargetAudienceStep({
   const [showPickerModal, setShowPickerModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [manualInputError, setManualInputError] = useState("");
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Sync local state with data prop whenever component mounts or data changes
   useEffect(() => {
@@ -354,6 +356,14 @@ export default function TargetAudienceStep({
                   </p> */}
                   <button
                     type="button"
+                    onClick={() => setShowPreviewModal(true)}
+                    className="text-sm hover:underline"
+                    style={{ color: color.primary.accent }}
+                  >
+                    Preview
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       setSelectedQuickList(null);
                       setIsQuickListCreated(false);
@@ -397,7 +407,7 @@ export default function TargetAudienceStep({
                   type="button"
                   onClick={() => setShowCreateModal(true)}
                   disabled={isSubmitting}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors `}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors text-white`}
                   style={{
                     backgroundColor: buttonTokens.action.background,
                   }}
@@ -512,6 +522,14 @@ export default function TargetAudienceStep({
         mode="create"
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateQuickList}
+      />
+
+      {/* Audience Preview Modal */}
+      <AudiencePreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        quicklistId={selectedQuickList?.id}
+        quicklistName={selectedQuickList?.name}
       />
     </div>
   );

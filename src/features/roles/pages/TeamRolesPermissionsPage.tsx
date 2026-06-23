@@ -1071,22 +1071,22 @@ export default function TeamRolesPermissionsPage() {
       {/* Delete Confirmation Dialog */}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="rounded-lg shadow-lg max-w-sm w-full mx-4" style={{ backgroundColor: "var(--c-surface-background)" }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: "var(--c-border-default)" }}>
+              <h3 className="text-lg font-semibold" style={{ color: "var(--c-text-primary)" }}>
                 {deleteTarget?.type === "role"
                   ? "Delete Role?"
                   : "Delete Permission?"}
               </h3>
             </div>
             <div className="px-6 py-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm" style={{ color: "var(--c-text-secondary)" }}>
                 {deleteTarget?.type === "role"
                   ? `Are you sure you want to delete "${roles.find((r) => r.id === deleteTarget?.id)?.name}"? This action cannot be undone.`
                   : `Are you sure you want to delete "${permissions.find((p) => p.id === deleteTarget?.id)?.name}"? This action cannot be undone.`}
               </p>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ borderColor: "var(--c-border-default)" }}>
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
                 className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
@@ -1114,15 +1114,15 @@ export default function TeamRolesPermissionsPage() {
       {/* Role Deactivation Modal */}
       {deactivateRoleModalOpen && roleToDeactivate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="rounded-lg shadow-lg max-w-md w-full mx-4" style={{ backgroundColor: "var(--c-surface-background)" }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: "var(--c-border-default)" }}>
+              <h3 className="text-lg font-semibold" style={{ color: "var(--c-text-primary)" }}>
                 Deactivate Role
               </h3>
             </div>
             <div className="px-6 py-4 space-y-4">
               <div>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm mb-3" style={{ color: "var(--c-text-secondary)" }}>
                   You are about to deactivate{" "}
                   <span className="font-medium">"{roleToDeactivate.name}"</span>
                   . Please provide a reason for this action.
@@ -1146,10 +1146,10 @@ export default function TeamRolesPermissionsPage() {
                   onChange={() => deactivatingRoleId === null && setCascadeToChildren(!cascadeToChildren)}
                   disabled={deactivatingRoleId !== null}
                 />
-                <span className="text-sm text-gray-700">Deactivate child roles too</span>
+                <span className="text-sm" style={{ color: "var(--c-text-primary)" }}>Deactivate child roles too</span>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ borderColor: "var(--c-border-default)" }}>
               <button
                 onClick={() => {
                   setDeactivateRoleModalOpen(false);
@@ -1181,7 +1181,7 @@ export default function TeamRolesPermissionsPage() {
       {/* Clone Role Modal */}
       {cloneModalOpen && roleToClone && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="rounded-lg shadow-xl max-w-md w-full mx-4 p-6" style={{ backgroundColor: "var(--c-surface-background)" }}>
             <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Copy Role
             </h2>

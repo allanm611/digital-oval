@@ -13,6 +13,7 @@ import {
   Archive,
   Star,
   X,
+  Gift,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
@@ -1133,11 +1134,14 @@ function OfferCategoriesPage() {
               style={{ backgroundColor: color.surface.cards }}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3
-                  className={`${tw.tableFirstColumn} text-gray-900 flex-1 truncate`}
-                >
-                  {category.name}
-                </h3>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Gift className="w-5 h-5 flex-shrink-0" style={{ color: color.primary.accent }} />
+                  <h3
+                    className={`${tw.tableFirstColumn} text-gray-900 truncate`}
+                  >
+                    {category.name}
+                  </h3>
+                </div>
                 <div className="flex items-center space-x-1">
                   {/* <button
                     onClick={() => handleViewDetails(category)}

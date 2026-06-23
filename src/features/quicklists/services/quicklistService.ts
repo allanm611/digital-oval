@@ -332,6 +332,138 @@ class QuickListService {
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     return this.request(`/upload-types${query}`);
   }
+
+  // Member Management
+  async addMemberToQuickList(
+    quicklistId: number,
+    identifier: string,
+    identifier_type: "msisdn" | "email",
+    added_by: number,
+  ): Promise<{ success: boolean; member_id?: number }> {
+    return this.request<{ success: boolean; member_id?: number }>(
+      `/${quicklistId}/members`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          identifier,
+          identifier_type,
+          added_by,
+        }),
+      },
+    );
+  }
+
+  async removeMemberFromQuickList(
+    quicklistId: number,
+    memberId: number,
+    removed_by: number,
+  ): Promise<{ success: boolean; message: string }> {
+    const url = `${BASE_URL}/${quicklistId}/members/${memberId}`;
+
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ removed_by }),
+    });
+
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (_) {
+      console.error("API Error Response (non-JSON):", {
+        status: response.status,
+        statusText: response.statusText,
+        body: text,
+        url,
+      });
+      throw new Error(
+        `HTTP error! status: ${response.status}, details: ${text}`,
+      );
+    }
+
+    if (!response.ok || ("success" in data && !data.success)) {
+      const errorMessage =
+        "error" in data
+          ? data.error
+          : `Request failed with status ${response.status}`;
+      console.error("API Error Response:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: data,
+        url,
+      });
+      throw new Error(errorMessage);
+    }
+
+    return data;
+  }
+
+  async getMembers(
+    quicklistId: number,
+    params?: {
+      limit?: number;
+      offset?: number;
+      skipCache?: boolean;
+    },
+  ): Promise<{
+    success: boolean;
+    data: Array<{
+      id: number;
+      identifier: string;
+      identifier_type: "msisdn" | "email";
+      status: string;
+      added_at: string;
+    }>;
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append("limit", String(params.limit));
+    if (params?.offset) queryParams.append("offset", String(params.offset));
+    if (params?.skipCache) queryParams.append("skipCache", String(params.skipCache));
+
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    return this.request(
+      `/${quicklistId}/members${query}`,
+    );
+  }
+
+  async getAuditTrail(
+    quicklistId: number,
+    params?: {
+      limit?: number;
+      offset?: number;
+    },
+  ): Promise<{
+    success: boolean;
+    data: Array<{
+      id: number;
+      identifier: string;
+      identifier_type: "msisdn" | "email";
+      removed_at: string;
+      removed_by: number;
+    }>;
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append("limit", String(params.limit));
+    if (params?.offset) queryParams.append("offset", String(params.offset));
+
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    return this.request(
+      `/${quicklistId}/audit-trail${query}`,
+    );
+  }
 }
 
 export const quicklistService = new QuickListService();

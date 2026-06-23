@@ -789,10 +789,10 @@ export default function AssignPermissionsModal({
                             style={{
                               borderColor: isAssigned
                                 ? color.primary.action
-                                : "#D1D5DB",
+                                : "var(--c-border-default)",
                               color: isAssigned
                                 ? color.primary.action
-                                : "#9CA3AF",
+                                : "var(--c-interactive-disabled)",
                             }}
                             title={
                               isAssigned

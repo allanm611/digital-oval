@@ -19,6 +19,7 @@ import {
 import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -45,8 +46,10 @@ import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal"
 export default function QuickListsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(null);
+  const [isManagingCustomers, setIsManagingCustomers] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteQuicklist } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -791,13 +794,69 @@ export default function QuickListsPage() {
           }}
           quicklist={selectedQuicklistForCustomer}
           mode={manageCustomersMode}
+          isLoading={isManagingCustomers}
           onSubmit={async (customers) => {
-            const action = manageCustomersMode === "add" ? "added to" : "removed from";
-            showToast(
-              `${customers.length} customer${customers.length !== 1 ? "s" : ""} ${action} ${selectedQuicklistForCustomer.name}`,
-            );
-            setIsManageCustomersModalOpen(false);
-            setSelectedQuicklistForCustomer(null);
+            if (!user?.user_id) {
+              showError("Error", "User ID not available");
+              return;
+            }
+
+            setIsManagingCustomers(true);
+            try {
+              if (manageCustomersMode === "add") {
+                // Add customers one by one
+                const results = await Promise.all(
+                  customers.map((customer) =>
+                    quicklistService.addMemberToQuickList(
+                      selectedQuicklistForCustomer.id,
+                      customer.customer_phone || customer.customer_email || String(customer.customer_id),
+                      customer.customer_phone ? "msisdn" : "email",
+                      user.user_id,
+                    ),
+                  ),
+                );
+
+                // Check if all succeeded
+                const allSucceeded = results.every((r) => r.success);
+                if (!allSucceeded) {
+                  showError("Partial Error", "Some customers could not be added. Please try again.");
+                } else {
+                  showToast(
+                    `${customers.length} customer${customers.length !== 1 ? "s" : ""} added to ${selectedQuicklistForCustomer.name}`,
+                  );
+                }
+              } else {
+                // Remove customers one by one
+                const results = await Promise.all(
+                  customers.map((customer) =>
+                    quicklistService.removeMemberFromQuickList(
+                      selectedQuicklistForCustomer.id,
+                      customer.customer_id,
+                      user.user_id,
+                    ),
+                  ),
+                );
+
+                const allSucceeded = results.every((r) => r.success);
+                if (!allSucceeded) {
+                  showError("Partial Error", "Some customers could not be removed. Please try again.");
+                } else {
+                  showToast(
+                    `${customers.length} customer${customers.length !== 1 ? "s" : ""} removed from ${selectedQuicklistForCustomer.name}`,
+                  );
+                }
+              }
+
+              setIsManageCustomersModalOpen(false);
+              setSelectedQuicklistForCustomer(null);
+            } catch (err) {
+              showError(
+                "Error",
+                extractBackendError(err, `Failed to ${manageCustomersMode} customer${customers.length !== 1 ? "s" : ""}. Please try again.`),
+              );
+            } finally {
+              setIsManagingCustomers(false);
+            }
           }}
         />
       )}

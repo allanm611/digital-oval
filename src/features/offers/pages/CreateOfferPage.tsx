@@ -531,6 +531,7 @@ function BasicInfoStep({
                     setFormData({
                       ...formData,
                       sms_route_id: Number(value),
+                      route: Number(value),
                     });
                   }}
                   placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
@@ -1850,7 +1851,12 @@ export default function CreateOfferPage({
         offer_type_id: offerTypeId,
         category_id: offer.category_id ? String(offer.category_id) : undefined,
         communication_channel_id: offer.communication_channel_id,
+        route: offer.route,
         sms_route_id: offer.sms_route_id,
+        email_route_id: offer.email_route_id,
+        whatsapp_route_id: offer.whatsapp_route_id,
+        ussd_route_id: offer.ussd_route_id,
+        push_notification_route_id: offer.push_notification_route_id,
         primary_product_id: offer.primary_product_id
           ? Number(offer.primary_product_id)
           : undefined,
@@ -2139,12 +2145,22 @@ export default function CreateOfferPage({
       errors.communication_channel = "Communication channel is required";
     }
 
-    // If SMS channel is selected, SMS route is required
+    // Route validation for all channels that require it
     const selectedChannel = communicationChannels?.find(
       (ch) => String(ch.id) === String(formData.communication_channel_id)
     );
-    if (selectedChannel?.name?.toUpperCase() === "SMS" && !formData.sms_route_id) {
-      errors.sms_route = "SMS route is required when SMS channel is selected";
+    const channelName = selectedChannel?.name?.toUpperCase();
+
+    if (channelName === "SMS" && !formData.sms_route_id) {
+      errors.sms_route = "SMS route is required";
+    } else if (channelName === "EMAIL" && !formData.email_route_id) {
+      errors.email_route = "Email route is required";
+    } else if (channelName === "WHATSAPP" && !formData.whatsapp_route_id) {
+      errors.whatsapp_route = "WhatsApp route is required";
+    } else if (channelName === "USSD" && !formData.ussd_route_id) {
+      errors.ussd_route = "USSD route is required";
+    } else if ((channelName === "PUSH" || channelName === "PUSH NOTIFICATION") && !formData.push_notification_route_id) {
+      errors.push_route = "Push notification route is required";
     }
 
     // Product selection is optional; remove validation
@@ -2175,14 +2191,27 @@ export default function CreateOfferPage({
         // Get selected channel
         const selectedChannel = communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id));
 
-        // If SMS channel is selected, SMS route is required
-        if (selectedChannel?.name?.toUpperCase() === "SMS") {
+        // Route validation for all channels that require it
+        const channelName = selectedChannel?.name?.toUpperCase();
+
+        if (channelName === "SMS") {
           return formData.sms_route_id !== undefined;
         }
 
-        // If EMAIL channel is selected, EMAIL route is required
-        if (selectedChannel?.name?.toUpperCase() === "EMAIL") {
+        if (channelName === "EMAIL") {
           return formData.email_route_id !== undefined;
+        }
+
+        if (channelName === "WHATSAPP") {
+          return formData.whatsapp_route_id !== undefined;
+        }
+
+        if (channelName === "USSD") {
+          return formData.ussd_route_id !== undefined;
+        }
+
+        if (channelName === "PUSH" || channelName === "PUSH NOTIFICATION") {
+          return formData.push_notification_route_id !== undefined;
         }
 
         return true;
@@ -2350,16 +2379,15 @@ export default function CreateOfferPage({
 
       // Prepare API data - remove empty description if not provided
       // Backend doesn't accept empty strings for description
-      const { description, communication_channel_id, sms_route_id, offer_type, ...formDataWithoutDescription } = formData;
+      const { description, communication_channel_id, route, sms_route_id, email_route_id, whatsapp_route_id, ussd_route_id, push_notification_route_id, offer_type, ...formDataWithoutDescription } = formData;
 
       const apiData: CreateOfferRequest = {
         ...formDataWithoutDescription,
         // TODO: Backend only accepts offer_type_id, not offer_type
         // offer_type: offerTypeName,
         ...(description?.trim() ? { description: description.trim() } : {}),
-        // TODO: Backend doesn't accept communication_channel_id and sms_route_id yet
-        // ...(communication_channel_id && { communication_channel_id }),
-        // ...(sms_route_id && { sms_route_id }),
+        ...(communication_channel_id && { communication_channel_id }),
+        ...(route && { route }),
       };
 
       let offerId: number;
@@ -2727,6 +2755,8 @@ export default function CreateOfferPage({
         max_usage_per_customer: formData.max_usage_per_customer,
         ...(formData.description && { description: formData.description }),
         ...(formData.category_id && { category_id: formData.category_id }),
+        ...(formData.communication_channel_id && { communication_channel_id: formData.communication_channel_id }),
+        ...(formData.route && { route: formData.route }),
         ...(formData.primary_product_id && { primary_product_id: formData.primary_product_id }),
         ...(formData.eligibility_rules && { eligibility_rules: formData.eligibility_rules }),
         ...(formData.is_reusable !== undefined && { is_reusable: formData.is_reusable }),

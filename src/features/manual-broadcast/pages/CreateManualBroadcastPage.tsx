@@ -228,12 +228,12 @@ export default function CreateManualBroadcastPage() {
     }
   }, [isEditMode, executionId, showError, navigate]);
 
-  // Persist form data to localStorage
+  // Persist form data to localStorage (only in create mode, not edit mode)
   useFormDataPersistence(
     "broadcast_form_data",
     broadcastData,
     setBroadcastData,
-    false,
+    isEditMode,
   );
 
   const updateBroadcastData = (data: Partial<ManualBroadcastData>) => {

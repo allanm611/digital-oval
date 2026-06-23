@@ -35,6 +35,7 @@ import { QuickList } from "../../features/quicklists/types/quicklist";
 import CascadingVariableSelector from "../../features/manual-broadcast/components/CascadingVariableSelector";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Input from "./ui/Input";
+import Textarea from "./ui/Textarea";
 import { useConfigurationData } from "../services/configurationDataService";
 import { useToast } from "../../contexts/ToastContext";
 import { extractBackendError } from "../utils/errorHandler";;;
@@ -615,10 +616,11 @@ export default function CreateCommunicationModal({
         style={{ zIndex: zIndex.modal }}
       >
         <div
-          className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-200`}
+          className={`${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col border`}
+          style={{ backgroundColor: "var(--c-surface-background)", borderColor: "var(--c-border-default)" }}
         >
           {/* Header */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b" style={{ borderColor: "var(--c-border-default)" }}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start space-x-3 flex-1">
                 {isSuccess ? (
@@ -627,21 +629,22 @@ export default function CreateCommunicationModal({
                   <XCircle className="w-6 h-6 flex-shrink-0 mt-1" style={{ color: color.primary.accent }} />
                 )}
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">
+                  <h2 className="text-lg font-bold" style={{ color: "var(--c-text-primary)" }}>
                     {isSuccess
                       ? 'Communication Sent Successfully'
                       : 'Communication Completed with Errors'}
                   </h2>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs mt-1" style={{ color: "var(--c-text-secondary)" }}>
                     Execution ID: {result.execution_id}
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
-                className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
+                className={`p-2 ${tw.rounded} transition-colors flex-shrink-0`}
+                style={{ color: "var(--c-text-secondary)" }}
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-5 h-5" style={{ color: "var(--c-text-secondary)" }}/>
               </button>
             </div>
           </div>
@@ -652,45 +655,45 @@ export default function CreateCommunicationModal({
               {/* Stats Cards - matching campaign analytics style */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Total Recipients */}
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                <div className={`${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <Bell className="h-5 w-5" style={{ color: color.primary.accent }} />
-                    <p className="text-sm font-medium text-gray-600">Total Recipients</p>
+                    <p className="text-sm font-medium" style={{ color: "var(--c-text-secondary)" }}>Total Recipients</p>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold" style={{ color: "var(--c-text-primary)" }}>
                     {result.total_recipients.toLocaleString()}
                   </p>
                 </div>
 
                 {/* Messages Sent */}
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                <div className={`${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle className="h-5 w-5" style={{ color: color.primary.accent }} />
-                    <p className="text-sm font-medium text-gray-600">Messages Sent</p>
+                    <p className="text-sm font-medium" style={{ color: "var(--c-text-secondary)" }}>Messages Sent</p>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold" style={{ color: "var(--c-text-primary)" }}>
                     {result.total_messages_sent.toLocaleString()}
                   </p>
                 </div>
 
                 {/* Messages Failed */}
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                <div className={`${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <XCircle className="h-5 w-5" style={{ color: color.primary.accent }} />
-                    <p className="text-sm font-medium text-gray-600">Messages Failed</p>
+                    <p className="text-sm font-medium" style={{ color: "var(--c-text-secondary)" }}>Messages Failed</p>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold" style={{ color: "var(--c-text-primary)" }}>
                     {result.total_messages_failed.toLocaleString()}
                   </p>
                 </div>
 
                 {/* Success Rate */}
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                <div className={`${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingUp className="h-5 w-5" style={{ color: color.primary.accent }} />
-                    <p className="text-sm font-medium text-gray-600">Success Rate</p>
+                    <p className="text-sm font-medium" style={{ color: "var(--c-text-secondary)" }}>Success Rate</p>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900">
+                  <p className="text-3xl font-bold" style={{ color: "var(--c-text-primary)" }}>
                     {successRate}%
                   </p>
                 </div>
@@ -699,17 +702,18 @@ export default function CreateCommunicationModal({
               {/* Channel Breakdown */}
               {result.channel_summaries.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                  <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--c-text-primary)" }}>
                     Channel Breakdown
                   </h3>
                   <div className="space-y-3">
                     {result.channel_summaries.map((summary) => (
                       <div
                         key={summary.channel}
-                        className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
+                        className={`${tw.rounded} border p-4 shadow-sm`}
+                        style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}
                       >
                         <div className="flex items-center justify-between gap-4">
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium" style={{ color: "var(--c-text-primary)" }}>
                             {summary.channel}
                           </span>
                           <div className="flex items-center space-x-6 text-sm">
@@ -730,10 +734,11 @@ export default function CreateCommunicationModal({
           </div>
 
           {/* Actions */}
-          <div className="p-6 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+          <div className="p-6 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3" style={{ borderColor: "var(--c-border-default)" }}>
             <button
               onClick={handleClose}
-              className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
+              className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium ${tw.rounded} transition-colors`}
+              style={{ color: "var(--c-text-primary)", backgroundColor: "transparent", border: "1px solid var(--c-border-default)" }}
             >
               Close
             </button>
@@ -758,17 +763,18 @@ export default function CreateCommunicationModal({
       style={{ zIndex: zIndex.modal }}
     >
       <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col`}
+        className={`${tw.rounded} shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col`}
+        style={{ backgroundColor: "var(--c-surface-background)" }}
       >
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 sm:p-6 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 sm:p-6 border-b" style={{ borderColor: "var(--c-border-default)" }}>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            <h2 className="text-lg sm:text-xl font-bold" style={{ color: "var(--c-text-primary)" }}>
               Send Communication
             </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            <p className="text-xs sm:text-sm mt-1" style={{ color: "var(--c-text-secondary)" }}>
               Sending to:{" "}
-              <span className="font-semibold text-gray-700 break-words">
+              <span className="font-semibold break-words" style={{ color: "var(--c-text-primary)" }}>
                 {customerRecord
                   ? `${customerRecord.first_name || customerRecord.firstName || ""} ${customerRecord.last_name || customerRecord.lastName || ""}`
                   : quicklist?.name || segment?.name}
@@ -783,9 +789,10 @@ export default function CreateCommunicationModal({
           <button
             onClick={handleClose}
             disabled={sending}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 self-start sm:self-auto flex-shrink-0`}
+            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 self-start sm:self-auto flex-shrink-0`}
+            style={{ color: "var(--c-text-secondary)" }}
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5" style={{ color: "var(--c-text-secondary)" }}/>
           </button>
         </div>
 
@@ -806,10 +813,8 @@ export default function CreateCommunicationModal({
                 {/* Channel and Route Selection on same line */}
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Communication Channel <span className="text-red-500">*</span>
-                    </label>
                     <HeadlessSelect
+                      label="Communication Channel *"
                       options={channels.map((channel) => ({
                         value: channel.id,
                         label: channel.name,
@@ -830,10 +835,8 @@ export default function CreateCommunicationModal({
                   {/* Email Route - only show when EMAIL channel is selected */}
                   {selectedChannel === "EMAIL" && (
                     <div className="flex-1">
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                        Email Route <span className="text-red-500">*</span>
-                      </label>
                       <HeadlessSelect
+                        label="Email Route *"
                         options={[
                           { value: "", label: "Select Email Route" },
                           ...(emailRoutes || []).map((route: any) => ({
@@ -858,10 +861,8 @@ export default function CreateCommunicationModal({
                   {/* SMS Route - only show when SMS channel is selected */}
                   {selectedChannel === "SMS" && (
                     <div className="flex-1">
-                      <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                        SMS Route <span className="text-red-500">*</span>
-                      </label>
                       <HeadlessSelect
+                        label="SMS Route *"
                         options={[
                           { value: "", label: "Select SMS Route" },
                           ...(smsRoutes || []).map((route: any) => ({
@@ -885,42 +886,38 @@ export default function CreateCommunicationModal({
                 </div>
 
                 {/* Communication Policy */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-3">
-                    Communication Policy
-                  </label>
-                  <div className="relative" ref={policyDropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setIsPolicyDropdownOpen(!isPolicyDropdownOpen)
-                      }
-                      className={`${
-                        components.input.default
-                      } w-full px-3 py-2 text-left flex items-center justify-between ${
-                        selectedPolicy ? "" : "text-gray-500"
-                      }`}
-                    >
-                      <span className="text-sm">
-                        {selectedPolicy && selectedPolicy.name ? selectedPolicy.name : null}
-                        {!selectedPolicy && communicationPolicies && Array.isArray(communicationPolicies) && communicationPolicies.length > 0 ? (
-                          (() => {
-                            const activePolicy = communicationPolicies.find((p) => {
-                              if (!p) {
+                <div className="relative" ref={policyDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsPolicyDropdownOpen(!isPolicyDropdownOpen)
+                    }
+                    className={`${
+                      components.input.default
+                    } w-full px-3 pt-3 pb-2 text-left flex items-center justify-between ${
+                      selectedPolicy ? "" : "opacity-60"
+                    }`}
+                  >
+                      <span className={`text-sm ${!selectedPolicy ? 'text-transparent' : ''}`}>
+                        {selectedPolicy && selectedPolicy.name ? selectedPolicy.name : (
+                          communicationPolicies && Array.isArray(communicationPolicies) && communicationPolicies.length > 0 ? (
+                            (() => {
+                              const activePolicy = communicationPolicies.find((p) => {
+                                if (!p) {
+                                  return false;
+                                }
+                                if (p.isActive === true || p.is_active === true) {
+                                  return true;
+                                }
                                 return false;
+                              });
+                              if (activePolicy && activePolicy.name) {
+                                return activePolicy.name;
                               }
-                              if (p.isActive === true || p.is_active === true) {
-                                return true;
-                              }
-                              return false;
-                            });
-                            if (activePolicy && activePolicy.name) {
-                              return activePolicy.name;
-                            }
-                            return "Choose a communication policy (optional)";
-                          })()
-                        ) : null}
-                        {!selectedPolicy && (!communicationPolicies || !Array.isArray(communicationPolicies) || communicationPolicies.length === 0) ? "Choose a communication policy (optional)" : null}
+                              return "Choose a communication policy (optional)";
+                            })()
+                          ) : "Choose a communication policy (optional)"
+                        )}
                       </span>
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${
@@ -928,6 +925,23 @@ export default function CreateCommunicationModal({
                         }`}
                       />
                     </button>
+
+                    {/* Floating Label */}
+                    <label
+                      className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
+                        ${selectedPolicy
+                          ? 'top-0 -translate-y-1/2 px-1 text-xs'
+                          : 'top-1/2 -translate-y-1/2 text-sm'
+                        }
+                      `}
+                      style={
+                        selectedPolicy
+                          ? { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                          : { color: 'var(--c-text-secondary)' }
+                      }
+                    >
+                      Communication Policy
+                    </label>
 
                     {isPolicyDropdownOpen && (
                       <div
@@ -940,13 +954,14 @@ export default function CreateCommunicationModal({
                             setSelectedPolicy(null);
                             setIsPolicyDropdownOpen(false);
                           }}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
+                          className="w-full text-left px-4 py-3 focus:outline-none border-b"
+                          style={{ borderColor: "var(--c-border-default)" }}
                           style={{ borderColor: color.border.default }}
                         >
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium" style={{ color: "var(--c-text-primary)" }}>
                             No Policy
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs" style={{ color: "var(--c-text-secondary)" }}>
                             Broadcast will use default communication settings
                           </div>
                         </button>
@@ -968,17 +983,17 @@ export default function CreateCommunicationModal({
                                 setSelectedPolicy(policy);
                                 setIsPolicyDropdownOpen(false);
                               }}
-                              className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
+                              className={`w-full text-left px-4 py-3 focus:outline-none ${
                                 selectedPolicy?.id === policy.id
-                                  ? "bg-blue-50"
+                                  ? "opacity-60"
                                   : ""
                               }`}
                             >
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-medium" style={{ color: "var(--c-text-primary)" }}>
                                 {policy.name}
                               </div>
                               {policy.description && (
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs mt-1" style={{ color: "var(--c-text-secondary)" }}>
                                   {policy.description}
                                 </div>
                               )}
@@ -987,18 +1002,18 @@ export default function CreateCommunicationModal({
                         </div>
                       </div>
                     )}
-                  </div>
+                </div>
 
-                  {/* Customization Toggle */}
+                {/* Customization Toggle */}
                   {selectedPolicy && (
                     <div
-                      className="flex items-center justify-between px-3 py-2 mt-2 rounded-md border"
+                      className="flex items-center justify-between px-3 py-2 mt-4 mb-6 rounded-md border"
                       style={{
                         backgroundColor: color.surface.background,
                         borderColor: color.border.default,
                       }}
                     >
-                      <span className="text-xs text-gray-500 flex items-center gap-2">
+                      <span className="text-xs flex items-center gap-2" style={{ color: "var(--c-text-secondary)" }}>
                         <Settings className="w-3 h-3" />
                         Want to modify this policy?
                       </span>
@@ -1023,7 +1038,7 @@ export default function CreateCommunicationModal({
                       className="flex items-center justify-between p-3 rounded-md"
                       style={{ backgroundColor: color.surface.cards }}
                     >
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium" style={{ color: "var(--c-text-primary)" }}>
                         Message Content
                       </span>
                       <div className="flex items-center gap-2">
@@ -1079,11 +1094,9 @@ export default function CreateCommunicationModal({
                     {/* Subject Line for Email */}
                     {selectedChannel === "EMAIL" && (
                       <div>
-                        <label className="text-sm font-medium text-gray-900 mb-2 block">
-                          Subject Line <span className="text-red-500">*</span>
-                        </label>
                         <Input
                           ref={titleInputRef}
+                          label="Subject Line *"
                           placeholder="Enter email subject..."
                           value={messageTitle}
                           onChange={(value) => {
@@ -1102,7 +1115,6 @@ export default function CreateCommunicationModal({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                         
                         />
                         {!messageTitle.trim() && error?.includes("Subject") && (
                           <p className="text-xs text-red-600 mt-1">Subject line is required for email</p>
@@ -1112,42 +1124,34 @@ export default function CreateCommunicationModal({
 
                     {/* Message Body */}
                     <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
-                        Message Body <span className="text-red-500">*</span>
-                      </label>
                       {isRichText ? (
-                        <RichTextEditor
+                        <div>
+                          <label className="block text-sm font-medium mb-3" style={{ color: "var(--c-text-primary)" }}>
+                            Message Body <span className="text-red-500">*</span>
+                          </label>
+                          <RichTextEditor
+                            value={messageBody}
+                            onChange={(value) => {
+                              setMessageBody(value);
+                              setActiveField("body");
+                            }}
+                            placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                            minHeight="250px"
+                          />
+                        </div>
+                      ) : (
+                        <Textarea
+                          ref={bodyTextareaRef}
+                          label="Message Body *"
                           value={messageBody}
                           onChange={(value) => {
-                            setMessageBody(value);
-                            setActiveField("body");
-                          }}
-                          placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
-                          minHeight="250px"
-                        />
-                      ) : (
-                        <textarea
-                          ref={bodyTextareaRef}
-                          value={messageBody}
-                          onChange={(e) => {
-                            if (!e || !e.target) {
-                              return;
-                            }
-                            const newValue = e.target.value;
-                            if (newValue === null || newValue === undefined) {
-                              return;
-                            }
-                            const editError = validateNoEditInsideVariables(messageBody, newValue);
+                            const editError = validateNoEditInsideVariables(messageBody, value);
                             if (editError) {
                               setVariableError(editError);
                               return;
                             }
-                            setMessageBody(newValue);
-                            const selectionStart = e.target.selectionStart;
-                            if (selectionStart !== null && selectionStart !== undefined) {
-                              setCursorPosition(selectionStart);
-                            }
-                            const syntaxError = validateMessageSyntax(newValue);
+                            setMessageBody(value);
+                            const syntaxError = validateMessageSyntax(value);
                             if (syntaxError) {
                               setVariableError(syntaxError);
                             } else {
@@ -1186,8 +1190,6 @@ export default function CreateCommunicationModal({
                           }}
                           placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
                           rows={10}
-                          className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-all text-sm resize-none"
-                          style={{ borderColor: color.border.default }}
                         />
                       )}
 
@@ -1196,7 +1198,7 @@ export default function CreateCommunicationModal({
                         {selectedChannel === "SMS" ||
                         selectedChannel === "WHATSAPP" ? (
                           messageBody.trim() ? (
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-4 text-xs" style={{ color: "var(--c-text-secondary)" }}>
                               <span>
                                 {getCharacterInfo().charCount} characters
                               </span>
@@ -1206,12 +1208,12 @@ export default function CreateCommunicationModal({
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs" style={{ color: "var(--c-text-secondary)" }}>
                               Enter your message to see character and SMS count
                             </span>
                           )
                         ) : (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs" style={{ color: "var(--c-text-secondary)" }}>
                             Variables like {"{{field}}"} will be replaced with
                             customer data
                           </span>
@@ -1243,29 +1245,31 @@ export default function CreateCommunicationModal({
                         className="bg-white rounded-md border p-4"
                         style={{ borderColor: color.border.default }}
                       >
-                        <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--c-text-primary)" }}>
                           Send Test Message
                         </h3>
 
                         {/* Available Test Contacts */}
                         <div className="mb-4">
-                          <label className="text-sm font-medium text-gray-900 mb-2 block">
+                          <label className="text-sm font-medium mb-2 block" style={{ color: "var(--c-text-primary)" }}>
                             Test Contacts
                           </label>
                           <div className="space-y-2 max-h-48 overflow-y-auto">
                             {getAvailableTestContacts().map((contact) => (
                               <div
                                 key={contact}
-                                className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-gray-50"
+                                className="flex items-center gap-3 cursor-pointer p-2 rounded"
+                                style={{ opacity: 1 }}
                                 onClick={() => toggleTestContact(contact)}
                               >
                                 <Checkbox
                                   id={`test-contact-${contact}`}
                                   checked={selectedTestContacts.has(contact)}
                                   onChange={() => toggleTestContact(contact)}
-                                  className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                                  className="w-4 h-4 rounded cursor-pointer"
+                                  style={{ borderColor: "var(--c-border-default)" }}
                                 />
-                                <span className="text-sm text-gray-700 flex-1">
+                                <span className="text-sm flex-1" style={{ color: "var(--c-text-primary)" }}>
                                   {contact}
                                 </span>
                               </div>
@@ -1323,7 +1327,7 @@ export default function CreateCommunicationModal({
                         {/* Test Results */}
                         {testResults.length > 0 && (
                           <div>
-                            <label className="text-sm font-medium text-gray-900 mb-2 block">
+                            <label className="text-sm font-medium mb-2 block" style={{ color: "var(--c-text-primary)" }}>
                               Test Results
                             </label>
                             <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -1362,7 +1366,7 @@ export default function CreateCommunicationModal({
                                       {result.contact}
                                     </p>
                                     {result.message && (
-                                      <p className="text-xs text-gray-600 mt-0.5">
+                                      <p className="text-xs mt-0.5" style={{ color: "var(--c-text-secondary)" }}>
                                         {result.message}
                                       </p>
                                     )}
@@ -1375,7 +1379,6 @@ export default function CreateCommunicationModal({
                       </div>
                     )}
                   </div>
-                </div>
 
               </div>
             </div>
@@ -1383,7 +1386,7 @@ export default function CreateCommunicationModal({
         )}
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+        <div className="p-4 sm:p-6 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3" style={{ borderColor: "var(--c-border-default)" }}>
           <button
             onClick={handleClose}
             disabled={sending}

@@ -126,8 +126,27 @@ export default function NotificationDropdown({
       if (!notification.is_read) {
         await markAsRead([notification.id]);
       }
+
+      let route: string | null = null;
+
+      if (notification.notification_action?.match(/^\/[\w-]+\/?(\/([\w-]+))?$/)) {
+        // If action has an ID (e.g., /offers/123), use it as-is
+        if (notification.notification_action.match(/\/[\w-]+$/)) {
+          route = `/dashboard${notification.notification_action}`;
+        }
+        // If action is just /entity-type/ (no ID) but payload has id, construct full route
+        else if (notification.payload?.id) {
+          const entityType = notification.notification_action.match(/^\/(\w+)/)?.[1];
+          route = `/dashboard/${entityType}/${notification.payload.id}`;
+        }
+      }
+
+      if (route) {
+        setIsOpen(false);
+        navigate(route);
+      }
     },
-    [markAsRead],
+    [markAsRead, navigate],
   );
 
   const unreadCount = stats?.unread || 0;

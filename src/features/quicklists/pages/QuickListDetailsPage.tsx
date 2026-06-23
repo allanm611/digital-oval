@@ -22,18 +22,20 @@ import {
   UploadTypeSchema,
 } from "../types/quicklist";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
-import { Table, type TableColumn } from "../../../shared/components/Table";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
-import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { formatDate, formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
@@ -42,6 +44,7 @@ export default function QuickListDetailsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { success: showToast, error: showError } = useToast();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,7 +52,7 @@ export default function QuickListDetailsPage() {
   const [quicklist, setQuicklist] = useState<QuickList | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<
-    "overview" | "data" | "logs"
+    "overview" | "data" | "logs" | "audit-trail"
   >("overview");
 
   // Data states
@@ -72,6 +75,15 @@ export default function QuickListDetailsPage() {
     hasMore: boolean;
   } | null>(null);
 
+  const [auditTrail, setAuditTrail] = useState<any[]>([]);
+  const [loadingAuditTrail, setLoadingAuditTrail] = useState(false);
+  const [auditTrailPagination, setAuditTrailPagination] = useState<{
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  } | null>(null);
+
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isManageCustomersModalOpen, setIsManageCustomersModalOpen] =
@@ -79,6 +91,7 @@ export default function QuickListDetailsPage() {
   const [manageCustomersMode, setManageCustomersMode] = useState<"add" | "remove">(
     "add",
   );
+  const [isManagingCustomers, setIsManagingCustomers] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [tableMapping, setTableMapping] =
     useState<QuickListTableMapping | null>(null);
@@ -104,6 +117,12 @@ export default function QuickListDetailsPage() {
   useEffect(() => {
     if (quicklist && activeSection === "logs") {
       loadImportLogs();
+    }
+  }, [quicklist?.id, activeSection]);
+
+  useEffect(() => {
+    if (quicklist && activeSection === "audit-trail") {
+      loadAuditTrail();
     }
   }, [quicklist?.id, activeSection]);
 
@@ -157,6 +176,7 @@ export default function QuickListDetailsPage() {
 
     try {
       setLoadingData(true);
+      
       const response = await quicklistService.getQuickListData(quicklist.id, {
         limit: 50,
         offset: 0,
@@ -189,6 +209,7 @@ export default function QuickListDetailsPage() {
         }
       }
     } catch (err) {
+      console.error("📊 Error loading data:", err);
       showError("Error loading data", extractBackendError(error, "Error loading data. Please try again."));
     } finally {
       setLoadingData(false);
@@ -200,6 +221,7 @@ export default function QuickListDetailsPage() {
 
     try {
       setLoadingLogs(true);
+      
       const response = await quicklistService.getImportLogs(quicklist.id, {
         limit: 100,
         offset: 0,
@@ -211,9 +233,33 @@ export default function QuickListDetailsPage() {
         setLogsPagination(response.pagination || null);
       }
     } catch (err) {
-      showError("Error loading import logs", extractBackendError(error, "Error loading import logs. Please try again."));
+      console.error("❌ Error loading import logs:", err);
+      showError("Error loading import logs", extractBackendError(err, "Error loading import logs. Please try again."));
     } finally {
       setLoadingLogs(false);
+    }
+  };
+
+  const loadAuditTrail = async () => {
+    if (!quicklist) return;
+
+    try {
+      setLoadingAuditTrail(true);
+      
+      const response = await quicklistService.getAuditTrail(quicklist.id, {
+        limit: 100,
+        offset: 0,
+      });
+
+      if (response.success) {
+        setAuditTrail(response.data || []);
+        setAuditTrailPagination(response.pagination || null);
+      }
+    } catch (err) {
+      console.error("❌ Error loading audit trail:", err);
+      showError("Error loading audit trail", extractBackendError(err, "Error loading audit trail. Please try again."));
+    } finally {
+      setLoadingAuditTrail(false);
     }
   };
 
@@ -408,57 +454,59 @@ export default function QuickListDetailsPage() {
     return stringValue;
   };
 
-  const dataTableColumns = useMemo((): TableColumn<QuickListData>[] => {
+  // Data table columns
+  const dataDefaultColumns: TableColumn<QuickListData>[] = useMemo(() => {
     const columns: TableColumn<QuickListData>[] = [
       {
         id: "row_number",
-        header: "Row",
-        accessorKey: "id",
-        cell: (info) => {
-          const index = data.findIndex((d) => d.id === info.getValue());
-          return index + 1;
-        },
+        label: "Row",
         visible: true,
         sortable: false,
+        render: (_, row: any) => {
+          const index = data.findIndex((d) => d.id === row.id);
+          return index + 1;
+        },
       },
     ];
 
     dataColumns.forEach((column) => {
       columns.push({
         id: column,
-        header: column.replace(/_/g, " "),
-        accessorFn: (row) => {
-          const rowDataObj = (row as Record<string, unknown>)
-            .row_data as Record<string, unknown> | undefined;
-          if (rowDataObj && rowDataObj[column] !== undefined) {
-            return rowDataObj[column];
-          }
-          return (row as Record<string, unknown>)[column];
-        },
-        cell: (info) => formatCellValue(info.getValue()),
+        label: column.replace(/_/g, " "),
         visible: true,
         sortable: false,
+        render: (_, row: any) => {
+          const rowDataObj = (row as Record<string, unknown>)
+            .row_data as Record<string, unknown> | undefined;
+          let value: any;
+          if (rowDataObj && rowDataObj[column] !== undefined) {
+            value = rowDataObj[column];
+          } else {
+            value = (row as Record<string, unknown>)[column];
+          }
+          return formatCellValue(value);
+        },
       });
     });
 
     return columns;
   }, [data, dataColumns]);
 
-  const importLogsColumns = useMemo((): TableColumn<ImportLog>[] => [
+  const importLogsDefaultColumns: TableColumn<ImportLog>[] = useMemo(() => [
     {
       id: "row_number",
-      header: "Row Number",
-      accessorKey: "row_number",
-      cell: (info) => info.getValue(),
+      label: "Row Number",
       visible: true,
       sortable: false,
+      render: (value) => value,
     },
     {
       id: "import_status",
-      header: "Status",
-      accessorKey: "import_status",
-      cell: (info) => {
-        const status = info.getValue() as string;
+      label: "Status",
+      visible: true,
+      sortable: false,
+      render: (value) => {
+        const status = value as string;
         return (
           <span
             className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium ${
@@ -473,26 +521,75 @@ export default function QuickListDetailsPage() {
           </span>
         );
       },
-      visible: true,
-      sortable: false,
     },
     {
       id: "error_message",
-      header: "Error Message",
-      accessorKey: "error_message",
-      cell: (info) => info.getValue() || "-",
+      label: "Error Message",
       visible: true,
       sortable: false,
+      render: (value) => value || "-",
     },
     {
       id: "created_at",
-      header: "Created",
-      accessorKey: "created_at",
-      cell: (info) => formatDate(info.getValue() as string),
+      label: "Created",
       visible: true,
       sortable: false,
+      render: (value) => formatDate(value as string),
     },
-  ], []);
+  ], [formatDate]);
+
+  const auditTrailDefaultColumns: TableColumn<any>[] = useMemo(() => [
+    {
+      id: "member_id",
+      label: "Member ID",
+      visible: true,
+      sortable: false,
+      render: (value) => value || "-",
+    },
+    {
+      id: "identifier",
+      label: "Identifier",
+      visible: true,
+      sortable: false,
+      render: (value) => value || "-",
+    },
+    {
+      id: "identifier_type",
+      label: "Type",
+      visible: true,
+      sortable: false,
+      render: (value) => {
+        const type = value as string;
+        const displayMap: Record<string, string> = {
+          msisdn: "Phone",
+          email: "Email",
+          id: "ID",
+        };
+        return displayMap[type] || type;
+      },
+    },
+    {
+      id: "removed_at",
+      label: "Removed At",
+      visible: true,
+      sortable: false,
+      render: (value) => formatDate(value as string),
+    },
+    {
+      id: "removed_by",
+      label: "Removed By",
+      visible: true,
+      sortable: false,
+      render: (value) => value || "-",
+    },
+  ], [formatDate]);
+
+  // Memoized column definitions
+  const dataTableColumns = dataDefaultColumns;
+  const importLogsColumns = importLogsDefaultColumns;
+  const auditTrailColumns = auditTrailDefaultColumns;
+
+  // Debug logs
 
   const infoRowClass =
     "flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 py-2";
@@ -700,11 +797,12 @@ export default function QuickListDetailsPage() {
           { id: "overview", label: "Overview", icon: FileText },
           { id: "data", label: "Data", icon: Database },
           { id: "logs", label: "Import Logs", icon: AlertCircle },
+          { id: "audit-trail", label: "Audit Trail", icon: AlertCircle },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() =>
-              setActiveSection(tab.id as "overview" | "data" | "logs")
+              setActiveSection(tab.id as "overview" | "data" | "logs" | "audit-trail")
             }
             className={`px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2 relative flex-shrink-0 ${
               activeSection === tab.id
@@ -729,7 +827,7 @@ export default function QuickListDetailsPage() {
         <div
           className={`${tw.rounded} overflow-hidden`}
           style={{
-            backgroundColor: 'var(--c-surface-cards)',
+            backgroundColor: 'var(--c-surface-background)',
             border: '1px solid var(--c-border-default)',
           }}
         >
@@ -741,7 +839,7 @@ export default function QuickListDetailsPage() {
                 <div
                   className={`${tw.rounded} p-4`}
                   style={{
-                    backgroundColor: 'transparent',
+                    // backgroundColor: 'var(--c-quicklist-inner-card)',
                   }}
                 >
                   <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--c-text-primary)' }}>
@@ -789,7 +887,7 @@ export default function QuickListDetailsPage() {
                 <div
                   className={`${tw.rounded} p-4`}
                   style={{
-                    backgroundColor: 'transparent',
+                    // backgroundColor: 'var(--c-quicklist-inner-card)',
                   }}
                 >
                   <h3 className="text-base font-semibold mb-3" style={{ color: 'var(--c-text-primary)' }}>
@@ -1028,10 +1126,6 @@ export default function QuickListDetailsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div
                     className={`${tw.rounded} p-4`}
-                    style={{
-                      backgroundColor: 'var(--c-surface-background)',
-                      border: '1px solid var(--c-border-default)',
-                    }}
                   >
                     <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>Upload Type</p>
                     <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
@@ -1041,10 +1135,6 @@ export default function QuickListDetailsPage() {
 
                   <div
                     className={`${tw.rounded} p-4`}
-                    style={{
-                      backgroundColor: 'var(--c-surface-background)',
-                      border: '1px solid var(--c-border-default)',
-                    }}
                   >
                     <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>Rows Imported</p>
                     <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
@@ -1056,10 +1146,6 @@ export default function QuickListDetailsPage() {
 
                   <div
                     className={`${tw.rounded} p-4`}
-                    style={{
-                      backgroundColor: 'var(--c-surface-background)',
-                      border: '1px solid var(--c-border-default)',
-                    }}
                   >
                     <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>Created</p>
                     <p className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>
@@ -1136,14 +1222,27 @@ export default function QuickListDetailsPage() {
                 columns={dataTableColumns}
                 data={data}
                 totalItems={dataPagination?.total || data.length}
+                currentPage={1}
+                pageSize={DEFAULT_PAGE_SIZE}
                 isLoading={loadingData}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
                   rowBackground: tableBodyBackground,
-                  rowSpacing: "6px",
+                  rowSpacing: "0 8px",
                 }}
               />
+              {data.length > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={1}
+                    pageSize={DEFAULT_PAGE_SIZE}
+                    totalItems={dataPagination?.total || data.length}
+                    onPageChange={() => {}}
+                    onPageSizeChange={() => {}}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1182,18 +1281,96 @@ export default function QuickListDetailsPage() {
                   </p>
                 </div>
               )}
+              
               <Table<ImportLog>
                 columns={importLogsColumns}
                 data={importLogs}
                 totalItems={logsPagination?.total || importLogs.length}
+                currentPage={1}
+                pageSize={DEFAULT_PAGE_SIZE}
                 isLoading={loadingLogs}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
                   rowBackground: tableBodyBackground,
-                  rowSpacing: "6px",
+                  rowSpacing: "0 8px",
                 }}
               />
+              {importLogs.length > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={1}
+                    pageSize={DEFAULT_PAGE_SIZE}
+                    totalItems={logsPagination?.total || importLogs.length}
+                    onPageChange={() => {}}
+                    onPageSizeChange={() => {}}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeSection === "audit-trail" && (
+        <div>
+          {loadingAuditTrail ? (
+            <div className="flex items-center justify-center py-12">
+              <LoadingSpinner
+                variant="modern"
+                size="lg"
+                color="primary"
+                className="mr-3"
+              />
+              <span className={`${tw.textSecondary}`}>
+                Loading audit trail...
+              </span>
+            </div>
+          ) : auditTrail.length === 0 ? (
+            <div className="text-center py-12">
+              <AlertCircle className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+              <p className="text-base font-medium text-gray-900 mb-1">
+                No Removed Members
+              </p>
+              <p className="text-sm text-gray-500">
+                No members have been removed from this quicklist.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {auditTrailPagination && auditTrailPagination.total > auditTrail.length && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <p className="text-sm text-gray-600">
+                    Showing {auditTrail.length} of {auditTrailPagination.total} removed members
+                  </p>
+                </div>
+              )}
+              
+              <Table<any>
+                columns={auditTrailColumns}
+                data={auditTrail}
+                totalItems={auditTrailPagination?.total || auditTrail.length}
+                currentPage={1}
+                pageSize={DEFAULT_PAGE_SIZE}
+                isLoading={loadingAuditTrail}
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: tableBodyBackground,
+                  rowSpacing: "0 8px",
+                }}
+              />
+              {auditTrail.length > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={1}
+                    pageSize={DEFAULT_PAGE_SIZE}
+                    totalItems={auditTrailPagination?.total || auditTrail.length}
+                    onPageChange={() => {}}
+                    onPageSizeChange={() => {}}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1231,12 +1408,74 @@ export default function QuickListDetailsPage() {
           onClose={() => setIsManageCustomersModalOpen(false)}
           quicklist={quicklist}
           mode={manageCustomersMode}
+          isLoading={isManagingCustomers}
           onSubmit={async (customers) => {
-            const action = manageCustomersMode === "add" ? "added to" : "removed from";
-            showToast(
-              `${customers.length} customer${customers.length !== 1 ? "s" : ""} ${action} ${quicklist.name}`,
-            );
-            setIsManageCustomersModalOpen(false);
+            if (!user?.user_id) {
+              showError("Error", "User ID not available");
+              return;
+            }
+
+            setIsManagingCustomers(true);
+            try {
+              if (manageCustomersMode === "add") {
+                // Add customers one by one
+                const results = await Promise.all(
+                  customers.map((customer) =>
+                    quicklistService.addMemberToQuickList(
+                      quicklist.id,
+                      customer.customer_phone || customer.customer_email || String(customer.customer_id),
+                      customer.customer_phone ? "msisdn" : "email",
+                      user.user_id,
+                    ),
+                  ),
+                );
+
+                // Check if all succeeded
+                const allSucceeded = results.every((r) => r.success);
+                if (!allSucceeded) {
+                  showError("Partial Error", "Some customers could not be added. Please try again.");
+                } else {
+                  showToast(
+                    `${customers.length} customer${customers.length !== 1 ? "s" : ""} added to ${quicklist.name}`,
+                  );
+                  // Reload quicklist data
+                  loadData();
+                }
+              } else {
+                // Remove customers one by one
+                // Note: For removal, we need the member_id from the quicklist data
+                // For now, using customer_id as member_id (assuming they match)
+                const results = await Promise.all(
+                  customers.map((customer) =>
+                    quicklistService.removeMemberFromQuickList(
+                      quicklist.id,
+                      customer.customer_id,
+                      user.user_id,
+                    ),
+                  ),
+                );
+
+                const allSucceeded = results.every((r) => r.success);
+                if (!allSucceeded) {
+                  showError("Partial Error", "Some customers could not be removed. Please try again.");
+                } else {
+                  showToast(
+                    `${customers.length} customer${customers.length !== 1 ? "s" : ""} removed from ${quicklist.name}`,
+                  );
+                  // Reload quicklist data
+                  loadData();
+                }
+              }
+
+              setIsManageCustomersModalOpen(false);
+            } catch (err) {
+              showError(
+                "Error",
+                extractBackendError(err, `Failed to ${manageCustomersMode} customer${customers.length !== 1 ? "s" : ""}. Please try again.`),
+              );
+            } finally {
+              setIsManagingCustomers(false);
+            }
           }}
         />
       )}

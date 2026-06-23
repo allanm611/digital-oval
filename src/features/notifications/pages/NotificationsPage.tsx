@@ -102,44 +102,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // TODO: Backend should add `entity_type` field to notification payload
-  // Then routing logic will be simple:
-  // const route = `/dashboard/${notification.payload.entity_type}s/${notification.payload.id}`;
-  // For now, just mark as read without navigating
-  /*
-  const getRouteFromNotification = (notification: InboxNotification): string | null => {
-    const payload = notification.payload;
-    const entityId = payload?.id;
-
-    if (!entityId) {
-      return null;
-    }
-
-    // Detect entity type by checking payload fields (unreliable)
-    // Offer
-    if (payload?.offer_type || payload?.offer_uuid || payload?.offer_type_id || payload?.discount_amount !== undefined) {
-      return `/dashboard/offers/${entityId}`;
-    }
-
-    // Product
-    if (payload?.product_type_id || payload?.product_uuid || payload?.product_code) {
-      return `/dashboard/products/${entityId}`;
-    }
-
-    // Segment
-    if (payload?.segment_id || payload?.segment_name || payload?.eligibility_rules) {
-      return `/dashboard/segments/${entityId}`;
-    }
-
-    // Campaign
-    if (payload?.campaign_id || payload?.campaign_name || payload?.communication_channel) {
-      return `/dashboard/campaigns/${entityId}`;
-    }
-
-    return null;
-  };
-  */
-
   const handleNotificationClick = async (notification: InboxNotification) => {
     try {
       setLoadingIndividual((prev) => ({ ...prev, [notification.id]: "marking" }));
@@ -148,9 +110,24 @@ export default function NotificationsPage() {
         await markAsRead([notification.id]);
       }
 
-      // TODO: When backend adds entity_type field, uncomment routing logic
-      // const route = getRouteFromNotification(notification);
-      // if (route) navigate(route);
+      let route: string | null = null;
+
+      if (notification.notification_action?.match(/^\/[\w-]+\/?(\/([\w-]+))?$/)) {
+        // If action has an ID (e.g., /offers/123), use it as-is
+        if (notification.notification_action.match(/\/[\w-]+$/)) {
+          route = `/dashboard${notification.notification_action}`;
+        }
+        // If action is just /entity-type/ (no ID) but payload has id, construct full route
+        else if (notification.payload?.id) {
+          const entityType = notification.notification_action.match(/^\/(\w+)/)?.[1];
+          route = `/dashboard/${entityType}/${notification.payload.id}`;
+        }
+      }
+
+      if (route) {
+        console.log('Navigating to:', route, 'from notification:', notification);
+        navigate(route);
+      }
     } catch (err) {
       console.error("Failed to mark notification as read:", err);
     } finally {

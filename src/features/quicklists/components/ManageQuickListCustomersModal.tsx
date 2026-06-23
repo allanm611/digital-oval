@@ -36,7 +36,7 @@ interface ManageQuickListCustomersModalProps {
   onClose: () => void;
   quicklist: QuickList | null;
   mode: "add" | "remove";
-  onSubmit?: (customers: SelectedCustomer[]) => void;
+  onSubmit?: (customers: SelectedCustomer[]) => Promise<void> | void;
   isLoading?: boolean;
 }
 
@@ -242,11 +242,16 @@ export default function ManageQuickListCustomersModal({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (onSubmit && selectedCustomers.length > 0) {
-      onSubmit(selectedCustomers);
+      try {
+        await onSubmit(selectedCustomers);
+        handleClose();
+      } catch (error) {
+        // Error is handled by parent component
+        console.error("Error submitting:", error);
+      }
     }
-    handleClose();
   };
 
   const handleClose = () => {

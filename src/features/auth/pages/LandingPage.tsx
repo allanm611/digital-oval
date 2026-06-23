@@ -25,6 +25,7 @@ import { tw } from '../../../shared/utils/utils';
 export default function LandingPage() {
   const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     setIsVisible(true);
@@ -85,134 +86,165 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className={`min-h-screen bg-[#0a192f] relative overflow-hidden `}>
-      {/* Background Pattern */}
-      <div className="bg-gradients"></div>
-      <div className="bg-hex"></div>
+    <div className={`min-h-screen bg-white relative overflow-hidden`}>
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
 
       {/* Content */}
       <div className="relative z-10">
         {/* Desktop Navigation */}
-        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 max-md:hidden backdrop-blur-sm bg-[#0a192f]/95">
+        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 max-md:hidden backdrop-blur-md bg-white/98">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
-            <div className="flex justify-between items-center h-20">
-              <div
-                className={`flex items-center space-x-3 transition-all duration-800 ${
-                  isVisible ? "slide-in-left" : "opacity-0"
-                }`}
-              >
-                <div className="w-40 h-40 flex items-center justify-center">
-                  <img
-                    src={logo}
-                    alt="Sentra Logo"
-                    className="w-full h-full object-contain"
-                  />
+            <div className="flex justify-between items-center h-14">
+              {/* Logo */}
+              <div className="flex items-center flex-shrink-0">
+                <img
+                  src={logo}
+                  alt="Sentra Logo"
+                  className="h-16 w-auto object-contain"
+                />
+              </div>
+
+              {/* Center Navigation Menu */}
+              <div className="hidden lg:flex items-center gap-8">
+                {/* Products Dropdown */}
+                <div className="relative group">
+                  <button className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center gap-2 py-4">
+                    Products
+                    <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3 divide-y divide-gray-100">
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Platform</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra CM</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra 360</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Target</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Analytics</Link>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">More</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Connect</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Config</Link>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Solutions Dropdown */}
+                <div className="relative group">
+                  <button className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center gap-2 py-4">
+                    Solutions
+                    <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3">
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Customer Engagement</Link>
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Revenue Optimization</Link>
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Customer Retention</Link>
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Data Intelligence</Link>
+                  </div>
+                </div>
+
+                {/* Resources */}
+                <Link to="/documentation" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-4">
+                  Resources
+                </Link>
+
+                {/* Company Dropdown */}
+                <div className="relative group">
+                  <button className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center gap-2 py-4">
+                    Company
+                    <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3">
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">About Us</Link>
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Customers</Link>
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Careers</Link>
+                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Press</Link>
+                  </div>
                 </div>
               </div>
-              <div
-                className={`flex items-center space-x-6 transition-all duration-800 delay-300 ${
-                  isVisible ? "slide-in-right" : "opacity-0"
-                }`}
-              >
-                <Link
-                  to="/documentation"
-                  className={`text-white/80 hover:text-white px-4 py-2 text-base font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/10`}
-                >
-                  Documentation
+
+              {/* Right - Search & CTAs */}
+              <div className="flex items-center gap-4">
+                {/* Search Icon */}
+                <button className="text-gray-400 hover:text-gray-600 p-2 transition-colors duration-200">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+
+                {/* Sign In */}
+                <Link to="/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200">
+                  Sign In
                 </Link>
-                <Link
-                  to="/login"
-                  className={`text-white/80 hover:text-white px-4 py-2 text-base font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/10`}
-                >
-                  {t.landing.signIn}
-                </Link>
-                <AnimatedButton
-                  variant="primary"
-                  size="md"
-                  glowEffect
+
+                {/* Demo Button */}
+                <button
                   onClick={() => (window.location.href = "/request-account")}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
                 >
-                  {t.landing.requestAccess}
-                </AnimatedButton>
+                  Book a Demo
+                </button>
               </div>
             </div>
           </div>
         </nav>
 
         {/* Mobile Navigation */}
-        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 md:hidden backdrop-blur-sm bg-[#0a192f]/95">
-          <div className="mx-auto px-5 py-2">
+        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 md:hidden backdrop-blur-md bg-white/98">
+          <div className="px-4 py-2.5">
             <div className="flex items-center justify-between">
-              {/* Logo on the left */}
-              <div
-                className={`flex items-center transition-all duration-800 ${
-                  isVisible ? "slide-in-left" : "opacity-0"
-                }`}
-              >
-                <div className="w-20 h-20 flex items-center justify-center">
-                  <img
-                    src={logo}
-                    alt="Sentra Logo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </div>
-              {/* Buttons on the right */}
-              <div
-                className={`flex items-center space-x-2 transition-all duration-800 delay-300 ${
-                  isVisible ? "slide-in-right" : "opacity-0"
-                }`}
-              >
-                <Link
-                  to="/documentation"
-                  className={`text-white/80 hover:text-white px-2 py-2 text-xs font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/10`}
-                >
-                  Docs
-                </Link>
-                <Link
-                  to="/login"
-                  className={`text-white/80 hover:text-white px-3 py-2 text-sm font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/10`}
-                >
-                  {t.landing.signIn}
-                </Link>
-                <AnimatedButton
-                  variant="primary"
-                  size="sm"
-                  glowEffect
-                  onClick={() => (window.location.href = "/request-account")}
-                >
-                  {t.landing.requestAccess}
-                </AnimatedButton>
+              <img src={logo} alt="Sentra Logo" className="h-14 w-auto object-contain" />
+              <div className="flex items-center gap-2">
+                <button className="text-gray-400 hover:text-gray-600 p-2 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+                <button className="text-gray-600 hover:text-gray-900 p-2 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         </nav>
 
         {/* Hero Section */}
-        <section className="pt-32 pb-20 overflow-hidden">
+        <section className="pt-28 pb-20 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <div className={`inline-flex items-center px-6 py-3 ${tw.surfaceBackground}/10 backdrop-blur-sm  rounded-full text-sm font-semibold mb-8 border border-white/20`}>
-                <Sparkles className="w-4 h-4 mr-2 text-emerald-400 animate-pulse" />
-                {t.landing.nextGenPlatform}
+              <div className={`inline-flex items-center px-6 py-3 bg-emerald-50 backdrop-blur-sm rounded-full text-sm font-semibold mb-8 border border-emerald-200`}>
+                <Sparkles className="w-4 h-4 mr-2 text-emerald-600 animate-pulse" />
+                <span className="text-emerald-700">{t.landing.nextGenPlatform}</span>
               </div>
               <h1
-                className={`${tw.mainHeading} text-white mb-6 leading-tight`}
+                className={`${tw.mainHeading} text-gray-900 mb-6 leading-tight`}
               >
                 {t.landing.transformCustomerValue} <br />
-                <span className="text-emerald-400">{t.landing.customerValueManagement}</span>
+                <span className="text-emerald-600">{t.landing.customerValueManagement}</span>
               </h1>
-              <p className={`text-lg /80 mb-12 max-w-3xl mx-auto leading-relaxed`}>
+              <p className={`text-lg text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed`}>
                 {t.landing.heroDescription}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
                 <Link
                   to="/request-account"
-                  className={`inline-flex items-center px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold ${tw.rounded} transition-all duration-300 transform hover:scale-105`}
+                  className={`inline-flex items-center px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold ${tw.rounded} transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl`}
                 >
                   {t.landing.getStartedToday}
                 </Link>
-                <button className={`inline-flex items-center px-6 py-4 border border-white/30 text-white font-semibold ${tw.rounded} hover:bg-white/10 transition-all duration-200`}>
+                <button className={`inline-flex items-center px-6 py-4 border-2 border-gray-300 text-gray-800 font-semibold ${tw.rounded} hover:bg-gray-50 hover:border-emerald-400 transition-all duration-200`}>
                   <Play className="mr-2 h-5 w-5" />
                   {t.landing.watchDemo}
                 </button>
@@ -224,24 +256,24 @@ export default function LandingPage() {
 
 
         {/* Features Section */}
-        <section className="py-20 border-t border-white/10 border-b border-b-white/10">
+        <section className="py-20 border-t border-gray-200 border-b border-b-gray-200">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className={`${tw.mainHeading} text-white mb-4`}>
+              <h2 className={`${tw.mainHeading} text-gray-900 mb-4`}>
                 {t.landing.everythingYouNeed}{" "}
-                <span className="text-emerald-400">customer value</span>
+                <span className="text-emerald-600">customer value</span>
               </h2>
-              <p className={`text-lg /80 max-w-2xl mx-auto`}>
+              <p className={`text-lg text-gray-600 max-w-2xl mx-auto`}>
                 {t.landing.ourComprehensive}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, index) => (
-                <div key={index} className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center mt-1">
-                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                <div key={index} className="flex items-start space-x-3 group">
+                  <div className="flex-shrink-0 w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center mt-1 group-hover:bg-emerald-200 transition-colors duration-300">
+                    <CheckCircle className="w-4 h-4 text-emerald-600" />
                   </div>
-                  <p className={`/90 leading-relaxed`}>{feature}</p>
+                  <p className={`text-gray-700 leading-relaxed group-hover:text-gray-900 transition-colors duration-300`}>{feature}</p>
                 </div>
               ))}
             </div>
@@ -249,13 +281,13 @@ export default function LandingPage() {
         </section>
 
         {/* Modules Section */}
-        <section className="py-20 border-b border-b-white/10">
+        <section className="py-20 border-b border-b-gray-200">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className={`${tw.mainHeading} text-white mb-4`}>
-                {t.landing.powerfulModules} <span className="text-emerald-400">Modules</span>
+              <h2 className={`${tw.mainHeading} text-gray-900 mb-4`}>
+                {t.landing.powerfulModules} <span className="text-emerald-600">Modules</span>
               </h2>
-              <p className={`text-lg /80 max-w-2xl mx-auto`}>
+              <p className={`text-lg text-gray-600 max-w-2xl mx-auto`}>
                 {t.landing.exploreComprehensive}
               </p>
             </div>
@@ -268,7 +300,7 @@ export default function LandingPage() {
                 return (
                   <div
                     key={index}
-                    className={`bg-white/5 backdrop-blur-sm ${tw.rounded} border border-white/10 p-6 hover:border-emerald-400/50 transition-all duration-300 hover:-translate-y-2 group cursor-pointer ${
+                    className={`bg-white border border-gray-200 shadow-sm hover:shadow-lg ${tw.rounded} p-6 hover:border-emerald-300 transition-all duration-300 hover:-translate-y-1 group cursor-pointer ${
                       isLast ? 'md:col-start-2' : ''
                     }`}
                     style={{
@@ -276,14 +308,14 @@ export default function LandingPage() {
                     }}
                   >
                     <div className="flex flex-col items-center text-center h-full">
-                      <div className={`flex items-center justify-center w-12 h-12 bg-emerald-500/20 ${tw.rounded} mb-4 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110`}>
-                        <Icon className="w-6 h-6 text-emerald-400" />
+                      <div className={`flex items-center justify-center w-12 h-12 bg-emerald-100 ${tw.rounded} mb-4 group-hover:bg-emerald-200 transition-all duration-300 group-hover:scale-110`}>
+                        <Icon className="w-6 h-6 text-emerald-600" />
                       </div>
-                      <h3 className={`text-base font-semibold  group-hover:text-emerald-400 transition-colors duration-300 mb-1`}>
+                      <h3 className={`text-base font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors duration-300 mb-1`}>
                         {module.title}
                       </h3>
-                      <p className={`text-sm /50 mb-3`}>{module.subtitle}</p>
-                      <p className={`text-sm /70 leading-relaxed`}>
+                      <p className={`text-sm text-gray-500 mb-3`}>{module.subtitle}</p>
+                      <p className={`text-sm text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors duration-300`}>
                         {module.description}
                       </p>
                     </div>
@@ -306,67 +338,67 @@ export default function LandingPage() {
 
 
         {/* Final CTA Section */}
-        <section className="py-20 border-t border-white/10">
+        <section className="py-20 border-t border-gray-200 bg-gradient-to-br from-white via-emerald-50/30 to-white">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               {/* Left Side - Benefits */}
               <div>
-                <h2 className={`text-3xl sm:text-4xl font-bold  mb-8`}>
+                <h2 className={`text-3xl sm:text-4xl font-bold text-gray-900 mb-8`}>
                   Transform your customer value strategy
                 </h2>
 
                 <div className="space-y-6">
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 group">
                     <div className="flex-shrink-0">
-                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-500/20 rounded-full">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-100 rounded-full group-hover:bg-emerald-200 transition-colors duration-300">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
                       </div>
                     </div>
                     <div>
-                      <h3 className={` font-semibold mb-1`}>Deploy in days, not months</h3>
-                      <p className={`/70 text-sm`}>
+                      <h3 className={`text-gray-900 font-semibold mb-1`}>Deploy in days, not months</h3>
+                      <p className={`text-gray-600 text-sm`}>
                         Get up and running quickly with our streamlined implementation process
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 group">
                     <div className="flex-shrink-0">
-                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-500/20 rounded-full">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-100 rounded-full group-hover:bg-emerald-200 transition-colors duration-300">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
                       </div>
                     </div>
                     <div>
-                      <h3 className={` font-semibold mb-1`}>Dedicated support team</h3>
-                      <p className={`/70 text-sm`}>
+                      <h3 className={`text-gray-900 font-semibold mb-1`}>Dedicated support team</h3>
+                      <p className={`text-gray-600 text-sm`}>
                         Expert guidance every step of your customer value journey
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 group">
                     <div className="flex-shrink-0">
-                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-500/20 rounded-full">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-100 rounded-full group-hover:bg-emerald-200 transition-colors duration-300">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
                       </div>
                     </div>
                     <div>
-                      <h3 className={` font-semibold mb-1`}>AI-powered insights</h3>
-                      <p className={`/70 text-sm`}>
+                      <h3 className={`text-gray-900 font-semibold mb-1`}>AI-powered insights</h3>
+                      <p className={`text-gray-600 text-sm`}>
                         Unified customer profiles across all channels in real-time
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 group">
                     <div className="flex-shrink-0">
-                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-500/20 rounded-full">
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <div className="flex items-center justify-center w-6 h-6 bg-emerald-100 rounded-full group-hover:bg-emerald-200 transition-colors duration-300">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
                       </div>
                     </div>
                     <div>
-                      <h3 className={` font-semibold mb-1`}>Proven ROI results</h3>
-                      <p className={`/70 text-sm`}>
+                      <h3 className={`text-gray-900 font-semibold mb-1`}>Proven ROI results</h3>
+                      <p className={`text-gray-600 text-sm`}>
                         Average 45% increase in ROI within the first 6 months
                       </p>
                     </div>
@@ -375,25 +407,25 @@ export default function LandingPage() {
               </div>
 
               {/* Right Side - CTA */}
-              <div className="lg:pl-12 border border-white/5 p-8 lg:p-10 rounded-lg">
-                <h3 className={`text-2xl font-bold  mb-3`}>
+              <div className="lg:pl-12 border border-gray-200 bg-white shadow-lg p-8 lg:p-10 rounded-xl">
+                <h3 className={`text-2xl font-bold text-gray-900 mb-3`}>
                   Ready to get started?
                 </h3>
-                <p className={`/70 mb-6`}>
+                <p className={`text-gray-600 mb-6`}>
                   Start transforming your customer relationships today.
                 </p>
 
                 <div className="flex gap-3 flex-wrap">
                   <Link
                     to="/request-account"
-                    className={`inline-flex items-center px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold ${tw.rounded} transition-all duration-200`}
+                    className={`inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold ${tw.rounded} transition-all duration-200 shadow-md hover:shadow-lg`}
                   >
                     Request Access
                   </Link>
 
                   <Link
                     to="/login"
-                    className={`inline-flex items-center px-6 py-3 border border-white/30 text-white font-semibold ${tw.rounded} hover:bg-white/10 transition-all duration-200`}
+                    className={`inline-flex items-center px-6 py-3 border-2 border-gray-300 text-gray-800 font-semibold ${tw.rounded} hover:bg-gray-50 hover:border-emerald-400 transition-all duration-200`}
                   >
                     Sign In
                   </Link>
@@ -404,39 +436,39 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className={`border-t border-white/10  py-16`}>
+        <footer className={`border-t border-gray-200 bg-gray-50 py-16`}>
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             {/* Footer Content */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
               {/* Brand Section */}
               <div className="md:col-span-1">
-                <h3 className={` font-semibold mb-4`}>Sentra</h3>
-                <p className={`/60 text-sm leading-relaxed`}>
+                <h3 className={`text-gray-900 font-semibold mb-4`}>Sentra</h3>
+                <p className={`text-gray-600 text-sm leading-relaxed`}>
                   Enterprise customer value management platform for modern businesses.
                 </p>
               </div>
 
               {/* Product Links */}
               <div>
-                <h4 className={` font-semibold mb-4`}>Product</h4>
+                <h4 className={`text-gray-900 font-semibold mb-4`}>Product</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link to="/documentation" className={`text-white/60 hover: transition-colors`}>
+                    <Link to="/documentation" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Documentation
                     </Link>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Features
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Pricing
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       API Reference
                     </a>
                   </li>
@@ -445,25 +477,25 @@ export default function LandingPage() {
 
               {/* Company Links */}
               <div>
-                <h4 className={` font-semibold mb-4`}>Company</h4>
+                <h4 className={`text-gray-900 font-semibold mb-4`}>Company</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       About Us
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Blog
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Careers
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Contact
                     </a>
                   </li>
@@ -472,25 +504,25 @@ export default function LandingPage() {
 
               {/* Resources */}
               <div>
-                <h4 className={` font-semibold mb-4`}>Resources</h4>
+                <h4 className={`text-gray-900 font-semibold mb-4`}>Resources</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Help Center
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Tutorials
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Case Studies
                     </a>
                   </li>
                   <li>
-                    <a href="#" className={`text-white/60 hover: transition-colors`}>
+                    <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                       Webinars
                     </a>
                   </li>
@@ -499,19 +531,19 @@ export default function LandingPage() {
             </div>
 
             {/* Divider */}
-            <div className="border-t border-white/10 pt-8">
+            <div className="border-t border-gray-200 pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className={`/60 text-sm`}>
+                <div className={`text-gray-600 text-sm`}>
                   <p dangerouslySetInnerHTML={{ __html: t.landing.copyrightNotice }}></p>
                 </div>
                 <div className="flex gap-6 text-sm">
-                  <a href="#" className={`text-white/60 hover: transition-colors`}>
+                  <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                     Privacy Policy
                   </a>
-                  <a href="#" className={`text-white/60 hover: transition-colors`}>
+                  <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                     Terms of Service
                   </a>
-                  <a href="#" className={`text-white/60 hover: transition-colors`}>
+                  <a href="#" className={`text-gray-600 hover:text-emerald-600 transition-colors`}>
                     Security
                   </a>
                 </div>
@@ -520,6 +552,32 @@ export default function LandingPage() {
           </div>
         </footer>
       </div>
+
+      <style>{`
+        @keyframes blob {
+          0%, 100% {
+            transform: translate(0, 0) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+        }
+
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
     </div>
   );
 }

@@ -10,7 +10,7 @@ import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
+import { Edit, Trash2, MessageSquare, Grid, List, Megaphone } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import CategoryModal from "../../../shared/components/CategoryModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
@@ -805,11 +805,14 @@ export default function CampaignCategoriesPage() {
               style={{ backgroundColor: color.surface.cards }}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3
-                  className={`${tw.tableFirstColumn} text-gray-900 flex-1 truncate`}
-                >
-                  {category.name}
-                </h3>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Megaphone className="w-5 h-5 flex-shrink-0" style={{ color: color.primary.accent }} />
+                  <h3
+                    className={`${tw.tableFirstColumn} text-gray-900 truncate`}
+                  >
+                    {category.name}
+                  </h3>
+                </div>
                 <div className="flex items-center space-x-1">
                   <ActivateDeactivateButton
                     isActive={category.is_active}
