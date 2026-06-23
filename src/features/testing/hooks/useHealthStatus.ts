@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { healthApi } from '../services/healthApi';
 import {
   buildDashboard,
@@ -18,6 +19,7 @@ import type {
   NotificationSettings,
   ScheduleUpdate,
   ModuleUpdate,
+  TriggerRunRequest,
 } from '../types/health';
 
 export const HEALTH_QUERY_KEYS = {
@@ -180,12 +182,19 @@ export function useRunDetail(runId: string | null) {
 
 export function useTriggerRun() {
   const queryClient = useQueryClient();
+  const { token } = useAuth();
 
   return useMutation({
-    mutationFn: (moduleId: string) => healthApi.triggerRun(moduleId),
-    onSuccess: (_run, moduleId) => {
+    mutationFn: async ({ moduleId, baseUrl }: TriggerRunRequest) => {
+      const raw = await healthApi.triggerRun(moduleId, { baseUrl, authToken: token });
+      return normalizeRunDetail(raw);
+    },
+    onSuccess: (run, { moduleId }) => {
       queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.status });
       queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.runs(moduleId) });
+      if (run.id) {
+        queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.runDetail(run.id) });
+      }
     },
   });
 }

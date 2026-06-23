@@ -2,6 +2,34 @@
 
 export type TestStatus = 'pass' | 'fail' | 'running' | 'unknown' | 'skipped';
 export type RunStatus = 'pending' | 'running' | 'passed' | 'failed' | 'unknown';
+export type PlaywrightCaseStatus = 'passed' | 'failed' | 'skipped' | 'flaky' | 'unknown';
+
+export interface PlaywrightTestCaseMeta {
+  id: string;
+  title: string;
+  specFile: string;
+  line?: number;
+  column?: number;
+  project?: string;
+  suiteType?: string;
+  durationMs: number;
+  status: PlaywrightCaseStatus;
+  retries?: number;
+  error?: TestError;
+  screenshotKey?: string;
+  traceKey?: string;
+}
+
+export interface RunMeta {
+  testSuites?: string[];
+  cron?: string;
+  suites?: Array<Partial<TestSuiteResult>>;
+  testCases?: PlaywrightTestCaseMeta[];
+  reportUrl?: string;
+  flaky?: number;
+  [key: string]: unknown;
+}
+
 export type TestType =
   | 'unit'
   | 'integration'
@@ -18,6 +46,9 @@ export interface TestError {
   message: string;
   stack?: string;
   screenshot?: string;
+  traceUrl?: string;
+  specFile?: string;
+  line?: number;
 }
 
 export interface TestSuiteResult {
@@ -48,6 +79,7 @@ export interface ModuleThresholds {
   performanceMs: number;
   maxFailures: number;
 }
+
 
 export interface ModuleConfig {
   id: string;
@@ -169,6 +201,35 @@ export interface ServiceProbeResult {
   status: number;
   durationMs: number;
   message?: string;
+}
+
+/** Nested credentials block — matches manual POST /v1/run/:moduleId REST examples. */
+export interface RunTriggerCredentials {
+  email?: string;
+  password?: string;
+  auth_token?: string;
+  session_id?: string;
+  auth_user?: Record<string, unknown>;
+  auth_permissions?: string[];
+}
+
+/** Body for POST /v1/run/:moduleId — forwarded into Playwright run auth context. */
+export interface RunTriggerPayload {
+  credentials?: RunTriggerCredentials;
+  auth_token?: string;
+  session_id?: string;
+  email?: string;
+  password?: string;
+  auth_user: Record<string, unknown>;
+  auth_permissions: string[];
+  /** Playwright target URL — typically the module's `baseUrl`. */
+  frontendUrl: string;
+}
+
+export interface TriggerRunRequest {
+  moduleId: string;
+  /** Module config `baseUrl` — preferred Playwright frontend target. */
+  baseUrl?: string;
 }
 
 export type TestCatalogKind = 'category' | 'spec' | 'case';

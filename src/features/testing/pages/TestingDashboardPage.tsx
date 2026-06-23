@@ -14,6 +14,7 @@ import {
   useDeleteModule,
 } from '../hooks/useHealthStatus';
 import { useToast } from '../../../contexts/ToastContext';
+import { HealthApiError } from '../services/healthApi';
 import { useAuth } from '../../../contexts/AuthContext';
 import ModuleCard from '../components/ModuleCard';
 import SummaryBar from '../components/SummaryBar';
@@ -73,12 +74,22 @@ const TestingDashboardPage: React.FC = () => {
     authToastShown.current = false;
   }, [isAuthenticated]);
 
-  const handleRunNow = useCallback(async (moduleId: string) => {
+  const handleRunNow = useCallback(async (moduleId: string, baseUrl?: string) => {
     try {
-      await triggerRun.mutateAsync(moduleId);
-      toast.success('Run started', 'The module has been submitted for execution.');
+      const run = await triggerRun.mutateAsync({ moduleId, baseUrl });
+      toast.success(
+        run.status === 'running' ? 'Run queued' : 'Run started',
+        run.status === 'running'
+          ? 'The module was submitted to the worker queue.'
+          : 'The module has been submitted for execution.',
+      );
     } catch (err) {
-      toast.error('Run failed', (err as Error)?.message ?? 'See console for details.');
+      const message = (err as Error)?.message ?? 'See console for details.';
+      if (err instanceof HealthApiError && (err.status === 401 || err.status === 400)) {
+        toast.error('Cannot run tests', message);
+      } else {
+        toast.error('Run failed', message);
+      }
       console.error('Trigger run failed:', err);
     }
   }, [triggerRun, toast]);
@@ -294,10 +305,12 @@ const TestingDashboardPage: React.FC = () => {
               viewMode={viewMode}
               onViewDetails={() => navigate(`/dashboard/health-check/${module.id}`)}
               onEdit={() => navigate(`/dashboard/health-check/${module.id}/edit`)}
-              onRunNow={() => handleRunNow(module.id)}
+              onRunNow={() => handleRunNow(module.id, module.baseUrl)}
               onViewLogs={() => navigate(`/dashboard/health-check/${module.id}/logs`)}
               onSchedule={() => navigate(`/dashboard/health-check/${module.id}/schedule`)}
-              isTriggering={triggerRun.isPending && triggerRun.variables === module.id}
+              isTriggering={
+                triggerRun.isPending && triggerRun.variables?.moduleId === module.id
+              }
               onDelete={() => {
                 if (window.confirm(`Delete "${module.name}"? This cannot be undone.`)) {
                   void handleDelete(module.id);

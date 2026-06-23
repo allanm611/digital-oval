@@ -67,7 +67,7 @@ export default function ModuleLogsPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Run Logs</h1>
         <p className="text-sm text-gray-500 mt-1">
-          {module.name} — browse run history, suite breakdown, and raw output.
+          {module.name} — browse run history, Playwright report, and raw output.
         </p>
       </div>
 

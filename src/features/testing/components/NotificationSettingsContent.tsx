@@ -15,6 +15,12 @@ import {
 import { sendTestNotification } from '../services/healthApi';
 import type { NotificationSettings, NotificationSendPayload } from '../types/health';
 import { useMutation } from '@tanstack/react-query';
+import { useAuth } from '../../../contexts/AuthContext';
+import {
+  clearStoredE2ePassword,
+  getStoredE2ePassword,
+  setStoredE2ePassword,
+} from '../utils/runAuthPayload';
 
 interface NotificationSettingsContentProps {
   onCancel?: () => void;
@@ -26,6 +32,7 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
   showCancel = false,
 }) => {
   const toast = useToast();
+  const { user } = useAuth();
   const { data: existing, isLoading } = useNotificationSettings();
   const saveMutation = useUpdateNotificationSettings();
 
@@ -44,6 +51,8 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
   const [testMessage, setTestMessage] = useState(
     'This is a test notification from the Playwright Health service.',
   );
+  const [e2ePassword, setE2ePassword] = useState(() => getStoredE2ePassword() ?? '');
+  const [showE2ePassword, setShowE2ePassword] = useState(false);
 
   useEffect(() => {
     if (existing) setForm(existing);
@@ -82,6 +91,17 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
     }
   };
 
+  const handleSaveE2ePassword = () => {
+    const trimmed = e2ePassword.trim();
+    if (!trimmed) {
+      clearStoredE2ePassword();
+      toast.success('E2E password cleared', 'Runs will rely on your auth token only.');
+      return;
+    }
+    setStoredE2ePassword(trimmed);
+    toast.success('E2E password saved', 'Stored for this browser session only.');
+  };
+
   const handleTest = async () => {
     if (!isValidEmail(testEmail)) return;
     try {
@@ -106,6 +126,51 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
 
   return (
     <div className="space-y-6">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
+        <h2 className="text-lg font-semibold text-gray-900">E2E run credentials</h2>
+        <p className="text-sm text-gray-500">
+          Playwright login tests need a valid session token or email/password. Your signed-in email is
+          sent automatically; save a password here when the token is unavailable or expired (session
+          storage only — cleared when the tab closes).
+        </p>
+        {user?.email && (
+          <p className="text-sm text-gray-700">
+            Run email: <span className="font-medium">{user.email}</span>
+          </p>
+        )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1 min-w-0">
+            <Input
+              label="E2E password (optional)"
+              type={showE2ePassword ? 'text' : 'password'}
+              placeholder="Same password used for UI login tests"
+              value={e2ePassword}
+              onChange={(value) => setE2ePassword(String(value))}
+            />
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowE2ePassword(!showE2ePassword)}
+              className="px-3 py-2 text-sm border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50"
+            >
+              {showE2ePassword ? 'Hide' : 'Show'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveE2ePassword}
+              className={`${tw.button} px-4 py-2 text-sm`}
+            >
+              Save for session
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <Info className="w-3 h-3" />
+          Matches the password in your manual POST /v1/run body under <code className="text-xs">credentials.password</code>.
+        </p>
+      </div>
+
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
         <h2 className="text-lg font-semibold text-gray-900">Email notifications</h2>
 

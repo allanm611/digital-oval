@@ -1,4 +1,5 @@
 import { buildApiUrl, getAuthHeaders } from '../../../shared/services/api';
+import { buildRunAuthPayload, hasRunAuthMaterial, validateRunAuthForPlaywright } from '../utils/runAuthPayload';
 import type {
   AIBackendResponse,
   HealthDashboardRaw,
@@ -8,13 +9,33 @@ import type {
   RunDetail,
   ScheduleUpdate,
   ModuleUpdate,
+  RunTriggerPayload,
   ServiceProbeResult,
   TestCatalogNode,
 } from '../types/health';
 
-// const BASE_URL = buildApiUrl('/playwright-health');
+// Override with VITE_PLAYWRIGHT_HEALTH_BASE_URL for direct service access (e.g. http://localhost:11008/playwright-health)
+function getPlaywrightHealthBaseUrl(): string {
+  const override = import.meta.env.VITE_PLAYWRIGHT_HEALTH_BASE_URL;
+  if (typeof override === 'string' && override.trim()) {
+    return override.replace(/\/$/, '');
+  }
+  return buildApiUrl('/playwright-health');
+}
+
+// const BASE_URL = getPlaywrightHealthBaseUrl();
 const BASE_URL = 'http://localhost:11008/playwright-health';
 
+
+/** Resolve a playwright-health path (e.g. /playwright-health/v1/runs/.../artifacts/...) to a full URL. */
+export function resolvePlaywrightHealthUrl(pathOrUrl: string): string {
+  if (!pathOrUrl) return '';
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return pathOrUrl;
+  }
+  const apiOrigin = BASE_URL.replace(/\/playwright-health\/?$/, '');
+  return `${apiOrigin}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`;
+}
 export class HealthApiError extends Error {
   readonly status: number;
 
@@ -183,9 +204,35 @@ class HealthApiService {
     });
   }
 
-  async triggerRun(moduleId: string): Promise<RunDetail> {
+  async triggerRun(
+    moduleId: string,
+    options?: { baseUrl?: string; authToken?: string | null } & Partial<RunTriggerPayload>,
+  ): Promise<RunDetail> {
+    const { baseUrl, authToken, ...overrides } = options ?? {};
+    const payload: RunTriggerPayload = {
+      ...buildRunAuthPayload({ baseUrl, authToken }),
+      ...overrides,
+    };
+
+    if (!hasRunAuthMaterial(payload)) {
+      throw new HealthApiError(
+        'No session credentials available. Sign in again before running health checks.',
+        401,
+      );
+    }
+
+    try {
+      validateRunAuthForPlaywright(payload);
+    } catch (err) {
+      throw new HealthApiError(
+        (err as Error).message,
+        400,
+      );
+    }
+
     return this.request<RunDetail>(`/v1/run/${encodeURIComponent(moduleId)}`, {
       method: 'POST',
+      body: JSON.stringify(payload),
     });
   }
 

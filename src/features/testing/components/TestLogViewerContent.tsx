@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle2, XCircle, Loader2, Clock, ChevronDown, ChevronRight,
@@ -8,7 +8,10 @@ import {
 import { tw } from '../../../shared/utils/utils';
 import OutlinedActionButton from '../../../shared/components/ui/OutlinedActionButton';
 import { useRunHistory, useRunDetail } from '../hooks/useHealthStatus';
+import PlaywrightReportPanel from './PlaywrightReportPanel';
+import { resolvePlaywrightHealthUrl } from '../services/healthApi';
 import type { ModuleStatus, TestRun, TestSuiteResult, TestStatus } from '../types/health';
+import { buildPlaywrightReport, type PlaywrightReportFilter } from '../utils/playwrightReportParser';
 
 const STATUS_ICON: Record<TestStatus, React.ReactNode> = {
   pass:    <CheckCircle2 size={14} className="text-emerald-500" />,
@@ -107,12 +110,23 @@ const SuiteRow: React.FC<{ suite: TestSuiteResult; index: number }> = ({ suite }
               )}
               {err.screenshot && (
                 <a
-                  href={err.screenshot}
+                  href={resolvePlaywrightHealthUrl(err.screenshot)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-blue-600 mt-2"
                 >
                   <Camera size={11} /> View screenshot
+                </a>
+              )}
+              {err.traceUrl && (
+                <a
+                  href={resolvePlaywrightHealthUrl(err.traceUrl)}
+                  target="_blank"
+                  rel="noreferrer"
+                  download
+                  className="inline-flex items-center gap-1 text-xs text-blue-600 mt-2 ml-3"
+                >
+                  Download trace
                 </a>
               )}
             </div>
@@ -170,7 +184,10 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
   onSelectRun,
 }) => {
   const navigate = useNavigate();
+  const reportRef = useRef<HTMLDivElement>(null);
   const [internalRunId, setInternalRunId] = useState<string | null>(controlledRunId ?? null);
+  const [reportFilter, setReportFilter] = useState<PlaywrightReportFilter>('all');
+  const [detailTab, setDetailTab] = useState<'report' | 'suites' | 'raw'>('report');
 
   const selectedRunId = controlledRunId !== undefined ? controlledRunId : internalRunId;
 
@@ -212,6 +229,22 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
 
   const metaText = tryFormatMeta(selectedRun?.meta);
   const suites = selectedRun?.suites ?? [];
+
+  const reportSummary = useMemo(
+    () => (selectedRun ? buildPlaywrightReport(selectedRun)?.summary : null),
+    [selectedRun],
+  );
+
+  const handleMetricClick = (filter: PlaywrightReportFilter) => {
+    setReportFilter(filter);
+    setDetailTab('report');
+    reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  useEffect(() => {
+    setReportFilter('all');
+    setDetailTab('report');
+  }, [selectedRunId]);
 
   return (
     <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm overflow-hidden`}>
@@ -285,23 +318,97 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-5 mt-3">
-                  {[
-                    { label: 'Passed', val: suites.reduce((sum, suite) => sum + suite.passed, 0), color: 'text-emerald-600' },
-                    { label: 'Failed', val: suites.reduce((sum, suite) => sum + suite.failed, 0), color: 'text-rose-600' },
-                    { label: 'Skipped', val: suites.reduce((sum, suite) => sum + suite.skipped, 0), color: 'text-gray-500' },
-                    { label: 'Suites', val: suites.length, color: 'text-gray-600' },
-                  ].map((metric) => (
-                    <div key={metric.label}>
-                      <div className={`text-lg font-bold ${metric.color}`}>{metric.val}</div>
-                      <div className="text-xs text-gray-500">{metric.label}</div>
-                    </div>
+                <div className="flex flex-wrap gap-3 mt-3">
+                  {([
+                    {
+                      label: 'Passed',
+                      filter: 'passed' as const,
+                      val: reportSummary?.passed ?? suites.reduce((sum, suite) => sum + suite.passed, 0),
+                      color: 'text-emerald-600',
+                      active: 'ring-emerald-500 bg-emerald-50',
+                    },
+                    {
+                      label: 'Failed',
+                      filter: 'failed' as const,
+                      val: reportSummary?.failed ?? suites.reduce((sum, suite) => sum + suite.failed, 0),
+                      color: 'text-rose-600',
+                      active: 'ring-rose-500 bg-rose-50',
+                    },
+                    {
+                      label: 'Skipped',
+                      filter: 'skipped' as const,
+                      val: reportSummary?.skipped ?? suites.reduce((sum, suite) => sum + suite.skipped, 0),
+                      color: 'text-gray-500',
+                      active: 'ring-gray-400 bg-gray-100',
+                    },
+                    ...(reportSummary?.flaky
+                      ? [{
+                          label: 'Flaky',
+                          filter: 'flaky' as const,
+                          val: reportSummary.flaky,
+                          color: 'text-amber-600',
+                          active: 'ring-amber-500 bg-amber-50',
+                        }]
+                      : []),
+                    {
+                      label: 'Suites',
+                      filter: 'suites' as const,
+                      val: reportSummary?.suites ?? suites.length,
+                      color: 'text-gray-700',
+                      active: 'ring-blue-500 bg-blue-50',
+                    },
+                  ]).map((metric) => {
+                    const isActive = detailTab === 'report' && reportFilter === metric.filter;
+                    return (
+                      <button
+                        key={metric.label}
+                        type="button"
+                        onClick={() => handleMetricClick(metric.filter)}
+                        className={`rounded-lg px-4 py-2 text-left transition-all ring-2 ring-transparent hover:ring-gray-200 ${
+                          isActive ? metric.active : 'bg-white'
+                        }`}
+                      >
+                        <div className={`text-lg font-bold ${metric.color}`}>{metric.val}</div>
+                        <div className="text-xs text-gray-500">{metric.label}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex gap-1 mt-4 border-b border-gray-200 -mb-px">
+                  {([
+                    { id: 'report' as const, label: 'Playwright report' },
+                    { id: 'suites' as const, label: 'Suite breakdown' },
+                    { id: 'raw' as const, label: 'Raw logs' },
+                  ]).map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setDetailTab(tab.id)}
+                      className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                        detailTab === tab.id
+                          ? 'border-blue-600 text-blue-700'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
                   ))}
                 </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {suites.length > 0 && (
+                {detailTab === 'report' && (
+                  <div ref={reportRef}>
+                    <PlaywrightReportPanel
+                      run={selectedRun}
+                      filter={reportFilter}
+                      onFilterChange={setReportFilter}
+                    />
+                  </div>
+                )}
+
+                {detailTab === 'suites' && suites.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       Suite breakdown
@@ -312,7 +419,13 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
                   </div>
                 )}
 
-                {(selectedRun.output || selectedRun.errors || metaText) && (
+                {detailTab === 'suites' && suites.length === 0 && (
+                  <div className="text-center py-8 text-sm text-gray-500">
+                    No suite breakdown available for this run.
+                  </div>
+                )}
+
+                {detailTab === 'raw' && (selectedRun.output || selectedRun.errors || metaText) && (
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-4">
                     {selectedRun.output && (
                       <div>
@@ -347,7 +460,7 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
                   </div>
                 )}
 
-                {suites.length === 0 && !selectedRun.output && !selectedRun.errors && (
+                {detailTab === 'raw' && !selectedRun.output && !selectedRun.errors && !metaText && (
                   <div className="text-center py-8 text-sm text-gray-500">
                     No detailed output recorded for this run.
                   </div>
