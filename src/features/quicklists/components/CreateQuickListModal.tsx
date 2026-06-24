@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { X, Upload, FileText, AlertCircle, Download } from "lucide-react";
+import { X, Upload, FileText, AlertCircle, Download, Check, XCircle, Grid3x3 } from "lucide-react";
 import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
@@ -9,6 +9,7 @@ import { CreateQuickListRequest } from "../types/quicklist";
 import { useMessageVariableFields } from "../../manual-broadcast/hooks/useMessageVariableFields";
 import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
 import { quicklistService } from "../services/quicklistService";
+import { useToast } from "../../../contexts/ToastContext";
 
 export type QuickListFormValues = {
   list_id?: number;
@@ -52,12 +53,17 @@ export default function CreateQuickListModal({
   onSubmit,
   submitLabel,
 }: CreateQuickListModalProps) {
+  const { showToast } = useToast();
   const [form, setForm] = useState<QuickListFormValues>(defaultForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFileProcessing, setIsFileProcessing] = useState(false);
+  const [validationResults, setValidationResults] = useState<any>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationTab, setValidationTab] = useState<"existing" | "missing">("existing");
   const [uploadTypes, setUploadTypes] = useState<
     Array<{ id: number; upload_type: string; description?: string; expected_columns?: string[] }>
   >([]);
@@ -438,6 +444,53 @@ export default function CreateQuickListModal({
 
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
+  };
+
+  const handleValidate = async () => {
+    if (!form.file_text) {
+      setErrors((prev) => ({
+        ...prev,
+        file_text: "Please upload a file first",
+      }));
+      return;
+    }
+
+    try {
+      setIsValidating(true);
+      const lines = form.file_text.split(/\r?\n/).filter(line => line.trim());
+      const identifiers = lines.slice(1).map(line => {
+        const cols = line.split(form.file_delimiter);
+        const colIndex = form.list_headers.split(form.file_delimiter).indexOf(form.subscriber_id_col_name);
+        return cols[colIndex]?.trim() || '';
+      }).filter(id => id);
+
+      console.log("subscriber_id_field_mapping:", form.subscriber_id_field_mapping);
+      console.log("identifiers:", identifiers);
+
+      // Strip "p_" prefix to get the actual field name
+      const identifierType = form.subscriber_id_field_mapping.startsWith("p_")
+        ? form.subscriber_id_field_mapping.substring(2)
+        : form.subscriber_id_field_mapping;
+
+      const result = await quicklistService.validateData({
+        identifiers,
+        identifier_type: identifierType,
+      });
+
+      console.log("Validation result:", result);
+      setValidationResults(result.data || result);
+      setShowValidationModal(true);
+    } catch (err) {
+      console.error("Validation failed:", err);
+      const errorMessage = err instanceof Error ? err.message : "Validation failed";
+      showToast("error", errorMessage);
+      setErrors((prev) => ({
+        ...prev,
+        file_text: errorMessage,
+      }));
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -997,11 +1050,29 @@ export default function CreateQuickListModal({
                 >
                   Cancel
                 </button>
+                {isCreateMode && (
+                  <button
+                    type="button"
+                    onClick={handleValidate}
+                    disabled={isValidating || isFileProcessing || !form.file_text || !form.subscriber_id_col_name.trim() || !form.subscriber_id_field_mapping.trim()}
+                    className="text-sm font-medium disabled:opacity-50 sm:order-2"
+                    style={{
+                      backgroundColor: buttonTokens.bordered.background,
+                      color: buttonTokens.bordered.color,
+                      border: buttonTokens.bordered.border,
+                      borderRadius: buttonTokens.bordered.borderRadius,
+                      padding: `${buttonTokens.bordered.paddingY} ${buttonTokens.bordered.paddingX}`,
+                    }}
+                    title={!form.file_text ? "Please upload a file first" : "Validate data before creating"}
+                  >
+                    {isValidating ? "Validating..." : "Validate Data"}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting || isFileProcessing || !form.name.trim() || (isCreateMode && !form.file_text) || !form.subscriber_id_col_name.trim() || !form.subscriber_id_field_mapping.trim() || !form.file_delimiter}
-                  className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-2"
+                  className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-3"
                   style={{
                     backgroundColor: buttonTokens.action.background,
                     color: buttonTokens.action.color,
@@ -1029,6 +1100,137 @@ export default function CreateQuickListModal({
           </div>
         </div>
       </div>
+
+      {/* Validation Results Modal */}
+      {showValidationModal && validationResults && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/30 backdrop-blur-[1px] px-4 py-6">
+          <div className={`w-full max-w-4xl ${tw.rounded} bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}>
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+              <h3 className="text-lg font-semibold text-gray-900">Validation Results</h3>
+              <button
+                onClick={() => setShowValidationModal(false)}
+                className="rounded-full p-2 text-gray-400 hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-6 space-y-6 flex-1 overflow-y-auto">
+              {/* Stat Cards in one line */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div className="flex items-center gap-2">
+                    <Grid3x3 className="h-5 w-5" style={{ color: color.primary.accent }} />
+                    <p className="text-sm font-medium text-gray-600">Total Count</p>
+                  </div>
+                  <p className="mt-2 text-3xl font-bold text-gray-900">{validationResults.total_checked || 0}</p>
+                </div>
+
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-5 w-5" style={{ color: color.primary.accent }} />
+                    <p className="text-sm font-medium text-gray-600">Existing Count</p>
+                  </div>
+                  <p className="mt-2 text-3xl font-bold text-gray-900">{validationResults.existing_count || 0}</p>
+                </div>
+
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div className="flex items-center gap-2">
+                    <XCircle className="h-5 w-5" style={{ color: color.primary.accent }} />
+                    <p className="text-sm font-medium text-gray-600">Missing Count</p>
+                  </div>
+                  <p className="mt-2 text-3xl font-bold text-gray-900">{validationResults.missing_count || 0}</p>
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-1 border-b border-gray-200">
+                <button
+                  onClick={() => setValidationTab("existing")}
+                  className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                    validationTab === "existing"
+                      ? "text-black"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Existing ({validationResults.existing_count || 0})
+                  {validationTab === "existing" && (
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-0.5"
+                      style={{ backgroundColor: color.primary.accent }}
+                    />
+                  )}
+                </button>
+                <button
+                  onClick={() => setValidationTab("missing")}
+                  className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
+                    validationTab === "missing"
+                      ? "text-black"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Not Existing ({validationResults.missing_count || 0})
+                  {validationTab === "missing" && (
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-0.5"
+                      style={{ backgroundColor: color.primary.accent }}
+                    />
+                  )}
+                </button>
+              </div>
+
+              {/* List Content */}
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {validationTab === "existing" ? (
+                  validationResults.existing && validationResults.existing.length > 0 ? (
+                    validationResults.existing.map((identifier: string, idx: number) => (
+                      <div key={idx} className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-900">
+                        {identifier}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No existing customers</p>
+                  )
+                ) : (
+                  validationResults.missing && validationResults.missing.length > 0 ? (
+                    validationResults.missing.map((identifier: string, idx: number) => (
+                      <div key={idx} className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-900">
+                        {identifier}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No missing customers</p>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-gray-100 px-6 py-4 sm:flex-row sm:justify-end">
+              <button
+                onClick={() => setShowValidationModal(false)}
+                className={`${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors`}
+              >
+                Go Back
+              </button>
+              <button
+                onClick={() => {
+                  setShowValidationModal(false);
+                  handleSubmit();
+                }}
+                className="text-sm font-semibold shadow-sm transition-colors"
+                style={{
+                  backgroundColor: buttonTokens.action.background,
+                  color: buttonTokens.action.color,
+                  borderRadius: buttonTokens.action.borderRadius,
+                  padding: `${buttonTokens.action.paddingY} ${buttonTokens.action.paddingX}`,
+                }}
+              >
+                Proceed with Existing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

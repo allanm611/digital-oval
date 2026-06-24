@@ -104,6 +104,7 @@ export default function UnifiedPickerModal<T = unknown>({
                   value={filterValue}
                   onChange={(value) => onFilterChange(value as string)}
                   placeholder="Filter by..."
+                  label="Subcategory"
                   className="text-sm"
                   zIndex={zIndex.popover}
                 />

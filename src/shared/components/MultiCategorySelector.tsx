@@ -298,12 +298,11 @@ export default function MultiCategorySelector({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`flex-1 px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0 ${
-            hasError ? "border-red-300" : "border-gray-300"
-          }`}
+          className={`flex-1 px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0`}
           style={{
             outline: "none",
             backgroundColor: disabled ? 'var(--c-input-disabled-bg)' : (labelBgColor || 'var(--c-input-bg)'),
+            borderColor: hasError ? '#ef4444' : 'var(--c-border-default)',
             cursor: disabled ? 'not-allowed' : 'pointer',
             borderTopRightRadius: allowCreate ? "0" : undefined,
             borderBottomRightRadius: allowCreate ? "0" : undefined,

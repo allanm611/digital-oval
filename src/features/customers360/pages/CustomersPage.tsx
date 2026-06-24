@@ -121,6 +121,8 @@ export default function CustomersPage() {
   const [allCustomers, setAllCustomers] = useState<CustomerSubscriptionRecord[]>([]);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
+  const [subscriberStats, setSubscriberStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const defaultColumns: TableColumn<any>[] = useMemo(() => [
     {
@@ -367,6 +369,22 @@ export default function CustomersPage() {
     loadCustomers();
   }, [loadCustomers]);
 
+  // Load subscriber stats on mount
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        setStatsLoading(true);
+        const data = await customerService.getSubscriberStats();
+        setSubscriberStats(data.data);
+      } catch (err) {
+        console.error("Failed to load subscriber stats:", err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    loadStats();
+  }, []);
+
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -611,47 +629,31 @@ export default function CustomersPage() {
   const statCards = useMemo(
     () => [
       {
-        title: t.customer360.uniqueCustomers,
-        value: formatNumber(customerStats.uniqueCustomers),
-        helper: `${formatNumber(customerStats.totalSubscriptions)} ${
-          t.customer360.totalSubscriptions
-        }`,
+        title: "Total Subscribers",
+        value: statsLoading ? "..." : (subscriberStats?.overview?.total_subscribers ? formatNumber(subscriberStats.overview.total_subscribers) : "_"),
+        helper: statsLoading ? "..." : (subscriberStats?.overview?.active_subscribers ? `${formatNumber(subscriberStats.overview.active_subscribers)} active` : "_"),
         icon: Users,
       },
       {
-        title: t.customer360.activeSubscriptions,
-        value: formatNumber(customerStats.activeSubscriptions),
-        helper:
-          customerStats.totalSubscriptions > 0
-            ? `${Math.round(
-                (customerStats.activeSubscriptions /
-                  customerStats.totalSubscriptions) *
-                  100,
-              )}${t.customer360.ofBase}`
-            : "—",
+        title: "Active Subscribers",
+        value: statsLoading ? "..." : (subscriberStats?.overview?.active_subscribers ? formatNumber(subscriberStats.overview.active_subscribers) : "_"),
+        helper: statsLoading ? "..." : (subscriberStats?.overview?.total_subscribers && subscriberStats.overview.total_subscribers > 0 ? `${Math.round((subscriberStats.overview.active_subscribers / subscriberStats.overview.total_subscribers) * 100)}% active` : "_"),
         icon: Activity,
       },
       {
-        title: t.customer360.pendingActivations,
-        value: formatNumber(customerStats.pendingActivations),
-        helper:
-          customerStats.totalSubscriptions > 0
-            ? `${Math.round(
-                (customerStats.pendingActivations /
-                  customerStats.totalSubscriptions) *
-                  100,
-              )}${t.customer360.awaitingSimSwap}`
-            : "—",
-        icon: AlertTriangle,
-      },
-      {
-        title: t.customer360.avgTenure,
-        value: formatNumber(customerStats.avgTenureDays),
-        helper: t.customer360.sinceActivation,
+        title: "VIP Subscribers",
+        value: statsLoading ? "..." : (subscriberStats?.overview?.vip_subscribers ? formatNumber(subscriberStats.overview.vip_subscribers) : "_"),
+        helper: statsLoading ? "..." : (subscriberStats?.overview?.total_subscribers && subscriberStats.overview.total_subscribers > 0 ? `${Math.round((subscriberStats.overview.vip_subscribers / subscriberStats.overview.total_subscribers) * 100)}% of total` : "_"),
         icon: Target,
       },
+      {
+        title: "Inactive Subscribers",
+        value: statsLoading ? "..." : (subscriberStats?.overview?.inactive_subscribers ? formatNumber(subscriberStats.overview.inactive_subscribers) : "_"),
+        helper: statsLoading ? "..." : (subscriberStats?.overview?.total_subscribers && subscriberStats.overview.total_subscribers > 0 ? `${Math.round((subscriberStats.overview.inactive_subscribers / subscriberStats.overview.total_subscribers) * 100)}% inactive` : "_"),
+        icon: AlertTriangle,
+      },
     ],
-    [customerStats],
+    [subscriberStats, statsLoading],
   );
 
   const handleSelectCustomer = (

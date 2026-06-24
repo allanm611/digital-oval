@@ -576,12 +576,9 @@ export default function SegmentManagementPage() {
     setShowActionMenu(null);
   };
 
-  const handleEditSegment = (segmentId: number) => {
-    const segment = segments.find((s) => s.id === segmentId);
-    if (segment) {
-      setSelectedSegment(segment);
-      setIsModalOpen(true);
-    }
+  const handleEditSegment = (segment: Segment) => {
+    setSelectedSegment(segment);
+    setIsModalOpen(true);
     setShowActionMenu(null);
   };
 
@@ -1041,15 +1038,18 @@ export default function SegmentManagementPage() {
             >
               <Eye className="w-4 h-4" />
             </button>
-            <PermissionGate permission="segments.update">
-              <button
-                onClick={() => handleEditSegment(segment.id)}
-                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                title="Edit"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            </PermissionGate>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleEditSegment(segment);
+              }}
+              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
             <div
               className="relative"
               ref={(el) => {

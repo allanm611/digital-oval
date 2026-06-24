@@ -240,7 +240,7 @@ export default function RevenueMetricDetailsPage() {
                 </tr>
               </thead>
               <tbody>
-                {getOperatorsForFieldType(metric.field_type).map((operator) => (
+                {getOperatorsForFieldType(metric.field_type || "text").map((operator) => (
                   <tr key={operator.id}>
                     <td
                       className="px-6 py-4 text-sm text-gray-900 font-medium"

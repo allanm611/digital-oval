@@ -464,6 +464,18 @@ class QuickListService {
       `/${quicklistId}/audit-trail${query}`,
     );
   }
+
+  async validateData(payload: {
+    identifiers?: string[];
+    items?: Array<Record<string, any>>;
+    unique_column?: string;
+    identifier_type: "msisdn" | "email";
+  }): Promise<any> {
+    return this.request("/validate-data", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 export const quicklistService = new QuickListService();

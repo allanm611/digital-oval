@@ -37,13 +37,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   if (variant === 'medium') paddingClass = 'px-3 py-2';
   if (variant === 'compact') paddingClass = 'px-3 py-1';
 
-  // Determine border color based on error state
-  const borderClass = hasError ? 'border-red-500' : 'border-gray-300';
-
   // Determine background based on disabled/readOnly state
   const isReadOnly = rest.readOnly;
   let inputStyle: React.CSSProperties = {
     backgroundColor: labelBgColor || 'var(--c-input-bg)',
+    borderColor: hasError ? '#ef4444' : 'var(--c-border-default)',
     color: 'var(--c-text-primary)',
     accentColor: type === 'date' || type === 'time' ? 'var(--c-input-accent)' : undefined,
     ...style
@@ -82,7 +80,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${borderClass} ${tw.rounded}
+        className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           ${className}`}
         style={inputStyle}
@@ -114,7 +112,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full px-3 pt-3 pb-2 text-sm leading-tight border ${borderClass} ${tw.rounded}
+        className={`w-full px-3 pt-3 pb-2 text-sm leading-tight border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
           ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
           ${className}`}

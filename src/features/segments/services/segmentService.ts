@@ -1972,6 +1972,26 @@ class SegmentService {
     //   data: data.data || data,
     // };
   }
+
+  /**
+   * POST /segments/preview-count
+   * Get segment subscriber count based on conditions
+   * Payload: { layer_filters, limit }
+   * Response: { data: { count: number } }
+   */
+  async previewSegmentCount(
+    payload: any
+  ): Promise<{ count: number } | null> {
+    try {
+      return await this.request(`/preview-count`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.error("Error previewing segment count:", error);
+      throw error;
+    }
+  }
 }
 
 export const segmentService = new SegmentService();

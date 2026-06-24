@@ -14,6 +14,7 @@ import {
   SEGMENT_FIELDS,
 } from "../types/segment";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { useToast } from "../../../contexts/ToastContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useMessageVariableFields } from "../../../features/manual-broadcast/hooks/useMessageVariableFields";
 import {  getOperatorsForField,  TIME_WINDOWS, OPERATORS } from "../../../shared/utils/operatorMapper";
@@ -171,6 +172,7 @@ export default function SegmentConditionsBuilder({
   const [fieldPickerModalData, setFieldPickerModalData] = useState<{
     fields: Array<{ value: string; label: string }>;
     categoryName: string;
+    isAllMode?: boolean;
   } | null>(null);
   const [currentEditingCondition, setCurrentEditingCondition] = useState<{
     groupId: string;
@@ -186,9 +188,11 @@ export default function SegmentConditionsBuilder({
   const [isLoadingQuickLists, setIsLoadingQuickLists] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isComputeLoading, setIsComputeLoading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewQuery, setPreviewQuery] = useState<string | null>(null);
   const [previewLimit, setPreviewLimit] = useState<number>(100);
+  const { success, error: showError } = useToast();
 
   const PREVIEW_LIMIT_OPTIONS = [
     { value: "10", label: "10" },
@@ -645,6 +649,38 @@ export default function SegmentConditionsBuilder({
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
                 {isPreviewLoading ? "Previewing..." : "Preview"}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    setIsComputeLoading(true);
+                    const payload = convertConditionsToPayload(conditions, true, previewLimit);
+                    const response = await segmentService.previewSegmentCount(payload);
+                    const count = response?.count || 0;
+                    success("Segment Count", `Segment matches ${count} subscribers`);
+                  } catch (error) {
+                    console.error("Preview count failed:", error);
+                    showError("Preview Failed", "Unable to get segment count");
+                  } finally {
+                    setIsComputeLoading(false);
+                  }
+                }}
+                disabled={
+                  isComputeLoading || conditions.length === 0 || !areAllConditionsValid()
+                }
+                className={`inline-flex items-center px-4 py-2 text-sm ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed border`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: color.primary.action,
+                  color: color.primary.action,
+                }}
+                title={!areAllConditionsValid() ? "Complete all conditions (operator and value required)" : ""}
+              >
+                {isComputeLoading && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {isComputeLoading ? "Computing..." : "Compute"}
               </button>
             </div>
           ) : ruleType === "sql" && (
@@ -1339,19 +1375,20 @@ export default function SegmentConditionsBuilder({
             setFieldPickerModalData(null);
             setCurrentEditingCondition(null);
           }}
-          onSelect={(value) => {
+          onSelect={(fieldData: any) => {
             if (currentEditingCondition) {
-              const fieldType = getFieldType(value as string);
-              const backendField = getFieldByValue(value as string);
+              const fieldType = getFieldType(fieldData.value as string);
+              const backendField = getFieldByValue(fieldData.value as string);
 
-              // Get first operator from backend field's operators array
-              const firstOp = getFirstBackendOperator(backendField);
+              // Get operators based on field type
+              const operators = getOperatorsForField(backendField);
+              const firstOp = operators[0];
 
               updateCondition(
                 currentEditingCondition.groupId,
                 currentEditingCondition.conditionId,
                 {
-                  field: value as string,
+                  field: fieldData.value as string,
                   field_name: backendField?.field_name,
                   field_id: backendField?.id,
                   operator: firstOp?.label as SegmentCondition["operator"],
@@ -1369,6 +1406,7 @@ export default function SegmentConditionsBuilder({
           }}
           fields={fieldPickerModalData.fields}
           categoryName={fieldPickerModalData.categoryName}
+          isAllMode={fieldPickerModalData.isAllMode}
           selectedValue={
             currentEditingCondition
               ? conditions

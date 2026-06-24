@@ -140,7 +140,7 @@ export default function HeadlessSelect({
               setIsOpen(!isOpen);
             }}
             className={`
-            w-full cursor-default py-2 px-4 text-left transition-all duration-200 text-sm ${tw.rounded} border border-gray-200
+            w-full cursor-default py-2 px-4 text-left transition-all duration-200 text-sm ${tw.rounded} border
             ${
               disabled
                 ? "opacity-50 cursor-not-allowed"
@@ -150,10 +150,10 @@ export default function HeadlessSelect({
           `}
             style={
               error
-                ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)', borderColor: '#ef4444' }
                 : disabled
-                ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)' }
-                : { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)', borderColor: 'var(--c-border-default)' }
+                : { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)', borderColor: 'var(--c-border-default)' }
             }
           >
             <div className="flex items-center justify-between w-full">

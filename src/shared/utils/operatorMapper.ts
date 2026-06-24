@@ -219,7 +219,7 @@ export function getOperatorsForField(field: Record<string, any> | null | undefin
     return getOperatorsForFieldType("text");
   }
 
-  const fieldType = (field.field_type || "").toLowerCase().trim();
+  const fieldType = (field.field_type || field.type || "").toLowerCase().trim();
   const isComputable = field.is_computable === true;
 
   if (isComputable) {

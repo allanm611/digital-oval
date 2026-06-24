@@ -73,8 +73,27 @@ export default function CustomerIdentityConditionRow({
         value: "field_value" in field ? (field.field_value || "") : (field.key || ""),
         label: "field_name" in field ? (field.field_name || "Unknown") : (field.label || "Unknown"),
         description: "field_description" in field ? (field.field_description || "Unknown") : "Unknown",
-        type: "field_type" in field ? (field.field_type || "Unknown") : "Unknown",
+        type: "field_type" in field ? (field.field_type || field.type || "Unknown") : (field.type || "Unknown"),
       }));
+    }
+
+    // "All" mode - return fields from all subcategories with subcategory info
+    if (hasSubcategories && condition.subcategory_id === "all") {
+      const allFieldsWithSubcategory: any[] = [];
+      selectedCategoryObj.sub_categories.forEach((sc: any) => {
+        const fieldsToShow = sc.fields || [];
+        fieldsToShow.forEach((field: any) => {
+          allFieldsWithSubcategory.push({
+            value: field.field_value || "",
+            label: field.field_name || "Unknown",
+            description: field.field_description || "Unknown",
+            type: field.field_type || field.type || "Unknown",
+            subcategory: sc.name,
+            subcategory_id: sc.id,
+          });
+        });
+      });
+      return allFieldsWithSubcategory;
     }
 
     if (hasSubcategories && condition.subcategory_id) {
@@ -86,7 +105,7 @@ export default function CustomerIdentityConditionRow({
         value: field.field_value || "",
         label: field.field_name || "Unknown",
         description: field.field_description || "Unknown",
-        type: field.field_type || "Unknown",
+        type: field.field_type || field.type || "Unknown",
       }));
     }
 
@@ -96,7 +115,7 @@ export default function CustomerIdentityConditionRow({
         value: field.field_value || "",
         label: field.field_name || "Unknown",
         description: field.field_description || "Unknown",
-        type: field.field_type || "Unknown",
+        type: field.field_type || field.type || "Unknown",
       }));
     }
 
@@ -106,11 +125,15 @@ export default function CustomerIdentityConditionRow({
   const fieldOptions = getFieldOptions();
   const selectedField = fieldOptions.find((f) => f.value === condition.field);
   const subcategoryOptions = hasSubcategories
-    ? (selectedCategoryObj?.sub_categories || []).map((sc: any) => ({
-        value: sc.id,
-        label: sc.name,
-      }))
+    ? [
+        { value: "all", label: "All" },
+        ...(selectedCategoryObj?.sub_categories || []).map((sc: any) => ({
+          value: sc.id,
+          label: sc.name,
+        })),
+      ]
     : [];
+
 
   const maxDate = getTodayDateString();
 
@@ -137,12 +160,14 @@ export default function CustomerIdentityConditionRow({
             >
               <HeadlessSelect
                 options={subcategoryOptions}
-                value={condition.subcategory_id || ""}
+                value={condition.subcategory_id === "all" ? "all" : (condition.subcategory_id || "")}
                 onChange={(value) => {
-                  const subcatId = parseInt(value as string);
+                  const isAllMode = value === "all";
+                  const subcatId = isAllMode ? "all" : parseInt(value as string);
+                  const subcatLabel = subcategoryOptions.find((opt) => opt.value === subcatId)?.label;
                   updateCondition(groupId, condition.id, {
                     subcategory_id: subcatId,
-                    subcategory_name: subcategoryOptions.find((opt) => opt.value === subcatId)?.label,
+                    subcategory_name: subcatLabel,
                     field: "",
                     field_name: undefined,
                     field_id: undefined,
@@ -169,9 +194,11 @@ export default function CustomerIdentityConditionRow({
                 conditionId: condition.id,
               });
               const subcategoryName = condition.subcategory_name || selectedCategoryObj?.name || "Field";
+              const isAllMode = condition.subcategory_id === "all";
               setFieldPickerModalData({
                 fields: fieldOptions,
                 categoryName: subcategoryName,
+                isAllMode,
               });
               setIsFieldPickerModalOpen(true);
             }}

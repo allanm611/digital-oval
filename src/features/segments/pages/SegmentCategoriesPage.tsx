@@ -269,7 +269,7 @@ export default function SegmentCategoriesPage() {
         await loadSegmentCounts(validCategoriesData);
       } catch (err) {
         const errorMsg = extractBackendError(err, "Failed to load segment catalogs");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", errorMsg);
         setCategories([]);
       } finally {
         setIsLoading(false);
