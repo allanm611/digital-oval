@@ -1,3 +1,10 @@
+## [1.4.15](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.14...v1.4.15) (2026-06-24)
+
+
+### Bug Fixes
+
+* validate quciklists and segments counts before there creation has been added, integrated ccustomer staticisc endpoint ([e954e5f](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/e954e5f0af4f86654b1f33845dbe6a7df1b78ce6))
+
 ## [1.4.14](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.13...v1.4.14) (2026-06-23)
 
 
