@@ -1,3 +1,10 @@
+## [1.4.16](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.15...v1.4.16) (2026-06-25)
+
+
+### Bug Fixes
+
+* add quicklist columns, fix reordering in the column component, add a search modal on customers page ([916435b](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/916435b13c8ce428c467603b8542cb76ee9d7d60))
+
 ## [1.4.15](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.14...v1.4.15) (2026-06-24)
 
 
