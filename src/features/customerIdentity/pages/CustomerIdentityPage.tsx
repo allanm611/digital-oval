@@ -74,10 +74,10 @@ export default function CustomerIdentityPage() {
         (field.description || "").toLowerCase().includes(search) ||
         (field.source_table || "").toLowerCase().includes(search);
 
-      const fieldTypeValue = field.field_type;
+      const fieldTypeValue = field?.field_type ?? field?.type ?? "";
       const matchesType =
         selectedFieldType === "all" ||
-        (fieldTypeValue && fieldTypeValue.toLowerCase() === selectedFieldType.toLowerCase());
+        (fieldTypeValue ? fieldTypeValue.toLowerCase() === selectedFieldType.toLowerCase() : false);
 
       return matchesSearch && matchesType;
     });

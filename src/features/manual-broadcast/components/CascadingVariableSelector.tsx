@@ -19,21 +19,29 @@ import type { TemplateVariable, ProfileSource, ProfileField } from "../types";
 
 const PRIMARY_COLOR = "#3B82F6";
 
+interface QuicklistColumn {
+  name: string;
+  [key: string]: any;
+}
+
 interface CascadingVariableSelectorProps {
   onVariableSelect: (variable: TemplateVariable) => void;
   isOpen: boolean;
   onClose: () => void;
   anchorRef?: React.RefObject<HTMLElement>;
+  quicklistColumns?: QuicklistColumn[];
 }
 
 export default function CascadingVariableSelector({
   onVariableSelect,
   isOpen,
   onClose,
+  quicklistColumns = [],
 }: CascadingVariableSelectorProps) {
   const { t } = useLanguage();
   const { categories, isLoading } = useMessageVariableFields();
   const [hoveredSourceId, setHoveredSourceId] = useState<number | null>(null);
+  const [hoveredQuicklistSource, setHoveredQuicklistSource] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -91,14 +99,17 @@ export default function CascadingVariableSelector({
     const category = categoryMap.get(hoveredSourceId);
     if (!category || !category.fields) return [];
 
-    return (category.fields || []).map((field: any) => ({
-      id: field?.id,
-      name: field?.field_name || "Unknown",
-      value: field?.field_value || "",
-      description: field?.description || "",
-      fieldType: field?.field_type || "text",
-      sourceTable: field?.source_table,
-    }));
+    return (category.fields || []).map((field: any) => {
+      const fieldType = field?.field_type ?? field?.type ?? "text";
+      return {
+        id: field?.id,
+        name: field?.field_name || "Unknown",
+        value: field?.field_value ?? "",
+        description: field?.description ?? "",
+        fieldType: String(fieldType || "text"),
+        sourceTable: field?.source_table ?? "",
+      };
+    });
   }, [categoryMap, hoveredSourceId]);
 
   // Filter fields by search query
@@ -134,20 +145,41 @@ export default function CascadingVariableSelector({
     const source = profileSources.find((s) => s.id === hoveredSourceId);
     if (!source) return;
 
+    const fieldType = field?.fieldType ?? field?.type ?? "text";
     const templateVariable: TemplateVariable = {
       id: field.id,
-      name: field.name || "Unknown",
-      value: field.value || "",
+      name: field.name ?? "Unknown",
+      value: field.value ?? "",
       sourceId: source.id,
-      sourceName: source.name || "Unknown",
-      description: field.description || "",
-      fieldType: field.fieldType || "text",
+      sourceName: source.name ?? "Unknown",
+      sourceValue: source.value ?? "",
+      description: field.description ?? "",
+      fieldType: String(fieldType || "text"),
     };
 
     onVariableSelect(templateVariable);
     onClose();
     setSearchQuery("");
     setHoveredSourceId(null);
+  };
+
+  // Handle quicklist column selection
+  const handleQuicklistColumnSelect = (columnName: string) => {
+    const templateVariable: TemplateVariable = {
+      id: columnName,
+      name: columnName,
+      value: columnName,
+      sourceId: -1,
+      sourceName: "Quicklist Columns",
+      sourceValue: "quicklist_columns",
+      description: `Column from quicklist: ${columnName}`,
+      fieldType: "quicklist_column",
+    };
+
+    onVariableSelect(templateVariable);
+    onClose();
+    setSearchQuery("");
+    setHoveredQuicklistSource(false);
   };
 
   if (!isOpen) return null;
@@ -175,29 +207,63 @@ export default function CascadingVariableSelector({
           </div>
         ) : (
           <div className="max-h-64 overflow-y-auto">
-            {profileSources.map((source) => (
+            {/* Quicklist Columns Section */}
+            {quicklistColumns.length > 0 && (
               <div
-                key={source.id}
-                onMouseEnter={() => setHoveredSourceId(source.id)}
-                className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors ${
-                  hoveredSourceId === source.id
-                    ? "bg-blue-50"
-                    : "hover:bg-gray-50"
-                }`}
+                onMouseEnter={() => {
+                  setHoveredQuicklistSource(true);
+                  setHoveredSourceId(null);
+                }}
+                className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <Database
                     className="w-4 h-4"
                     style={{
-                      color:
-                        hoveredSourceId === source.id
-                          ? PRIMARY_COLOR
-                          : "#9CA3AF",
+                      color: "#9CA3AF",
                     }}
                   />
                   <div>
                     <p
-                      className={`text-sm font-medium ${hoveredSourceId === source.id ? "text-blue-600" : tw.textPrimary}`}
+                      className={`text-sm font-medium ${tw.textPrimary}`}
+                    >
+                      Quicklist Columns
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {quicklistColumns.length}{" "}
+                      {quicklistColumns.length === 1 ? "column" : "columns"}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight
+                  className="w-4 h-4"
+                  style={{
+                    color: "#D1D5DB",
+                  }}
+                />
+              </div>
+            )}
+
+            {/* KPI Source Categories */}
+            {profileSources.map((source) => (
+              <div
+                key={source.id}
+                onMouseEnter={() => {
+                  setHoveredSourceId(source.id);
+                  setHoveredQuicklistSource(false);
+                }}
+                className="flex items-center justify-between px-3 py-2.5 cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Database
+                    className="w-4 h-4"
+                    style={{
+                      color: "#9CA3AF",
+                    }}
+                  />
+                  <div>
+                    <p
+                      className={`text-sm font-medium ${tw.textPrimary}`}
                     >
                       {source.name}
                     </p>
@@ -212,8 +278,7 @@ export default function CascadingVariableSelector({
                 <ChevronRight
                   className="w-4 h-4"
                   style={{
-                    color:
-                      hoveredSourceId === source.id ? PRIMARY_COLOR : "#D1D5DB",
+                    color: "#D1D5DB",
                   }}
                 />
               </div>
@@ -223,6 +288,42 @@ export default function CascadingVariableSelector({
       </div>
 
       {/* Fields List (Level 2 - Submenu) */}
+      {hoveredQuicklistSource && quicklistColumns.length > 0 && (
+        <div
+          className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden ml-1"
+          style={{ minWidth: "280px" }}
+        >
+          <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
+            <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+              {t.manualBroadcast.selectField}
+            </p>
+            {/* Search Input */}
+            <SearchInput
+              placeholder="Search columns..."
+              value={searchQuery}
+              onChange={(value) => setSearchQuery(value)}
+            />
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {quicklistColumns
+              .filter((col) =>
+                searchQuery.trim()
+                  ? col.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  : true
+              )
+              .map((column) => (
+                <div
+                  key={column.name}
+                  onClick={() => handleQuicklistColumnSelect(column.name)}
+                  className="px-3 py-2 cursor-pointer flex items-center justify-between"
+                >
+                  <p className="text-sm text-gray-900">{column.name}</p>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
       {hoveredSourceId !== null && hoveredSourceFields.length > 0 && (
         <div
           className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden ml-1"
@@ -250,7 +351,7 @@ export default function CascadingVariableSelector({
                 <div
                   key={field.id}
                   onClick={() => handleFieldSelect(field)}
-                  className="px-3 py-2.5 cursor-pointer hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                  className="px-3 py-2.5 cursor-pointer border-b border-gray-100 last:border-b-0"
                 >
                   <p className={`text-sm font-medium ${tw.textPrimary}`}>
                     {field.name}

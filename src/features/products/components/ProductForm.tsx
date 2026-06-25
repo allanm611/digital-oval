@@ -459,17 +459,12 @@ export default function ProductForm({
   };
 
   const unitEnumOptions: { label: string; value: ProductUnit }[] = [
-    { label: "Data (MB)", value: "data_mb" },
+    { label: "MB", value: "mb" },
+    { label: "GB", value: "gb" },
     { label: "SMS Count", value: "sms_count" },
-    { label: "Airtime", value: "airtime" },
-    { label: "Onnet Minutes", value: "onnet_minutes" },
-    { label: "Offnet Minutes", value: "offnet_minutes" },
-    { label: "Allnet Minutes", value: "allnet_minutes" },
-    { label: "Roaming Data (MB)", value: "roaming_data_mb" },
-    { label: "Roaming Minutes", value: "roaming_minutes" },
-    { label: "Roaming SMS Count", value: "roaming_sms_count" },
-    { label: "Utility", value: "utility" },
-    { label: "Points", value: "points" },
+    { label: "Minutes", value: "minutes" },
+    { label: "Currency", value: "currency" },
+    { label: "Percentage", value: "percentage" },
     { label: "Other", value: "other" },
   ];
 

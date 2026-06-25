@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import logo from "/img/sentra.webp";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { accountService } from "../../account/services/accountService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -326,7 +327,7 @@ export default function RequestAccountPage() {
       <header className="page-header">
         <div className="container">
           <div className="brand-logo">
-            <h1 className="brand-name">Sentra</h1>
+            <img src={logo} alt="Sentra Logo" className="h-10 w-auto object-contain" />
           </div>
           <button className="btn-back-home" onClick={goHome}>
             <ArrowLeft size={16} />

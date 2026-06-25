@@ -10,7 +10,7 @@
  *   Service Status, Personal Information, Location Information)
  */
 
-import { ChevronRight, Database } from "lucide-react";
+import { ChevronRight, Database, FileText } from "lucide-react";
 import { tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { ProfileSource } from "../types";
@@ -29,6 +29,10 @@ interface ProfileSourceSelectorProps {
   isLoading?: boolean;
   /** Error message to display */
   error?: string | null;
+  /** Callback when quicklist columns section is selected */
+  onQuicklistSelect?: () => void;
+  /** Number of quicklist columns available */
+  quicklistColumnCount?: number;
 }
 
 export default function ProfileSourceSelector({
@@ -37,6 +41,8 @@ export default function ProfileSourceSelector({
   onSourceSelect,
   isLoading = false,
   error = null,
+  onQuicklistSelect,
+  quicklistColumnCount = 0,
 }: ProfileSourceSelectorProps) {
   const { t } = useLanguage();
 
@@ -75,10 +81,42 @@ export default function ProfileSourceSelector({
         {t.manualBroadcast.selectProfileSource}
       </p>
       <div className="max-h-64 overflow-y-auto">
+        {/* Quicklist Columns Section */}
+        {onQuicklistSelect && quicklistColumnCount > 0 && (
+          <button
+            onClick={onQuicklistSelect}
+            className={`w-full flex items-center justify-between px-3 py-2.5 text-left rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800`}
+            style={{
+              borderLeft: "3px solid transparent",
+            }}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  backgroundColor: "rgba(107, 114, 128, 0.1)",
+                }}
+              >
+                <FileText className="w-4 h-4" style={{ color: "currentColor" }} />
+              </div>
+              <div className="min-w-0">
+                <p className={`text-sm font-medium truncate ${tw.textPrimary}`}>
+                  Quicklist Columns
+                </p>
+                <p className={`text-xs ${tw.textMuted} truncate`}>
+                  {quicklistColumnCount} {quicklistColumnCount === 1 ? "column" : "columns"}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className={`w-4 h-4 flex-shrink-0 ${tw.textMuted}`} />
+          </button>
+        )}
+
+        {/* KPI Source Categories */}
         {sources.map((source) => {
           const isSelected = selectedSourceId === source.id;
-          const fieldCountLabel = source.fieldCount === 1 
-            ? t.manualBroadcast.fieldSingular 
+          const fieldCountLabel = source.fieldCount === 1
+            ? t.manualBroadcast.fieldSingular
             : t.manualBroadcast.fieldPlural;
 
           return (

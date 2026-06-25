@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logo from "../../../assets/logo.png";
+import logo from "/img/sentra.webp";
 import {
   ArrowRight,
   Target,
@@ -97,74 +97,119 @@ export default function LandingPage() {
       {/* Content */}
       <div className="relative z-10">
         {/* Desktop Navigation */}
-        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 max-md:hidden backdrop-blur-md bg-white/98">
-          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
-            <div className="flex justify-between items-center h-14">
+        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-700 max-md:hidden backdrop-blur-md bg-gray-800/95">
+          <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
               {/* Logo */}
               <div className="flex items-center flex-shrink-0">
                 <img
                   src={logo}
                   alt="Sentra Logo"
-                  className="h-16 w-auto object-contain"
+                  className="h-8 w-auto object-contain"
                 />
               </div>
 
               {/* Center Navigation Menu */}
-              <div className="hidden lg:flex items-center gap-8">
+              <div className="hidden lg:flex items-center gap-8 flex-1 justify-center">
                 {/* Products Dropdown */}
                 <div className="relative group">
-                  <button className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center gap-2 py-4">
+                  <button className="text-gray-100 hover:text-emerald-400 text-base font-medium transition-colors duration-200 flex items-center gap-2 px-3 py-2">
                     Products
                     <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3 divide-y divide-gray-100">
+                  <div className="absolute left-0 mt-0 w-72 bg-white border border-gray-100  rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3 divide-y divide-gray-100">
                     <div className="px-4 py-3">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Platform</p>
-                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra CM</Link>
-                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra 360</Link>
-                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Target</Link>
-                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Analytics</Link>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Core Platform</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra CM - Campaigns</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra 360 - Customer Profiles</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Target - Segmentation</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Analytics - Reports</Link>
                     </div>
                     <div className="px-4 py-3">
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">More</p>
-                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Connect</Link>
-                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Config</Link>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Management</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Offers - Promotions</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Products - Catalog</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">KPIs - Metrics</Link>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Advanced</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Connect - Activation</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Control Groups - Testing</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Sentra Config - Admin</Link>
                     </div>
                   </div>
                 </div>
 
                 {/* Solutions Dropdown */}
                 <div className="relative group">
-                  <button className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center gap-2 py-4">
+                  <button className="text-gray-100 hover:text-emerald-400 text-base font-medium transition-colors duration-200 flex items-center gap-2 px-3 py-2">
                     Solutions
                     <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3">
-                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Customer Engagement</Link>
-                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Revenue Optimization</Link>
-                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Customer Retention</Link>
-                    <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Data Intelligence</Link>
+                  <div className="absolute left-0 mt-0 w-72 bg-white border border-gray-100  rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3 divide-y divide-gray-100">
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Business Goals</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Revenue Optimization</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Customer Engagement</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Customer Retention</Link>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By Use Case</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Loyalty Programs</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Personalization</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Marketing Automation</Link>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Capabilities</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Data Intelligence</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Multi-Channel Delivery</Link>
+                    </div>
                   </div>
                 </div>
 
-                {/* Resources */}
-                <Link to="/documentation" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 py-4">
-                  Resources
-                </Link>
+                {/* Resources Dropdown */}
+                <div className="relative group">
+                  <button className="text-gray-100 hover:text-emerald-400 text-base font-medium transition-colors duration-200 flex items-center gap-2 px-3 py-2">
+                    Resources
+                    <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <div className="absolute left-0 mt-0 w-72 bg-white border border-gray-100  rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3 divide-y divide-gray-100">
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Learning</p>
+                      <Link to="/documentation" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Documentation</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Tutorials</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Help Center</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">API Reference</Link>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Community</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Blog</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Webinars</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Case Studies</Link>
+                    </div>
+                    <div className="px-4 py-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Support</p>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Contact Support</Link>
+                      <Link to="#" className="block px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded transition-colors font-medium">Status Page</Link>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Company Dropdown */}
                 <div className="relative group">
-                  <button className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200 flex items-center gap-2 py-4">
+                  <button className="text-gray-100 hover:text-emerald-400 text-base font-medium transition-colors duration-200 flex items-center gap-2 px-3 py-2">
                     Company
                     <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3">
+                  <div className="absolute left-0 mt-0 w-64 bg-white border border-gray-100  rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 py-3">
                     <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">About Us</Link>
                     <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Customers</Link>
                     <Link to="#" className="block px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 rounded mx-2 transition-colors font-medium">Careers</Link>
@@ -173,24 +218,17 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Right - Search & CTAs */}
+              {/* Right - CTAs */}
               <div className="flex items-center gap-4">
-                {/* Search Icon */}
-                <button className="text-gray-400 hover:text-gray-600 p-2 transition-colors duration-200">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-
                 {/* Sign In */}
-                <Link to="/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors duration-200">
+                <Link to="/login" className="text-gray-100 hover:text-emerald-400 text-sm font-medium transition-colors duration-200">
                   Sign In
                 </Link>
 
                 {/* Demo Button */}
                 <button
                   onClick={() => (window.location.href = "/request-account")}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 whitespace-nowrap"
+                  className="px-6 py-2.5 bg-emerald-400 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-all duration-300  hover: hover:scale-105 whitespace-nowrap"
                 >
                   Book a Demo
                 </button>
@@ -200,17 +238,12 @@ export default function LandingPage() {
         </nav>
 
         {/* Mobile Navigation */}
-        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-100 md:hidden backdrop-blur-md bg-white/98">
-          <div className="px-4 py-2.5">
+        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-700 md:hidden backdrop-blur-md bg-gray-800/95">
+          <div className="px-4 py-4">
             <div className="flex items-center justify-between">
-              <img src={logo} alt="Sentra Logo" className="h-14 w-auto object-contain" />
+              <img src={logo} alt="Sentra Logo" className="h-8 w-auto object-contain" />
               <div className="flex items-center gap-2">
-                <button className="text-gray-400 hover:text-gray-600 p-2 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-                <button className="text-gray-600 hover:text-gray-900 p-2 transition-colors">
+                <button className="text-gray-100 hover:text-emerald-400 p-2 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
@@ -221,33 +254,82 @@ export default function LandingPage() {
         </nav>
 
         {/* Hero Section */}
-        <section className="pt-28 pb-20 overflow-hidden">
+        <section className="py-24 overflow-hidden bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <div className={`inline-flex items-center px-6 py-3 bg-emerald-50 backdrop-blur-sm rounded-full text-sm font-semibold mb-8 border border-emerald-200`}>
-                <Sparkles className="w-4 h-4 mr-2 text-emerald-600 animate-pulse" />
-                <span className="text-emerald-700">{t.landing.nextGenPlatform}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Left Side - Text */}
+              <div>
+                <div className={`inline-flex items-center px-6 py-3 bg-emerald-50 backdrop-blur-sm rounded-full text-sm font-semibold mb-8 border border-emerald-200`}>
+                  <Sparkles className="w-4 h-4 mr-2 text-emerald-600 animate-pulse" />
+                  <span className="text-emerald-700">{t.landing.nextGenPlatform}</span>
+                </div>
+                <h1 className={`${tw.mainHeading} text-gray-900 mb-6 leading-tight`}>
+                  Manage Customer Campaigns with Precision
+                </h1>
+                <p className={`text-lg text-gray-600 mb-12 leading-relaxed`}>
+                  Segment your customers, create targeted campaigns, and deliver personalized messages across all channels. All in one platform.
+                </p>
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  <Link
+                    to="/request-account"
+                    className={`inline-flex items-center px-8 py-4 bg-emerald-400 hover:bg-emerald-500 text-white font-semibold ${tw.rounded} transition-all duration-300 transform hover:scale-105  hover:`}
+                  >
+                    Book a Demo
+                  </Link>
+                  <button className={`inline-flex items-center px-6 py-4 border-2 border-gray-300 text-gray-800 font-semibold ${tw.rounded} hover:bg-gray-50 hover:border-emerald-400 transition-all duration-200`}>
+                    <Play className="mr-2 h-5 w-5" />
+                    Learn More
+                  </button>
+                </div>
               </div>
-              <h1
-                className={`${tw.mainHeading} text-gray-900 mb-6 leading-tight`}
-              >
-                {t.landing.transformCustomerValue} <br />
-                <span className="text-emerald-600">{t.landing.customerValueManagement}</span>
-              </h1>
-              <p className={`text-lg text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed`}>
-                {t.landing.heroDescription}
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                <Link
-                  to="/request-account"
-                  className={`inline-flex items-center px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold ${tw.rounded} transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl`}
-                >
-                  {t.landing.getStartedToday}
-                </Link>
-                <button className={`inline-flex items-center px-6 py-4 border-2 border-gray-300 text-gray-800 font-semibold ${tw.rounded} hover:bg-gray-50 hover:border-emerald-400 transition-all duration-200`}>
-                  <Play className="mr-2 h-5 w-5" />
-                  {t.landing.watchDemo}
-                </button>
+
+              {/* Right Side - Workflow Diagram */}
+              <div className="flex justify-center">
+                <svg width="100%" height="400" viewBox="0 0 500 400" className="max-w-md">
+                  {/* Step 1: Customers */}
+                  <circle cx="50" cy="200" r="35" fill="#e8f5e9" stroke="#10b981" strokeWidth="2"/>
+                  <text x="50" y="200" textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-emerald-700">👥</text>
+                  <text x="50" y="250" textAnchor="middle" className="text-xs font-semibold fill-gray-700">Customers</text>
+
+                  {/* Arrow 1 */}
+                  <path d="M 85 200 L 130 200" stroke="#10b981" strokeWidth="2" fill="none" markerEnd="url(#arrowhead)"/>
+
+                  {/* Step 2: Segments */}
+                  <circle cx="165" cy="200" r="35" fill="#e8f5e9" stroke="#10b981" strokeWidth="2"/>
+                  <text x="165" y="200" textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-emerald-700">🎯</text>
+                  <text x="165" y="250" textAnchor="middle" className="text-xs font-semibold fill-gray-700">Segments</text>
+
+                  {/* Arrow 2 */}
+                  <path d="M 200 200 L 245 200" stroke="#10b981" strokeWidth="2" fill="none" markerEnd="url(#arrowhead)"/>
+
+                  {/* Step 3: Campaigns */}
+                  <circle cx="280" cy="200" r="35" fill="#e8f5e9" stroke="#10b981" strokeWidth="2"/>
+                  <text x="280" y="200" textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-emerald-700">🚀</text>
+                  <text x="280" y="250" textAnchor="middle" className="text-xs font-semibold fill-gray-700">Campaigns</text>
+
+                  {/* Arrow 3 */}
+                  <path d="M 315 200 L 360 200" stroke="#10b981" strokeWidth="2" fill="none" markerEnd="url(#arrowhead)"/>
+
+                  {/* Step 4: Send */}
+                  <circle cx="395" cy="200" r="35" fill="#e8f5e9" stroke="#10b981" strokeWidth="2"/>
+                  <text x="395" y="200" textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-emerald-700">📧</text>
+                  <text x="395" y="250" textAnchor="middle" className="text-xs font-semibold fill-gray-700">Multi-Channel</text>
+
+                  {/* Step 5: Results - Below */}
+                  <circle cx="280" cy="320" r="35" fill="#e8f5e9" stroke="#10b981" strokeWidth="2"/>
+                  <text x="280" y="320" textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-emerald-700">📊</text>
+                  <text x="280" y="365" textAnchor="middle" className="text-xs font-semibold fill-gray-700">Measure Results</text>
+
+                  {/* Arrow from Send to Results */}
+                  <path d="M 395 235 Q 340 270 280 285" stroke="#10b981" strokeWidth="2" fill="none" markerEnd="url(#arrowhead)"/>
+
+                  {/* Arrow marker definition */}
+                  <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
+                      <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
+                    </marker>
+                  </defs>
+                </svg>
               </div>
             </div>
           </div>
@@ -300,7 +382,7 @@ export default function LandingPage() {
                 return (
                   <div
                     key={index}
-                    className={`bg-white border border-gray-200 shadow-sm hover:shadow-lg ${tw.rounded} p-6 hover:border-emerald-300 transition-all duration-300 hover:-translate-y-1 group cursor-pointer ${
+                    className={`bg-white border border-gray-200  hover: ${tw.rounded} p-6 hover:border-emerald-300 transition-all duration-300 hover:-translate-y-1 group cursor-pointer ${
                       isLast ? 'md:col-start-2' : ''
                     }`}
                     style={{
@@ -407,7 +489,7 @@ export default function LandingPage() {
               </div>
 
               {/* Right Side - CTA */}
-              <div className="lg:pl-12 border border-gray-200 bg-white shadow-lg p-8 lg:p-10 rounded-xl">
+              <div className="lg:pl-12 border border-gray-200 bg-white  p-8 lg:p-10 rounded-xl">
                 <h3 className={`text-2xl font-bold text-gray-900 mb-3`}>
                   Ready to get started?
                 </h3>
@@ -418,7 +500,7 @@ export default function LandingPage() {
                 <div className="flex gap-3 flex-wrap">
                   <Link
                     to="/request-account"
-                    className={`inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold ${tw.rounded} transition-all duration-200 shadow-md hover:shadow-lg`}
+                    className={`inline-flex items-center px-6 py-3 bg-emerald-400 hover:bg-emerald-500 text-white font-semibold ${tw.rounded} transition-all duration-200  hover:`}
                   >
                     Request Access
                   </Link>

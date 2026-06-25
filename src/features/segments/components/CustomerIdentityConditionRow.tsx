@@ -323,7 +323,8 @@ export default function CustomerIdentityConditionRow({
     const isDropdown = backendField?.ui?.component_type === "dropdown";
     const distinctValues = backendField?.validation?.distinct_values || [];
     const operator = condition.operator?.toLowerCase() || "";
-    const fieldType = backendField?.field_type?.toLowerCase() || "";
+    const fieldTypeValue = backendField?.field_type ?? backendField?.type ?? "";
+    const fieldType = String(fieldTypeValue || "").toLowerCase();
     const isDateField = ["date", "timestamp", "timestamptz", "datetime"].includes(fieldType);
     const isBooleanField = fieldType === "boolean" || fieldType === "bool";
     const isNumericField = ["money", "decimal", "numeric"].includes(fieldType);

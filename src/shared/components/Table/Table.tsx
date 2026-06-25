@@ -56,9 +56,11 @@ export function Table<T extends { id?: number | string } = any>({
   const [startWidth, setStartWidth] = useState(0);
   const [columnFilters, setColumnFilters] = useState<{ [columnId: string]: any }>({});
   const [filteringColumn, setFilteringColumn] = useState<string | null>(null);
+  const [autoSizedOnce, setAutoSizedOnce] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const tableRef = useRef<HTMLDivElement | null>(null);
+  const headersRef = useRef<{ [key: string]: HTMLElement | null }>({});
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -146,6 +148,55 @@ export function Table<T extends { id?: number | string } = any>({
     () => columns.filter((col) => col.visible),
     [columns],
   );
+
+  // Auto-scroll to newly visible columns
+  useEffect(() => {
+    if (tableRef.current && visibleColumns.length > 0) {
+      requestAnimationFrame(() => {
+        if (tableRef.current) {
+          // Scroll to the end to show newly added columns
+          tableRef.current.scrollLeft = tableRef.current.scrollWidth - tableRef.current.clientWidth;
+        }
+      });
+    }
+  }, [visibleColumns.map((c) => c.id).join(',')]); // Track visible column IDs
+
+  // Auto-size columns on first load based on content
+  useEffect(() => {
+    if (!autoSizedOnce && visibleColumns.length > 0 && data.length > 0) {
+      requestAnimationFrame(() => {
+        const newWidths: { [key: string]: number } = {};
+        const padding = 48; // px-6 = 24px on each side
+
+        visibleColumns.forEach((col) => {
+          if (headersRef.current[col.id]) {
+            const headerEl = headersRef.current[col.id];
+            const headerText = headerEl?.textContent || col.label;
+            const headerWidth = headerText.length * 8 + padding; // Rough estimate: ~8px per character
+
+            // Sample first few rows to estimate content width
+            let maxContentWidth = headerWidth;
+            for (let i = 0; i < Math.min(5, data.length); i++) {
+              const cellContent = col.render
+                ? col.render(data[i][col.id as keyof typeof data[i]], data[i])
+                : data[i][col.id as keyof typeof data[i]];
+
+              const text = typeof cellContent === 'string' ? cellContent : String(cellContent || '');
+              const contentWidth = Math.min(text.length * 8 + padding, 300); // Cap at 300px
+              maxContentWidth = Math.max(maxContentWidth, contentWidth);
+            }
+
+            newWidths[col.id] = Math.max(100, Math.min(maxContentWidth, 400)); // Min 100px, max 400px
+          }
+        });
+
+        if (Object.keys(newWidths).length > 0) {
+          setColumnWidths(newWidths);
+          setAutoSizedOnce(true);
+        }
+      });
+    }
+  }, [autoSizedOnce, visibleColumns, data]);
 
   // Calculate pagination
   const totalPages = Math.ceil(totalItems / pageSize);
@@ -387,7 +438,7 @@ export function Table<T extends { id?: number | string } = any>({
               <tr>
                 {enableRowSelection && (
                   <th
-                    className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
+                    className={`px-6 py-2 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
                       headerClassName
                     } ${styleHeaderClassName}`}
                     style={{
@@ -413,10 +464,26 @@ export function Table<T extends { id?: number | string } = any>({
                   const isSortable = col.sortable !== false && col.id !== 'actions';
                   const isLastColumn = colIndex === visibleColumns.length - 1;
 
+                  // Calculate cumulative width for sticky positioning
+                  let cumulativeWidth = enableRowSelection ? 60 : 0;
+                  for (let i = 0; i < colIndex; i++) {
+                    cumulativeWidth += columnWidths[visibleColumns[i].id] || 120;
+                  }
+
+                  const isFrozen = col.visible;
+                  const stickyStyle = isFrozen && !isLastColumn
+                    ? { left: `${cumulativeWidth}px`, zIndex: 20 }
+                    : isFrozen && isLastColumn
+                    ? { right: 0, zIndex: 20 }
+                    : {};
+
                   return (
                     <th
                       key={col.id}
-                      className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
+                      ref={(el) => {
+                        if (el) headersRef.current[col.id] = el;
+                      }}
+                      className={`px-6 py-2 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
                         headerClassName
                       } ${styleHeaderClassName}`}
                       style={{
@@ -424,13 +491,13 @@ export function Table<T extends { id?: number | string } = any>({
                         background: headerBackground || color.surface.tableHeader,
                         position: 'sticky',
                         top: 0,
-                        zIndex: 10,
                         width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                         minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
+                        ...stickyStyle,
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span>{col.label}</span>
+                        <span className="truncate">{col.label}</span>
 
                         {/* Sort Icon & Menu */}
                         <div className="flex items-center gap-1">
@@ -635,7 +702,7 @@ export function Table<T extends { id?: number | string } = any>({
                       {/* Selection Checkbox */}
                       {enableRowSelection && (
                         <td
-                          className={`px-6 py-4 ${cellClassName}`}
+                          className={`px-6 py-2 ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: '60px',
@@ -651,23 +718,42 @@ export function Table<T extends { id?: number | string } = any>({
                         </td>
                       )}
                       {/* Data Cells */}
-                      {visibleColumns.map((col, colIdx) => (
+                      {visibleColumns.map((col, colIdx) => {
+                        // Calculate cumulative width for sticky positioning
+                        let cumulativeWidth = enableRowSelection ? 60 : 0;
+                        for (let i = 0; i < colIdx; i++) {
+                          cumulativeWidth += columnWidths[visibleColumns[i].id] || 120;
+                        }
+
+                        const isFrozen = col.visible;
+                        const isLastColumn = colIdx === visibleColumns.length - 1;
+                        const stickyStyle = isFrozen && !isLastColumn
+                          ? { left: `${cumulativeWidth}px`, zIndex: 15 }
+                          : isFrozen && isLastColumn
+                          ? { right: 0, zIndex: 15 }
+                          : {};
+
+                        return (
                         <td
                           key={`${rowId}-${col.id}`}
-                          className={`px-6 py-4 text-sm ${cellClassName}`}
+                          className={`px-6 py-2 text-sm ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                             minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
+                            position: isFrozen ? 'sticky' : undefined,
+                            ...stickyStyle,
                           }}
                         >
-                          <div className="flex items-center gap-2">
-                            {renderCellContent(col, row)}
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <div className="truncate flex-1">
+                              {renderCellContent(col, row)}
+                            </div>
                             {/* Expand button after first column content */}
                             {colIdx === 0 && expandedContent && (
                               <button
                                 onClick={() => handleRowExpand(rowId)}
-                                className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors`}
+                                className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors flex-shrink-0`}
                                 title={isExpanded ? "Collapse" : "Expand"}
                               >
                                 <ChevronDown
@@ -678,7 +764,8 @@ export function Table<T extends { id?: number | string } = any>({
                             )}
                           </div>
                         </td>
-                      ))}
+                        );
+                      })}
                     </tr>
 
                     {/* Expanded Content Row */}
@@ -686,7 +773,7 @@ export function Table<T extends { id?: number | string } = any>({
                       <tr>
                         <td colSpan={visibleColumns.length + (expandedContent ? 1 : 0)}>
                           <div
-                            className={`px-6 py-4 border-t ${borderColor}`}
+                            className={`px-6 py-2 border-t ${borderColor}`}
                             style={{ backgroundColor: bgColor }}
                           >
                             {expandedContent(row)}

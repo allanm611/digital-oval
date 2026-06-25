@@ -94,6 +94,20 @@ export default function CreateProductPage({
     }
   }, [searchParams]);
 
+  const mapResourceUnitToBackend = (unit: string | undefined): string => {
+    if (!unit) return "";
+    const mapping: Record<string, string> = {
+      "data_mb": "mb",
+      "roaming_data_mb": "mb",
+      "onnet_minutes": "minutes",
+      "offnet_minutes": "minutes",
+      "allnet_minutes": "minutes",
+      "roaming_minutes": "minutes",
+      "roaming_sms_count": "sms_count",
+    };
+    return mapping[unit] || unit;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -107,14 +121,14 @@ export default function CreateProductPage({
 
       const finalSubmitData: any = { ...baseData };
 
-      if (unit) finalSubmitData.unit_of_measure = unit;
+      if (unit) finalSubmitData.unit_of_measure = mapResourceUnitToBackend(unit);
       if (unit_value && unit_value > 0) finalSubmitData.value = unit_value;
       if (formData.validity_hours && formData.validity_hours > 0) finalSubmitData.validity_hours = formData.validity_hours;
       if (combo_data?.resources?.length) {
         finalSubmitData.resources = combo_data.resources.map((resource: any) => ({
           resource_type: resource.resource_type,
-          resource_unit: resource.unit?.toLowerCase(),
-          resource_value: resource.unit_value,
+          resource_unit: mapResourceUnitToBackend(resource.resource_unit),
+          resource_value: resource.resource_value,
           ...(resource.validity_hours !== undefined && { validity_hours: resource.validity_hours }),
           ...(resource.price !== undefined && { price: resource.price }),
           ...(resource.daid_account && { daid_account: resource.daid_account }),

@@ -71,6 +71,9 @@ export const ColumnPickerModal = ({
 
     setLocalColumns(newColumns);
     setDraggedItem(null);
+
+    // Clear search to show the reordered result
+    setSearchQuery("");
   };
 
   const handleReset = () => {

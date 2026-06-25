@@ -16,6 +16,7 @@ import {
   Send,
   Download,
   ArrowLeft,
+  Search,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -38,6 +39,7 @@ import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal"
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import EditCustomerModal from "../components/EditCustomerModal";
+import CustomerSearchModal from "../components/CustomerSearchModal";
 import { color, tw, zIndex, button } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -117,8 +119,8 @@ export default function CustomersPage() {
     useState(false);
   const [editingCustomer, setEditingCustomer] =
     useState<CustomerSubscriptionRecord | null>(null);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>([]);
-  const [allCustomers, setAllCustomers] = useState<CustomerSubscriptionRecord[]>([]);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
   const [subscriberStats, setSubscriberStats] = useState<any>(null);
@@ -332,7 +334,6 @@ export default function CustomersPage() {
             },
           );
           setCustomers(apiCustomers);
-          setAllCustomers(apiCustomers);
 
           // Set total from response pagination.total (preferred) or top-level total
           const total =
@@ -398,89 +399,15 @@ export default function CustomersPage() {
     setFilters((prev) => ({ ...prev, page: 1, offset: 0 }));
   }, [searchTerm]);
 
-  // Load all customers for frontend search fallback
-  const loadAllCustomersForSearch = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      let allCustomers: CustomerSubscriptionRecord[] = [];
-      let offset = 0;
-      let hasMore = true;
-      let totalCount = 0;
-
-      // Paginate through all customers
-      while (hasMore) {
-        const apiResponse = await customerService.getAllCustomers({
-          limit: 100,
-          offset,
-          skipCache: true,
-        });
-
-        if (
-          apiResponse.success &&
-          apiResponse.data &&
-          Array.isArray(apiResponse.data)
-        ) {
-          const apiCustomers = apiResponse.data.map(
-            (apiCustomer: Subscriber) => {
-              const customerId =
-                typeof apiCustomer.id === "string"
-                  ? parseInt(apiCustomer.id, 10)
-                  : apiCustomer.id;
-
-              const subscriberId = apiCustomer.subscriber_id
-                ? typeof apiCustomer.subscriber_id === "string"
-                  ? parseInt(apiCustomer.subscriber_id, 10)
-                  : apiCustomer.subscriber_id
-                : customerId;
-
-              return {
-                customerId: customerId,
-                subscriptionId: subscriberId,
-                firstName: apiCustomer.first_name || "Unknown",
-                lastName: apiCustomer.last_name || "Customer",
-                msisdn: apiCustomer.msisdn,
-                email: apiCustomer.email,
-                city: apiCustomer.city,
-                customerType: apiCustomer.subscriber_type || "prepaid",
-                tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
-                status: apiCustomer.subscriber_status || "active",
-                simType: apiCustomer.kyc_verified
-                  ? "KYC Verified"
-                  : "Not Verified",
-                activationDate: apiCustomer.created_at,
-              };
-            },
-          );
-
-          allCustomers = [...allCustomers, ...apiCustomers];
-
-          // Get total from pagination response
-          totalCount = apiResponse.pagination?.total || allCustomers.length;
-          hasMore = apiResponse.pagination?.hasMore || false;
-          offset += 100;
-        } else {
-          hasMore = false;
-        }
-      }
-
-      setCustomers(allCustomers);
-      setAllCustomers(allCustomers);
-      setTotalCustomers(totalCount);
-    } catch (err) {
-      console.error("Failed to load customers for search:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   // Perform backend search when debounced search term changes
   useEffect(() => {
+    // If search is empty, use paginated browse mode
     if (!debouncedSearchTerm.trim()) {
-      // If search is cleared, reload all customers
-      loadAllCustomersForSearch();
+      loadCustomers();
       return;
     }
 
+    // If search has a value, use search mode
     const performSearch = async () => {
       try {
         setIsLoading(true);
@@ -527,24 +454,18 @@ export default function CustomersPage() {
         }
       } catch (err: any) {
         console.error("Search error:", err);
-        // Fallback to frontend search - load all customers and filter locally
-        console.warn("Backend search failed, falling back to frontend search");
-        await loadAllCustomersForSearch();
+        showError("Search failed", extractBackendError(err, "Could not search customers"));
+        setCustomers([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     performSearch();
-  }, [debouncedSearchTerm, loadAllCustomersForSearch]);
+  }, [debouncedSearchTerm, loadCustomers, showError]);
 
   const filteredCustomers = useMemo(() => {
     let results = customers;
-
-    // Apply frontend search filter (for fallback when backend search fails)
-    if (debouncedSearchTerm.trim()) {
-      results = searchCustomersUtil(debouncedSearchTerm, results);
-    }
 
     // Apply channel filter
     if (channelFilter) {
@@ -559,7 +480,7 @@ export default function CustomersPage() {
     }
 
     return results;
-  }, [debouncedSearchTerm, customers, channelFilter, customerTypeFilter]);
+  }, [customers, channelFilter, customerTypeFilter]);
 
   // Backend pagination - no need to slice since backend returns paginated data
   const paginatedResults = filteredCustomers;
@@ -572,7 +493,7 @@ export default function CustomersPage() {
     value.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
   const customerStats = useMemo(() => {
-    if (!totalCustomers) {
+    if (!customers.length) {
       return {
         uniqueCustomers: 0,
         totalSubscriptions: 0,
@@ -591,7 +512,7 @@ export default function CustomersPage() {
     let tenureSamples = 0;
     const now = Date.now();
 
-    allCustomers.forEach((record) => {
+    customers.forEach((record) => {
       uniqueCustomers.add(record.customerId);
       const status = record.status?.toLowerCase();
       if (status === "active") {
@@ -616,15 +537,15 @@ export default function CustomersPage() {
     });
 
     return {
-      uniqueCustomers: totalCustomers,
-      totalSubscriptions: totalCustomers,
+      uniqueCustomers: uniqueCustomers.size,
+      totalSubscriptions: customers.length,
       activeSubscriptions,
       pendingActivations,
       atRiskSubscriptions,
       avgTenureDays:
         tenureSamples > 0 ? Math.round(tenureDaysTotal / tenureSamples) : 0,
     };
-  }, [allCustomers, totalCustomers]);
+  }, [customers]);
 
   const statCards = useMemo(
     () => [
@@ -665,21 +586,6 @@ export default function CustomersPage() {
   };
 
   const handleCustomersAdded = (newCustomers: CustomerSubscriptionRecord[]) => {
-    setAllCustomers((prevCustomers) => {
-      // Create set of existing customer+subscription combinations
-      const existingKeys = new Set(
-        prevCustomers.map((c) => `${c.customerId}-${c.subscriptionId}`),
-      );
-
-      // Filter out duplicates
-      const uniqueNewCustomers = newCustomers.filter((customer) => {
-        const key = `${customer.customerId}-${customer.subscriptionId}`;
-        return !existingKeys.has(key);
-      });
-
-      // Prepend new customers to show at top of first page
-      return [...uniqueNewCustomers, ...prevCustomers];
-    });
     setCustomers((prevCustomers) => {
       // Create set of existing customer+subscription combinations
       const existingKeys = new Set(
@@ -711,6 +617,11 @@ export default function CustomersPage() {
     }
   };
 
+  const handleSearchModalSelectCustomer = (customer: Subscriber) => {
+    const customerId = typeof customer.id === "string" ? parseInt(customer.id, 10) : customer.id;
+    navigate(`/dashboard/customers/details/${customerId}`);
+  };
+
   const handleFilteredCountChange = (count: number) => {
     // Updates when filters applied in the Table component
   };
@@ -723,12 +634,7 @@ export default function CustomersPage() {
   const handleCustomerUpdated = (
     updatedCustomer: CustomerSubscriptionRecord,
   ) => {
-    // Update customer in both state arrays
-    setAllCustomers((prev) =>
-      prev.map((c) =>
-        c.customerId === updatedCustomer.customerId ? updatedCustomer : c,
-      ),
-    );
+    // Update customer in the current view
     setCustomers((prev) =>
       prev.map((c) =>
         c.customerId === updatedCustomer.customerId ? updatedCustomer : c,
@@ -749,10 +655,7 @@ export default function CustomersPage() {
     try {
       await customerService.deleteCustomer(customerToDelete.customerId);
 
-      // Optimistic UI: Remove deleted customer from both lists
-      setAllCustomers((prev) =>
-        prev.filter((c) => c.customerId !== customerToDelete.customerId),
-      );
+      // Optimistic UI: Remove deleted customer from view
       setCustomers((prev) =>
         prev.filter((c) => c.customerId !== customerToDelete.customerId),
       );
@@ -899,6 +802,16 @@ export default function CustomersPage() {
             >
               <Plus className="h-4 w-4" />
               {t.customer360.addCustomer}
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="customer.read">
+            <button
+              type="button"
+              onClick={() => setIsSearchModalOpen(true)}
+              className={`${tw.button} flex items-center gap-2`}
+            >
+              <Search className="h-4 w-4" />
+              Search Customer
             </button>
           </PermissionGate>
         </div>
@@ -1170,6 +1083,12 @@ export default function CustomersPage() {
         onCustomerUpdated={handleCustomerUpdated}
       />
 
+      <CustomerSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelectCustomer={handleSearchModalSelectCustomer}
+      />
+
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteModalOpen}
@@ -1211,9 +1130,9 @@ export default function CustomersPage() {
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
         onReorderColumns={(reorderedCols) => {
-          const updatedColumns = columns.map((col) => {
-            const reordered = reorderedCols.find((c) => c.id === col.id);
-            return reordered ? { ...col, visible: reordered.visible } : col;
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
           });
           reorderColumns(updatedColumns);
         }}

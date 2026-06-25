@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import logo from "/img/sentra.webp";
 import {
   PlayCircle,
   CheckCircle2,
@@ -134,12 +135,12 @@ const LoginPage: React.FC = () => {
         {/* Mobile Header (visible only on small screens) */}
         <div className="mobile-header">
           <div className="brand">
-            <h1
-              className="brand-name cursor-pointer hover:opacity-80 transition-opacity"
+            <img
+              src={logo}
+              alt="Sentra Logo"
+              className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate("/dashboard")}
-            >
-              Sentra
-            </h1>
+            />
           </div>
           <button
             className="tour-btn mobile-tour-btn"
@@ -153,12 +154,12 @@ const LoginPage: React.FC = () => {
         {/* Left hero area */}
         <section className="hero">
           <div className="brand desktop-brand">
-            <h1
-              className="brand-name cursor-pointer hover:opacity-80 transition-opacity"
+            <img
+              src={logo}
+              alt="Sentra Logo"
+              className="h-12 w-auto cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate("/dashboard")}
-            >
-              Sentra
-            </h1>
+            />
           </div>
 
           <h2 className="headline">{t.auth.login.headline}</h2>

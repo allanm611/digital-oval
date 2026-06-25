@@ -22,6 +22,8 @@ export interface TemplateVariable {
   sourceId: number;
   /** Name of the source category (e.g., "Customer Identity") */
   sourceName: string;
+  /** Backend source value in snake_case (e.g., "customer_identity") */
+  sourceValue?: string;
   /** Description of the field */
   description: string;
   /** Field data type: "text", "numeric", "date", "boolean", "timestamp" */

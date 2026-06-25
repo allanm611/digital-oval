@@ -302,9 +302,9 @@ export default function CampaignsPage() {
           <span className={`text-sm ${tw.textPrimary}`}>
             Conversion: <span className="font-medium">0%</span>
           </span>
-          <span className={`text-sm ${tw.textPrimary}`}>
+          {/* <span className={`text-sm ${tw.textPrimary}`}>
             Revenue: <span className="font-medium">0</span>
-          </span>
+          </span> */}
         </div>
       ),
     },
@@ -1956,9 +1956,9 @@ export default function CampaignsPage() {
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
         onReorderColumns={(reorderedCols) => {
-          const updatedColumns = columns.map((col) => {
-            const reordered = reorderedCols.find((c) => c.id === col.id);
-            return reordered ? { ...col, visible: reordered.visible } : col;
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
           });
           reorderColumns(updatedColumns);
         }}

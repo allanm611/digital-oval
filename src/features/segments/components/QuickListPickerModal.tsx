@@ -56,15 +56,19 @@ export default function QuickListPickerModal({
         limit: 100,
       });
       if (response.success && response.data) {
-        // Map backend response to QuickListItem format and filter only completed quicklists
+        // Map backend response to QuickListItem format and filter only completed quicklists with data
         const lists = response.data
-          .filter((item: any) => item.status === "completed" || item.processing_status === "completed")
+          .filter((item: any) => {
+            const isCompleted = item.status === "completed" || item.processing_status === "completed";
+            const hasRows = (item.rows_imported ?? 0) > 0;
+            return isCompleted && hasRows;
+          })
           .map((item: any) => ({
             id: item.id,
             name: item.name,
-            description: item.description,
-            upload_type: item.processing_status || "multi",
-            row_count: item.rows_imported || 0,
+            description: item.upload_type_description ?? item.description ?? "",
+            upload_type: item.processing_status || item.upload_type || "multi",
+            row_count: item.rows_imported ?? 0,
             created_at: item.created_at,
             status: item.status || item.processing_status,
           }));
@@ -232,7 +236,7 @@ export default function QuickListPickerModal({
               <div className="text-center py-12">
                 <Loader2
                   className="w-12 h-12 mx-auto mb-4 animate-spin"
-                  strokeWidth={1.5}
+                  strokeWidth={1}
                   style={{ color: color.text.primary }}
                 />
                 <p className={tw.textSecondary}>Loading quicklists...</p>

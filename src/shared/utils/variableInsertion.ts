@@ -185,11 +185,12 @@ export function validateNoEditInsideVariables(
  * @returns The formatted placeholder string (e.g., "{{customer_identity.phone_number}}")
  */
 export function formatVariablePlaceholder(variable: TemplateVariable): string {
-  // Convert source name to snake_case for consistency
-  const sourceKey = (variable.sourceName || "source")
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "");
+  // Use the pre-converted source value (already in snake_case from backend)
+  const sourceKey = variable.sourceValue ||
+    (variable.sourceName || "source")
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
 
   // Use the field value directly (already in correct format)
   const fieldKey = variable.value || "field";

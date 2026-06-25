@@ -53,6 +53,7 @@ import { emailRouteService } from "../../routes/services/emailRouteService";
 import { EmailRoute } from "../../routes/types/emailRoute";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
+import { quicklistService } from "../../quicklists/services/quicklistService";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -87,6 +88,31 @@ export default function DefineCommunicationStep({
   const [isRichText, setIsRichText] = useState(data.isRichText || false);
   const [smsRoute, setSmsRoute] = useState(data.smsRoute || "");
   const [emailRoute, setEmailRoute] = useState("");
+  const [loadedQuicklist, setLoadedQuicklist] = useState<any>(null);
+
+  // Load quicklist data columns if we have quicklistId
+  useEffect(() => {
+    if (data.quicklistId) {
+      quicklistService.getQuickListData(data.quicklistId, { limit: 1 }).then((response) => {
+        if (response.success && response.data && response.data.length > 0) {
+          // Extract column names from first row's row_data
+          const firstRow = response.data[0];
+          const columns = firstRow?.row_data ? Object.keys(firstRow.row_data) : [];
+          setLoadedQuicklist({
+            columns: columns.map((name) => ({ name })),
+          });
+        }
+      }).catch((err) => {
+        console.error("Failed to load quicklist data:", err);
+      });
+    } else if (data.quicklist) {
+      setLoadedQuicklist(data.quicklist);
+    }
+  }, [data.quicklistId, data.quicklist]);
+
+  // Extract quicklist columns for variable insertion
+  const quicklistData = loadedQuicklist || data.quicklist;
+  const quicklistColumns = quicklistData?.columns || [];
 
   // Load email routes from configuration (dummy data)
   const emailRoutesConfig = useConfigurationData("emailRoutes");
@@ -1021,6 +1047,7 @@ export default function DefineCommunicationStep({
                     isOpen={showVariableSelector}
                     onClose={() => setShowVariableSelector(false)}
                     onVariableSelect={handleVariableSelect}
+                    quicklistColumns={quicklistColumns}
                   />
                 </div>
               </div>

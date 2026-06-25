@@ -26,6 +26,11 @@ import ProfileSourceSelector from "./ProfileSourceSelector";
 import ProfileFieldSelector from "./ProfileFieldSelector";
 import type { TemplateVariable, ProfileSource, ProfileField } from "../types";
 
+interface QuicklistColumn {
+  name: string;
+  [key: string]: any;
+}
+
 interface HierarchicalVariableSelectorProps {
   /** Callback when a variable is selected */
   onVariableSelect: (variable: TemplateVariable) => void;
@@ -35,6 +40,8 @@ interface HierarchicalVariableSelectorProps {
   onSourceChange?: (sourceId: number) => void;
   /** Custom class name for the container */
   className?: string;
+  /** Quicklist columns to display as an additional source */
+  quicklistColumns?: QuicklistColumn[];
 }
 
 export default function HierarchicalVariableSelector({
@@ -42,12 +49,14 @@ export default function HierarchicalVariableSelector({
   selectedSource: initialSelectedSource,
   onSourceChange,
   className = "",
+  quicklistColumns = [],
 }: HierarchicalVariableSelectorProps) {
   const { t } = useLanguage();
   const { categories, isLoading, error } = useMessageVariableFields();
   const [selectedSourceId, setSelectedSourceId] = useState<number | null>(
     initialSelectedSource ?? null
   );
+  const [isQuicklistSelected, setIsQuicklistSelected] = useState(false);
 
   // Transform categories to ProfileSource format
   const profileSources: ProfileSource[] = useMemo(() => {
@@ -67,14 +76,17 @@ export default function HierarchicalVariableSelector({
     const category = categories.find((c) => c.id === selectedSourceId);
     if (!category || !category.fields) return [];
 
-    return category.fields.map((field) => ({
-      id: field.id,
-      name: field.field_name,
-      value: field.field_value,
-      description: field.description,
-      fieldType: field.field_type,
-      sourceTable: field.source_table,
-    }));
+    return category.fields.map((field) => {
+      const fieldType = field?.field_type ?? field?.type ?? "text";
+      return {
+        id: field.id,
+        name: field?.field_name ?? "",
+        value: field?.field_value ?? "",
+        description: field?.description ?? "",
+        fieldType: String(fieldType || "text"),
+        sourceTable: field?.source_table ?? "",
+      };
+    });
   }, [categories, selectedSourceId]);
 
   // Get the selected source name
@@ -88,15 +100,41 @@ export default function HierarchicalVariableSelector({
   const handleSourceSelect = useCallback(
     (sourceId: number) => {
       setSelectedSourceId(sourceId);
+      setIsQuicklistSelected(false);
       onSourceChange?.(sourceId);
     },
     [onSourceChange]
   );
 
+  // Handle quicklist selection
+  const handleQuicklistSelect = useCallback(() => {
+    setIsQuicklistSelected(true);
+    setSelectedSourceId(null);
+  }, []);
+
   // Handle back navigation
   const handleBack = useCallback(() => {
     setSelectedSourceId(null);
+    setIsQuicklistSelected(false);
   }, []);
+
+  // Handle quicklist column selection
+  const handleQuicklistColumnSelect = useCallback(
+    (columnName: string) => {
+      const templateVariable: TemplateVariable = {
+        id: columnName,
+        name: columnName,
+        value: columnName,
+        sourceId: -1, // Special ID for quicklist columns
+        sourceName: "Quicklist Columns",
+        description: `Column from quicklist: ${columnName}`,
+        fieldType: "quicklist_column",
+      };
+
+      onVariableSelect(templateVariable);
+    },
+    [onVariableSelect]
+  );
 
   // Handle field selection - convert to TemplateVariable and emit
   const handleFieldSelect = useCallback(
@@ -128,7 +166,7 @@ export default function HierarchicalVariableSelector({
         className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-700"
         style={{ backgroundColor: `${PRIMARY_COLOR}08` }}
       >
-        {selectedSourceId !== null && (
+        {(selectedSourceId !== null || isQuicklistSelected) && (
           <button
             onClick={handleBack}
             className={`p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
@@ -139,7 +177,9 @@ export default function HierarchicalVariableSelector({
         )}
         <Variable className="w-4 h-4" style={{ color: PRIMARY_COLOR }} />
         <span className={`text-sm font-medium ${tw.textPrimary}`}>
-          {selectedSourceId !== null
+          {isQuicklistSelected
+            ? "Quicklist Columns"
+            : selectedSourceId !== null
             ? selectedSourceName
             : t.manualBroadcast.selectProfileSource}
         </span>
@@ -147,14 +187,31 @@ export default function HierarchicalVariableSelector({
 
       {/* Content */}
       <div className="p-2">
-        {selectedSourceId === null ? (
+        {selectedSourceId === null && !isQuicklistSelected ? (
           <ProfileSourceSelector
             sources={profileSources}
             selectedSourceId={selectedSourceId}
             onSourceSelect={handleSourceSelect}
+            onQuicklistSelect={quicklistColumns.length > 0 ? handleQuicklistSelect : undefined}
+            quicklistColumnCount={quicklistColumns.length}
             isLoading={isLoading}
             error={error ? t.manualBroadcast.errorLoadingFields : null}
           />
+        ) : isQuicklistSelected ? (
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            {quicklistColumns.map((column, idx) => (
+              <button
+                key={`${column.name}-${idx}`}
+                onClick={() => handleQuicklistColumnSelect(column.name)}
+                className="w-full flex items-center justify-between px-3 py-2.5 text-left rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {column.name}
+                </p>
+                <ChevronRight className={`w-4 h-4 ${tw.textMuted}`} />
+              </button>
+            ))}
+          </div>
         ) : (
           <ProfileFieldSelector
             fields={selectedSourceFields}
