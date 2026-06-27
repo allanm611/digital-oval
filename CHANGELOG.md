@@ -1,3 +1,10 @@
+## [1.4.17](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.16...v1.4.17) (2026-06-27)
+
+
+### Bug Fixes
+
+* changes to the landing page ,table compoent ([7eb5e1c](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/7eb5e1cb9870a92f2acd5fceeb9855aad5e594c2))
+
 ## [1.4.16](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.15...v1.4.16) (2026-06-25)
 
 
