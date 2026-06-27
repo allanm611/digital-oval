@@ -1,3 +1,4 @@
+import { useLanguage } from "../../../contexts/LanguageContext";
 import CodeMirror from "@uiw/react-codemirror";
 import { sql as sqlLanguage } from "@codemirror/lang-sql";
 import Input from "../../../shared/components/ui/Input";
@@ -103,6 +104,7 @@ export default function KPIForm({
   onCancel,
   onSubmit,
 }: KPIFormProps) {
+  const { t } = useLanguage();
   const { isDark } = useTheme();
   const handleInputChange = (fieldName: keyof KPIFormData) => (value: string | number | boolean) => {
     onFormDataChange({ ...formData, [fieldName]: value });
@@ -180,8 +182,8 @@ export default function KPIForm({
                 label="Tag"
                 options={[
                   { label: "KPI", value: "kpi" },
-                  { label: "Revenue Metric", value: "revenue_metric" },
-                  { label: "Usage Metric", value: "usage_metric" },
+                  { label: t.kpis.categories.revenueMetric, value: "revenue_metric" },
+                  { label: t.kpis.categories.usageMetric, value: "usage_metric" },
                 ]}
                 value={formData.tag || ""}
                 onChange={(value) => onFormDataChange({ ...formData, tag: value || null })}

@@ -4,6 +4,7 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   Filter,
   Eye,
@@ -31,15 +32,15 @@ import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { color, tw } from "../../../shared/utils/utils";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 
-const STATUS_OPTIONS = [
-  { label: "All statuses", value: "" },
-  { label: "Pending", value: "pending" },
-  { label: "Running", value: "running" },
-  { label: "Success", value: "success" },
-  { label: "Failure", value: "failure" },
-  { label: "Timeout", value: "timeout" },
-  { label: "Skipped", value: "skipped" },
-  { label: "Cancelled", value: "cancelled" },
+const getStatusOptions = (t: any) => [
+  { label: t.common.allStatuses, value: "" },
+  { label: t.common.pending, value: "pending" },
+  { label: t.common.running, value: "running" },
+  { label: t.common.success, value: "success" },
+  { label: t.common.failure, value: "failure" },
+  { label: t.common.timeout, value: "timeout" },
+  { label: t.common.skipped, value: "skipped" },
+  { label: t.common.cancelled, value: "cancelled" },
 ];
 
 const getStatusColor = (status: string) => {
@@ -74,6 +75,7 @@ const formatDuration = (seconds: number | null) => {
 
 export default function StepExecutionsPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
   const canWrite =
@@ -122,7 +124,8 @@ export default function StepExecutionsPage() {
           trimmedSearch
         );
       const isNumeric = /^\d+$/.test(trimmedSearch);
-      const isStatus = STATUS_OPTIONS.some(
+      const statusOptions = getStatusOptions(t);
+      const isStatus = statusOptions.some(
         (opt) =>
           opt.value && opt.value.toLowerCase() === trimmedSearch.toLowerCase()
       );
@@ -438,19 +441,21 @@ export default function StepExecutionsPage() {
     <div className="">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <BackButton showBreadcrumb={true} currentLabel="Step Executions" />
+        <BackButton showBreadcrumb={true} currentLabel={t.jobs.stepExecutions || "Step Executions"} />
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/dashboard/step-executions/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
               backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
+              color: "var(--c-bordered-button-color)",
+              borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
             }}
           >
             <BarChart3 className="h-4 w-4" />
-            Analytics
+            {t.common.analytics || "Analytics"}
           </button>
           {canWrite && (
             <button
@@ -470,8 +475,10 @@ export default function StepExecutionsPage() {
                 backgroundColor: isSelectionMode
                   ? color.primary.action
                   : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
               }}
             >
               {isSelectionMode ? (
@@ -479,7 +486,7 @@ export default function StepExecutionsPage() {
               ) : (
                 <Square className="h-4 w-4" />
               )}
-              {isSelectionMode ? "Exit Selection" : "Select Step Executions"}
+              {isSelectionMode ? (t.common.exitSelection || "Exit Selection") : (t.jobs.selectStepExecutions || "Select Step Executions")}
             </button>
           )}
         </div>
@@ -495,7 +502,7 @@ export default function StepExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>Total</p>
+            <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>{t.common.total || "Total"}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.totalExecutions}
@@ -509,7 +516,7 @@ export default function StepExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Active</p>
+            <p className="text-sm font-medium text-gray-600">{t.common.active || "Active"}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.activeExecutions}
@@ -523,7 +530,7 @@ export default function StepExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Failed</p>
+            <p className="text-sm font-medium text-gray-600">{t.common.failed || "Failed"}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.failedExecutions}
@@ -537,7 +544,7 @@ export default function StepExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Queued</p>
+            <p className="text-sm font-medium text-gray-600">{t.common.queued || "Queued"}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.queuedExecutions}
@@ -551,7 +558,7 @@ export default function StepExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Pending</p>
+            <p className="text-sm font-medium text-gray-600">{t.common.pending || "Pending"}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.pendingExecutions}
@@ -565,7 +572,7 @@ export default function StepExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Successful</p>
+            <p className="text-sm font-medium text-gray-600">{t.common.successful || "Successful"}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.successfulExecutions}
@@ -576,7 +583,7 @@ export default function StepExecutionsPage() {
       {/* Search and Filters */}
       <div className="flex gap-4">
         <SearchInput
-          placeholder="Search step executions..."
+          placeholder={t.jobs.searchStepExecutions || "Search step executions..."}
           value={searchTerm}
           onChange={setSearchTerm}
         />
@@ -586,8 +593,8 @@ export default function StepExecutionsPage() {
             setStatusFilter(value as string);
             setQuickFilter("");
           }}
-          options={STATUS_OPTIONS}
-          placeholder="All statuses"
+          options={getStatusOptions(t)}
+          placeholder={t.common.allStatuses}
           className="w-auto min-w-[180px]"
         />
         <button
@@ -595,10 +602,10 @@ export default function StepExecutionsPage() {
           className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
         >
           <Filter className="h-4 w-4" />
-          <span>Filters</span>
+          <span>{t.common.filters || "Filters"}</span>
           {(jobExecutionIdFilter || stepIdFilter || quickFilter) && (
             <span className="ml-1 inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
-              Active
+              {t.common.active || "Active"}
             </span>
           )}
         </button>
@@ -611,7 +618,7 @@ export default function StepExecutionsPage() {
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
-              {selectedExecutions.size} step execution(s) selected
+              {selectedExecutions.size} {t.jobs.stepExecutionsSelected || "step execution(s) selected"}
             </span>
             <button
               onClick={() => setSelectedExecutions(new Set())}
@@ -628,7 +635,7 @@ export default function StepExecutionsPage() {
               style={{ backgroundColor: color.primary.action }}
             >
               <RotateCcw className="h-4 w-4" />
-              Retry Failed
+              {t.jobs.retryFailed || "Retry Failed"}
             </button>
             <button
               onClick={() => handleBatchAction("abort")}
@@ -636,7 +643,7 @@ export default function StepExecutionsPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50`}
             >
               <Ban className="h-4 w-4" />
-              Abort Running
+              {t.jobs.abortRunning || "Abort Running"}
             </button>
           </div>
         </div>
@@ -659,10 +666,10 @@ export default function StepExecutionsPage() {
           <div className="py-16 text-center">
             <Activity className="mx-auto mb-4 h-12 w-12 text-gray-300" />
             <p className={`text-lg font-semibold ${tw.textPrimary}`}>
-              No step executions found
+              {t.jobs.noStepExecutionsFound || "No step executions found"}
             </p>
             <p className="mt-2 text-sm text-gray-500">
-              Try updating your search filters or check back later.
+              {t.jobs.tryUpdatingFilters || "Try updating your search filters or check back later."}
             </p>
           </div>
         ) : (
@@ -704,7 +711,7 @@ export default function StepExecutionsPage() {
                       }),
                     }}
                   >
-                    Step Exec ID
+                    {t.jobs.stepExecId || "Step Exec ID"}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -713,7 +720,7 @@ export default function StepExecutionsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Job Exec ID
+                    {t.jobs.jobExecId || "Job Exec ID"}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -722,7 +729,7 @@ export default function StepExecutionsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Step ID
+                    {t.jobs.stepId || "Step ID"}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -731,7 +738,7 @@ export default function StepExecutionsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Status
+                    {t.common.status || "Status"}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -740,7 +747,7 @@ export default function StepExecutionsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Started At
+                    {t.common.startedAt || "Started At"}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -749,7 +756,7 @@ export default function StepExecutionsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Duration
+                    {t.common.duration || "Duration"}
                   </th>
                   <th
                     className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
@@ -759,7 +766,7 @@ export default function StepExecutionsPage() {
                       borderTopRightRadius: "0.375rem",
                     }}
                   >
-                    Actions
+                    {t.common.actions || "Actions"}
                   </th>
                 </tr>
               </thead>
@@ -927,7 +934,7 @@ export default function StepExecutionsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
                   <h2 className="text-sm font-semibold text-gray-900">
-                    Filter Step Executions
+                    {t.jobs.filterStepExecutions || "Filter Step Executions"}
                   </h2>
                   <button
                     onClick={() => setShowAdvancedFilters(false)}
@@ -943,7 +950,7 @@ export default function StepExecutionsPage() {
                     {/* Quick Filters */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Quick Filters
+                        {t.common.quickFilters || "Quick Filters"}
                       </label>
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -962,7 +969,7 @@ export default function StepExecutionsPage() {
                           }`}
                         >
                           <XCircle className="h-4 w-4" />
-                          Failed
+                          {t.common.failed || "Failed"}
                         </button>
                         <button
                           onClick={() => {
@@ -980,7 +987,7 @@ export default function StepExecutionsPage() {
                           }`}
                         >
                           <Activity className="h-4 w-4" />
-                          Active
+                          {t.common.active || "Active"}
                         </button>
                       </div>
                     </div>
@@ -988,12 +995,12 @@ export default function StepExecutionsPage() {
                     {/* Job Execution ID Filter */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Job Execution ID
+                        {t.jobs.jobExecutionId || "Job Execution ID"}
                       </label>
                       <Input
                         type="text"
                         className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                        placeholder="Job execution UUID (GUID)"
+                        placeholder={t.jobs.jobExecutionUuidGuid || "Job execution UUID (GUID)"}
                         value={jobExecutionIdFilter}
                         onChange={(value) =>
                           setJobExecutionIdFilter(String(value).trim())
@@ -1005,7 +1012,7 @@ export default function StepExecutionsPage() {
                           jobExecutionIdFilter
                         ) && (
                           <p className="mt-1 text-xs text-red-600">
-                            Please enter a valid GUID format
+                            {t.common.pleaseEnterValidGuidFormat || "Please enter a valid GUID format"}
                           </p>
                         )}
                     </div>
@@ -1013,12 +1020,12 @@ export default function StepExecutionsPage() {
                     {/* Step ID Filter */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Step ID
+                        {t.jobs.stepId || "Step ID"}
                       </label>
                       <Input
                         type="number"
                         className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
-                        placeholder="Step ID (numeric)"
+                        placeholder={t.jobs.stepIdNumeric || "Step ID (numeric)"}
                         value={stepIdFilter}
                         onChange={(value) =>
                           setStepIdFilter(
@@ -1044,14 +1051,14 @@ export default function StepExecutionsPage() {
                       }}
                       className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                     >
-                      Clear All
+                      {t.common.clearAll || "Clear All"}
                     </button>
                     <button
                       onClick={() => setShowAdvancedFilters(false)}
                       className={`flex-1 px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors`}
                       style={{ backgroundColor: color.primary.action }}
                     >
-                      Apply Filters
+                      {t.common.applyFilters || "Apply Filters"}
                     </button>
                   </div>
                 </div>

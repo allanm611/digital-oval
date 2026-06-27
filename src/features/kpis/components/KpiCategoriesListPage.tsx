@@ -35,13 +35,13 @@ export default function KpiCategoriesListPage() {
   const tableColumns: TableColumn<KpiCategory>[] = [
     {
       id: "name",
-      label: "Name",
+      label: t.common.name,
       visible: true,
       render: (_, row) => row.name,
     },
     {
       id: "description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       render: (_, row) => (
         <div className="max-w-md">
@@ -51,19 +51,19 @@ export default function KpiCategoriesListPage() {
     },
     {
       id: "display_order",
-      label: "Order",
+      label: t.kpis.order,
       visible: true,
       render: (_, row) => row.display_order || "0",
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
-      render: (_, row) => row.is_active ?? true ? "Active" : "Inactive",
+      render: (_, row) => row.is_active ?? true ? t.common.active : t.common.inactive,
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
       render: (_, row) => (
@@ -89,7 +89,7 @@ export default function KpiCategoriesListPage() {
               (categoryToDelete?.id === row.id && isDeleting)
             }
             className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-            title="Edit"
+            title={t.common.edit}
           >
             <Edit className="w-4 h-4" />
           </button>
@@ -100,7 +100,7 @@ export default function KpiCategoriesListPage() {
               (categoryToDelete?.id === row.id && isDeleting)
             }
             className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-            title="Delete"
+            title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -208,7 +208,7 @@ export default function KpiCategoriesListPage() {
       });
       showToast(
         newActive ? "Activated" : "Deactivated",
-        `"${category.name}" has been ${newActive ? "activated" : "deactivated"}`
+        `"${category.name}" has been ${newActive ? t.common.activated : t.common.deactivated}`
       );
     } catch (err) {
       console.error("Failed to update category:", err);

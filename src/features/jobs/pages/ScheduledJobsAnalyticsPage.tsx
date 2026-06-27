@@ -45,13 +45,14 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+      className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-3 shadow-lg`}
     >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -352,14 +353,15 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
           {slaCompliance && (
             <div className="grid gap-4 md:grid-cols-3">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Within SLA
                   </p>
                 </div>
@@ -368,14 +370,15 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     SLA Breached
                   </p>
                 </div>
@@ -384,14 +387,15 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <TrendingUp
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Breach Rate
                   </p>
                 </div>
@@ -465,12 +469,12 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                               (job.job_name as string) ||
                               "Unknown"}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {(job.failures as number) ||
                               (job.total_failures as number) ||
                               0}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {job.failure_rate
                               ? `${String(job.failure_rate)}%`
                               : job.failure_rate_percent
@@ -546,7 +550,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                                 (job.job_name as string) ||
                                 "Unknown"}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="px-6 py-4 text-sm text-sm">
                               {job.avg_duration_seconds
                                 ? `${parseFloat(
                                     String(job.avg_duration_seconds)
@@ -557,7 +561,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                                   (job.avg_duration as string) ||
                                   "N/A"}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="px-6 py-4 text-sm text-sm">
                               {job.last_run_at
                                 ? new Date(
                                     String(job.last_run_at)
@@ -641,7 +645,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                                 ? `${String(job.failure_rate_percent)}%`
                                 : "N/A"}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="px-6 py-4 text-sm text-sm">
                               {(job.failures as number) ||
                                 (job.total_failures as number) ||
                                 0}
@@ -660,7 +664,8 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             <div className="grid gap-6 md:grid-cols-2">
               {statusCounts.length > 0 && (
                 <div
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
                 >
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Status Distribution
@@ -721,7 +726,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                           height={36}
                           formatter={(value) => (
                             <span
-                              style={{ fontSize: "12px", color: "#000000" }}
+                              style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}
                             >
                               {value}
                             </span>
@@ -735,7 +740,8 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
 
               {typeCounts.length > 0 && (
                 <div
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
                 >
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Job Type Distribution
@@ -786,7 +792,8 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
 
             {ownerCounts.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-8 mt-8`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm mb-8 mt-8`}
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Jobs by Owner
@@ -837,7 +844,8 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             {executionStats && Object.keys(executionStats).length > 0 && (
               <div className="mb-8">
                 <div
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
                 >
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Execution Counts
@@ -895,7 +903,8 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                 </div>
 
                 <div
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mt-8`}
+                  className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm mt-8`}
                 >
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Performance Metrics
@@ -957,7 +966,8 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             {resourceUtilization &&
               Object.keys(resourceUtilization).length > 0 && (
                 <div
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-8`}
+                  className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm mb-8`}
                 >
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Resource Utilization

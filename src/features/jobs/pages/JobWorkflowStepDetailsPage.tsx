@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   Edit,
   Trash2,
@@ -29,6 +30,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function JobWorkflowStepDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const jobIdParam = searchParams.get("job_id");

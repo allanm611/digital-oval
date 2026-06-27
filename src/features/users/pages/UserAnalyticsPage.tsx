@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { AlertTriangle, Users, UserCheck, UserPlus, UserX, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -34,7 +35,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   active,
   payload,
   label,
-}) => {
+}: ChartTooltipProps) => {
   if (!active || !payload?.length) {
     return null;
   }
@@ -466,7 +467,7 @@ export default function UserAnalyticsPage() {
 
     if (chartData.length === 0) {
       return (
-        <div className={`${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`${tw.rounded} border p-6`} style={{ borderColor: 'var(--c-border-default)' }}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
             {title}
           </h3>
@@ -476,7 +477,7 @@ export default function UserAnalyticsPage() {
     }
 
     return (
-      <div className={`${tw.rounded} border border-gray-200 p-6 w-full`}>
+      <div className={`${tw.rounded} border p-6 w-full`} style={{ borderColor: 'var(--c-border-default)' }}>
         <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
           {title}
         </h3>
@@ -506,7 +507,7 @@ export default function UserAnalyticsPage() {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="space-y-2 pt-4 border-t border-gray-200">
+        <div className="space-y-2 pt-4 border-t" style={{ borderColor: 'var(--c-border-default)' }}>
           {chartData.map((item) => (
             <div
               key={item.name}
@@ -552,7 +553,8 @@ export default function UserAnalyticsPage() {
               return (
                 <div
                   key={stat.name}
-                  className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+                  className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-4 sm:p-6 shadow-sm`}
                 >
                   <div className="flex items-center justify-between gap-3 sm:gap-4">
                     <div className="flex items-center gap-2 min-w-0">
@@ -560,7 +562,7 @@ export default function UserAnalyticsPage() {
                         className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
                         style={{ color: color.primary.accent }}
                       />
-                      <p className="text-sm font-medium text-gray-600 truncate">
+                      <p className="text-sm font-medium text-sm truncate">
                         {stat.name}
                       </p>
                     </div>
@@ -581,7 +583,8 @@ export default function UserAnalyticsPage() {
           {/* Reporting Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-4 sm:p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span
@@ -590,7 +593,7 @@ export default function UserAnalyticsPage() {
                 >
                   ✓
                 </span>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   MFA Enabled
                 </p>
               </div>
@@ -600,7 +603,8 @@ export default function UserAnalyticsPage() {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-4 sm:p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span
@@ -609,7 +613,7 @@ export default function UserAnalyticsPage() {
                 >
                   !
                 </span>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   MFA Disabled
                 </p>
               </div>
@@ -619,14 +623,15 @@ export default function UserAnalyticsPage() {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-4 sm:p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle
                   className="w-6 h-6"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Expiring Passwords
                 </p>
               </div>
@@ -636,14 +641,15 @@ export default function UserAnalyticsPage() {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-4 sm:p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle
                   className="w-6 h-6"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Expired Access
                 </p>
               </div>
@@ -653,7 +659,8 @@ export default function UserAnalyticsPage() {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-4 sm:p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span
@@ -662,7 +669,7 @@ export default function UserAnalyticsPage() {
                 >
                   +
                 </span>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Recent Users
                 </p>
               </div>
@@ -672,7 +679,8 @@ export default function UserAnalyticsPage() {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-4 sm:p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span
@@ -681,7 +689,7 @@ export default function UserAnalyticsPage() {
                 >
                   -
                 </span>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Inactive Users
                 </p>
               </div>

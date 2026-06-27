@@ -14,10 +14,11 @@ import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/push
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
-const STATUS_OPTIONS = [
-  { label: "Active", value: "true" },
-  { label: "Inactive", value: "false" },
+const STATUS_OPTIONS = (t: any) => [
+  { label: t.common.active, value: "true" },
+  { label: t.common.inactive, value: "false" },
 ];
 
 interface PushNotificationRouteFormPageProps {
@@ -28,6 +29,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
@@ -78,7 +80,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
       const configs = await pushGatewayConfigService.getAllConfigs();
       setGatewayConfigs(configs);
     } catch (err) {
-      showError("Error", "Failed to load gateway configurations");
+      showError(t.common.error, "Failed to load gateway configurations");
     } finally {
       setIsLoadingConfigs(false);
     }
@@ -108,7 +110,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
         });
       }
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/push-notification-routes");
     } finally {
       setLoading(false);
@@ -131,7 +133,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
     e.preventDefault();
 
     if (!validateForm()) {
-      showError("Validation Error", "Please fill in all required fields");
+      showError(t.common.error, "Please fill in all required fields");
       return;
     }
 
@@ -143,16 +145,16 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
 
       if (mode === "edit" && id) {
         await pushNotificationRouteService.updateRoute(Number(id), payloadData);
-        success("Success", "Push notification route updated successfully");
+        success(t.common.success, "Push notification route updated successfully");
       } else {
         await pushNotificationRouteService.createRoute(payloadData);
-        success("Success", "Push notification route created successfully");
+        success(t.common.success, "Push notification route created successfully");
       }
 
       navigate("/dashboard/push-notification-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -235,7 +237,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading push notification route...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>Loading push notification {t.routes.route}...</p>
       </div>
     );
   }
@@ -243,23 +245,23 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Push Notification Route" : "Edit Push Notification Route"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create Push Notification Route" : `${t.common.edit} Push Notification ${t.routes.route}`} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Route Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Configuration</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>{t.routes.routeName} {t.common.metadata}</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Input
-                  label="Route Name"
+                  label={t.routes.routeName}
                   placeholder="e.g., Firebase Production Gateway"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
-                 
+
                   disabled={saving}
                   required
                 />
@@ -292,7 +294,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
 
             <div>
               <Textarea
-                label="Description"
+                label={t.common.description}
                 value={formData.description || ""}
                 onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
@@ -432,7 +434,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
             disabled={saving}
             className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
-            Cancel
+            {t.common.cancel}
           </button>
 
           <button
@@ -442,7 +444,7 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="w-4 h-4" />
-            {saving ? "Saving..." : "Save Route"}
+            {saving ? t.routes.successfully : t.routes.route}
           </button>
         </div>
       </form>

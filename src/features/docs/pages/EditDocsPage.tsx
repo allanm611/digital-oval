@@ -2,6 +2,7 @@ import Input from '../../../shared/components/ui/Input';
 import Textarea from "../../../shared/components/ui/Textarea";
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import MarkdownIt from 'markdown-it';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useToast } from '../../../contexts/ToastContext';
@@ -24,6 +25,7 @@ const md = new MarkdownIt({
 });
 
 function EditDocsPageContent() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();

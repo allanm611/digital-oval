@@ -44,13 +44,14 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+      className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-3 shadow-lg`}
     >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -169,7 +170,7 @@ export default function WorkflowsAnalyticsPage() {
       <div className="flex items-center space-x-2 sm:space-x-4">
         <button
           onClick={() => navigate("/dashboard/workflows")}
-          className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
+          className={`${tw.rounded} p-2 text-sm hover:text-gray-800 transition-colors`}
           aria-label="Back"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -189,14 +190,15 @@ export default function WorkflowsAnalyticsPage() {
         <div className="grid gap-4">
           <div className="grid gap-4 md:grid-cols-4">
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
                 <BarChart3
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   {t.analytics.totalWorkflows}
                 </p>
               </div>
@@ -214,14 +216,15 @@ export default function WorkflowsAnalyticsPage() {
             ].map((card) => (
               <div
                 key={card.label}
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <BarChart3
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     {card.label}
                   </p>
                 </div>
@@ -240,14 +243,15 @@ export default function WorkflowsAnalyticsPage() {
             ].map((card) => (
               <div
                 key={card.label}
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <BarChart3
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     {card.label}
                   </p>
                 </div>
@@ -263,7 +267,8 @@ export default function WorkflowsAnalyticsPage() {
       {/* Status Distribution */}
       {statusChartData.length > 0 && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             {t.analytics.statusDistribution}
@@ -299,7 +304,8 @@ export default function WorkflowsAnalyticsPage() {
       {/* Count by Type */}
       {typeChartData.length > 0 && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             {t.analytics.countByType}

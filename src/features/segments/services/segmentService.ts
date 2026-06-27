@@ -1983,10 +1983,11 @@ class SegmentService {
     payload: any
   ): Promise<{ count: number } | null> {
     try {
-      return await this.request(`/preview-count`, {
+      const response = await this.request(`/preview-count`, {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      return response?.data || null;
     } catch (error) {
       console.error("Error previewing segment count:", error);
       throw error;

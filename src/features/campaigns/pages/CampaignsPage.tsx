@@ -178,10 +178,7 @@ export default function CampaignsPage() {
       label: "Category",
       visible: true,
       sortable: true,
-      filterConfig: {
-        type: 'select',
-        options: categories?.filter(c => c?.name)?.map(c => c.name) || []
-      },
+      filterConfig: { type: 'text' },
     },
     {
       id: "status",

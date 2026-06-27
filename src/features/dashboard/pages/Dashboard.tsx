@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 
 import DashboardLayout from "../components/DashboardLayout";
@@ -876,6 +877,7 @@ const OtherPages = {
 };
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   return (
     <DashboardLayout>
       <Suspense

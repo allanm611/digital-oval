@@ -4,6 +4,7 @@ import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
@@ -32,6 +33,7 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [selectedChannel, setSelectedChannel] = useState<ChannelType>(mode === "edit" ? "EMAIL" : "");
   const [editingConfig, setEditingConfig] = useState<any>(null);
@@ -176,8 +178,8 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
       }
 
       success(
-        "Success",
-        `Gateway configuration ${mode === "edit" ? "updated" : "created"} successfully`
+        t.common.save,
+        `Gateway configuration ${mode === "edit" ? t.common.update : t.common.create}d successfully`
       );
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
@@ -199,9 +201,9 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
   return (
     <div className="space-y-6">
       <BackButton
-       
+
         showBreadcrumb={true}
-        currentLabel={mode === "create" ? "Create Gateway Configuration" : "Edit Gateway Configuration"}
+        currentLabel={mode === "create" ? (t.configurations.createGatewayConfiguration || "Create Gateway Configuration") : (t.configurations.editGatewayConfiguration || "Edit Gateway Configuration")}
       />
 
       <div className="space-y-6">

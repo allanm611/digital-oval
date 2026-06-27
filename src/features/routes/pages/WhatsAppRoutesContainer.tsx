@@ -1,9 +1,11 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import WhatsAppRoutesPage from "./WhatsAppRoutesPage";
 import WhatsAppRouteFormPage from "./WhatsAppRouteFormPage";
 import WhatsAppRouteDetailsPage from "./WhatsAppRouteDetailsPage";
 
 export default function WhatsAppRoutesContainer() {
+  const { t } = useLanguage();
   return (
     <Routes>
       <Route path="/" element={<WhatsAppRoutesPage />} />

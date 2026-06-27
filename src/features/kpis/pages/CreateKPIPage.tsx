@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -56,6 +57,7 @@ interface FormData {
 export default function CreateKPIPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { success, error: showError } = useToast();
   const { user } = useAuth();
 
@@ -196,7 +198,7 @@ export default function CreateKPIPage() {
         setFormData(newFormData);
       }
     } catch (err) {
-      showError("Error", extractBackendError(err as any, "Error loading KPI"));
+      showError("Error", extractBackendError(err as any, t.kpis.messages.errorLoading));
       navigate("/dashboard/kpis/all");
     } finally {
       setLoading(false);

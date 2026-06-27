@@ -307,6 +307,19 @@ function BasicInfoStep({
   const [categoryRefreshTriggerState, setCategoryRefreshTriggerState] = useState(0);
   const userInitiatedUpdateRef = useRef(false);
 
+  // Refs for required fields to enable auto-scroll on validation error
+  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({
+    name: null,
+    offer_type: null,
+    category_id: null,
+    communication_channel: null,
+    sms_route: null,
+    email_route: null,
+    whatsapp_route: null,
+    ussd_route: null,
+    push_notification_route: null,
+  });
+
   // Initialize selectedCategoryIds from formData.category_id (only on mount or when formData changes externally)
   useEffect(() => {
     // Skip if this update was triggered by user selecting categories
@@ -340,6 +353,25 @@ function BasicInfoStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategoryIds]); // Only depend on selectedCategoryIds to avoid circular updates
 
+  // Auto-scroll to first field with validation error
+  useEffect(() => {
+    if (validationErrors && Object.keys(validationErrors).length > 0) {
+      // Find the first field with an error
+      const errorFieldKey = Object.keys(validationErrors)[0];
+      const fieldElement = fieldRefs.current[errorFieldKey];
+
+      if (fieldElement) {
+        // Scroll the field into view with smooth behavior
+        fieldElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        // Focus the first input within this field container (if it exists)
+        const input = fieldElement.querySelector("input, select, textarea") as HTMLElement;
+        if (input) {
+          input.focus();
+        }
+      }
+    }
+  }, [validationErrors]);
+
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -351,21 +383,23 @@ function BasicInfoStep({
         </p>
       </div>
       <div className="space-y-8">
-        <Input
-          label="Offer Name"
-          value={formData.name}
-          onChange={(value) => {
-            setFormData({ ...formData, name: value });
-            if (validationErrors?.name && clearValidationErrors) {
-              clearValidationErrors();
-            }
-          }}
-          hasError={!!validationErrors?.name}
-          required
-        />
-        {validationErrors?.name && (
-          <p className="mt-1 text-sm text-red-600">{validationErrors.name}</p>
-        )}
+        <div ref={(el) => { if (el) fieldRefs.current.name = el; }}>
+          <Input
+            label="Offer Name"
+            value={formData.name}
+            onChange={(value) => {
+              setFormData({ ...formData, name: value });
+              if (validationErrors?.name && clearValidationErrors) {
+                clearValidationErrors();
+              }
+            }}
+            hasError={!!validationErrors?.name}
+            required
+          />
+          {validationErrors?.name && (
+            <p className="mt-1 text-xs text-red-600">{validationErrors.name}</p>
+          )}
+        </div>
 
         <div>
           <Input
@@ -381,7 +415,7 @@ function BasicInfoStep({
             required
           />
           {validationErrors?.code && (
-            <p className="mt-1 text-sm text-red-600">{validationErrors.code}</p>
+            <p className="mt-1 text-xs text-red-600">{validationErrors.code}</p>
           )}
           <p className="mt-1 text-xs text-gray-500">
             A unique, descriptive code to identify this offer in your business
@@ -398,7 +432,7 @@ function BasicInfoStep({
           rows={3}
         />
 
-        <div>
+        <div ref={(el) => { if (el) fieldRefs.current.offer_type = el; }}>
           <TypeSelector
             label="Offer Type"
             options={(offerTypes || [])
@@ -434,7 +468,7 @@ function BasicInfoStep({
           )}
         </div>
 
-        <div>
+        <div ref={(el) => { if (el) fieldRefs.current.category_id = el; }}>
           <MultiCategorySelector
             label="Catalog"
             value={selectedCategoryIds}
@@ -468,7 +502,7 @@ function BasicInfoStep({
         </div>
 
         <div className="flex gap-4">
-          <div className="flex-1">
+          <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.communication_channel = el; }}>
             <HeadlessSelect
               label="Communication Channel"
               options={communicationChannels?.map((channel) => ({
@@ -511,7 +545,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("SMS") ? (
-              <div className="flex-1">
+              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.sms_route = el; }}>
                 <HeadlessSelect
                   label="SMS Route"
                   options={
@@ -546,7 +580,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase() === "EMAIL" ? (
-              <div className="flex-1">
+              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.email_route = el; }}>
                 <HeadlessSelect
                   label="Email Route"
                   options={
@@ -580,7 +614,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("WHATSAPP") && whatsappRoutes ? (
-              <div className="flex-1">
+              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.whatsapp_route = el; }}>
                 <HeadlessSelect
                   label="WhatsApp Route"
                   options={
@@ -614,7 +648,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("USSD") && ussdRoutes ? (
-              <div className="flex-1">
+              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.ussd_route = el; }}>
                 <HeadlessSelect
                   label="USSD Route"
                   options={
@@ -648,7 +682,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("PUSH") && pushRoutes ? (
-              <div className="flex-1">
+              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.push_notification_route = el; }}>
                 <HeadlessSelect
                   label="Push Notification Route"
                   options={
@@ -2303,7 +2337,34 @@ export default function CreateOfferPage({
       // Set validation errors based on current step
       const errors: Record<string, string> = {};
 
-      if (currentStep === 3) {
+      if (currentStep === 1) {
+        // Step 1: Basic Info validation errors
+        if (!formData.name?.trim()) errors.name = "Offer name is required";
+        if (!formData.offer_type_id) errors.offer_type = "Offer type is required";
+        if (!formData.category_id) errors.category_id = "Catalog is required";
+        if (!formData.communication_channel_id) errors.communication_channel = "Communication channel is required";
+
+        // Check route requirements based on selected channel
+        const selectedChannel = communicationChannels?.find(
+          (ch) => String(ch.id) === String(formData.communication_channel_id)
+        );
+        const channelName = selectedChannel?.name?.toUpperCase();
+        if (channelName === "SMS" && !formData.sms_route_id) {
+          errors.sms_route = "SMS route is required";
+        }
+        if (channelName === "EMAIL" && !formData.email_route_id) {
+          errors.email_route = "Email route is required";
+        }
+        if (channelName === "WHATSAPP" && !formData.whatsapp_route_id) {
+          errors.whatsapp_route = "WhatsApp route is required";
+        }
+        if (channelName === "USSD" && !formData.ussd_route_id) {
+          errors.ussd_route = "USSD route is required";
+        }
+        if ((channelName === "PUSH" || channelName === "PUSH NOTIFICATION") && !formData.push_notification_route_id) {
+          errors.push_notification_route = "Push notification route is required";
+        }
+      } else if (currentStep === 3) {
         // Step 3: Creative validation errors
         if (creatives.length === 0) {
           errors.creatives = "At least one creative is required";

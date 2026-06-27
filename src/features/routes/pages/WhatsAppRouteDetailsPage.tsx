@@ -13,11 +13,13 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { color, tw } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function WhatsAppRouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const { deleteConfirm, isDeleting: deleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await confirmDeleteRoute() });
 
@@ -38,7 +40,7 @@ export default function WhatsAppRouteDetailsPage() {
         setRoute(data);
       }
     } catch (err) {
-      showError("Error", "Failed to load WhatsApp route");
+      showError(t.common.error, "Failed to load WhatsApp route");
       navigate("/dashboard/whatsapp-routes");
     } finally {
       setLoading(false);
@@ -75,11 +77,11 @@ export default function WhatsAppRouteDetailsPage() {
       });
       setRoute((prev) => (prev ? { ...prev, is_active: newStatus } : null));
       success(
-        "Success",
-        `"${route.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`,
+        t.common.success,
+        `"${route.name}" has been ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`,
       );
     } catch (err) {
-      showError("Error", "Failed to update route status");
+      showError(t.common.error, "Failed to update route status");
     } finally {
       setTogglingStatus(false);
     }
@@ -90,7 +92,7 @@ export default function WhatsAppRouteDetailsPage() {
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
         <p className={`${tw.textMuted} font-medium mt-4`}>
-          Loading WhatsApp route details...
+          Loading {t.routes.channels.whatsapp} {t.routes.route} details...
         </p>
       </div>
     );
@@ -106,7 +108,7 @@ export default function WhatsAppRouteDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton showBreadcrumb={true} currentLabel="WhatsApp Route Details" />
+      <BackButton showBreadcrumb={true} currentLabel={`${t.routes.channels.whatsapp} ${t.routes.route} Details`} />
 
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -122,13 +124,13 @@ export default function WhatsAppRouteDetailsPage() {
             onToggle={handleToggleStatus}
             disabled={deleting || togglingStatus}
             isLoading={togglingStatus}
-            title={route.is_active ? "Deactivate route" : "Activate route"}
+            title={route.is_active ? t.common.deactivate : t.common.activate}
           />
           <button
             onClick={() => navigate(`/dashboard/whatsapp-routes/${route.id}/edit`)}
             disabled={deleting}
             className={`p-2 text-black hover:bg-gray-100 ${tw.rounded} disabled:opacity-60`}
-            title="Edit route"
+            title={t.common.edit}
           >
             <Edit className="w-5 h-5" />
           </button>
@@ -136,7 +138,7 @@ export default function WhatsAppRouteDetailsPage() {
             onClick={handleDeleteClick}
             disabled={deleting}
             className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} disabled:opacity-60`}
-            title="Delete route"
+            title={t.common.delete}
           >
             <Trash2 className="w-5 h-5" />
           </button>
@@ -148,37 +150,37 @@ export default function WhatsAppRouteDetailsPage() {
         <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-sm text-gray-600 mb-1">Route Name</p>
+            <p className="text-sm text-gray-600 mb-1">{t.routes.routeName}</p>
             <p className="text-sm font-medium text-gray-900">{route.name}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-1">Status</p>
+            <p className="text-sm text-gray-600 mb-1">{t.routes.status}</p>
             <p className="text-sm font-medium text-gray-900">
               {route.is_active ? (
                 <span className="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">
-                  Active
+                  {t.common.active}
                 </span>
               ) : (
                 <span className="inline-block px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded">
-                  Inactive
+                  {t.common.inactive}
                 </span>
               )}
             </p>
           </div>
           {route.description && (
             <div className="md:col-span-2">
-              <p className="text-sm text-gray-600 mb-1">Description</p>
+              <p className="text-sm text-gray-600 mb-1">{t.common.description}</p>
               <p className="text-sm text-gray-900">{route.description}</p>
             </div>
           )}
           <div>
-            <p className="text-sm text-gray-600 mb-1">Created At</p>
+            <p className="text-sm text-gray-600 mb-1">{t.common.created}</p>
             <p className="text-sm text-gray-900">
               <DateFormatter date={route.created_at} useUserTimezone includeTime />
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-1">Updated At</p>
+            <p className="text-sm text-gray-600 mb-1">{t.common.lastUpdated}</p>
             <p className="text-sm text-gray-900">
               <DateFormatter date={route.updated_at} useUserTimezone includeTime />
             </p>
@@ -190,7 +192,7 @@ export default function WhatsAppRouteDetailsPage() {
         isOpen={deleteConfirm.id !== null}
         onClose={() => closeDeleteConfirm()}
         onConfirm={confirmDeleteRoute}
-        title="Delete WhatsApp Route"
+        title={`Delete ${t.routes.channels.whatsapp} Route`}
         description="This action cannot be undone."
         itemName={route?.name || ""}
         isLoading={deleting}

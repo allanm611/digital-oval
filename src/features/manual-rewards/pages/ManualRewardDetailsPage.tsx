@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   AlertCircle,
   Calendar,
@@ -17,6 +18,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { dummyManualRewards } from "../data/dummyManualRewards";
 
 export default function ManualRewardDetailsPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 

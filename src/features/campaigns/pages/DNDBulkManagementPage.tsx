@@ -319,8 +319,10 @@ export default function DNDBulkManagementPage() {
             className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium whitespace-nowrap`}
             style={{
               backgroundColor: isSelectionMode ? color.primary.action : "transparent",
-              color: isSelectionMode ? "white" : color.primary.action,
-              border: `1px solid ${color.primary.action}`,
+              color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+              borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
             }}
           >
             {isSelectionMode ? "Exit Selection" : "Select Customers"}

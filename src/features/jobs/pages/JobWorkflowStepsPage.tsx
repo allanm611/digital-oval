@@ -930,8 +930,10 @@ export default function JobWorkflowStepsPage() {
                   className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                   style={{
                     backgroundColor: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
+                    color: "var(--c-bordered-button-color)",
+                    borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                   }}
                 >
                   <Workflow className="h-4 w-4" />
@@ -954,8 +956,10 @@ export default function JobWorkflowStepsPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-bordered-button-color)",
+                borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
               }}
             >
               <BarChart3 className="h-4 w-4" />
@@ -979,8 +983,10 @@ export default function JobWorkflowStepsPage() {
                   backgroundColor: isSelectionMode
                     ? color.primary.action
                     : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 {isSelectionMode ? (
@@ -1013,8 +1019,10 @@ export default function JobWorkflowStepsPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 <Plus className="h-4 w-4" />
@@ -1192,8 +1200,10 @@ export default function JobWorkflowStepsPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 <Pause className="h-4 w-4" />
@@ -1223,8 +1233,10 @@ export default function JobWorkflowStepsPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 <Edit className="h-4 w-4" />

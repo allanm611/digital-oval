@@ -87,6 +87,12 @@ export interface Translations {
     audienceConfiguration: {
       [key: string]: unknown;
     };
+    campaignDefinition: {
+      createSuccess: string;
+      nameRequired: string;
+      saveFailed: string;
+      updateSuccess: string;
+    };
   };
 
   // Settings
@@ -163,6 +169,24 @@ export interface Translations {
       medium: string;
       high: string;
       urgent: string;
+    };
+    settings: {
+      channelsSubtitle: string;
+      channelsTitle: string;
+      desktopNotifications: string;
+      emailNotifications: string;
+      loadingError: string;
+      loadingSubscriptions: string;
+      noSubscriptions: string;
+      saveError: string;
+      saveSuccess: string;
+      smsAlerts: string;
+      soundEnabled: string;
+      soundSubtitle: string;
+      soundTitle: string;
+      soundType: string;
+      subscriptionsSubtitle: string;
+      subscriptionsTitle: string;
     };
   };
 
@@ -921,6 +945,62 @@ export interface Translations {
     allJobTypes: string;
     updateJobTypeDesc: string;
     createJobTypeDesc: string;
+    jobWorkflow: {
+      abort: string;
+      active: string;
+      add: string;
+      addAnother: string;
+      addStep: string;
+      apiCall: string;
+      basicInformation: string;
+      batchSteps: string;
+      continue: string;
+      critical: string;
+      dataValidation: string;
+      dependencies: string;
+      dependenciesParallel: string;
+      enableParallel: string;
+      enterParallelGroupId: string;
+      enterStepAction: string;
+      enterStepCode: string;
+      enterStepDescription: string;
+      enterStepName: string;
+      executionConfiguration: string;
+      fileTransfer: string;
+      job: string;
+      maxExpectedRows: string;
+      minExpectedRows: string;
+      nodeScript: string;
+      notification: string;
+      onFailureAction: string;
+      parallelGroupId: string;
+      postValidationQuery: string;
+      preValidationQuery: string;
+      pythonScript: string;
+      retry: string;
+      retryCount: string;
+      retryDelaySeconds: string;
+      selectAction: string;
+      selectJob: string;
+      selectStepType: string;
+      selectType: string;
+      shellScript: string;
+      skipRemaining: string;
+      sql: string;
+      sqlAfterExecution: string;
+      sqlBeforeExecution: string;
+      status: string;
+      stepAction: string;
+      stepCode: string;
+      stepDescription: string;
+      stepName: string;
+      stepOrder: string;
+      stepType: string;
+      storedProcedure: string;
+      timeoutSeconds: string;
+      validation: string;
+      wait: string;
+    };
   };
 
   // Quick Lists
@@ -1869,6 +1949,166 @@ export interface Translations {
     remaining: string;
     utilization: string;
   };
+  // KPIs
+  kpis: {
+    title: string;
+    allKPIs: string;
+    revenueMetrics: string;
+    usageMetrics: string;
+    subscriberProfiles: string;
+    systemEvents: string;
+    totalKPIs: string;
+    subscriberProfilesCount: string;
+    systemEventsCount: string;
+    usageMetricsCount: string;
+    revenueMetricsCount: string;
+    metricName: string;
+    eventName: string;
+    eventCode: string;
+    fieldName: string;
+    kpiName: string;
+    category: string;
+    type: string;
+    defaultValue: string;
+    fieldType: string;
+    source: string;
+    order: string;
+    createdDate: string;
+    updatedDate: string;
+    actions: string;
+    edit: string;
+    delete: string;
+    view: string;
+    create: string;
+    createKPI: string;
+    updateKPI: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessage: string;
+    deleteSuccess: string;
+    createSuccess: string;
+    updateSuccess: string;
+    loadError: string;
+    noData: string;
+    search: string;
+    filter: string;
+    viewAllKPIsDescription: string;
+    categories: {
+      revenueMetric: string;
+      usageMetric: string;
+      subscriberProfile: string;
+      systemEvent: string;
+      title: string;
+    };
+    descriptions: {
+      allKPIs: string;
+      categories: string;
+      revenueMetrics: string;
+      usageMetrics: string;
+      systemEvents: string;
+      subscriberProfiles: string;
+    };
+    filters: {
+      allCategories: string;
+      filterByCategory: string;
+      searchKPIs: string;
+    };
+    messages: {
+      noKPIsFound: string;
+      noKPIsYet: string;
+      failedToLoadDetails: string;
+      notFound: string;
+      errorLoading: string;
+      noEventsFound: string;
+      adjustSearch: string;
+      createFirst: string;
+      failedLoadKPIs: string;
+    };
+    modals: {
+      deleteKPI: string;
+      deleteKPIDescription: string;
+    };
+  };
+  // Routes
+  routes: {
+    title: string;
+    routesManagement: string;
+    allRoutes: string;
+    createRoute: string;
+    editRoute: string;
+    deleteRoute: string;
+    routeName: string;
+    routeDescription: string;
+    channel: string;
+    status: string;
+    gateway: string;
+    configuration: string;
+    createdDate: string;
+    updatedDate: string;
+    actions: string;
+    edit: string;
+    delete: string;
+    view: string;
+    active: string;
+    inactive: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessage: string;
+    deleteSuccess: string;
+    createSuccess: string;
+    updateSuccess: string;
+    loadError: string;
+    noData: string;
+    search: string;
+    filter: string;
+    channels: {
+      sms: string;
+      email: string;
+      whatsapp: string;
+      push: string;
+      ussd: string;
+    };
+    customerBase: {
+      activeSubscribers: string;
+      allCustomers: string;
+      customConditions: string;
+    };
+    recurrence: {
+      oneTime: string;
+      daily: string;
+      weekly: string;
+      monthly: string;
+    };
+  };
+  // Data Connectors
+  dataConnectors: {
+    title: string;
+    allConnectors: string;
+    createConnector: string;
+    editConnector: string;
+    deleteConnector: string;
+    connectorName: string;
+    connectorType: string;
+    description: string;
+    status: string;
+    createdDate: string;
+    updatedDate: string;
+    actions: string;
+    edit: string;
+    delete: string;
+    view: string;
+    active: string;
+    inactive: string;
+    allTypes: string;
+    allStatuses: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessage: string;
+    deleteSuccess: string;
+    createSuccess: string;
+    updateSuccess: string;
+    loadError: string;
+    noData: string;
+    search: string;
+    filter: string;
+  };
   // Control Groups
   controlGroups: {
     title: string;
@@ -1877,6 +2117,7 @@ export interface Translations {
     createControlGroup: string;
     totalGroups: string;
     activeGroups: string;
+    totalMembers: string;
     loading: string;
     noGroups: string;
     groupName: string;
@@ -1885,8 +2126,20 @@ export interface Translations {
     actions: string;
     edit: string;
     delete: string;
+    view: string;
     active: string;
     inactive: string;
+    allStatus: string;
+    allTypes: string;
+    universal: string;
+    standard: string;
+    percentage: string;
+    members: string;
+    customerBase: string;
+    recurrence: string;
+    type: string;
+    runScheduled: string;
+    running: string;
     createModalTitle: string;
     editModalTitle: string;
     nameLabel: string;
@@ -1902,6 +2155,12 @@ export interface Translations {
     deleteSuccess: string;
     createSuccess: string;
     updateSuccess: string;
+    noControlGroupsFound: string;
+    tryAdjustingSearch: string;
+    filterByStatus: string;
+    filterByType: string;
+    noData: string;
+    search: string;
   };
   // Landing Page
   landing: {
@@ -1928,6 +2187,13 @@ export interface Translations {
     sentraConfig: string;
     sentraConfigSubtitle: string;
     sentraConfigDescription: string;
+  };
+
+  // Definition/Layer Filters
+  definition: {
+    layer_filters: {
+      groups: string;
+    };
   };
 
   // Allow for additional translation sections

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import { useNavigate, useParams } from "react-router-dom";
@@ -18,6 +19,7 @@ import { tw, button, color } from "../../../shared/utils/utils";
 type LanguageOption = { value: string; label: string };
 
 export default function CreativeTemplateFormPage() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();

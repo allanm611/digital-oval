@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { Trash2, ChevronDown, Edit } from "lucide-react";
 import { ComboType, comboTypeService } from "../services/comboTypeService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -15,6 +16,7 @@ import { useConfigurationData } from "../../../shared/services/configurationData
 import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
 
 export default function ComboTypeFormPage() {
+  const { t } = useLanguage();
   // Get resource types and utilities from configuration
   const { data: resourceTypesData = [] } = useConfigurationData("resourceTypes");
   const { data: utilitiesData = [] } = useConfigurationData("utilities");

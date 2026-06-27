@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import RoutesManagementPage from "./RoutesManagementPage";
 import CreateRoutePage from "./CreateRoutePage";
 import EditRoutePage from "./EditRoutePage";
 import RouteDetailsPage from "./RouteDetailsPage";
 
 export default function RoutesContainer() {
+  const { t } = useLanguage();
   return (
     <Routes>
       <Route path="/" element={<RoutesManagementPage />} />

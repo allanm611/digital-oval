@@ -40,10 +40,12 @@ import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shar
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function DataConnectors() {
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
+  const { t } = useLanguage();
   const [connectors, setConnectors] = useState<ProcessedDataConnector[]>([]);
   const [statistics, setStatistics] = useState<DataConnectorStatistics | null>(
     null,
@@ -72,32 +74,32 @@ export default function DataConnectors() {
   const defaultColumns: TableColumn<ProcessedDataConnector>[] = [
     {
       id: "name",
-      label: "Name",
+      label: t.common.name,
       visible: true,
     },
     {
       id: "type",
-      label: "Type",
+      label: t.common.type,
       visible: true,
       },
     {
       id: "description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
       },
     {
       id: "created_at",
-      label: "Created",
+      label: t.dataConnectors.createdDate,
       visible: true,
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
       render: (_, connector) => (
@@ -163,7 +165,7 @@ export default function DataConnectors() {
       setTotalCount(response.total);
     } catch (error) {
       console.error("Failed to load data connectors:", error);
-      showError("Error", "Failed to load connectors");
+      showError(t.dataConnectors.loadError, t.dataConnectors.loadError);
     } finally {
       setLoading(false);
     }
@@ -233,10 +235,10 @@ export default function DataConnectors() {
           ),
         });
       }
-      success("Deleted", `${connectorToDelete.name} was deleted successfully.`);
+      success(t.dataConnectors.deleteSuccess, t.dataConnectors.deleteSuccess);
       setConnectorToDelete(null);
     } catch (err: any) {
-      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
+      showError(t.dataConnectors.loadError, extractBackendError(err, t.dataConnectors.loadError));
     } finally {
       setIsDeleting(false);
     }
@@ -267,7 +269,7 @@ export default function DataConnectors() {
         setConnectors((prev) =>
           prev.map((c) => (c.id === editingConnector.id ? savedConnector : c)),
         );
-        success("Updated", `${formData.name} was updated successfully.`);
+        success(t.dataConnectors.updateSuccess, t.dataConnectors.updateSuccess);
       } else {
         // ─── Create ───────────────────────────────────
         const createPayload: CreateDataConnectorRequest = {
@@ -293,14 +295,14 @@ export default function DataConnectors() {
               (savedConnector.connection_count || 0),
           });
         }
-        success("Created", `${formData.name} was created successfully.`);
+        success(t.dataConnectors.createSuccess, t.dataConnectors.createSuccess);
       }
 
       setShowCreateModal(false);
       setEditingConnector(null);
     } catch (err: any) {
       console.error(err);
-      showError("Save failed", extractBackendError(err, "Save failed. Please try again."));
+      showError(t.dataConnectors.loadError, extractBackendError(err, t.dataConnectors.loadError));
     } finally {
       setIsSavingForm(false);
     }
@@ -321,7 +323,7 @@ export default function DataConnectors() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
           showBreadcrumb={true}
-          currentLabel="Data Connectors"
+          currentLabel={t.dataConnectors.title}
         />
         <PermissionGate permission="servers.create">
           <FeatureActionButton
@@ -335,7 +337,7 @@ export default function DataConnectors() {
         </PermissionGate>
       </div>
       <p className={`${tw.textSecondary} text-sm mt-1`}>
-        Manage connector configurations and monitor integration health.
+        {t.dataConnectors.subtitle}
       </p>
 
       {/* Stats Cards */}
@@ -350,7 +352,7 @@ export default function DataConnectors() {
                 style={{ color: color.primary.accent }}
               />
               <p className="text-sm font-medium text-gray-600">
-                Total Connectors
+                {t.dataConnectors.totalConnectors}
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -365,7 +367,7 @@ export default function DataConnectors() {
                 className="h-5 w-5"
                 style={{ color: color.primary.accent }}
               />
-              <p className="text-sm font-medium text-gray-600">Active</p>
+              <p className="text-sm font-medium text-gray-600">{t.common.active}</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {statistics ? (statistics?.active_connectors ?? connectors.filter((c) => c.is_active).length) : "..."}
@@ -380,7 +382,7 @@ export default function DataConnectors() {
                 style={{ color: color.primary.accent }}
               />
               <p className="text-sm font-medium text-gray-600">
-                Total Connections
+                {t.dataConnectors.totalConnections}
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -396,7 +398,7 @@ export default function DataConnectors() {
                 style={{ color: color.primary.accent }}
               />
               <p className="text-sm font-medium text-gray-600">
-                Connector Types
+                {t.dataConnectors.connectorTypes}
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -411,7 +413,7 @@ export default function DataConnectors() {
       <div className="flex flex-col sm:flex-row gap-4 items-end">
         <div className="flex-1">
           <SearchInput
-            placeholder="Search connectors..."
+            placeholder={t.dataConnectors.search}
             value={searchTerm}
             onChange={setSearchTerm}
             onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
@@ -421,7 +423,7 @@ export default function DataConnectors() {
         <div className="w-48">
           <HeadlessSelect
             options={[
-              { value: "all", label: "All Types" },
+              { value: "all", label: t.dataConnectors.allTypes },
               ...(connectorTypes.length
                 ? connectorTypes
                 : ([
@@ -441,20 +443,20 @@ export default function DataConnectors() {
             ]}
             value={filterType}
             onChange={(value) => setFilterType(value as DataConnectorType | "all")}
-            placeholder="Filter by type"
+            placeholder={t.common.filter}
           />
         </div>
 
         <div className="w-40">
           <HeadlessSelect
             options={[
-              { value: "all", label: "All Statuses" },
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
+              { value: "all", label: t.dataConnectors.allStatuses },
+              { value: "active", label: t.common.active },
+              { value: "inactive", label: t.common.inactive },
             ]}
             value={filterStatus}
             onChange={(value) => setFilterStatus(value as typeof filterStatus)}
-            placeholder="Filter by status"
+            placeholder={t.common.filter}
           />
         </div>
       </div>
@@ -467,7 +469,7 @@ export default function DataConnectors() {
             className="animate-spin rounded-full h-5 w-5 border-b-2"
             style={{ borderColor: color.primary.action }}
           ></div>
-          <span>Loading connectors...</span>
+          <span>{t.dataConnectors.loading}</span>
         </div>
       ) : (
         <div className={`${tw.rounded} overflow-hidden`}>
@@ -503,7 +505,7 @@ export default function DataConnectors() {
               },
               {
                 id: "type",
-                label: "Type",
+                label: t.common.type,
                 visible: true,
                 render: (_, connector) => (
                   <span className={tw.textPrimary}>
@@ -513,7 +515,7 @@ export default function DataConnectors() {
               },
               {
                 id: "connection_count",
-                label: "Connections",
+                label: t.dataConnectors.connections,
                 visible: true,
                 render: (value) => (
                   <span className={`font-medium ${tw.textPrimary}`}>
@@ -523,17 +525,17 @@ export default function DataConnectors() {
               },
               {
                 id: "is_active",
-                label: "Status",
+                label: t.common.status,
                 visible: true,
                 render: (value) => (
                   <span className="inline-flex items-center font-medium text-gray-900">
-                    {value ? "Active" : "Inactive"}
+                    {value ? t.common.active : t.common.inactive}
                   </span>
                 ),
               },
               {
                 id: "actions",
-                label: "Actions",
+                label: t.common.actions,
                 visible: true,
                 sortable: false,
                 render: (_, connector) => (
@@ -541,7 +543,7 @@ export default function DataConnectors() {
                     <button
                       onClick={() => handleConnectorClick(connector)}
                       className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
-                      title="View details"
+                      title={t.common.view}
                       disabled={isDeleting && connectorToDelete?.id === connector.id}
                     >
                       <Eye className="h-4 w-4" />
@@ -550,7 +552,7 @@ export default function DataConnectors() {
                       <button
                         onClick={() => handleEdit(connector)}
                         className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
-                        title="Edit connector"
+                        title={t.common.edit}
                         disabled={isDeleting && connectorToDelete?.id === connector.id}
                       >
                         <Edit className="h-4 w-4" />
@@ -560,7 +562,7 @@ export default function DataConnectors() {
                       <button
                         onClick={() => handleDelete(connector)}
                         className={`group p-3 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                        title="Delete connector"
+                        title={t.common.delete}
                         disabled={
                           isDeleting && connectorToDelete?.id === connector.id
                         }
@@ -624,12 +626,12 @@ export default function DataConnectors() {
         isOpen={!!connectorToDelete}
         onClose={() => setConnectorToDelete(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete Data Connector"
-        description="Are you sure you want to delete this data connector? This action cannot be undone."
+        title={t.dataConnectors.deleteConnectorTitle}
+        description={t.dataConnectors.deleteConnectorDescription}
         itemName={connectorToDelete?.name || ""}
         isLoading={isDeleting}
-        confirmText="Delete Connector"
-        cancelText="Cancel"
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
       />
     </div>
   );

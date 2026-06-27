@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {  AlertCircle, CheckCircle, Loader } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
@@ -45,6 +46,7 @@ const getChannelCategory = (channelCode: string): "SMS" | "EMAIL" | "WHATSAPP" |
 };
 
 export default function SMSTestPage() {
+  const { t } = useLanguage();
   const { success, error: showError } = useToast();
   const [channel, setChannel] = useState<ChannelCode>("SMS");
   const [channels, setChannels] = useState<ChannelOption[]>([]);

@@ -864,8 +864,10 @@ export default function ServersPage() {
                   backgroundColor: isSelectionMode
                     ? color.primary.action
                     : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 {isSelectionMode ? (

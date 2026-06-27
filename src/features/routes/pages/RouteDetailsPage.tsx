@@ -13,11 +13,13 @@ import { pushNotificationRouteService } from "../services/pushNotificationRouteS
 import { whatsappRouteService } from "../services/whatsappRouteService";
 import { ussdRouteService } from "../services/ussdRouteService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function RouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const { deleteConfirm, isDeleting: deleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await handleDelete() });
 
@@ -68,10 +70,10 @@ export default function RouteDetailsPage() {
         return;
       }
 
-      showError("Error", "Route not found");
+      showError(t.common.error, "Route not found");
       navigate("/dashboard/routes");
     } catch (err) {
-      showError("Error", "Failed to load route details");
+      showError(t.common.error, "Failed to load route details");
       navigate("/dashboard/routes");
     } finally {
       setLoading(false);
@@ -96,10 +98,10 @@ export default function RouteDetailsPage() {
         await ussdRouteService.updateRoute(route.id, { is_active: newStatus });
       }
 
-      success("Success", `Route ${newStatus ? "activated" : "deactivated"} successfully`);
+      success(t.common.success, `Route ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`);
       setRoute({ ...route, is_active: newStatus });
     } catch (err) {
-      showError("Error", extractBackendError(err, "Failed to update route status"));
+      showError(t.common.error, extractBackendError(err, "Failed to update route status"));
     } finally {
       setTogglingStatus(false);
     }
@@ -124,10 +126,10 @@ export default function RouteDetailsPage() {
         await ussdRouteService.deleteRoute(route.id);
       }
 
-      success("Success", `"${route.name}" has been deleted successfully`);
+      success(t.common.success, `"${route.name}" has been deleted successfully`);
       navigate("/dashboard/routes");
     } catch (err) {
-      showError("Error", extractBackendError(err, "Failed to delete route"));
+      showError(t.common.error, extractBackendError(err, "Failed to delete route"));
     } finally {
       closeDeleteConfirm();
     }
@@ -137,7 +139,7 @@ export default function RouteDetailsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading route details...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>Loading {t.routes.route} details...</p>
       </div>
     );
   }
@@ -145,7 +147,7 @@ export default function RouteDetailsPage() {
   if (!route) {
     return (
       <div className="space-y-6">
-        <BackButton showBreadcrumb={true} currentLabel="Route Details" />
+        <BackButton showBreadcrumb={true} currentLabel={`${t.routes.route} Details`} />
         <p className={tw.textSecondary}>Route not found</p>
       </div>
     );
@@ -156,7 +158,7 @@ export default function RouteDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton showBreadcrumb={true} currentLabel="Route Details" />
+          <BackButton showBreadcrumb={true} currentLabel={`${t.routes.route} Details`} />
           <div></div>
         </div>
 
@@ -181,12 +183,12 @@ export default function RouteDetailsPage() {
             {route.is_active ? (
               <>
                 <XCircle className="w-4 h-4" />
-                Deactivate
+                {t.common.deactivate}
               </>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                Activate
+                {t.common.activate}
               </>
             )}
           </button>
@@ -202,7 +204,7 @@ export default function RouteDetailsPage() {
             }}
           >
             <Edit className="w-4 h-4" />
-            Edit
+            {t.common.edit}
           </button>
           <button
             onClick={handleDelete}
@@ -223,7 +225,7 @@ export default function RouteDetailsPage() {
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            {t.common.delete}
           </button>
         </div>
       </div>
@@ -250,31 +252,31 @@ export default function RouteDetailsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-              Route Name
+              {t.routes.routeName}
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>{route.name}</p>
           </div>
 
           <div className="space-y-1">
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-              Channel
+              {t.routes.channel}
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>{route.channel}</p>
           </div>
 
           <div className="space-y-1">
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-              Gateway Provider
+              {t.routes.gatewayProvider}
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>{route.gateway_provider || "—"}</p>
           </div>
 
           <div className="space-y-1">
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-              Status
+              {t.routes.status}
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
-              {route.is_active ? "Active" : "Inactive"}
+              {route.is_active ? t.common.active : t.common.inactive}
             </p>
           </div>
 
@@ -300,12 +302,12 @@ export default function RouteDetailsPage() {
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
         onClose={() => closeDeleteConfirm()}
-        onConfirm={confirmDeleteItem}
-        title="Delete Route"
+        onConfirm={handleConfirmDelete}
+        title={`Delete ${t.routes.route}`}
         description="Are you sure you want to delete this route? This action cannot be undone."
         itemName={route.name}
         isLoading={deleting}
-        confirmText="Delete"
+        confirmText={t.common.delete}
       />
     </div>
   );

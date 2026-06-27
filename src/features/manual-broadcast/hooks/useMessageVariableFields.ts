@@ -60,19 +60,19 @@ export function useMessageVariableFields(): UseMessageVariableFieldsReturn {
       const profiles = await customerIdentityService.getProfiles(true);
       const allCategories = profiles.data?.[0]?.field_selector_config ?? [];
 
-      // Extract all fields across all categories (including sub-categories), filtering by is_active
+      // Extract all fields across all categories (including sub-categories), filtering by is_active and is_dynamic_variable
       const allFieldsList: MessageVariableField[] = [];
       const extractFieldsFromCategory = (cat: any) => {
-        // Extract fields from the category itself (only if is_active)
-        if (cat.fields && Array.isArray(cat.fields)) {
-          const activeFields = cat.fields.filter((f: any) => f.is_active !== false);
+        // Extract fields from the category itself (only if is_active AND is_dynamic_variable)
+        if (cat?.fields && Array.isArray(cat.fields)) {
+          const activeFields = cat.fields.filter((f: any) => f?.is_active !== false && f?.is_dynamic_variable === true);
           allFieldsList.push(...activeFields);
         }
         // Extract fields from sub-categories
-        if (cat.sub_categories && Array.isArray(cat.sub_categories)) {
+        if (cat?.sub_categories && Array.isArray(cat.sub_categories)) {
           cat.sub_categories.forEach((subCat: any) => {
-            if (subCat.fields && Array.isArray(subCat.fields)) {
-              const activeSubFields = subCat.fields.filter((f: any) => f.is_active !== false);
+            if (subCat?.fields && Array.isArray(subCat.fields)) {
+              const activeSubFields = subCat.fields.filter((f: any) => f?.is_active !== false && f?.is_dynamic_variable === true);
               allFieldsList.push(...activeSubFields);
             }
           });
@@ -80,14 +80,14 @@ export function useMessageVariableFields(): UseMessageVariableFieldsReturn {
       };
       allCategories.forEach(extractFieldsFromCategory);
 
-      // Filter categories recursively to only include those that are active and have active fields
+      // Filter categories recursively to only include those that are active and have active fields marked as dynamic variables
       const filterCategoriesRecursive = (cats: any[]): MessageVariableCategory[] => {
         return cats
-          .filter((cat) => cat.is_active !== false)
+          .filter((cat) => cat?.is_active !== false)
           .map((cat) => ({
             ...cat,
-            fields: (cat.fields || []).filter((f: any) => f.is_active !== false),
-            sub_categories: cat.sub_categories ? filterCategoriesRecursive(cat.sub_categories) : undefined,
+            fields: (cat?.fields || []).filter((f: any) => f?.is_active !== false && f?.is_dynamic_variable === true),
+            sub_categories: cat?.sub_categories ? filterCategoriesRecursive(cat.sub_categories) : undefined,
           }))
           .filter((cat) => {
             const catValue = (cat.value || '').toLowerCase();

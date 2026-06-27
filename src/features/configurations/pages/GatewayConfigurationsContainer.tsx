@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { Suspense } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import GatewayConfigurationsPage from "./GatewayConfigurationsPage";
 import GatewayConfigFormPage from "./GatewayConfigFormPage";
 import GatewayConfigDetailsPage from "./GatewayConfigDetailsPage";
 
 export default function GatewayConfigurationsContainer() {
+  const { t } = useLanguage();
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#3b8169]"></div></div>}>
       <Routes>

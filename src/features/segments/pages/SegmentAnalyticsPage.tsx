@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { AlertTriangle } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
@@ -38,7 +39,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   active,
   payload,
   label,
-}) => {
+}: ChartTooltipProps) => {
   if (!active || !payload?.length) {
     return null;
   }
@@ -49,7 +50,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -250,9 +251,10 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {healthSummary && (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Total Segments
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -260,9 +262,10 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Active Segments
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -270,9 +273,10 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Recently Refreshed
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -280,9 +284,10 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Stale Segments
                 </p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -297,7 +302,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
             {/* Type Distribution - Pie Chart */}
             {typeDistribution.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="mb-4">
                   <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -339,7 +345,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
             {/* Category Distribution - Bar Chart */}
             {categoryDistribution.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="mb-4">
                   <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -381,7 +388,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {/* Creation Trend - Line Chart (Full Width) */}
           {creationTrend.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <div className="mb-4">
                 <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -426,7 +434,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {/* Largest Segments - Bar Chart */}
           {largestSegments.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <div className="mb-4">
                 <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -456,7 +465,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {/* Most Used Segments - Bar Chart */}
           {mostUsedSegments.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <div className="mb-4">
                 <h3 className={`font-semibold ${tw.textPrimary}`}>

@@ -34,6 +34,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import ManageQuickListCustomersModal from "../components/ManageQuickListCustomersModal";
 import { formatDate, formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
@@ -99,6 +100,9 @@ export default function QuickListDetailsPage() {
     useState<UploadTypeSchema | null>(null);
   const [loadingMapping, setLoadingMapping] = useState(false);
   const [loadingSchema, setLoadingSchema] = useState(false);
+  const [showDataColumnPicker, setShowDataColumnPicker] = useState(false);
+  const [showLogsColumnPicker, setShowLogsColumnPicker] = useState(false);
+  const [showAuditColumnPicker, setShowAuditColumnPicker] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -461,7 +465,7 @@ export default function QuickListDetailsPage() {
         id: "row_number",
         label: "Row",
         visible: true,
-        sortable: false,
+        sortable: true,
         render: (_, row: any) => {
           const index = data.findIndex((d) => d.id === row.id);
           return index + 1;
@@ -474,7 +478,8 @@ export default function QuickListDetailsPage() {
         id: column,
         label: column.replace(/_/g, " "),
         visible: true,
-        sortable: false,
+        sortable: true,
+        filterConfig: { type: 'text' },
         render: (_, row: any) => {
           const rowDataObj = (row as Record<string, unknown>)
             .row_data as Record<string, unknown> | undefined;
@@ -497,14 +502,16 @@ export default function QuickListDetailsPage() {
       id: "row_number",
       label: "Row Number",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'number' },
       render: (value) => value,
     },
     {
       id: "import_status",
       label: "Status",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'select', options: ['success', 'failed', 'pending'] },
       render: (value) => {
         const status = value as string;
         return (
@@ -526,14 +533,16 @@ export default function QuickListDetailsPage() {
       id: "error_message",
       label: "Error Message",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => value || "-",
     },
     {
       id: "created_at",
       label: "Created",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'date' },
       render: (value) => formatDate(value as string),
     },
   ], [formatDate]);
@@ -543,21 +552,24 @@ export default function QuickListDetailsPage() {
       id: "member_id",
       label: "Member ID",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => value || "-",
     },
     {
       id: "identifier",
       label: "Identifier",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => value || "-",
     },
     {
       id: "identifier_type",
       label: "Type",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'select', options: ['msisdn', 'email', 'id'] },
       render: (value) => {
         const type = value as string;
         const displayMap: Record<string, string> = {
@@ -572,14 +584,16 @@ export default function QuickListDetailsPage() {
       id: "removed_at",
       label: "Removed At",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'date' },
       render: (value) => formatDate(value as string),
     },
     {
       id: "removed_by",
       label: "Removed By",
       visible: true,
-      sortable: false,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => value || "-",
     },
   ], [formatDate]);
@@ -588,6 +602,52 @@ export default function QuickListDetailsPage() {
   const dataTableColumns = dataDefaultColumns;
   const importLogsColumns = importLogsDefaultColumns;
   const auditTrailColumns = auditTrailDefaultColumns;
+
+  // useTable hooks for managing sorting, filtering, column management
+  const {
+    columns: dataColumns_,
+    currentPage: dataCurrentPage,
+    pageSize: dataPageSize,
+    handlePageChange: handleDataPageChange,
+    handlePageSizeChange: handleDataPageSizeChange,
+    sortConfigs: dataSortConfigs,
+    handleSort: handleDataSort,
+    toggleColumn: handleDataToggleColumn,
+  } = useTable({
+    tableId: "quicklist-data-table",
+    defaultColumns: dataDefaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  const {
+    columns: logsColumns_,
+    currentPage: logsCurrentPage,
+    pageSize: logsPageSize,
+    handlePageChange: handleLogsPageChange,
+    handlePageSizeChange: handleLogsPageSizeChange,
+    sortConfigs: logsSortConfigs,
+    handleSort: handleLogsSort,
+    toggleColumn: handleLogsToggleColumn,
+  } = useTable({
+    tableId: "quicklist-import-logs-table",
+    defaultColumns: importLogsDefaultColumns,
+    persistToLocalStorage: true,
+  });
+
+  const {
+    columns: auditColumns_,
+    currentPage: auditCurrentPage,
+    pageSize: auditPageSize,
+    handlePageChange: handleAuditPageChange,
+    handlePageSizeChange: handleAuditPageSizeChange,
+    sortConfigs: auditSortConfigs,
+    handleSort: handleAuditSort,
+    toggleColumn: handleAuditToggleColumn,
+  } = useTable({
+    tableId: "quicklist-audit-trail-table",
+    defaultColumns: auditTrailDefaultColumns,
+    persistToLocalStorage: true,
+  });
 
   // Debug logs
 
@@ -1219,27 +1279,27 @@ export default function QuickListDetailsPage() {
                 </div>
               )}
               <Table<QuickListData>
-                columns={dataTableColumns}
+                columns={dataColumns_}
                 data={data}
                 totalItems={dataPagination?.total || data.length}
-                currentPage={1}
-                pageSize={DEFAULT_PAGE_SIZE}
+                currentPage={dataCurrentPage}
+                pageSize={dataPageSize}
                 isLoading={loadingData}
-                style={{
-                  headerBackground: color.surface.tableHeader,
-                  headerTextColor: color.surface.tableHeaderText,
-                  rowBackground: tableBodyBackground,
-                  rowSpacing: "0 8px",
-                }}
+                onPageChange={handleDataPageChange}
+                onPageSizeChange={handleDataPageSizeChange}
+                onSort={handleDataSort}
+                sortConfigs={dataSortConfigs}
+                onHideColumn={handleDataToggleColumn}
+                onManageColumnsClick={() => setShowDataColumnPicker(true)}
               />
               {data.length > 0 && (
                 <div className="mt-4">
                   <Pagination
-                    currentPage={1}
-                    pageSize={DEFAULT_PAGE_SIZE}
+                    currentPage={dataCurrentPage}
+                    pageSize={dataPageSize}
                     totalItems={dataPagination?.total || data.length}
-                    onPageChange={() => {}}
-                    onPageSizeChange={() => {}}
+                    onPageChange={handleDataPageChange}
+                    onPageSizeChange={handleDataPageSizeChange}
                   />
                 </div>
               )}
@@ -1283,27 +1343,27 @@ export default function QuickListDetailsPage() {
               )}
               
               <Table<ImportLog>
-                columns={importLogsColumns}
+                columns={logsColumns_}
                 data={importLogs}
                 totalItems={logsPagination?.total || importLogs.length}
-                currentPage={1}
-                pageSize={DEFAULT_PAGE_SIZE}
+                currentPage={logsCurrentPage}
+                pageSize={logsPageSize}
                 isLoading={loadingLogs}
-                style={{
-                  headerBackground: color.surface.tableHeader,
-                  headerTextColor: color.surface.tableHeaderText,
-                  rowBackground: tableBodyBackground,
-                  rowSpacing: "0 8px",
-                }}
+                onPageChange={handleLogsPageChange}
+                onPageSizeChange={handleLogsPageSizeChange}
+                onSort={handleLogsSort}
+                sortConfigs={logsSortConfigs}
+                onHideColumn={handleLogsToggleColumn}
+                onManageColumnsClick={() => setShowLogsColumnPicker(true)}
               />
               {importLogs.length > 0 && (
                 <div className="mt-4">
                   <Pagination
-                    currentPage={1}
-                    pageSize={DEFAULT_PAGE_SIZE}
+                    currentPage={logsCurrentPage}
+                    pageSize={logsPageSize}
                     totalItems={logsPagination?.total || importLogs.length}
-                    onPageChange={() => {}}
-                    onPageSizeChange={() => {}}
+                    onPageChange={handleLogsPageChange}
+                    onPageSizeChange={handleLogsPageSizeChange}
                   />
                 </div>
               )}
@@ -1347,27 +1407,27 @@ export default function QuickListDetailsPage() {
               )}
               
               <Table<any>
-                columns={auditTrailColumns}
+                columns={auditColumns_}
                 data={auditTrail}
                 totalItems={auditTrailPagination?.total || auditTrail.length}
-                currentPage={1}
-                pageSize={DEFAULT_PAGE_SIZE}
+                currentPage={auditCurrentPage}
+                pageSize={auditPageSize}
                 isLoading={loadingAuditTrail}
-                style={{
-                  headerBackground: color.surface.tableHeader,
-                  headerTextColor: color.surface.tableHeaderText,
-                  rowBackground: tableBodyBackground,
-                  rowSpacing: "0 8px",
-                }}
+                onPageChange={handleAuditPageChange}
+                onPageSizeChange={handleAuditPageSizeChange}
+                onSort={handleAuditSort}
+                sortConfigs={auditSortConfigs}
+                onHideColumn={handleAuditToggleColumn}
+                onManageColumnsClick={() => setShowAuditColumnPicker(true)}
               />
               {auditTrail.length > 0 && (
                 <div className="mt-4">
                   <Pagination
-                    currentPage={1}
-                    pageSize={DEFAULT_PAGE_SIZE}
+                    currentPage={auditCurrentPage}
+                    pageSize={auditPageSize}
                     totalItems={auditTrailPagination?.total || auditTrail.length}
-                    onPageChange={() => {}}
-                    onPageSizeChange={() => {}}
+                    onPageChange={handleAuditPageChange}
+                    onPageSizeChange={handleAuditPageSizeChange}
                   />
                 </div>
               )}
@@ -1491,6 +1551,31 @@ export default function QuickListDetailsPage() {
         isLoading={isDeleting}
         confirmText="Delete QuickList"
         cancelText="Cancel"
+      />
+
+      {/* Column Picker Modals */}
+      <ColumnPickerModal
+        isOpen={showDataColumnPicker}
+        columns={dataColumns_}
+        onClose={() => setShowDataColumnPicker(false)}
+        onToggleColumn={handleDataToggleColumn}
+        onResetToDefaults={() => {}}
+      />
+
+      <ColumnPickerModal
+        isOpen={showLogsColumnPicker}
+        columns={logsColumns_}
+        onClose={() => setShowLogsColumnPicker(false)}
+        onToggleColumn={handleLogsToggleColumn}
+        onResetToDefaults={() => {}}
+      />
+
+      <ColumnPickerModal
+        isOpen={showAuditColumnPicker}
+        columns={auditColumns_}
+        onClose={() => setShowAuditColumnPicker(false)}
+        onToggleColumn={handleAuditToggleColumn}
+        onResetToDefaults={() => {}}
       />
     </div>
   );

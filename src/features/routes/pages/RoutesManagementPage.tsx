@@ -208,7 +208,7 @@ export default function RoutesManagementPage() {
   const defaultColumns: TableColumn<UnifiedRoute>[] = [
     {
       id: "name",
-      label: "Name",
+      label: t.common.name,
       visible: true,
       render: (value) => (
         <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
@@ -218,7 +218,7 @@ export default function RoutesManagementPage() {
     },
     {
       id: "description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "—"}>
@@ -228,7 +228,7 @@ export default function RoutesManagementPage() {
     },
     {
       id: "channel",
-      label: "Channel",
+      label: t.routes.channel,
       visible: true,
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
@@ -238,7 +238,7 @@ export default function RoutesManagementPage() {
     },
     {
       id: "gateway_provider",
-      label: "Gateway Provider",
+      label: t.routes.gatewayProvider,
       visible: true,
       render: (value) => (
         <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "—"}>
@@ -248,17 +248,17 @@ export default function RoutesManagementPage() {
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
       render: (value) => (
         <span className={`text-sm ${tw.textSecondary}`}>
-          {value ? "Active" : "Inactive"}
+          {value ? t.common.active : t.common.inactive}
         </span>
       ),
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
       render: (value, route) => (
@@ -272,26 +272,26 @@ export default function RoutesManagementPage() {
             isLoading={
               togglingStatus?.id === route.id && togglingStatus?.channel === route.channel
             }
-            title={route.is_active ? "Deactivate" : "Activate"}
+            title={route.is_active ? t.common.deactivate : t.common.activate}
           />
           <button
             onClick={() => navigate(`/dashboard/routes/${route.id}`)}
             className={`p-2 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            title="View Details"
+            title={t.common.view}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigateToEdit(route)}
             className={`p-2 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
-            title="Edit"
+            title={t.common.edit}
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDeleteRoute(route)}
             className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-            title="Delete"
+            title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -358,7 +358,7 @@ export default function RoutesManagementPage() {
         await ussdRouteService.updateRoute(route.id, { is_active: newStatus });
       }
 
-      showSuccess("Success", `Route ${newStatus ? "activated" : "deactivated"} successfully`);
+      showSuccess(t.common.success, `${t.routes.route} ${newStatus ? t.routes.activated : t.routes.deactivated} ${t.routes.successfully}`);
     } catch (err) {
       setRoutes(oldRoutes);
       showError("Error", extractBackendError(err, "Error. Please try again."));
@@ -382,12 +382,12 @@ export default function RoutesManagementPage() {
   };
 
   const channelOptions = [
-    { value: "all", label: "All Channels" },
-    { value: "SMS", label: "SMS" },
-    { value: "EMAIL", label: "Email" },
-    { value: "WHATSAPP", label: "WhatsApp" },
-    { value: "PUSH", label: "Push Notification" },
-    { value: "USSD", label: "USSD" },
+    { value: "all", label: t.routes.allChannels },
+    { value: "SMS", label: t.routes.channels.sms },
+    { value: "EMAIL", label: t.routes.channels.email },
+    { value: "WHATSAPP", label: t.routes.channels.whatsapp },
+    { value: "PUSH", label: t.routes.channels.push },
+    { value: "USSD", label: t.routes.channels.ussd },
   ];
 
   return (
@@ -396,13 +396,13 @@ export default function RoutesManagementPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex flex-col gap-4 flex-1">
           <BackButton
-           
+
             showBreadcrumb={true}
-           
-            currentLabel="Routes Management"
+
+            currentLabel={t.routes.routesManagement}
           />
           <p className={`text-sm ${tw.textSecondary}`}>
-            Manage all communication routes across channels
+            {t.routes.manageAllRoutes}
           </p>
         </div>
         <button
@@ -411,7 +411,7 @@ export default function RoutesManagementPage() {
           style={{ backgroundColor: color.primary.action }}
         >
           <Plus className="w-4 h-4" />
-          Create Route
+          {t.routes.createRoute}
         </button>
       </div>
 
@@ -419,7 +419,7 @@ export default function RoutesManagementPage() {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <SearchInput
-            placeholder="Search by route name..."
+            placeholder={t.routes.searchByRouteName}
             value={searchTerm}
             onChange={setSearchTerm}
           />
@@ -429,7 +429,7 @@ export default function RoutesManagementPage() {
             value={filterChannel}
             onChange={setFilterChannel}
             options={channelOptions}
-            placeholder="Filter by channel"
+            placeholder={t.routes.filterByChannel}
           />
         </div>
       </div>
@@ -444,8 +444,8 @@ export default function RoutesManagementPage() {
           <div className="text-center py-12">
             <p className={`${tw.textSecondary} text-sm`}>
               {searchTerm || filterChannel !== "all"
-                ? "No routes found matching your filters"
-                : "No routes created yet"}
+                ? t.routes.noRoutesFound
+                : t.routes.noRoutesCreated}
             </p>
           </div>
         ) : (
@@ -492,11 +492,11 @@ export default function RoutesManagementPage() {
         isOpen={deleteConfirm.id !== null}
         onClose={closeDeleteConfirm}
         onConfirm={handleDelete}
-        title="Delete Route"
-        description="Are you sure you want to delete this route? This action cannot be undone."
+        title={t.routes.deleteRoute}
+        description={t.routes.deleteRouteDescription}
         itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
-        confirmText="Delete"
+        confirmText={t.common.delete}
       />
     </div>
   );

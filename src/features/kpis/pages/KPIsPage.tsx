@@ -1,3 +1,4 @@
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useState, useMemo } from "react";
 import { Filter, MoreHorizontal, Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
@@ -12,6 +13,7 @@ const allKPIs = generateAllKPIs();
 const ITEMS_PER_PAGE = 10;
 
 export default function KPIsPage() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,29 +66,29 @@ export default function KPIsPage() {
   // Calculate statistics
   const stats = {
     totalKPIs: kpis.length,
-    systemEvents: kpis.filter((k) => k.category === "System Event").length,
-    usageMetrics: kpis.filter((k) => k.category === "Usage Metric").length,
-    revenueMetrics: kpis.filter((k) => k.category === "Revenue Metric").length,
+    systemEvents: kpis.filter((k) => k.category === t.kpis.categories.systemEvent).length,
+    usageMetrics: kpis.filter((k) => k.category === t.kpis.categories.usageMetric).length,
+    revenueMetrics: kpis.filter((k) => k.category === t.kpis.categories.revenueMetric).length,
   };
 
   const statCards = [
     {
-      name: "Total KPIs",
+      name: t.kpis.totalKPIs,
       value: stats.totalKPIs,
       icon: ListChecks,
     },
     {
-      name: "System Events",
+      name: t.kpis.systemEvents,
       value: stats.systemEvents,
       icon: ListChecks,
     },
     {
-      name: "Usage Metrics",
+      name: t.kpis.usageMetrics,
       value: stats.usageMetrics,
       icon: Activity,
     },
     {
-      name: "Revenue Metrics",
+      name: t.kpis.revenueMetrics,
       value: stats.revenueMetrics,
       icon: DollarSign,
     },
@@ -124,7 +126,7 @@ export default function KPIsPage() {
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-wrap">
         <SearchInput
-          placeholder="Search KPIs..."
+          placeholder={t.kpis.filters.searchKPIs}
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
@@ -135,12 +137,12 @@ export default function KPIsPage() {
 
         <HeadlessSelect
           options={[
-            { value: "all", label: "All Categories" },
+            { value: "all", label: t.kpis.filters.allCategories },
             ...categories.map((cat) => ({ value: cat, label: cat })),
           ]}
           value={categoryFilter}
           onChange={(value) => handleCategoryChange(value || "all")}
-          placeholder="Filter by category"
+          placeholder={t.kpis.filters.filterByCategory}
           className="min-w-[180px]"
         />
       </div>
@@ -262,13 +264,13 @@ export default function KPIsPage() {
                         <div className="flex items-center justify-center space-x-2">
                           <button
                             className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                            title="View Details"
+                            title={t.common.view}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                            title="Edit"
+                            title={t.common.edit}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -281,7 +283,7 @@ export default function KPIsPage() {
                           <button
                             className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
                             style={{ color: "#DC2626" }}
-                            title="Delete"
+                            title={t.common.delete}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -335,13 +337,13 @@ export default function KPIsPage() {
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                        title="View"
+                        title={t.common.view}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                        title="Edit"
+                        title={t.common.edit}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -352,7 +354,7 @@ export default function KPIsPage() {
                       <button
                         className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
                         style={{ color: "#DC2626" }}
-                        title="Delete"
+                        title={t.common.delete}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

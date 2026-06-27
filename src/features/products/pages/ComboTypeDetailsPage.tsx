@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { Edit, Trash2, Briefcase } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -12,6 +13,7 @@ import { tw, color, button } from "../../../shared/utils/utils";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ComboTypeDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();

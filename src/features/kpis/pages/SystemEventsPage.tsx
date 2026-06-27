@@ -11,12 +11,14 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { systemEventService } from "../services/systemEventService";
 
 export default function SystemEventsPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { success, error: showError } = useToast();
   const [events, setEvents] = useState<SystemEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function SystemEventsPage() {
   const tableColumns: TableColumn<SystemEvent>[] = [
     {
       id: "event_name",
-      label: "Event Name",
+      label: t.kpis.eventName,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -40,7 +42,7 @@ export default function SystemEventsPage() {
     },
     {
       id: "event_code",
-      label: "Event Code",
+      label: t.kpis.eventCode,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -51,7 +53,7 @@ export default function SystemEventsPage() {
     },
     {
       id: "category",
-      label: "Category",
+      label: t.common.category,
       visible: true,
       filterConfig: { type: "select", options: ["Email", "SMS", "Campaign", "Other"] },
       render: (_, row) => (
@@ -64,7 +66,7 @@ export default function SystemEventsPage() {
     },
     {
       id: "event_description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -75,7 +77,7 @@ export default function SystemEventsPage() {
     },
     {
       id: "source_table",
-      label: "Source",
+      label: t.kpis.source,
       visible: false,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -86,7 +88,7 @@ export default function SystemEventsPage() {
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
       render: (_, row) => (
@@ -104,7 +106,7 @@ export default function SystemEventsPage() {
               )
             }
             className={`group p-3 ${tw.rounded} icon-edit transition-all duration-300`}
-            title="View Details"
+            title={t.common.view}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -221,7 +223,7 @@ export default function SystemEventsPage() {
   ];
 
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "all", label: t.kpis.filters.allCategories },
     ...SYSTEM_EVENT_CATEGORIES.map((cat) => ({
       value: cat.value,
       label: cat.label,
@@ -273,7 +275,7 @@ export default function SystemEventsPage() {
           options={categoryOptions}
           value={categoryFilter}
           onChange={(value) => handleCategoryChange(value || "all")}
-          placeholder="Filter by category"
+          placeholder={t.kpis.filters.filterByCategory}
           className="min-w-[180px]"
         />
       </div>
@@ -294,11 +296,11 @@ export default function SystemEventsPage() {
           <div className="text-center py-12">
             <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm || categoryFilter !== "all" ? "No events found" : "No events yet"}
+              {searchTerm || categoryFilter !== "all" ? t.kpis.messages.noEventsFound : "No events yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm || categoryFilter !== "all"
-                ? "Try adjusting your search or filters"
+                ? t.kpis.messages.adjustSearch
                 : "No events available"}
             </p>
           </div>

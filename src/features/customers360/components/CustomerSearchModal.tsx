@@ -23,49 +23,6 @@ export default function CustomerSearchModal({
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Mock customers for UI preview
-  const mockCustomers: Subscriber[] = [
-    {
-      id: 1,
-      subscriber_id: 1001,
-      first_name: "John",
-      last_name: "Doe",
-      msisdn: "+254763056860",
-      email: "john.doe@example.com",
-      subscriber_type: "prepaid",
-      subscriber_status: "active",
-      kyc_verified: true,
-      created_at: "2024-01-15",
-      preferred_channel: "NORMAL_SMS",
-    },
-    {
-      id: 2,
-      subscriber_id: 1002,
-      first_name: "Jane",
-      last_name: "Smith",
-      msisdn: "+254764555314",
-      email: "jane.smith@example.com",
-      subscriber_type: "postpaid",
-      subscriber_status: "active",
-      kyc_verified: true,
-      created_at: "2024-02-20",
-      preferred_channel: "EMAIL",
-    },
-    {
-      id: 3,
-      subscriber_id: 1003,
-      first_name: "Robert",
-      last_name: "Johnson",
-      msisdn: "+254763056254",
-      email: "robert.j@example.com",
-      subscriber_type: "prepaid",
-      subscriber_status: "suspended",
-      kyc_verified: false,
-      created_at: "2024-03-10",
-      preferred_channel: "WHATSAPP",
-    },
-  ];
-
   useEffect(() => {
     const performSearch = async () => {
       if (!searchTerm.trim()) {
@@ -82,36 +39,14 @@ export default function CustomerSearchModal({
           limit: 50,
         });
 
-        if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+        if (response?.data && Array.isArray(response.data)) {
           setResults(response.data);
         } else {
-          // Use mock data as fallback
-          console.log("Using mock data for search");
-          const searchLower = searchTerm.toLowerCase();
-          const filtered = mockCustomers.filter(
-            (c) =>
-              (c.first_name && c.first_name.toLowerCase().includes(searchLower)) ||
-              (c.last_name && c.last_name.toLowerCase().includes(searchLower)) ||
-              (c.msisdn && c.msisdn.includes(searchTerm)) ||
-              (c.email && c.email.toLowerCase().includes(searchLower)) ||
-              String(c.id).includes(searchTerm) ||
-              String(c.subscriber_id).includes(searchTerm)
-          );
-          setResults(filtered.length > 0 ? filtered : mockCustomers.slice(0, 3));
+          setResults([]);
         }
       } catch (err) {
         console.error("Search error:", err);
-        // Show mock data on error
-        const searchLower = searchTerm.toLowerCase();
-        const filtered = mockCustomers.filter(
-          (c) =>
-            (c.first_name && c.first_name.toLowerCase().includes(searchLower)) ||
-            (c.last_name && c.last_name.toLowerCase().includes(searchLower)) ||
-            (c.msisdn && c.msisdn.includes(searchTerm)) ||
-            (c.email && c.email.toLowerCase().includes(searchLower)) ||
-            String(c.id).includes(searchTerm)
-        );
-        setResults(filtered.length > 0 ? filtered : mockCustomers.slice(0, 3));
+        setResults([]);
       } finally {
         setIsLoading(false);
       }

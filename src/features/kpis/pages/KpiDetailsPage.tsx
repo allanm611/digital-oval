@@ -4,6 +4,7 @@ import { Edit, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { kpiService, KPIProfile } from "../services/kpiService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { button } from "../../../shared/utils/utils";
@@ -11,6 +12,7 @@ import { button } from "../../../shared/utils/utils";
 export default function KpiDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const location = useLocation();
   const parentLabel = (location.state as any)?.parentLabel;
   const { success, error: showError } = useToast();
@@ -32,11 +34,11 @@ export default function KpiDetailsPage() {
       if (data && data.id) {
         setKpi(data);
       } else {
-        showError("Error", "KPI not found");
+        showError("Error", t.kpis.messages.notFound);
         navigate("/dashboard/kpis/all");
       }
     } catch (err) {
-      showError("Error", "Failed to load KPI details");
+      showError("Error", t.kpis.messages.failedToLoadDetails);
       navigate("/dashboard/kpis/all");
     } finally {
       setLoading(false);
@@ -323,7 +325,7 @@ export default function KpiDetailsPage() {
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                 Status
               </label>
-              <p className={`text-sm ${tw.textPrimary}`}>{kpi.is_active ? "Active" : "Inactive"}</p>
+              <p className={`text-sm ${tw.textPrimary}`}>{kpi.is_active ? t.common.active : t.common.inactive}</p>
             </div>
             <div className="space-y-1">
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>

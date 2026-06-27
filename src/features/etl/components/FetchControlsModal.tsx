@@ -336,15 +336,11 @@ export default function FetchControlsModal({
           {mode === "immediate" && (
             <>
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Scheduled Job <span style={{ color: color.status.danger }}>*</span>
-                </label>
                 {isLoadingJobs ? (
                   <div className="text-sm text-gray-500">Loading jobs...</div>
                 ) : (
                   <HeadlessSelect
+                    label="Scheduled Job"
                     options={scheduledJobs.map((job) => ({
                       value: String(job.id),
                       label: `${job.name} (ID: ${job.id})`,
@@ -375,12 +371,8 @@ export default function FetchControlsModal({
           {mode === "by-time" && (
             <>
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Category
-                </label>
                 <HeadlessSelect
+                  label="Category"
                   options={categoryOptions}
                   value={byTimeCategory}
                   onChange={(v) => setByTimeCategory(String(v || "CDR"))}
@@ -391,12 +383,8 @@ export default function FetchControlsModal({
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label
-                    className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Month
-                  </label>
                   <HeadlessSelect
+                    label="Month"
                     options={monthOptions}
                     value={byTimeMonth}
                     onChange={(v) => setByTimeMonth(String(v || "1"))}
@@ -406,12 +394,8 @@ export default function FetchControlsModal({
                   />
                 </div>
                 <div>
-                  <label
-                    className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Day
-                  </label>
                   <HeadlessSelect
+                    label="Day"
                     options={dayOptions}
                     value={byTimeDay}
                     onChange={(v) => setByTimeDay(String(v || "1"))}
@@ -421,12 +405,8 @@ export default function FetchControlsModal({
                   />
                 </div>
                 <div>
-                  <label
-                    className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Hour
-                  </label>
                   <HeadlessSelect
+                    label="Hour"
                     options={hourOptions}
                     value={byTimeHour}
                     onChange={(v) => setByTimeHour(String(v || "0"))}
@@ -442,15 +422,11 @@ export default function FetchControlsModal({
           {mode === "by-range" && (
             <>
               <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Scheduled Job <span style={{ color: color.status.danger }}>*</span>
-                </label>
                 {isLoadingJobs ? (
                   <div className="text-sm text-gray-500">Loading jobs...</div>
                 ) : (
                   <HeadlessSelect
+                    label="Scheduled Job"
                     options={scheduledJobs.map((job) => ({
                       value: String(job.id),
                       label: `${job.name} (ID: ${job.id})`,
@@ -468,12 +444,8 @@ export default function FetchControlsModal({
                 <p className={`${tw.textSecondary} text-xs mb-3`}>Start Time</p>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label
-                      className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Month
-                    </label>
                     <HeadlessSelect
+                      label="Month"
                       options={monthOptions}
                       value={byRangeStartMonth}
                       onChange={(v) => setByRangeStartMonth(String(v || "1"))}
@@ -483,12 +455,8 @@ export default function FetchControlsModal({
                     />
                   </div>
                   <div>
-                    <label
-                      className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Day
-                    </label>
                     <HeadlessSelect
+                      label="Day"
                       options={dayOptions}
                       value={byRangeStartDay}
                       onChange={(v) => setByRangeStartDay(String(v || "1"))}
@@ -498,12 +466,8 @@ export default function FetchControlsModal({
                     />
                   </div>
                   <div>
-                    <label
-                      className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Hour
-                    </label>
                     <HeadlessSelect
+                      label="Hour"
                       options={hourOptions}
                       value={byRangeStartHour}
                       onChange={(v) => setByRangeStartHour(String(v || "0"))}
@@ -519,12 +483,8 @@ export default function FetchControlsModal({
                 <p className={`${tw.textSecondary} text-xs mb-3`}>End Time</p>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label
-                      className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Month
-                    </label>
                     <HeadlessSelect
+                      label="Month"
                       options={monthOptions}
                       value={byRangeEndMonth}
                       onChange={(v) => setByRangeEndMonth(String(v || "1"))}
@@ -534,12 +494,8 @@ export default function FetchControlsModal({
                     />
                   </div>
                   <div>
-                    <label
-                      className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Day
-                    </label>
                     <HeadlessSelect
+                      label="Day"
                       options={dayOptions}
                       value={byRangeEndDay}
                       onChange={(v) => setByRangeEndDay(String(v || "3"))}
@@ -549,12 +505,8 @@ export default function FetchControlsModal({
                     />
                   </div>
                   <div>
-                    <label
-                      className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                    >
-                      Hour
-                    </label>
                     <HeadlessSelect
+                      label="Hour"
                       options={hourOptions}
                       value={byRangeEndHour}
                       onChange={(v) => setByRangeEndHour(String(v || "23"))}

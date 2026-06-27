@@ -2570,6 +2570,33 @@
   --c-readonly-field-bg: #394247;
 }
 
+/* Recharts dark mode text colors */
+.dark .recharts-cartesian-axis-tick text,
+[color-mode="dark"] .recharts-cartesian-axis-tick text {
+  fill: #d1d5db !important;
+}
+
+.dark .recharts-legend-item-text,
+[color-mode="dark"] .recharts-legend-item-text {
+  color: #d1d5db !important;
+}
+
+.dark text.recharts-text,
+[color-mode="dark"] text.recharts-text {
+  fill: #d1d5db !important;
+}
+
+/* Pie chart and general chart labels in dark mode */
+.dark .recharts-pie-sector text,
+[color-mode="dark"] .recharts-pie-sector text {
+  fill: #d1d5db !important;
+}
+
+.dark .recharts-default-tooltip tspan,
+[color-mode="dark"] .recharts-default-tooltip tspan {
+  fill: #1f2223 !important;
+}
+
 /*
  * Dark mode compatibility layer:
  * Gradually migrate legacy hardcoded utility classes to semantic theme tokens.

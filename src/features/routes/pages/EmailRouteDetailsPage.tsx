@@ -7,6 +7,7 @@ import { EmailRoute } from "../types/emailRoute";
 import { emailRouteService } from "../services/emailRouteService";
 import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -15,6 +16,7 @@ export default function EmailRouteDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [route, setRoute] = useState<EmailRoute | null>(null);
@@ -35,11 +37,11 @@ export default function EmailRouteDetailsPage() {
         setRoute(data);
         loadGatewayConfig(data.gateway_config_id);
       } else {
-        showError("Error", "Email route not found");
+        showError(t.common.error, t.routes.emailRouteNotFound);
         navigate("/dashboard/email-routes");
       }
     } catch (err) {
-      showError("Error", "Failed to load email route details");
+      showError(t.common.error, t.routes.failedLoadEmailRoute);
       navigate("/dashboard/email-routes");
     } finally {
       setLoading(false);
@@ -67,10 +69,10 @@ export default function EmailRouteDetailsPage() {
     try {
       setDeleting(true);
       await emailRouteService.deleteRoute(route.id);
-      success("Success", `"${route.name}" has been deleted successfully`);
+      success(t.common.success, `"${route.name}" ${t.routes.hasBeenDeleted}`);
       navigate("/dashboard/email-routes");
     } catch (err) {
-      showError("Error", "Failed to delete email route");
+      showError(t.common.error, t.routes.failedDeleteEmailRoute);
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
@@ -81,7 +83,7 @@ export default function EmailRouteDetailsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading route details...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>{t.routes.loadingRouteDetails}</p>
       </div>
     );
   }
@@ -91,7 +93,7 @@ export default function EmailRouteDetailsPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <BackButton />
-          <p className={tw.textSecondary}>Route not found</p>
+          <p className={tw.textSecondary}>{t.routes.routeNotFound}</p>
         </div>
       </div>
     );
@@ -101,9 +103,9 @@ export default function EmailRouteDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-         
+
           showBreadcrumb={true}
-          currentLabel="Email Route Details"
+          currentLabel={t.routes.emailRouteDetails}
         />
 
         <div className="flex flex-wrap items-center gap-2">
@@ -119,7 +121,7 @@ export default function EmailRouteDetailsPage() {
             }}
           >
             <Edit className="w-4 h-4" />
-            Edit
+            {t.common.edit}
           </button>
           <button
             onClick={handleDelete}
@@ -140,7 +142,7 @@ export default function EmailRouteDetailsPage() {
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            {t.common.delete}
           </button>
         </div>
       </div>
@@ -158,7 +160,7 @@ export default function EmailRouteDetailsPage() {
               <div className="flex-1">
                 <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>{route.name}</h2>
                 <p className={`${tw.textSecondary} text-base leading-relaxed`}>
-                  {route.description || "No description available"}
+                  {route.description || t.routes.noDescriptionAvailable}
                 </p>
               </div>
             </div>
@@ -167,28 +169,28 @@ export default function EmailRouteDetailsPage() {
                 className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-white`}
                 style={{ backgroundColor: route.is_active ? "#16a34a" : "#6b7280" }}
               >
-                {route.is_active ? "Active" : "Inactive"}
+                {route.is_active ? t.common.active : t.common.inactive}
               </span>
             </div>
           </div>
 
           <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Basic Information
+              {t.routes.basicInformation}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Route Name
+                  {t.routes.routeName}
                 </label>
                 <p className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>{route.name}</p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Status
+                  {t.common.status}
                 </label>
                 <p className={`text-base ${tw.textPrimary} capitalize`}>
-                  {route.is_active ? "Active" : "Inactive"}
+                  {route.is_active ? t.common.active : t.common.inactive}
                 </p>
               </div>
             </div>
@@ -196,12 +198,12 @@ export default function EmailRouteDetailsPage() {
 
           <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Gateway Configuration
+              {t.routes.gatewayConfiguration}
             </h3>
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Configuration ID
+                  {t.routes.configurationId}
                 </label>
                 <p className={`text-base ${tw.textPrimary}`}>{route.gateway_config_id}</p>
               </div>
@@ -209,13 +211,13 @@ export default function EmailRouteDetailsPage() {
                 <>
                   <div className="space-y-1">
                     <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                      Configuration Name
+                      {t.routes.configurationName}
                     </label>
                     <p className={`text-base ${tw.textPrimary}`}>{gatewayConfig.name}</p>
                   </div>
                   <div className="space-y-1">
                     <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                      Provider Type
+                      {t.routes.providerType}
                     </label>
                     <p className={`text-base ${tw.textPrimary}`}>{gatewayConfig.provider_type}</p>
                   </div>
@@ -227,7 +229,7 @@ export default function EmailRouteDetailsPage() {
           {route.description && (
             <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
               <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-                Description
+                {t.common.description}
               </h3>
               <p className={`text-base ${tw.textPrimary} leading-relaxed`}>
                 {route.description}
@@ -238,11 +240,11 @@ export default function EmailRouteDetailsPage() {
 
         <div className="space-y-6">
           <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>Metadata</h3>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>{t.common.metadata}</h3>
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Route ID
+                  {t.routes.routeId}
                 </label>
                 <p className={`text-base ${tw.textPrimary} font-mono font-semibold`}>
                   {route.id}
@@ -250,7 +252,7 @@ export default function EmailRouteDetailsPage() {
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Created
+                  {t.common.created}
                 </label>
                 <p className={`text-base ${tw.textPrimary}`}>
                   {route.created_at ? (
@@ -272,7 +274,7 @@ export default function EmailRouteDetailsPage() {
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Last Updated
+                  {t.common.lastUpdated}
                 </label>
                 <p className={`text-base ${tw.textPrimary}`}>
                   {route.updated_at ? (
@@ -301,10 +303,10 @@ export default function EmailRouteDetailsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-              Delete Email Route
+              {t.routes.deleteEmailRoute}
             </h3>
             <p className={`${tw.textSecondary} text-sm mb-6`}>
-              Are you sure you want to delete "{route.name}"? This action cannot be undone.
+              {t.routes.areYouSureDeleteRoute}{route.name}"? {t.routes.cannotBeUndone}
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
@@ -312,14 +314,14 @@ export default function EmailRouteDetailsPage() {
                 disabled={deleting}
                 className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleting}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-60"
               >
-                {deleting ? "Deleting..." : "Delete"}
+                {deleting ? t.routes.deleting : t.common.delete}
               </button>
             </div>
           </div>

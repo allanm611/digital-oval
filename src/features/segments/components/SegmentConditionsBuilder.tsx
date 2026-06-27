@@ -617,11 +617,11 @@ export default function SegmentConditionsBuilder({
           {/* Preview Button and Limit (Rule type) OR Preview Button (SQL type) */}
           {ruleType === "rule" ? (
             <div className="flex items-center space-x-3">
-              {/* {previewCount !== null && (
+              {previewCount !== null && (
                 <span className={`text-sm ${tw.textSecondary}`}>
-                  {previewCount.toLocaleString()} customers
+                  Estimated Subscribers: {previewCount.toLocaleString()}
                 </span>
-              )} */}
+              )}
               <div className="flex items-center space-x-2">
                 <label className={`text-sm ${tw.textSecondary}`}>Limit:</label>
                 <HeadlessSelect
@@ -658,6 +658,7 @@ export default function SegmentConditionsBuilder({
                     const payload = convertConditionsToPayload(conditions, true, previewLimit);
                     const response = await segmentService.previewSegmentCount(payload);
                     const count = response?.count || 0;
+                    setPreviewCount(count);
                     success("Segment Count", `Segment matches ${count} subscribers`);
                   } catch (error) {
                     console.error("Preview count failed:", error);

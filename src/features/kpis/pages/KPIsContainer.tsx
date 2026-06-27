@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import KPIsHubPage from "./KPIsHubPage";
 import AllKPIsPage from "./AllKPIsPage";
 import SystemEventsContainer from "./SystemEventsContainer";
@@ -12,6 +13,7 @@ import SubscriberProfileDetailPage from "./SubscriberProfileDetailPage";
 import KpiCategoriesPage from "./KpiCategoriesPage";
 
 export default function KPIsContainer() {
+  const { t } = useLanguage();
   return (
     <Routes>
       <Route path="/" element={<KPIsHubPage />} />

@@ -3,6 +3,7 @@ import { Edit, Trash2, Users } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { useState, useEffect } from "react";
 import { subscriberProfileService } from "../services/subscriberProfileService";
@@ -21,6 +22,7 @@ interface Profile {
 export default function SubscriberProfileDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const location = useLocation();
   const parentLabel = (location.state as any)?.parentLabel;
   const { showToast } = useToast();
@@ -45,7 +47,7 @@ export default function SubscriberProfileDetailPage() {
           description: profileData.description,
           dataSource: profileData.data_source || "—",
           frequency: profileData.data_latency || "—",
-          status: profileData.is_active ? "Active" : "Inactive",
+          status: profileData.is_active ? t.common.active : t.common.inactive,
           field_type: profileData.field_type || "text",
         };
         setProfile(mappedProfile);

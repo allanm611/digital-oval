@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Trash2, Mail, MessageSquare, MessageCircle, Bell } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { emailGatewayConfigService } from "../services/emailGatewayConfigService";
@@ -44,6 +45,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<any>(null);

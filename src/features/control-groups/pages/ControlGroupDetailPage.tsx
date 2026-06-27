@@ -12,12 +12,14 @@ import type { ControlGroupApiModel, ControlGroupMember } from "../types/controlG
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination from "../../../shared/components/ui/Pagination";
 import AddMembersModal from "../components/AddMembersModal";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function ControlGroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { success: showSuccess, error: showError } = useToast();
+  const { t } = useLanguage();
   const [group, setGroup] = useState<ControlGroupApiModel | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -102,11 +104,11 @@ export default function ControlGroupDetailPage() {
   const getCustomerBaseLabel = (base: string) => {
     switch (base) {
       case "active_subscribers":
-        return "Active Subscribers";
+        return t.controlGroups.activeSubscribers;
       case "all_customers":
-        return "All Customers";
+        return t.controlGroups.allCustomers;
       case "saved_segment":
-        return "Custom Conditions";
+        return t.controlGroups.customConditions;
       default:
         return base;
     }
@@ -115,13 +117,13 @@ export default function ControlGroupDetailPage() {
   const getRecurrenceLabel = (recurrence: string | null) => {
     switch (recurrence) {
       case "one_time":
-        return "One-time";
+        return t.controlGroups.oneTime;
       case "daily":
-        return "Daily";
+        return t.controlGroups.daily;
       case "weekly":
-        return "Weekly";
+        return t.controlGroups.weekly;
       case "monthly":
-        return "Monthly";
+        return t.controlGroups.monthly;
       default:
         return recurrence || "-";
     }
@@ -130,9 +132,9 @@ export default function ControlGroupDetailPage() {
   const getGenerationMethodLabel = (method: string | null) => {
     switch (method) {
       case "random":
-        return "Random Selection";
+        return t.controlGroups.randomSelection;
       case "stratified":
-        return "Stratified Sampling";
+        return t.controlGroups.stratifiedSampling;
       default:
         return method || "-";
     }
@@ -143,10 +145,10 @@ export default function ControlGroupDetailPage() {
     setIsDeleting(true);
     try {
       await controlGroupService.deleteControlGroup(Number(id));
-      showSuccess("Control group deleted successfully");
+      showSuccess(t.controlGroups.groupDeletedSuccessfully);
       navigate("/dashboard/control-groups");
     } catch (error) {
-      showError(extractBackendError(error, "Failed to delete control group. Please try again."));
+      showError(extractBackendError(error, t.controlGroups.failedToDeleteGroup));
       console.error(error);
     } finally {
       setIsDeleting(false);
@@ -171,7 +173,7 @@ export default function ControlGroupDetailPage() {
         subscriber_ids: subscriberIds,
       });
 
-      showSuccess(`${subscriberIds.length} member${subscriberIds.length !== 1 ? "s" : ""} added successfully`);
+      showSuccess(t.controlGroups.membersAddedSuccessfully(subscriberIds.length));
       setMembersPage(1);
 
       // Refresh both members list and group stats
@@ -215,13 +217,13 @@ export default function ControlGroupDetailPage() {
         subscriber_id: memberToRemove.subscriberId,
       });
 
-      showSuccess("Member removed successfully");
+      showSuccess(t.controlGroups.memberRemovedSuccessfully);
       setMembers(members.filter((m) => m.id !== memberToRemove.id));
       setMembersTotalCount(Math.max(0, membersTotalCount - 1));
       setShowRemoveModal(false);
       setMemberToRemove(null);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to remove member. Please try again."));
+      showError(extractBackendError(error, t.controlGroups.failedToRemoveMember));
       console.error(error);
     } finally {
       setRemovingMemberId(null);
@@ -262,7 +264,7 @@ export default function ControlGroupDetailPage() {
         <BackButton
           onBack={handleBack}
           showBreadcrumb={true}
-          currentLabel="Control Group Details"
+          currentLabel={t.controlGroups.controlGroupDetails}
         />
         <div className="flex items-center gap-2">
           <button
@@ -275,10 +277,10 @@ export default function ControlGroupDetailPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Edit className="w-4 h-4" />
-            Edit
+            {t.common.edit}
           </button>
           <button
-            onClick={() => openDeleteConfirm(item?.id || 0, item?.name || "")}
+            onClick={() => setShowDeleteModal(true)}
             disabled={isDeleting}
             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{
@@ -295,7 +297,7 @@ export default function ControlGroupDetailPage() {
                 style={{ color: "#FFFFFF" }}
               />
             )}
-            Delete
+            {t.common.delete}
           </button>
         </div>
       </div>
@@ -311,7 +313,7 @@ export default function ControlGroupDetailPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Total Members</p>
+            <p className="text-sm font-medium text-gray-600">{t.controlGroups.totalMembers}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {(group.member_count || 0).toLocaleString()}
@@ -328,7 +330,7 @@ export default function ControlGroupDetailPage() {
                 className="h-5 w-5"
                 style={{ color: color.primary.accent }}
               />
-              <p className="text-sm font-medium text-gray-600">Percentage</p>
+              <p className="text-sm font-medium text-gray-600">{t.controlGroups.percentage}</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {group.percentage}%
@@ -345,10 +347,10 @@ export default function ControlGroupDetailPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Status</p>
+            <p className="text-sm font-medium text-gray-600">{t.common.status}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {group.is_active ? "Active" : "Inactive"}
+            {group.is_active ? t.common.active : t.common.inactive}
           </p>
         </div>
       </div>
@@ -360,28 +362,28 @@ export default function ControlGroupDetailPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-base font-semibold text-gray-900 mb-4">
-            Basic Information
+            {t.controlGroups.basicInformation}
           </h3>
           <div className="space-y-4">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Name
+                {t.common.name}
               </p>
               <p className="text-sm text-gray-900 font-medium">{group.name}</p>
             </div>
             {group.description && (
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                  Description
+                  {t.common.description}
                 </p>
                 <p className="text-sm text-gray-900">{group.description}</p>
               </div>
             )}
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Type
+                {t.common.type}
               </p>
-              <p className="text-sm text-gray-900 font-medium">Universal</p>
+              <p className="text-sm text-gray-900 font-medium">{t.controlGroups.universal}</p>
             </div>
           </div>
         </div>
@@ -391,12 +393,12 @@ export default function ControlGroupDetailPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-base font-semibold text-gray-900 mb-4">
-            Configuration
+            {t.controlGroups.configuration}
           </h3>
           <div className="space-y-4">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Customer Base
+                {t.controlGroups.customerBase}
               </p>
               <p className="text-sm text-gray-900 font-medium">
                 {getCustomerBaseLabel(group.customer_source_type || "manual")}
@@ -404,7 +406,7 @@ export default function ControlGroupDetailPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Generation Method
+                {t.controlGroups.generationMethod}
               </p>
               <p className="text-sm text-gray-900 font-medium">
                 {getGenerationMethodLabel(group.generation_method)}
@@ -412,7 +414,7 @@ export default function ControlGroupDetailPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Recurrence Pattern
+                {t.controlGroups.recurrencePattern}
               </p>
               <p className="text-sm text-gray-900 font-medium">
                 {getRecurrenceLabel(group.recurrence_pattern)}
@@ -427,12 +429,12 @@ export default function ControlGroupDetailPage() {
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
             <h3 className="text-base font-semibold text-gray-900 mb-4">
-              Schedule
+              {t.controlGroups.schedule}
             </h3>
             <div className="space-y-4">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                  Start Date
+                  {t.controlGroups.startDate}
                 </p>
                 <p className="text-sm text-gray-900 font-medium">
                   {new Date(group.start_date).toLocaleString()}
@@ -441,7 +443,7 @@ export default function ControlGroupDetailPage() {
               {group.end_date && (
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                    End Date
+                    {t.controlGroups.endDate}
                   </p>
                   <p className="text-sm text-gray-900 font-medium">
                     {new Date(group.end_date).toLocaleString()}
@@ -451,7 +453,7 @@ export default function ControlGroupDetailPage() {
               {!group.end_date && (
                 <div>
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                    End Date
+                    {t.controlGroups.endDate}
                   </p>
                   <p className="text-sm text-gray-900">-</p>
                 </div>
@@ -465,12 +467,12 @@ export default function ControlGroupDetailPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-base font-semibold text-gray-900 mb-4">
-            Timeline
+            {t.controlGroups.timeline}
           </h3>
           <div className="space-y-4">
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Created
+                {t.controlGroups.created}
               </p>
               <p className="text-sm text-gray-900 font-medium">
                 {new Date(group.created_at).toLocaleString()}
@@ -478,7 +480,7 @@ export default function ControlGroupDetailPage() {
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Last Updated
+                {t.controlGroups.lastUpdated}
               </p>
               <p className="text-sm text-gray-900 font-medium">
                 {new Date(group.updated_at).toLocaleString()}
@@ -495,10 +497,10 @@ export default function ControlGroupDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
-              Group Members
+              {t.controlGroups.groupMembers}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Total: {membersTotalCount} members
+              {t.controlGroups.totalLabel}: {membersTotalCount} {t.controlGroups.members}
             </p>
           </div>
           <button
@@ -512,7 +514,7 @@ export default function ControlGroupDetailPage() {
             ) : (
               <Plus className="h-4 w-4" />
             )}
-            Add Members
+            {t.controlGroups.addMembers}
           </button>
         </div>
 
@@ -533,25 +535,25 @@ export default function ControlGroupDetailPage() {
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Subscriber ID
+                      {t.controlGroups.subscriberId}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Added Date
+                      {t.controlGroups.addedDate}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Reason
+                      {t.controlGroups.reason}
                     </th>
                     <th
                       className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Actions
+                      {t.common.actions}
                     </th>
                   </tr>
                 </thead>
@@ -612,7 +614,7 @@ export default function ControlGroupDetailPage() {
         ) : (
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No members yet</p>
+            <p className="text-gray-500">{t.controlGroups.noMembersYet}</p>
           </div>
         )}
       </div>
@@ -621,7 +623,7 @@ export default function ControlGroupDetailPage() {
       <AddMembersModal
         isOpen={showAddMemberModal}
         onClose={() => setShowAddMemberModal(false)}
-        groupName={group?.name || "Control Group"}
+        groupName={group?.name || t.controlGroups.title}
         onAdd={handleAddMembers}
         existingMemberIds={existingMemberIds}
         isAdding={addingMembers}
@@ -632,12 +634,12 @@ export default function ControlGroupDetailPage() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        title="Delete Control Group"
-        description="Are you sure you want to delete this control group? This action cannot be undone."
-        itemName={group?.name || "Control Group"}
+        title={t.controlGroups.deleteControlGroup}
+        description={t.controlGroups.deleteControlGroupDescription}
+        itemName={group?.name || t.controlGroups.title}
         isLoading={isDeleting}
-        confirmText="Delete"
-        cancelText="Cancel"
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
       />
 
       {/* Remove Member Confirmation Modal */}
@@ -648,12 +650,12 @@ export default function ControlGroupDetailPage() {
           setMemberToRemove(null);
         }}
         onConfirm={handleConfirmRemove}
-        title="Remove Member"
-        description="Are you sure you want to remove this member from the control group?"
+        title={t.controlGroups.removeMember}
+        description={t.controlGroups.removeMemberDescription}
         itemName={memberToRemove?.name || ""}
         isLoading={removingMemberId === memberToRemove?.id}
-        confirmText="Remove"
-        cancelText="Cancel"
+        confirmText={t.controlGroups.remove}
+        cancelText={t.common.cancel}
         variant="warning"
       />
     </div>

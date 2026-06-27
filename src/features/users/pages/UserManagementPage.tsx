@@ -1815,8 +1815,10 @@ export default function UserManagementPage() {
                   backgroundColor: isSelectionMode
                     ? color.primary.action
                     : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
                 title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
               >
@@ -2077,7 +2079,9 @@ export default function UserManagementPage() {
                 style={{
                   backgroundColor: "transparent",
                   color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 Update Department

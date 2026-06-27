@@ -522,6 +522,7 @@ export default function CustomerDetailPage() {
     name: string;
     category: string;
     value: string | number;
+    type?: string;
     unit?: string;
     description: string;
     trend?: "up" | "down" | "neutral";
@@ -681,6 +682,7 @@ export default function CustomerDetailPage() {
         name: metric.name,
         category: "Revenue",
         value: currentValue,
+        type: metric.field_type,
         unit: metric.unit,
         description: metric.description,
         defaultValue: metric.default_value ?? "-",

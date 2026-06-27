@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Trash2, Copy, Play, Pause, MoreVertical } from "lucide-react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -15,6 +16,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function WorkflowDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();

@@ -9,6 +9,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { PermissionGate } from '../../auth/components/PermissionGate';
 import { useDocumentation } from '../hooks/useDocumentation';
 import { useDocsVersion } from '../contexts/DocsVersionContext';
@@ -27,6 +28,7 @@ export function DocsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeVersion } = useDocsVersion();
+  const { t } = useLanguage();
   const [sidebarItems, setSidebarItems] = useState<SidebarItem[]>([]);
   const [sidebarLoading, setSidebarLoading] = useState(true);
   const [sidebarError, setSidebarError] = useState<string | null>(null);
@@ -64,13 +66,13 @@ export function DocsPage() {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
-          <h2>Authentication Required</h2>
-          <p>You need to be logged in to access the documentation.</p>
+          <h2>{t.auth.authenticationRequired}</h2>
+          <p>{t.docs.authenticationRequiredMessage}</p>
           <button
             onClick={() => navigate('/login')}
             className={styles.loginButton}
           >
-            Go to Login
+            {t.auth.goToLogin}
           </button>
         </div>
       </div>
@@ -84,13 +86,13 @@ export function DocsPage() {
         header={<DocsHeader />}
       >
         <div className={styles.error}>
-          <h2>Documentation Not Found</h2>
+          <h2>{t.docs.notFound}</h2>
           <p>{error}</p>
           <button
             onClick={() => navigate('/documentation')}
             className={styles.homeButton}
           >
-            Back to Home
+            {t.common.back}
           </button>
         </div>
       </DocsLayout>
@@ -114,7 +116,7 @@ export function DocsPage() {
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }} />
-            <p style={{ color: '#9ca3af', marginTop: '16px' }}>Loading documentation...</p>
+            <p style={{ color: '#9ca3af', marginTop: '16px' }}>{t.docs.loading}</p>
           </div>
           <style>{`
             @keyframes spin {
@@ -143,7 +145,7 @@ export function DocsPage() {
                   onClick={() => navigate(`/documentation/add`)}
                   className={styles.editLink}
                 >
-                  Add
+                  {t.common.create}
                 </button>
               </PermissionGate>
             )}
@@ -152,7 +154,7 @@ export function DocsPage() {
                 onClick={() => navigate(`/documentation/edit?slug=${slug}`)}
                 className={styles.editLink}
               >
-                Edit
+                {t.common.edit}
               </button>
               {/* Manage Sidebar hidden for now - API integration pending */}
               {/* <button

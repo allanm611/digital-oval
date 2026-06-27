@@ -14,10 +14,11 @@ import { MESSAGE_TEMPLATE_OPTIONS } from "../constants/whatsappRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
-const STATUS_OPTIONS = [
-  { label: "Active", value: "true" },
-  { label: "Inactive", value: "false" },
+const STATUS_OPTIONS = (t: any) => [
+  { label: t.common.active, value: "true" },
+  { label: t.common.inactive, value: "false" },
 ];
 
 interface WhatsAppRouteFormPageProps {
@@ -28,6 +29,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
@@ -77,7 +79,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
       const configs = await whatsappGatewayConfigService.getAllConfigs();
       setGatewayConfigs(configs);
     } catch (err) {
-      showError("Error", "Failed to load gateway configurations");
+      showError(t.common.error, "Failed to load gateway configurations");
     } finally {
       setIsLoadingConfigs(false);
     }
@@ -129,7 +131,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
     e.preventDefault();
 
     if (!validateForm()) {
-      showError("Validation Error", "Please fill in all required fields");
+      showError(t.common.error, "Please fill in all required fields");
       return;
     }
 
@@ -141,16 +143,16 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
 
       if (mode === "edit" && id) {
         await whatsappRouteService.updateRoute(Number(id), payloadData);
-        success("Success", "WhatsApp route updated successfully");
+        success(t.common.success, "WhatsApp route updated successfully");
       } else {
         await whatsappRouteService.createRoute(payloadData);
-        success("Success", "WhatsApp route created successfully");
+        success(t.common.success, "WhatsApp route created successfully");
       }
 
       navigate("/dashboard/whatsapp-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -221,7 +223,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading WhatsApp route...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>Loading {t.routes.channels.whatsapp} {t.routes.route}...</p>
       </div>
     );
   }
@@ -229,23 +231,23 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create WhatsApp Route" : "Edit WhatsApp Route"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? `${t.routes.createRoute} ${t.routes.channels.whatsapp}` : `${t.common.edit} ${t.routes.channels.whatsapp} ${t.routes.route}`} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Route Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Configuration</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>{t.routes.routeName} {t.common.metadata}</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Input
-                  label="Route Name"
+                  label={t.routes.routeName}
                   placeholder="e.g., Meta WhatsApp Business"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
-                 
+
                   disabled={saving}
                   required
                 />
@@ -278,7 +280,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
 
             <div>
               <Textarea
-                label="Description"
+                label={t.common.description}
                 value={formData.description || ""}
                 onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
@@ -399,7 +401,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
             disabled={saving}
             className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
-            Cancel
+            {t.common.cancel}
           </button>
 
           <button
@@ -409,7 +411,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="w-4 h-4" />
-            {saving ? "Saving..." : "Save Route"}
+            {saving ? t.routes.successfully : t.routes.route}
           </button>
         </div>
       </form>

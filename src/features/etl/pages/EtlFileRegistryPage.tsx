@@ -81,30 +81,40 @@ export default function EtlFileRegistryPage() {
       id: "file_name",
       label: "File Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => value || "—",
     },
     {
       id: "file_category",
       label: "Category",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => value || "—",
     },
     {
       id: "processing_status",
       label: "Status",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'select', options: ['pending', 'processing', 'completed', 'failed'] },
       render: (value) => getStatusBadge(value),
     },
     {
       id: "record_count",
       label: "Records",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'number' },
       render: (value) => value ? <NumberFormatter value={Number(value)} /> : "—",
     },
     {
       id: "created_at",
       label: "Created",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'date' },
       render: (value) => <DateFormatter date={value as string} useUserTimezone />,
     },
   ];
@@ -300,8 +310,8 @@ export default function EtlFileRegistryPage() {
             onClick={() => navigate("/dashboard/etl/analytics")}
             className={`inline-flex items-center gap-2 ${tw.borderedButton}`}
             style={{
-              borderColor: color.primary.action,
-              color: color.primary.action,
+              borderColor: "var(--c-bordered-button-color)",
+              color: "var(--c-bordered-button-color)",
             }}
           >
             <BarChart3 className="h-4 w-4" />

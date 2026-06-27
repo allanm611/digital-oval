@@ -39,10 +39,10 @@ const InfoRow = ({
   value: string | number | null | undefined;
 }) => (
   <div className="flex flex-col gap-1">
-    <span className="text-xs font-semibold uppercase tracking-wide text-black">
+    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--c-text-primary)]">
       {label}
     </span>
-    <span className="text-sm text-black">
+    <span className="text-sm text-[var(--c-text-primary)]">
       {value === undefined || value === null || value === "" ? "—" : value}
     </span>
   </div>
@@ -368,7 +368,7 @@ export default function ServerDetailsPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <LoadingSpinner variant="modern" size="lg" color="primary" />
-        <p className="mt-3 text-sm text-black">Loading server details…</p>
+        <p className="mt-3 text-sm text-[var(--c-text-primary)]">Loading server details…</p>
       </div>
     );
   }
@@ -376,25 +376,25 @@ export default function ServerDetailsPage() {
   if (errorMessage || !server) {
     return (
       <div
-        className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center shadow-sm`}
+        className={`${tw.rounded} border border-[var(--c-border-default)] bg-[var(--c-surface-background)] p-8 text-center shadow-sm`}
       >
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500">
           <AlertTriangle size={20} />
         </div>
-        <h2 className="text-lg font-semibold text-black">
+        <h2 className="text-lg font-semibold text-[var(--c-text-primary)]">
           {t.errors.unableLoadServer}
         </h2>
-        <p className="mt-2 text-sm text-black">
+        <p className="mt-2 text-sm text-[var(--c-text-primary)]">
           {errorMessage || t.errors.serverNotFound}
         </p>
         <button
           onClick={() => navigateBackOrFallback(navigate, "/dashboard/servers")}
-          className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50`}
+          className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border border-[var(--c-border-default)] px-4 py-2 text-sm font-medium text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)]`}
         >
           <BackButton
            
             iconSize="w-4 h-4"
-            className="p-0 text-black hover:text-black"
+            className="p-0 text-[var(--c-text-primary)] hover:text-[var(--c-text-primary)]"
           />
           Go back
         </button>
@@ -444,7 +444,7 @@ export default function ServerDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`inline-flex items-center gap-2 justify-center ${tw.rounded} border border-gray-200 px-3 py-2 text-sm font-medium text-black hover:bg-gray-50 transition-colors`}
+              className={`inline-flex items-center gap-2 justify-center ${tw.rounded} border border-[var(--c-border-default)] px-3 py-2 text-sm font-medium text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)] transition-colors`}
               title="More actions"
             >
               <MoreVertical size={16} />
@@ -452,7 +452,7 @@ export default function ServerDetailsPage() {
             </button>
             {showMoreMenu && (
               <div
-                className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+                className={`absolute right-0 top-full mt-1 w-56 bg-[var(--c-surface-background)] ${tw.rounded} shadow-lg border border-[var(--c-border-default)] py-1 z-10`}
               >
                 <button
                   onClick={() => {
@@ -460,7 +460,7 @@ export default function ServerDetailsPage() {
                     setShowMoreMenu(false);
                   }}
                   disabled={isHealthLoading}
-                  className={`w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-50 flex items-center gap-2 ${
+                  className={`w-full text-left px-4 py-2 text-sm text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)] flex items-center gap-2 ${
                     isHealthLoading ? "opacity-60" : ""
                   }`}
                 >
@@ -479,7 +479,7 @@ export default function ServerDetailsPage() {
                     setShowMoreMenu(false);
                   }}
                   disabled={isDeprecationLoading}
-                  className={`w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-50 flex items-center gap-2 ${
+                  className={`w-full text-left px-4 py-2 text-sm text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)] flex items-center gap-2 ${
                     isDeprecationLoading ? "opacity-60" : ""
                   }`}
                 >
@@ -496,7 +496,7 @@ export default function ServerDetailsPage() {
                     setShowMoreMenu(false);
                   }}
                   disabled={isCircuitBreakerLoading}
-                  className={`w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-50 flex items-center gap-2 ${
+                  className={`w-full text-left px-4 py-2 text-sm text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)] flex items-center gap-2 ${
                     isCircuitBreakerLoading ? "opacity-60" : ""
                   }`}
                 >
@@ -511,14 +511,14 @@ export default function ServerDetailsPage() {
                 </button>
                 {server.health_check_enabled && (
                   <>
-                    <div className="border-t border-gray-200 my-1" />
+                    <div className="border-t my-1" style={{ borderColor: "var(--c-border-default)" }} />
                     <button
                       onClick={() => {
                         handleResetHealthCheck();
                         setShowMoreMenu(false);
                       }}
                       disabled={isResetHealthLoading}
-                      className={`w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-50 flex items-center gap-2 ${
+                      className={`w-full text-left px-4 py-2 text-sm text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)] flex items-center gap-2 ${
                         isResetHealthLoading ? "opacity-60" : ""
                       }`}
                     >
@@ -534,7 +534,7 @@ export default function ServerDetailsPage() {
                         setShowPushHealthModal(true);
                         setShowMoreMenu(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-sm text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)] flex items-center gap-2"
                     >
                       <Upload size={16} />
                       Push Health Result
@@ -548,17 +548,17 @@ export default function ServerDetailsPage() {
       </div>
 
       <div
-        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        className={`${tw.rounded} border border-[var(--c-border-default)] bg-[var(--c-surface-background)] p-6 shadow-sm`}
       >
         <div className="flex flex-col gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-black">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--c-text-primary)]">
               Server
             </p>
             <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
               {server.name}
             </h1>
-            <p className="text-sm text-black">Code: {server.code}</p>
+            <p className="text-sm text-[var(--c-text-primary)]">Code: {server.code}</p>
           </div>
           <div className="flex items-center gap-2">
             <span
@@ -584,40 +584,43 @@ export default function ServerDetailsPage() {
 
         <div className="mt-6 grid gap-6 md:grid-cols-3">
           <div
-            className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}
+            className={`${tw.rounded} border p-4`}
+            style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-cards)" }}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-black">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--c-text-primary)" }}>
               Environment
             </p>
-            <div className="mt-2 text-black">
+            <div className="mt-2" style={{ color: "var(--c-text-primary)" }}>
               <span className="font-semibold uppercase">
                 {server.environment}
               </span>
             </div>
-            <p className="mt-1 text-sm text-black">
+            <p className="mt-1 text-sm" style={{ color: "var(--c-text-secondary)" }}>
               Region: {server.region || "—"}
             </p>
           </div>
           <div
-            className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}
+            className={`${tw.rounded} border p-4`}
+            style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-cards)" }}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-black">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--c-text-primary)" }}>
               Protocol
             </p>
-            <div className="mt-2 text-black">
+            <div className="mt-2" style={{ color: "var(--c-text-primary)" }}>
               <span className="font-semibold uppercase">{server.protocol}</span>
             </div>
-            <p className="mt-1 text-sm text-black">
+            <p className="mt-1 text-sm" style={{ color: "var(--c-text-secondary)" }}>
               TLS: {server.tls_enabled ? "Enabled" : "Disabled"}
             </p>
           </div>
           <div
-            className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}
+            className={`${tw.rounded} border p-4`}
+            style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-cards)" }}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide text-black">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--c-text-primary)" }}>
               Endpoint
             </p>
-            <p className="mt-2 font-mono text-xs text-black break-all">
+            <p className="mt-2 font-mono text-xs break-all" style={{ color: "var(--c-text-primary)" }}>
               {endpoint}
             </p>
           </div>
@@ -626,11 +629,11 @@ export default function ServerDetailsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section
-          className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`space-y-4 ${tw.rounded} border border-[var(--c-border-default)] bg-[var(--c-surface-background)] p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <Activity size={20} style={{ color: color.status.info }} />
-            <h2 className="text-base font-semibold text-black">
+            <h2 className="text-base font-semibold text-[var(--c-text-primary)]">
               Connection & Limits
             </h2>
           </div>
@@ -662,7 +665,7 @@ export default function ServerDetailsPage() {
         </section>
 
         <section
-          className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`space-y-4 ${tw.rounded} border border-[var(--c-border-default)] bg-[var(--c-surface-background)] p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             {server.health_check_enabled ? (
@@ -673,7 +676,7 @@ export default function ServerDetailsPage() {
                 style={{ color: color.status.warning }}
               />
             )}
-            <h2 className="text-base font-semibold text-black">
+            <h2 className="text-base font-semibold text-[var(--c-text-primary)]">
               Health Monitoring
             </h2>
           </div>
@@ -717,17 +720,17 @@ export default function ServerDetailsPage() {
       {showPushHealthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div
-            className={`w-full max-w-md ${tw.rounded} bg-white p-6 shadow-xl`}
+            className={`w-full max-w-md ${tw.rounded} bg-[var(--c-surface-background)] p-6 shadow-xl`}
           >
-            <h3 className="text-lg font-semibold text-black">
+            <h3 className="text-lg font-semibold text-[var(--c-text-primary)]">
               Push Health Check Result
             </h3>
-            <p className="mt-2 text-sm text-black">
+            <p className="mt-2 text-sm text-[var(--c-text-primary)]">
               Manually record a health check result for {server.name}
             </p>
             <div className="mt-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-black mb-2">
+                <label className="block text-sm font-medium text-[var(--c-text-primary)] mb-2">
                   Status
                 </label>
                 <HeadlessSelect
@@ -755,7 +758,7 @@ export default function ServerDetailsPage() {
                   setShowPushHealthModal(false);
                   setHealthResultDetails("");
                 }}
-                className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50`}
+                className={`${tw.rounded} border border-[var(--c-border-default)] px-4 py-2 text-sm font-medium text-[var(--c-text-primary)] hover:bg-[var(--c-interactive-hover)]`}
               >
                 Cancel
               </button>
@@ -773,19 +776,19 @@ export default function ServerDetailsPage() {
 
       {server.metadata && Object.keys(server.metadata).length > 0 && (
         <section
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border border-[var(--c-border-default)] bg-[var(--c-surface-background)] p-6 shadow-sm`}
         >
-          <h2 className="text-base font-semibold text-black">Metadata</h2>
+          <h2 className="text-base font-semibold text-[var(--c-text-primary)]">Metadata</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {Object.entries(server.metadata).map(([key, value]) => (
               <div
                 key={key}
-                className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4 text-sm`}
+                className={`${tw.rounded} border border-[var(--c-border-default)] bg-[var(--c-surface-cards)] p-4 text-sm`}
               >
-                <p className="text-xs font-semibold uppercase tracking-wide text-black">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--c-text-primary)]">
                   {key}
                 </p>
-                <p className="mt-1 text-black">
+                <p className="mt-1 text-[var(--c-text-primary)]">
                   {typeof value === "object"
                     ? JSON.stringify(value, null, 2)
                     : String(value)}

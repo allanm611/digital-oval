@@ -19,6 +19,7 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination, { getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { controlGroupService } from "../services/controlGroupService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -27,6 +28,7 @@ import type { ControlGroupApiModel, ControlGroupStatistics } from "../types/cont
 export default function ControlGroupsPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
+  const { t } = useLanguage();
   const [controlGroups, setControlGroups] = useState<ControlGroupApiModel[]>([]);
   const [statistics, setStatistics] = useState<ControlGroupStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,15 +38,15 @@ export default function ControlGroupsPage() {
   const [totalCount, setTotalCount] = useState(0);
 
   const statusFilterOptions = [
-    { value: "all", label: "All Status" },
-    { value: "active", label: "Active" },
-    { value: "inactive", label: "Inactive" },
+    { value: "all", label: t.controlGroups.allStatus },
+    { value: "active", label: t.controlGroups.active },
+    { value: "inactive", label: t.controlGroups.inactive },
   ];
 
   const typeFilterOptions = [
-    { value: "all", label: "All Types" },
-    { value: "universal", label: "Universal" },
-    { value: "standard", label: "Standard" },
+    { value: "all", label: t.controlGroups.allTypes },
+    { value: "universal", label: t.controlGroups.universal },
+    { value: "standard", label: t.controlGroups.standard },
   ];
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -117,7 +119,7 @@ export default function ControlGroupsPage() {
       await controlGroupService.deleteControlGroup(groupToDelete.id);
       setControlGroups(controlGroups.filter((g) => g.id !== groupToDelete.id));
       setTotalCount(Math.max(0, totalCount - 1));
-      showSuccess("Control group deleted successfully");
+      showSuccess(t.controlGroups.deleteSuccess);
       setShowDeleteModal(false);
       setGroupToDelete(null);
     } catch (error) {
@@ -132,7 +134,7 @@ export default function ControlGroupsPage() {
     setIsRunningScheduled(true);
     try {
       const result = await controlGroupService.runScheduled();
-      showSuccess("Scheduled control groups processed successfully");
+      showSuccess(t.controlGroups.updateSuccess);
       // Reload data to reflect any changes
       loadData();
     } catch (error) {
@@ -151,11 +153,11 @@ export default function ControlGroupsPage() {
   const getCustomerBaseLabel = (base: string) => {
     switch (base) {
       case "active_subscribers":
-        return "Active Subscribers";
+        return t.routes.customerBase.activeSubscribers;
       case "all_customers":
-        return "All Customers";
+        return t.routes.customerBase.allCustomers;
       case "saved_segment":
-        return "Custom Conditions";
+        return t.routes.customerBase.customConditions;
       default:
         return base;
     }
@@ -164,13 +166,13 @@ export default function ControlGroupsPage() {
   const getRecurrenceLabel = (recurrence: string | null) => {
     switch (recurrence) {
       case "one_time":
-        return "One-time";
+        return t.routes.recurrence.oneTime;
       case "daily":
-        return "Daily";
+        return t.routes.recurrence.daily;
       case "weekly":
-        return "Weekly";
+        return t.routes.recurrence.weekly;
       case "monthly":
-        return "Monthly";
+        return t.routes.recurrence.monthly;
       default:
         return recurrence || "-";
     }
@@ -184,7 +186,7 @@ export default function ControlGroupsPage() {
 
             showBreadcrumb={true}
 
-            currentLabel="Universal Control Groups"
+            currentLabel={t.controlGroups.title}
           />
           <div className="flex gap-3">
             <button
@@ -198,7 +200,7 @@ export default function ControlGroupsPage() {
               ) : (
                 <Clock className="h-4 w-4 mr-2" />
               )}
-              <span>{isRunningScheduled ? "Running..." : "Run Scheduled"}</span>
+              <span>{isRunningScheduled ? t.controlGroups.running : t.controlGroups.runScheduled}</span>
             </button>
             <button
               onClick={() => navigate("/dashboard/control-groups/create")}
@@ -206,11 +208,11 @@ export default function ControlGroupsPage() {
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              <span>Create Control Group</span>
+              <span>{t.controlGroups.createControlGroup}</span>
             </button>
           </div>
         </div>
-        <p className="text-gray-600 text-sm">Create and manage control groups to measure campaign effectiveness and customer behavior</p>
+        <p className="text-gray-600 text-sm">{t.controlGroups.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -222,7 +224,7 @@ export default function ControlGroupsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Total Groups</p>
+            <p className="text-sm font-medium text-gray-600">{t.controlGroups.totalGroups}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoading ? "-" : statistics?.total_control_groups || 0}
@@ -237,7 +239,7 @@ export default function ControlGroupsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Active Groups</p>
+            <p className="text-sm font-medium text-gray-600">{t.controlGroups.activeGroups}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoading ? "-" : statistics?.active_groups || 0}
@@ -252,7 +254,7 @@ export default function ControlGroupsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Total Members</p>
+            <p className="text-sm font-medium text-gray-600">{t.controlGroups.totalMembers}</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoading ? "-" : (statistics?.total_members || 0).toLocaleString()}
@@ -263,7 +265,7 @@ export default function ControlGroupsPage() {
       <div>
         <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
           <SearchInput
-            placeholder="Search control groups"
+            placeholder={t.controlGroups.searchPlaceholder}
             value={searchTerm}
             onChange={setSearchTerm}
           />
@@ -275,7 +277,7 @@ export default function ControlGroupsPage() {
               onChange={(value: string | number) =>
                 setStatusFilter(value as string)
               }
-              placeholder="Filter by status"
+              placeholder={t.controlGroups.filterByStatus}
             />
           </div>
 
@@ -286,7 +288,7 @@ export default function ControlGroupsPage() {
               onChange={(value: string | number) =>
                 setTypeFilter(value as string)
               }
-              placeholder="Filter by type"
+              placeholder={t.controlGroups.filterByType}
             />
           </div>
         </div>
@@ -312,49 +314,49 @@ export default function ControlGroupsPage() {
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Name
+                      {t.controlGroups.groupName}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Status
+                      {t.controlGroups.status}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Type
+                      {t.controlGroups.type}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Percentage
+                      {t.controlGroups.percentage}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Members
+                      {t.controlGroups.members}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Customer Base
+                      {t.controlGroups.customerBase}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Recurrence
+                      {t.controlGroups.recurrence}
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Actions
+                      {t.controlGroups.actions}
                     </th>
                   </tr>
                 </thead>
@@ -373,7 +375,7 @@ export default function ControlGroupsPage() {
                         className="px-6 py-4 text-sm font-medium text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {group.is_active ? "Active" : "Inactive"}
+                        {group.is_active ? t.controlGroups.active : t.controlGroups.inactive}
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-black"
@@ -420,7 +422,7 @@ export default function ControlGroupsPage() {
                             }
                             className={`p-2 icon-edit ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
                             disabled={isDeleting === group.id}
-                            title="View"
+                            title={t.controlGroups.view}
                           >
                             <Eye className="h-4 w-4" />
                           </button>
@@ -432,7 +434,7 @@ export default function ControlGroupsPage() {
                             }
                             className={`p-2 icon-edit ${tw.rounded} transition-all duration-200 disabled:opacity-50`}
                             disabled={isDeleting === group.id}
-                            title="Edit"
+                            title={t.controlGroups.edit}
                           >
                             <Edit className="h-4 w-4" />
                           </button>
@@ -440,7 +442,7 @@ export default function ControlGroupsPage() {
                             onClick={() => handleDeleteClick(group.id, group.name)}
                             disabled={isDeleting === group.id}
                             className={`p-2 icon-delete transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80`}
-                            title="Delete"
+                            title={t.controlGroups.delete}
                           >
                             {isDeleting === group.id ? (
                               <Loader2 className="h-4 w-4 animate-spin text-red-600" />
@@ -469,12 +471,12 @@ export default function ControlGroupsPage() {
           <div className="text-center py-12">
             <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No control groups found
+              {t.controlGroups.noControlGroupsFound}
             </h3>
             <p className="text-gray-500 mb-6">
               {searchTerm
-                ? "Try adjusting your search terms"
-                : "Create your first control group to get started"}
+                ? t.controlGroups.tryAdjustingSearch
+                : t.controlGroups.noGroups}
             </p>
             <button
               onClick={() => navigate("/dashboard/control-groups/create")}
@@ -482,7 +484,7 @@ export default function ControlGroupsPage() {
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create Control Group
+              {t.controlGroups.createControlGroup}
             </button>
           </div>
         )}
@@ -495,8 +497,8 @@ export default function ControlGroupsPage() {
           setGroupToDelete(null);
         }}
         onConfirm={handleConfirmDelete}
-        title="Delete Control Group"
-        description="This action cannot be undone. All members in this control group will be unassigned."
+        title={t.controlGroups.deleteConfirmTitle}
+        description={t.controlGroups.deleteConfirmMessage}
         itemName={groupToDelete?.name || ""}
         isLoading={isDeleting === groupToDelete?.id}
       />

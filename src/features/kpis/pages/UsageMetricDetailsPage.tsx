@@ -5,6 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -21,6 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function UsageMetricDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const location = useLocation();
   const parentLabel = (location.state as any)?.parentLabel;
   const { success, error: showError } = useToast();

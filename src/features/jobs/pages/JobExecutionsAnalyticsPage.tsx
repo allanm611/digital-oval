@@ -60,13 +60,14 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+      className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-3 shadow-lg`}
     >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -272,7 +273,7 @@ export default function JobExecutionsAnalyticsPage() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate("/dashboard/job-executions")}
-          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+          className={`p-2 ${tw.rounded} text-sm hover:text-gray-900 hover:bg-gray-100 transition-colors`}
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -289,14 +290,15 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Key Metrics - All Statistics */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <BarChart3
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-sm font-medium text-sm">
               Total Executions
             </p>
           </div>
@@ -305,70 +307,75 @@ export default function JobExecutionsAnalyticsPage() {
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Successful</p>
+            <p className="text-sm font-medium text-sm">Successful</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {parseInt(String(executionStats?.successful || 0), 10)}
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Failed</p>
+            <p className="text-sm font-medium text-sm">Failed</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {parseInt(String(executionStats?.failed || 0), 10)}
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Timed Out</p>
+            <p className="text-sm font-medium text-sm">Timed Out</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {parseInt(String(executionStats?.timed_out || 0), 10)}
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <Clock
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Aborted</p>
+            <p className="text-sm font-medium text-sm">Aborted</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {parseInt(String(executionStats?.aborted || 0), 10)}
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <TrendingUp
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Success Rate</p>
+            <p className="text-sm font-medium text-sm">Success Rate</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {successRate?.success_rate
@@ -382,7 +389,8 @@ export default function JobExecutionsAnalyticsPage() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Status Distribution */}
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Status Distribution
@@ -423,7 +431,8 @@ export default function JobExecutionsAnalyticsPage() {
 
         {/* Trigger Distribution */}
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Trigger Distribution
@@ -450,7 +459,8 @@ export default function JobExecutionsAnalyticsPage() {
         {/* Trend Data */}
         {trendData.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Execution Trends (30 Days)
@@ -491,7 +501,8 @@ export default function JobExecutionsAnalyticsPage() {
         {/* Error Analysis */}
         {errorAnalysis.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Top Errors (30 Days)
@@ -524,7 +535,8 @@ export default function JobExecutionsAnalyticsPage() {
       {/* SLA Compliance Details */}
       {slaCompliance && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             SLA Compliance Details
@@ -569,7 +581,8 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Additional Analytics Sections */}
       {resourceUtilization && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Resource Utilization
@@ -613,7 +626,8 @@ export default function JobExecutionsAnalyticsPage() {
 
       {performanceSummary && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Performance Summary
@@ -663,7 +677,8 @@ export default function JobExecutionsAnalyticsPage() {
 
       {healthScore && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Health Score
@@ -683,7 +698,7 @@ export default function JobExecutionsAnalyticsPage() {
                   ) => (
                     <div key={idx} className="mb-2">
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">{factor.factor}</span>
+                        <span className="text-sm">{factor.factor}</span>
                         <span className="font-medium">
                           {Number(factor.score).toFixed(0)}
                         </span>
@@ -706,7 +721,8 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Executions by Hour */}
       {executionsByHour.length > 0 && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Executions by Hour
@@ -734,7 +750,8 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Worker Node Stats */}
       {workers.length > 0 && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Worker Node Statistics
@@ -780,7 +797,7 @@ export default function JobExecutionsAnalyticsPage() {
           {/* Pagination Controls for Worker Node Statistics */}
           {workerTotalCount > workerPageSize && (
             <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-sm">
                 Showing{" "}
                 <strong>
                   {(workerCurrentPage - 1) * workerPageSize + 1}-
@@ -798,7 +815,7 @@ export default function JobExecutionsAnalyticsPage() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                <span className="text-sm text-sm min-w-[50px] text-center">
                   Page {workerCurrentPage}
                 </span>
                 <button
@@ -819,7 +836,8 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Step Failure Analysis - Disabled for now */}
       {/* {stepFailureAnalysis.length > 0 && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Step Failure Analysis
@@ -848,7 +866,8 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Slowest Executions */}
       {slowestExecutions.length > 0 && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Slowest Executions

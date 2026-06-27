@@ -22,6 +22,7 @@ import { whatsappGatewayConfigService } from "../../configurations/services/what
 import { ussdGatewayConfigService } from "../../configurations/services/ussdGatewayConfigService";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 type Channel = "SMS" | "EMAIL" | "PUSH" | "WHATSAPP" | "USSD" | "";
 
@@ -48,9 +49,9 @@ interface FormData {
   encoding?: string;
 }
 
-const STATUS_OPTIONS = [
-  { label: "Active", value: "true" },
-  { label: "Inactive", value: "false" },
+const STATUS_OPTIONS = (t: any) => [
+  { label: t.common.active, value: "true" },
+  { label: t.common.inactive, value: "false" },
 ];
 
 const ENCODING_OPTIONS = [
@@ -63,6 +64,7 @@ export default function EditRoutePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState<FormData>({
     channel: "SMS",
@@ -255,10 +257,10 @@ export default function EditRoutePage() {
         });
       }
 
-      success("Route updated successfully");
+      success(t.common.success, "Route updated successfully");
       navigate("/dashboard/routes");
     } catch (error) {
-      showError("Error", extractBackendError(error, "Failed to update route"));
+      showError(t.common.error, extractBackendError(error, "Failed to update route"));
     } finally {
       setSaving(false);
     }
@@ -275,10 +277,10 @@ export default function EditRoutePage() {
   return (
     <div className="space-y-6">
       <BackButton
-       
+
         showBreadcrumb={true}
-       
-        currentLabel="Edit Route"
+
+        currentLabel={t.common.edit}
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -292,7 +294,7 @@ export default function EditRoutePage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={`block text-sm font-medium text-gray-700 mb-2`}>
-                  Channel *
+                  {t.routes.channel} *
                 </label>
                 <div className="px-3 py-2 border border-gray-300 rounded bg-gray-50 text-sm text-gray-600">
                   {formData.channel}
@@ -301,7 +303,7 @@ export default function EditRoutePage() {
 
               <div>
                 <Input
-                  label="Route Name"
+                  label={t.routes.routeName}
                   value={formData.name}
                   onChange={(value) => {
                     setFormData({ ...formData, name: value });
@@ -317,7 +319,7 @@ export default function EditRoutePage() {
             </div>
 
             <Textarea
-              label="Description"
+              label={t.common.description}
               value={formData.description}
               onChange={(value) => setFormData({ ...formData, description: value })}
               placeholder="Add notes about this route..."
@@ -328,7 +330,7 @@ export default function EditRoutePage() {
             {/* Gateway Configuration */}
             <div>
               <HeadlessSelect
-                label="Gateway Configuration"
+                label={t.routes.gatewayProvider}
                 value={String(formData.gateway_config_id)}
                 onChange={(value) => {
                   setFormData({ ...formData, gateway_config_id: Number(value) });
@@ -418,7 +420,7 @@ export default function EditRoutePage() {
               padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
             }}
           >
-            Cancel
+            {t.common.cancel}
           </button>
           <button
             type="submit"
@@ -429,7 +431,7 @@ export default function EditRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             {saving && <LoadingSpinner size={16} />}
-            {saving ? "Updating..." : "Update"}
+            {saving ? "Updating..." : t.common.edit}
           </button>
         </div>
       </form>

@@ -18,6 +18,7 @@ import { ManualBroadcast } from "../../communications/types/communication";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -31,6 +32,7 @@ export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { success: showToast, error: showError } = useToast();
+  const { t } = useLanguage();
 
   // Check if we came from a returnTo state
   const returnTo = (
@@ -64,7 +66,7 @@ export default function ManualBroadcastListsPage() {
       setBroadcasts((prev) => prev.filter((b) => b.id !== numId));
       await communicationService.deleteExecution(numId);
     },
-    itemLabel: "Broadcast",
+    itemLabel: t.manualBroadcast.broadcastLabel || "Broadcast",
   });
 
   const loadInitialData = useCallback(async () => {
@@ -248,25 +250,25 @@ export default function ManualBroadcastListsPage() {
 
   const broadcastStatsCards = [
     {
-      name: "Total Broadcasts",
+      name: t.manualBroadcast.totalBroadcasts || "Total Broadcasts",
       value: pagination.total.toLocaleString(),
       icon: CheckCircle,
       color: color.tertiary.tag1,
     },
     {
-      name: "Executed Broadcasts",
+      name: t.manualBroadcast.executedBroadcasts || "Executed Broadcasts",
       value: executedBroadcasts.toLocaleString(),
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
-      name: "Unique Channels",
+      name: t.manualBroadcast.uniqueChannels || "Unique Channels",
       value: uniqueChannels.toLocaleString(),
       icon: CheckCircle,
       color: color.tertiary.tag3,
     },
     {
-      name: "Pending Broadcasts",
+      name: t.manualBroadcast.pendingBroadcasts || "Pending Broadcasts",
       value: (broadcasts.length - executedBroadcasts).toLocaleString(),
       icon: XCircle,
       color: color.tertiary.tag2,
@@ -277,7 +279,7 @@ export default function ManualBroadcastListsPage() {
   const broadcastColumns: TableColumn<ManualBroadcast>[] = [
     {
       id: "source_name",
-      label: "Name",
+      label: t.common.name,
       visible: true,
       filterConfig: { type: 'text' },
       render: (value, broadcast) => (
@@ -292,31 +294,31 @@ export default function ManualBroadcastListsPage() {
     },
     {
       id: "description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       filterConfig: { type: 'text' },
     },
     {
       id: "channels",
-      label: "Channels",
+      label: t.manualBroadcast.channels || "Channels",
       visible: true,
       filterConfig: { type: 'multiselect', options: ['SMS', 'EMAIL', 'PUSH', 'USSD'] },
     },
     {
       id: "source_type",
-      label: "Source Type",
+      label: t.manualBroadcast.sourceType || "Source Type",
       visible: true,
       filterConfig: { type: 'text' },
     },
     {
       id: "schedule_type",
-      label: "Schedule Type",
+      label: t.manualBroadcast.scheduleType || "Schedule Type",
       visible: true,
       filterConfig: { type: 'text' },
     },
     {
       id: "created_at",
-      label: "Created",
+      label: t.common.date,
       visible: true,
       filterConfig: { type: 'date' },
       render: (value) => (
@@ -327,7 +329,7 @@ export default function ManualBroadcastListsPage() {
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
       render: (value, broadcast) => (
@@ -337,7 +339,7 @@ export default function ManualBroadcastListsPage() {
               onClick={() => navigate(`/dashboard/manual-communications/${broadcast.execution_id}`)}
               className={`p-1 ${tw.rounded} transition-colors cursor-pointer`}
               style={{ color: 'var(--c-icon-table-view)' }}
-              title="View"
+              title={t.common.view}
             >
               <Eye className="w-4 h-4" />
             </button>
@@ -347,7 +349,7 @@ export default function ManualBroadcastListsPage() {
               onClick={() => handleViewDetails(broadcast)}
               className={`p-1 ${tw.rounded} transition-colors cursor-pointer`}
               style={{ color: 'var(--c-icon-table-edit)' }}
-              title="Edit"
+              title={t.common.edit}
             >
               <Edit className="w-4 h-4" />
             </button>
@@ -355,7 +357,7 @@ export default function ManualBroadcastListsPage() {
           <button
             onClick={() => handleDelete(broadcast)}
             className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
-            title="Delete"
+            title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -384,9 +386,9 @@ export default function ManualBroadcastListsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
-         
+
           showBreadcrumb={true}
-          currentLabel="Manual Communications"
+          currentLabel={t.manualBroadcast.title || "Manual Communications"}
         />
         {/* <PermissionGate permission="manual-communications.create"> */}
         <div className="flex items-center gap-3">
@@ -431,7 +433,7 @@ export default function ManualBroadcastListsPage() {
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1">
           <SearchInput
-            placeholder="Search broadcasts by name or execution ID..."
+            placeholder={t.manualBroadcast.searchPlaceholder || "Search broadcasts by name or execution ID..."}
             value={searchTerm}
             onChange={(value) => setSearchTerm(value)}
           />
@@ -451,7 +453,7 @@ export default function ManualBroadcastListsPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading broadcasts...
+              {t.manualBroadcast.loading}
             </p>
           </div>
         ) : broadcasts.length === 0 ? (
@@ -459,8 +461,8 @@ export default function ManualBroadcastListsPage() {
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
-                ? "No broadcasts match your search."
-                : "No broadcasts yet. Create your first manual broadcast to get started."}
+                ? (t.manualBroadcast.noSearchResults || "No broadcasts match your search.")
+                : (t.manualBroadcast.noBroadcasts || "No broadcasts yet. Create your first manual broadcast to get started.")}
             </p>
             {!searchTerm && (
               <PermissionGate permission="manual-communications.create">
@@ -478,7 +480,7 @@ export default function ManualBroadcastListsPage() {
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Plus className="w-4 h-4" />
-                  Create broadcast
+                  {t.manualBroadcast.createBroadcast || "Create broadcast"}
                 </button>
               </PermissionGate>
             )}
@@ -533,12 +535,12 @@ export default function ManualBroadcastListsPage() {
           setBroadcastToDelete(null);
         }}
         onConfirm={handleConfirmDelete}
-        title="Delete Broadcast"
-        description="Are you sure you want to delete this broadcast? This action cannot be undone."
+        title={t.manualBroadcast.deleteBroadcastTitle || "Delete Broadcast"}
+        description={t.manualBroadcast.deleteBroadcastConfirm || "Are you sure you want to delete this broadcast? This action cannot be undone."}
         itemName={broadcastToDelete?.source_name || ""}
         isLoading={isDeleting}
-        confirmText="Delete Broadcast"
-        cancelText="Cancel"
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
       />
 
       {/* Column Picker Modal */}

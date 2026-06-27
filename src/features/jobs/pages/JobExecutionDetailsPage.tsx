@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   AlertCircle,
   XCircle,
@@ -125,6 +126,7 @@ const getStatusColor = (status: string) => {
 };
 
 export default function JobExecutionDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();

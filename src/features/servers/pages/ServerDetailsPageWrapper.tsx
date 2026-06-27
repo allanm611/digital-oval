@@ -5,6 +5,7 @@
  */
 
 import ServerDetailsPage from "./ServerDetailsPage";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
@@ -13,6 +14,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
  * Shows detail page skeleton while ServerDetailsPage mounts and loads its data
  */
 export default function ServerDetailsPageWrapper() {
+  const { t } = useLanguage();
   return (
     <PermissionGate permission="servers.read">
       <SuspenseBoundary type="detail">

@@ -8,6 +8,7 @@ import Checkbox from "../ui/Checkbox";
 import Radio from "../ui/Radio";
 import Input from "../ui/Input";
 import HeadlessSelect from "../ui/HeadlessSelect";
+import { FilterBuilder } from "./FilterBuilder";
 import { createPortal } from "react-dom";
 
 export function Table<T extends { id?: number | string } = any>({
@@ -55,7 +56,8 @@ export function Table<T extends { id?: number | string } = any>({
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
   const [columnFilters, setColumnFilters] = useState<{ [columnId: string]: any }>({});
-  const [filteringColumn, setFilteringColumn] = useState<string | null>(null);
+  const [isFilterBuilderOpen, setIsFilterBuilderOpen] = useState(false);
+  const [filterFromColumnId, setFilterFromColumnId] = useState<string | null>(null);
   const [autoSizedOnce, setAutoSizedOnce] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
@@ -207,8 +209,8 @@ export function Table<T extends { id?: number | string } = any>({
     let filtered = [...data];
 
     // Apply column filters
-    Object.entries(columnFilters).forEach(([columnId, filterValue]) => {
-      if (filterValue === null || filterValue === undefined) return;
+    Object.entries(columnFilters).forEach(([columnId, filterCondition]) => {
+      if (!filterCondition || !filterCondition.operator) return;
 
       const column = columns.find(c => c.id === columnId);
       if (!column?.filterConfig) return;
@@ -216,39 +218,93 @@ export function Table<T extends { id?: number | string } = any>({
       filtered = filtered.filter((row) => {
         const value = row[columnId as keyof T];
         const filterType = column.filterConfig!.type;
+        const operator = filterCondition.operator;
+        const filterValue = filterCondition.value;
+
+        // Handle operators without values
+        if (operator === 'is empty') {
+          return value === null || value === undefined || String(value).trim() === '';
+        }
+        if (operator === 'is not empty') {
+          return value !== null && value !== undefined && String(value).trim() !== '';
+        }
 
         if (filterType === 'text') {
           const stringValue = String(value || '').toLowerCase();
-          return stringValue.includes(String(filterValue).toLowerCase());
+          const filterStr = String(filterValue || '').toLowerCase();
+
+          switch (operator) {
+            case 'contains':
+              return stringValue.includes(filterStr);
+            case 'does not contain':
+              return !stringValue.includes(filterStr);
+            case 'equals':
+              return stringValue === filterStr;
+            case 'does not equal':
+              return stringValue !== filterStr;
+            case 'starts with':
+              return stringValue.startsWith(filterStr);
+            case 'ends with':
+              return stringValue.endsWith(filterStr);
+            case 'is any of':
+              return filterStr.split(',').map(s => s.trim()).includes(stringValue);
+            default:
+              return true;
+          }
         } else if (filterType === 'number') {
           const numValue = Number(value) || 0;
-          if (filterValue && typeof filterValue === 'object' && filterValue.operator && filterValue.value !== undefined && filterValue.value !== '') {
-            const filterNum = Number(filterValue.value);
-            switch (filterValue.operator) {
-              case '>': return numValue > filterNum;
-              case '<': return numValue < filterNum;
-              case '>=': return numValue >= filterNum;
-              case '<=': return numValue <= filterNum;
-              case '==': return numValue === filterNum;
-              default: return true;
-            }
+          const filterNum = Number(filterValue);
+
+          switch (operator) {
+            case '=':
+              return numValue === filterNum;
+            case '!=':
+              return numValue !== filterNum;
+            case '>':
+              return numValue > filterNum;
+            case '>=':
+              return numValue >= filterNum;
+            case '<':
+              return numValue < filterNum;
+            case '<=':
+              return numValue <= filterNum;
+            case 'is any of':
+              const nums = filterStr.split(',').map(s => Number(s.trim()));
+              return nums.includes(numValue);
+            default:
+              return true;
           }
-          return true;
         } else if (filterType === 'select' || filterType === 'multiselect') {
-          if (Array.isArray(filterValue)) {
-            if (Array.isArray(value)) {
-              return filterValue.some(f => value.includes(f));
-            }
-            return filterValue.includes(value);
+          switch (operator) {
+            case 'is':
+              return value === filterValue;
+            case 'is not':
+              return value !== filterValue;
+            case 'is any of':
+              if (Array.isArray(filterValue)) {
+                return filterValue.includes(value);
+              }
+              return value === filterValue;
+            default:
+              return true;
           }
-          return value === filterValue;
         } else if (filterType === 'date') {
-          if (Array.isArray(filterValue)) {
-            const rowDate = new Date(value).getTime();
-            const [startDate, endDate] = filterValue.map(d => new Date(d).getTime());
-            return rowDate >= startDate && rowDate <= endDate;
+          switch (operator) {
+            case 'is':
+              return new Date(value).toDateString() === new Date(filterValue).toDateString();
+            case 'is not':
+              return new Date(value).toDateString() !== new Date(filterValue).toDateString();
+            case 'is after':
+              return new Date(value).getTime() > new Date(filterValue).getTime();
+            case 'is on or after':
+              return new Date(value).getTime() >= new Date(filterValue).getTime();
+            case 'is before':
+              return new Date(value).getTime() < new Date(filterValue).getTime();
+            case 'is on or before':
+              return new Date(value).getTime() <= new Date(filterValue).getTime();
+            default:
+              return true;
           }
-          return new Date(value).toDateString() === new Date(filterValue).toDateString();
         }
         return true;
       });
@@ -332,29 +388,18 @@ export function Table<T extends { id?: number | string } = any>({
   }
 
   // Get filter display value
-  const getFilterDisplayValue = (columnId: string, filterValue: any): string => {
-    const column = columns.find(c => c.id === columnId);
-    const filterType = column?.filterConfig?.type;
+  const getFilterDisplayValue = (columnId: string, filterCondition: any): string => {
+    if (!filterCondition) return '';
 
-    if (filterType === 'text') {
-      return String(filterValue || '');
-    } else if (filterType === 'number') {
-      if (filterValue?.operator && filterValue?.value !== undefined) {
-        return `${filterValue.operator} ${filterValue.value}`;
-      }
-      return '';
-    } else if (filterType === 'date') {
-      if (Array.isArray(filterValue) && filterValue.length >= 2) {
-        return `${filterValue[0]} to ${filterValue[1]}`;
-      }
-      return String(filterValue || '');
-    } else if (filterType === 'select' || filterType === 'multiselect') {
-      if (Array.isArray(filterValue)) {
-        return filterValue.join(', ');
-      }
-      return String(filterValue || '');
+    const operator = filterCondition.operator;
+    const value = filterCondition.value;
+
+    if (['is empty', 'is not empty'].includes(operator)) {
+      return operator;
     }
-    return String(filterValue || '');
+
+    const valueStr = Array.isArray(value) ? value.join(', ') : String(value || '');
+    return `${operator} ${valueStr}`;
   };
 
 
@@ -639,7 +684,8 @@ export function Table<T extends { id?: number | string } = any>({
                               {col.filterConfig && (
                                 <button
                                   onClick={() => {
-                                    setFilteringColumn(col.id);
+                                    setFilterFromColumnId(col.id);
+                                    setIsFilterBuilderOpen(true);
                                     setOpenColumnMenu(null);
                                   }}
                                   className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
@@ -648,7 +694,7 @@ export function Table<T extends { id?: number | string } = any>({
                                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                                 >
                                   <Filter size={16} style={{ color: 'var(--c-text-secondary)' }} />
-                                  Filter
+                                  Filters
                                 </button>
                               )}
                             </>
@@ -736,7 +782,7 @@ export function Table<T extends { id?: number | string } = any>({
                         return (
                         <td
                           key={`${rowId}-${col.id}`}
-                          className={`px-6 py-2 text-sm ${colIdx === 0 ? `font-bold ${tw.tableText}` : `font-medium ${tw.tableTextOther}`} ${cellClassName}`}
+                          className={`px-6 py-2 text-sm ${colIdx === 0 ? `font-semibold text-gray-900` : `text-gray-900`} ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
@@ -789,210 +835,20 @@ export function Table<T extends { id?: number | string } = any>({
         </div>
       )}
 
-      {filteringColumn && (() => {
-        return createPortal(
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="rounded-lg shadow-lg p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--c-surface-cards)' }}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold" style={{ color: 'var(--c-text-primary)' }}>Filter {columns.find(c => c.id === filteringColumn)?.label}</h3>
-              <button onClick={() => setFilteringColumn(null)} style={{ color: 'var(--c-text-muted)' }} className="hover:opacity-70 transition-opacity">
-                <X size={20} />
-              </button>
-            </div>
-
-            {filteringColumn && (() => {
-              const column = columns.find(c => c.id === filteringColumn);
-              const filterType = column?.filterConfig?.type;
-              const currentFilter = columnFilters[filteringColumn];
-
-              return (
-                <>
-                  {filterType === 'text' && (
-                    <div className="mb-6">
-                      <Input
-                        type="text"
-                        value={currentFilter || ''}
-                        onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: String(value) }))}
-                        variant="medium"
-                        label="Contains"
-                      />
-                    </div>
-                  )}
-
-                  {filterType === 'number' && (
-                    <div className="space-y-4 mb-6">
-                      <div>
-                        <HeadlessSelect
-                          options={[
-                            { value: '>', label: 'Greater than' },
-                            { value: '<', label: 'Less than' },
-                            { value: '>=', label: 'Greater than or equal' },
-                            { value: '<=', label: 'Less than or equal' },
-                            { value: '==', label: 'Equals' }
-                          ]}
-                          value={currentFilter?.operator || ''}
-                          onChange={(value) => {
-                            setColumnFilters(prev => ({
-                              ...prev,
-                              [filteringColumn]: {
-                                operator: value,
-                                value: currentFilter?.value ?? ''
-                              }
-                            }));
-                          }}
-                          placeholder="Select operator"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          value={currentFilter?.value ?? ''}
-                          onChange={(value) => {
-                            if (value !== '' && value !== null && value !== undefined) {
-                              setColumnFilters(prev => ({
-                                ...prev,
-                                [filteringColumn]: {
-                                  operator: currentFilter?.operator || '==',
-                                  value: Number(value)
-                                }
-                              }));
-                            } else if (currentFilter?.operator) {
-                              setColumnFilters(prev => ({
-                                ...prev,
-                                [filteringColumn]: {
-                                  operator: currentFilter.operator,
-                                  value: ''
-                                }
-                              }));
-                            } else {
-                              setColumnFilters(prev => {
-                                const next = { ...prev };
-                                delete next[filteringColumn];
-                                return next;
-                              });
-                            }
-                          }}
-                          variant="medium"
-                          label="Value"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {(filterType === 'select' || filterType === 'multiselect') && (
-                    <div className="space-y-3 mb-6 max-h-48 overflow-y-auto">
-                      {column?.filterConfig?.options?.map((option) => {
-                        const labelText = String(option).charAt(0).toUpperCase() + String(option).slice(1);
-                        return (
-                            <div key={option} className="flex items-center gap-2 cursor-pointer">
-                              {filterType === 'multiselect' ? (
-                                <>
-                                  <Checkbox
-                                    checked={Array.isArray(currentFilter) ? currentFilter.includes(option) : false}
-                                    onChange={(e) => {
-                                      const arr = Array.isArray(currentFilter) ? [...currentFilter] : [];
-                                      if (e.target.checked) {
-                                        arr.push(option);
-                                      } else {
-                                        arr.splice(arr.indexOf(option), 1);
-                                      }
-                                      setColumnFilters(prev => ({ ...prev, [filteringColumn]: arr.length > 0 ? arr : null }));
-                                    }}
-                                    className="h-4 w-4"
-                                  />
-                                  <span className="text-sm font-medium" style={{ color: 'var(--c-text-primary)' }}>{labelText}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Radio
-                                    checked={currentFilter === option}
-                                    onChange={(e) => {
-                                      setColumnFilters(prev => ({ ...prev, [filteringColumn]: e.target.checked ? option : null }));
-                                    }}
-                                  />
-                                  <span className="text-sm font-medium" style={{ color: 'var(--c-text-primary)' }}>{labelText}</span>
-                                </>
-                              )}
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-
-                  {filterType === 'date' && (
-                    <div className="space-y-4 mb-6">
-                      <div>
-                        <Input
-                          type="date"
-                          value={Array.isArray(currentFilter) ? currentFilter[0] : currentFilter || ''}
-                          onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: [String(value), Array.isArray(prev[filteringColumn]) ? prev[filteringColumn][1] : String(value)] }))}
-                          variant="medium"
-                          label="From"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="date"
-                          value={Array.isArray(currentFilter) ? currentFilter[1] : currentFilter || ''}
-                          onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: [Array.isArray(prev[filteringColumn]) ? prev[filteringColumn][0] : '', String(value)] }))}
-                          variant="medium"
-                          label="To"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => {
-                        setColumnFilters(prev => {
-                          const next = { ...prev };
-                          delete next[filteringColumn];
-                          return next;
-                        });
-                        setFilteringColumn(null);
-                      }}
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: 'var(--c-text-primary)',
-                        border: '1px solid var(--c-text-primary)',
-                        padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
-                        borderRadius: buttons.bordered.borderRadius,
-                        fontSize: buttons.bordered.fontSize,
-                      }}
-                      className="transition-colors font-medium"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={() => setFilteringColumn(null)}
-                      style={{
-                        background: buttons.action.background,
-                        color: buttons.action.color,
-                        border: buttons.action.border,
-                        padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
-                        borderRadius: buttons.action.borderRadius,
-                        fontSize: buttons.action.fontSize,
-                      }}
-                      className="hover:opacity-90 transition-opacity font-medium"
-                    >
-                      Done
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>,
-        document.body
-        );
-      })()}
+      {/* Filter Builder Modal */}
+      <FilterBuilder
+        columns={columns}
+        isOpen={isFilterBuilderOpen}
+        onClose={() => {
+          setIsFilterBuilderOpen(false);
+          setFilterFromColumnId(null);
+        }}
+        onApply={(filters) => {
+          setColumnFilters(filters);
+        }}
+        currentFilters={columnFilters}
+        defaultColumnId={filterFromColumnId}
+      />
     </div>
   );
 }

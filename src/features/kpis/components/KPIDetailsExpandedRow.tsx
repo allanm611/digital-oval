@@ -1,3 +1,4 @@
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { KPI } from "../types/kpi";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -11,6 +12,8 @@ export default function KPIDetailsExpandedRow({
   kpi,
   colSpan,
 }: KPIDetailsExpandedRowProps) {
+  const { t } = useLanguage();
+
   const formatValue = (value: unknown) => {
     if (value === null || value === undefined || value === "") {
       return "—";
@@ -24,7 +27,7 @@ export default function KPIDetailsExpandedRow({
         {kpi.description && (
           <div className="flex flex-col gap-1">
             <label className={`text-xs font-medium ${tw.textMuted}`}>
-              Description
+              {t.common.description}
             </label>
             <div className={`text-sm ${tw.textPrimary} break-words`}>
               {formatValue(kpi.description)}
@@ -35,7 +38,7 @@ export default function KPIDetailsExpandedRow({
         {kpi.source && (
           <div className="flex flex-col gap-1">
             <label className={`text-xs font-medium ${tw.textMuted}`}>
-              Source
+              {t.kpis.source}
             </label>
             <div className={`text-sm ${tw.textPrimary}`}>
               {formatValue(kpi.source)}
@@ -46,7 +49,7 @@ export default function KPIDetailsExpandedRow({
         {kpi.field_type && (
           <div className="flex flex-col gap-1">
             <label className={`text-xs font-medium ${tw.textMuted}`}>
-              Field Type
+              {t.kpis.fieldType}
             </label>
             <div className={`text-sm ${tw.textPrimary}`}>
               {formatValue(kpi.field_type.charAt(0).toUpperCase() + kpi.field_type.slice(1))}
@@ -70,7 +73,7 @@ export default function KPIDetailsExpandedRow({
             Status
           </label>
           <div className={`text-sm ${tw.textPrimary}`}>
-            {kpi.is_active ? "Active" : "Inactive"}
+            {kpi.is_active ? t.common.active : t.common.inactive}
           </div>
         </div>
 

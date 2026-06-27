@@ -53,13 +53,14 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+      className={`${tw.rounded} border bg-white p-3 shadow-lg`}
+      style={{ borderColor: 'var(--c-border-default)' }}
     >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -319,7 +320,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
 
       {!analyticsData ? (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-8 text-center`}
         >
           <p className="text-gray-500">No analytics data available</p>
         </div>
@@ -329,14 +331,15 @@ export default function JobWorkflowStepsAnalyticsPage() {
           {statistics && (
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Activity
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Total Steps
                   </p>
                 </div>
@@ -345,14 +348,15 @@ export default function JobWorkflowStepsAnalyticsPage() {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Critical Steps
                   </p>
                 </div>
@@ -363,14 +367,15 @@ export default function JobWorkflowStepsAnalyticsPage() {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Clock
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Avg Timeout
                   </p>
                 </div>
@@ -381,14 +386,15 @@ export default function JobWorkflowStepsAnalyticsPage() {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Zap
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Avg Retries
                   </p>
                 </div>
@@ -399,14 +405,15 @@ export default function JobWorkflowStepsAnalyticsPage() {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <TrendingUp
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Step Types
                   </p>
                 </div>
@@ -415,14 +422,15 @@ export default function JobWorkflowStepsAnalyticsPage() {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Failure Actions
                   </p>
                 </div>
@@ -435,7 +443,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
 
           {/* Type Distribution */}
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Step Type Distribution
@@ -482,7 +491,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
             statistics.steps_by_failure_action &&
             Object.keys(statistics.steps_by_failure_action).length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Failure Actions Distribution
@@ -535,7 +545,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
           {analyticsData.mostFailed.length > 0 && (
             <div className="">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Most Failed Steps
@@ -595,7 +606,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
               </div>
 
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Most Failed Steps (Table)
@@ -672,13 +684,13 @@ export default function JobWorkflowStepsAnalyticsPage() {
                               {item.step_name}
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {item.step_code}
                           </td>
                           <td className="px-6 py-4 text-sm text-red-600 font-semibold">
                             {item.failure_count}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {item.last_failure_at
                               ? new Date(
                                   item.last_failure_at
@@ -698,7 +710,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
           {analyticsData.longestRunning.length > 0 && (
             <div className="">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Longest Running Steps
@@ -768,7 +781,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
               </div>
 
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Longest Running Steps (Table)
@@ -845,7 +859,7 @@ export default function JobWorkflowStepsAnalyticsPage() {
                               {item.step_name}
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {item.step_code}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700 font-semibold">
@@ -867,7 +881,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
           {analyticsData.complexWorkflows &&
             analyticsData.complexWorkflows.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Complex Workflows
@@ -878,7 +893,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
                     return (
                       <div
                         key={item.job_id}
-                        className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
+                        className={`flex items-center justify-between ${tw.rounded} border bg-gray-50 p-3`}
+                        style={{ borderColor: 'var(--c-border-default)' }}
                       >
                         <div>
                           <div className="text-sm font-medium text-gray-900">
@@ -904,7 +920,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
           {analyticsData.dependencyComplexity &&
             analyticsData.dependencyComplexity.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Dependency Complexity
@@ -974,7 +991,8 @@ export default function JobWorkflowStepsAnalyticsPage() {
           {analyticsData.timeoutAnalysis &&
             analyticsData.timeoutAnalysis.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   Timeout Analysis by Step Type
@@ -1154,10 +1172,10 @@ export default function JobWorkflowStepsAnalyticsPage() {
                                 {step.step_name}
                               </button>
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="px-6 py-4 text-sm text-sm">
                               {step.step_code}
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="px-6 py-4 text-sm text-sm">
                               {getStepTypeLabel(step.step_type)}
                             </td>
                             <td className="px-6 py-4 text-sm">
@@ -1308,13 +1326,13 @@ export default function JobWorkflowStepsAnalyticsPage() {
                             {step.step_name}
                           </button>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
+                        <td className="px-6 py-4 text-sm text-sm">
                           {step.step_code}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-700 font-semibold">
                           {step.retry_count || 0}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
+                        <td className="px-6 py-4 text-sm text-sm">
                           {step.retry_delay_seconds || 0}
                         </td>
                       </tr>
@@ -1413,13 +1431,13 @@ export default function JobWorkflowStepsAnalyticsPage() {
                               {step.step_name}
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {step.step_code}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {getStepTypeLabel(step.step_type)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">
+                          <td className="px-6 py-4 text-sm text-sm">
                             {step.job_id}
                           </td>
                           <td className="px-6 py-4 text-sm">

@@ -162,7 +162,22 @@ export default function ConnectionProfilesPage() {
       id: "is_active",
       label: "Status",
       visible: true,
+      sortable: true,
       filterConfig: { type: 'select', options: ['active', 'inactive'] },
+      render: (value) => {
+        const isActive = value as boolean;
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium ${
+              isActive
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        );
+      },
     },
     {
       id: "actions",
@@ -780,8 +795,10 @@ export default function ConnectionProfilesPage() {
                   backgroundColor: isSelectionMode
                     ? color.primary.action
                     : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 {isSelectionMode ? (
@@ -799,8 +816,10 @@ export default function ConnectionProfilesPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
               style={{
                 backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-bordered-button-color)",
+                borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
               }}
             >
               <BarChart3 className="h-4 w-4" />
@@ -941,12 +960,6 @@ export default function ConnectionProfilesPage() {
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
               onManageColumnsClick={() => setShowColumnPicker(true)}
-              style={{
-                headerBackground: color.surface.tableHeader,
-                headerTextColor: color.surface.tableHeaderText,
-                rowBackground: color.surface.tablebodybg,
-                rowSpacing: "0 8px",
-              }}
             />
             {/* Pagination Controls */}
             {filteredProfiles.length > 0 && (

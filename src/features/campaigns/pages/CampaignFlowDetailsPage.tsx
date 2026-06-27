@@ -4,6 +4,7 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AlertCircle, Trash2, X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -28,6 +29,7 @@ export default function CampaignFlowDetailsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
+  const { t } = useLanguage();
 
   const [flow, setFlow] = useState<CampaignFlowResponseData | null>(
     (location.state as { flow?: CampaignFlowResponseData })?.flow || null

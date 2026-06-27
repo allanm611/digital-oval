@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import BackButton from '../../../shared/components/ui/BackButton';
 import styles from './ManageSidebarPage.module.css';
 
@@ -8,6 +9,7 @@ import styles from './ManageSidebarPage.module.css';
  * Will be enabled when API integration is complete
  */
 export default function ManageSidebarPage() {
+  const { t } = useLanguage();
   return (
     <div className={styles.container}>
       <div className={styles.header}>

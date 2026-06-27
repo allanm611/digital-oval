@@ -7,6 +7,7 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
@@ -27,6 +28,7 @@ interface Profile {
 
 export default function SubscriberProfileListPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { showToast } = useToast();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,35 +45,35 @@ export default function SubscriberProfileListPage() {
 
     {
       id: "name",
-      label: "Field Name",
+      label: t.kpis.fieldName,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => row.name,
     },
     {
       id: "dataSource",
-      label: "Category",
+      label: t.common.category,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => row.dataSource,
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
-      filterConfig: { type: "select", options: ["Active", "Inactive"] },
-      render: (_, row) => row.is_active ? "Active" : "Inactive",
+      filterConfig: { type: "select", options: [t.common.active, t.common.inactive] },
+      render: (_, row) => row.is_active ? t.common.active : t.common.inactive,
     },
     {
       id: "default_value",
-      label: "Default Value",
+      label: t.kpis.defaultValue,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => row.default_value,
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
       render: (_, row) => (
@@ -99,7 +101,7 @@ export default function SubscriberProfileListPage() {
           <button
             onClick={() => handleDeleteClick(row)}
             className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
-            title="Delete"
+            title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -215,7 +217,7 @@ export default function SubscriberProfileListPage() {
 
       showToast(
         "success",
-        `"${profile.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+        `"${profile.name}" has been ${newStatus ? t.common.activated : t.common.deactivated} successfully`
       );
     } catch (err) {
       console.error("Failed to toggle profile status:", err);

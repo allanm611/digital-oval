@@ -1081,13 +1081,11 @@ export default function OfferCreativeStep({
     while ((match = variableRegex.exec(contentToPreview)) !== null) {
       const variablePath = match[1].trim();
       if (!previewVars[variablePath]) {
-        // Check if variable exists in stored variables and has default_value (from backend)
-        const storedVar = (selectedCreativeData.variables || {})[variablePath];
-        if (storedVar && typeof storedVar === 'object' && 'default_value' in storedVar) {
-          previewVars[variablePath] = (storedVar as any).default_value;
-        } else {
-          // Fallback to 0 until backend adds default_value field
-          previewVars[variablePath] = 0;
+        // Get default_value from stored variables (from backend)
+        const storedVar = selectedCreativeData.variables?.[variablePath];
+        const defaultValue = storedVar?.default_value;
+        if (defaultValue != null) {
+          previewVars[variablePath] = defaultValue;
         }
       }
     }

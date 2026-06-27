@@ -22,6 +22,7 @@ import { whatsappGatewayConfigService } from "../../configurations/services/what
 import { ussdGatewayConfigService } from "../../configurations/services/ussdGatewayConfigService";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 type Channel = "SMS" | "EMAIL" | "PUSH" | "WHATSAPP" | "USSD" | "";
 
@@ -48,9 +49,9 @@ interface FormData {
   encoding?: string;
 }
 
-const STATUS_OPTIONS = [
-  { label: "Active", value: "true" },
-  { label: "Inactive", value: "false" },
+const STATUS_OPTIONS = (t: any) => [
+  { label: t.common.active, value: "true" },
+  { label: t.common.inactive, value: "false" },
 ];
 
 const ENCODING_OPTIONS = [
@@ -62,6 +63,7 @@ const ENCODING_OPTIONS = [
 export default function CreateRoutePage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState<FormData>({
     channel: "",
@@ -235,10 +237,10 @@ export default function CreateRoutePage() {
         });
       }
 
-      success("Route created successfully");
+      success(t.common.success, "Route created successfully");
       navigate("/dashboard/routes");
     } catch (error) {
-      showError("Error", extractBackendError(error, "Failed to create route"));
+      showError(t.common.error, extractBackendError(error, "Failed to create route"));
     } finally {
       setSaving(false);
     }
@@ -256,10 +258,10 @@ export default function CreateRoutePage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <BackButton
-       
+
         showBreadcrumb={true}
-       
-        currentLabel="Create"
+
+        currentLabel={t.routes.createRoute}
       />
 
       {/* Form Container */}
@@ -275,7 +277,7 @@ export default function CreateRoutePage() {
               {/* Channel Selection */}
               <div>
                 <HeadlessSelect
-                  label="Channel"
+                  label={t.routes.channel}
                   value={String(formData.channel_id || "")}
                   onChange={(value) => {
                     const selectedChannel = channels.find((c) => c.id === Number(value));
@@ -302,7 +304,7 @@ export default function CreateRoutePage() {
               </div>
               {/* Name */}
               <Input
-                label="Route Name *"
+                label={`${t.routes.routeName} *`}
                 value={formData.name}
                 onChange={(value) => {
                   setFormData({ ...formData, name: value });
@@ -317,7 +319,7 @@ export default function CreateRoutePage() {
 
             {/* Description */}
             <Textarea
-              label="Description"
+              label={t.common.description}
               value={formData.description}
               onChange={(value) => setFormData({ ...formData, description: value })}
               placeholder="Add notes about this route..."
@@ -328,7 +330,7 @@ export default function CreateRoutePage() {
             {/* Gateway Configuration */}
             <div>
               <HeadlessSelect
-                label="Gateway Configuration"
+                label={t.routes.gatewayProvider}
                 value={String(formData.gateway_config_id)}
                 onChange={(value) => {
                   setFormData({ ...formData, gateway_config_id: Number(value) });
@@ -555,7 +557,7 @@ export default function CreateRoutePage() {
               padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
             }}
           >
-            Cancel
+            {t.common.cancel}
           </button>
           <button
             type="submit"
@@ -566,7 +568,7 @@ export default function CreateRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             {saving && <LoadingSpinner size={16} />}
-            {saving ? "Creating..." : "Create"}
+            {saving ? "Creating..." : t.routes.createRoute}
           </button>
         </div>
       </form>

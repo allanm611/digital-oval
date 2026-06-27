@@ -11,6 +11,7 @@ import { Table, useTable, type TableColumn } from "../../../shared/components/Ta
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
@@ -18,6 +19,7 @@ import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
 
 export default function UsageMetricsPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { success, error: showError } = useToast();
 
   const [metrics, setMetrics] = useState<UsageMetric[]>([]);
@@ -35,7 +37,7 @@ export default function UsageMetricsPage() {
   const tableColumns: TableColumn<UsageMetric>[] = [
     {
       id: "name",
-      label: "Metric Name",
+      label: t.kpis.metricName,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -46,7 +48,7 @@ export default function UsageMetricsPage() {
     },
     {
       id: "category",
-      label: "Category",
+      label: t.common.category,
       visible: true,
       filterConfig: { type: "select", options: ["Data Usage", "Voice Usage", "SMS Usage", "Bundle Usage", "DOU Metrics"] },
       render: (_, row) => (
@@ -59,7 +61,7 @@ export default function UsageMetricsPage() {
     },
     {
       id: "field_type",
-      label: "Type",
+      label: t.common.type,
       visible: true,
       filterConfig: { type: "select", options: ["Decimal", "Numeric"] },
       render: (_, row) => (
@@ -70,7 +72,7 @@ export default function UsageMetricsPage() {
     },
     {
       id: "description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -81,18 +83,18 @@ export default function UsageMetricsPage() {
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
-      filterConfig: { type: "select", options: ["Active", "Inactive"] },
+      filterConfig: { type: "select", options: [t.common.active, t.common.inactive] },
       render: (_, row) => (
         <span className="text-sm text-black">
-          {row.is_active ? "Active" : "Inactive"}
+          {row.is_active ? t.common.active : t.common.inactive}
         </span>
       ),
     },
     {
       id: "default_value",
-      label: "Default Value",
+      label: t.kpis.defaultValue,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -103,7 +105,7 @@ export default function UsageMetricsPage() {
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
       render: (_, row) => (
@@ -217,7 +219,7 @@ export default function UsageMetricsPage() {
 
       success(
         "Success",
-        `"${metric.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+        `"${metric.name}" has been ${newStatus ? t.common.activated : t.common.deactivated} successfully`
       );
     } catch (err) {
       console.error("Failed to toggle metric status:", err);
@@ -286,7 +288,7 @@ export default function UsageMetricsPage() {
   ];
 
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "all", label: t.kpis.filters.allCategories },
     { value: "data_usage", label: "Data Usage" },
     { value: "voice_usage", label: "Voice Usage" },
     { value: "sms_usage", label: "SMS Usage" },
@@ -350,7 +352,7 @@ export default function UsageMetricsPage() {
           options={categoryOptions}
           value={categoryFilter}
           onChange={(value) => handleCategoryChange(value || "all")}
-          placeholder="Filter by category"
+          placeholder={t.kpis.filters.filterByCategory}
           className="min-w-[180px]"
         />
       </div>

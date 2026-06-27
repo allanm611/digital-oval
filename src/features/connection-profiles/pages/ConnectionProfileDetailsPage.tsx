@@ -320,8 +320,8 @@ export default function ConnectionProfileDetailsPage() {
                 togglingStatus ? "opacity-60" : ""
               }`}
               style={{
-                borderColor: color.primary.action,
-                color: color.primary.action,
+                borderColor: "var(--c-bordered-button-color)",
+                color: "var(--c-bordered-button-color)",
               }}
               title={
                 profile.is_active ? "Deactivate profile" : "Activate profile"

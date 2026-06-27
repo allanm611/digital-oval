@@ -13,6 +13,7 @@ import { ussdGatewayConfigService } from "../../configurations/services/ussdGate
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 const ENCODING_OPTIONS = [
   { value: "UTF-8", label: "UTF-8" },
@@ -24,6 +25,7 @@ export default function CreateEditUSSDRoutePage() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
@@ -68,7 +70,7 @@ export default function CreateEditUSSDRoutePage() {
         const configs = await ussdGatewayConfigService.getAllConfigs();
         setGatewayConfigs(configs);
       } catch (err) {
-        showError("Error", "Failed to load gateway configurations");
+        showError(t.common.error, "Failed to load gateway configurations");
       } finally {
         setIsLoadingConfigs(false);
       }
@@ -109,7 +111,7 @@ export default function CreateEditUSSDRoutePage() {
         });
       }
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
       navigate("/dashboard/ussd-routes");
     } finally {
       setLoading(false);
@@ -135,7 +137,7 @@ export default function CreateEditUSSDRoutePage() {
     e.preventDefault();
 
     if (!validateForm()) {
-      showError("Validation Error", "Please fill in all required fields");
+      showError(t.common.error, "Please fill in all required fields");
       return;
     }
 
@@ -147,16 +149,16 @@ export default function CreateEditUSSDRoutePage() {
 
       if (id) {
         await ussdRouteService.updateRoute(Number(id), payloadData);
-        success("Success", "USSD route updated successfully");
+        success(t.common.success, "USSD route updated successfully");
       } else {
         await ussdRouteService.createRoute(payloadData);
-        success("Success", "USSD route created successfully");
+        success(t.common.success, "USSD route created successfully");
       }
 
       navigate("/dashboard/ussd-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -235,7 +237,7 @@ export default function CreateEditUSSDRoutePage() {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading USSD route...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>Loading {t.routes.channels.ussd} {t.routes.route}...</p>
       </div>
     );
   }
@@ -244,21 +246,21 @@ export default function CreateEditUSSDRoutePage() {
     <div className="space-y-6">
       {/* Header with Back Button */}
       <BackButton
-       
+
         showBreadcrumb={true}
-        currentLabel={id ? "Edit USSD Route" : "Create USSD Route"}
+        currentLabel={id ? `${t.common.edit} ${t.routes.channels.ussd} ${t.routes.route}` : `${t.routes.createRoute} ${t.routes.channels.ussd}`}
       />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Route Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Configuration</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>{t.routes.routeName} {t.common.metadata}</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Input
-                  label="Route Name"
+                  label={t.routes.routeName}
                   placeholder="e.g., Primary USSD Gateway"
                   value={formData.name}
                   onChange={handleInputChange("name")}
@@ -295,7 +297,7 @@ export default function CreateEditUSSDRoutePage() {
 
             <div>
               <Textarea
-                label="Description"
+                label={t.common.description}
                 value={formData.description || ""}
                 onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
@@ -363,7 +365,7 @@ export default function CreateEditUSSDRoutePage() {
 
         {/* USSD-Specific Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>USSD Configuration</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>{t.routes.channels.ussd} {t.common.metadata}</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -444,7 +446,7 @@ export default function CreateEditUSSDRoutePage() {
               border: `1px solid ${color.primary.action}`,
             }}
           >
-            Cancel
+            {t.common.cancel}
           </button>
 
           <button
@@ -454,7 +456,7 @@ export default function CreateEditUSSDRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="w-4 h-4" />
-            {saving ? (id ? "Updating..." : "Creating...") : id ? "Update" : "Create"}
+            {saving ? (id ? "Updating..." : "Creating...") : id ? t.common.edit : t.routes.createRoute}
           </button>
         </div>
       </form>

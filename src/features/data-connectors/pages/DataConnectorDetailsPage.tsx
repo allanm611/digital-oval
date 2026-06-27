@@ -30,11 +30,13 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { getConnectorDisplayName } from "../utils/connectorIcons";
 import SelectConnectionProfileModal from "../components/SelectConnectionProfileModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function DataConnectorDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
+  const { t } = useLanguage();
 
   const handleViewConnectionProfile = (profileId: number) => {
     navigate(`/dashboard/connection-profiles/${profileId}`);
@@ -66,7 +68,7 @@ export default function DataConnectorDetailsPage() {
       const data = await dataConnectorService.fetchDataConnectorById(id);
 
       if (!data) {
-        showError("Not Found", "Data connector not found");
+        showError(t.dataConnectors.loadError, t.dataConnectors.loadError);
         navigate("/dashboard/data-connectors");
         return;
       }
@@ -96,12 +98,12 @@ export default function DataConnectorDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to load data connector:", err);
-      showError("Failed to load data connector", extractBackendError(err, "Failed to load data connector. Please try again."));
+      showError(t.dataConnectors.loadError, extractBackendError(err, t.dataConnectors.loadError));
     } finally {
       setLoading(false);
       setLoadingProfiles(false);
     }
-  }, [id, navigate, showError]);
+  }, [id, navigate, showError, t]);
 
   useEffect(() => {
     if (id) {
@@ -144,19 +146,19 @@ export default function DataConnectorDetailsPage() {
       setTestResults((prev) => ({ ...prev, [profileId]: result }));
 
       if (result.success) {
-        success("Connection OK", result.message);
+        success(t.dataConnectors.testConnection, result.message);
       } else {
-        showError("Connection failed", result.message);
+        showError(t.dataConnectors.testConnectionFailed, result.message);
       }
     } catch (err: any) {
       const errorResult = {
         success: false,
-        message: "Test failed",
-        error_details: err.message || "Connection test error",
+        message: t.dataConnectors.testConnectionFailed,
+        error_details: err.message || t.dataConnectors.testConnectionFailed,
       };
       setTestResults((prev) => ({ ...prev, [profileId]: errorResult }));
 
-      showError("Test failed", extractBackendError(err, "Test failed. Please try again."));
+      showError(t.dataConnectors.testConnectionFailed, extractBackendError(err, t.dataConnectors.testConnectionFailed));
     } finally {
       setTestingProfileId(null);
     }
@@ -168,10 +170,10 @@ export default function DataConnectorDetailsPage() {
     try {
       setIsDeleting(true);
       await dataConnectorService.deleteDataConnector(connector.id);
-      success("Deleted", "Connector removed");
+      success(t.dataConnectors.deleteSuccess, t.dataConnectors.deleteSuccess);
       navigate("/dashboard/data-connectors");
     } catch (err: any) {
-      showError("Delete failed", extractBackendError(err, "Delete failed. Please try again."));
+      showError(t.dataConnectors.loadError, extractBackendError(err, t.dataConnectors.loadError));
     } finally {
       setIsDeleting(false);
     }
@@ -205,11 +207,11 @@ export default function DataConnectorDetailsPage() {
 
       if (updated) {
         setConnector(updated);
-        success("Success", "Connector updated successfully");
+        success(t.dataConnectors.updateSuccess, t.dataConnectors.updateSuccess);
         setShowEditModal(false);
       }
     } catch (err: any) {
-      showError("Save failed", extractBackendError(err, "Save failed. Please try again."));
+      showError(t.dataConnectors.loadError, extractBackendError(err, t.dataConnectors.loadError));
     } finally {
       setIsSavingForm(false);
     }
@@ -219,12 +221,12 @@ export default function DataConnectorDetailsPage() {
     profile: ConnectionProfileType
   ) => {
     if (!connector) {
-      showError("Error", "Connector not found");
+      showError(t.dataConnectors.loadError, t.dataConnectors.loadError);
       return;
     }
 
     if (!profile) {
-      showError("Error", "Profile not selected");
+      showError(t.dataConnectors.loadError, t.dataConnectors.loadError);
       return;
     }
 
@@ -242,7 +244,7 @@ export default function DataConnectorDetailsPage() {
       );
 
       if (!updated) {
-        showError("Error", "Failed to update connector");
+        showError(t.dataConnectors.loadError, t.dataConnectors.loadError);
         return;
       }
 
@@ -253,7 +255,7 @@ export default function DataConnectorDetailsPage() {
       );
 
       if (!updatedProfile) {
-        showError("Error", "Failed to reload profile after attachment");
+        showError(t.dataConnectors.loadError, t.dataConnectors.loadError);
         return;
       }
 
@@ -272,11 +274,11 @@ export default function DataConnectorDetailsPage() {
       });
 
       const profileName = profile.profile_name || profile.name || "Unknown";
-      success("Success", `Connected profile "${profileName}"`);
+      success(t.dataConnectors.createSuccess, `${t.dataConnectors.connectedProfile} "${profileName}"`);
     } catch (err: any) {
       showError(
-        "Failed to connect profile",
-        extractBackendError(err, "Could not link connection profile")
+        t.dataConnectors.loadError,
+        extractBackendError(err, t.dataConnectors.loadError)
       );
     }
   };
@@ -291,7 +293,7 @@ export default function DataConnectorDetailsPage() {
           className="mb-4"
         />
         <p className={`${tw.textMuted} font-medium text-sm`}>
-          Loading connector details...
+          {t.dataConnectors.loading}
         </p>
       </div>
     );
@@ -305,10 +307,10 @@ export default function DataConnectorDetailsPage() {
             className={`w-16 h-16 text-[${color.primary.accent}] mx-auto mb-4`}
           />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-            Connector Not Found
+            {t.dataConnectors.connectorNotFound}
           </h3>
           <p className={`${tw.textMuted} mb-6`}>
-            The data connector you are looking for does not exist.
+            {t.dataConnectors.connectorNotFoundDescription}
           </p>
           <button
             onClick={() => navigate("/dashboard/data-connectors")}
@@ -316,7 +318,7 @@ export default function DataConnectorDetailsPage() {
             style={{ backgroundColor: button.action.background }}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Connectors
+            {t.dataConnectors.backToConnectors}
           </button>
         </div>
       </div>
@@ -333,7 +335,7 @@ export default function DataConnectorDetailsPage() {
         <BackButton
 
           showBreadcrumb={true}
-          currentLabel="Data Connector Details"
+          currentLabel={t.dataConnectors.dataConnectorDetails}
         />
         <div className="flex flex-wrap items-center gap-2">
           {/*
@@ -362,7 +364,7 @@ export default function DataConnectorDetailsPage() {
             style={{ backgroundColor: button.action.background }}
           >
             <Edit className="w-4 h-4" />
-            Edit
+            {t.common.edit}
           </button>
 
           <button
@@ -378,7 +380,7 @@ export default function DataConnectorDetailsPage() {
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            {t.common.delete}
           </button>
         </div>
       </div>
@@ -415,7 +417,7 @@ export default function DataConnectorDetailsPage() {
                   <label
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Connector ID
+                    {t.dataConnectors.connectorId}
                   </label>
                   <p className={`text-sm ${tw.textPrimary} font-mono`}>
                     {connector.id}
@@ -425,7 +427,7 @@ export default function DataConnectorDetailsPage() {
                   <label
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Type
+                    {t.common.type}
                   </label>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {connectorTypeLabel}
@@ -435,17 +437,17 @@ export default function DataConnectorDetailsPage() {
                   <label
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Status
+                    {t.common.status}
                   </label>
                   <p className={`text-sm ${tw.textPrimary}`}>
-                    {connector.is_active ? "Active" : "Inactive"}
+                    {connector.is_active ? t.common.active : t.common.inactive}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <label
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Created By
+                    {t.dataConnectors.createdBy}
                   </label>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {connector.created_by || "System"}
@@ -455,7 +457,7 @@ export default function DataConnectorDetailsPage() {
                   <label
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Updated By
+                    {t.dataConnectors.updatedBy}
                   </label>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {connector.updated_by || "—"}
@@ -465,7 +467,7 @@ export default function DataConnectorDetailsPage() {
                   <label
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Connection Count
+                    {t.dataConnectors.connectionCount}
                   </label>
                   <p className={`text-sm ${tw.textPrimary}`}>
                     {connector.connection_count ?? 0}
@@ -499,7 +501,7 @@ export default function DataConnectorDetailsPage() {
             className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6 h-full`}
           >
             <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
-              Timeline
+              {t.controlGroups.timeline}
             </h3>
             <div className="space-y-5">
               <div className="relative pl-6 border-l-2 border-gray-200">
@@ -508,7 +510,7 @@ export default function DataConnectorDetailsPage() {
                   <p
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Created
+                    {t.controlGroups.created}
                   </p>
                   <p className={`text-sm ${tw.textPrimary} font-semibold`}>
                     <DateFormatter
@@ -534,7 +536,7 @@ export default function DataConnectorDetailsPage() {
                   <p
                     className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                   >
-                    Last Updated
+                    {t.controlGroups.lastUpdated}
                   </p>
                   <p className={`text-sm ${tw.textPrimary} font-semibold`}>
                     <DateFormatter
@@ -558,7 +560,7 @@ export default function DataConnectorDetailsPage() {
                     <p
                       className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
                     >
-                      Last Used
+                      {t.dataConnectors.lastUsed}
                     </p>
                     <p className={`text-sm ${tw.textPrimary} font-semibold`}>
                       <DateFormatter
@@ -585,7 +587,7 @@ export default function DataConnectorDetailsPage() {
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
-            Connection Profiles
+            {t.dataConnectors.connectionProfiles}
           </h3>
           <button
             onClick={() => setShowSelectProfileModal(true)}
@@ -593,7 +595,7 @@ export default function DataConnectorDetailsPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Connection Profile
+            {t.dataConnectors.addConnectionProfile}
           </button>
         </div>
         {loadingProfiles ? (
@@ -611,37 +613,37 @@ export default function DataConnectorDetailsPage() {
                   className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                   style={{ color: color.surface.tableHeaderText }}
                 >
-                  ID
+                  {t.dataConnectors.id}
                 </th>
                 <th
                   className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                   style={{ color: color.surface.tableHeaderText }}
                 >
-                  Name
+                  {t.common.name}
                 </th>
                 <th
                   className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                   style={{ color: color.surface.tableHeaderText }}
                 >
-                  Type
+                  {t.common.type}
                 </th>
                 <th
                   className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                   style={{ color: color.surface.tableHeaderText }}
                 >
-                  Status
+                  {t.common.status}
                 </th>
                 <th
                   className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                   style={{ color: color.surface.tableHeaderText }}
                 >
-                  Last Used
+                  {t.dataConnectors.lastUsed}
                 </th>
                 <th
                   className="px-6 py-4 text-center text-xs sm:text-sm font-medium uppercase tracking-wider"
                   style={{ color: color.surface.tableHeaderText }}
                 >
-                  Action
+                  {t.common.actions}
                 </th>
               </tr>
             </thead>
@@ -676,7 +678,7 @@ export default function DataConnectorDetailsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`text-sm ${tw.textPrimary}`}>
-                          {(profile as any).is_active ? "Active" : "Inactive"}
+                          {(profile as any).is_active ? t.common.active : t.common.inactive}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -699,10 +701,10 @@ export default function DataConnectorDetailsPage() {
                             {testingProfileId === profile.id ? (
                               <>
                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                                Testing...
+                                {t.dataConnectors.testing}
                               </>
                             ) : (
-                              "Test"
+                              t.dataConnectors.test
                             )}
                           </button>
                         </div>
@@ -716,7 +718,7 @@ export default function DataConnectorDetailsPage() {
         ) : (
           <div className="text-center py-8">
             <p className={`${tw.textMuted} text-sm`}>
-              No connection profiles attached to this connector
+              {t.dataConnectors.noConnectionProfiles}
             </p>
           </div>
         )}
@@ -726,12 +728,12 @@ export default function DataConnectorDetailsPage() {
       <DeleteConfirmModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title="Delete Data Connector"
-        description={`Are you sure you want to delete "${connector.name}"? This action cannot be undone.`}
+        title={t.dataConnectors.deleteConnectorTitle}
+        description={t.dataConnectors.deleteConnectorConfirmation(connector.name)}
         itemName={connector.name}
         isLoading={isDeleting}
-        confirmText="Delete Connector"
-        cancelText="Cancel"
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
         variant="warning"
         onConfirm={confirmDelete}
       />

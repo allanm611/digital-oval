@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import Input from '../../../shared/components/ui/Input';
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useLocation, useNavigate } from "react-router-dom";
