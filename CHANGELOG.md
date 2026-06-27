@@ -1,3 +1,10 @@
+## [1.4.18](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.17...v1.4.18) (2026-06-27)
+
+
+### Bug Fixes
+
+* added more languages, fixed quciklist tables ([9c8e14d](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/9c8e14de6e586fbd58a80b68f5968dd91adce162))
+
 ## [1.4.17](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.16...v1.4.17) (2026-06-27)
 
 
