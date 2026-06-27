@@ -168,7 +168,7 @@ export default function CampaignsPage() {
       sortable: true,
       filterConfig: { type: 'text' },
       render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value}>
+        <div className="truncate" title={value}>
           {value}
         </div>
       ),
@@ -182,14 +182,6 @@ export default function CampaignsPage() {
         type: 'select',
         options: categories?.filter(c => c?.name)?.map(c => c.name) || []
       },
-      render: (value, campaign) => {
-        const categoryName = value || "Uncategorized";
-        return (
-          <span className={`text-sm ${tw.textPrimary}`} title={categoryName || "No category assigned"}>
-            {categoryName}
-          </span>
-        );
-      },
     },
     {
       id: "status",
@@ -200,11 +192,7 @@ export default function CampaignsPage() {
         type: 'select',
         options: ['draft', 'scheduled', 'running', 'paused', 'completed']
       },
-      render: (value) => (
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-black`}>
-          {value?.replace(/_/g, " ") || "Unknown"}
-        </span>
-      ),
+      render: (value) => value?.replace(/_/g, " ") || "Unknown",
     },
     {
       id: "approval_status",
@@ -215,11 +203,7 @@ export default function CampaignsPage() {
         type: 'select',
         options: ['pending', 'approved', 'rejected']
       },
-      render: (value) => (
-        <span className={`text-sm ${tw.textPrimary}`}>
-          {value?.replace(/_/g, " ") || "Pending"}
-        </span>
-      ),
+      render: (value) => value?.replace(/_/g, " ") || "Pending",
     },
     {
       id: "offer_count",
@@ -227,7 +211,7 @@ export default function CampaignsPage() {
       visible: true,
       filterConfig: { type: 'number' },
       render: (value, campaign) => (
-        <button
+        <span
           onClick={async () => {
             if (campaign.offer_count > 0) {
               if (Array.isArray(campaign.offers) && campaign.offers.length > 0) {
@@ -249,12 +233,10 @@ export default function CampaignsPage() {
               }
             }
           }}
-          className={`text-sm ${tw.textPrimary} font-medium ${
-            campaign.offer_count > 0 ? "cursor-pointer hover:underline" : ""
-          }`}
+          className={campaign.offer_count > 0 ? "cursor-pointer" : ""}
         >
           {campaign.offer_count ?? 0}
-        </button>
+        </span>
       ),
     },
     {
@@ -263,7 +245,7 @@ export default function CampaignsPage() {
       visible: true,
       filterConfig: { type: 'number' },
       render: (value, campaign) => (
-        <button
+        <span
           onClick={async () => {
             if (campaign.segment_count > 0) {
               if (Array.isArray(campaign.segments) && campaign.segments.length > 0) {
@@ -285,39 +267,24 @@ export default function CampaignsPage() {
               }
             }
           }}
-          className={`text-sm ${tw.textPrimary} font-medium ${
-            campaign.segment_count > 0 ? "cursor-pointer hover:underline" : ""
-          }`}
+          className={campaign.segment_count > 0 ? "cursor-pointer" : ""}
         >
           {campaign.segment_count ?? 0}
-        </button>
+        </span>
       ),
     },
     {
       id: "performance",
       label: "Performance",
       visible: true,
-      render: () => (
-        <div className="flex flex-col gap-1">
-          <span className={`text-sm ${tw.textPrimary}`}>
-            Conversion: <span className="font-medium">0%</span>
-          </span>
-          {/* <span className={`text-sm ${tw.textPrimary}`}>
-            Revenue: <span className="font-medium">0</span>
-          </span> */}
-        </div>
-      ),
+      render: () => "Conversion: 0%",
     },
     {
       id: "created_by",
       label: "Created By",
       visible: false,
       filterConfig: { type: 'number' },
-      render: (value) => (
-        <span className={`text-sm ${tw.textPrimary}`}>
-          {value ? userNamesCache.get(value) || "—" : "—"}
-        </span>
-      ),
+      render: (value) => value ? userNamesCache.get(value) || "—" : "—",
     },
     {
       id: "created_at",

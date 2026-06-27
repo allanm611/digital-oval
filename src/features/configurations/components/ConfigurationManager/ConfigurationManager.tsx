@@ -193,7 +193,7 @@ export default function ConfigurationManager({
       sortable: true,
       filterConfig: { type: 'text' },
       render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+        <div className="truncate" title={value as string}>
           {value}
         </div>
       ),
@@ -204,7 +204,7 @@ export default function ConfigurationManager({
       visible: true,
       filterConfig: { type: 'text' },
       render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+        <div className="truncate max-w-md" title={value ? String(value) : "-"}>
           {value || t.genericConfig.noDescription}
         </div>
       ),
@@ -215,9 +215,7 @@ export default function ConfigurationManager({
       visible: true,
       filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (value) => (
-        <span className={`text-sm font-medium ${tw.textSecondary}`}>
-          {value !== false ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
-        </span>
+        value !== false ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'
       ),
     },
     {

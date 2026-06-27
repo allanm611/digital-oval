@@ -185,11 +185,6 @@ export default function LanguagesPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "language_code",
@@ -197,44 +192,24 @@ export default function LanguagesPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} font-mono truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "country",
       label: "Country",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "is_active",
       label: "Status",
       visible: true,
       filterConfig: { type: 'select', options: ['active', 'inactive'] },
-      render: (value) => (
-        <span className={`text-sm ${value ? "text-green-600" : "text-gray-500"}`}>
-          {value ? "Active" : "Inactive"}
-        </span>
-      ),
     },
     {
       id: "description",
       label: "Description",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "actions",

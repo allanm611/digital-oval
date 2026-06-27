@@ -135,55 +135,30 @@ export default function ScheduledJobsPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "code",
       label: "Code",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className="text-sm">{value}</div>
-      ),
     },
     {
       id: "job_type_id",
       label: "Type",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary}`}>
-          {value && jobTypeMap[value as number]
-            ? jobTypeMap[value as number]
-            : value
-            ? `Type #${value}`
-            : "—"}
-        </div>
-      ),
     },
     {
       id: "schedule_type",
       label: "Schedule",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} capitalize`}>
-          {(value as string).replace("_", " ")}
-        </div>
-      ),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className="text-sm text-gray-900 font-medium">{value}</span>
-      ),
     },
     {
       id: "actions",
@@ -669,6 +644,11 @@ export default function ScheduledJobsPage() {
             <FeatureActionButton featureId="scheduled-jobs" action="create" onClick={() => setIsSelectTypeModalOpen(true)} />
           </PermissionGate>
           </div>
+        </div>
+        <div className="mt-4">
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+            Scheduled Jobs
+          </h1>
         </div>
         <p className={`${tw.textSecondary} text-sm mt-1`}>
           {t.jobs.scheduledJobsDescription}

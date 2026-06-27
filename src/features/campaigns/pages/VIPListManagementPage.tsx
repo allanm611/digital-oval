@@ -113,47 +113,30 @@ export default function VIPListManagementPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
-          {row.name}
-        </div>
-      ),
     },
     {
       id: "email",
       label: "Email",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.email || "-"}</span>
-      ),
     },
     {
       id: "vipList",
       label: "VIP List",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.vipList || "Default"}</span>
-      ),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
       filterConfig: { type: 'select', options: ['active', 'inactive'] },
-      render: (_, row) => (
-        <span className="text-sm text-black capitalize">{row.status}</span>
-      ),
     },
     {
       id: "addedDate",
       label: "Added Date",
       visible: true,
       filterConfig: { type: 'date' },
-      render: (_, row) => (
-        <DateFormatter date={row.addedDate} useUserTimezone />
-      ),
     },
     {
       id: "actions",

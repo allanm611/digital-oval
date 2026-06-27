@@ -133,9 +133,7 @@ export default function CustomersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <span className="text-sm text-gray-900">{row.subscriptionId}</span>
-      ),
+      render: (_, row) => row.subscriptionId,
     },
     {
       id: "msisdn",
@@ -143,9 +141,7 @@ export default function CustomersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <span className="text-sm text-gray-900">{row.msisdn}</span>
-      ),
+      render: (_, row) => row.msisdn,
     },
     {
       id: "customer",
@@ -155,8 +151,7 @@ export default function CustomersPage() {
       filterConfig: { type: "text" },
       render: (_, row: any) => {
         if (!row) return null;
-        const name = getSubscriptionDisplayName(row, `Customer ${row.customerId}`);
-        return <span className="text-sm text-gray-900">{name}</span>;
+        return getSubscriptionDisplayName(row, `Customer ${row.customerId}`);
       },
     },
     {
@@ -165,9 +160,7 @@ export default function CustomersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["prepaid", "postpaid"] },
-      render: (_, row) => (
-        <span className="text-sm text-gray-900 capitalize">{row.customerType}</span>
-      ),
+      render: (_, row) => row.customerType ? row.customerType.charAt(0).toUpperCase() + row.customerType.slice(1) : "",
     },
     {
       id: "status",
@@ -175,9 +168,7 @@ export default function CustomersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["active", "inactive", "suspended"] },
-      render: (_, row) => (
-        <span className="text-sm text-gray-900">{row.status ?? "Unknown"}</span>
-      ),
+      render: (_, row) => row.status ?? "Unknown",
     },
     {
       id: "preferredChannel",
@@ -187,7 +178,7 @@ export default function CustomersPage() {
       filterConfig: { type: "select", options: ["SMS", "USSD", "EMAIL", "PUSH"] },
       render: (_, row: any) => {
         if (!row) return null;
-        return <span className="text-sm text-gray-900">{getChannelLabel(row.tariff)}</span>;
+        return getChannelLabel(row.tariff);
       },
     },
     {
@@ -196,9 +187,7 @@ export default function CustomersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "select", options: ["KYC Verified", "Not Verified"] },
-      render: (_, row) => (
-        <span className="text-sm text-gray-900">{row.simType}</span>
-      ),
+      render: (_, row) => row.simType,
     },
     {
       id: "activationDate",
@@ -206,11 +195,7 @@ export default function CustomersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: "date" },
-      render: (value, row) => (
-        <span className="text-sm text-gray-900">
-          {formatDate(new Date(row.activationDate))}
-        </span>
-      ),
+      render: (value, row) => formatDate(new Date(row.activationDate)),
     },
     {
       id: "actions",
@@ -762,7 +747,7 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className={`${tw.mainHeading} mt-2`}>{t.customer360.title}</h1>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary} mt-2`}>{t.customer360.title}</h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             {t.customer360.description}
           </p>

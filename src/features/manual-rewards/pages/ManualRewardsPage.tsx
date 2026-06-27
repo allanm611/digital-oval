@@ -126,7 +126,7 @@ export default function ManualRewardsPage() {
       render: (_, reward) => (
         <button
           onClick={() => handleViewDetails(reward.id)}
-          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+          className="truncate hover:underline cursor-pointer"
           title={reward.name}
         >
           {reward.name}
@@ -138,35 +138,35 @@ export default function ManualRewardsPage() {
       label: "Type",
       visible: true,
       filterConfig: { type: "select", options: ["bundle", "points", "discount", "cashback"] },
-      render: (_, reward) => <span className="text-sm">{getRewardTypeLabel(reward.rewardType)}</span>,
+      render: (_, reward) => getRewardTypeLabel(reward.rewardType),
     },
     {
       id: "rewardValue",
       label: "Value",
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, reward) => <span className="text-sm">{reward.rewardValue}</span>,
+      render: (_, reward) => reward.rewardValue,
     },
     {
       id: "recipientCount",
       label: "Recipients",
       visible: true,
       filterConfig: { type: "number" },
-      render: (_, reward) => <span className="text-sm">{reward.recipientCount.toLocaleString()}</span>,
+      render: (_, reward) => reward.recipientCount.toLocaleString(),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
       filterConfig: { type: "select", options: ["applied", "scheduled", "pending", "failed"] },
-      render: (_, reward) => <span className="text-sm">{getStatusLabel(reward.status)}</span>,
+      render: (_, reward) => getStatusLabel(reward.status),
     },
     {
       id: "createdAt",
       label: "Created",
       visible: true,
       filterConfig: { type: "date" },
-      render: (_, reward) => <span className="text-sm"><DateFormatter date={reward.createdAt} /></span>,
+      render: (_, reward) => <DateFormatter date={reward.createdAt} />,
     },
     {
       id: "actions",

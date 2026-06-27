@@ -736,7 +736,7 @@ export function Table<T extends { id?: number | string } = any>({
                         return (
                         <td
                           key={`${rowId}-${col.id}`}
-                          className={`px-6 py-2 text-sm ${cellClassName}`}
+                          className={`px-6 py-2 text-sm ${colIdx === 0 ? `font-bold ${tw.tableText}` : `font-medium ${tw.tableTextOther}`} ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,

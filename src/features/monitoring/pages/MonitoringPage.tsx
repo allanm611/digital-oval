@@ -47,48 +47,37 @@ export default function MonitoringPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => <div className={`${tw.tableFirstColumn}`}>{value}</div>,
     },
     {
       id: "type",
       label: "Type",
       visible: true,
-      render: (value) => <span className="text-sm">{getTypeLabel(value)}</span>,
-    },
+      },
     {
       id: "recipientsCount",
       label: "Recipients",
       visible: true,
-      render: (value) => <span className="text-sm">{value || "—"}</span>,
-    },
+      },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
-          {value}
-        </span>
-      ),
     },
     {
       id: "successCount",
       label: "Success",
       visible: true,
-      render: (value) => <span className="text-sm">{value || "—"}</span>,
-    },
+      },
     {
       id: "failureCount",
       label: "Failed",
       visible: true,
-      render: (value) => <span className="text-sm">{value || "—"}</span>,
-    },
+      },
     {
       id: "duration",
       label: "Duration",
       visible: true,
-      render: (value) => <span className="text-sm">{formatDuration(value)}</span>,
-    },
+      },
     {
       id: "actions",
       label: "Actions",
@@ -267,9 +256,9 @@ export default function MonitoringPage() {
       {/* Header */}
       <div className="flex flex-col gap-4">
         <BackButton
-         
+
           showBreadcrumb={true}
-         
+
           currentLabel="Execution Monitoring"
         />
         <p className={`${tw.textSecondary} text-sm`}>

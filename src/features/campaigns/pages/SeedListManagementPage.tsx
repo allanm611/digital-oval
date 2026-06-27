@@ -159,38 +159,24 @@ export default function SeedListManagementPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
-          {row.name}
-        </div>
-      ),
     },
     {
       id: "email",
       label: "Email",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.email || "-"}</span>
-      ),
     },
     {
       id: "seedList",
       label: "Seed List",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.seedList || "-"}</span>
-      ),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
       filterConfig: { type: 'select', options: ['active', 'inactive'] },
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.status}</span>
-      ),
     },
     {
       id: "actions",
@@ -235,11 +221,6 @@ export default function SeedListManagementPage() {
       label: "Description",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-          {row.description || "No description"}
-        </div>
-      ),
     },
     {
       id: "recipients",

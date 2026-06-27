@@ -37,18 +37,14 @@ export default function KpiCategoriesListPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (_, row) => (
-        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-          {row.name}
-        </div>
-      ),
+      render: (_, row) => row.name,
     },
     {
       id: "description",
       label: "Description",
       visible: true,
       render: (_, row) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+        <div className="max-w-md">
           {row.description || "-"}
         </div>
       ),
@@ -57,21 +53,13 @@ export default function KpiCategoriesListPage() {
       id: "display_order",
       label: "Order",
       visible: true,
-      render: (_, row) => (
-        <div className={`text-sm ${tw.textSecondary} text-center`}>
-          {row.display_order || "0"}
-        </div>
-      ),
+      render: (_, row) => row.display_order || "0",
     },
     {
       id: "is_active",
       label: "Status",
       visible: true,
-      render: (_, row) => (
-        <span className={`text-sm font-medium ${tw.textSecondary} text-center`}>
-          {row.is_active ?? true ? "Active" : "Inactive"}
-        </span>
-      ),
+      render: (_, row) => row.is_active ?? true ? "Active" : "Inactive",
     },
     {
       id: "actions",
@@ -303,7 +291,7 @@ export default function KpiCategoriesListPage() {
       {!showBackButton && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               KPI Categories
             </h1>
             <p className={`text-sm ${tw.textSecondary} mt-2`}>

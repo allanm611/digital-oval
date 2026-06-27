@@ -295,44 +295,24 @@ export default function ManualBroadcastListsPage() {
       label: "Description",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textMuted} truncate max-w-xs`} title={value as string || ""}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "channels",
       label: "Channels",
       visible: true,
       filterConfig: { type: 'multiselect', options: ['SMS', 'EMAIL', 'PUSH', 'USSD'] },
-      render: (value) => (
-        <div className={`text-sm ${tw.textPrimary}`}>
-          {Array.isArray(value) && value.length > 0 ? value.join(", ") : "-"}
-        </div>
-      ),
     },
     {
       id: "source_type",
       label: "Source Type",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className={`text-sm capitalize`}>
-          {value || "-"}
-        </span>
-      ),
     },
     {
       id: "schedule_type",
       label: "Schedule Type",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className={`text-sm capitalize`}>
-          {value || "-"}
-        </span>
-      ),
     },
     {
       id: "created_at",

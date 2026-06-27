@@ -243,7 +243,7 @@ export default function CommunicationPolicyPage() {
       visible: true,
       filterConfig: { type: "text" },
       render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+        <div className="truncate" title={value as string}>
           {value}
         </div>
       ),
@@ -255,7 +255,7 @@ export default function CommunicationPolicyPage() {
       filterConfig: { type: "text" },
       render: (value) => (
         <span
-          className={`text-sm ${tw.textMuted} truncate`}
+          className="truncate"
           title={value ? String(value) : t.communicationPolicy.noDescription}
         >
           {value || t.communicationPolicy.noDescription}
@@ -274,11 +274,7 @@ export default function CommunicationPolicyPage() {
       label: t.communicationPolicy.type,
       visible: true,
       filterConfig: { type: "select", options: ["EMAIL", "SMS", "PUSH", "INAPP"] },
-      render: (value, policy) => (
-        <span className={`text-sm ${tw.textSecondary}`}>
-          {(policy as any).type_name || value}
-        </span>
-      ),
+      render: (value, policy) => (policy as any).type_name || value,
     },
     {
       id: "is_active",

@@ -721,25 +721,16 @@ export default function AssignPermissionsModal({
                     id: "name",
                     label: "Permission Name",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-medium text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "code",
                     label: "Code",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-mono text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "action",
                     label: "Action",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "is_sensitive",

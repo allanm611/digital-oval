@@ -430,46 +430,24 @@ export default function JobTypesPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className="flex items-center">
-          <div>
-            <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-              {value}
-            </div>
-          </div>
-        </div>
-      ),
     },
     {
       id: "description",
       label: "Description",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-lg`}>
-          {value || "No description"}
-        </div>
-      ),
     },
     {
       id: "code",
       label: "Code",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className="text-sm text-gray-900 font-medium">{value}</span>
-      ),
     },
     {
       id: "created_at",
       label: "Created",
       visible: true,
       filterConfig: { type: 'date' },
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          <DateFormatter date={value as string} useUserTimezone />
-        </span>
-      ),
     },
     {
       id: "actions",

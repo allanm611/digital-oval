@@ -81,47 +81,31 @@ export default function EtlFileRegistryPage() {
       id: "file_name",
       label: "File Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} text-sm`}>
-          {value || "—"}
-        </div>
-      ),
+      render: (value) => value || "—",
     },
     {
       id: "file_category",
       label: "Category",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">{value || "—"}</span>
-      ),
+      render: (value) => value || "—",
     },
     {
       id: "processing_status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">{getStatusBadge(value)}</span>
-      ),
+      render: (value) => getStatusBadge(value),
     },
     {
       id: "record_count",
       label: "Records",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          {value ? <NumberFormatter value={Number(value)} /> : "—"}
-        </span>
-      ),
+      render: (value) => value ? <NumberFormatter value={Number(value)} /> : "—",
     },
     {
       id: "created_at",
       label: "Created",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          <DateFormatter date={value as string} useUserTimezone />
-        </span>
-      ),
+      render: (value) => <DateFormatter date={value as string} useUserTimezone />,
     },
   ];
 

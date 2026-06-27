@@ -159,7 +159,7 @@ export default function AllKPIsPage() {
       visible: true,
       filterConfig: { type: 'text' },
       render: (_, row) => (
-        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
+        <div className="truncate" title={row.name}>
           {row.name}
         </div>
       ),
@@ -180,31 +180,21 @@ export default function AllKPIsPage() {
       label: "Type",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <p className="text-sm text-gray-700">
-          {row.field_type ? row.field_type.charAt(0).toUpperCase() + row.field_type.slice(1) : "-"}
-        </p>
-      ),
+      render: (_, row) => row.field_type ? row.field_type.charAt(0).toUpperCase() + row.field_type.slice(1) : "-",
     },
     {
       id: "is_active",
       label: "Status",
       visible: true,
       filterConfig: { type: 'select', options: ["Active", "Inactive"] },
-      render: (_, row) => (
-        <span className="text-sm font-medium text-gray-900 text-center block">
-          {row.is_active ? "Active" : "Inactive"}
-        </span>
-      ),
+      render: (_, row) => row.is_active ? "Active" : "Inactive",
     },
     {
       id: "default_value",
       label: "Default Value",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <p className="text-sm text-gray-700">{row.default_value}</p>
-      ),
+      render: (_, row) => row.default_value,
     },
     {
       id: "actions",

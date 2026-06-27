@@ -101,51 +101,26 @@ export default function NotificationTypesPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "table_name",
       label: "Table",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "action_type",
       label: "Action Type",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "category_id",
       label: "Category",
       visible: true,
-      render: (value, rule) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}>
-          {rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}
-        </div>
-      ),
     },
     {
       id: "description",
       label: "Description",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "actions",

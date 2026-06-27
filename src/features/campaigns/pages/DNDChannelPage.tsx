@@ -117,51 +117,26 @@ export default function DNDChannelPage() {
       id: "customer_name",
       label: "Customer",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string || "Unknown"}>
-          {value || "Unknown"}
-        </div>
-      ),
     },
     {
       id: "customer_phone",
       label: "Phone",
       visible: true,
-      render: (value) => (
-        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
-          {value || "—"}
-        </div>
-      ),
     },
     {
       id: "customer_email",
       label: "Email",
       visible: true,
-      render: (value) => (
-        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
-          {value || "—"}
-        </div>
-      ),
     },
     {
       id: "dnd_type_name",
       label: "DND Type",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-black capitalize">
-          {value || "Unknown"}
-        </span>
-      ),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-black capitalize">
-          {value}
-        </span>
-      ),
     },
     {
       id: "actions",

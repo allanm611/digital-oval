@@ -358,7 +358,7 @@ export default function JobExecutionDetailsPage() {
       />
       <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             Execution ID: {execution.id.substring(0, 8)}...
           </h1>
         </div>

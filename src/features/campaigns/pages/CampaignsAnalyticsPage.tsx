@@ -160,7 +160,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       visible: true,
       sortable: true,
       filterConfig: { type: 'number' },
-      render: (value) => <span className="font-medium">{value}</span>,
+      render: (value) => value,
     },
     {
       id: "campaign_name",
@@ -171,7 +171,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       render: (value, row) => (
         <button
           onClick={() => navigate(`/dashboard/campaigns/${row.campaign_id}`)}
-          className="hover:underline font-medium"
+          className="hover:underline"
           style={{ color: color.primary.accent }}
         >
           {value}

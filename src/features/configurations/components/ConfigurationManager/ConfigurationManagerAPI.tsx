@@ -238,20 +238,16 @@ export default function ConfigurationManagerAPI({
   // Table columns definition (after handlers are defined)
   const defaultColumns: TableColumn<ConfigurationTableRow>[] = useMemo(() => [
     { id: "name", label: config.entityName, width: "200px", visible: true, sortable: true, filterConfig: { type: "text" }, render: (_, row) => (
-      <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} cursor-pointer`} onClick={() => onRowClick?.(row.name)}>
+      <div className="cursor-pointer" onClick={() => onRowClick?.(row.name)}>
         {row.name}
       </div>
     ) },
     { id: "description", label: t.genericConfig.description, width: "300px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+      <div className="max-w-md">
         {row.description || t.genericConfig.noDescription}
       </div>
     ) },
-    { id: "status", label: config.statusLabel || t.genericConfig.status, width: "120px", visible: true, filterConfig: { type: "multiselect", options: ["Active", "Inactive"] }, render: (_, row) => (
-      <span className={`text-sm font-medium ${tw.textSecondary}`}>
-        {row.status}
-      </span>
-    ) },
+    { id: "status", label: config.statusLabel || t.genericConfig.status, width: "120px", visible: true, filterConfig: { type: "multiselect", options: ["Active", "Inactive"] }, render: (_, row) => row.status },
     {
       id: "actions",
       label: t.genericConfig.actions,

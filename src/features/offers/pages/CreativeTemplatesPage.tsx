@@ -158,41 +158,21 @@ export default function CreativeTemplatesPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "code",
       label: "Code",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} font-mono truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "primaryChannel",
       label: "Channel",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "description",
       label: "Description",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "actions",
@@ -292,7 +272,7 @@ export default function CreativeTemplatesPage() {
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             Creative Templates
           </h1>
           <p className={`text-sm ${tw.textSecondary} mt-1`}>

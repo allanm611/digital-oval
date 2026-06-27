@@ -46,44 +46,28 @@ export default function SubscriberProfileListPage() {
       label: "Field Name",
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-          {row.name}
-        </div>
-      ),
+      render: (_, row) => row.name,
     },
     {
       id: "dataSource",
       label: "Category",
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <span className={`text-sm ${tw.textSecondary}`}>
-          {row.dataSource}
-        </span>
-      ),
+      render: (_, row) => row.dataSource,
     },
     {
       id: "is_active",
       label: "Status",
       visible: true,
       filterConfig: { type: "select", options: ["Active", "Inactive"] },
-      render: (_, row) => (
-        <span className={`text-sm font-medium ${tw.textSecondary} text-center block`}>
-          {row.is_active ? "Active" : "Inactive"}
-        </span>
-      ),
+      render: (_, row) => row.is_active ? "Active" : "Inactive",
     },
     {
       id: "default_value",
       label: "Default Value",
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <span className={`text-sm ${tw.textSecondary}`}>
-          {row.default_value}
-        </span>
-      ),
+      render: (_, row) => row.default_value,
     },
     {
       id: "actions",

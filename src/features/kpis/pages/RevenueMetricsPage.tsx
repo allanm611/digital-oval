@@ -38,35 +38,21 @@ export default function RevenueMetricsPage() {
       label: "Metric Name",
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <div className={`text-sm ${tw.tableFirstColumn} font-medium text-black`}>
-          {row.name}
-        </div>
-      ),
+      render: (_, row) => row.name,
     },
     {
       id: "category",
       label: "Category",
       visible: true,
       filterConfig: { type: "select", options: ["Data Revenue", "Voice Revenue", "SMS Revenue", "Bundle Revenue", "Other Revenue"] },
-      render: (_, row) => (
-        <span className="text-sm text-black">
-          {row.category
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (l) => l.toUpperCase())}
-        </span>
-      ),
+      render: (_, row) => row.category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
     },
     {
       id: "field_type",
       label: "Type",
       visible: true,
       filterConfig: { type: "select", options: ["Decimal", "Numeric"] },
-      render: (_, row) => (
-        <span className="text-sm text-black">
-          {row.field_type === "decimal" ? "Decimal" : "Numeric"}
-        </span>
-      ),
+      render: (_, row) => row.field_type === "decimal" ? "Decimal" : "Numeric",
     },
     {
       id: "description",
@@ -74,7 +60,7 @@ export default function RevenueMetricsPage() {
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
-        <span className="text-sm text-black truncate max-w-xs" title={row.description}>
+        <span className="truncate max-w-xs" title={row.description}>
           {row.description || "—"}
         </span>
       ),
@@ -84,11 +70,7 @@ export default function RevenueMetricsPage() {
       label: "Status",
       visible: true,
       filterConfig: { type: "select", options: ["Active", "Inactive"] },
-      render: (_, row) => (
-        <span className="text-sm text-black">
-          {row.is_active ? "Active" : "Inactive"}
-        </span>
-      ),
+      render: (_, row) => row.is_active ? "Active" : "Inactive",
     },
     {
       id: "default_value",

@@ -1301,49 +1301,31 @@ export default function JobWorkflowStepsPage() {
                   id: "step_name",
                   label: "Step Name",
                   visible: true,
-                  render: (value) => (
-                    <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                      {value}
-                    </div>
-                  ),
+                  render: (value) => value,
                 },
                 {
                   id: "job_id",
                   label: "Job",
                   visible: true,
-                  render: (value) => (
-                    <div className={`text-sm ${tw.textSecondary}`}>
-                      {jobMap[value as number]?.name || `Job #${value}`}
-                    </div>
-                  ),
+                  render: (value) => jobMap[value as number]?.name || `Job #${value}`,
                 },
                 {
                   id: "step_order",
                   label: "Step Order",
                   visible: true,
-                  render: (value) => (
-                    <div className={`text-sm ${tw.textSecondary}`}>{value}</div>
-                  ),
+                  render: (value) => value,
                 },
                 {
                   id: "step_type",
                   label: "Type",
                   visible: true,
-                  render: (value) => (
-                    <div className={`text-sm ${tw.textSecondary}`}>
-                      {getStepTypeLabel(value as StepType)}
-                    </div>
-                  ),
+                  render: (value) => getStepTypeLabel(value as StepType),
                 },
                 {
                   id: "is_active",
                   label: "Status",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-black">
-                      {value ? "Active" : "Inactive"}
-                    </span>
-                  ),
+                  render: (value) => value ? "Active" : "Inactive",
                 },
                 {
                   id: "actions",

@@ -58,33 +58,18 @@ function EmailRoutesListView() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "gateway_provider",
       label: "Provider",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "from_address",
       label: "From Address",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "isActive",

@@ -2058,61 +2058,43 @@ export default function JobDependenciesPage() {
                   id: "job_id",
                   label: "Job Name",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900">
-                      {jobsMap.get(value as number) || "Unknown Job"}
-                    </span>
-                  ),
+                  render: (value) => jobsMap.get(value as number) || "Unknown Job",
                 },
                 {
                   id: "depends_on_job_id",
                   label: "Depends On Job Name",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900">
-                      {jobsMap.get(value as number) || "Unknown Job"}
-                    </span>
-                  ),
+                  render: (value) => jobsMap.get(value as number) || "Unknown Job",
                 },
                 {
                   id: "dependency_type",
                   label: "Type",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900 capitalize">
-                      {value}
-                    </span>
-                  ),
+                  render: (value) => {
+                    const text = (value as string) || "";
+                    return text.charAt(0).toUpperCase() + text.slice(1);
+                  },
                 },
                 {
                   id: "wait_for_status",
                   label: "Wait For",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900 capitalize">
-                      {value}
-                    </span>
-                  ),
+                  render: (value) => {
+                    const text = (value as string) || "";
+                    return text.charAt(0).toUpperCase() + text.slice(1);
+                  },
                 },
                 {
                   id: "is_active",
                   label: "Status",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-black capitalize">
-                      {value ? "Active" : "Inactive"}
-                    </span>
-                  ),
+                  render: (value) => value ? "Active" : "Inactive",
                 },
                 {
                   id: "created_at",
                   label: "Created",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-600">
-                      <DateFormatter date={value as string} />
-                    </span>
-                  ),
+                  render: (value) => <DateFormatter date={value as string} />,
                 },
                 {
                   id: "actions",

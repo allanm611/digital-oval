@@ -690,51 +690,31 @@ export default function TeamRolesPermissionsPage() {
                     id: "name",
                     label: "Role Name",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-medium text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "code",
                     label: "Code",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-mono text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "role_level",
                     label: "Level",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "data_access_level",
                     label: "Data Access",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value || "—"}</span>
-                    ),
                   },
                   {
                     id: "current_user_count",
                     label: "Users",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value || 0}</span>
-                    ),
                   },
                   {
                     id: "is_active",
                     label: "Status",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">
-                        {value ? "Active" : "Inactive"}
-                      </span>
-                    ),
                   },
                   {
                     id: "actions",

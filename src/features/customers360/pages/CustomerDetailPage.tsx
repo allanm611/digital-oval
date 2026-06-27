@@ -560,7 +560,6 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
     },
     {
       id: "category",
@@ -568,7 +567,6 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="text-sm text-gray-900">{row.category}</span>,
     },
     {
       id: "type",
@@ -576,7 +574,7 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="text-sm text-gray-900">{row.field_type || "—"}</span>,
+
     },
     {
       id: "value",
@@ -584,7 +582,7 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="text-sm font-medium text-gray-900">{row.value} {row.unit || ""}</span>,
+
     },
     {
       id: "firstRecordedValue",
@@ -592,7 +590,7 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="text-sm text-gray-600">{row.firstRecordedValue || "—"} {row.unit || ""}</span>,
+
     },
     {
       id: "defaultValue",
@@ -600,7 +598,7 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="text-sm text-gray-900">{row.defaultValue ?? 0}</span>,
+
     },
     {
       id: "lastUpdated",
@@ -608,7 +606,7 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="text-sm text-gray-600">{row.lastUpdated || "—"}</span>,
+
     },
     {
       id: "created",
@@ -616,7 +614,7 @@ export default function CustomerDetailPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => <span className="text-sm text-gray-600">{row.created || "—"}</span>,
+
     },
     {
       id: "action",
@@ -1122,7 +1120,7 @@ export default function CustomerDetailPage() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <BackButton
-           
+
             showBreadcrumb={true}
             currentLabel="Customer Details"
           />
@@ -1250,7 +1248,7 @@ export default function CustomerDetailPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Key Performance Indicators
                 </h3>
-                
+
                 {/* KPI Search Bar */}
                 <div className="mb-6">
                   <SearchInput
@@ -1328,7 +1326,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventSearchTerm(String(value))}
                       placeholder="Search events..."
                       className="pl-10 pr-4"
-                     
+
                     />
                   </div>
                   <HeadlessSelect
@@ -1365,7 +1363,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventDateFrom(String(value))}
                       placeholder="From Date"
                       className="pl-10 pr-10"
-                     
+
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }
@@ -1387,7 +1385,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventDateTo(String(value))}
                       placeholder="To Date"
                       className="pl-10 pr-10"
-                     
+
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }
@@ -1411,26 +1409,22 @@ export default function CustomerDetailPage() {
                         id: "title",
                         label: "Event Type",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.title}</span>,
-                      },
+                        },
                       {
                         id: "description",
                         label: "Description",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.description}</span>,
-                      },
+                        },
                       {
                         id: "type",
                         label: "Channel",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type.toUpperCase()}</span>,
-                      },
+                        },
                       {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                      },
+                        },
                     ]}
                     data={paginatedEvents}
                     totalItems={filteredEvents.length}
@@ -1653,14 +1647,12 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "Segment Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "type",
                         label: "Type",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                      },
+                        },
                       {
                         id: "addedDate",
                         label: "Added Date",
@@ -1723,20 +1715,17 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "Offer Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "type",
                         label: "Type",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                      },
+                        },
                       {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                      },
+                        },
                       {
                         id: "value",
                         label: "Value",
@@ -1807,14 +1796,12 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "QuickList Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "recordCount",
                         label: "Total Members",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.recordCount || 0}</span>,
-                      },
+                        },
                       {
                         id: "createdDate",
                         label: "Created Date",
@@ -1831,8 +1818,7 @@ export default function CustomerDetailPage() {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm font-medium text-gray-900">{row.status}</span>,
-                      },
+                        },
                     ]}
                     data={paginatedQuicklists}
                     totalItems={quicklists.length}
@@ -1885,14 +1871,12 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "Campaign Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "type",
                         label: "Type",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                      },
+                        },
                       {
                         id: "participationDate",
                         label: "Participation Date",
@@ -1909,8 +1893,7 @@ export default function CustomerDetailPage() {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                      },
+                        },
                     ]}
                     data={campaigns}
                     totalItems={campaigns.length}
@@ -1952,8 +1935,7 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "List Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "subscribedDate",
                         label: "Subscribed Date",
@@ -1970,8 +1952,7 @@ export default function CustomerDetailPage() {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status === "active" ? "Active" : "Unsubscribed"}</span>,
-                      },
+                        },
                     ]}
                     data={paginatedLists}
                     totalItems={lists.length}
@@ -2021,14 +2002,12 @@ export default function CustomerDetailPage() {
                     id: "subject",
                     label: "Subject",
                     visible: true,
-                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.subject}</span>,
-                  },
+                    },
                   {
                     id: "channel",
                     label: "Channel",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.channel}</span>,
-                  },
+                    },
                   {
                     id: "date",
                     label: "Sent Date",
@@ -2039,8 +2018,7 @@ export default function CustomerDetailPage() {
                     id: "status",
                     label: "Status",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                  },
+                    },
                 ]}
                 data={[
                   {
@@ -2102,14 +2080,12 @@ export default function CustomerDetailPage() {
                     id: "id",
                     label: "Transaction ID",
                     visible: true,
-                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.id}</span>,
-                  },
+                    },
                   {
                     id: "product",
                     label: "Product",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.product}</span>,
-                  },
+                    },
                   {
                     id: "amount",
                     label: "Amount",
@@ -2126,8 +2102,7 @@ export default function CustomerDetailPage() {
                     id: "status",
                     label: "Status",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                  },
+                    },
                 ]}
                 data={[
                   {
@@ -2213,14 +2188,12 @@ export default function CustomerDetailPage() {
                       id: "name",
                       label: "Reward Name",
                       visible: true,
-                      render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                    },
+                                    },
                     {
                       id: "points",
                       label: "Points",
                       visible: true,
-                      render: (_, row) => <span className="text-sm text-gray-900">{row.points.toLocaleString()}</span>,
-                    },
+                      },
                     {
                       id: "date",
                       label: "Redeemed Date",
@@ -2398,26 +2371,22 @@ export default function CustomerDetailPage() {
                     id: "id",
                     label: "Ticket ID",
                     visible: true,
-                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.id}</span>,
-                  },
+                    },
                   {
                     id: "type",
                     label: "Type",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                  },
+                    },
                   {
                     id: "subject",
                     label: "Subject",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.subject}</span>,
-                  },
+                    },
                   {
                     id: "status",
                     label: "Status",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                  },
+                    },
                   {
                     id: "date",
                     label: "Date",

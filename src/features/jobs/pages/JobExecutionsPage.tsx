@@ -709,61 +709,40 @@ export default function JobExecutionsPage() {
           id: "id",
           label: "Execution ID",
           visible: true,
-          render: (value) => (
-            <div className={`text-sm font-mono ${tw.textPrimary}`}>
-              {(value as string).substring(0, 8)}...
-            </div>
-          ),
+          render: (value) => `${(value as string).substring(0, 8)}...`,
         },
         {
           id: "job_id",
           label: "Job ID",
           visible: true,
-          render: (value) => (
-            <div className={`text-sm font-medium ${tw.textSecondary}`}>
-              {value}
-            </div>
-          ),
+          render: (value) => value,
         },
         {
           id: "execution_status",
           label: "Status",
           visible: true,
-          render: (value) => (
-            <span className="text-sm text-black font-medium">
-              {value}
-            </span>
-          ),
+          render: (value) => value,
         },
         {
           id: "started_at",
           label: "Started At",
           visible: true,
-          render: (value) => (
-            <div className={`text-sm ${tw.textSecondary}`}>
-              {value ? new Date(value as string).toLocaleString() : "—"}
-            </div>
-          ),
+          render: (value) => value ? new Date(value as string).toLocaleString() : "—",
         },
         {
           id: "duration_seconds",
           label: "Duration",
           visible: true,
-          render: (value) => (
-            <div className={`text-sm ${tw.textSecondary}`}>
-              {formatDuration(value as number | null)}
-            </div>
-          ),
+          render: (value) => formatDuration(value as number | null),
         },
         {
           id: "triggered_by",
           label: "Triggered By",
           visible: true,
-          render: (value) => (
-            <div className={`text-sm capitalize ${tw.textSecondary}`}>
-              {value || "—"}
-            </div>
-          ),
+          render: (value) => {
+            const text = (value as string) || "—";
+            return text.charAt(0).toUpperCase() + text.slice(1);
+          },
         },
         {
           id: "actions",

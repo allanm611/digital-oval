@@ -166,7 +166,7 @@ export default function CampaignBroadcastsPage() {
   // Table columns definition
   const defaultColumns: TableColumn<BroadcastTableRow>[] = [
     { id: "campaignName", label: "Campaign", width: "200px", visible: true, sortable: true, filterConfig: { type: "text" }, render: (_, row) => (
-      <div className="text-sm font-bold truncate">{row.campaignName}</div>
+      <div className="truncate">{row.campaignName}</div>
     ) },
     { id: "status", label: "Status", width: "140px", visible: true, filterConfig: { type: "multiselect", options: ["sent", "in_progress", "scheduled", "failed", "paused", "completed"] } },
     { id: "sentDate", label: "Sent Date", width: "180px", visible: true, filterConfig: { type: "date" }, render: (_, row) => (

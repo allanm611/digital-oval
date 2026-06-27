@@ -145,38 +145,24 @@ export default function ConnectionProfilesPage() {
       label: "Code",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className={`p-2 icon-edit ${tw.rounded} text-sm `}>{value || "—"}</span>
-      ),
     },
     {
       id: "connection_type",
       label: "Type",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className="text-sm text-gray-600">{value || "—"}</span>
-      ),
     },
     {
       id: "environment",
       label: "Environment",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className="text-sm text-gray-600">{value || "—"}</span>
-      ),
     },
     {
       id: "is_active",
       label: "Status",
       visible: true,
       filterConfig: { type: 'select', options: ['active', 'inactive'] },
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          {value ? "Active" : "Inactive"}
-        </span>
-      ),
     },
     {
       id: "actions",

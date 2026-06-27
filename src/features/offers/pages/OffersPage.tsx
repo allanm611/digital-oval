@@ -124,11 +124,6 @@ export default function OffersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm truncate`} title={row.name}>
-          {row.name}
-        </div>
-      ),
     },
     {
       id: "category",
@@ -139,11 +134,6 @@ export default function OffersPage() {
         type: 'select',
         options: categories.map(c => c.name)
       },
-      render: (value) => (
-        <span className={`text-sm`} style={{ color: 'var(--c-text-primary)' }}>
-          {value}
-        </span>
-      ),
     },
     {
       id: "status",

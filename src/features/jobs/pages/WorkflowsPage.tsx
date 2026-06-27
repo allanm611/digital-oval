@@ -376,21 +376,11 @@ export default function WorkflowsPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm font-semibold text-gray-900`}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "workflow_type",
       label: "Type",
       visible: true,
-      render: (value) => (
-        <div className={`p-2 icon-edit ${tw.rounded} text-sm `}>
-          {value || "—"}
-        </div>
-      ),
     },
     {
       id: "is_active",
@@ -495,6 +485,9 @@ export default function WorkflowsPage() {
                 currentLabel="Job Workflows"
               />
             </div>
+            <h1 className={`${tw.mainHeading} ${tw.textPrimary} mt-4`}>
+              Job Workflows
+            </h1>
             <p className={`${tw.textSecondary} text-sm mt-1`}>
               Manage and monitor workflows
             </p>

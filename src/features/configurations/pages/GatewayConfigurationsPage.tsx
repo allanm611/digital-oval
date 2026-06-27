@@ -288,41 +288,21 @@ export default function GatewayConfigurationsPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "description",
       label: "Description",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "channel_type",
       label: "Channel",
       visible: true,
-      render: (value, config) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={CHANNEL_LABEL[config.channel_type]}>
-          {CHANNEL_LABEL[config.channel_type]}
-        </div>
-      ),
     },
     {
       id: "provider_type",
       label: "Provider",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "is_active",

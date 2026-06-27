@@ -28,8 +28,25 @@ import InteractivePatternBg from "../components/InteractivePatternBg";
 export default function LandingPage() {
   const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    return () => link.remove();
+  }, []);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
+
+  // Sentra brand typography - scoped to landing page only
+  const landingStyles = `
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
+    .landing-page-container .landing-heading {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+    }
+  `;
 
   useEffect(() => {
     setIsVisible(true);
@@ -114,7 +131,8 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className={`min-h-screen bg-white relative overflow-hidden`}>
+    <div className={`landing-page-container min-h-screen bg-white relative overflow-hidden`}>
+      <style>{landingStyles}</style>
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -278,7 +296,7 @@ export default function LandingPage() {
                 <Sparkles className="w-4 h-4 mr-2 text-emerald-600 animate-bounce" />
                 <span className="text-emerald-700">{t.landing.nextGenPlatform}</span>
               </div>
-              <h1 className={`font-['Sora'] text-5xl font-[700] text-gray-900 mb-6 leading-tight tracking-[-0.02em]`}>
+              <h1 className={`landing-heading text-5xl font-[700] text-gray-900 mb-6 leading-tight tracking-[-0.02em]`}>
                 Build Intelligent Customer Campaigns Across Channels
               </h1>
               <p className={`font-['Inter'] text-base text-gray-600 mb-6 leading-relaxed max-w-2xl mx-auto`}>
@@ -306,7 +324,7 @@ export default function LandingPage() {
         <section className="py-20 bg-emerald-900">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className={`font-['Sora'] text-4xl font-[700] text-white mb-4 leading-tight tracking-[-0.02em]`}>
+              <h2 className={`landing-heading text-4xl font-[700] text-white mb-4 leading-tight tracking-[-0.02em]`}>
                 {t.landing.everythingYouNeed}{" "}
                 <span className="text-emerald-300">customer value</span>
               </h2>
@@ -371,7 +389,7 @@ export default function LandingPage() {
         <section className="py-20 bg-gradient-to-b from-white to-gray-50 border-b border-b-gray-200">
           <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className={`font-['Sora'] text-4xl font-[700] text-gray-900 mb-4 leading-tight tracking-[-0.02em]`}>
+              <h2 className={`landing-heading text-4xl font-[700] text-gray-900 mb-4 leading-tight tracking-[-0.02em]`}>
                 Deploy in 4 Simple Steps
               </h2>
               <p className={`font-['Inter'] text-base text-gray-600 max-w-2xl mx-auto`}>
@@ -454,7 +472,7 @@ export default function LandingPage() {
         <section className="py-20 border-b border-b-gray-200">
           <div className="max-w-4xl mx-auto px-5 sm:px-8 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className={`font-['Sora'] text-4xl font-[700] text-gray-900 mb-4 leading-tight tracking-[-0.02em]`}>
+              <h2 className={`landing-heading text-4xl font-[700] text-gray-900 mb-4 leading-tight tracking-[-0.02em]`}>
                 Frequently Asked Questions
               </h2>
               <p className={`font-['Inter'] text-base text-gray-600 max-w-2xl mx-auto`}>
@@ -518,7 +536,7 @@ export default function LandingPage() {
         {/* Ready to Get Started Section */}
         <section className="py-20 bg-white border-b border-b-gray-200">
           <div className="max-w-4xl mx-auto px-5 sm:px-8 lg:px-8 text-center">
-            <h3 className={`font-['Sora'] text-3xl font-[700] text-gray-900 mb-3`}>
+            <h3 className={`landing-heading text-3xl font-[700] text-gray-900 mb-3`}>
               Ready to get started?
             </h3>
             <p className={`text-lg text-gray-600 mb-8`}>
