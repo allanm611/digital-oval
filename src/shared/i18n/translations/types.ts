@@ -12,6 +12,7 @@ export interface Translations {
     update: string;
     search: string;
     filter: string;
+    filters: string;
     loading: string;
     noData: string;
     confirm: string;
@@ -55,6 +56,7 @@ export interface Translations {
     cancelled: string;
     clearAll: string;
     created: string;
+    creating: string;
     deactivate: string;
     deactivated: string;
     duration: string;
@@ -77,6 +79,8 @@ export interface Translations {
     success: string;
     successful: string;
     timeout: string;
+    update: string;
+    updating: string;
     view: string;
     viewDetails: string;
   };
@@ -116,6 +120,9 @@ export interface Translations {
     conversions: string;
     sent: string;
     delivered: string;
+    channels: string;
+    campaigns: string;
+    campaignTypes: string;
     audienceConfiguration: {
       [key: string]: unknown;
     };
@@ -125,9 +132,10 @@ export interface Translations {
       saveFailed: string;
       updateSuccess: string;
     };
-    campaigns: string;
     failedToLoad: string;
     failedToLoadForm: string;
+    run: string;
+    scheduling: string;
   };
 
   // Settings
@@ -310,6 +318,7 @@ export interface Translations {
     priorityHigh: string;
     priorityMedium: string;
     unknown: string;
+    allCaughtUp: string;
   };
 
   // Page Titles
@@ -689,6 +698,75 @@ export interface Translations {
     errorSelectTime: string;
     errorFutureDateTime: string;
     errorCreateBroadcast: string;
+    addContact: string;
+    broadcastLabel: string;
+    broadcastSummary: string;
+    channelLabel: string;
+    channels: string;
+    communicationPolicy: string;
+    contactAlreadyAdded: string;
+    createBroadcast: string;
+    defineCommunicationSubtitle: string;
+    defineCommunicationTitle: string;
+    deleteBroadcastConfirm: string;
+    deleteBroadcastTitle: string;
+    errorAddAtLeastOne: string;
+    errorEnterContact: string;
+    errorInvalidContact: string;
+    errorInvalidEmail: string;
+    errorInvalidPhone: string;
+    errorLoadingFields: string;
+    errorMessageBodyRequired: string;
+    errorSendTestFailed: string;
+    errorSubjectRequired: string;
+    executedBroadcasts: string;
+    fieldPlural: string;
+    fieldSingular: string;
+    noBroadcasts: string;
+    noFieldsAvailable: string;
+    noFieldsMatchSearch: string;
+    noSearchResults: string;
+    noSourcesAvailable: string;
+    pendingBroadcasts: string;
+    scheduleType: string;
+    searchFields: string;
+    searchPlaceholder: string;
+    selectField: string;
+    selectProfileSource: string;
+    sendTest: string;
+    sendingTest: string;
+    sourceType: string;
+    subscriptionIdHelper: string;
+    subscriptionIdLabel: string;
+    subscriptionIdPlaceholder: string;
+    summaryAudience: string;
+    summaryChannel: string;
+    summaryNotSet: string;
+    summarySchedule: string;
+    summaryScheduled: string;
+    summarySendNow: string;
+    testBroadcastSubtitle: string;
+    testBroadcastTitle: string;
+    testCompleted: string;
+    testHelperEmail: string;
+    testHelperGeneric: string;
+    testHelperPhone: string;
+    testInputLabelEmail: string;
+    testInputLabelGeneric: string;
+    testInputLabelPhone: string;
+    testMessageSuccess: string;
+    testPlaceholderEmail: string;
+    testPlaceholderGeneric: string;
+    testPlaceholderPhone: string;
+    testRecipientsLabel: string;
+    testResults: string;
+    testSummary: string;
+    totalBroadcasts: string;
+    uniqueChannels: string;
+    updatedSuccess: string;
+    warningBodyNow: string;
+    warningBodyScheduled: string;
+    warningTitle: string;
   };
 
   // Servers
@@ -813,6 +891,56 @@ export interface Translations {
     warningBodyScheduled: string;
     applying: string;
     applyReward: string;
+    bundleTrack: string;
+    bundleTrackHelper: string;
+    bundleTrackLabel: string;
+    bundleTrackPlaceholder: string;
+    communicationPolicy: string;
+    defineRewardSubtitle: string;
+    defineRewardTitle: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    errorBundleTrackRequired: string;
+    errorRewardValueInvalid: string;
+    errorRewardValueRequired: string;
+    manualEntryHelp: string;
+    manualEntryLabel: string;
+    manualEntryPlaceholder: string;
+    optional: string;
+    previewSubtitle: string;
+    previewTitle: string;
+    recipients: string;
+    rewardSummary: string;
+    rewardTypeBundle: string;
+    rewardTypeBundleDesc: string;
+    rewardTypeCashback: string;
+    rewardTypeCashbackDesc: string;
+    rewardTypeDiscount: string;
+    rewardTypeDiscountDesc: string;
+    rewardTypeLabel: string;
+    rewardTypePoints: string;
+    rewardTypePointsDesc: string;
+    rewardValueHelperBundle: string;
+    rewardValueHelperCashback: string;
+    rewardValueHelperDiscount: string;
+    rewardValueHelperPoints: string;
+    rewardValueLabel: string;
+    rewardValuePlaceholderBundle: string;
+    rewardValuePlaceholderCashback: string;
+    rewardValuePlaceholderDiscount: string;
+    rewardValuePlaceholderPoints: string;
+    summaryApplyNow: string;
+    summaryAudience: string;
+    summaryNotSet: string;
+    summaryRecipients: string;
+    summaryReward: string;
+    summarySchedule: string;
+    summaryScheduled: string;
+    updatedSuccess: string;
+    warningBody: string;
+    warningBodyNow: string;
+    warningBodyScheduled: string;
+    warningTitle: string;
   };
 
   // Customer 360 Profile
@@ -853,6 +981,12 @@ export interface Translations {
     noResultsFound: string;
     searchResults: string;
     selectCustomer: string;
+    tariff: string;
+  };
+
+  // Customers
+  customers: {
+    failedToLoadCustomers: string;
   };
 
   // Customer Profile Reports (Details Page)
@@ -1007,6 +1141,8 @@ export interface Translations {
     tryUpdatingFilters: string;
     type: string;
     updated: string;
+    filter: string;
+    filterStepExecutions: string;
     jobWorkflow: {
       abort: string;
       active: string;
@@ -1104,6 +1240,13 @@ export interface Translations {
     exportFailed: string;
     validationErrors: string; // QuickList created but {count} row(s) failed validation
     firstFewErrors: string;
+  };
+
+  // Segments
+  segments: {
+    failedToLoadCategories: string;
+    failedToLoadDetails: string;
+    failedToLoadSegments: string;
   };
 
   // Segment Lists
@@ -1668,6 +1811,7 @@ export interface Translations {
     failedToLoad: string;
     failedToLoadCategories: string;
     nameRequired: string;
+    locales: string;
   };
 
   // History Pages
@@ -2181,6 +2325,7 @@ export interface Translations {
     smsRouteDetails: string;
     smsRouteNotFound: string;
     successfully: string;
+    filterByChannel: string;
   };
   // Data Connectors
   dataConnectors: {
@@ -2212,6 +2357,32 @@ export interface Translations {
     noData: string;
     search: string;
     filter: string;
+    addConnectionProfile: string;
+    backToConnectors: string;
+    connectedProfile: string;
+    connectionCount: string;
+    connectionProfiles: string;
+    connections: string;
+    connectorId: string;
+    connectorNotFound: string;
+    connectorNotFoundDescription: string;
+    connectorTypes: string;
+    createdBy: string;
+    dataConnectorDetails: string;
+    deleteConnectorDescription: string;
+    deleteConnectorTitle: string;
+    id: string;
+    lastUsed: string;
+    loading: string;
+    noConnectionProfiles: string;
+    subtitle: string;
+    test: string;
+    testConnection: string;
+    testConnectionFailed: string;
+    testing: string;
+    totalConnections: string;
+    totalConnectors: string;
+    updatedBy: string;
   };
   // Control Groups
   controlGroups: {
@@ -2512,6 +2683,7 @@ export interface Translations {
     failedToLoad: string;
     failedToLoadCategories: string;
     failedToLoadDetails: string;
+    form: string;
   };
 
   // Analytics
@@ -2520,6 +2692,7 @@ export interface Translations {
     loadingAnalytics: string;
     failedToLoadAnalytics: string;
     errorLoadingData: string;
+    failedToLoad: string;
     noData: string;
     timeRange: string;
     timeRangeLastDay: string;

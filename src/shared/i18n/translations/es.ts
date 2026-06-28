@@ -2509,6 +2509,9 @@ export const es: Translations = {
       successMessage: "Tu contraseña ha sido restablecida exitosamente",
       errorMessage: "Error al restablecer la contraseña",
     },
+    authenticationRequired: "Autenticación requerida",
+    goToLogin: "Ir a iniciar sesión",
+    unauthorized: "No autorizado",
   },
   sidebar: {
     logo: {

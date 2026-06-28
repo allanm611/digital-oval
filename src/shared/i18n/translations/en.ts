@@ -47,6 +47,9 @@ export const en: Translations = {
     no: "No",
     createdAt: "Created At",
     updatedAt: "Updated At",
+    creating: "Creating...",
+    filters: "Filters",
+    updating: "Updating...",
   },
   navigation: {
     dashboard: "Dashboard",
@@ -1594,6 +1597,7 @@ export const en: Translations = {
     noResultsFound: "No results found",
     searchResults: "Search Results",
     selectCustomer: "Select Customer",
+    tariff: "Tariff",
   },
   customerProfileReports: {
     title: "Customer Profile Reports",
@@ -2969,6 +2973,9 @@ export const en: Translations = {
       successMessage: "Your password has been reset successfully",
       errorMessage: "Failed to reset password",
     },
+    authenticationRequired: "Authentication required",
+    goToLogin: "Go to login",
+    unauthorized: "Unauthorized",
   },
   sidebar: {
     logo: {
@@ -3056,6 +3063,7 @@ export const en: Translations = {
     performanceMetrics: "Performance Metrics",
     chartTitle: "Distribution Chart",
     refreshing: "Refreshing...",
+    failedToLoad: "Failed to load analytics",
     campaigns: {
       title: "Campaigns Analytics",
       summaryCards: {

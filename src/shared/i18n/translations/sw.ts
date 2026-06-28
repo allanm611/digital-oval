@@ -2708,6 +2708,9 @@ export const sw: Translations = {
       successMessage: "Nenosiri lako limebadilishwa kwa ufanisi",
       errorMessage: "Hitilafu katika kurudisha nenosiri",
     },
+    authenticationRequired: "Uthibitishaji unaohitajika",
+    goToLogin: "Nenda kwenye login",
+    unauthorized: "Haijaidhinishwa",
   },
   sidebar: {
     logo: {

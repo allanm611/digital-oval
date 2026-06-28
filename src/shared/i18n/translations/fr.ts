@@ -2798,6 +2798,9 @@ export const fr: Translations = {
       successMessage: "Votre mot de passe a été réinitialisé avec succès",
       errorMessage: "Erreur lors de la réinitialisation du mot de passe",
     },
+    authenticationRequired: "Authentification requise",
+    goToLogin: "Aller à la connexion",
+    unauthorized: "Non autorisé",
   },
   sidebar: {
     logo: {
