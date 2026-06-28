@@ -263,16 +263,17 @@ export default function RoleFormModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: "var(--c-surface-background)" }}>
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
+          <h2 className="text-xl font-semibold" style={{ color: "var(--c-text-primary)" }}>
             {role ? "Edit Role" : "Create New Role"}
           </h2>
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            className="disabled:opacity-50"
+            style={{ color: "var(--c-text-muted)" }}
           >
             <X className="w-5 h-5" />
           </button>
@@ -310,7 +311,7 @@ export default function RoleFormModal({
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
               )}
               {role && (
-                <p className="mt-1 text-xs text-gray-500">(Cannot be changed after creation)</p>
+                <p className="mt-1 text-xs text-[var(--c-text-muted)]">(Cannot be changed after creation)</p>
               )}
             </div>
           </div>
@@ -403,7 +404,7 @@ export default function RoleFormModal({
               checked={formData.is_default}
               onChange={handleCheckboxChange}
             />
-            <span className="text-sm font-medium text-gray-700">Set as Default</span>
+            <span className="text-sm font-medium text-[var(--c-text-primary)]">Set as Default</span>
           </div>
 
           {/* Tags */}
@@ -425,7 +426,7 @@ export default function RoleFormModal({
                     <div
                       key={tagKey}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-sm font-medium"
-                      style={{ backgroundColor: color.primary.action + "20", color: color.primary.action }}
+                      style={{ backgroundColor: var(--c-icon-table-edit) + "20", color: var(--c-icon-table-edit) }}
                     >
                       {tagName}
                       <button
@@ -444,7 +445,7 @@ export default function RoleFormModal({
         </form>
 
         {/* Footer */}
-        <div className="sticky bottom-0 px-6 py-4 border-t border-gray-200 bg-white">
+        <div className="sticky bottom-0 px-6 py-4 border-t" style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"
@@ -459,7 +460,7 @@ export default function RoleFormModal({
               type="submit"
               disabled={isLoading}
               className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             >
               {isLoading ? (
                 <>

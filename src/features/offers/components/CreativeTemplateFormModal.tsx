@@ -212,8 +212,8 @@ export default function CreativeTemplateFormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)", zIndex: zIndex.popover }}
       onClick={onClose}
     >
       <div
@@ -356,8 +356,8 @@ export default function CreativeTemplateFormModal({
               className="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 background: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: var(--c-icon-table-edit),
+                border: `1px solid ${var(--c-icon-table-edit)}`,
               }}
             >
               Cancel
@@ -366,7 +366,7 @@ export default function CreativeTemplateFormModal({
               type="submit"
               disabled={isSaving}
               className="px-4 py-2 text-white rounded text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             >
               {isSaving && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

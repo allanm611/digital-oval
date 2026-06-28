@@ -159,7 +159,7 @@ export default function OfferCreativesPage() {
 
       {/* Table */}
       <div
-        className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className="overflow-hidden"
       >
         {loading ? (
           <div className="text-center py-12">

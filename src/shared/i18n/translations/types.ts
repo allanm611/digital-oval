@@ -47,6 +47,38 @@ export interface Translations {
     count: string;
     yes: string;
     no: string;
+    activate: string;
+    activated: string;
+    allStatuses: string;
+    analytics: string;
+    applyFilters: string;
+    cancelled: string;
+    clearAll: string;
+    created: string;
+    deactivate: string;
+    deactivated: string;
+    duration: string;
+    error: string;
+    exitSelection: string;
+    failed: string;
+    failedToPerformAction: string;
+    failure: string;
+    fieldRequired: string;
+    lastUpdated: string;
+    metadata: string;
+    pending: string;
+    pleaseEnterValidGuidFormat: string;
+    queued: string;
+    quickFilters: string;
+    retry: string;
+    running: string;
+    skipped: string;
+    startedAt: string;
+    success: string;
+    successful: string;
+    timeout: string;
+    view: string;
+    viewDetails: string;
   };
 
   // Navigation
@@ -93,6 +125,9 @@ export interface Translations {
       saveFailed: string;
       updateSuccess: string;
     };
+    campaigns: string;
+    failedToLoad: string;
+    failedToLoadForm: string;
   };
 
   // Settings
@@ -120,6 +155,7 @@ export interface Translations {
     success: string;
     confirmDelete: string;
     areYouSure: string;
+    warning: string;
   };
 
   // Notifications
@@ -149,6 +185,7 @@ export interface Translations {
     emptyFiltered: string;
     emptyNoData: string;
     viewDetails: string;
+    save: string;
     previous: string;
     next: string;
     pageOf: string; // {page} {total}
@@ -945,6 +982,31 @@ export interface Translations {
     allJobTypes: string;
     updateJobTypeDesc: string;
     createJobTypeDesc: string;
+    abortRunning: string;
+    allJobs: string;
+    created: string;
+    failedToLoadExecutions: string;
+    failedToLoadScheduledJobs: string;
+    getStartedJob: string;
+    jobExecId: string;
+    jobExecutionId: string;
+    jobExecutionUuidGuid: string;
+    jobName: string;
+    noJobsFound: string;
+    noJobsMatch: string;
+    noStepExecutionsFound: string;
+    retryFailed: string;
+    searchJobs: string;
+    searchStepExecutions: string;
+    selectStepExecutions: string;
+    stepExecId: string;
+    stepExecutions: string;
+    stepExecutionsSelected: string;
+    stepId: string;
+    stepIdNumeric: string;
+    tryUpdatingFilters: string;
+    type: string;
+    updated: string;
     jobWorkflow: {
       abort: string;
       active: string;
@@ -1599,6 +1661,13 @@ export interface Translations {
     updateWithProductError: string;
     createWithCreativeError: string;
     updateWithCreativeError: string;
+    assignComingSoon: string;
+    detailsComingSoon: string;
+    draftSaveError: string;
+    draftSaveSuccess: string;
+    failedToLoad: string;
+    failedToLoadCategories: string;
+    nameRequired: string;
   };
 
   // History Pages
@@ -2077,6 +2146,41 @@ export interface Translations {
       weekly: string;
       monthly: string;
     };
+    activated: string;
+    allChannels: string;
+    areYouSureDeleteRoute: string;
+    basicInformation: string;
+    cannotBeUndone: string;
+    configurationId: string;
+    configurationName: string;
+    deactivated: string;
+    deleteEmailRoute: string;
+    deleteRouteDescription: string;
+    deleteSmsRoute: string;
+    deleting: string;
+    emailRouteDetails: string;
+    emailRouteNotFound: string;
+    failedDeleteEmailRoute: string;
+    failedDeleteSmsRoute: string;
+    failedLoadEmailRoute: string;
+    failedLoadSmsRoute: string;
+    gatewayConfiguration: string;
+    gatewayConfigurationId: string;
+    gatewayProvider: string;
+    hasBeenDeleted: string;
+    loadingRouteDetails: string;
+    manageAllRoutes: string;
+    noDescriptionAvailable: string;
+    noRoutesCreated: string;
+    noRoutesFound: string;
+    providerType: string;
+    route: string;
+    routeId: string;
+    routeNotFound: string;
+    searchByRouteName: string;
+    smsRouteDetails: string;
+    smsRouteNotFound: string;
+    successfully: string;
   };
   // Data Connectors
   dataConnectors: {
@@ -2161,6 +2265,78 @@ export interface Translations {
     filterByType: string;
     noData: string;
     search: string;
+    activeSubscribers: string;
+    addAtLeastOneCondition: string;
+    addMembers: string;
+    addedDate: string;
+    allCustomers: string;
+    allCustomersInDatabase: string;
+    basicInfo: string;
+    basicInformation: string;
+    code: string;
+    codeAndName: string;
+    codeRequired: string;
+    configuration: string;
+    configureWhenGenerated: string;
+    controlGroupDetails: string;
+    controlGroupGenerationSchedule: string;
+    controlGroupPercentage: string;
+    controlPercentage: string;
+    created: string;
+    customConditions: string;
+    daily: string;
+    defineCustomConditions: string;
+    defineCustomSegmentConditions: string;
+    deleteControlGroup: string;
+    deleteControlGroupDescription: string;
+    endDate: string;
+    enterControlGroupCode: string;
+    enterControlGroupDescription: string;
+    enterControlGroupName: string;
+    failedToDeleteGroup: string;
+    failedToRemoveMember: string;
+    failedToSaveGroup: string;
+    generationMethod: string;
+    generationMethodRequired: string;
+    groupCreatedSuccessfully: string;
+    groupDeletedSuccessfully: string;
+    groupMembers: string;
+    groupUpdatedSuccessfully: string;
+    lastUpdated: string;
+    markAsUniversal: string;
+    memberRemovedSuccessfully: string;
+    membersAddedSuccessfully: string;
+    monthly: string;
+    nameRequired: string;
+    noMembersYet: string;
+    oneTime: string;
+    onlyActiveSubscribers: string;
+    percentageAndMethod: string;
+    percentageBetween1And100: string;
+    percentageOfCustomers: string;
+    preview: string;
+    randomSelection: string;
+    reason: string;
+    recurrencePattern: string;
+    remove: string;
+    removeMember: string;
+    removeMemberDescription: string;
+    reviewBeforeCreate: string;
+    reviewControlGroupSetup: string;
+    schedule: string;
+    scheduleDateRequired: string;
+    scheduling: string;
+    selectCustomerBase: string;
+    setRecurrencePattern: string;
+    startDate: string;
+    stratifiedSampling: string;
+    subscriberId: string;
+    timeZone: string;
+    timeline: string;
+    totalLabel: string;
+    universalControlGroup: string;
+    updateControlGroup: string;
+    weekly: string;
   };
   // Landing Page
   landing: {
@@ -2187,6 +2363,16 @@ export interface Translations {
     sentraConfig: string;
     sentraConfigSubtitle: string;
     sentraConfigDescription: string;
+    advancedCustomerSegmentation: string;
+    automatedOfferPersonalization: string;
+    comprehensiveAnalytics: string;
+    copyrightNotice: string;
+    enterpriseGradeSecurity: string;
+    everythingYouNeed: string;
+    multiChannelOrchestration: string;
+    nextGenPlatform: string;
+    ourComprehensive: string;
+    realtimePerformance: string;
   };
 
   // Definition/Layer Filters
@@ -2208,7 +2394,7 @@ export interface Translations {
 
   // Authentication
   auth: {
-    login: {
+    login: string | {
       title: string;
       headline: string;
       subheading: string;
@@ -2233,7 +2419,7 @@ export interface Translations {
       makeRequest: string;
       tourButton: string;
     };
-    forgotPassword: {
+    forgotPassword: string | {
       title: string;
       description: string;
       emailLabel: string;
@@ -2242,7 +2428,19 @@ export interface Translations {
       sendButton: string;
       successMessage: string;
     };
-    requestAccount: {
+    resetPassword: string | {
+      title: string;
+      description: string;
+      newPasswordLabel: string;
+      newPasswordPlaceholder: string;
+      confirmPasswordLabel: string;
+      confirmPasswordPlaceholder: string;
+      passwordMismatch: string;
+      resetButton: string;
+      successMessage: string;
+      errorMessage: string;
+    };
+    requestAccount: string | {
       title: string;
       fullNameLabel: string;
       fullNamePlaceholder: string;
@@ -2259,18 +2457,9 @@ export interface Translations {
       successMessage: string;
       errorMessage: string;
     };
-    resetPassword: {
-      title: string;
-      description: string;
-      newPasswordLabel: string;
-      newPasswordPlaceholder: string;
-      confirmPasswordLabel: string;
-      confirmPasswordPlaceholder: string;
-      passwordMismatch: string;
-      resetButton: string;
-      successMessage: string;
-      errorMessage: string;
-    };
+    unauthorized: string;
+    goToLogin: string;
+    authenticationRequired: string;
   };
 
   // Workflows
@@ -2320,6 +2509,9 @@ export interface Translations {
     failedToLoadProduct: string;
     createProduct: string;
     editProductPage: string;
+    failedToLoad: string;
+    failedToLoadCategories: string;
+    failedToLoadDetails: string;
   };
 
   // Analytics
@@ -2347,6 +2539,241 @@ export interface Translations {
     performanceMetrics: string;
     chartTitle: string;
     refreshing: string;
+  };
+
+  // Categories
+  categories: {
+    deleteError: string;
+    deleteSuccess: string;
+    loadError: string;
+    notFound: string;
+    statusError: string;
+    updateError: string;
+    updateSuccess: string;
+  };
+
+  // Configurations
+  configurations: {
+    createGatewayConfiguration: string;
+    editGatewayConfiguration: string;
+  };
+
+  // Conversion
+  conversion: {
+    conversions: string;
+    cpa: string;
+    cpc: string;
+    cpl: string;
+    cvr: string;
+    revenue: string;
+    roas: string;
+    spend: string;
+  };
+
+  // Data Connectors (additional keys for page-specific strings)
+  dataConnectorPages: {
+    addConnectionProfile: string;
+    backToConnectors: string;
+    connectedProfile: string;
+    connectionCount: string;
+    connectionProfiles: string;
+    connections: string;
+    connectorId: string;
+    connectorNotFound: string;
+    connectorNotFoundDescription: string;
+    connectorTypes: string;
+    createdBy: string;
+    dataConnectorDetails: string;
+    deleteConnectorDescription: string;
+    deleteConnectorTitle: string;
+    id: string;
+    lastUsed: string;
+    loading: string;
+    noConnectionProfiles: string;
+    subtitle: string;
+    test: string;
+    testConnection: string;
+    testConnectionFailed: string;
+    testing: string;
+    totalConnections: string;
+    totalConnectors: string;
+    updatedBy: string;
+  };
+
+  // Documentation
+  docs: {
+    authenticationRequiredMessage: string;
+    loading: string;
+    notFound: string;
+  };
+
+  // Engagement
+  engagement: {
+    clicks: string;
+    ctr: string;
+    engagementRate: string;
+    openRate: string;
+  };
+
+  // Errors
+  errors: {
+    failedLoadServer: string;
+    serverIdMissing: string;
+    serverNotFound: string;
+    unableLoadServer: string;
+  };
+
+  // ETL
+  etl: {
+    adjustFiltersOrRefresh: string;
+    allCategories: string;
+    allStatuses: string;
+    analytics: string;
+    categoryLabel: string;
+    categoryPlaceholder: string;
+    cdr: string;
+    completed: string;
+    dayLabel: string;
+    endTime: string;
+    enterJobId: string;
+    executionIdColon: string;
+    failed: string;
+    failedToLoadFileRegistry: string;
+    failedToLoadStatistics: string;
+    failedToTriggerFetch: string;
+    failedToTriggerHistoricalFetch: string;
+    failedToTriggerRangeFetch: string;
+    fetchByDateRange: string;
+    fetchByRange: string;
+    fetchByTime: string;
+    fetchControls: string;
+    fetchControlsButton: string;
+    fetchControlsDescription: string;
+    fetchFailed: string;
+    fetchFilesForDateTimeRange: string;
+    fetchFilesForSpecificTime: string;
+    fetchFilesImmediately: string;
+    fetchNow: string;
+    fetchTriggered: string;
+    fileRegistryDescription: string;
+    fileUploaded: string;
+    forceReprocessing: string;
+    historicalFetchTriggered: string;
+    hourLabel: string;
+    jobIdLabel: string;
+    jobIdRequired: string;
+    loadingFileRegistry: string;
+    maxRangeNote: string;
+    monthLabel: string;
+    noFilesFound: string;
+    pending: string;
+    pleaseRetry: string;
+    pleaseRetryLater: string;
+    processingFilesStatus: string;
+    processingStatus: string;
+    rangeFetchTriggered: string;
+    searchByFileName: string;
+    selectCategory: string;
+    startTime: string;
+    statusPlaceholder: string;
+    tdr: string;
+    unableToFetchFiles: string;
+    validationError: string;
+  };
+
+  // History Pages (additional keys)
+  historyPagesExtended: {
+    featureNotImplemented: string;
+    loadingHistory: string;
+    noApprovalHistory: string;
+    noApprovalHistoryDesc: string;
+    noLifecycleHistory: string;
+    noLifecycleHistoryDesc: string;
+    notAvailable: string;
+  };
+
+  // Manual Actions
+  manualActions: {
+    chooseAction: string;
+    distributeRewards: string;
+    manualBroadcasts: string;
+    manualCommunications: string;
+    manualRewards: string;
+    sendTargetedMessages: string;
+  };
+
+  // Summary
+  summary: {
+    bounceRate: string;
+    conversionRate: string;
+    conversions: string;
+    ctr: string;
+    delivered: string;
+    deliveryRate: string;
+    failedRate: string;
+    openRate: string;
+    optOutRate: string;
+    sent: string;
+    unsubscribeRate: string;
+  };
+
+  // Validation
+  validation: {
+    codeRequired: string;
+    hostRequired: string;
+    nameRequired: string;
+    protocolRequired: string;
+  };
+
+  // Style
+  style: {
+    animation: string;
+    backgroundColor: string;
+    borderColor: string;
+    color: string;
+    opacity: string;
+  };
+
+  // Additional Data Type Formatters
+  conversions: {
+    toLocaleString: string;
+  };
+  customer_count: {
+    toLocaleString: string;
+  };
+  delivered: {
+    toLocaleString: string;
+  };
+  id: {
+    toString: string;
+  };
+  length: {
+    toLocaleString: string;
+    toString: string;
+  };
+  opened: {
+    toLocaleString: string;
+  };
+  reach: {
+    reach: string;
+  };
+  roleName: {
+    trim: string;
+  };
+  rows_failed: {
+    toLocaleString: string;
+  };
+  rows_imported: {
+    toLocaleString: string;
+  };
+  target: {
+    value: string;
+  };
+  total_recipients: {
+    toLocaleString: string;
+  };
+  sidebar: {
+    navigation: string;
   };
 
   // Reports

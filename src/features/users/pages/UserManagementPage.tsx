@@ -1581,7 +1581,7 @@ export default function UserManagementPage() {
             <button
               onClick={() => handleViewUser(user)}
               className={`p-2 icon-delete ${tw.rounded} transition-colors`}
-              style={{ color: color.primary.action, backgroundColor: "transparent" }}
+              style={{ color: var(--c-icon-table-edit), backgroundColor: "transparent" }}
               title="View user details"
             >
               <Eye className="w-4 h-4" />
@@ -1590,7 +1590,7 @@ export default function UserManagementPage() {
               <button
                 onClick={() => handleEditUser(user)}
                 className={`p-2 icon-delete ${tw.rounded} transition-colors`}
-                style={{ color: color.primary.action, backgroundColor: "transparent" }}
+                style={{ color: var(--c-icon-table-edit), backgroundColor: "transparent" }}
                 title="Edit user"
               >
                 <Edit className="w-4 h-4" />
@@ -1813,7 +1813,7 @@ export default function UserManagementPage() {
                 className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: isSelectionMode
-                    ? color.primary.action
+                    ? var(--c-icon-table-edit)
                     : "transparent",
                   color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
                   borderColor: "var(--c-bordered-button-color)",
@@ -1872,7 +1872,7 @@ export default function UserManagementPage() {
                 <div className="flex items-center gap-2 min-w-0">
                   <Icon
                     className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
-                    style={{ color: color.primary.accent }}
+                    style={{ color: var(--c-icon-table-edit) }}
                   />
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--c-text-secondary)' }}>
                     {stat.name}
@@ -1920,7 +1920,7 @@ export default function UserManagementPage() {
             className={`px-2 py-0.5 rounded-full text-xs  flex-shrink-0`}
             style={{
               backgroundColor:
-                activeTab === "users" ? color.primary.accent : color.text.muted,
+                activeTab === "users" ? var(--c-icon-table-edit) : color.text.muted,
               color: 'white',
             }}
           >
@@ -1929,7 +1929,7 @@ export default function UserManagementPage() {
           {activeTab === "users" && (
             <div
               className="absolute bottom-0 left-0 right-0 h-0.5"
-              style={{ backgroundColor: color.primary.accent }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             />
           )}
         </button>
@@ -1948,7 +1948,7 @@ export default function UserManagementPage() {
             style={{
               backgroundColor:
                 activeTab === "requests"
-                  ? color.primary.accent
+                  ? var(--c-icon-table-edit)
                   : color.text.muted,
               color: 'white',
             }}
@@ -1958,7 +1958,7 @@ export default function UserManagementPage() {
           {activeTab === "requests" && (
             <div
               className="absolute bottom-0 left-0 right-0 h-0.5"
-              style={{ backgroundColor: color.primary.accent }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             />
           )}
         </button>
@@ -2020,7 +2020,7 @@ export default function UserManagementPage() {
                   : "N/A",
               ])}
               filename={`users-${new Date().toISOString().split("T")[0]}.csv`}
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             />
 
             {/* <button
@@ -2078,7 +2078,7 @@ export default function UserManagementPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
+                  color: var(--c-icon-table-edit),
                   borderColor: "var(--c-bordered-button-color)",
                   borderWidth: "1px",
                   borderStyle: "solid",
@@ -2091,7 +2091,7 @@ export default function UserManagementPage() {
               onClick={() => handleBatchAction("deactivate")}
               disabled={isBatchProcessing}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             >
               Deactivate
             </button>
@@ -2102,7 +2102,7 @@ export default function UserManagementPage() {
 
         {/* Content */}
         <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className="overflow-hidden"
       >
         {!rolesReady || isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -2148,7 +2148,7 @@ export default function UserManagementPage() {
                     setIsModalOpen(true);
                   }}
                   className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
-                  style={{ backgroundColor: color.primary.action }}
+                  style={{ backgroundColor: var(--c-icon-table-edit) }}
                 >
                   <Plus className="w-4 h-4" />
                   {t.userManagement.addUser}
@@ -2245,7 +2245,7 @@ export default function UserManagementPage() {
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.color =
-                                color.primary.accent;
+                                var(--c-icon-table-edit);
                             }}
                             onMouseLeave={(e) => {
                               e.currentTarget.style.color = "rgb(17, 24, 39)"; // gray-900
@@ -2316,7 +2316,7 @@ export default function UserManagementPage() {
                             onClick={() => handleViewUser(user)}
                             className={`p-2 ${tw.rounded} transition-colors`}
                             style={{
-                              color: color.primary.action,
+                              color: var(--c-icon-table-edit),
                               backgroundColor: "transparent",
                             }}
                             title="View user details"
@@ -2330,7 +2330,7 @@ export default function UserManagementPage() {
                             }}
                             className={`p-2 ${tw.rounded} transition-colors`}
                             style={{
-                              color: color.primary.action,
+                              color: var(--c-icon-table-edit),
                               backgroundColor: "transparent",
                             }}
                             title="Edit user"
@@ -2788,7 +2788,7 @@ export default function UserManagementPage() {
                 rows={4}
                 style={{
                   borderColor: color.border.default,
-                  "--tw-ring-color": color.primary.accent,
+                  "--tw-ring-color": var(--c-icon-table-edit),
                 } as React.CSSProperties & { "--tw-ring-color": string }}
                 disabled={loadingActions.rejecting.size > 0}
               />
@@ -2974,7 +2974,7 @@ export default function UserManagementPage() {
                 <button
                   onClick={handleCloseModal}
                   className={`flex-1 px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
-                  style={{ backgroundColor: color.primary.accent }}
+                  style={{ backgroundColor: var(--c-icon-table-edit) }}
                 >
                   Apply Filters
                 </button>

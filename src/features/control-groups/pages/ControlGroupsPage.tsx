@@ -193,7 +193,7 @@ export default function ControlGroupsPage() {
               onClick={handleRunScheduled}
               disabled={isRunningScheduled}
               className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90 w-auto disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ backgroundColor: color.primary.accent }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             >
               {isRunningScheduled ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -205,7 +205,7 @@ export default function ControlGroupsPage() {
             <button
               onClick={() => navigate("/dashboard/control-groups/create")}
               className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90 w-auto`}
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             >
               <Plus className="h-4 w-4 mr-2" />
               <span>{t.controlGroups.createControlGroup}</span>
@@ -222,7 +222,7 @@ export default function ControlGroupsPage() {
           <div className="flex items-center gap-2">
             <Shield
               className="h-5 w-5"
-              style={{ color: color.primary.accent }}
+              style={{ color: var(--c-icon-table-edit) }}
             />
             <p className="text-sm font-medium text-gray-600">{t.controlGroups.totalGroups}</p>
           </div>
@@ -237,7 +237,7 @@ export default function ControlGroupsPage() {
           <div className="flex items-center gap-2">
             <Users
               className="h-5 w-5"
-              style={{ color: color.primary.accent }}
+              style={{ color: var(--c-icon-table-edit) }}
             />
             <p className="text-sm font-medium text-gray-600">{t.controlGroups.activeGroups}</p>
           </div>
@@ -252,7 +252,7 @@ export default function ControlGroupsPage() {
           <div className="flex items-center gap-2">
             <Percent
               className="h-5 w-5"
-              style={{ color: color.primary.accent }}
+              style={{ color: var(--c-icon-table-edit) }}
             />
             <p className="text-sm font-medium text-gray-600">{t.controlGroups.totalMembers}</p>
           </div>
@@ -295,7 +295,7 @@ export default function ControlGroupsPage() {
       </div>
 
       <div
-        className={`${tw.rounded} border border-gray-200 overflow-hidden`}
+        className="overflow-hidden"
       >
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
@@ -481,7 +481,7 @@ export default function ControlGroupsPage() {
             <button
               onClick={() => navigate("/dashboard/control-groups/create")}
               className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors hover:opacity-90 text-white`}
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: var(--c-icon-table-edit) }}
             >
               <Plus className="h-4 w-4 mr-2" />
               {t.controlGroups.createControlGroup}

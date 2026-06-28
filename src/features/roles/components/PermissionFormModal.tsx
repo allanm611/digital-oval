@@ -220,16 +220,17 @@ export default function PermissionFormModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: "var(--c-surface-background)" }}>
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
+          <h2 className="text-xl font-semibold" style={{ color: "var(--c-text-primary)" }}>
             {permission ? "Edit Permission" : "Create New Permission"}
           </h2>
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            className="disabled:opacity-50"
+            style={{ color: "var(--c-text-muted)" }}
           >
             <X className="w-5 h-5" />
           </button>
@@ -356,15 +357,15 @@ export default function PermissionFormModal({
         </form>
 
         {/* Footer */}
-        <div className="sticky bottom-0 flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-white">
+        <div className="sticky bottom-0 flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
           <button
             onClick={onClose}
             disabled={isLoading}
             className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               background: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
+              color: "var(--c-bordered-button-color)",
+              border: `1px solid var(--c-bordered-button-color)`,
             }}
           >
             Cancel
@@ -372,8 +373,8 @@ export default function PermissionFormModal({
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-            style={{ backgroundColor: color.primary.action }}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-white`}
+            style={{ backgroundColor: "var(--c-primary-action)" }}
           >
             {isLoading && <LoadingSpinner />}
             {isLoading ? (permission ? "Updating..." : "Creating...") : (permission ? "Update" : "Create")}

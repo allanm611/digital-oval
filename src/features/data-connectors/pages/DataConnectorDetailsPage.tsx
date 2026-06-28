@@ -304,7 +304,7 @@ export default function DataConnectorDetailsPage() {
       <div className="">
         <div className="text-center py-12">
           <Database
-            className={`w-16 h-16 text-[${color.primary.accent}] mx-auto mb-4`}
+            className={`w-16 h-16 text-[${var(--c-icon-table-edit)}] mx-auto mb-4`}
           />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
             {t.dataConnectors.connectorNotFound}
@@ -397,7 +397,7 @@ export default function DataConnectorDetailsPage() {
               <div
                 className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                 style={{
-                  backgroundColor: connector.colorClass || color.primary.accent,
+                  backgroundColor: connector.colorClass || var(--c-icon-table-edit),
                 }}
               >
                 <ConnectorIcon className="w-7 h-7 text-white" />
@@ -530,7 +530,7 @@ export default function DataConnectorDetailsPage() {
               <div className="relative pl-6 border-l-2 border-gray-200">
                 <div
                   className="absolute -left-2 top-0 w-4 h-4 rounded-full"
-                  style={{ backgroundColor: color.primary.accent }}
+                  style={{ backgroundColor: var(--c-icon-table-edit) }}
                 ></div>
                 <div className="space-y-1">
                   <p
@@ -592,7 +592,7 @@ export default function DataConnectorDetailsPage() {
           <button
             onClick={() => setShowSelectProfileModal(true)}
             className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
-            style={{ backgroundColor: color.primary.action }}
+            style={{ backgroundColor: var(--c-icon-table-edit) }}
           >
             <Plus className="h-4 w-4 mr-2" />
             {t.dataConnectors.addConnectionProfile}
@@ -660,7 +660,7 @@ export default function DataConnectorDetailsPage() {
                         <button
                           onClick={() => handleViewConnectionProfile(profile.id)}
                           className="text-sm font-medium break-all hover:underline"
-                          style={{ color: color.primary.accent }}
+                          style={{ color: var(--c-icon-table-edit) }}
                           title="Click to view connection profile details"
                         >
                           {profile.id}
@@ -728,8 +728,8 @@ export default function DataConnectorDetailsPage() {
       <DeleteConfirmModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title={t.dataConnectors.deleteConnectorTitle}
-        description={t.dataConnectors.deleteConnectorConfirmation(connector.name)}
+        title={t.dataConnectors.deleteConfirmTitle}
+        description={t.dataConnectors.deleteConfirmMessage}
         itemName={connector.name}
         isLoading={isDeleting}
         confirmText={t.common.delete}

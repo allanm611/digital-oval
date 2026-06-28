@@ -627,15 +627,16 @@ export default function JobExecutionDetailsPage() {
       {/* Error Information */}
       {execution.error_message && (
         <div
-          className={`${tw.rounded} border border-red-200 bg-red-50 p-6 shadow-sm`}
+          className={`${tw.rounded} border p-6 shadow-sm mt-6 mb-6`}
+          style={{ borderColor: "#ef4444", backgroundColor: "#394247" }}
         >
-          <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: "#dc2626" }}>
             <XCircle className="h-5 w-5" />
             Error Information
           </h3>
           <dl className="space-y-3">
             <div>
-              <dt className="text-sm font-medium text-red-700">
+              <dt className="text-sm font-medium" style={{ color: "#dc2626" }}>
                 Error Message
               </dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
@@ -644,7 +645,7 @@ export default function JobExecutionDetailsPage() {
             </div>
             {execution.error_code && (
               <div>
-                <dt className="text-sm font-medium text-red-700">Error Code</dt>
+                <dt className="text-sm font-medium" style={{ color: "#dc2626" }}>Error Code</dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.error_code}
                 </dd>
@@ -652,7 +653,7 @@ export default function JobExecutionDetailsPage() {
             )}
             {execution.error_step_id && (
               <div>
-                <dt className="text-sm font-medium text-red-700">
+                <dt className="text-sm font-medium" style={{ color: "#dc2626" }}>
                   Failed Step ID
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
