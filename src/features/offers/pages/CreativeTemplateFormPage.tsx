@@ -108,7 +108,7 @@ export default function CreativeTemplateFormPage() {
           template?.variables ? JSON.stringify(template.variables, null, 2) : "",
         );
       } catch (err) {
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError(t.common.error || "Error", extractBackendError(err, "Error. Please try again."));
         navigate("/dashboard/creative-templates");
       } finally {
         setLoading(false);
@@ -116,7 +116,7 @@ export default function CreativeTemplateFormPage() {
     };
 
     loadTemplate();
-  }, [id, navigate, showError]);
+  }, [id, navigate, showError, t]);
 
   // For now, remove loading state when component mounts
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function CreativeTemplateFormPage() {
     e.preventDefault();
 
     if (!name.trim() || !code.trim() || !channel) {
-      showError("Validation", "Name, code, and channel are required");
+      showError(t.common.validation || "Validation", t.common.requiredFieldsMissing || "Name, code, and channel are required");
       return;
     }
 
@@ -147,7 +147,7 @@ export default function CreativeTemplateFormPage() {
       try {
         parsedVariables = JSON.parse(variablesText);
       } catch {
-        showError("Validation", "Variables must be valid JSON");
+        showError(t.common.validation || "Validation", t.offers.invalidVariablesJson || "Variables must be valid JSON");
         return;
       }
     }
@@ -168,30 +168,30 @@ export default function CreativeTemplateFormPage() {
 
       if (id) {
         await creativeTemplateService.updateCreativeTemplate(parseInt(id, 10), payload);
-        showSuccess("Creative Template", "Updated successfully");
+        showSuccess(t.offers.creativeTemplate || "Creative Template", t.messages.updatedSuccessfully || "Updated successfully");
       } else {
         await creativeTemplateService.createCreativeTemplate(payload);
-        showSuccess("Creative Template", "Created successfully");
+        showSuccess(t.offers.creativeTemplate || "Creative Template", t.messages.createdSuccessfully || "Created successfully");
       }
 
       navigate("/dashboard/creative-templates");
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error || "Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return <div className="p-6">{t.common.loading || "Loading..."}</div>;
   }
 
   return (
     <div className="space-y-4">
       <BackButton
-       
+
         showBreadcrumb={true}
-        currentLabel={id ? "Edit Creative Template" : "Create Creative Template"}
+        currentLabel={id ? (t.offers.editTemplate || "Edit Creative Template") : (t.offers.createTemplate || "Create Creative Template")}
       />
 
       <form

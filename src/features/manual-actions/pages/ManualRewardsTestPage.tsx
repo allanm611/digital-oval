@@ -97,7 +97,7 @@ export default function ManualRewardsTestPage() {
         }
       } catch (err) {
         console.error("Failed to load communication channels:", err);
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError(t.common.error || "Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoadingChannels(false);
       }

@@ -220,7 +220,7 @@ export default function LanguagesPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleOpenEditModal(language)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -247,7 +247,7 @@ export default function LanguagesPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(language.id, e)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               style={{
                 color: color.primary.action,
                 backgroundColor: "transparent",

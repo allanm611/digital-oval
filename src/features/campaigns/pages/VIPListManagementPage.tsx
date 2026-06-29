@@ -149,7 +149,7 @@ export default function VIPListManagementPage() {
           <div className="flex items-center justify-center">
             <button
               onClick={() => setMemberToRemove(row._full)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title="Remove from VIP List"
             >
               <Trash2 className="w-4 h-4" />
@@ -247,14 +247,14 @@ export default function VIPListManagementPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
-              className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
               title="View details"
             >
               <Eye className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDeleteVIPList(row._full)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title="Delete VIP List"
             >
               <Trash2 className="w-4 h-4" />
@@ -1005,7 +1005,7 @@ export default function VIPListManagementPage() {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handleViewCustomerDetail(customer)}
-                                className={`p-2 icon-edit ${tw.rounded} inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors  hover:text-gray-700`}
+                                className={`p-0 icon-edit ${tw.rounded} inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors  hover:text-gray-700`}
                                 title="View customer details"
                               >
                                 <Eye className="w-4 h-4" />

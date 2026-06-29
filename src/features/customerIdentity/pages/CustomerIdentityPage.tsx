@@ -179,7 +179,7 @@ export default function CustomerIdentityPage() {
               },
             )
           }
-          className={`p-2 icon-edit ${tw.rounded} text-black transition-colors hover:bg-gray-100`}
+          className={`p-0 icon-edit ${tw.rounded} text-black transition-colors hover:bg-gray-100`}
           title={t.customerIdentity.viewDetails}
         >
           <Eye className="h-4 w-4" />

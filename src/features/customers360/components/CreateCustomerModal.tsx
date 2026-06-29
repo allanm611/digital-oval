@@ -8,6 +8,8 @@ import {
   Download,
 
 } from "lucide-react";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import * as XLSX from "xlsx";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
@@ -127,6 +129,10 @@ export default function CreateCustomerModal({
   existingCustomers = [],
 }: CreateCustomerModalProps) {
   const { success, error } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const nextSubscriptionId = useMemo(
     () => getNextSubscriptionId(existingCustomers),
     [existingCustomers],
@@ -836,22 +842,17 @@ export default function CreateCustomerModal({
           {activeTab === "single" && (
             <>
               <div className="space-y-6">
-                <div>
+                <FormField error={formErrors?.msisdn} ref={registerFieldRef('msisdn')}>
                   <Input
                     label="Phone Number (MSISDN)"
                     placeholder=""
                     value={formData.msisdn}
                     onChange={(value) => handleInputChange({ target: { name: "msisdn", value } } as any)}
                     hasError={!!formErrors.msisdn}
-                   
+
                     required
                   />
-                  {formErrors.msisdn && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {formErrors.msisdn}
-                    </p>
-                  )}
-                </div>
+                </FormField>
               </div>
 
               {/* Personal Information Section */}
@@ -861,38 +862,28 @@ export default function CreateCustomerModal({
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <FormField error={formErrors?.firstName} ref={registerFieldRef('firstName')}>
                     <Input
                       label="First Name"
                       placeholder="First Name"
                       value={formData.firstName}
                       onChange={(value) => handleInputChange({ target: { name: "firstName", value } } as any)}
                       hasError={!!formErrors.firstName}
-                     
+
                       required
                     />
-                    {formErrors.firstName && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {formErrors.firstName}
-                      </p>
-                    )}
-                  </div>
-                  <div>
+                  </FormField>
+                  <FormField error={formErrors?.lastName} ref={registerFieldRef('lastName')}>
                     <Input
                       label="Last Name"
                       placeholder="Last Name"
                       value={formData.lastName}
                       onChange={(value) => handleInputChange({ target: { name: "lastName", value } } as any)}
                       hasError={!!formErrors.lastName}
-                     
+
                       required
                     />
-                    {formErrors.lastName && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {formErrors.lastName}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
@@ -928,7 +919,7 @@ export default function CreateCustomerModal({
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
+                  <FormField error={formErrors?.email} ref={registerFieldRef('email')}>
                     <Input
                       label="Email"
                       type="email"
@@ -936,14 +927,9 @@ export default function CreateCustomerModal({
                       value={formData.email}
                       onChange={(value) => handleInputChange({ target: { name: "email", value } } as any)}
                       hasError={!!formErrors.email}
-                     
+
                     />
-                    {formErrors.email && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {formErrors.email}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                   <div>
                     <Input
                       label="Alternate Email"

@@ -55,7 +55,7 @@ export default function SystemEventsPage() {
       id: "category",
       label: t.common.category,
       visible: true,
-      filterConfig: { type: "select", options: ["Email", "SMS", "Campaign", "Other"] },
+      filterConfig: { type: "select", options: SYSTEM_EVENT_CATEGORIES.map(cat => cat.value) },
       render: (_, row) => (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
           {SYSTEM_EVENT_CATEGORIES.find(

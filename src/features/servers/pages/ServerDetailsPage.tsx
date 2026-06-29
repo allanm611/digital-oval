@@ -20,6 +20,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
+import { useConfirm } from "../../../contexts/ConfirmContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
@@ -52,6 +53,7 @@ export default function ServerDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
+  const { confirm } = useConfirm();
   const { user } = useAuth();
   const { t } = useLanguage();
 
@@ -562,7 +564,7 @@ export default function ServerDetailsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold `}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white`}
               style={{
                 backgroundColor: color.primary.accent,
               }}
@@ -571,7 +573,7 @@ export default function ServerDetailsPage() {
             </span>
             {server.is_deprecated && (
               <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold `}
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-white`}
                 style={{
                   backgroundColor: color.primary.accent,
                 }}

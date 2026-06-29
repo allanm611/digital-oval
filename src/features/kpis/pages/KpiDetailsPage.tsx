@@ -54,10 +54,10 @@ export default function KpiDetailsPage() {
     try {
       setDeleting(true);
       await kpiService.deleteKPI(kpi.id || 0);
-      success("Success", `"${kpi.field_name}" has been deleted successfully`);
+      success(t.common.success, `"${kpi.field_name}" ${t.messages.deleted}`);
       navigate("/dashboard/kpis/all");
     } catch (err) {
-      showError("Error", "Failed to delete KPI");
+      showError(t.common.error, t.kpis.messages.failedLoadKPIs);
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
@@ -69,7 +69,7 @@ export default function KpiDetailsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading KPI details...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>{t.common.loading}</p>
       </div>
     );
   }
@@ -78,8 +78,8 @@ export default function KpiDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
-          <p className={tw.textSecondary}>KPI not found</p>
+          <BackButton showBreadcrumb={true} currentLabel={t.kpis.kpiName || "KPI"} parentLabel={parentLabel} />
+          <p className={tw.textSecondary}>{t.kpis.messages.notFound}</p>
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ export default function KpiDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
+          <BackButton showBreadcrumb={true} currentLabel={t.kpis.kpiName || "KPI"} parentLabel={parentLabel} />
           <div></div>
         </div>
 
@@ -110,7 +110,7 @@ export default function KpiDetailsPage() {
             }}
           >
             <Edit className="w-4 h-4" />
-            Edit
+            {t.common.edit}
           </button>
           <button
             onClick={handleDelete}
@@ -131,7 +131,7 @@ export default function KpiDetailsPage() {
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            {t.common.delete}
           </button>
         </div>
       </div>

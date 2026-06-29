@@ -2105,7 +2105,7 @@ export default function JobDependenciesPage() {
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleView(dependency)}
-                        className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                        className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                         aria-label="View dependency"
                         title="View"
                       >
@@ -2114,7 +2114,7 @@ export default function JobDependenciesPage() {
                       <PermissionGate permission="job-dependencies.update">
                         <button
                           onClick={() => handleEdit(dependency)}
-                          className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                          className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                           aria-label="Edit dependency"
                           title="Edit"
                         >
@@ -2124,7 +2124,7 @@ export default function JobDependenciesPage() {
                       <PermissionGate permission="job-dependencies.delete">
                         <button
                           onClick={() => handleDeleteClick(dependency)}
-                          className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                           aria-label="Delete dependency"
                           title="Delete"
                         >

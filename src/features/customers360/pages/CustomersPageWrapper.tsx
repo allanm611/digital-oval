@@ -30,6 +30,7 @@ export default function CustomersPageWrapper() {
  * Alternative: Use this if you want custom error handling
  */
 export function CustomersPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="table"

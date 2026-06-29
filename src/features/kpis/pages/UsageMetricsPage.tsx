@@ -50,7 +50,7 @@ export default function UsageMetricsPage() {
       id: "category",
       label: t.common.category,
       visible: true,
-      filterConfig: { type: "select", options: ["Data Usage", "Voice Usage", "SMS Usage", "Bundle Usage", "DOU Metrics"] },
+      filterConfig: { type: "select", options: ["data_usage", "voice_usage", "sms_usage", "bundle_usage", "dou_metrics"] },
       render: (_, row) => (
         <span className="text-sm text-black">
           {row.category
@@ -124,7 +124,7 @@ export default function UsageMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-edit ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -136,7 +136,7 @@ export default function UsageMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-edit ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="Edit metric"
           >
             <Edit className="w-4 h-4" />
@@ -144,7 +144,7 @@ export default function UsageMetricsPage() {
           <button
             onClick={() => handleDeleteClick(row)}
             disabled={deleting === row.id}
-            className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-delete ${tw.rounded} disabled:opacity-60`}
             title="Delete metric"
           >
             <Trash2 className="w-4 h-4" />

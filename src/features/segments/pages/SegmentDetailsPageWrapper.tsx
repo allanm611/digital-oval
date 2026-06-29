@@ -30,6 +30,7 @@ export default function SegmentDetailsPageWrapper() {
  * Alternative: Use this if you want custom error handling
  */
 export function SegmentDetailsPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="detail"

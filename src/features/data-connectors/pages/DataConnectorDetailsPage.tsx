@@ -23,7 +23,7 @@ import { connectionProfileService } from "../../connection-profiles/services/con
 import { ConnectionProfileType } from "../../connection-profiles/types/connectionProfile";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import { tw, color, button } from "../../../shared/utils/utils";
+import { tw, color, button, getButtonStyles } from "../../../shared/utils/utils";
 import DataConnectorForm from "../components/DataConnectorForm";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -304,7 +304,8 @@ export default function DataConnectorDetailsPage() {
       <div className="">
         <div className="text-center py-12">
           <Database
-            className={`w-16 h-16 text-[${var(--c-icon-table-edit)}] mx-auto mb-4`}
+            className="w-16 h-16 mx-auto mb-4"
+            style={{ color: "var(--c-icon-table-edit)" }}
           />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
             {t.dataConnectors.connectorNotFound}
@@ -397,7 +398,7 @@ export default function DataConnectorDetailsPage() {
               <div
                 className={`h-14 w-14 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                 style={{
-                  backgroundColor: connector.colorClass || var(--c-icon-table-edit),
+                  backgroundColor: connector.colorClass || "var(--c-icon-table-edit)",
                 }}
               >
                 <ConnectorIcon className="w-7 h-7 text-white" />
@@ -407,7 +408,7 @@ export default function DataConnectorDetailsPage() {
                   {connector.name}
                 </h2>
                 <p className={`${tw.textSecondary} text-sm leading-relaxed`}>
-                  {connector.description || "No description available"}
+                  {connector.description || t.routes.noDescriptionAvailable}
                 </p>
               </div>
             </div>
@@ -530,7 +531,7 @@ export default function DataConnectorDetailsPage() {
               <div className="relative pl-6 border-l-2 border-gray-200">
                 <div
                   className="absolute -left-2 top-0 w-4 h-4 rounded-full"
-                  style={{ backgroundColor: var(--c-icon-table-edit) }}
+                  style={{ backgroundColor: color.primary.accent }}
                 ></div>
                 <div className="space-y-1">
                   <p
@@ -591,10 +592,10 @@ export default function DataConnectorDetailsPage() {
           </h3>
           <button
             onClick={() => setShowSelectProfileModal(true)}
-            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
-            style={{ backgroundColor: var(--c-icon-table-edit) }}
+            className="inline-flex items-center gap-2"
+            style={getButtonStyles(button.action)}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             {t.dataConnectors.addConnectionProfile}
           </button>
         </div>
@@ -660,7 +661,7 @@ export default function DataConnectorDetailsPage() {
                         <button
                           onClick={() => handleViewConnectionProfile(profile.id)}
                           className="text-sm font-medium break-all hover:underline"
-                          style={{ color: var(--c-icon-table-edit) }}
+                          style={{ color: "var(--c-icon-table-edit)" }}
                           title="Click to view connection profile details"
                         >
                           {profile.id}

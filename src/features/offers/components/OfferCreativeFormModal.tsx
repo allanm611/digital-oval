@@ -9,15 +9,11 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import RichTextEditor from "../../communications/components/RichTextEditor";
-import PreviewPanel from "../../communications/components/PreviewPanel";
-import {
-  SMSSmartphonePreview,
-  EmailLaptopPreview,
-} from "../components/CreativePreviewComponents";
+import CreativePreviewRenderer from "../components/CreativePreviewRenderer";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
@@ -36,6 +32,7 @@ import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
   validateInsertPosition,
+  validateNoEditInsideVariables,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
@@ -63,6 +60,20 @@ const replaceVariables = (
     result = result.replace(regex, value);
   });
   return result;
+};
+
+const getBaseChannel = (channelName: string): string => {
+  if (!channelName) return "SMS";
+  const upperName = channelName.toUpperCase();
+
+  // Extract base channel from full channel name (e.g., "SMS Normal" → "SMS")
+  const validChannels = ["EMAIL", "SMS", "USSD", "WHATSAPP", "PUSH"];
+  for (const valid of validChannels) {
+    if (upperName.includes(valid)) {
+      return valid;
+    }
+  }
+  return "SMS";
 };
 
 const getCharacterInfo = (text: string) => {
@@ -95,16 +106,13 @@ export default function OfferCreativeFormModal({
 
   // Form state
   const [formData, setFormData] = useState<{
-    offer_id?: number;
     channel: CreativeChannel;
     locale: string;
     title: string;
     text_body: string;
     html_body: string;
     is_active: boolean;
-    sms_route?: string;
   }>({
-    offer_id: undefined,
     channel: "SMS",
     locale: "en",
     title: "",
@@ -131,14 +139,12 @@ export default function OfferCreativeFormModal({
   const [senderIds, setSenderIds] = useState<SenderId[]>([]);
   const [smsRoutes, setSmsRoutes] = useState<any[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
-  const [offers, setOffers] = useState<any[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [senderIdsLoading, setSenderIdsLoading] = useState(false);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
   const [languagesLoading, setLanguagesLoading] = useState(false);
-  const [offersLoading, setOffersLoading] = useState(false);
   const [templatesLoading, setTemplatesLoading] = useState(false);
 
   // Preview state
@@ -220,17 +226,6 @@ export default function OfferCreativeFormModal({
       }
 
       try {
-        setOffersLoading(true);
-        const offersRes = await offerService.searchOffers({ limit: 100 });
-        const offersData = offersRes?.data || offersRes || [];
-        setOffers(Array.isArray(offersData) ? offersData : []);
-      } catch (err) {
-        console.error("Failed to load offers:", err);
-      } finally {
-        setOffersLoading(false);
-      }
-
-      try {
         setTemplatesLoading(true);
         const templatesRes = await creativeTemplateService.getCreativeTemplates();
         const templatesData = templatesRes?.data || templatesRes || [];
@@ -247,14 +242,12 @@ export default function OfferCreativeFormModal({
     // Initialize form data for edit mode
     if (initialCreative && mode === "edit") {
       setFormData({
-        offer_id: initialCreative.offer_id,
         channel: initialCreative.channel,
         locale: initialCreative.locale,
         title: initialCreative.title || "",
         text_body: initialCreative.text_body || "",
         html_body: initialCreative.html_body || "",
         is_active: initialCreative.is_active ?? true,
-        sms_route: initialCreative.sms_route,
       });
     } else {
       setFormData({
@@ -356,10 +349,18 @@ export default function OfferCreativeFormModal({
   };
 
   const handlePreview = () => {
+    // Build variables object with default values from selected variables
+    const previewVars: Record<string, string | number | boolean> = {};
+    selectedVariables.forEach((v) => {
+      // Variables are referenced as {{sourceValue.fieldValue}} in content
+      const variableKey = `${v.sourceValue}.${v.value}`;
+      previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
+    });
+
     setPreviewData({
-      rendered_title: formData.title,
-      rendered_text_body: formData.text_body,
-      rendered_html_body: formData.html_body,
+      rendered_title: replaceVariables(formData.title, previewVars),
+      rendered_text_body: replaceVariables(formData.text_body, previewVars),
+      rendered_html_body: replaceVariables(formData.html_body, previewVars),
     });
     setShowPreview(true);
   };
@@ -382,9 +383,6 @@ export default function OfferCreativeFormModal({
   const handleSave = async () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.offer_id) {
-      newErrors.offer_id = "Offer is required";
-    }
     if (!formData.title) {
       newErrors.title = "Title is required";
     }
@@ -413,7 +411,6 @@ export default function OfferCreativeFormModal({
 
       if (mode === "create") {
         creativeData.name = formData.title;
-        if (formData.offer_id) creativeData.offer_id = formData.offer_id;
         if (user?.user_id) creativeData.created_by = user.user_id;
       } else {
         creativeData.title = formData.title;
@@ -441,22 +438,7 @@ export default function OfferCreativeFormModal({
         title={`${mode === "create" ? "Add" : "Edit"} Creative`}
         size="2xl"
       >
-        <div className="space-y-4">
-            {/* Offer Selector */}
-            <div>
-              <HeadlessSelect
-                label="Offer *"
-                value={formData.offer_id ? String(formData.offer_id) : ""}
-                onChange={(value) => setFormData((prev) => ({ ...prev, offer_id: value ? Number(value) : undefined }))}
-                options={offers.map((offer) => ({ value: String(offer.id), label: offer.name }))}
-                placeholder="Select an offer"
-                zIndex={zIndex.popover}
-                disabled={mode === "edit" || offersLoading}
-              />
-              {errors.offer_id && (
-                <p className="text-xs text-red-600 mt-1">{errors.offer_id}</p>
-              )}
-            </div>
+        <div className="space-y-3">
 
             {/* Channel & Locale */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -508,21 +490,25 @@ export default function OfferCreativeFormModal({
             </div>
 
             {/* Creative Template */}
-            <TypeSelector
-              label="Creative Template (Optional)"
-              options={[
-                { label: "Select a template", value: "" },
-                ...templates
-                  .filter((t) => t.is_active && t.channel === formData.channel)
-                  .map((t) => ({ value: String(t.id), label: t.name }))
-              ]}
-              value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
-              onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
-              placeholder="Select template..."
-              disabled={templatesLoading || !formData.channel}
-              allowCreate={true}
-              onCreate={() => setIsTemplateModalOpen(true)}
-            />
+            {(() => {
+              const baseChannel = getBaseChannel(formData.channel);
+              const filteredTemplates = templates.filter((t) => t.is_active && t.channel?.toUpperCase() === baseChannel?.toUpperCase());
+              return (
+                <TypeSelector
+                  label="Creative Template (Optional)"
+                  options={[
+                    { label: "Select a template", value: "" },
+                    ...filteredTemplates.map((t) => ({ value: String(t.id), label: t.name }))
+                  ]}
+                  value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
+                  onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
+                  placeholder="Select template..."
+                  disabled={templatesLoading || !formData.channel}
+                  allowCreate={true}
+                  onCreate={() => setIsTemplateModalOpen(true)}
+                />
+              );
+            })()}
 
             {/* Sender ID (SMS) or Subject (Email/Web) */}
             {formData.channel?.toUpperCase() === "SMS" ? (
@@ -551,7 +537,16 @@ export default function OfferCreativeFormModal({
                   placeholder="Enter subject..."
                   maxLength={160}
                   value={formData.title}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, title: value }))}
+                  onChange={(value) => {
+                    // Validate and show error, but allow text update
+                    const editError = validateNoEditInsideVariables(formData.title || "", value);
+                    if (editError) {
+                      setVariableError(editError);
+                    } else {
+                      setVariableError("");
+                    }
+                    setFormData((prev) => ({ ...prev, title: value }));
+                  }}
                   onClick={(e) => {
                     setActiveField("title");
                     setCursorPosition(e.currentTarget.selectionStart || 0);
@@ -568,25 +563,6 @@ export default function OfferCreativeFormModal({
               </div>
             )}
 
-            {/* SMS Route */}
-            {formData.channel?.toUpperCase() === "SMS" && (
-              <HeadlessSelect
-                label="SMS Route"
-                value={formData.sms_route || ""}
-                onChange={(value) => setFormData((prev) => ({ ...prev, sms_route: value }))}
-                options={
-                  smsRoutes
-                    ?.filter((route) => route.is_active)
-                    .map((route) => ({
-                      value: route.id?.toString() || "",
-                      label: route.name,
-                    })) || []
-                }
-                placeholder="Select SMS Route"
-                zIndex={zIndex.popover}
-                disabled={smsRoutesLoading}
-              />
-            )}
 
             {/* Message Content Toolbar */}
             <div
@@ -622,13 +598,14 @@ export default function OfferCreativeFormModal({
                     Insert Variable
                   </button>
                   <div
-                    className="absolute left-0 mt-1"
+                    className="absolute right-0 mt-1"
                     style={{ zIndex: zIndex.popover }}
                   >
                     <CascadingVariableSelector
                       isOpen={showVariableSelector}
                       onClose={() => setShowVariableSelector(false)}
                       onVariableSelect={handleVariableSelect}
+                      openToLeft={true}
                     />
                   </div>
                 </div>
@@ -658,6 +635,13 @@ export default function OfferCreativeFormModal({
                     setActiveField("body");
                     if (bodyTextareaRef.current) {
                       setCursorPosition(bodyTextareaRef.current.selectionStart || 0);
+                    }
+                    // Validate and show error, but allow text update
+                    const editError = validateNoEditInsideVariables(formData.text_body || "", value);
+                    if (editError) {
+                      setVariableError(editError);
+                    } else {
+                      setVariableError("");
                     }
                     setFormData((prev) => ({ ...prev, text_body: value }));
                   }}
@@ -721,18 +705,6 @@ export default function OfferCreativeFormModal({
               </div>
             </div>
 
-            {/* Active Status */}
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
-              setFormData((prev) => ({ ...prev, is_active: !prev.is_active }))
-            }>
-              <Checkbox
-                id="creative-active"
-                checked={formData.is_active}
-                onChange={() => setFormData((prev) => ({ ...prev, is_active: !prev.is_active }))}
-              />
-              <span className="text-sm text-gray-700">Mark creative as active</span>
-            </div>
-
             {/* Buttons */}
             <div className="pt-4">
               <ModalFooter
@@ -749,15 +721,13 @@ export default function OfferCreativeFormModal({
                 confirmStyle={{ backgroundColor: color.primary.action }}
                 leftContent={
                   <div className="flex items-center gap-2">
-                    {(formData.channel === "SMS" || formData.channel === "SMS Flash" || formData.channel === "Email") && (
-                      <button
-                        onClick={handlePreview}
-                        className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview
-                      </button>
-                    )}
+                    <button
+                      onClick={handlePreview}
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview
+                    </button>
                     <button
                       onClick={() => setIsTestModalOpen(true)}
                       disabled={!formData.channel}
@@ -789,98 +759,12 @@ export default function OfferCreativeFormModal({
       >
         <div className="space-y-6">
           {previewData ? (
-            <div className="space-y-6">
-              {/* Device-Specific Previews */}
-              {formData.channel === "SMS" ||
-              formData.channel === "SMS Flash" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    SMS Preview
-                  </h3>
-                  <SMSSmartphonePreview
-                    message={
-                      previewData.rendered_text_body ||
-                      previewData.rendered_title ||
-                      ""
-                    }
-                    title={previewData.rendered_title}
-                  />
-                </div>
-              ) : formData.channel === "Email" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    Email Preview
-                  </h3>
-                  <EmailLaptopPreview
-                    title={previewData.rendered_title}
-                    htmlBody={previewData.rendered_html_body}
-                    textBody={previewData.rendered_text_body}
-                  />
-                </div>
-              ) : (
-                // Fallback for other channels (Web, USSD, etc.)
-                <div className="space-y-4">
-                  {previewData.rendered_title && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rendered Title
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <p className="text-gray-900">
-                          {previewData.rendered_title}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {previewData.rendered_text_body && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rendered Text Body
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <p className="text-gray-900 whitespace-pre-wrap">
-                          {previewData.rendered_text_body}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {previewData.rendered_html_body && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rendered HTML Body
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <div
-                          className="prose max-w-none"
-                          dangerouslySetInnerHTML={{
-                            __html: previewData.rendered_html_body,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {!previewData.rendered_title &&
-                    !previewData.rendered_text_body &&
-                    !previewData.rendered_html_body && (
-                      <div className="text-center py-8 text-gray-500">
-                        <p>
-                          No content to preview. Add title, text body, or HTML
-                          body.
-                        </p>
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
+            <CreativePreviewRenderer
+              channel={formData.channel}
+              title={previewData.rendered_title}
+              textBody={previewData.rendered_text_body}
+              htmlBody={previewData.rendered_html_body}
+            />
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>No preview available.</p>

@@ -30,6 +30,7 @@ interface CascadingVariableSelectorProps {
   onClose: () => void;
   anchorRef?: React.RefObject<HTMLElement>;
   quicklistColumns?: QuicklistColumn[];
+  openToLeft?: boolean;
 }
 
 export default function CascadingVariableSelector({
@@ -37,6 +38,7 @@ export default function CascadingVariableSelector({
   isOpen,
   onClose,
   quicklistColumns = [],
+  openToLeft = false,
 }: CascadingVariableSelectorProps) {
   const { t } = useLanguage();
   const { categories, isLoading } = useMessageVariableFields();
@@ -108,6 +110,7 @@ export default function CascadingVariableSelector({
         description: field?.description ?? "",
         fieldType: String(fieldType || "text"),
         sourceTable: field?.source_table ?? "",
+        defaultValue: field?.default_value ?? undefined,
       };
     });
   }, [categoryMap, hoveredSourceId]);
@@ -146,6 +149,7 @@ export default function CascadingVariableSelector({
     if (!source) return;
 
     const fieldType = field?.fieldType ?? field?.type ?? "text";
+
     const templateVariable: TemplateVariable = {
       id: field.id,
       name: field.name ?? "Unknown",
@@ -155,8 +159,10 @@ export default function CascadingVariableSelector({
       sourceValue: source.value ?? "",
       description: field.description ?? "",
       fieldType: String(fieldType || "text"),
+      defaultValue: field.defaultValue ?? undefined,
     };
 
+    console.log("✅ Selected variable with default:", { fieldName: field.name, defaultValue: field.defaultValue, templateVariable });
     onVariableSelect(templateVariable);
     onClose();
     setSearchQuery("");
@@ -187,7 +193,7 @@ export default function CascadingVariableSelector({
   return (
     <div
       ref={containerRef}
-      className="absolute top-full left-0 mt-1 z-50 flex"
+      className={`absolute top-full mt-1 z-50 flex ${openToLeft ? "right-0" : "left-0"}`}
       style={{ minWidth: "200px" }}
     >
       {/* Sources List (Level 1) */}

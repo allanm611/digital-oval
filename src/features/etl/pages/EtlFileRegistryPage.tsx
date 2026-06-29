@@ -33,8 +33,6 @@ import FetchControlsModal from "../components/FetchControlsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import DateFormatter from "../../../shared/components/DateFormatter";
 
-const PAGE_SIZE = 15;
-
 type StatusFilter = "all" | "pending" | "processing" | "completed" | "failed";
 type CategoryFilter = "all" | "CDR" | "TDR" | string;
 type FetchMode = "immediate" | "by-time" | "by-range";
@@ -72,7 +70,6 @@ export default function EtlFileRegistryPage() {
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
   // Table columns definition
@@ -158,8 +155,8 @@ export default function EtlFileRegistryPage() {
       const response = await etlService.getFileRegistry({
         category: categoryFilter !== "all" ? categoryFilter : undefined,
         status: statusFilter !== "all" ? statusFilter : undefined,
-        limit: PAGE_SIZE,
-        offset: (page - 1) * PAGE_SIZE,
+        limit: tablePageSize,
+        offset: (tableCurrentPage - 1) * tablePageSize,
       });
 
       const filesList = Array.isArray(response.data) ? response.data : [];
@@ -177,7 +174,7 @@ export default function EtlFileRegistryPage() {
     } finally {
       setIsLoadingFiles(false);
     }
-  }, [page, categoryFilter, statusFilter, showError, t.etl]);
+  }, [tableCurrentPage, tablePageSize, categoryFilter, statusFilter, showError, t.etl]);
 
   useEffect(() => {
     loadStats();
@@ -188,8 +185,8 @@ export default function EtlFileRegistryPage() {
   }, [loadRegistry]);
 
   useEffect(() => {
-    setPage(1);
-  }, [statusFilter, categoryFilter]);
+    tableHandlePageChange(1);
+  }, [statusFilter, categoryFilter, tableHandlePageChange]);
 
   const handleFetchModalOpen = (mode: FetchMode) => {
     setFetchModalMode(mode);
@@ -215,8 +212,6 @@ export default function EtlFileRegistryPage() {
     { label: t.etl.cdr, value: "CDR" },
     { label: t.etl.tdr, value: "TDR" },
   ];
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const getStatusBadge = (status: string) => {
     return <span className="text-black text-sm">{status}</span>;
@@ -498,13 +493,13 @@ export default function EtlFileRegistryPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<EtlFileRegistryRowType>
               columns={columns}
-              data={displayedFiles}
+              data={files}
               totalItems={totalCount}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={isLoadingFiles}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
@@ -521,13 +516,13 @@ export default function EtlFileRegistryPage() {
       </div>
 
       {/* Pagination */}
-      {!isLoadingFiles && files.length > 0 && (
+      {!isLoadingFiles && totalCount > 0 && (
         <Pagination
           currentPage={tableCurrentPage}
           pageSize={tablePageSize}
           totalItems={totalCount}
           onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+          onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

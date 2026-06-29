@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -69,11 +71,6 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
 import { useBackendOfferTypeData } from "../../../shared/hooks/useBackendOfferTypeData";
 import { Step } from "../../../shared/components/ui/ProgressStepper";
-import {
-  SMSButtonPhonePreview,
-  SMSSmartphonePreview,
-  EmailLaptopPreview,
-} from "../components/CreativePreviewComponents";
 import CategoryModal from "../../../shared/components/CategoryModal";
 import CreateOfferTypeModal from "../components/CreateOfferTypeModal";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
@@ -307,18 +304,8 @@ function BasicInfoStep({
   const [categoryRefreshTriggerState, setCategoryRefreshTriggerState] = useState(0);
   const userInitiatedUpdateRef = useRef(false);
 
-  // Refs for required fields to enable auto-scroll on validation error
-  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({
-    name: null,
-    offer_type: null,
-    category_id: null,
-    communication_channel: null,
-    sms_route: null,
-    email_route: null,
-    whatsapp_route: null,
-    ussd_route: null,
-    push_notification_route: null,
-  });
+  // Use form validation hook for auto-scroll and error management
+  const { registerFieldRef, hasError, clearValidationError } = useFormValidation();
 
   // Initialize selectedCategoryIds from formData.category_id (only on mount or when formData changes externally)
   useEffect(() => {
@@ -353,24 +340,6 @@ function BasicInfoStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategoryIds]); // Only depend on selectedCategoryIds to avoid circular updates
 
-  // Auto-scroll to first field with validation error
-  useEffect(() => {
-    if (validationErrors && Object.keys(validationErrors).length > 0) {
-      // Find the first field with an error
-      const errorFieldKey = Object.keys(validationErrors)[0];
-      const fieldElement = fieldRefs.current[errorFieldKey];
-
-      if (fieldElement) {
-        // Scroll the field into view with smooth behavior
-        fieldElement.scrollIntoView({ behavior: "smooth", block: "center" });
-        // Focus the first input within this field container (if it exists)
-        const input = fieldElement.querySelector("input, select, textarea") as HTMLElement;
-        if (input) {
-          input.focus();
-        }
-      }
-    }
-  }, [validationErrors]);
 
   return (
     <div className="space-y-6">
@@ -383,7 +352,7 @@ function BasicInfoStep({
         </p>
       </div>
       <div className="space-y-8">
-        <div ref={(el) => { if (el) fieldRefs.current.name = el; }}>
+        <FormField error={validationErrors?.name} ref={registerFieldRef('name')}>
           <Input
             label="Offer Name"
             value={formData.name}
@@ -393,13 +362,10 @@ function BasicInfoStep({
                 clearValidationErrors();
               }
             }}
-            hasError={!!validationErrors?.name}
+            hasError={hasError('name')}
             required
           />
-          {validationErrors?.name && (
-            <p className="mt-1 text-xs text-red-600">{validationErrors.name}</p>
-          )}
-        </div>
+        </FormField>
 
         <div>
           <Input
@@ -432,7 +398,7 @@ function BasicInfoStep({
           rows={3}
         />
 
-        <div ref={(el) => { if (el) fieldRefs.current.offer_type = el; }}>
+        <FormField error={validationErrors?.offer_type} ref={registerFieldRef('offer_type')}>
           <TypeSelector
             label="Offer Type"
             options={(offerTypes || [])
@@ -461,14 +427,9 @@ function BasicInfoStep({
             allowCreate={true}
             onCreate={() => setShowCreateTypeModal(true)}
           />
-          {validationErrors?.offer_type && (
-            <p className="mt-1 text-sm text-red-600">
-              {validationErrors.offer_type}
-            </p>
-          )}
-        </div>
+        </FormField>
 
-        <div ref={(el) => { if (el) fieldRefs.current.category_id = el; }}>
+        <FormField error={validationErrors?.category_id} ref={registerFieldRef('category_id')}>
           <MultiCategorySelector
             label="Catalog"
             value={selectedCategoryIds}
@@ -490,19 +451,10 @@ function BasicInfoStep({
               setShowCreateCatalogModal(false);
             }}
           />
-          {/* <p className="text-xs text-gray-500 mt-1">
-            You can select multiple catalogs. Only the first one will be saved
-            to the backend.
-          </p> */}
-          {validationErrors?.category_id && (
-            <p className="mt-1 text-sm text-red-600">
-              {validationErrors.category_id}
-            </p>
-          )}
-        </div>
+        </FormField>
 
         <div className="flex gap-4">
-          <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.communication_channel = el; }}>
+          <FormField error={validationErrors?.communication_channel} className="flex-1" ref={registerFieldRef('communication_channel')}>
             <HeadlessSelect
               label="Communication Channel"
               options={communicationChannels?.map((channel) => ({
@@ -532,12 +484,7 @@ function BasicInfoStep({
               }}
               placeholder={channelsLoading ? "Loading..." : "Select communication channel"}
             />
-            {validationErrors?.communication_channel && (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.communication_channel}
-              </p>
-            )}
-          </div>
+          </FormField>
 
           {/* SMS Route - only show when SMS variant channel is selected */}
           {(() => {
@@ -545,7 +492,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("SMS") ? (
-              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.sms_route = el; }}>
+              <FormField error={validationErrors?.sms_route} className="flex-1" ref={registerFieldRef('sms_route')}>
                 <HeadlessSelect
                   label="SMS Route"
                   options={
@@ -570,7 +517,7 @@ function BasicInfoStep({
                   }}
                   placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
                 />
-              </div>
+              </FormField>
             ) : null;
           })()}
 
@@ -580,7 +527,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase() === "EMAIL" ? (
-              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.email_route = el; }}>
+              <FormField error={validationErrors?.email_route} className="flex-1" ref={registerFieldRef('email_route')}>
                 <HeadlessSelect
                   label="Email Route"
                   options={
@@ -604,7 +551,7 @@ function BasicInfoStep({
                     }}
                     placeholder={emailRoutesLoading ? "Loading..." : "Select email route"}
                   />
-                </div>
+                </FormField>
               ) : null;
             })()}
 
@@ -614,7 +561,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("WHATSAPP") && whatsappRoutes ? (
-              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.whatsapp_route = el; }}>
+              <FormField error={validationErrors?.whatsapp_route} className="flex-1" ref={registerFieldRef('whatsapp_route')}>
                 <HeadlessSelect
                   label="WhatsApp Route"
                   options={
@@ -638,7 +585,7 @@ function BasicInfoStep({
                   }}
                   placeholder={whatsappRoutesLoading ? "Loading..." : "Select WhatsApp route"}
                 />
-              </div>
+              </FormField>
             ) : null;
           })()}
 
@@ -648,7 +595,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("USSD") && ussdRoutes ? (
-              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.ussd_route = el; }}>
+              <FormField error={validationErrors?.ussd_route} className="flex-1" ref={registerFieldRef('ussd_route')}>
                 <HeadlessSelect
                   label="USSD Route"
                   options={
@@ -672,7 +619,7 @@ function BasicInfoStep({
                   }}
                   placeholder={ussdRoutesLoading ? "Loading..." : "Select USSD route"}
                 />
-              </div>
+              </FormField>
             ) : null;
           })()}
 
@@ -682,7 +629,7 @@ function BasicInfoStep({
               (ch) => String(ch.id) === String(formData.communication_channel_id)
             );
             return selectedChannel?.name?.toUpperCase().includes("PUSH") && pushRoutes ? (
-              <div className="flex-1" ref={(el) => { if (el) fieldRefs.current.push_notification_route = el; }}>
+              <FormField error={validationErrors?.push_notification_route} className="flex-1" ref={registerFieldRef('push_notification_route')}>
                 <HeadlessSelect
                   label="Push Notification Route"
                   options={
@@ -706,7 +653,7 @@ function BasicInfoStep({
                   }}
                   placeholder={pushRoutesLoading ? "Loading..." : "Select push notification route"}
                 />
-              </div>
+              </FormField>
             ) : null;
           })()}
         </div>

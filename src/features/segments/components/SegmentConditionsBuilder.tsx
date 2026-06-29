@@ -673,8 +673,8 @@ export default function SegmentConditionsBuilder({
                 className={`inline-flex items-center px-4 py-2 text-sm ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed border`}
                 style={{
                   backgroundColor: "transparent",
-                  borderColor: color.primary.action,
-                  color: color.primary.action,
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
                 }}
                 title={!areAllConditionsValid() ? "Complete all conditions (operator and value required)" : ""}
               >

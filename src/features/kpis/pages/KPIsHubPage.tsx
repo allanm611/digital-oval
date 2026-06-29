@@ -53,13 +53,13 @@ export default function KPIsHubPage() {
         {/* Header */}
         <div className="flex flex-col gap-4">
           <BackButton
-           
+
             showBreadcrumb={true}
-           
-            currentLabel="KPIs"
+
+            currentLabel={t.kpis.title}
           />
           <p className={`${tw.textSecondary} text-sm`}>
-            Manage and monitor key performance indicators
+            {t.kpis.descriptions.allKPIs}
           </p>
         </div>
 

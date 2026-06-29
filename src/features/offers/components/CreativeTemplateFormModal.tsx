@@ -8,7 +8,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { languageService, Language } from "../../configurations/services/languageService";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 
 interface CreativeTemplateFormModalProps {
   isOpen: boolean;
@@ -83,7 +83,7 @@ export default function CreativeTemplateFormModal({
     if (isOpen) {
       loadData();
     }
-  }, [isOpen, communicationChannels]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (template) {
@@ -202,7 +202,7 @@ export default function CreativeTemplateFormModal({
       await onSave(dataToSubmit);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save template";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -356,8 +356,8 @@ export default function CreativeTemplateFormModal({
               className="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 background: "transparent",
-                color: var(--c-icon-table-edit),
-                border: `1px solid ${var(--c-icon-table-edit)}`,
+                color: "var(--c-bordered-button-color)",
+                border: "1px solid var(--c-bordered-button-color)",
               }}
             >
               Cancel
@@ -366,7 +366,7 @@ export default function CreativeTemplateFormModal({
               type="submit"
               disabled={isSaving}
               className="px-4 py-2 text-white rounded text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
-              style={{ backgroundColor: var(--c-icon-table-edit) }}
+              style={{ backgroundColor: "var(--c-primary-action)" }}
             >
               {isSaving && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

@@ -34,20 +34,15 @@ import { creativeTemplateService, CreativeTemplate } from "../../configurations/
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { languageService, Language } from "../../configurations/services/languageService";
-import {
-  SMSSmartphonePreview,
-  EmailLaptopPreview,
-  WhatsAppPhonePreview,
-  PushNotificationPreview,
-  USSDMenuPreview,
-} from "./CreativePreviewComponents";
-import PreviewPanel from "../../communications/components/PreviewPanel";
+import CreativePreviewRenderer from "./CreativePreviewRenderer";
+import SimpleTextPreview from "./SimpleTextPreview";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
   validateInsertPosition,
+  validateNoEditInsideVariables,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
@@ -541,6 +536,10 @@ export default function OfferCreativeStep({
   const [languages, setLanguages] = useState<Language[]>([]);
   const [languagesLoading, setLanguagesLoading] = useState(true);
 
+  // Fetch existing creatives for dropdown selector
+  const [existingCreatives, setExistingCreatives] = useState<OfferCreative[]>([]);
+  const [existingCreativesLoading, setExistingCreativesLoading] = useState(true);
+
   // Fetch creative templates on component mount
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -625,6 +624,24 @@ export default function OfferCreativeStep({
       }
     };
     fetchLanguages();
+  }, []);
+
+  // Fetch existing creatives for dropdown selector
+  useEffect(() => {
+    const fetchExistingCreatives = async () => {
+      try {
+        setExistingCreativesLoading(true);
+        const response = await offerCreativeService.superSearch({ limit: 1000, skipCache: true });
+        const creativesData = response?.data || [];
+        setExistingCreatives(Array.isArray(creativesData) ? creativesData : []);
+      } catch (error) {
+        console.error("Failed to fetch existing creatives:", error);
+        setExistingCreatives([]);
+      } finally {
+        setExistingCreativesLoading(false);
+      }
+    };
+    fetchExistingCreatives();
   }, []);
 
   // Handle language creation - auto-select it
@@ -771,6 +788,34 @@ export default function OfferCreativeStep({
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
+  // Handle selecting an existing creative from dropdown
+  const handleSelectExistingCreative = (creativeId: number) => {
+    const selectedCreative = existingCreatives.find(c => c.id === creativeId);
+    if (!selectedCreative) return;
+
+    // Check if this creative is already added
+    if (creatives.some(c => c.id === creativeId)) {
+      return; // Already added
+    }
+
+    // Add the selected creative to the list
+    const newCreative: LocalOfferCreative = {
+      id: String(creativeId),
+      channel: selectedCreative.channel,
+      locale: selectedCreative.locale as Locale,
+      title: selectedCreative.title || "",
+      text_body: selectedCreative.text_body || "",
+      html_body: selectedCreative.html_body || "",
+      variables: {} as Record<string, string | number | boolean>,
+      is_active: selectedCreative.is_active ?? true,
+    };
+
+    const updatedCreatives = [...creatives, newCreative];
+    onCreativesChange(updatedCreatives);
+    setSelectedCreative(newCreative.id);
+    setSelectedExistingCreativeId(""); // Reset dropdown
+  };
+
   const addCreative = () => {
     const defaultChannel = getDefaultChannelFromId(communicationChannelId);
 
@@ -818,12 +863,16 @@ export default function OfferCreativeStep({
     onCreativesChange(updatedCreatives);
   };
 
-  const selectedCreativeData = creatives.find((c) => c.id === selectedCreative);
+  // Filter creatives by the selected communication channel
+  const selectedChannelForFiltering = getDefaultChannelFromId(communicationChannelId);
+  const filteredCreatives = creatives.filter((c) => c.channel === selectedChannelForFiltering);
+
+  const selectedCreativeData = filteredCreatives.find((c) => c.id === selectedCreative) || creatives.find((c) => c.id === selectedCreative);
 
   // Use draft creative if none selected (for inline creation flow)
   const editingCreative = selectedCreativeData || {
     id: 'temp-draft',
-    channel: getDefaultChannelFromId(communicationChannelId),
+    channel: selectedChannelForFiltering,
     locale: languageOptions.find((opt) => !opt.isUsed)?.value || "en",
     title: "",
     text_body: "",
@@ -1066,29 +1115,13 @@ export default function OfferCreativeStep({
     setIsPreviewOpen(true);
     setPreviewError(null);
 
-    // Extract all variable placeholders from the creative content
-    const variableRegex = /\{\{([^}]+)\}\}/g;
+    // Build preview variables from selected variables with default values
     const previewVars: Record<string, string | number | boolean> = {};
-
-    // Build preview variables by extracting placeholders from all content
-    const contentToPreview = [
-      selectedCreativeData.title || "",
-      selectedCreativeData.text_body || "",
-      selectedCreativeData.html_body || "",
-    ].join(" ");
-
-    let match;
-    while ((match = variableRegex.exec(contentToPreview)) !== null) {
-      const variablePath = match[1].trim();
-      if (!previewVars[variablePath]) {
-        // Get default_value from stored variables (from backend)
-        const storedVar = selectedCreativeData.variables?.[variablePath];
-        const defaultValue = storedVar?.default_value;
-        if (defaultValue != null) {
-          previewVars[variablePath] = defaultValue;
-        }
-      }
-    }
+    selectedVariables.forEach((v) => {
+      // Variables are referenced as {{sourceValue.fieldValue}} in content
+      const variableKey = `${v.sourceValue}.${v.value}`;
+      previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
+    });
 
     // Client-side preview with variable replacement using default values
     const clientPreview = {
@@ -1136,7 +1169,7 @@ export default function OfferCreativeStep({
         </div>
       )}
 
-      {creatives.length === 0 ? (
+      {filteredCreatives.length === 0 ? (
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}
         >
@@ -1144,10 +1177,10 @@ export default function OfferCreativeStep({
             <MessageSquare className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {t.offers.creatives.noCreativesAdded}
+            {creatives.length === 0 ? t.offers.creatives.noCreativesAdded : `No ${selectedChannelForFiltering} creatives yet`}
           </h3>
           <p className="text-gray-500 text-sm mb-6">
-            {t.offers.creatives.subheadline}
+            {creatives.length === 0 ? t.offers.creatives.subheadline : `Create a ${selectedChannelForFiltering} creative to get started`}
           </p>
           <button
             onClick={addCreative}
@@ -1185,7 +1218,7 @@ export default function OfferCreativeStep({
                 </button>
               </div>
 
-              {languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 && creatives.length > 0 && (
+              {languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 && filteredCreatives.length > 0 && (
                 <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 mb-4">
                   <p className="text-xs text-amber-700">
                     Each creative is limited to one language. All available languages already have creatives. To add more creatives, create a new language in your configuration.
@@ -1194,7 +1227,7 @@ export default function OfferCreativeStep({
               )}
 
               <div className="space-y-2">
-                {creatives.map((creative) => {
+                {filteredCreatives.map((creative) => {
                   const channelConfig = getChannelConfig(creative.channel);
                   const Icon = channelConfig?.icon || MessageSquare;
 
@@ -1215,7 +1248,7 @@ export default function OfferCreativeStep({
                           <div
                             className={`w-8 h-8 ${tw.rounded} flex items-center justify-center bg-gray-100`}
                           >
-                            <Icon className={`p-2 icon-edit ${tw.rounded} w-4 h-4 `} />
+                            <Icon className={`p-0 icon-edit ${tw.rounded} w-4 h-4 `} />
                           </div>
                           <div>
                             <div className="font-medium text-sm text-gray-900">
@@ -1274,31 +1307,29 @@ export default function OfferCreativeStep({
                 </div>
               )}
               <div className="space-y-6">
-                  {/* Channel Selection - Commented out: will be moved to step 1 */}
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.offers.channel.label}
-                    </label>
-                    <HeadlessSelect
-                      value={selectedCreativeData.channel}
-                      onChange={(value) => {
-                        const newChannel = value as CreativeChannel;
-                        updateCreative(selectedCreativeData.id, {
-                          channel: newChannel,
-                        });
-                        setSelectedTemplates((prev) => ({
-                          ...prev,
-                          [selectedCreativeData.id]: null,
-                        }));
-                      }}
-                      options={CHANNEL_CONFIG.map((channel) => ({
-                        value: channel.value,
-                        label: getChannelLabel(channel.value),
-                      }))}
-                      placeholder={t.offers.channel.placeholder}
-                      zIndex={zIndex.popover}
-                    />
-                  </div> */}
+                  {/* Select Existing Creative */}
+                  <HeadlessSelect
+                    label="Select Existing Creative"
+                    value=""
+                    onChange={(value) => {
+                      if (value) {
+                        handleSelectExistingCreative(Number(value));
+                      }
+                    }}
+                    options={[
+                      { label: "Choose a creative to use", value: "" },
+                      ...existingCreatives
+                        .filter(c => c.channel === selectedChannelForFiltering && c.is_active)
+                        .filter(c => !creatives.some(ac => ac.id === String(c.id))) // Exclude already added
+                        .map((creative) => ({
+                          value: String(creative.id),
+                          label: `${creative.title || creative.name} (${creative.locale})`,
+                        }))
+                    ]}
+                    placeholder={existingCreativesLoading ? "Loading creatives..." : `Select a ${selectedChannelForFiltering} creative or create new below`}
+                    disabled={existingCreativesLoading}
+                    className="w-full"
+                  />
 
                   {/* Locale Selection */}
                   <HeadlessSelect
@@ -1448,6 +1479,13 @@ export default function OfferCreativeStep({
                           value={editingCreative.title || ""}
                           onChange={(value) => {
                             setActiveField("title");
+                            // Validate and show error, but allow text update
+                            const editError = validateNoEditInsideVariables(editingCreative.title || "", value);
+                            if (editError) {
+                              setVariableError(editError);
+                            } else {
+                              setVariableError("");
+                            }
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               title: value,
                             });
@@ -1599,6 +1637,13 @@ export default function OfferCreativeStep({
                           value={editingCreative.text_body || ""}
                           onChange={(value) => {
                             setActiveField("body");
+                            // Validate and show error, but allow text update
+                            const editError = validateNoEditInsideVariables(editingCreative.text_body || "", value);
+                            if (editError) {
+                              setVariableError(editError);
+                            } else {
+                              setVariableError("");
+                            }
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               text_body: value,
                             });
@@ -1647,11 +1692,25 @@ export default function OfferCreativeStep({
           {creatives.length > 0 && (
             <div className="lg:col-span-1">
               <div className="sticky top-4">
-                <PreviewPanel
-                  channel={editingCreative.channel === "SMS" ? "SMS" : editingCreative.channel === "Email" ? "EMAIL" : editingCreative.channel === "WhatsApp" ? "WHATSAPP" : "PUSH"}
-                  title={editingCreative.title}
-                  body={editingCreative.text_body || ""}
-                />
+                {(() => {
+                  // Build variables object with default values using same format as manual communications
+                  const previewVars: Record<string, string | number | boolean> = {};
+                  selectedVariables.forEach((v) => {
+                    // Use the same formatVariablePlaceholder logic to extract the key
+                    const placeholder = formatVariablePlaceholder(v);
+                    // Remove {{ and }} to get just the key part
+                    const variableKey = placeholder.slice(2, -2);
+                    previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
+                  });
+
+                  return (
+                    <SimpleTextPreview
+                      channel={editingCreative.channel}
+                      title={replaceVariables(editingCreative.title, previewVars)}
+                      body={replacedBody}
+                    />
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -1685,139 +1744,12 @@ export default function OfferCreativeStep({
               <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
             </div>
           ) : previewResult ? (
-            <div className="space-y-6">
-              {/* Device-Specific Previews */}
-              {editingCreative?.channel === "SMS" ||
-              editingCreative?.channel === "SMS Flash" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    {t.offers.preview.smsPreview}
-                  </h3>
-                  <SMSSmartphonePreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : editingCreative?.channel === "Email" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    {t.offers.preview.emailPreview}
-                  </h3>
-                  <EmailLaptopPreview
-                    title={previewResult.rendered_title}
-                    htmlBody={previewResult.rendered_html_body}
-                    textBody={previewResult.rendered_text_body}
-                  />
-                </div>
-              ) : editingCreative?.channel === "WhatsApp" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    WhatsApp Preview
-                  </h3>
-                  <WhatsAppPhonePreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : editingCreative?.channel === "Push" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    Push Notification Preview
-                  </h3>
-                  <PushNotificationPreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : editingCreative?.channel === "USSD" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    USSD Menu Preview
-                  </h3>
-                  <USSDMenuPreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : (
-                // Fallback for other channels
-                <div className="space-y-4">
-                  {previewResult.rendered_title && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.preview.renderedTitle}
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <p className="text-gray-900">
-                          {previewResult.rendered_title}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {previewResult.rendered_text_body && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.preview.renderedTextBody}
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <p className="text-gray-900 whitespace-pre-wrap">
-                          {previewResult.rendered_text_body}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {previewResult.rendered_html_body && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.preview.renderedHtmlBody}
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <div
-                          className="prose max-w-none"
-                          dangerouslySetInnerHTML={{
-                            __html: previewResult.rendered_html_body,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {!previewResult.rendered_title &&
-                    !previewResult.rendered_text_body &&
-                    !previewResult.rendered_html_body && (
-                      <div className="text-center py-8 text-gray-500">
-                        <p>
-                          {t.offers.preview.noContent}
-                        </p>
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
+            <CreativePreviewRenderer
+              channel={editingCreative?.channel}
+              title={previewResult.rendered_title}
+              textBody={previewResult.rendered_text_body}
+              htmlBody={previewResult.rendered_html_body}
+            />
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>

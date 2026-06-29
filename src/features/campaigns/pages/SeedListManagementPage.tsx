@@ -189,7 +189,7 @@ export default function SeedListManagementPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => handleRemoveRecipient(row._full)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title={row._full.status === "active" ? "Remove from Seed List" : "Delete from Seed List"}
             >
               <Trash2 className="w-4 h-4" />
@@ -246,7 +246,7 @@ export default function SeedListManagementPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -258,7 +258,7 @@ export default function SeedListManagementPage() {
                 name: row.name,
               })
             }
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             title="Delete seed list"
           >
             <Trash2 className="w-4 h-4" />
@@ -1508,7 +1508,7 @@ export default function SeedListManagementPage() {
                                     onClick={() => {
                                       navigate(`/dashboard/user-management/${member.customer_id}`);
                                     }}
-                                    className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                                    className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                                     title="View user details"
                                   >
                                     <Eye className="w-4 h-4" style={{ color: "inherit" }} />

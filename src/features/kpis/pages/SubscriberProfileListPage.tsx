@@ -86,7 +86,7 @@ export default function SubscriberProfileListPage() {
           />
           <button
             onClick={() => handleViewDetails(row)}
-            className={`p-2 icon-edit rounded transition-colors`}
+            className={`p-0 icon-edit rounded transition-colors`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -100,7 +100,7 @@ export default function SubscriberProfileListPage() {
           />
           <button
             onClick={() => handleDeleteClick(row)}
-            className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-delete ${tw.rounded} disabled:opacity-60`}
             title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />

@@ -29,6 +29,8 @@ import {
   DATABASE_TYPE_OPTIONS,
 } from "../constants/connectionTypes";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import {
   APIConfig,
   JDBCConfig,
@@ -74,6 +76,9 @@ export default function ConnectionProfileFormPage({
   const { success, error: showError } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
@@ -573,7 +578,7 @@ export default function ConnectionProfileFormPage({
             Basic Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+            <FormField error={errors?.profile_name} ref={registerFieldRef('profile_name')}>
               <Input
                 label="Profile Name*"
                 placeholder="Profile name"
@@ -584,11 +589,8 @@ export default function ConnectionProfileFormPage({
                 }}
                 hasError={!!errors.profile_name}
               />
-              {errors.profile_name && (
-                <p className="text-sm text-red-500 mt-1">{errors.profile_name}</p>
-              )}
-            </div>
-            <div>
+            </FormField>
+            <FormField error={errors?.profile_code} ref={registerFieldRef('profile_code')}>
               <Input
                 label="Profile Code*"
                 placeholder="Profile code (letters and numbers only)"
@@ -599,17 +601,14 @@ export default function ConnectionProfileFormPage({
                 }}
                 hasError={!!errors.profile_code}
               />
-              {errors.profile_code && (
-                <p className="text-sm text-red-500 mt-1">{errors.profile_code}</p>
-              )}
-            </div>
+            </FormField>
             <div>
               {loadingConnectorTypes ? (
                 <div className="text-sm text-gray-500 py-2">
                   Loading connection types...
                 </div>
               ) : (
-                <>
+                <FormField error={errors?.connection_type} ref={registerFieldRef('connection_type')}>
                   <HeadlessSelect
                     label="Connection Type *"
                     options={connectorTypes.map((type) => ({
@@ -651,13 +650,10 @@ export default function ConnectionProfileFormPage({
                     placeholder="Select a connection type..."
                     className="w-full"
                   />
-                  {errors.connection_type && (
-                    <p className="text-sm text-red-500 mt-1">{errors.connection_type}</p>
-                  )}
-                </>
+                </FormField>
               )}
             </div>
-            <div>
+            <FormField error={errors?.environment} ref={registerFieldRef('environment')}>
               <HeadlessSelect
                 label="Environment *"
                 options={[
@@ -676,11 +672,8 @@ export default function ConnectionProfileFormPage({
                 }}
                 className="w-full"
               />
-              {errors.environment && (
-                <p className="text-sm text-red-500 mt-1">{errors.environment}</p>
-              )}
-            </div>
-            <div>
+            </FormField>
+            <FormField error={errors?.load_strategy} ref={registerFieldRef('load_strategy')}>
               {/* <p className="text-xs text-gray-500 mb-2">
                 How new data is brought in.
               </p> */}
@@ -705,10 +698,7 @@ export default function ConnectionProfileFormPage({
                 }}
                 className="w-full"
               />
-              {errors.load_strategy && (
-                <p className="text-sm text-red-500 mt-1">{errors.load_strategy}</p>
-              )}
-            </div>
+            </FormField>
             <div>
               {/* <p className="text-xs text-gray-500 mb-2">
                 Select the server endpoint for this connection.

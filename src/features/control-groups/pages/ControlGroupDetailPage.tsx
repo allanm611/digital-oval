@@ -61,7 +61,7 @@ export default function ControlGroupDetailPage() {
         const data = await controlGroupService.getControlGroupById(Number(id));
         setGroup(data);
       } catch (error) {
-        showError(extractBackendError(error, "Failed to load control group. Please try again."));
+        showError(t.controlGroups.failedToSaveGroup, extractBackendError(error, t.controlGroups.failedToSaveGroup));
         console.error(error);
       } finally {
         setIsLoading(false);
@@ -69,7 +69,7 @@ export default function ControlGroupDetailPage() {
     };
 
     loadGroup();
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   useEffect(() => {
     if (!group?.id) return;
@@ -91,7 +91,7 @@ export default function ControlGroupDetailPage() {
         });
         setExistingMemberIds(allMembersResponse.members.map((m) => m.subscriber_id));
       } catch (error) {
-        showError(extractBackendError(error, "Failed to load members. Please try again."));
+        showError(t.controlGroups.failedToRemoveMember, extractBackendError(error, t.controlGroups.failedToRemoveMember));
         console.error(error);
       } finally {
         setMembersLoading(false);
@@ -99,7 +99,7 @@ export default function ControlGroupDetailPage() {
     };
 
     loadMembers();
-  }, [group?.id, membersPage, showError]);
+  }, [group?.id, membersPage, showError, t]);
 
   const getCustomerBaseLabel = (base: string) => {
     switch (base) {
@@ -173,7 +173,7 @@ export default function ControlGroupDetailPage() {
         subscriber_ids: subscriberIds,
       });
 
-      showSuccess(t.controlGroups.membersAddedSuccessfully(subscriberIds.length));
+      showSuccess(t.controlGroups.membersAddedSuccessfully);
       setMembersPage(1);
 
       // Refresh both members list and group stats
@@ -243,14 +243,14 @@ export default function ControlGroupDetailPage() {
       <div className="space-y-6">
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Control group not found
+            {t.controlGroups.controlGroupNotFound || t.common.noData}
           </h3>
           <button
             onClick={() => navigate("/dashboard/control-groups")}
             className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors hover:opacity-90 text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
-            Back to Control Groups
+            {t.controlGroups.title}
           </button>
         </div>
       </div>

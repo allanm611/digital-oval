@@ -283,13 +283,7 @@ export default function OfferCreativesPage() {
                         backgroundColor: color.surface.tablebodybg,
                       }}
                     >
-                      <div
-                        className={`text-sm font-medium ${
-                          creative.is_active
-                            ? tw.textSuccess
-                            : tw.textSecondary
-                        }`}
-                      >
+                      <div className={`text-sm font-medium ${tw.textPrimary}`}>
                         {creative.is_active ? t.genericConfig.active : t.genericConfig.inactive}
                       </div>
                     </td>
@@ -302,6 +296,13 @@ export default function OfferCreativesPage() {
                       }}
                     >
                       <div className="flex items-center justify-end gap-3">
+                        <ActivateDeactivateButton
+                          isActive={creative.is_active}
+                          onToggle={(e) => handleToggleActive(e, creative)}
+                          disabled={isTogglingActive === creative.id}
+                          isLoading={isTogglingActive === creative.id}
+                          title={creative.is_active ? "Deactivate" : "Activate"}
+                        />
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -309,7 +310,7 @@ export default function OfferCreativesPage() {
                               state: { returnTo: { pathname: "/dashboard/offer-creatives" } }
                             });
                           }}
-                          className={`${tw.textAction} hover:opacity-75 transition-opacity`}
+                          className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                           title="View details"
                         >
                           <Eye className="w-4 h-4" />
@@ -319,21 +320,14 @@ export default function OfferCreativesPage() {
                             e.stopPropagation();
                             handleEdit(creative);
                           }}
-                          className={`${tw.textAction} hover:opacity-75 transition-opacity`}
+                          className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <ActivateDeactivateButton
-                          isActive={creative.is_active}
-                          onToggle={(e) => handleToggleActive(e, creative)}
-                          disabled={isTogglingActive === creative.id}
-                          isLoading={isTogglingActive === creative.id}
-                          title={creative.is_active ? "Deactivate" : "Activate"}
-                        />
                         <button
                           onClick={(e) => handleDelete(e, creative)}
-                          className="text-red-600 hover:opacity-75 transition-opacity"
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />

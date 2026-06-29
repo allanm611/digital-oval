@@ -502,7 +502,7 @@ export default function ProgramsPage() {
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => handleEditProgram(program)}
-                            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                             style={{
                               color: color.primary.action,
                               backgroundColor: "transparent",

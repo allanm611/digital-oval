@@ -7,6 +7,8 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -64,6 +66,9 @@ export default function CreateRoutePage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   const [formData, setFormData] = useState<FormData>({
     channel: "",
@@ -303,18 +308,19 @@ export default function CreateRoutePage() {
                 />
               </div>
               {/* Name */}
-              <Input
-                label={`${t.routes.routeName} *`}
-                value={formData.name}
-                onChange={(value) => {
-                  setFormData({ ...formData, name: value });
-                  if (errors.name) setErrors({ ...errors, name: undefined });
-                }}
-                placeholder="Enter route name"
-                hasError={!!errors.name}
-                disabled={saving}
-              />
-              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+              <FormField error={errors?.name} ref={registerFieldRef('name')}>
+                <Input
+                  label={`${t.routes.routeName} *`}
+                  value={formData.name}
+                  onChange={(value) => {
+                    setFormData({ ...formData, name: value });
+                    if (errors.name) setErrors({ ...errors, name: undefined });
+                  }}
+                  placeholder="Enter route name"
+                  hasError={!!errors.name}
+                  disabled={saving}
+                />
+              </FormField>
             </div>
 
             {/* Description */}
@@ -328,7 +334,7 @@ export default function CreateRoutePage() {
             />
 
             {/* Gateway Configuration */}
-            <div>
+            <FormField error={errors?.gateway_config_id} ref={registerFieldRef('gateway_config_id')}>
               <HeadlessSelect
                 label={t.routes.gatewayProvider}
                 value={String(formData.gateway_config_id)}
@@ -346,10 +352,7 @@ export default function CreateRoutePage() {
                 placeholder="Select gateway..."
                 disabled={saving}
               />
-              {errors.gateway_config_id && (
-                <p className="text-xs text-red-500 mt-1">{errors.gateway_config_id}</p>
-              )}
-            </div>
+            </FormField>
           </div>
         </div>
 

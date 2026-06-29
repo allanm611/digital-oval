@@ -45,8 +45,6 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
-const PAGE_SIZE = 15;
-const BASE_FETCH_LIMIT = 100;
 
 type ScopeFilter = "all" | "health-enabled" | "health-failing" | "health-due";
 
@@ -68,9 +66,6 @@ export default function ServersPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [isLoadingServers, setIsLoadingServers] = useState(true);
   const [sourceServers, setSourceServers] = useState<ServerType[]>([]);
-  const [filteredServers, setFilteredServers] = useState<ServerType[]>([]);
-  const [visibleServers, setVisibleServers] = useState<ServerType[]>([]);
-  const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedServerIds, setSelectedServerIds] = useState<Set<number>>(
@@ -177,7 +172,7 @@ export default function ServersPage() {
           <button
             type="button"
             onClick={() => navigate(`/dashboard/servers/${server.id}`)}
-            className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
+            className={`inline-flex items-center justify-center icon-edit ${tw.rounded} p-2 transition-colors hover:bg-gray-100`}
             aria-label={`View ${server.name}`}
             title="View details"
           >
@@ -187,7 +182,7 @@ export default function ServersPage() {
             <button
               type="button"
               onClick={(e) => handleEdit(server, e)}
-              className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
+              className={`inline-flex items-center justify-center icon-edit ${tw.rounded} p-2 transition-colors hover:bg-gray-100`}
               aria-label={`Edit ${server.name}`}
               title="Edit server"
             >
@@ -345,73 +340,58 @@ export default function ServersPage() {
   const loadServers = useCallback(async () => {
     setIsLoadingServers(true);
     try {
-      let dataset: ServerType[] = [];
-      const searchValue = debouncedSearchTerm.trim();
-      const usingBackendSearch = scope === "all" && Boolean(searchValue);
-      const listQuery = {
-        limit: BASE_FETCH_LIMIT,
-        offset: 0,
+      const params: any = {
+        limit: tablePageSize,
+        offset: (tableCurrentPage - 1) * tablePageSize,
+        skipCache: true,
       };
 
-      if (scope === "health-enabled") {
-        dataset = await serverService.listHealthCheckEnabled();
-      } else if (scope === "health-failing") {
-        dataset = await serverService.listHealthCheckFailing();
-      } else if (scope === "health-due") {
-        dataset = await serverService.listHealthCheckDue();
-      } else if (usingBackendSearch) {
-        dataset = await serverService.searchServers({
-          ...listQuery,
-          searchTerm: searchValue,
-        });
-      } else if (statusFilter === "deprecated") {
-        dataset = await serverService.getDeprecatedServers(listQuery);
-      } else if (statusFilter === "active") {
-        dataset = await serverService.getActiveServers(listQuery);
-      } else if (environmentFilter !== "all") {
-        dataset = await serverService.getServersByEnvironment(
-          environmentFilter,
-          listQuery,
-        );
-      } else if (protocolFilter !== "all") {
-        dataset = await serverService.getServersByProtocol(
-          protocolFilter,
-          listQuery,
-        );
-      } else if (regionFilter !== "all") {
-        dataset = await serverService.getServersByRegion(
-          regionFilter,
-          listQuery,
-        );
-      } else if (serverTypeFilter !== "all") {
-        dataset = await serverService.getServersByType(
-          serverTypeFilter,
-          listQuery,
-        );
-      } else {
-        const response = await serverService.listServers({
-          ...listQuery,
-          activeOnly: statusFilter === "inactive" ? false : undefined,
-        });
-        dataset = response.data || [];
+      if (statusFilter === "active") {
+        params.activeOnly = true;
+      } else if (statusFilter === "inactive") {
+        params.activeOnly = false;
       }
 
-      setSourceServers(Array.isArray(dataset) ? dataset : []);
+      if (environmentFilter !== "all") {
+        params.environment = environmentFilter;
+      }
+
+      if (protocolFilter !== "all") {
+        params.protocol = protocolFilter;
+      }
+
+      if (regionFilter !== "all") {
+        params.region = regionFilter;
+      }
+
+      if (serverTypeFilter !== "all") {
+        params.serverType = serverTypeFilter;
+      }
+
+      if (debouncedSearchTerm) {
+        params.searchTerm = debouncedSearchTerm;
+      }
+
+      const response = await serverService.listServers(params);
+      setSourceServers(Array.isArray(response.data) ? response.data : []);
+      setTotalCount(response.meta?.total || 0);
     } catch (err) {
       setSourceServers([]);
+      setTotalCount(0);
       showError("Failed to load servers", extractBackendError(err, "Failed to load servers. Please try again."));
     } finally {
       setIsLoadingServers(false);
     }
   }, [
-    scope,
-    showError,
-    debouncedSearchTerm,
+    tableCurrentPage,
+    tablePageSize,
+    statusFilter,
     environmentFilter,
     protocolFilter,
     regionFilter,
-    statusFilter,
     serverTypeFilter,
+    debouncedSearchTerm,
+    showError,
   ]);
 
   useEffect(() => {
@@ -438,7 +418,7 @@ export default function ServersPage() {
   }, [sourceServers]);
 
   useEffect(() => {
-    setPage(1);
+    tableHandlePageChange(1);
   }, [
     environmentFilter,
     protocolFilter,
@@ -447,91 +427,13 @@ export default function ServersPage() {
     serverTypeFilter,
     debouncedSearchTerm,
     scope,
-    sourceServers,
+    tableHandlePageChange,
   ]);
 
-  useEffect(() => {
-    const usingBackendSearch = scope === "all" && Boolean(debouncedSearchTerm);
-
-    const filtered = sourceServers.filter((server) => {
-      if (
-        environmentFilter !== "all" &&
-        server.environment?.toLowerCase() !== environmentFilter.toLowerCase()
-      ) {
-        return false;
-      }
-
-      if (
-        protocolFilter !== "all" &&
-        server.protocol?.toLowerCase() !== protocolFilter.toLowerCase()
-      ) {
-        return false;
-      }
-
-      if (
-        regionFilter !== "all" &&
-        (server.region || "").toLowerCase() !== regionFilter.toLowerCase()
-      ) {
-        return false;
-      }
-
-      if (statusFilter === "active" && !server.is_active) {
-        return false;
-      }
-
-      if (statusFilter === "inactive" && server.is_active) {
-        return false;
-      }
-
-      if (statusFilter === "deprecated" && !server.is_deprecated) {
-        return false;
-      }
-
-      if (
-        debouncedSearchTerm &&
-        !usingBackendSearch &&
-        !`${server.name} ${server.code}`
-          .toLowerCase()
-          .includes(debouncedSearchTerm)
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-    // Sort by created_at descending (newest first)
-    const sorted = [...filtered].sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return dateB - dateA; // Descending order (newest first)
-    });
-
-    setFilteredServers(sorted);
-    setTotalCount(sorted.length);
-  }, [
-    sourceServers,
-    environmentFilter,
-    protocolFilter,
-    regionFilter,
-    statusFilter,
-    debouncedSearchTerm,
-  ]);
-
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-    setPage((prev) => Math.min(prev, totalPages));
-  }, [totalCount]);
-
-  useEffect(() => {
-    const start = (tableCurrentPage - 1) * tablePageSize;
-    const slice = filteredServers.slice(start, start + tablePageSize);
-    setVisibleServers(slice);
-  }, [filteredServers, tableCurrentPage, tablePageSize]);
 
   const visibleIds = useMemo(
-    () => visibleServers.map((server) => server.id),
-    [visibleServers],
+    () => sourceServers.map((server) => server.id),
+    [sourceServers],
   );
 
   const allVisibleSelected =
@@ -603,8 +505,6 @@ export default function ServersPage() {
     return ["all", ...Array.from(values)];
   }, [sourceServers]);
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-
   const handleRefresh = useCallback(() => {
     loadStats();
     loadServers();
@@ -644,7 +544,7 @@ export default function ServersPage() {
     );
   };
 
-  const isEmptyState = !isLoadingServers && filteredServers.length === 0;
+  const isEmptyState = !isLoadingServers && sourceServers.length === 0;
 
   const toggleServerSelection = (id: number) => {
     setSelectedServerIds((prev) => {
@@ -997,13 +897,13 @@ export default function ServersPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<ServerType>
               columns={columns}
-              data={visibleServers}
+              data={sourceServers}
               totalItems={totalCount}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={isLoadingServers}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
@@ -1019,13 +919,13 @@ export default function ServersPage() {
         )}
       </div>
 
-      {!isLoadingServers && filteredServers.length > 0 && (
+      {!isLoadingServers && totalCount > 0 && (
         <Pagination
           currentPage={tableCurrentPage}
           pageSize={tablePageSize}
           totalItems={totalCount}
           onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+          onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

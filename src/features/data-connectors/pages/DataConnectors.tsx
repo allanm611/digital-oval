@@ -41,6 +41,8 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { FilterBuilder } from "../../../shared/components/Table/FilterBuilder";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 export default function DataConnectors() {
   const navigate = useNavigate();
@@ -67,35 +69,36 @@ export default function DataConnectors() {
   const [filterStatus, setFilterStatus] = useState<
     "all" | "active" | "inactive"
   >("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalCount, setTotalCount] = useState(0);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   const defaultColumns: TableColumn<ProcessedDataConnector>[] = [
     {
       id: "name",
       label: t.common.name,
       visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
     },
     {
       id: "type",
       label: t.common.type,
       visible: true,
-      },
+      sortable: true,
+      filterConfig: { type: "select", options: connectorTypes as string[] },
+    },
     {
-      id: "description",
-      label: t.common.description,
+      id: "connection_count",
+      label: t.dataConnectors.connections,
       visible: true,
-      },
+      sortable: true,
+      filterConfig: { type: "number" },
+    },
     {
       id: "is_active",
       label: t.common.status,
       visible: true,
-      },
-    {
-      id: "created_at",
-      label: t.dataConnectors.createdDate,
-      visible: true,
+      sortable: true,
     },
     {
       id: "actions",
@@ -104,16 +107,16 @@ export default function DataConnectors() {
       sortable: false,
       render: (_, connector) => (
         <div className="flex items-center justify-end gap-2">
-          <button onClick={() => handleConnectorClick(connector)} className={`p-2 icon-edit ${tw.rounded} transition-colors`} title="View">
+          <button onClick={() => handleConnectorClick(connector)} className={`p-0 icon-edit ${tw.rounded} transition-colors`} title="View">
             <Eye className="w-4 h-4" />
           </button>
           <PermissionGate permission="data-connectors.update">
-            <button onClick={() => handleEdit(connector)} className={`p-2 icon-edit ${tw.rounded} transition-colors`} title="Edit">
+            <button onClick={() => handleEdit(connector)} className={`p-0 icon-edit ${tw.rounded} transition-colors`} title="Edit">
               <Edit className="w-4 h-4" />
             </button>
           </PermissionGate>
           <PermissionGate permission="data-connectors.delete">
-            <button onClick={() => handleDelete(connector)} className={`p-2 icon-delete ${tw.rounded} transition-colors`} title="Delete">
+            <button onClick={() => handleDelete(connector)} className={`p-0 icon-delete ${tw.rounded} transition-colors`} title="Delete">
               <Trash2 className="w-4 h-4" />
             </button>
           </PermissionGate>
@@ -131,8 +134,10 @@ export default function DataConnectors() {
     sortConfigs,
     handleSort,
     toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
-    tableId: "data-connectors-table",
+    tableId: "data-connectors-table-v2",
     defaultColumns,
     defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
@@ -313,10 +318,6 @@ export default function DataConnectors() {
     setEditingConnector(null);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
     <div className="overflow-x-auto">
       {/* Header */}
@@ -474,75 +475,74 @@ export default function DataConnectors() {
       ) : (
         <div className={`${tw.rounded} overflow-hidden`}>
           <Table<DataConnectorType>
-            columns={[
-              {
-                id: "name",
-                label: "Name",
-                visible: true,
-                render: (value, connector) => (
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      {(() => {
-                        const { icon: IconComp, color: iconColor } =
-                          getConnectorIcon(connector.type);
-                        return (
-                          <IconComp
-                            className="h-5 w-5 flex-shrink-0"
-                            style={{ color: iconColor }}
-                          />
-                        );
-                      })()}
+            columns={columns.filter(col => col.visible).map((col) => {
+              if (col.id === "name") {
+                return {
+                  ...col,
+                  render: (value, connector) => (
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        {(() => {
+                          const { icon: IconComp, color: iconColor } =
+                            getConnectorIcon(connector.type);
+                          return (
+                            <IconComp
+                              className="h-5 w-5 flex-shrink-0"
+                              style={{ color: iconColor }}
+                            />
+                          );
+                        })()}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`text-sm font-semibold ${tw.textPrimary}`}
+                        >
+                          {value}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <span
-                        className={`text-sm font-semibold ${tw.textPrimary}`}
-                      >
-                        {value}
-                      </span>
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                id: "type",
-                label: t.common.type,
-                visible: true,
-                render: (_, connector) => (
-                  <span className={tw.textPrimary}>
-                    {getConnectorDisplayName(connector.type)}
-                  </span>
-                ),
-              },
-              {
-                id: "connection_count",
-                label: t.dataConnectors.connections,
-                visible: true,
-                render: (value) => (
-                  <span className={`font-medium ${tw.textPrimary}`}>
-                    {value ?? "--"}
-                  </span>
-                ),
-              },
-              {
-                id: "is_active",
-                label: t.common.status,
-                visible: true,
-                render: (value) => (
-                  <span className="inline-flex items-center font-medium text-gray-900">
-                    {value ? t.common.active : t.common.inactive}
-                  </span>
-                ),
-              },
-              {
-                id: "actions",
-                label: t.common.actions,
-                visible: true,
-                sortable: false,
-                render: (_, connector) => (
-                  <div className="relative flex items-center justify-center space-x-2">
+                  ),
+                };
+              }
+              if (col.id === "type") {
+                return {
+                  ...col,
+                  render: (_, connector) => (
+                    <span className={tw.textPrimary}>
+                      {getConnectorDisplayName(connector.type)}
+                    </span>
+                  ),
+                };
+              }
+              if (col.id === "connection_count") {
+                return {
+                  ...col,
+                  render: (value) => (
+                    <span className={`font-medium ${tw.textPrimary}`}>
+                      {value ?? "--"}
+                    </span>
+                  ),
+                };
+              }
+              if (col.id === "is_active") {
+                return {
+                  ...col,
+                  render: (value) => (
+                    <span className="inline-flex items-center font-medium text-gray-900">
+                      {value ? t.common.active : t.common.inactive}
+                    </span>
+                  ),
+                };
+              }
+              if (col.id === "actions") {
+                return {
+                  ...col,
+                  headerClassName: "text-right",
+                  render: (_, connector) => (
+                  <div className="relative flex items-center justify-end space-x-2">
                     <button
                       onClick={() => handleConnectorClick(connector)}
-                      className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                      className={`group p-1 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
                       title={t.common.view}
                       disabled={isDeleting && connectorToDelete?.id === connector.id}
                     >
@@ -551,7 +551,7 @@ export default function DataConnectors() {
                     <PermissionGate permission="servers.update">
                       <button
                         onClick={() => handleEdit(connector)}
-                        className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                        className={`group p-1 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
                         title={t.common.edit}
                         disabled={isDeleting && connectorToDelete?.id === connector.id}
                       >
@@ -580,15 +580,19 @@ export default function DataConnectors() {
                     </PermissionGate>
                   </div>
                 ),
-              },
-            ]}
+                };
+              }
+              return col;
+            })}
             data={connectors}
             totalItems={totalCount}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            onPageChange={handlePageChange}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
+            onPageChange={tableHandlePageChange}
             onHideColumn={toggleColumn}
             onManageColumnsClick={() => setShowColumnPicker(true)}
+            sortConfigs={sortConfigs}
+            onSort={handleSort}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,
@@ -601,15 +605,40 @@ export default function DataConnectors() {
           {totalCount > 0 && (
             <div className="mt-4">
               <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
+                currentPage={tableCurrentPage}
+                pageSize={tablePageSize}
                 totalItems={totalCount}
-                onPageChange={handlePageChange}
-                onPageSizeChange={setPageSize}
+                onPageChange={tableHandlePageChange}
+                onPageSizeChange={tableHandlePageSizeChange}
               />
             </div>
           )}
         </div>
+      )}
+
+      {/* Column Manager Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
+
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <FilterBuilder
+          isOpen={showFilterModal}
+          columns={[
+            { id: "name", label: t.common.name, type: "text" },
+            { id: "type", label: t.common.type, type: "select", options: connectorTypes as string[] },
+            { id: "connection_count", label: t.dataConnectors.connections, type: "number" },
+            { id: "is_active", label: t.common.status, type: "select", options: ["true", "false"] },
+          ]}
+          onClose={() => setShowFilterModal(false)}
+          onApply={() => setShowFilterModal(false)}
+        />
       )}
 
       {/* Create Data Connector Modal */}

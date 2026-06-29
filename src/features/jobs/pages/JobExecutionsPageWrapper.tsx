@@ -20,6 +20,7 @@ export default function JobExecutionsPageWrapper() {
 
 
 export function JobExecutionsPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="table"

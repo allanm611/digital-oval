@@ -28,6 +28,8 @@ export interface TemplateVariable {
   description: string;
   /** Field data type: "text", "numeric", "date", "boolean", "timestamp" */
   fieldType: string;
+  /** Default value for preview/sample data (e.g., "0", "Sample Name") */
+  defaultValue?: string | number;
 }
 
 /**
@@ -64,6 +66,8 @@ export interface ProfileField {
   fieldType: string;
   /** Source table in the database */
   sourceTable: string;
+  /** Default value for preview/sample data from the backend */
+  defaultValue?: string | number;
 }
 
 /**

@@ -2507,7 +2507,7 @@
   --c-toggle-inactive: #d1d5db;
   --c-bordered-button-color: #000000;
   --c-icon-table-edit: #5F6F77;
-  --c-icon-table-delete: #821637;
+  --c-icon-table-delete: #5F6F77;
   --c-readonly-field-bg: #f9fafb;
 }
 
@@ -2566,7 +2566,7 @@
   --c-toggle-inactive: #d1d5db;
   --c-bordered-button-color: #ffffff;
   --c-icon-table-edit: #D1DCE1;
-  --c-icon-table-delete: #FC9C9C;
+  --c-icon-table-delete: #D1DCE1;
   --c-readonly-field-bg: #394247;
 }
 

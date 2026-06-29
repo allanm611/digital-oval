@@ -545,7 +545,7 @@ export default function NotificationsPage() {
                                   e.stopPropagation();
                                   handleDeleteClick(notification);
                                 }}
-                                className="p-2 icon-delete rounded transition-colors flex-shrink-0 disabled:opacity-50 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20"
+                                className="p-0 icon-delete rounded transition-colors flex-shrink-0 disabled:opacity-50 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20"
                                 title={t.notifications.bulkDelete}
                               >
                                 <Trash2 className="h-4 w-4" />

@@ -87,7 +87,8 @@ function AppRoutes() {
           />
           <Route path="/request-account" element={<RequestAccountPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={isAuthenticated ? <Navigate to="/landingpage" /> : <Navigate to="/login" />} />
+          <Route path="/onboard" element={<LandingPage />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>

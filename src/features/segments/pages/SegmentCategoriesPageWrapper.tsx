@@ -36,6 +36,7 @@ export default function SegmentCategoriesPageWrapper() {
  * Alternative: Use this if you want custom error handling
  */
 export function SegmentCategoriesPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="table"

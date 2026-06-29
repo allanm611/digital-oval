@@ -183,7 +183,7 @@ export default function CreativeTemplatesPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/creative-templates/${template.id}`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -200,7 +200,7 @@ export default function CreativeTemplatesPage() {
           </button>
           <button
             onClick={() => navigate(`/dashboard/creative-templates/${template.id}/edit`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -220,7 +220,7 @@ export default function CreativeTemplatesPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(template.id, e)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               style={{
                 color: color.primary.action,
                 backgroundColor: "transparent",

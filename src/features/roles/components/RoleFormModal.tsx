@@ -426,7 +426,7 @@ export default function RoleFormModal({
                     <div
                       key={tagKey}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-sm font-medium"
-                      style={{ backgroundColor: var(--c-icon-table-edit) + "20", color: var(--c-icon-table-edit) }}
+                      style={{ backgroundColor: "var(--c-icon-table-edit)20", color: "var(--c-icon-table-edit)" }}
                     >
                       {tagName}
                       <button
@@ -460,7 +460,7 @@ export default function RoleFormModal({
               type="submit"
               disabled={isLoading}
               className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ backgroundColor: var(--c-icon-table-edit) }}
+              style={{ backgroundColor: "var(--c-primary-action)" }}
             >
               {isLoading ? (
                 <>

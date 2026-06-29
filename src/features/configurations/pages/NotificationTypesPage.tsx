@@ -131,7 +131,7 @@ export default function NotificationTypesPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleOpenEditModal(rule)}
-            className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -139,7 +139,7 @@ export default function NotificationTypesPage() {
           <button
             onClick={() => handleDeleteClick(rule)}
             disabled={isDeleting && deleteConfirm.id === rule.id}
-            className={`p-2 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             {isDeleting && deleteConfirm.id === rule.id ? (

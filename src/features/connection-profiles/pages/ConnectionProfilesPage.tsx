@@ -114,11 +114,9 @@ export default function ConnectionProfilesPage() {
   >(null);
 
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
-  const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<ConnectionProfileType | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [pageSize, setPageSize] = useState(20);
   const [totalProfiles, setTotalProfiles] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
@@ -167,13 +165,7 @@ export default function ConnectionProfilesPage() {
       render: (value) => {
         const isActive = value as boolean;
         return (
-          <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium ${
-              isActive
-                ? "bg-green-100 text-green-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-          >
+          <span className="text-sm font-medium">
             {isActive ? "Active" : "Inactive"}
           </span>
         );
@@ -189,7 +181,7 @@ export default function ConnectionProfilesPage() {
           <button
             type="button"
             onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}`)}
-            className={`p-2 icon-edit ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
             aria-label="View"
             title="View details"
           >
@@ -263,7 +255,7 @@ export default function ConnectionProfilesPage() {
       const serverId = debouncedServerFilter
         ? Number(debouncedServerFilter)
         : null;
-      const offset = (currentPage - 1) * pageSize;
+      const offset = (tableCurrentPage - 1) * tablePageSize;
       const shouldUseSearch = Boolean(
         debouncedSearchTerm ||
         filters.status === "inactive" ||
@@ -276,7 +268,7 @@ export default function ConnectionProfilesPage() {
         const response =
           await connectionProfileService.getProfilesByConnectionType(
             filters.connectionType,
-            { limit: pageSize, offset, skipCache: true },
+            { limit: tablePageSize, offset, skipCache: true },
           );
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
         paginationMetadata = response?.pagination;
@@ -287,7 +279,7 @@ export default function ConnectionProfilesPage() {
         const response =
           await connectionProfileService.getProfilesByEnvironment(
             filters.environment,
-            { limit: pageSize, offset, skipCache: true },
+            { limit: tablePageSize, offset, skipCache: true },
           );
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
         paginationMetadata = response?.pagination;
@@ -295,14 +287,14 @@ export default function ConnectionProfilesPage() {
         const response =
           await connectionProfileService.getProfilesByClassification(
             filters.classification,
-            { limit: pageSize, offset, skipCache: true },
+            { limit: tablePageSize, offset, skipCache: true },
           );
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
         paginationMetadata = response?.pagination;
       } else if (serverId) {
         const response =
           await connectionProfileService.getProfilesByServer(serverId, {
-            limit: pageSize,
+            limit: tablePageSize,
             offset,
             skipCache: true,
           });
@@ -313,7 +305,7 @@ export default function ConnectionProfilesPage() {
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
       } else if (shouldUseSearch) {
         const searchPayload: ConnectionProfileSearchQuery = {
-          limit: pageSize,
+          limit: tablePageSize,
           offset,
           skipCache: true,
         };
@@ -357,7 +349,7 @@ export default function ConnectionProfilesPage() {
         paginationMetadata = response.pagination;
       } else {
         const response = await connectionProfileService.listProfiles({
-          limit: pageSize,
+          limit: tablePageSize,
           offset,
           skipCache: true,
         });
@@ -383,7 +375,7 @@ export default function ConnectionProfilesPage() {
       setSelectedProfileIds(new Set());
     } catch (err) {
       console.error("Failed to load connection profiles", err);
-      showError("Unable to Load Profiles", extractBackendError(error, "Unable to Load Profiles. Please try again."));
+      showError("Unable to Load Profiles", extractBackendError(err, "Unable to Load Profiles. Please try again."));
       setProfiles([]);
     } finally {
       setLoadingProfiles(false);
@@ -399,13 +391,13 @@ export default function ConnectionProfilesPage() {
     filters.health,
     showError,
     t,
-    currentPage,
-    pageSize,
+    tableCurrentPage,
+    tablePageSize,
   ]);
 
   // Reset page when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    tableHandlePageChange(1);
   }, [
     debouncedSearchTerm,
     debouncedServerFilter,
@@ -415,6 +407,7 @@ export default function ConnectionProfilesPage() {
     filters.status,
     filters.pii,
     filters.health,
+    tableHandlePageChange,
   ]);
 
   useEffect(() => {
@@ -727,13 +720,13 @@ export default function ConnectionProfilesPage() {
       name: "Active Profiles",
       value: statsSummary.active,
       icon: CheckCircle,
-      color: color.tertiary.tag4,
+      color: color.primary.accent,
     },
     {
       name: "With PII",
       value: statsSummary.withPii,
       icon: Shield,
-      color: color.tertiary.tag3,
+      color: color.primary.accent,
     },
     {
       name: "Health Enabled",
@@ -949,24 +942,24 @@ export default function ConnectionProfilesPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<ConnectionProfileType>
               columns={columns}
-              data={filteredProfiles}
-              totalItems={filteredProfiles.length}
+              data={profiles}
+              totalItems={totalProfiles}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={loadingProfiles}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
               onManageColumnsClick={() => setShowColumnPicker(true)}
             />
             {/* Pagination Controls */}
-            {filteredProfiles.length > 0 && (
+            {totalProfiles > 0 && (
               <Pagination
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
-                totalItems={filteredProfiles.length}
+                totalItems={totalProfiles}
                 onPageChange={tableHandlePageChange}
                 onPageSizeChange={tableHandlePageSizeChange}
               />

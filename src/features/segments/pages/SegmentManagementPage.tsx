@@ -1259,7 +1259,7 @@ export default function SegmentManagementPage() {
                 className="h-5 w-5"
                 style={{ color: color.primary.accent }}
               />
-              <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>
+              <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>
                 Total Segments
               </p>
             </div>
@@ -1775,7 +1775,7 @@ export default function SegmentManagementPage() {
                       </button> */}
                       <button
                         onClick={() => handleViewSegment(segment.id)}
-                        className={`p-2 icon-edit ${tw.rounded} text-gray-500 hover:bg-gray-100`}
+                        className={`p-0 icon-edit ${tw.rounded} text-gray-500 hover:bg-gray-100`}
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />

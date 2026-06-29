@@ -303,7 +303,7 @@ export default function CategoryDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`p-2 icon-delete ${tw.rounded}`} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded}`} transition-colors`}
             >
               <MoreVertical className="w-5 h-5" />
             </button>
@@ -316,7 +316,7 @@ export default function CategoryDetailsPage() {
                     handleViewOffers();
                     setShowMoreMenu(false);
                   }}
-                  className={`p-2 icon-edit ${tw.rounded} w-full text-left px-4 py-2 text-sm  hover:bg-gray-50 flex items-center gap-2`}
+                  className={`p-0 icon-edit ${tw.rounded} w-full text-left px-4 py-2 text-sm  hover:bg-gray-50 flex items-center gap-2`}
                 >
                   <Eye className="w-4 h-4" />
                   View Offers

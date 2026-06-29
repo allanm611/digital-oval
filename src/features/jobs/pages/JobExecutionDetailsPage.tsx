@@ -202,7 +202,7 @@ export default function JobExecutionDetailsPage() {
           }
         }
       } catch (err) {
-        showError("Job Execution", extractBackendError(err, "Job Execution. Please try again."));
+        showError(t.jobs.jobExecution || "Job Execution", extractBackendError(err, "Job Execution. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -296,8 +296,8 @@ export default function JobExecutionDetailsPage() {
             reason: "User requested abort",
           });
           showToast(
-            "Execution Aborted",
-            "The execution has been aborted successfully"
+            t.jobs.executionAborted || "Execution Aborted",
+            t.messages.abortedSuccessfully || "The execution has been aborted successfully"
           );
           break;
         case "retry":
@@ -308,16 +308,16 @@ export default function JobExecutionDetailsPage() {
             userId: user.user_id,
           });
           showToast(
-            "Retry Initiated",
-            "Failed executions are being retried"
+            t.jobs.retryInitiated || "Retry Initiated",
+            t.messages.retryInitiatedSuccess || "Failed executions are being retried"
           );
           break;
         case "archive":
           if (!user?.user_id) return;
           await jobExecutionService.archiveJobExecution(id, user.user_id);
           showToast(
-            "Execution Archived",
-            "The execution has been archived successfully"
+            t.jobs.executionArchived || "Execution Archived",
+            t.messages.archivedSuccessfully || "The execution has been archived successfully"
           );
           break;
       }
@@ -326,7 +326,7 @@ export default function JobExecutionDetailsPage() {
       setDaysBackInput(7);
       navigate("/dashboard/job-executions");
     } catch (err) {
-      showError("Action Failed", extractBackendError(err, "Action Failed. Please try again."));
+      showError(t.common.actionFailed || "Action Failed", extractBackendError(err, "Action Failed. Please try again."));
     } finally {
       setIsProcessingAction(false);
     }
@@ -345,7 +345,7 @@ export default function JobExecutionDetailsPage() {
       <div className="py-16 text-center">
         <AlertCircle className="mx-auto mb-4 h-12 w-12 text-gray-300" />
         <p className={`text-lg font-semibold ${tw.textPrimary}`}>
-          Execution not found
+          {t.common.notFound || "Execution not found"}
         </p>
       </div>
     );
@@ -354,14 +354,14 @@ export default function JobExecutionDetailsPage() {
   return (
     <div className="">
       <BackButton
-       
+
         showBreadcrumb={true}
-        currentLabel="Job Execution Details"
+        currentLabel={t.jobs.executionDetails || "Job Execution Details"}
       />
       <div className="flex items-center justify-between">
         <div>
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Execution ID: {execution.id.substring(0, 8)}...
+            {t.jobs.executionId || "Execution ID"}: {execution.id.substring(0, 8)}...
           </h1>
         </div>
         <div className="flex gap-2">
@@ -371,7 +371,7 @@ export default function JobExecutionDetailsPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700`}
             >
               <Ban className="h-4 w-4" />
-              Abort
+              {t.common.abort || "Abort"}
             </button>
           )}
           {canWrite &&
@@ -383,7 +383,7 @@ export default function JobExecutionDetailsPage() {
                 style={{ backgroundColor: color.primary.action }}
               >
                 <RotateCcw className="h-4 w-4" />
-                Retry
+                {t.common.retry || "Retry"}
               </button>
             )}
           {canWrite && !execution.archived && (
@@ -392,7 +392,7 @@ export default function JobExecutionDetailsPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50`}
             >
               <Archive className="h-4 w-4" />
-              Archive
+              {t.common.archive || "Archive"}
             </button>
           )}
         </div>
@@ -404,25 +404,25 @@ export default function JobExecutionDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Execution Information
+            {t.jobs.executionInformation || "Execution Information"}
           </h3>
           <dl className="space-y-3">
             <div>
               <dt className="text-sm font-medium text-gray-500">
-                Execution ID
+                {t.jobs.executionId || "Execution ID"}
               </dt>
               <dd className={`mt-1 text-sm font-mono ${tw.textPrimary}`}>
                 {execution.id}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Job ID</dt>
+              <dt className="text-sm font-medium text-gray-500">{t.jobs.jobId || "Job ID"}</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                 {execution.job_id}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Status</dt>
+              <dt className="text-sm font-medium text-gray-500">{t.common.status || "Status"}</dt>
               <dd className="text-sm mt-1 flex items-center gap-3">
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
@@ -440,41 +440,41 @@ export default function JobExecutionDetailsPage() {
                 {execution.sla_breached && (
                   <div className="flex items-center gap-1 text-red-600">
                     <AlertCircle className="h-3 w-3" />
-                    <span className="text-xs font-medium">SLA Breached</span>
+                    <span className="text-xs font-medium">{t.jobs.slaBreached || "SLA Breached"}</span>
                   </div>
                 )}
                 {isTimedOut && (
                   <div className="flex items-center gap-1 text-purple-600">
                     <Clock className="h-3 w-3" />
-                    <span className="text-xs font-medium">Timed Out</span>
+                    <span className="text-xs font-medium">{t.common.timedOut || "Timed Out"}</span>
                   </div>
                 )}
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">
-                Triggered By
+                {t.jobs.triggeredBy || "Triggered By"}
               </dt>
               <dd className={`mt-1 text-sm capitalize ${tw.textPrimary}`}>
                 {execution.triggered_by || "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Started At</dt>
+              <dt className="text-sm font-medium text-gray-500">{t.common.startedAt || "Started At"}</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                 <DateFormatter date={execution.started_at} useUserTimezone includeTime />
               </dd>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">
-                Completed At
+                {t.common.completedAt || "Completed At"}
               </dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                 <DateFormatter date={execution.completed_at} useUserTimezone includeTime />
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Duration</dt>
+              <dt className="text-sm font-medium text-gray-500">{t.common.duration || "Duration"}</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                 {execution.execution_status === "running" && runningDuration
                   ? formatDuration(runningDuration)
@@ -488,13 +488,13 @@ export default function JobExecutionDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            System Information
+            {t.jobs.systemInformation || "System Information"}
           </h3>
           <dl className="space-y-3">
             {execution.server_instance && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Server Instance
+                  {t.jobs.serverInstance || "Server Instance"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.server_instance}
@@ -504,7 +504,7 @@ export default function JobExecutionDetailsPage() {
             {execution.worker_node_id && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Worker Node ID
+                  {t.jobs.workerNodeId || "Worker Node ID"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.worker_node_id}
@@ -513,7 +513,7 @@ export default function JobExecutionDetailsPage() {
             )}
             {execution.trace_id && (
               <div>
-                <dt className="text-sm font-medium text-gray-500">Trace ID</dt>
+                <dt className="text-sm font-medium text-gray-500">{t.jobs.traceId || "Trace ID"}</dt>
                 <dd className={`mt-1 text-sm font-mono ${tw.textPrimary}`}>
                   {execution.trace_id}
                 </dd>
@@ -522,7 +522,7 @@ export default function JobExecutionDetailsPage() {
             {execution.correlation_id && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Correlation ID
+                  {t.jobs.correlationId || "Correlation ID"}
                 </dt>
                 <dd className={`mt-1 text-sm font-mono ${tw.textPrimary}`}>
                   {execution.correlation_id}
@@ -531,16 +531,16 @@ export default function JobExecutionDetailsPage() {
             )}
             <div>
               <dt className="text-sm font-medium text-gray-500">
-                Execution Date
+                {t.jobs.executionDate || "Execution Date"}
               </dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                 {execution.execution_date}
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Archived</dt>
+              <dt className="text-sm font-medium text-gray-500">{t.common.archived || "Archived"}</dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                {execution.archived ? "Yes" : "No"}
+                {execution.archived ? (t.common.yes || "Yes") : (t.common.no || "No")}
               </dd>
             </div>
           </dl>
@@ -553,13 +553,13 @@ export default function JobExecutionDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Execution Progress
+            {t.jobs.executionProgress || "Execution Progress"}
           </h3>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">
-                  Steps Completed
+                  {t.jobs.stepsCompleted || "Steps Completed"}
                 </span>
                 <span className="text-sm text-gray-600">
                   {progress.steps_completed || 0} / {progress.steps_total || 0}
@@ -582,7 +582,7 @@ export default function JobExecutionDetailsPage() {
             {progress.estimated_completion && (
               <div>
                 <span className="text-sm font-medium text-gray-700">
-                  Estimated Completion:{" "}
+                  {t.jobs.estimatedCompletion || "Estimated Completion"}:{" "}
                 </span>
                 <span className="text-sm text-gray-600">
                   <DateFormatter date={progress.estimated_completion} useUserTimezone includeTime />
@@ -599,13 +599,13 @@ export default function JobExecutionDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Resource Usage
+            {t.jobs.resourceUsage || "Resource Usage"}
           </h3>
           <div className="grid gap-4 md:grid-cols-2">
             {resourceUsage.peak_memory_mb !== null && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Peak Memory
+                  {t.jobs.peakMemory || "Peak Memory"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {resourceUsage.peak_memory_mb} MB
@@ -614,7 +614,7 @@ export default function JobExecutionDetailsPage() {
             )}
             {resourceUsage.peak_cpu_percent !== null && (
               <div>
-                <dt className="text-sm font-medium text-gray-500">Peak CPU</dt>
+                <dt className="text-sm font-medium text-gray-500">{t.jobs.peakCpu || "Peak CPU"}</dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {resourceUsage.peak_cpu_percent}%
                 </dd>
@@ -632,12 +632,12 @@ export default function JobExecutionDetailsPage() {
         >
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: "#dc2626" }}>
             <XCircle className="h-5 w-5" />
-            Error Information
+            {t.jobs.errorInformation || "Error Information"}
           </h3>
           <dl className="space-y-3">
             <div>
               <dt className="text-sm font-medium" style={{ color: "#dc2626" }}>
-                Error Message
+                {t.common.errorMessage || "Error Message"}
               </dt>
               <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                 {execution.error_message}
@@ -645,7 +645,7 @@ export default function JobExecutionDetailsPage() {
             </div>
             {execution.error_code && (
               <div>
-                <dt className="text-sm font-medium" style={{ color: "#dc2626" }}>Error Code</dt>
+                <dt className="text-sm font-medium" style={{ color: "#dc2626" }}>{t.jobs.errorCode || "Error Code"}</dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.error_code}
                 </dd>
@@ -654,7 +654,7 @@ export default function JobExecutionDetailsPage() {
             {execution.error_step_id && (
               <div>
                 <dt className="text-sm font-medium" style={{ color: "#dc2626" }}>
-                  Failed Step ID
+                  {t.jobs.failedStepId || "Failed Step ID"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.error_step_id}
@@ -673,12 +673,12 @@ export default function JobExecutionDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Processing Metrics
+            {t.jobs.processingMetrics || "Processing Metrics"}
           </h3>
           <div className="grid gap-4 md:grid-cols-3">
             {execution.rows_read !== null && (
               <div>
-                <dt className="text-sm font-medium text-gray-500">Rows Read</dt>
+                <dt className="text-sm font-medium text-gray-500">{t.jobs.rowsRead || "Rows Read"}</dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.rows_read.toLocaleString()}
                 </dd>
@@ -687,7 +687,7 @@ export default function JobExecutionDetailsPage() {
             {execution.rows_processed !== null && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Rows Processed
+                  {t.jobs.rowsProcessed || "Rows Processed"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.rows_processed.toLocaleString()}
@@ -697,7 +697,7 @@ export default function JobExecutionDetailsPage() {
             {execution.steps_total !== null && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Total Steps
+                  {t.jobs.totalSteps || "Total Steps"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.steps_total}
@@ -707,7 +707,7 @@ export default function JobExecutionDetailsPage() {
             {execution.steps_completed !== null && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Steps Completed
+                  {t.jobs.stepsCompleted || "Steps Completed"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.steps_completed}
@@ -717,7 +717,7 @@ export default function JobExecutionDetailsPage() {
             {execution.data_quality_score !== null && (
               <div>
                 <dt className="text-sm font-medium text-gray-500">
-                  Data Quality Score
+                  {t.jobs.dataQualityScore || "Data Quality Score"}
                 </dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
                   {execution.data_quality_score}%
@@ -734,7 +734,7 @@ export default function JobExecutionDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Job Analytics & Insights
+            {t.jobs.jobAnalyticsInsights || "Job Analytics & Insights"}
           </h3>
 
           {isLoadingAnalytics ? (
@@ -1200,9 +1200,9 @@ export default function JobExecutionDetailsPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                {actionType === "abort" && "Abort Execution"}
-                {actionType === "archive" && "Archive Execution"}
-                {actionType === "retry" && "Retry Execution"}
+                {actionType === "abort" && (t.jobs.abortExecution || "Abort Execution")}
+                {actionType === "archive" && (t.jobs.archiveExecution || "Archive Execution")}
+                {actionType === "retry" && (t.jobs.retryExecution || "Retry Execution")}
               </h3>
               <button
                 onClick={() => {
@@ -1217,16 +1217,16 @@ export default function JobExecutionDetailsPage() {
             </div>
             <p className="text-sm text-gray-600 mb-4">
               {actionType === "abort" &&
-                "Are you sure you want to abort this execution?"}
+                (t.jobs.confirmAbortExecution || "Are you sure you want to abort this execution?")}
               {actionType === "archive" &&
-                "Are you sure you want to archive this execution?"}
+                (t.jobs.confirmArchiveExecution || "Are you sure you want to archive this execution?")}
               {actionType === "retry" &&
-                "This will retry all failed executions for this job. Continue?"}
+                (t.jobs.confirmRetryExecution || "This will retry all failed executions for this job. Continue?")}
             </p>
             {actionType === "retry" && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Days Back
+                  {t.jobs.daysBack || "Days Back"}
                 </label>
                 <input
                   type="number"
@@ -1235,10 +1235,10 @@ export default function JobExecutionDetailsPage() {
                   value={daysBackInput}
                   onChange={(e) => setDaysBackInput(Number(e.target.value))}
                   className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  placeholder="Enter days back"
+                  placeholder={t.jobs.enterDaysBack || "Enter days back"}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Retry failed executions from the last {daysBackInput} day(s)
+                  {t.jobs.retryFailedExecutionsDays || `Retry failed executions from the last ${daysBackInput} day(s)`}
                 </p>
               </div>
             )}
@@ -1252,7 +1252,7 @@ export default function JobExecutionDetailsPage() {
                 className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
                 disabled={isProcessingAction}
               >
-                Cancel
+                {t.common.cancel || "Cancel"}
               </button>
               <button
                 onClick={confirmAction}
@@ -1264,7 +1264,7 @@ export default function JobExecutionDetailsPage() {
                     : color.primary.action,
                 }}
               >
-                {isProcessingAction ? "Processing..." : "Confirm"}
+                {isProcessingAction ? (t.common.processing || "Processing...") : (t.common.confirm || "Confirm")}
               </button>
             </div>
           </div>

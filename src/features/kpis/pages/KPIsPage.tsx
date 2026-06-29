@@ -115,7 +115,7 @@ export default function KPIsPage() {
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
+                <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
             </div>
@@ -312,7 +312,7 @@ export default function KPIsPage() {
                         <h4 className="font-semibold text-sm text-gray-900">
                           {kpi.name}
                         </h4>
-                        <p className={`p-2 icon-edit ${tw.rounded} text-xs  mt-1`}>{kpi.description}</p>
+                        <p className={`p-0 icon-edit ${tw.rounded} text-xs  mt-1`}>{kpi.description}</p>
                       </div>
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 text-gray-900">
                         {kpi.category}
@@ -373,7 +373,7 @@ export default function KPIsPage() {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className={`p-2 icon-delete ${tw.rounded} transition-colors ${
+                  className={`p-0 icon-delete ${tw.rounded} transition-colors ${
                     currentPage === 1
                       ? "text-gray-300 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"
@@ -388,7 +388,7 @@ export default function KPIsPage() {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className={`p-2 icon-delete ${tw.rounded} transition-colors ${
+                  className={`p-0 icon-delete ${tw.rounded} transition-colors ${
                     currentPage === totalPages
                       ? "text-gray-300 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"

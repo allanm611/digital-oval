@@ -163,7 +163,7 @@ export default function TeamRolesPage() {
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => handleOpenEditModal(role)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -178,7 +178,7 @@ export default function TeamRolesPage() {
           <button
             onClick={() => handleDeleteClick(role)}
             disabled={deleting === role.id}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             {deleting === role.id ? (

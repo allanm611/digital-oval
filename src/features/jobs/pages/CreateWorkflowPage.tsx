@@ -9,6 +9,8 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import type { CreateWorkflowPayload, UpdateWorkflowPayload } from "../types/workflow";
@@ -19,6 +21,10 @@ export default function CreateWorkflowPage() {
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const isEditMode = !!id;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -151,7 +157,7 @@ export default function CreateWorkflowPage() {
             {t.workflows.workflowInformation}
           </h2>
           <div className="space-y-4">
-            <div>
+            <FormField error={errors?.name} ref={registerFieldRef('name')}>
               <Input
                 label={`${t.common.name}*`}
                 placeholder={t.workflows.enterWorkflowName}
@@ -161,10 +167,7 @@ export default function CreateWorkflowPage() {
                 }
                 hasError={!!errors.name}
               />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
+            </FormField>
 
             <Textarea
               label={t.common.description}

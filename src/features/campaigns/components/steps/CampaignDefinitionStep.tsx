@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import Input from "../../../../shared/components/ui/Input";
 import Textarea from "../../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
+import FormField from "../../../../shared/components/FormField";
+import { useFormValidation } from "../../../../shared/hooks/useFormValidation";
 import { ChevronDown, Search, Settings, X, Plus } from "lucide-react";
 import MultiCategorySelector from "../../../../shared/components/MultiCategorySelector";
 import { CreateCampaignRequest } from "../../types/campaign";
@@ -49,6 +51,9 @@ export default function CampaignDefinitionStep({
   const t = useTranslation();
   const { t: tLanguage } = useLanguage();
   const { success: showToast, error: showError } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef, hasError } = useFormValidation();
 
   const { data: campaignTypes, loading: campaignTypesLoading, refresh: refreshCampaignTypes } =
     useBackendCampaignTypeData();
@@ -490,7 +495,7 @@ export default function CampaignDefinitionStep({
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7 px-0">
-          <div>
+          <FormField error={validationErrors?.name} ref={registerFieldRef('name')}>
             <Input
               type="text"
               label="Campaign Name *"
@@ -501,17 +506,12 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
-              hasError={!!validationErrors.name}
+              hasError={hasError('name')}
               placeholder={tLanguage.campaigns.campaignDefinition.enterCampaignName}
             />
-            {validationErrors.name && (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.name}
-              </p>
-            )}
-          </div>
+          </FormField>
 
-          <div>
+          <FormField error={validationErrors?.category_id} ref={registerFieldRef('category_id')}>
             <MultiCategorySelector
               label="Campaign Catalog *"
               value={selectedCategoryIds}
@@ -531,14 +531,9 @@ export default function CampaignDefinitionStep({
                 setCategoryRefreshTriggerState((prev) => prev + 1);
               }}
               refreshTrigger={categoryRefreshTriggerState}
-              hasError={!!validationErrors.category_id}
+              hasError={hasError('category_id')}
             />
-            {validationErrors.category_id && (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.category_id}
-              </p>
-            )}
-          </div>
+          </FormField>
 
           {/* Campaign Type - Commented out
           <div>
@@ -584,7 +579,7 @@ export default function CampaignDefinitionStep({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          <FormField error={validationErrors?.line_of_business} ref={registerFieldRef('line_of_business')}>
             <HeadlessSelect
               label="Line of Business *"
               options={[
@@ -608,14 +603,9 @@ export default function CampaignDefinitionStep({
               }}
               searchable={true}
               disabled={lobLoading}
-              error={!!validationErrors?.line_of_business}
+              error={hasError('line_of_business')}
             />
-            {validationErrors?.line_of_business && (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.line_of_business}
-              </p>
-            )}
-          </div>
+          </FormField>
 
           <div>
             <HeadlessSelect
@@ -737,7 +727,7 @@ export default function CampaignDefinitionStep({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7">
-          <div>
+          <FormField error={validationErrors?.objective} ref={registerFieldRef('objective')}>
             <HeadlessSelect
               label="Primary Objective *"
               options={[
@@ -762,14 +752,9 @@ export default function CampaignDefinitionStep({
               }}
               searchable={true}
               disabled={objectivesLoading}
-              error={!!validationErrors.objective}
+              error={hasError('objective')}
             />
-            {validationErrors.objective && (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.objective}
-              </p>
-            )}
-          </div>
+          </FormField>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -870,7 +855,7 @@ export default function CampaignDefinitionStep({
         </div>
 
         {/* Communication Policy */}
-        <div>
+        <FormField error={validationErrors?.communication_policy} ref={registerFieldRef('communication_policy')}>
           <HeadlessSelect
             label="Communication Policy *"
             options={[
@@ -904,7 +889,7 @@ export default function CampaignDefinitionStep({
             }}
             searchable={true}
             disabled={policiesLoading}
-            error={!!validationErrors?.communication_policy}
+            error={hasError('communication_policy')}
           />
           {/* Customization Toggle */}
           {selectedPolicy && (
@@ -928,14 +913,9 @@ export default function CampaignDefinitionStep({
               </button>
             </div>
           )}
-          {validationErrors?.communication_policy && (
-            <p className="mt-1 text-sm text-red-600">
-              {validationErrors.communication_policy}
-            </p>
-          )}
-        </div>
+        </FormField>
 
-        <div>
+        <FormField error={validationErrors?.description} ref={registerFieldRef('description')}>
           <Textarea
             label={tLanguage.campaigns.campaignDefinition.campaignDescription}
             value={formData.description}
@@ -945,16 +925,11 @@ export default function CampaignDefinitionStep({
                 clearValidationErrors();
               }
             }}
-            hasError={!!validationErrors?.description}
+            hasError={hasError('description')}
             placeholder="Describe your campaign goals and objectives"
             rows={3}
           />
-          {validationErrors?.description && (
-            <p className="mt-1 text-sm text-red-600">
-              {validationErrors.description}
-            </p>
-          )}
-        </div>
+        </FormField>
 
         {/* Budget Allocation */}
         <div className="relative" onFocus={() => setBudgetFocused(true)} onBlur={() => setBudgetFocused(false)}>
@@ -1019,7 +994,7 @@ export default function CampaignDefinitionStep({
             </p>
           </div>
 
-          <div>
+          <FormField error={validationErrors?.end_date} ref={registerFieldRef('end_date')}>
             <Input
               type="datetime-local"
               label="End Date *"
@@ -1037,19 +1012,15 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
-              hasError={!!validationErrors.end_date}
+              hasError={hasError('end_date')}
               placeholder="Select end date and time"
             />
-            {validationErrors.end_date ? (
-              <p className="mt-1 text-sm text-red-600">
-                {validationErrors.end_date}
-              </p>
-            ) : (
+            {!validationErrors?.end_date && (
               <p className="text-xs mt-1 text-gray-500">
                 When should this campaign end?
               </p>
             )}
-          </div>
+          </FormField>
         </div>
       </div>
 

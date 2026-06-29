@@ -30,6 +30,8 @@ import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils"
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 
 const SCHEDULE_TYPES: {
   value: ScheduleType;
@@ -88,6 +90,10 @@ export default function CreateScheduledJobPage() {
   const { showToast, error: showError, success: showSuccess } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const isEditMode = !!id;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -558,7 +564,7 @@ export default function CreateScheduledJobPage() {
             Basic Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <FormField error={errors?.name} ref={registerFieldRef('name')}>
               <Input
                 label="Name*"
                 type="text"
@@ -569,12 +575,9 @@ export default function CreateScheduledJobPage() {
                 hasError={!!errors.name}
                 placeholder="Enter job name"
               />
-              {errors.name && (
-                <p className="mt-1 text-xs text-red-600">{errors.name}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
+            <FormField error={errors?.code} ref={registerFieldRef('code')}>
               <Input
                 label="Code*"
                 type="text"
@@ -588,12 +591,9 @@ export default function CreateScheduledJobPage() {
                 hasError={!!errors.code}
                 placeholder="JOB_CODE"
               />
-              {errors.code && (
-                <p className="mt-1 text-xs text-red-600">{errors.code}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div className="md:col-span-2">
+            <FormField error={errors?.description} ref={registerFieldRef('description')} className="md:col-span-2">
               <Textarea
                 label="Description *"
                 value={formData.description || ""}
@@ -604,14 +604,9 @@ export default function CreateScheduledJobPage() {
                 hasError={!!errors.description}
                 placeholder="Enter job description"
               />
-              {errors.description && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.description}
-                </p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
+            <FormField error={errors?.job_type_id} ref={registerFieldRef('job_type_id')}>
               <HeadlessSelect
                 label="Job Type *"
                 options={[
@@ -628,10 +623,7 @@ export default function CreateScheduledJobPage() {
                 hasError={!!errors.job_type_id}
                 placeholder="Select job type"
               />
-              {errors.job_type_id && (
-                <p className="mt-1 text-xs text-red-600">{errors.job_type_id}</p>
-              )}
-            </div>
+            </FormField>
 
             <div>
               <HeadlessSelect

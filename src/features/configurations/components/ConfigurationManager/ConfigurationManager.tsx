@@ -238,13 +238,13 @@ export default function ConfigurationManager({
           />
           <button
             onClick={() => handleEditItem(item)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDeleteClick(item)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
           >
             <Trash2 className="w-4 h-4" />
           </button>

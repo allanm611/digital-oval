@@ -178,7 +178,7 @@ export default function ProductsPage() {
             />
             <button
               onClick={() => navigate(`/dashboard/products/${row.id}`)}
-              className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
+              className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
@@ -192,7 +192,7 @@ export default function ProductsPage() {
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
-                className={`p-2 icon-delete ${tw.rounded} transition-all duration-200`}
+                className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
 
                 title="Delete Product"
               >
@@ -491,7 +491,7 @@ export default function ProductsPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate(`/dashboard/products/${row.id}`)}
-              className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
+              className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
@@ -512,7 +512,7 @@ export default function ProductsPage() {
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
-                className={`p-2 icon-delete ${tw.rounded} transition-all duration-200`}
+                className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
                 title="Delete Product"
               >
                 <Trash2 className="w-4 h-4" />

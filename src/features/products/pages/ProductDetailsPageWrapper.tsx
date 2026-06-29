@@ -30,6 +30,7 @@ export default function ProductDetailsPageWrapper() {
  * Alternative: Use this if you want custom error handling
  */
 export function ProductDetailsPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="detail"

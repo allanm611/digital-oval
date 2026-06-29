@@ -176,7 +176,7 @@ export default function ComboTypesPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/combo-types/${combo.id}`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -193,7 +193,7 @@ export default function ComboTypesPage() {
           </button>
           <button
             onClick={() => navigate(`/dashboard/combo-types/${combo.id}/edit`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -213,7 +213,7 @@ export default function ComboTypesPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(combo.id, e)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               style={{
                 color: color.primary.action,
                 backgroundColor: "transparent",

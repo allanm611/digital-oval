@@ -140,7 +140,7 @@ export default function SMSRoutesList() {
           />
           <button
             onClick={() => navigate(`/dashboard/sms-routes/edit/${route.id}`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",

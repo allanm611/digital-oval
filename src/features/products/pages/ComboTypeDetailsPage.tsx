@@ -32,8 +32,8 @@ export default function ComboTypeDetailsPage() {
           setComboType(data);
         } catch (err) {
           console.error("Failed to load combo type:", err);
-          showError("Error", "Failed to load combo type");
-          setError("Failed to load combo type");
+          showError(t.common.error || "Error", t.common.error || "Failed to load combo type");
+          setError(t.common.error || "Failed to load combo type");
         } finally {
           setLoading(false);
         }
@@ -52,13 +52,13 @@ export default function ComboTypeDetailsPage() {
     try {
       await comboTypeService.deleteComboType(comboType.id);
       success(
-        "Combo Type Deleted",
-        `"${comboType.name}" has been deleted successfully.`
+        t.products.comboTypeDeleted || "Combo Type Deleted",
+        `"${comboType.name}" ${t.messages.deletedSuccessfully || "has been deleted successfully."}`
       );
       navigate("/dashboard/combo-types");
     } catch (err) {
       console.error("Failed to delete:", err);
-      showError("Cannot Delete Combo Type", extractBackendError(err, "Cannot Delete Combo Type. Please try again."));
+      showError(t.products.cannotDeleteComboType || "Cannot Delete Combo Type", extractBackendError(err, "Cannot Delete Combo Type. Please try again."));
     } finally {
       closeDeleteConfirm();
     }
@@ -69,7 +69,7 @@ export default function ComboTypeDetailsPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <LoadingSpinner variant="modern" size="xl" color="primary" className="mb-4" />
         <p className={`${tw.textMuted} font-medium text-sm`}>
-          Loading combo type details...
+          {t.common.loadingDetails || "Loading combo type details..."}
         </p>
       </div>
     );
@@ -82,17 +82,17 @@ export default function ComboTypeDetailsPage() {
         <div className="text-center py-12">
           <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-            Combo Type Not Found
+            {t.products.comboTypeNotFound || "Combo Type Not Found"}
           </h3>
           <p className={`${tw.textMuted} mb-6`}>
-            The combo type you are looking for does not exist.
+            {t.products.comboTypeNotFoundDesc || "The combo type you are looking for does not exist."}
           </p>
           <button
             onClick={() => navigate("/dashboard/combo-types")}
             className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-colors`}
             style={{ backgroundColor: color.primary.action }}
           >
-            Back to Combo Types
+            {t.products.backToComboTypes || "Back to Combo Types"}
           </button>
         </div>
       </div>

@@ -78,6 +78,7 @@ export default function ScheduledJobsPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [deletingJob, setDeletingJob] = useState<ScheduledJob | null>(null);
   const [jobTypeMap, setJobTypeMap] = useState<Record<number, string>>({});
+  const [totalCount, setTotalCount] = useState(0);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteJob } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -173,7 +174,7 @@ export default function ScheduledJobsPage() {
                 state: { parentLabel: "Scheduled Jobs" },
               })
             }
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             aria-label="View details"
           >
             <Eye className="w-4 h-4" />
@@ -183,7 +184,7 @@ export default function ScheduledJobsPage() {
               onClick={() =>
                 navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)
               }
-              className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
               aria-label="Edit job"
             >
               <Edit className="w-4 h-4" />
@@ -195,7 +196,7 @@ export default function ScheduledJobsPage() {
                 setDeletingJob(job);
                 openDeleteConfirm(job.id, job.name || `Job #${job.id}`);
               }}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               aria-label="Delete job"
             >
               <Trash2 className="w-4 h-4" />
@@ -280,8 +281,8 @@ export default function ScheduledJobsPage() {
         } else if (hasSearchTerm) {
           // Use search endpoint when there's a search term
           const params: ScheduledJobSearchParams = {
-            limit: 50,
-            offset: 0,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             searchTerm: trimmedSearchTerm,
             ...overrideParams,
           };
@@ -292,8 +293,8 @@ export default function ScheduledJobsPage() {
         } else {
           // Use list endpoint when there's no search term
           const params = {
-            limit: 50,
-            offset: 0,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             ...overrideParams,
           };
           response = await scheduledJobService.listScheduledJobs({
@@ -311,11 +312,14 @@ export default function ScheduledJobsPage() {
           return createdB - createdA;
         });
         setJobs(sortedJobs);
+        if (response.pagination) {
+          setTotalCount(response.pagination.total);
+        }
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load scheduled jobs";
         setErrorMessage(message);
-        showError("Scheduled Jobs", extractBackendError(error, "Scheduled Jobs. Please try again."));
+        showError("Scheduled Jobs", extractBackendError(err, "Scheduled Jobs. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -332,6 +336,8 @@ export default function ScheduledJobsPage() {
       jobCodeFilter,
       activeJobsFilter,
       showError,
+      tableCurrentPage,
+      tablePageSize,
     ],
   );
 
@@ -868,13 +874,13 @@ export default function ScheduledJobsPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<ScheduledJob>
               columns={columns}
-              data={paginatedJobs}
-              totalItems={filteredJobs.length}
+              data={jobs}
+              totalItems={totalCount}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={isLoading}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
@@ -887,11 +893,11 @@ export default function ScheduledJobsPage() {
               }}
             />
 
-            {paginatedJobs.length > 0 && filteredJobs.length > 0 && (
+            {jobs.length > 0 && totalCount > 0 && (
               <Pagination
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
-                totalItems={filteredJobs.length}
+                totalItems={totalCount}
                 onPageChange={tableHandlePageChange}
                 onPageSizeChange={tableHandlePageSizeChange}
               />

@@ -277,7 +277,7 @@ export default function ConfigurationManagerAPI({
               <button
                 onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
                 disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`p-0 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={`View details for ${item.name}`}
               >
                 <Eye className="w-4 h-4" />
@@ -288,7 +288,7 @@ export default function ConfigurationManagerAPI({
               <button
                 onClick={() => handleEditItem(item)}
                 disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`p-0 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={`Edit ${item.name}`}
               >
                 <Edit className="w-4 h-4" />
@@ -299,7 +299,7 @@ export default function ConfigurationManagerAPI({
               <button
                 onClick={() => handleDeleteItem(item)}
                 disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={`Delete ${item.name}`}
               >
                 <Trash2 className="w-4 h-4" />

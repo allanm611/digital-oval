@@ -126,7 +126,7 @@ export default function CreateControlGroupPage() {
       }
     } catch (error) {
       console.error("Failed to load control group:", error);
-      showError(extractBackendError(error, "Failed to load control group data. Please try again."));
+      showError(t.controlGroups.failedToSaveGroup, extractBackendError(error, t.controlGroups.failedToSaveGroup));
       handleBack();
     } finally {
       setIsLoading(false);
@@ -190,36 +190,36 @@ export default function CreateControlGroupPage() {
 
   const getScheduleSummary = () => {
     const scheduleType =
-      scheduling.type === "immediate" ? "Immediate" : "Scheduled";
+      scheduling.type === "immediate" ? t.controlGroups.oneTime : t.controlGroups.scheduling;
     const interval = scheduling.recurrence_interval || 1;
     const recurrence = scheduling.recurrence_pattern || "weekly";
     const startDate = scheduling.start_date
       ? scheduling.start_date.replace("T", " ")
-      : "not set";
-    const timeZone = scheduling.time_zone || "not set";
+      : t.common.noData;
+    const timeZone = scheduling.time_zone || t.common.noData;
 
     let cadence = "";
     if (recurrence === "daily") {
-      cadence = `every ${interval} day${interval > 1 ? "s" : ""}`;
+      cadence = `${t.controlGroups.daily} ${interval} ${interval > 1 ? "days" : "day"}`;
     } else if (recurrence === "weekly") {
       const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const days = (scheduling.selected_days || [])
         .map((d: number) => dayMap[d])
         .filter(Boolean)
         .join(", ");
-      cadence = `every ${interval} week${interval > 1 ? "s" : ""}${days ? ` on ${days}` : ""}`;
+      cadence = `${t.controlGroups.weekly} ${interval} ${interval > 1 ? "weeks" : "week"}${days ? ` on ${days}` : ""}`;
     } else {
       const monthlyRuleLabel =
         scheduling.monthly_rule === "last_day"
-          ? "last day"
+          ? t.controlGroups.monthly
           : scheduling.monthly_rule === "day_of_month"
             ? `day ${scheduling.monthly_day_of_month || 1}`
-            : "first day";
-      cadence = `every ${interval} month${interval > 1 ? "s" : ""} on ${monthlyRuleLabel}`;
+            : t.controlGroups.monthly;
+      cadence = `${t.controlGroups.monthly} ${interval} ${interval > 1 ? "months" : "month"} on ${monthlyRuleLabel}`;
     }
 
     const endText = scheduling.end_date
-      ? `, ending ${scheduling.end_date.replace("T", " ")}`
+      ? `, ${t.common.endDate} ${scheduling.end_date.replace("T", " ")}`
       : ", no end date";
 
     return `${scheduleType}: starts ${startDate}, ${cadence} (${timeZone})${endText}.`;
@@ -461,7 +461,7 @@ export default function CreateControlGroupPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Input
-                      label={t.controlGroups.nameRequired}
+                      label={t.controlGroups.nameLabel}
                       placeholder={t.controlGroups.enterControlGroupName}
                       value={controlGroupName}
                       onChange={(value) => {

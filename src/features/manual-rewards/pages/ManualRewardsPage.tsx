@@ -302,7 +302,7 @@ export default function ManualRewardsPage() {
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
+                <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {stat.value}

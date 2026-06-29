@@ -46,7 +46,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className={`p-2 icon-edit ${tw.rounded} flex items-center justify-between gap-4 text-sm `}
+          className={`p-0 icon-edit ${tw.rounded} flex items-center justify-between gap-4 text-sm `}
         >
           <span>{entry.name}:</span>
           <span className="font-semibold">{entry.value}</span>

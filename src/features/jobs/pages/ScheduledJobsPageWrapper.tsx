@@ -20,6 +20,7 @@ export default function ScheduledJobsPageWrapper() {
 
 
 export function ScheduledJobsPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="table"

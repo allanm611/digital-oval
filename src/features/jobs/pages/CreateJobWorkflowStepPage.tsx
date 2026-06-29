@@ -7,6 +7,8 @@ import { scheduledJobService } from "../services/scheduledJobService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import {
   CreateJobWorkflowStepPayload,
   UpdateJobWorkflowStepPayload,
@@ -54,6 +56,10 @@ export default function CreateJobWorkflowStepPage() {
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const isEditMode = operationType === "edit" && !!id;
   const isDuplicateMode = operationType === "duplicate" && !!id;
 
@@ -694,7 +700,7 @@ export default function CreateJobWorkflowStepPage() {
                     )}
                   </div>
 
-                  <div>
+                  <FormField error={errors?.step_name} ref={registerFieldRef('step_name')}>
                     <Input
                       label={`${t.jobs.jobWorkflow.stepName}*`}
                       type="text"
@@ -705,14 +711,9 @@ export default function CreateJobWorkflowStepPage() {
                       placeholder={t.jobs.jobWorkflow.enterStepName}
                       hasError={!!errors.step_name}
                     />
-                    {errors.step_name && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.step_name}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
 
-                  <div>
+                  <FormField error={errors?.step_code} ref={registerFieldRef('step_code')}>
                     <Input
                       label={`${t.jobs.jobWorkflow.stepCode}*`}
                       type="text"
@@ -726,14 +727,9 @@ export default function CreateJobWorkflowStepPage() {
                       placeholder={t.jobs.jobWorkflow.enterStepCode}
                       hasError={!!errors.step_code}
                     />
-                    {errors.step_code && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.step_code}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
 
-                  <div>
+                  <FormField error={errors?.step_order} ref={registerFieldRef('step_order')}>
                     <Input
                       label={`${t.jobs.jobWorkflow.stepOrder}*`}
                       type="number"
@@ -747,14 +743,9 @@ export default function CreateJobWorkflowStepPage() {
                       placeholder="1"
                       hasError={!!errors.step_order}
                     />
-                    {errors.step_order && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.step_order}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
 
-                  <div>
+                  <FormField error={errors?.step_type} ref={registerFieldRef('step_type')}>
                     <HeadlessSelect
                       label={`${t.jobs.jobWorkflow.stepType} *`}
                       options={getStepTypes(t).map((type) => ({
@@ -768,9 +759,9 @@ export default function CreateJobWorkflowStepPage() {
                       placeholder={t.jobs.jobWorkflow.selectType}
                       className="w-full"
                     />
-                  </div>
+                  </FormField>
 
-                  <div>
+                  <FormField error={errors?.step_description} ref={registerFieldRef('step_description')} className="md:col-span-2">
                     <Textarea
                       label={`${t.jobs.jobWorkflow.stepDescription} *`}
                       value={formData.step_description ?? ""}
@@ -784,12 +775,7 @@ export default function CreateJobWorkflowStepPage() {
                       hasError={!!errors.step_description}
                       placeholder={t.jobs.jobWorkflow.enterStepDescription}
                     />
-                    {errors.step_description && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.step_description}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                 </div>
               </div>
 
@@ -801,7 +787,7 @@ export default function CreateJobWorkflowStepPage() {
                   {t.jobs.jobWorkflow.executionConfiguration}
                 </h2>
                 <div className="space-y-4">
-                  <div>
+                  <FormField error={errors?.step_action} ref={registerFieldRef('step_action')}>
                     <Textarea
                       label={`${t.jobs.jobWorkflow.stepAction} *`}
                       value={formData.step_action}
@@ -816,15 +802,10 @@ export default function CreateJobWorkflowStepPage() {
                       placeholder={t.jobs.jobWorkflow.enterStepAction}
                       hasError={!!errors.step_action}
                     />
-                    {errors.step_action && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.step_action}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
+                    <FormField error={errors?.timeout_seconds} ref={registerFieldRef('timeout_seconds')}>
                       <Input
                         label={`${t.jobs.jobWorkflow.timeoutSeconds}*`}
                         type="number"
@@ -839,12 +820,7 @@ export default function CreateJobWorkflowStepPage() {
                         }
                         hasError={!!errors.timeout_seconds}
                       />
-                      {errors.timeout_seconds && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.timeout_seconds}
-                        </p>
-                      )}
-                    </div>
+                    </FormField>
 
                     <div>
                       <HeadlessSelect

@@ -1145,7 +1145,7 @@ function OfferCategoriesPage() {
                 <div className="flex items-center space-x-1">
                   {/* <button
                     onClick={() => handleViewDetails(category)}
-                    className={`p-2 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                     title="View Details"
                   >
                     <Eye className="w-4 h-4 " />
@@ -1165,14 +1165,14 @@ function OfferCategoriesPage() {
                   </PermissionGate>
                   <button
                     onClick={() => handleEditCategory(category)}
-                    className={`p-2 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.edit}
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1342,7 +1342,7 @@ function OfferCategoriesPage() {
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
                   {/* <button
                   onClick={() => handleViewDetails(category)}
-                  className={`p-2 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
+                  className={`p-0 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                   title="View Details"
                 >
                   <Eye className="w-4 h-4 " />
@@ -1367,7 +1367,7 @@ function OfferCategoriesPage() {
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 " />

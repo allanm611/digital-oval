@@ -163,9 +163,19 @@ export default function JobWorkflowStepsPage() {
   }>({});
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalCount, setTotalCount] = useState(0);
+
+  // Table with pagination
+  const {
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
+  } = useTable({
+    tableId: "job-workflow-steps-table",
+    defaultPageSize: getInitialPageSize(),
+    persistToLocalStorage: true,
+  });
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -199,8 +209,8 @@ export default function JobWorkflowStepsPage() {
             response = await jobWorkflowStepService.searchJobWorkflowSteps({
               job_id: Number(jobIdFilter),
               step_code: stepCodeFilter.trim(),
-              limit: pageSize,
-              offset: (currentPage - 1) * pageSize,
+              limit: tablePageSize,
+              offset: (tableCurrentPage - 1) * tablePageSize,
               skipCache: true,
             });
           }
@@ -219,8 +229,8 @@ export default function JobWorkflowStepsPage() {
             response = await jobWorkflowStepService.searchJobWorkflowSteps({
               job_id: Number(jobIdFilter),
               step_order: Number(stepOrderFilter),
-              limit: pageSize,
-              offset: (currentPage - 1) * pageSize,
+              limit: tablePageSize,
+              offset: (tableCurrentPage - 1) * tablePageSize,
               skipCache: true,
             });
           }
@@ -424,8 +434,8 @@ export default function JobWorkflowStepsPage() {
       showRetrySteps,
       showOrphanedSteps,
       showError,
-      currentPage,
-      pageSize,
+      tableCurrentPage,
+      tablePageSize,
       t,
     ],
   );
@@ -535,7 +545,7 @@ export default function JobWorkflowStepsPage() {
 
   // Reset pagination when filters/search change
   useEffect(() => {
-    setCurrentPage(1);
+    tableHandlePageChange(1);
   }, [
     searchTerm,
     jobIdFilter,
@@ -547,6 +557,7 @@ export default function JobWorkflowStepsPage() {
     parallelGroupIdFilter,
     stepCodeFilter,
     stepOrderFilter,
+    tableHandlePageChange,
     showValidationSteps,
     showRetrySteps,
     showOrphanedSteps,
@@ -1043,7 +1054,7 @@ export default function JobWorkflowStepsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>Total Steps</p>
+            <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>Total Steps</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.totalSteps}
@@ -1285,8 +1296,8 @@ export default function JobWorkflowStepsPage() {
                             <Checkbox
                               id="select-all-steps"
                               checked={
-                                filteredSteps.length > 0 &&
-                                selectedSteps.size === filteredSteps.length
+                                steps.length > 0 &&
+                                selectedSteps.size === steps.length
                               }
                               onChange={handleSelectAll}
                             />
@@ -1354,7 +1365,7 @@ export default function JobWorkflowStepsPage() {
                             }`,
                           )
                         }
-                        className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
+                        className={`p-0 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                         aria-label="View details"
                         title="View details"
                       >
@@ -1369,7 +1380,7 @@ export default function JobWorkflowStepsPage() {
                               }`,
                             )
                           }
-                          className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                           aria-label="Edit step"
                           title="Edit step"
                         >
@@ -1384,7 +1395,7 @@ export default function JobWorkflowStepsPage() {
                       >
                         <button
                           onClick={(e) => handleActionMenuToggle(step.id, e)}
-                          className={`p-2 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                           aria-label="More actions"
                           title="More actions"
                         >
@@ -1403,7 +1414,7 @@ export default function JobWorkflowStepsPage() {
                             );
                           }}
                           disabled={validateLoadingId === Number(jobIdFilter)}
-                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
+                          className={`p-0 icon-delete ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
                           aria-label="Validate workflow integrity"
                           title="Validate workflow integrity"
                         >
@@ -1418,10 +1429,10 @@ export default function JobWorkflowStepsPage() {
                   ),
                 },
               ]}
-              data={filteredSteps}
-              totalItems={filteredSteps.length}
-              currentPage={currentPage}
-              pageSize={pageSize}
+              data={steps}
+              totalItems={totalCount}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1435,11 +1446,11 @@ export default function JobWorkflowStepsPage() {
         {/* Pagination */}
         {!isLoading && steps.length > 0 && (
           <Pagination
-            currentPage={currentPage}
-            pageSize={pageSize}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
             totalItems={totalCount}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
+            onPageChange={tableHandlePageChange}
+            onPageSizeChange={tableHandlePageSizeChange}
           />
         )}
         </div>

@@ -706,7 +706,7 @@ export default function AssignPermissionsModal({
                                 {isAssigned && (
                                   <span
                                     className="ml-2 text-xs font-medium"
-                                    style={{ color: var(--c-icon-table-delete) }}
+                                    style={{ color: "var(--c-icon-table-delete)" }}
                                   >
                                     (Already assigned)
                                   </span>

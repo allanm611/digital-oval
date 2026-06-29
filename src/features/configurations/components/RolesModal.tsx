@@ -139,7 +139,7 @@ export default function RolesModal({
               color: "var(--c-text-muted)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${var(--c-icon-table-edit)}10`;
+              e.currentTarget.style.backgroundColor = "var(--c-icon-table-edit)10";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
@@ -257,7 +257,7 @@ export default function RolesModal({
             <button
               type="submit"
               className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-60`}
-              style={{ backgroundColor: var(--c-icon-table-edit) }}
+              style={{ backgroundColor: "var(--c-primary-action)" }}
               disabled={isSubmitting}
             >
               {isSubmitting ? (

@@ -46,7 +46,7 @@ export default function RevenueMetricsPage() {
       id: "category",
       label: t.common.category,
       visible: true,
-      filterConfig: { type: "select", options: ["Data Revenue", "Voice Revenue", "SMS Revenue", "Bundle Revenue", "Other Revenue"] },
+      filterConfig: { type: "select", options: ["data_revenue", "voice_revenue", "sms_revenue", "bundle_revenue", "other_revenue"] },
       render: (_, row) => row.category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
     },
     {
@@ -106,7 +106,7 @@ export default function RevenueMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-edit ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -118,7 +118,7 @@ export default function RevenueMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-edit ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="Edit metric"
           >
             <Edit className="w-4 h-4" />
@@ -126,7 +126,7 @@ export default function RevenueMetricsPage() {
           <button
             onClick={() => handleDeleteClick(row)}
             disabled={deleting === row.id}
-            className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-delete ${tw.rounded} disabled:opacity-60`}
             title="Delete metric"
           >
             <Trash2 className="w-4 h-4" />
@@ -169,7 +169,7 @@ export default function RevenueMetricsPage() {
       const data = await revenueMetricService.getAllMetrics();
       setMetrics(data);
     } catch (err) {
-      showError("Error", "Failed to load revenue metrics");
+      showError(t.common.error, t.kpis.messages.failedLoadKPIs);
     } finally {
       setIsLoading(false);
     }
@@ -205,7 +205,7 @@ export default function RevenueMetricsPage() {
       );
     } catch (err) {
       console.error("Failed to toggle metric status:", err);
-      showError("Error", "Failed to update metric status. Please try again.");
+      showError(t.common.error, t.kpis.messages.failedLoadKPIs);
 
       // Revert optimistic update on error
       setMetrics((prev) =>
@@ -225,14 +225,14 @@ export default function RevenueMetricsPage() {
       setDeleting(deleteConfirmId);
       await revenueMetricService.deleteMetric(deleteConfirmId);
       success(
-        "Success",
-        `"${deleteConfirmName}" has been deleted successfully`,
+        t.common.success,
+        `"${deleteConfirmName}" ${t.messages.deleted}`,
       );
       await loadMetrics();
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(err, t.kpis.messages.failedLoadKPIs));
     } finally {
       setDeleting(null);
     }
@@ -286,14 +286,14 @@ export default function RevenueMetricsPage() {
     <div className="space-y-6">
       {/* Header with Back Button and Create Button */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <BackButton showBreadcrumb={true} currentLabel="Revenue Metrics" />
+        <BackButton showBreadcrumb={true} currentLabel={t.kpis.revenueMetrics} />
         <button
           onClick={() => navigate("/dashboard/kpis/revenue-metrics/create")}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md whitespace-nowrap disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
         >
           <Plus className="w-4 h-4" />
-          Create
+          {t.common.create}
         </button>
       </div>
 

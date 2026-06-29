@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus } from "lucide-react";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import {
   Segment,
   CreateSegmentRequest,
@@ -42,6 +44,10 @@ export default function SegmentModal({
   segment,
 }: SegmentModalProps) {
   const { error: showError } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef, hasError } = useFormValidation();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -1117,7 +1123,7 @@ export default function SegmentModal({
                         </p>
                       </div>
                     ) : (
-                      <>
+                      <FormField error={fieldErrors?.unique_identifier} ref={registerFieldRef('unique_identifier')}>
                         <HeadlessSelect
                           label="Map to Customer Identity Field *"
                           options={customerIdentityFields.map((field) => ({
@@ -1139,12 +1145,7 @@ export default function SegmentModal({
                           placeholder="Select identity field..."
                           disabled={isLoadingIdentityFields}
                         />
-                        {fieldErrors.unique_identifier && (
-                          <p className="mt-2 text-sm text-red-600">
-                            {fieldErrors.unique_identifier}
-                          </p>
-                        )}
-                      </>
+                      </FormField>
                     )}
                   </div>
 
@@ -1244,7 +1245,7 @@ export default function SegmentModal({
                       </div>
                     </div>
 
-                    <div>
+                    <FormField error={fieldErrors?.segment_type_id} ref={registerFieldRef('segment_type_id')}>
                       <TypeSelector
                         label="Segment Type *"
                         value={
@@ -1284,17 +1285,12 @@ export default function SegmentModal({
                         }
                         allowCreate={true}
                         onCreate={() => setShowCreateTypeModal(true)}
-                        error={!!fieldErrors.segment_type_id}
+                        error={hasError('segment_type_id')}
                       />
-                      {fieldErrors.segment_type_id && (
-                        <p className="mt-2 text-sm text-red-600">
-                          {fieldErrors.segment_type_id}
-                        </p>
-                      )}
-                    </div>
+                    </FormField>
                   </div>
 
-                  <div>
+                  <FormField error={fieldErrors?.description} ref={registerFieldRef('description')}>
                     <Textarea
                       label="Description"
                       value={formData.description}
@@ -1320,19 +1316,14 @@ export default function SegmentModal({
                       }
                       placeholder="Describe this segment..."
                       rows={3}
-                      hasError={!!fieldErrors.description}
+                      hasError={hasError('description')}
                       required
                     />
-                    {fieldErrors.description && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {fieldErrors.description}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
 
                   {/* Segment Conditions - Builder now includes title and preview button */}
                   {/* Segment Conditions/Rules Builder - now with type selector */}
-                  <div>
+                  <FormField error={fieldErrors?.conditions} ref={registerFieldRef('conditions')}>
                     <div
                       className={`${tw.rounded} p-4`}
                       style={{
@@ -1366,12 +1357,7 @@ export default function SegmentModal({
                         onSqlPreview={handleSqlPreview}
                       />
                     </div>
-                    {fieldErrors.conditions && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {fieldErrors.conditions}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                 </form>
               </div>
 

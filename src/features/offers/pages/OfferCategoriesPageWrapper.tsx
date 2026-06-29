@@ -36,6 +36,7 @@ export default function OfferCategoriesPageWrapper() {
  * Alternative: Use this if you want custom error handling
  */
 export function OfferCategoriesPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="table"

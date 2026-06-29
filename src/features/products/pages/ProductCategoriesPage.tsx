@@ -1234,7 +1234,7 @@ export default function ProductCatalogsPage() {
                   <PermissionGate permission="products.delete">
                     <button
                       onClick={() => handleDeleteCatalog(category)}
-                      className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                      className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                       title={t.productCatalogs.delete}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -1390,7 +1390,7 @@ export default function ProductCatalogsPage() {
                 <PermissionGate permission="products.delete">
                   <button
                     onClick={() => handleDeleteCatalog(category)}
-                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />

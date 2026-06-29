@@ -276,14 +276,14 @@ export default function RoutesManagementPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/routes/${route.id}`)}
-            className={`p-2 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
             title={t.common.view}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigateToEdit(route)}
-            className={`p-2 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
             title={t.common.edit}
           >
             <Edit className="w-4 h-4" />

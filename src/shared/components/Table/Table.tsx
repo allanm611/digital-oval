@@ -163,6 +163,33 @@ export function Table<T extends { id?: number | string } = any>({
     }
   }, [visibleColumns.map((c) => c.id).join(',')]); // Track visible column IDs
 
+  // Debug: Log row heights and column info
+  useEffect(() => {
+    const rows = tableRef.current?.querySelectorAll('tbody tr');
+    if (rows && rows.length > 0) {
+      const firstRow = rows[0];
+      const computedStyle = window.getComputedStyle(firstRow);
+      const height = firstRow.offsetHeight;
+      console.log('🔍 Table Row Height Debug:', {
+        offsetHeight: height,
+        minHeight: computedStyle.minHeight,
+        paddingTop: computedStyle.paddingTop,
+        paddingBottom: computedStyle.paddingBottom,
+        visibleColumnsCount: visibleColumns.length,
+        hasActionsColumn: visibleColumns.some(col => col.id === 'actions'),
+      });
+
+      // Log each cell height in first row
+      const cells = firstRow.querySelectorAll('td');
+      console.log('📊 Cell heights:', Array.from(cells).map((cell, idx) => ({
+        columnId: visibleColumns[idx]?.id,
+        height: (cell as HTMLElement).offsetHeight,
+        paddingTop: window.getComputedStyle(cell).paddingTop,
+        paddingBottom: window.getComputedStyle(cell).paddingBottom,
+      })));
+    }
+  }, [visibleColumns]);
+
   // Auto-size columns on first load based on content
   useEffect(() => {
     if (!autoSizedOnce && visibleColumns.length > 0 && data.length > 0) {
@@ -173,7 +200,7 @@ export function Table<T extends { id?: number | string } = any>({
         visibleColumns.forEach((col) => {
           if (headersRef.current[col.id]) {
             const headerEl = headersRef.current[col.id];
-            const headerText = headerEl?.textContent || col.label;
+            const headerText = (headerEl?.textContent || col.label || '').trim();
             const headerWidth = headerText.length * 8 + padding; // Rough estimate: ~8px per character
 
             // Sample first few rows to estimate content width
@@ -483,7 +510,7 @@ export function Table<T extends { id?: number | string } = any>({
               <tr>
                 {enableRowSelection && (
                   <th
-                    className={`px-6 py-2 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
+                    className={`px-6 py-3 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
                       headerClassName
                     } ${styleHeaderClassName}`}
                     style={{
@@ -528,8 +555,8 @@ export function Table<T extends { id?: number | string } = any>({
                       ref={(el) => {
                         if (el) headersRef.current[col.id] = el;
                       }}
-                      className={`px-6 py-2 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
-                        headerClassName
+                      className={`px-6 py-3 ${!col.headerClassName ? 'text-left' : ''} text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
+                        col.headerClassName || headerClassName
                       } ${styleHeaderClassName}`}
                       style={{
                         color: headerTextColor || color.surface.tableHeaderText,
@@ -541,7 +568,7 @@ export function Table<T extends { id?: number | string } = any>({
                         ...stickyStyle,
                       }}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className={`flex items-center ${col.id === 'actions' ? 'justify-end' : 'justify-between'}`}>
                         <span className="truncate">{col.label}</span>
 
                         {/* Sort Icon & Menu */}
@@ -744,11 +771,11 @@ export function Table<T extends { id?: number | string } = any>({
                 return (
                   <React.Fragment key={rowId}>
                     {/* Main Row */}
-                    <tr className={`transition-colors ${rowClassName} ${styleRowClassName}`}>
+                    <tr className={`transition-colors ${rowClassName} ${styleRowClassName} min-h-[44px]`}>
                       {/* Selection Checkbox */}
                       {enableRowSelection && (
                         <td
-                          className={`px-6 py-2 ${cellClassName}`}
+                          className={`px-6 py-3 ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: '60px',
@@ -782,7 +809,7 @@ export function Table<T extends { id?: number | string } = any>({
                         return (
                         <td
                           key={`${rowId}-${col.id}`}
-                          className={`px-6 py-2 text-sm ${colIdx === 0 ? `font-semibold text-gray-900` : `text-gray-900`} ${cellClassName}`}
+                          className={`px-6 py-3 text-sm ${colIdx === 0 ? `font-semibold text-gray-900` : `text-gray-900`} ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
@@ -819,7 +846,7 @@ export function Table<T extends { id?: number | string } = any>({
                       <tr>
                         <td colSpan={visibleColumns.length + (expandedContent ? 1 : 0)}>
                           <div
-                            className={`px-6 py-2 border-t ${borderColor}`}
+                            className={`px-6 py-3 border-t ${borderColor}`}
                             style={{ backgroundColor: bgColor }}
                           >
                             {expandedContent(row)}

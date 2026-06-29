@@ -40,7 +40,7 @@ export default function PushNotificationRouteDetailsPage() {
         setRoute(data);
       }
     } catch (err) {
-      showError(t.common.error, "Failed to load push notification route");
+      showError(t.common.error, t.routes.loadError);
       navigate("/dashboard/push-notification-routes");
     } finally {
       setLoading(false);
@@ -56,11 +56,11 @@ export default function PushNotificationRouteDetailsPage() {
 
     try {
       await pushNotificationRouteService.deleteRoute(route.id);
-      success("Success", `"${route.name}" has been deleted successfully`);
+      success(t.common.success, `"${route.name}" ${t.routes.hasBeenDeleted}`);
       closeDeleteConfirm();
       navigate("/dashboard/push-notification-routes");
     } catch (err) {
-      showError("Error", "Failed to delete push notification route");
+      showError(t.common.error, t.routes.loadError);
     } finally {
       closeDeleteConfirm();
     }
@@ -81,7 +81,7 @@ export default function PushNotificationRouteDetailsPage() {
         `"${route.name}" has been ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`,
       );
     } catch (err) {
-      showError(t.common.error, "Failed to update route status");
+      showError(t.common.error, t.routes.loadError);
     } finally {
       setTogglingStatus(false);
     }
@@ -92,7 +92,7 @@ export default function PushNotificationRouteDetailsPage() {
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
         <p className={`${tw.textMuted} font-medium mt-4`}>
-          Loading push notification {t.routes.route} details...
+          {t.routes.loadingRouteDetails}
         </p>
       </div>
     );

@@ -36,7 +36,7 @@ export default function CreativeTemplateDetailsPage() {
       setTemplate(data);
     } catch (err) {
       console.error("Failed to load creative template:", err);
-      showError("Failed to load creative template", extractBackendError(error, "Failed to load creative template. Please try again."));
+      showError(t.common.error || "Failed to load creative template", extractBackendError(err, "Failed to load creative template. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -54,10 +54,10 @@ export default function CreativeTemplateDetailsPage() {
     try {
       setIsDeleting(true);
       await creativeTemplateService.deleteCreativeTemplate(template.id);
-      success("Deleted", "Creative template removed");
+      success(t.common.deleted || "Deleted", t.messages.removed || "Creative template removed");
       navigate("/dashboard/creative-templates");
     } catch (err: any) {
-      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
+      showError(t.common.deleteFailed || "Delete failed", extractBackendError(err, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -74,7 +74,7 @@ export default function CreativeTemplateDetailsPage() {
           className="mb-4"
         />
         <p className={`${tw.textMuted} font-medium text-sm`}>
-          Loading template details...
+          {t.common.loadingDetails || "Loading template details..."}
         </p>
       </div>
     );
@@ -85,10 +85,10 @@ export default function CreativeTemplateDetailsPage() {
       <div className="space-y-6">
         <div className="text-center py-12">
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-            Template Not Found
+            {t.common.notFound || "Template Not Found"}
           </h3>
           <p className={`${tw.textMuted} mb-6`}>
-            The creative template you are looking for does not exist.
+            {t.offers.templateNotFound || "The creative template you are looking for does not exist."}
           </p>
           <button
             onClick={() => navigate("/dashboard/creative-templates")}
@@ -96,7 +96,7 @@ export default function CreativeTemplateDetailsPage() {
             style={{ backgroundColor: button.action.background }}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Templates
+            {t.common.backTo || "Back to"} Templates
           </button>
         </div>
       </div>

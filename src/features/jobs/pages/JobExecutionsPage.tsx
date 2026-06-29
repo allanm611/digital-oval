@@ -118,8 +118,6 @@ export default function JobExecutionsPage() {
     new Set(),
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalExecutions, setTotalExecutions] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [showArchiveManagementModal, setShowArchiveManagementModal] = useState(false);
@@ -199,7 +197,8 @@ export default function JobExecutionsPage() {
 
       try {
         let response;
-        const offset = (currentPage - 1) * pageSize;
+        // For pagination: use offset for endpoints that support it properly
+        const offset = (tableCurrentPage - 1) * tablePageSize;
 
         // Quick filters
         if (quickFilter === "sla-breached") {
@@ -223,7 +222,7 @@ export default function JobExecutionsPage() {
               data: [exec],
               pagination: {
                 total: 1,
-                limit: pageSize,
+                limit: tablePageSize,
                 offset: 0,
                 hasMore: false,
               },
@@ -233,7 +232,7 @@ export default function JobExecutionsPage() {
               data: [],
               pagination: {
                 total: 0,
-                limit: pageSize,
+                limit: tablePageSize,
                 offset: 0,
                 hasMore: false,
               },
@@ -248,7 +247,7 @@ export default function JobExecutionsPage() {
             startDate: startDateFilter,
             endDate: endDateFilter,
             jobId: jobIdFilter || undefined,
-            limit: pageSize,
+            limit: tablePageSize,
             offset,
           });
         } else if (statusFilter === "running") {
@@ -264,7 +263,7 @@ export default function JobExecutionsPage() {
           response = await jobExecutionService.getExecutionsByStatus(
             statusFilter,
             {
-              limit: pageSize,
+              limit: tablePageSize,
               offset,
             },
           );
@@ -272,15 +271,15 @@ export default function JobExecutionsPage() {
           response = await jobExecutionService.getExecutionsByJobId(
             Number(jobIdFilter),
             {
-              limit: pageSize,
+              limit: tablePageSize,
               offset,
             },
           );
         } else {
-          // Use search endpoint for general queries
+          // Use search endpoint for general queries with server-side pagination
           const params: JobExecutionSearchParams = {
             filters: {},
-            limit: pageSize,
+            limit: tablePageSize,
             offset,
             skipCache: true,
             ...overrideParams,
@@ -319,10 +318,18 @@ export default function JobExecutionsPage() {
         }
 
         // Extract pagination metadata
+        let total = 0;
         if (response && "pagination" in response && response.pagination) {
-          setTotalExecutions(response.pagination.total || 0);
-          setHasMore(response.pagination.hasMore || false);
+          total = (response.pagination as { total?: number }).total || 0;
+          setHasMore((response.pagination as { hasMore?: boolean }).hasMore || false);
+        } else if (response && "count" in response) {
+          // Search endpoint returns count field
+          total = (response as { count?: number }).count || executionList.length;
+        } else {
+          // Fallback: use the fetched data length
+          total = executionList.length;
         }
+        setTotalExecutions(total);
 
         const sortedExecutions = [...executionList].sort((a, b) => {
           const startedB = b.started_at ? new Date(b.started_at).getTime() : 0;
@@ -350,8 +357,8 @@ export default function JobExecutionsPage() {
       endDateFilter,
       longRunningThreshold,
       showError,
-      currentPage,
-      pageSize,
+      tableCurrentPage,
+      tablePageSize,
     ],
   );
 
@@ -401,7 +408,7 @@ export default function JobExecutionsPage() {
 
   // Reset page when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    tableHandlePageChange(1);
   }, [
     statusFilter,
     jobIdFilter,
@@ -413,6 +420,7 @@ export default function JobExecutionsPage() {
     endDateFilter,
     longRunningThreshold,
     searchTerm,
+    tableHandlePageChange,
   ]);
 
   useEffect(() => {
@@ -757,7 +765,7 @@ export default function JobExecutionsPage() {
                     `/dashboard/job-executions/${execution.id}`,
                   )
                 }
-                className={`p-2 icon-edit ${tw.rounded}`}
+                className={`p-0 icon-edit ${tw.rounded}`}
                 title="View details"
               >
                 <Eye className="w-4 h-4" />
@@ -1358,10 +1366,11 @@ export default function JobExecutionsPage() {
               columns={columns}
               data={filteredExecutions}
               totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
-              currentPage={currentPage}
-              pageSize={pageSize}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
               isLoading={isLoading}
-              onPageChange={setCurrentPage}
+              onPageChange={tableHandlePageChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
@@ -1378,11 +1387,11 @@ export default function JobExecutionsPage() {
             {filteredExecutions.length > 0 && (
               <div className="mt-4">
                 <Pagination
-                  currentPage={currentPage}
-                  pageSize={pageSize}
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
                   totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
+                  onPageChange={tableHandlePageChange}
+                  onPageSizeChange={tableHandlePageSizeChange}
                 />
               </div>
             )}

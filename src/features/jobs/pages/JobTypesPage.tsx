@@ -404,7 +404,7 @@ export default function JobTypesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJobType, setEditingJobType] = useState<JobType | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -458,7 +458,7 @@ export default function JobTypesPage() {
         <div className="flex items-center justify-end space-x-2">
           <button
             onClick={() => handleView(jobType)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             aria-label="View job type"
             title="View"
           >
@@ -466,7 +466,7 @@ export default function JobTypesPage() {
           </button>
           <button
             onClick={() => handleEdit(jobType)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             aria-label="Edit job type"
             title="Edit"
           >
@@ -475,7 +475,7 @@ export default function JobTypesPage() {
           <PermissionGate permission="job-types.delete">
             <button
               onClick={() => handleDeleteClick(jobType)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               aria-label="Delete job type"
               title="Delete"
             >
@@ -517,19 +517,23 @@ export default function JobTypesPage() {
     setLoadError(null);
     try {
       const response = await jobTypeService.listJobTypes({
-        limit: 100,
+        limit: tablePageSize,
+        offset: (tableCurrentPage - 1) * tablePageSize,
         skipCache: true,
       });
       setJobTypes(response.data || []);
+      if (response.pagination) {
+        setTotalCount(response.pagination.total);
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load job types";
       setLoadError(message);
-      showError("Unable to load job types", extractBackendError(error, "Unable to load job types. Please try again."));
+      showError("Unable to load job types", extractBackendError(err, "Unable to load job types. Please try again."));
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [tableCurrentPage, tablePageSize, showError]);
 
   const searchJobTypes = useCallback(
     async (term: string) => {
@@ -544,7 +548,8 @@ export default function JobTypesPage() {
       try {
         const response = await jobTypeService.searchJobTypes({
           name: term,
-          limit: 100,
+          limit: tablePageSize,
+          offset: (tableCurrentPage - 1) * tablePageSize,
           skipCache: true,
         });
         const results = response.data || [];
@@ -841,8 +846,8 @@ export default function JobTypesPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<JobType>
               columns={columns}
-              data={paginatedJobTypes}
-              totalItems={filteredJobTypes.length}
+              data={jobTypes}
+              totalItems={totalCount}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={isLoading}
@@ -862,11 +867,11 @@ export default function JobTypesPage() {
         )}
 
         {/* Pagination */}
-        {!isLoading && filteredJobTypes.length > 0 && (
+        {!isLoading && totalCount > 0 && (
           <Pagination
             currentPage={tableCurrentPage}
             pageSize={tablePageSize}
-            totalItems={filteredJobTypes.length}
+            totalItems={totalCount}
             onPageChange={tableHandlePageChange}
             onPageSizeChange={tableHandlePageSizeChange}
           />
