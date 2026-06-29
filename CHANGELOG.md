@@ -1,3 +1,11 @@
+## [1.4.19](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.18...v1.4.19) (2026-06-29)
+
+
+### Bug Fixes
+
+* comprehensive translation keys audit and remediation ([8b5dfc6](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/8b5dfc63957e5a557c788109f4c3faff6af5387a))
+* fixing different bugs, translaitons,ui changes ([2f5ac75](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/2f5ac75524407312b1a2dcc1a7a9493d11f72330))
+
 ## [1.4.18](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.17...v1.4.18) (2026-06-27)
 
 
