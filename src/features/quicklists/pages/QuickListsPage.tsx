@@ -500,11 +500,12 @@ export default function QuickListsPage() {
       label: t.quickList.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, quicklist) => (
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/quick-lists/${quicklist.id}`)}
-            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+            className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
             title={t.quickList.viewDetails}
           >
             <Eye className="w-4 h-4" />
@@ -512,7 +513,7 @@ export default function QuickListsPage() {
           <PermissionGate permission="quicklists.update">
             <button
               onClick={() => handleEdit(quicklist)}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
               title={t.quickList.edit}
             >
               <Edit className="w-4 h-4" />
@@ -523,7 +524,7 @@ export default function QuickListsPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(quicklist.id, e)}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>

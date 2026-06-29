@@ -978,7 +978,7 @@ export default function CampaignDetailsPage() {
           {/* Scheduled Run Clock Button */}
           <button
             onClick={() => setShowScheduledModal(true)}
-            className={`flex items-center justify-center p-2 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
+            className={`flex items-center justify-center p-0 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
             style={{ backgroundColor: color.primary.accent }}
             title="View campaign schedule"
           >
@@ -1082,7 +1082,7 @@ export default function CampaignDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm`}
+              className={`flex items-center gap-0 ${tw.rounded} font-semibold text-sm`}
               style={{
                 backgroundColor: button.secondaryAction.background,
                 color: button.secondaryAction.color,
@@ -2541,6 +2541,7 @@ export default function CampaignDetailsPage() {
                     width: "120px",
                     visible: true,
                     sortable: false,
+      isActionColumn: true,
                     render: (_, row) => {
                       const flow = flows.find((f) => f.id === row.id);
                       return (
@@ -2548,21 +2549,21 @@ export default function CampaignDetailsPage() {
                           <button
                             onClick={() => flow && handleFlowView(flow)}
                             title="View flow details"
-                            className="p-2 hover:bg-gray-50 rounded transition-colors"
+                            className="p-0 hover:bg-gray-50 rounded transition-colors"
                           >
                             <Eye className="w-4 h-4 text-gray-600" />
                           </button>
                           <button
                             onClick={() => flow && handleFlowEdit(flow)}
                             title="Edit flow"
-                            className="p-2 hover:bg-gray-50 rounded transition-colors"
+                            className="p-0 hover:bg-gray-50 rounded transition-colors"
                           >
                             <Edit className="w-4 h-4 text-gray-600" />
                           </button>
                           <button
                             onClick={() => flow && handleFlowDelete(flow)}
                             title="Delete flow"
-                            className="p-2 hover:bg-red-50 rounded transition-colors"
+                            className="p-0 hover:bg-red-50 rounded transition-colors"
                           >
                             <Trash2 className="w-4 h-4 text-red-600" />
                           </button>

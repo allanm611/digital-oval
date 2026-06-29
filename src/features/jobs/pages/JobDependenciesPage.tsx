@@ -2101,6 +2101,7 @@ export default function JobDependenciesPage() {
                   label: "Actions",
                   visible: true,
                   sortable: false,
+      isActionColumn: true,
                   render: (_, dependency) => (
                     <div className="flex items-center justify-end space-x-2">
                       <button

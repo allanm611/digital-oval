@@ -15,6 +15,8 @@ export interface TableColumn<T = any> {
   width?: string;
   sortable?: boolean;
   filterConfig?: FilterConfig;
+  isActionColumn?: boolean;
+  headerClassName?: string;
 }
 
 export interface SortConfig {

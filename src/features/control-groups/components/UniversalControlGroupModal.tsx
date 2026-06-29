@@ -2,6 +2,8 @@ import { useState } from "react";
 import Input from '../../../shared/components/ui/Input';
 import { createPortal } from "react-dom";
 import { X, Users, Calendar, BarChart3 } from "lucide-react";
+import FormField from '../../../shared/components/FormField';
+import { useFormValidation } from '../../../shared/hooks/useFormValidation';
 
 import { tw, zIndex } from "../../../shared/utils/utils";
 import type { UniversalControlGroup } from "../configs/universalControlGroupsConfig";
@@ -49,7 +51,11 @@ function CreateControlGroupModal({
   editingGroup,
   onSave,
 }: CreateControlGroupModalProps) {
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<Partial<UniversalControlGroup>>({
     name: editingGroup?.name || "",
     customerBase: editingGroup?.customerBase || "active_subscribers",
@@ -86,16 +92,17 @@ function CreateControlGroupModal({
   ];
 
   const canProceedToNextStep = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.name && formData.name.trim() !== "";
-      case 2:
-        return true;
-      case 3:
-        return true;
-      default:
-        return false;
+    const newErrors: Record<string, string> = {};
+
+    if (currentStep === 1) {
+      if (!formData.name || formData.name.trim() === "") {
+        newErrors.name = "Control group name is required";
+      }
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
     }
+
+    return true;
   };
 
   const handleNext = () => {
@@ -219,7 +226,7 @@ function CreateControlGroupModal({
         <div className="p-6 h-[calc(95vh-220px)] overflow-y-auto">
           {currentStep === 1 && (
             <div className="space-y-6">
-              <div>
+              <FormField error={errors?.name} ref={registerFieldRef('name')}>
                 <Input
                   type="text"
                   label="Control Group Name *"
@@ -230,7 +237,7 @@ function CreateControlGroupModal({
                   className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                   placeholder="Enter control group name"
                 />
-              </div>
+              </FormField>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">

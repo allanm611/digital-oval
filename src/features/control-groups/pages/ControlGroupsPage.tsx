@@ -111,6 +111,7 @@ export default function ControlGroupsPage() {
       label: t.controlGroups.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
     },
   ];
 

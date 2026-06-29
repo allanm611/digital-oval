@@ -300,6 +300,7 @@ export default function CommunicationPolicyPage() {
       label: t.communicationPolicy.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, policy) => (
         <div className="flex items-center justify-end gap-2">
           <ActivateDeactivateButton
@@ -311,14 +312,14 @@ export default function CommunicationPolicyPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/campaign-communication-policy/${policy.id}`)}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+            className={`p-0 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
             title="View details"
           >
             <Eye className="w-4 h-4 text-gray-500" />
           </button>
           <button
             onClick={() => handleEditPolicy(policy)}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+            className={`p-0 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
             title={t.communicationPolicy.edit}
           >
             <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
@@ -328,7 +329,7 @@ export default function CommunicationPolicyPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(policy.id, e)}
-              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+              className={`p-0 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
               title="More options"
             >
               <MoreHorizontal className="w-4 h-4" />

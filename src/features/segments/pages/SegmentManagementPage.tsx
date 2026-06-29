@@ -1029,11 +1029,12 @@ export default function SegmentManagementPage() {
         label: "Actions",
         visible: true,
         sortable: false,
+      isActionColumn: true,
         render: (value, segment) => (
           <div className="flex items-center justify-center space-x-2">
             <button
               onClick={() => handleViewSegment(segment.id)}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
@@ -1045,7 +1046,7 @@ export default function SegmentManagementPage() {
                 e.stopPropagation();
                 handleEditSegment(segment);
               }}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
               title="Edit"
             >
               <Edit className="w-4 h-4" />
@@ -1058,7 +1059,7 @@ export default function SegmentManagementPage() {
             >
               <button
                 onClick={(e) => handleActionMenuToggle(segment.id, e)}
-                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>

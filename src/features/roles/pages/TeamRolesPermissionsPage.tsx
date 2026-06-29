@@ -721,6 +721,7 @@ export default function TeamRolesPermissionsPage() {
                     label: "Actions",
                     visible: true,
                     sortable: false,
+      isActionColumn: true,
                     render: (_, role) => (
                       <div className="flex items-center gap-1">
                         <button
@@ -933,6 +934,7 @@ export default function TeamRolesPermissionsPage() {
                     label: "Actions",
                     visible: true,
                     sortable: false,
+      isActionColumn: true,
                     render: (_, permission) => (
                       <div className="flex items-center gap-1">
                         <button

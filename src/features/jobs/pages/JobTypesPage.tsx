@@ -454,6 +454,7 @@ export default function JobTypesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, jobType) => (
         <div className="flex items-center justify-end space-x-2">
           <button

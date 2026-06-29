@@ -150,7 +150,7 @@ export default function FeatureActionButton({
   return (
     <button
       onClick={handleClick}
-      className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300 ${className}`}
+      className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300 ${className}`}
       title={label || 'Edit'}
     >
       <Edit className="w-4 h-4" />

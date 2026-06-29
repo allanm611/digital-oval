@@ -188,6 +188,7 @@ export default function CampaignBroadcastsPage() {
       width: "150px",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         const broadcast = filteredBroadcasts.find((b) => b.id === row.id);
         return (

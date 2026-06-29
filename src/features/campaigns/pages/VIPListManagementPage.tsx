@@ -143,6 +143,7 @@ export default function VIPListManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         if (!row._full) return null;
         return (
@@ -241,6 +242,7 @@ export default function VIPListManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         if (!row._full) return null;
         return (

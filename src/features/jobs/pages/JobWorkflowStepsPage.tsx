@@ -1355,6 +1355,7 @@ export default function JobWorkflowStepsPage() {
                   label: "Actions",
                   visible: true,
                   sortable: false,
+      isActionColumn: true,
                   render: (_, step) => (
                     <div className="flex items-center justify-end space-x-2">
                       <button

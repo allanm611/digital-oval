@@ -122,12 +122,13 @@ export default function DNDBulkManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, subscription) => (
         <div className="flex items-center justify-center">
           {subscription.status === "active" && (
             <button
               onClick={() => handleRemoveCustomer(subscription)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
               title="Remove from DND"
             >
               <Trash2 className="w-4 h-4" />
@@ -399,7 +400,7 @@ export default function DNDBulkManagementPage() {
           <button
             onClick={handleBatchRemove}
             disabled={isBatchProcessing}
-            className={`inline-flex items-center gap-2 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`inline-flex items-center gap-0 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {isBatchProcessing ? (
               <>

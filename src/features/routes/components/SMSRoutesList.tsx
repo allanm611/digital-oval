@@ -129,6 +129,7 @@ export default function SMSRoutesList() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, route) => (
         <div className="flex items-center justify-center gap-2">
           <ActivateDeactivateButton

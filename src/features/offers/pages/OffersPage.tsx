@@ -170,11 +170,12 @@ export default function OffersPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleViewOffer(row.id)}
-            className={`p-1 rounded icon-edit`}
+            className={`p-0 rounded icon-edit`}
             title="View Details"
           >
             <Eye className="h-4 w-4" />
@@ -188,7 +189,7 @@ export default function OffersPage() {
           >
             <button
               onClick={(e) => handleActionMenuToggle(row.id, e)}
-              className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
+              className={`${tw.textMuted} hover:${tw.textPrimary} p-0 rounded`}
               title="More Actions"
             >
               <MoreHorizontal className="h-4 w-4" />

@@ -216,6 +216,7 @@ export default function LanguagesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, language) => (
         <div className="flex items-center justify-center space-x-2">
           <button

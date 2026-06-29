@@ -11,6 +11,8 @@ import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 
 interface RoleFormModalProps {
   isOpen: boolean;
@@ -50,6 +52,9 @@ export default function RoleFormModal({
 }: RoleFormModalProps) {
   const { success, error: showError } = useToast();
   const { user } = useAuth();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   const userId = propUserId || user?.user_id;
 
@@ -283,7 +288,7 @@ export default function RoleFormModal({
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {/* Name and Code Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <FormField error={errors?.name} ref={registerFieldRef('name')}>
               <Input
                 label="Role Name *"
                 type="text"
@@ -292,12 +297,9 @@ export default function RoleFormModal({
                 placeholder="e.g., Administrator"
                 hasError={!!errors.name}
               />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
+            <FormField error={errors?.code} ref={registerFieldRef('code')}>
               <Input
                 label="Code *"
                 type="text"
@@ -307,13 +309,10 @@ export default function RoleFormModal({
                 placeholder="e.g., administrator"
                 hasError={!!errors.code}
               />
-              {errors.code && (
-                <p className="mt-1 text-sm text-red-600">{errors.code}</p>
-              )}
               {role && (
                 <p className="mt-1 text-xs text-[var(--c-text-muted)]">(Cannot be changed after creation)</p>
               )}
-            </div>
+            </FormField>
           </div>
 
           {/* Description */}

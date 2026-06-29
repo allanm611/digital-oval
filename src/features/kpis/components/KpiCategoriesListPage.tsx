@@ -66,6 +66,7 @@ export default function KpiCategoriesListPage() {
       label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center gap-2">
           <ActivateDeactivateButton

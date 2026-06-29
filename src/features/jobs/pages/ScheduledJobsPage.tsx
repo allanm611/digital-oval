@@ -166,6 +166,7 @@ export default function ScheduledJobsPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, job) => (
         <div className="flex items-center justify-end space-x-2">
           <button

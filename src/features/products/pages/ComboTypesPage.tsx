@@ -172,6 +172,7 @@ export default function ComboTypesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, combo) => (
         <div className="flex items-center justify-center space-x-2">
           <button

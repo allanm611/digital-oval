@@ -202,6 +202,7 @@ export default function CustomersPage() {
       label: t.customer360.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row: any) => (
         <div className="flex items-center justify-end gap-2">
           <PermissionGate permission="customer.read">

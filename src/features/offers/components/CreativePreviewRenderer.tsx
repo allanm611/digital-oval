@@ -14,6 +14,7 @@ import {
   PushNotificationPreview,
   USSDMenuPreview,
 } from "./CreativePreviewComponents";
+import GenericPhonePreview from "./GenericPhonePreview";
 
 interface CreativePreviewRendererProps {
   channel?: string;
@@ -148,6 +149,16 @@ export default function CreativePreviewRenderer({
     );
   }
 
-  // Fallback
-  return null;
+  // Fallback for unknown channels - show generic phone preview
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-4">
+        {channelLabel} Preview
+      </h3>
+      <GenericPhonePreview
+        title={title}
+        message={textBody || title || ""}
+      />
+    </div>
+  );
 }

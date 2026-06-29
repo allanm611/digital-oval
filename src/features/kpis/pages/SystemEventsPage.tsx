@@ -91,6 +91,7 @@ export default function SystemEventsPage() {
       label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center space-x-2">
           <ActivateDeactivateButton
@@ -105,7 +106,7 @@ export default function SystemEventsPage() {
                 `/dashboard/kpis/system-events/${row.id}`,
               )
             }
-            className={`group p-3 ${tw.rounded} icon-edit transition-all duration-300`}
+            className={`group p-0 ${tw.rounded} icon-edit transition-all duration-300`}
             title={t.common.view}
           >
             <Eye className="w-4 h-4" />

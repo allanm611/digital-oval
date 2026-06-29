@@ -7,6 +7,8 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import { notificationTypeService, NotificationRule, CreateNotificationRuleRequest } from "../../../shared/services/notificationTypeService";
 import { notificationCategoryService } from "../../notifications/services/notificationCategoryService";
 import { notificationService } from "../../notifications/services/notificationService";
@@ -31,7 +33,12 @@ export default function NotificationTypeModal({
   editingRule,
 }: NotificationTypeModalProps) {
   const { error: showError, success: showSuccess } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoadingTables, setIsLoadingTables] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isLoadingEventConditions, setIsLoadingEventConditions] = useState(false);
@@ -165,26 +172,29 @@ export default function NotificationTypeModal({
     }
   }, [editingRule, isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name.trim()) {
-      showError("Name is required");
-      return;
-    }
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
     if (!formData.table_name) {
-      showError("Table name is required");
-      return;
+      newErrors.table_name = "Table name is required";
     }
 
     if (!formData.action_type) {
-      showError("Action type is required");
-      return;
+      newErrors.action_type = "Action type is required";
     }
 
     if (!formData.message_template.trim()) {
-      showError("Message template is required");
+      newErrors.message_template = "Message template is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) {
       return;
     }
 
@@ -296,24 +306,28 @@ export default function NotificationTypeModal({
           {/* Table Name and Action Type on Same Line */}
           <div className="grid grid-cols-2 gap-4">
             {/* Table Name */}
-            <HeadlessSelect
-              label="Table Name *"
-              options={tableOptions}
-              value={formData.table_name}
-              onChange={(value) => setFormData({ ...formData, table_name: String(value) })}
-              placeholder="Select a table..."
-              disabled={isLoadingTables}
-              searchable={true}
-            />
+            <FormField error={errors?.table_name} ref={registerFieldRef('table_name')}>
+              <HeadlessSelect
+                label="Table Name *"
+                options={tableOptions}
+                value={formData.table_name}
+                onChange={(value) => setFormData({ ...formData, table_name: String(value) })}
+                placeholder="Select a table..."
+                disabled={isLoadingTables}
+                searchable={true}
+              />
+            </FormField>
 
             {/* Action Type */}
-            <HeadlessSelect
-              label="Action Type *"
-              options={ACTION_OPTIONS}
-              value={formData.action_type}
-              onChange={(value) => setFormData({ ...formData, action_type: String(value) })}
-              placeholder="Select an action..."
-            />
+            <FormField error={errors?.action_type} ref={registerFieldRef('action_type')}>
+              <HeadlessSelect
+                label="Action Type *"
+                options={ACTION_OPTIONS}
+                value={formData.action_type}
+                onChange={(value) => setFormData({ ...formData, action_type: String(value) })}
+                placeholder="Select an action..."
+              />
+            </FormField>
           </div>
 
           {/* Event Condition and Category on Same Line */}
@@ -342,22 +356,24 @@ export default function NotificationTypeModal({
           </div>
 
           {/* Message Template */}
-          <div className="space-y-1.5 relative">
-            <Textarea
-              label="Message Template *"
-              value={formData.message_template}
-              onChange={(value) => setFormData({ ...formData, message_template: value })}
-              placeholder="e.g., {actor_id} created {table_name} {record_id}"
-              rows={3}
-              required
-            />
-            <div className="group absolute top-2 right-3 cursor-pointer" title="">
-              <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
-                Use placeholders: {"{record_id}"}, {"{actor_id}"}, {"{table_name}"}, {"{action_type}"}
+          <FormField error={errors?.message_template} ref={registerFieldRef('message_template')}>
+            <div className="space-y-1.5 relative">
+              <Textarea
+                label="Message Template *"
+                value={formData.message_template}
+                onChange={(value) => setFormData({ ...formData, message_template: value })}
+                placeholder="e.g., {actor_id} created {table_name} {record_id}"
+                rows={3}
+                required
+              />
+              <div className="group absolute top-2 right-3 cursor-pointer" title="">
+                <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
+                  Use placeholders: {"{record_id}"}, {"{actor_id}"}, {"{table_name}"}, {"{action_type}"}
+                </div>
               </div>
             </div>
-          </div>
+          </FormField>
 
           {/* Actions */}
           <div className="flex gap-3 pt-4 justify-end">

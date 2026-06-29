@@ -179,6 +179,7 @@ export default function CreativeTemplatesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, template) => (
         <div className="flex items-center justify-center space-x-2">
           <button

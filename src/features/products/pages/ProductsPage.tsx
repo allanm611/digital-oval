@@ -165,6 +165,7 @@ export default function ProductsPage() {
       width: "180px",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         const isActive = row.is_active ?? false;
         return (
@@ -485,6 +486,7 @@ export default function ProductsPage() {
       width: "180px",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         const isActive = row.is_active ?? false;
         return (

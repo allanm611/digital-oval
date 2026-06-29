@@ -2159,6 +2159,7 @@ export default function OfferDetailsPage() {
                       width: "200px",
                       visible: true,
                       sortable: false,
+      isActionColumn: true,
                       render: (_, row) => {
                         const product = linkedProducts.find((p: any) => String(p.product_id ?? p.id) === row.id);
                         if (!product) return null;
@@ -2380,6 +2381,7 @@ export default function OfferDetailsPage() {
                       width: "150px",
                       visible: true,
                       sortable: false,
+      isActionColumn: true,
                       render: (_, row) => {
                         const creative = offerCreatives.find((c) => String(c.id) === row.id);
                         if (!creative) return null;

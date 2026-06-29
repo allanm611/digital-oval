@@ -757,6 +757,7 @@ export default function JobExecutionsPage() {
           label: "Actions",
           visible: true,
           sortable: false,
+      isActionColumn: true,
           render: (value, execution) => (
             <div className="flex items-center justify-end space-x-2">
               <button
@@ -773,7 +774,7 @@ export default function JobExecutionsPage() {
               {canWrite && !execution.archived && (
                 <button
                   onClick={() => handleAction(execution, "archive")}
-                  className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
                   title="Archive execution"
                 >
                   <Archive className="w-4 h-4" />
@@ -782,7 +783,7 @@ export default function JobExecutionsPage() {
               {canWrite && execution.archived && (
                 <button
                   onClick={() => handleAction(execution, "unarchive")}
-                  className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
                   title="Unarchive execution"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -796,7 +797,7 @@ export default function JobExecutionsPage() {
                     }}
                     data-execution-menu-button
                     onClick={(e) => handleMenuToggle(execution.id, e)}
-                    className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                    className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
                     title="More actions"
                   >
                     <MoreVertical className="w-4 h-4" />
@@ -879,7 +880,7 @@ export default function JobExecutionsPage() {
           <div className="flex gap-3">
             <button
               onClick={() => navigate("/dashboard/job-executions/analytics")}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: "transparent",
                 color: "var(--c-bordered-button-color)",
@@ -904,7 +905,7 @@ export default function JobExecutionsPage() {
                     setSelectedExecutions(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: isSelectionMode
                     ? color.primary.action
@@ -926,7 +927,7 @@ export default function JobExecutionsPage() {
             <PermissionGate permission="job-executions.write">
               <button
                 onClick={() => setShowArchiveManagementModal(true)}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
                   color: "var(--c-bordered-button-color)",
@@ -1056,7 +1057,7 @@ export default function JobExecutionsPage() {
         />
         <button
           onClick={() => setShowAdvancedFilters(true)}
-          className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
+          className={`inline-flex items-center justify-center gap-0 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
@@ -1094,7 +1095,7 @@ export default function JobExecutionsPage() {
             <button
               onClick={() => handleBatchAction("abort")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-red-700 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-red-700 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Ban className="h-4 w-4" />
               Abort Running
@@ -1102,7 +1103,7 @@ export default function JobExecutionsPage() {
             <button
               onClick={() => handleBatchAction("archive")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Archive className="h-4 w-4" />
               Archive
@@ -1110,7 +1111,7 @@ export default function JobExecutionsPage() {
             <button
               onClick={() => handleBatchAction("retry")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               <RotateCcw className="h-4 w-4" />
@@ -1145,7 +1146,7 @@ export default function JobExecutionsPage() {
                   </h2>
                   <button
                     onClick={() => setShowAdvancedFilters(false)}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-0 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>

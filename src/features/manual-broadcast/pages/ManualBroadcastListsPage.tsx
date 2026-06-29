@@ -332,6 +332,7 @@ export default function ManualBroadcastListsPage() {
       label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, broadcast) => (
         <div className="flex items-center justify-center space-x-2">
           {broadcast.execution_id && (

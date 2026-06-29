@@ -324,11 +324,12 @@ export default function CampaignsPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, campaign) => (
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
-            className={`group p-3 ${tw.rounded} icon-edit`}
+            className={`group p-0 ${tw.rounded} icon-edit`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -347,7 +348,7 @@ export default function CampaignsPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(campaign.id, e)}
-              className={`group p-3 ${tw.rounded} icon-edit hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} icon-edit hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>

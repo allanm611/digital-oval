@@ -105,6 +105,7 @@ export default function DataConnectors() {
       label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, connector) => (
         <div className="flex items-center justify-end gap-2">
           <button onClick={() => handleConnectorClick(connector)} className={`p-0 icon-edit ${tw.rounded} transition-colors`} title="View">
@@ -561,7 +562,7 @@ export default function DataConnectors() {
                     <PermissionGate permission="servers.delete">
                       <button
                         onClick={() => handleDelete(connector)}
-                        className={`group p-3 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        className={`group p-0 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                         title={t.common.delete}
                         disabled={
                           isDeleting && connectorToDelete?.id === connector.id

@@ -83,9 +83,10 @@ export default function MonitoringPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, execution) => (
         <div className="flex items-center justify-center gap-2">
-          <button onClick={() => handleRetry(execution)} className={`p-2 ${tw.rounded} transition-colors`} style={{ color: 'var(--c-text-primary)' }} title="Retry">
+          <button onClick={() => handleRetry(execution)} className={`p-0 ${tw.rounded} transition-colors`} style={{ color: 'var(--c-text-primary)' }} title="Retry">
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>

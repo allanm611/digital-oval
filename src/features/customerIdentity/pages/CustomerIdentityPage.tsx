@@ -168,6 +168,7 @@ export default function CustomerIdentityPage() {
       label: t.customerIdentity.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <button
           type="button"

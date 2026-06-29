@@ -10,6 +10,8 @@ import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 
 interface PermissionFormModalProps {
   isOpen: boolean;
@@ -45,6 +47,9 @@ export default function PermissionFormModal({
   onSave,
 }: PermissionFormModalProps) {
   const { success, error: showError } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -240,7 +245,7 @@ export default function PermissionFormModal({
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {/* Name and Code Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <FormField error={errors?.name} ref={registerFieldRef('name')}>
               <Input
                 label="Permission Name *"
                 type="text"
@@ -249,12 +254,9 @@ export default function PermissionFormModal({
                 placeholder="e.g., User Management"
                 hasError={!!errors.name}
               />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
+            <FormField error={errors?.code} ref={registerFieldRef('code')}>
               <Input
                 label="Code *"
                 type="text"
@@ -264,16 +266,13 @@ export default function PermissionFormModal({
                 placeholder="e.g., permission.action.resource"
                 hasError={!!errors.code}
               />
-              {errors.code && (
-                <p className="mt-1 text-sm text-red-600">{errors.code}</p>
-              )}
               {!errors.code && !permission && (
                 <p className="mt-1 text-xs text-gray-500">Use dot notation for readability</p>
               )}
               {permission && (
                 <p className="mt-1 text-xs text-gray-500">(Cannot be changed)</p>
               )}
-            </div>
+            </FormField>
           </div>
 
           {/* Description */}
@@ -287,7 +286,7 @@ export default function PermissionFormModal({
 
           {/* Action and Resource Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <FormField error={errors?.action} ref={registerFieldRef('action')}>
               <HeadlessSelect
                 label="Action *"
                 options={AVAILABLE_ACTIONS}
@@ -301,10 +300,7 @@ export default function PermissionFormModal({
                 error={!!errors.action}
                 className="w-full"
               />
-              {errors.action && (
-                <p className="mt-1 text-sm text-red-600">{errors.action}</p>
-              )}
-            </div>
+            </FormField>
 
             <Input
               label="Resource Type ID (Optional)"

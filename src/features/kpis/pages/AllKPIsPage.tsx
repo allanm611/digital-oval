@@ -203,6 +203,7 @@ export default function AllKPIsPage() {
       label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center space-x-2">
           <ActivateDeactivateButton
@@ -213,21 +214,21 @@ export default function AllKPIsPage() {
           />
           <button
             onClick={() => handleViewDetails(row)}
-            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title={t.common.viewDetails}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate(`/dashboard/kpis/${extractNumericId(row.id)}/edit`, { state: { parentLabel: t.kpis.allKPIs } })}
-            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title={t.common.edit}
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDeleteClick(row)}
-            className={`p-1 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />

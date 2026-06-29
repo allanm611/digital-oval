@@ -159,6 +159,7 @@ export default function TeamRolesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, role) => (
         <div className="flex items-center justify-center gap-2">
           <button

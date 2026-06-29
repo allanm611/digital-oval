@@ -163,32 +163,6 @@ export function Table<T extends { id?: number | string } = any>({
     }
   }, [visibleColumns.map((c) => c.id).join(',')]); // Track visible column IDs
 
-  // Debug: Log row heights and column info
-  useEffect(() => {
-    const rows = tableRef.current?.querySelectorAll('tbody tr');
-    if (rows && rows.length > 0) {
-      const firstRow = rows[0];
-      const computedStyle = window.getComputedStyle(firstRow);
-      const height = firstRow.offsetHeight;
-      console.log('🔍 Table Row Height Debug:', {
-        offsetHeight: height,
-        minHeight: computedStyle.minHeight,
-        paddingTop: computedStyle.paddingTop,
-        paddingBottom: computedStyle.paddingBottom,
-        visibleColumnsCount: visibleColumns.length,
-        hasActionsColumn: visibleColumns.some(col => col.id === 'actions'),
-      });
-
-      // Log each cell height in first row
-      const cells = firstRow.querySelectorAll('td');
-      console.log('📊 Cell heights:', Array.from(cells).map((cell, idx) => ({
-        columnId: visibleColumns[idx]?.id,
-        height: (cell as HTMLElement).offsetHeight,
-        paddingTop: window.getComputedStyle(cell).paddingTop,
-        paddingBottom: window.getComputedStyle(cell).paddingBottom,
-      })));
-    }
-  }, [visibleColumns]);
 
   // Auto-size columns on first load based on content
   useEffect(() => {
@@ -533,7 +507,7 @@ export function Table<T extends { id?: number | string } = any>({
                 )}
                 {visibleColumns.map((col, colIndex) => {
                   const sortConfig = sortConfigs.find((s) => s.columnId === col.id);
-                  const isSortable = col.sortable !== false && col.id !== 'actions';
+                  const isSortable = col.sortable !== false && !col.isActionColumn;
                   const isLastColumn = colIndex === visibleColumns.length - 1;
 
                   // Calculate cumulative width for sticky positioning
@@ -541,13 +515,6 @@ export function Table<T extends { id?: number | string } = any>({
                   for (let i = 0; i < colIndex; i++) {
                     cumulativeWidth += columnWidths[visibleColumns[i].id] || 120;
                   }
-
-                  const isFrozen = col.visible;
-                  const stickyStyle = isFrozen && !isLastColumn
-                    ? { left: `${cumulativeWidth}px`, zIndex: 20 }
-                    : isFrozen && isLastColumn
-                    ? { right: 0, zIndex: 20 }
-                    : {};
 
                   return (
                     <th
@@ -563,12 +530,12 @@ export function Table<T extends { id?: number | string } = any>({
                         background: headerBackground || color.surface.tableHeader,
                         position: 'sticky',
                         top: 0,
+                        zIndex: 10,
                         width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                         minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
-                        ...stickyStyle,
                       }}
                     >
-                      <div className={`flex items-center ${col.id === 'actions' ? 'justify-end' : 'justify-between'}`}>
+                      <div className={`flex items-center ${col.isActionColumn ? 'justify-end' : 'justify-between'}`}>
                         <span className="truncate">{col.label}</span>
 
                         {/* Sort Icon & Menu */}
@@ -663,7 +630,7 @@ export function Table<T extends { id?: number | string } = any>({
                             backgroundColor: 'var(--c-surface-cards)',
                           }}
                         >
-                          {col.id !== 'actions' && (
+                          {!col.isActionColumn && (
                             <>
                               {isSortable && (
                                 <>
@@ -798,14 +765,6 @@ export function Table<T extends { id?: number | string } = any>({
                           cumulativeWidth += columnWidths[visibleColumns[i].id] || 120;
                         }
 
-                        const isFrozen = col.visible;
-                        const isLastColumn = colIdx === visibleColumns.length - 1;
-                        const stickyStyle = isFrozen && !isLastColumn
-                          ? { left: `${cumulativeWidth}px`, zIndex: 15 }
-                          : isFrozen && isLastColumn
-                          ? { right: 0, zIndex: 15 }
-                          : {};
-
                         return (
                         <td
                           key={`${rowId}-${col.id}`}
@@ -814,12 +773,10 @@ export function Table<T extends { id?: number | string } = any>({
                             backgroundColor: bgColor,
                             width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                             minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
-                            position: isFrozen ? 'sticky' : undefined,
-                            ...stickyStyle,
                           }}
                         >
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <div className="truncate flex-1">
+                          <div className={`flex items-center gap-2 overflow-hidden ${col.isActionColumn ? 'justify-end' : ''}`}>
+                            <div className={`${!col.isActionColumn ? 'truncate flex-1' : ''}`}>
                               {renderCellContent(col, row)}
                             </div>
                             {/* Expand button after first column content */}
@@ -846,8 +803,8 @@ export function Table<T extends { id?: number | string } = any>({
                       <tr>
                         <td colSpan={visibleColumns.length + (expandedContent ? 1 : 0)}>
                           <div
-                            className={`px-6 py-3 border-t ${borderColor}`}
-                            style={{ backgroundColor: bgColor }}
+                            className={`px-6 py-0`}
+                            style={{ backgroundColor: bgColor, marginTop: '-8px' }}
                           >
                             {expandedContent(row)}
                           </div>

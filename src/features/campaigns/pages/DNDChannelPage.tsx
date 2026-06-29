@@ -143,11 +143,12 @@ export default function DNDChannelPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, subscription) => (
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/dashboard/dnd-management/${channelInfo?.id}/${subscription.id}`)}
-            className={`p-2 ${tw.textSecondary} hover:bg-gray-100 ${tw.rounded} transition-colors`}
+            className={`p-0 ${tw.textSecondary} hover:bg-gray-100 ${tw.rounded} transition-colors`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -155,7 +156,7 @@ export default function DNDChannelPage() {
           {subscription.status === "active" && (
             <button
               onClick={() => handleRemoveCustomer(subscription)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
               disabled={isRemoving}
               title="Remove from DND"
             >

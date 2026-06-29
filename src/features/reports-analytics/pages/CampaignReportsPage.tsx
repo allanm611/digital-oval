@@ -557,6 +557,7 @@ export default function CampaignReportsPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row: CampaignTableRow) => (
         <div className="space-x-2 flex items-center">
           <button

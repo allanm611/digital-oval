@@ -151,7 +151,7 @@ export default function TemplateSelector({
                 <div className="flex items-center space-x-1 ml-2">
                   <button
                     onClick={(e) => handlePreview(template, e)}
-                    className="p-1.5 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    className="p-0 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                     title="Preview"
                   >
                     <Eye className="w-4 h-4" />
@@ -159,7 +159,7 @@ export default function TemplateSelector({
                   {!template.id.startsWith("default_") && (
                     <button
                       onClick={(e) => handleDelete(template.id, e)}
-                      className="p-1.5 icon-delete hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                      className="p-0 icon-delete hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />

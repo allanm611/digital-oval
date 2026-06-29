@@ -319,6 +319,7 @@ export default function GatewayConfigurationsPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, config) => (
         <div className="flex items-center justify-center gap-2">
           <ActivateDeactivateButton
@@ -328,7 +329,7 @@ export default function GatewayConfigurationsPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/${config.channel_type}/details`)}
-            className={`p-2 rounded transition`}
+            className={`p-0 rounded transition`}
             style={{ color: 'var(--c-text-secondary)' }}
             title="View details"
           >
@@ -336,7 +337,7 @@ export default function GatewayConfigurationsPage() {
           </button>
           <button
             onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/edit`)}
-            className={`p-2 rounded transition`}
+            className={`p-0 rounded transition`}
             style={{ color: 'var(--c-text-secondary)' }}
             title="Edit configuration"
           >
@@ -344,7 +345,7 @@ export default function GatewayConfigurationsPage() {
           </button>
           <button
             onClick={() => handleDeleteClick(config)}
-            className="p-2 rounded transition"
+            className="p-0 rounded transition"
             
             title="Delete configuration"
           >

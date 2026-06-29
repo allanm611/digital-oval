@@ -1566,6 +1566,7 @@ export default function UserManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, user) => {
         const normalizedStatus = normalizeStatus(user);
         const userIsActive = normalizedStatus === "active";
@@ -1580,7 +1581,7 @@ export default function UserManagementPage() {
             />
             <button
               onClick={() => handleViewUser(user)}
-              className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
               style={{ backgroundColor: "transparent" }}
               title="View user details"
             >
@@ -1589,7 +1590,7 @@ export default function UserManagementPage() {
             <PermissionGate permission="users.update">
               <button
                 onClick={() => handleEditUser(user)}
-                className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                 style={{ backgroundColor: "transparent" }}
                 title="Edit user"
               >
@@ -1600,7 +1601,7 @@ export default function UserManagementPage() {
               <button
                 onClick={() => handleDeleteUser(user)}
                 disabled={loadingActions.deleting.has(user.id)}
-                className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Delete user"
               >
                 {loadingActions.deleting.has(user.id) ? (
@@ -1683,12 +1684,13 @@ export default function UserManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, request) => (
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => handleApproveRequest(request)}
             disabled={loadingActions.approving.has(request.requestId || request.id || 0)}
-            className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Approve"
           >
             {loadingActions.approving.has(request.requestId || request.id || 0) ? (
@@ -1700,7 +1702,7 @@ export default function UserManagementPage() {
           <button
             onClick={() => handleRejectRequest(request)}
             disabled={loadingActions.rejecting.has(request.requestId || request.id || 0)}
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Reject"
           >
             {loadingActions.rejecting.has(request.requestId || request.id || 0) ? (
@@ -2073,7 +2075,7 @@ export default function UserManagementPage() {
               <button
                 onClick={() => handleBatchAction("update_department")}
                 disabled={isBatchProcessing || !batchDepartmentValue}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors`}
+                className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
                   color: color.primary.action,
@@ -2086,7 +2088,7 @@ export default function UserManagementPage() {
             <button
               onClick={() => handleBatchAction("deactivate")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               Deactivate
@@ -2132,7 +2134,7 @@ export default function UserManagementPage() {
                   ? t.userManagement.noUsersFound
                   : t.userManagement.noUsers}
               </h3>
-              <p className={`p-2 icon-edit ${tw.rounded} text-sm  mb-6`}>
+              <p className={`p-0 icon-edit ${tw.rounded} text-sm  mb-6`}>
                 {searchTerm
                   ? t.userManagement.tryAdjustingSearch
                   : t.userManagement.createFirstUser}
@@ -2282,7 +2284,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleToggleStatus(user)}
                             disabled={loadingActions.toggling.has(user.id)}
-                            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`p-0 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                             style={{
                               color: userIsActive
                                 ? deactivateColor
@@ -2310,7 +2312,7 @@ export default function UserManagementPage() {
                           </button>
                           <button
                             onClick={() => handleViewUser(user)}
-                            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                             style={{
                               backgroundColor: "transparent",
                             }}
@@ -2323,7 +2325,7 @@ export default function UserManagementPage() {
                               setSelectedUser(user);
                               setIsModalOpen(true);
                             }}
-                            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                             style={{
                               backgroundColor: "transparent",
                             }}
@@ -2334,7 +2336,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleDeleteUser(user)}
                             disabled={loadingActions.deleting.has(user.id)}
-                            className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                             title={
                               loadingActions.deleting.has(user.id)
                                 ? t.profile.saving
@@ -2525,7 +2527,7 @@ export default function UserManagementPage() {
                                 <button
                                   onClick={() => handleMoveToReview(request)}
                                   disabled={actionDisabled || approvingLoading}
-                                  className={`p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title="Move to review"
                                 >
                                   {approvingLoading ? (
@@ -2539,7 +2541,7 @@ export default function UserManagementPage() {
                                 <button
                                   onClick={() => handleMoveToPendingApproval(request)}
                                   disabled={actionDisabled || approvingLoading}
-                                  className={`p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title="Send to approver"
                                 >
                                   {approvingLoading ? (
@@ -2554,7 +2556,7 @@ export default function UserManagementPage() {
                                   <button
                                     onClick={() => handleApproveRequest(request)}
                                     disabled={actionDisabled || approvingLoading}
-                                    className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`p-0 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                     title="Approve request"
                                   >
                                     {approvingLoading ? (
@@ -2566,7 +2568,7 @@ export default function UserManagementPage() {
                                   <button
                                     onClick={() => handleRejectRequest(request)}
                                     disabled={actionDisabled}
-                                    className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                     title="Reject request"
                                   >
                                     <Ban className="w-4 h-4" />
@@ -2577,7 +2579,7 @@ export default function UserManagementPage() {
                                 <button
                                   onClick={() => handleCreateUserFromRequest(request)}
                                   disabled={actionDisabled || approvingLoading}
-                                  className={`p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title="Create user"
                                 >
                                   {approvingLoading ? (

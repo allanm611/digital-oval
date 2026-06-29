@@ -76,6 +76,7 @@ export default function SubscriberProfileListPage() {
       label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex gap-1 justify-center items-center">
           <ActivateDeactivateButton

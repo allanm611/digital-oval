@@ -176,6 +176,7 @@ export default function ConnectionProfilesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, profile) => (
         <div className="flex items-center justify-end gap-2">
           <button

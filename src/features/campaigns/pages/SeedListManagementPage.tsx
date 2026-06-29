@@ -183,6 +183,7 @@ export default function SeedListManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         if (!row._full) return null;
         return (
@@ -242,6 +243,7 @@ export default function SeedListManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center gap-2">
           <button

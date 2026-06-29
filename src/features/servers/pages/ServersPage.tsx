@@ -167,12 +167,13 @@ export default function ServersPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, server) => (
         <div className="flex items-center justify-end gap-1">
           <button
             type="button"
             onClick={() => navigate(`/dashboard/servers/${server.id}`)}
-            className={`inline-flex items-center justify-center icon-edit ${tw.rounded} p-2 transition-colors hover:bg-gray-100`}
+            className={`inline-flex items-center justify-center icon-edit ${tw.rounded} p-0 transition-colors hover:bg-gray-100`}
             aria-label={`View ${server.name}`}
             title="View details"
           >
@@ -182,7 +183,7 @@ export default function ServersPage() {
             <button
               type="button"
               onClick={(e) => handleEdit(server, e)}
-              className={`inline-flex items-center justify-center icon-edit ${tw.rounded} p-2 transition-colors hover:bg-gray-100`}
+              className={`inline-flex items-center justify-center icon-edit ${tw.rounded} p-0 transition-colors hover:bg-gray-100`}
               aria-label={`Edit ${server.name}`}
               title="Edit server"
             >

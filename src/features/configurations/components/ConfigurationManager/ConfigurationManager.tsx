@@ -223,6 +223,7 @@ export default function ConfigurationManager({
       label: t.genericConfig.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, item) => (
         <div className="flex items-center justify-center space-x-2">
           <ActivateDeactivateButton

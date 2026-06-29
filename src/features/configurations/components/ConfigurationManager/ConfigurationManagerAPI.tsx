@@ -254,6 +254,7 @@ export default function ConfigurationManagerAPI({
       width: "150px",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row: any) => {
         const item = row._full;
         if (!item) return null;

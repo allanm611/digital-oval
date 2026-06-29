@@ -407,6 +407,7 @@ export default function WorkflowsPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, workflow) => (
         <div className="flex items-center justify-end space-x-2">
           <button

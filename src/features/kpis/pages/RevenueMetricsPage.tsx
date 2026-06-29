@@ -90,6 +90,7 @@ export default function RevenueMetricsPage() {
       label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-end space-x-2">
           <ActivateDeactivateButton
