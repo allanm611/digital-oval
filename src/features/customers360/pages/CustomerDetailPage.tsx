@@ -579,7 +579,7 @@ export default function CustomerDetailPage() {
     },
     {
       id: "value",
-      label: "Value",
+      label: "Current Value",
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
@@ -664,10 +664,9 @@ export default function CustomerDetailPage() {
       ? new Date(new Date(selectedSubscription.created_at).getTime() + (7 * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
       : "—";
 
-    const kpiData = revenueMetrics.map((metric, index) => {
-      const baseValue = 500 + (index * 150);
-      const currentValue = (baseValue + (index * 50)).toFixed(2);
-      const previousValue = baseValue.toFixed(2);
+    const kpiData = revenueMetrics.map((metric) => {
+      const currentValue = 0;
+      const previousValue = 0;
 
       const kpiCreatedDate = metric.created_at
         ? new Date(metric.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })

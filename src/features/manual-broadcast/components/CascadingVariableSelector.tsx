@@ -162,7 +162,6 @@ export default function CascadingVariableSelector({
       defaultValue: field.defaultValue ?? undefined,
     };
 
-    console.log("✅ Selected variable with default:", { fieldName: field.name, defaultValue: field.defaultValue, templateVariable });
     onVariableSelect(templateVariable);
     onClose();
     setSearchQuery("");

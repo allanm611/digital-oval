@@ -150,10 +150,11 @@ export default function CreativePreviewRenderer({
   }
 
   // Fallback for unknown channels - show generic phone preview
+  const displayLabel = channel || "Message";
   return (
     <div>
       <h3 className="text-sm font-semibold text-gray-700 mb-4">
-        {channelLabel} Preview
+        {displayLabel} Preview
       </h3>
       <GenericPhonePreview
         title={title}

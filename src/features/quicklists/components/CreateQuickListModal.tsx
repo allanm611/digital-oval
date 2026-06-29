@@ -23,6 +23,7 @@ export type QuickListFormValues = {
   list_headers?: string;
   file_name?: string;
   file_size?: number;
+  column_defaults: Record<string, string>;
 };
 
 interface CreateQuickListModalProps {
@@ -43,6 +44,7 @@ const defaultForm: QuickListFormValues = {
   upload_type: "generic",
   list_headers: "",
   file_text: "",
+  column_defaults: {},
 };
 
 export default function CreateQuickListModal({
@@ -68,6 +70,7 @@ export default function CreateQuickListModal({
     Array<{ id: number; upload_type: string; description?: string; expected_columns?: string[] }>
   >([]);
   const [isLoadingUploadTypes, setIsLoadingUploadTypes] = useState(false);
+  const [showDefaultsModal, setShowDefaultsModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Hook for fetching filtered message variable fields
@@ -109,6 +112,7 @@ export default function CreateQuickListModal({
       file_text: initialData?.file_text || "",
       file_name: initialData?.file_name,
       file_size: initialData?.file_size,
+      column_defaults: (initialData as any)?.column_defaults || {},
     });
     setErrors({});
     setUploadedFile(null);
@@ -440,6 +444,9 @@ export default function CreateQuickListModal({
     }
     if (isCreateMode && !form.file_text) {
       validationErrors.file_text = "Upload a CSV, TXT, or XLSX file.";
+    }
+    if (Object.keys(form.column_defaults || {}).length === 0) {
+      validationErrors.column_defaults = "Set default values for at least one column.";
     }
 
     setErrors(validationErrors);
@@ -955,6 +962,35 @@ export default function CreateQuickListModal({
                 disabled={isSubmitting}
                 className="hidden"
               />
+
+              {/* Set Default Values Button */}
+              {form.file_text && (
+                <div className="mt-4 flex gap-2 items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowDefaultsModal(true)}
+                    disabled={isSubmitting}
+                    className="text-sm font-medium disabled:opacity-50"
+                    style={{
+                      backgroundColor: buttonTokens.bordered.background,
+                      color: buttonTokens.bordered.color,
+                      border: buttonTokens.bordered.border,
+                      borderRadius: buttonTokens.bordered.borderRadius,
+                      padding: `${buttonTokens.bordered.paddingY} ${buttonTokens.bordered.paddingX}`,
+                    }}
+                  >
+                    Set Default Values
+                  </button>
+                  {Object.keys(form.column_defaults || {}).length > 0 && (
+                    <span className="text-xs text-green-600">
+                      ✓ {Object.keys(form.column_defaults).length} column(s) set
+                    </span>
+                  )}
+                  {errors.column_defaults && (
+                    <span className="text-xs text-red-500">{errors.column_defaults}</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {(() => {
@@ -1031,6 +1067,7 @@ export default function CreateQuickListModal({
                       </>
                     )}
                   </div>
+
                 </>
               );
             })()}
@@ -1071,7 +1108,7 @@ export default function CreateQuickListModal({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || isFileProcessing || !form.name.trim() || (isCreateMode && !form.file_text) || !form.subscriber_id_col_name.trim() || !form.subscriber_id_field_mapping.trim() || !form.file_delimiter}
+                  disabled={isSubmitting || isFileProcessing || !form.name.trim() || (isCreateMode && !form.file_text) || !form.subscriber_id_col_name.trim() || !form.subscriber_id_field_mapping.trim() || !form.file_delimiter || Object.keys(form.column_defaults || {}).length === 0}
                   className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-3"
                   style={{
                     backgroundColor: buttonTokens.action.background,
@@ -1086,6 +1123,7 @@ export default function CreateQuickListModal({
                     !form.subscriber_id_col_name.trim() ? "Please select subscriber ID column" :
                     !form.subscriber_id_field_mapping.trim() ? "Please select customer identity field mapping" :
                     !form.file_delimiter ? "Please select a delimiter" :
+                    Object.keys(form.column_defaults || {}).length === 0 ? "Please set default values for columns" :
                     ""
                   }
                 >
@@ -1231,6 +1269,84 @@ export default function CreateQuickListModal({
           </div>
         </div>
       )}
+
+      {/* Set Column Defaults Modal */}
+      {showDefaultsModal && (() => {
+        const parseHeaders = (): string[] => {
+          if (!form.list_headers || !form.file_delimiter) {
+            return [];
+          }
+          let delimiter = form.file_delimiter;
+          if (delimiter === "\\t" || delimiter === "\t") {
+            delimiter = "\t";
+          }
+          return form.list_headers
+            .split(delimiter)
+            .map((h) => h.trim().replace(/^["']|["']$/g, ""))
+            .filter((h) => h.length > 0);
+        };
+
+        const columns = parseHeaders();
+
+        return (
+          <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/30 backdrop-blur-[1px] px-4 py-6">
+            <div className={`w-full max-w-md ${tw.rounded} bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}>
+              <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
+                <h3 className="text-lg font-semibold text-gray-900">Set Column Default Values</h3>
+                <button
+                  onClick={() => setShowDefaultsModal(false)}
+                  className="rounded-full p-2 text-gray-400 hover:bg-gray-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                <p className="text-sm text-gray-600">
+                  These will be used when this quicklist is referenced as a variable in manual communications.
+                </p>
+                {columns.map((column) => (
+                  <div key={column}>
+                    <Input
+                      label={column}
+                      value={form.column_defaults?.[column] || ""}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          column_defaults: {
+                            ...prev.column_defaults,
+                            [column]: String(value),
+                          },
+                        }))
+                      }
+                      placeholder={`e.g., "John Doe"`}
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => setShowDefaultsModal(false)}
+                  disabled={isSubmitting}
+                  className="text-sm font-medium disabled:opacity-50"
+                  style={{
+                    backgroundColor: buttonTokens.bordered.background,
+                    color: buttonTokens.bordered.color,
+                    border: buttonTokens.bordered.border,
+                    borderRadius: buttonTokens.bordered.borderRadius,
+                    padding: `${buttonTokens.bordered.paddingY} ${buttonTokens.bordered.paddingX}`,
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

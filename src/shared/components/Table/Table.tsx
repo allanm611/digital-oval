@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect, MouseEvent } from "react";
-import { ChevronDown, ArrowUp, ArrowDown, MoreVertical, Filter, Settings, Eye, EyeOff, X } from "lucide-react";
+import { ChevronDown, ArrowUp, ArrowDown, MoreVertical, Filter, Settings, Eye, EyeOff, X, ChevronRight } from "lucide-react";
 import { TableProps, TableColumn, SortConfig } from "./types";
 import { tw, color } from "../../utils/utils";
 import { buttons } from "../../utils/tokens";
@@ -59,6 +59,9 @@ export function Table<T extends { id?: number | string } = any>({
   const [isFilterBuilderOpen, setIsFilterBuilderOpen] = useState(false);
   const [filterFromColumnId, setFilterFromColumnId] = useState<string | null>(null);
   const [autoSizedOnce, setAutoSizedOnce] = useState(false);
+  const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const [isAtEnd, setIsAtEnd] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const tableRef = useRef<HTMLDivElement | null>(null);
@@ -119,6 +122,37 @@ export function Table<T extends { id?: number | string } = any>({
     onPageChange?.(1);
   }, [columnFilters, onPageChange]);
 
+  // Detect horizontal overflow and scroll position
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (tableRef.current) {
+        const hasOverflow = tableRef.current.scrollWidth > tableRef.current.clientWidth;
+        setHasHorizontalOverflow(hasOverflow);
+
+        // Check if at end
+        const scrollLeft = tableRef.current.scrollLeft;
+        const clientWidth = tableRef.current.clientWidth;
+        const scrollWidth = tableRef.current.scrollWidth;
+        const atEnd = scrollLeft + clientWidth >= scrollWidth - 1; // -1 for rounding
+        setIsAtEnd(atEnd);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+
+    // Listen for scroll events
+    const tableElement = tableRef.current;
+    if (tableElement) {
+      tableElement.addEventListener('scroll', checkOverflow);
+      return () => {
+        window.removeEventListener('resize', checkOverflow);
+        tableElement.removeEventListener('scroll', checkOverflow);
+      };
+    }
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [columns, columnWidths, data]);
+
   const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
     e.preventDefault();
     const thElement = (e.currentTarget as HTMLElement).closest('th');
@@ -126,6 +160,15 @@ export function Table<T extends { id?: number | string } = any>({
       setResizingColumn(columnId);
       setStartX(e.clientX);
       setStartWidth(thElement.offsetWidth);
+    }
+  };
+
+  const handleScrollToMore = () => {
+    if (tableRef.current) {
+      tableRef.current.scrollTo({
+        left: tableRef.current.scrollWidth,
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -463,17 +506,57 @@ export function Table<T extends { id?: number | string } = any>({
           <p className={`${tw.textMuted} text-sm`}>Try adjusting your filters or search criteria.</p>
         </div>
       ) : (
-        <div
-          ref={tableRef}
-          className={`${tw.rounded} ${tableWrapperClassName}`}
-          style={{
-            maxHeight: 'min(calc(100vh - 350px), 800px)',
-            minHeight: '300px',
-            overflowY: 'auto',
-            overflowX: 'auto',
-            userSelect: resizingColumn ? 'none' : 'auto',
-          }}
-        >
+        <div style={{ position: 'relative' }}>
+          {/* Scroll Indicator Button */}
+          {hasHorizontalOverflow && !isAtEnd && (
+            <div style={{ position: 'absolute', top: '-8px', right: '0', zIndex: 20 }}>
+              <button
+                onClick={handleScrollToMore}
+                onMouseEnter={() => setShowScrollHint(true)}
+                onMouseLeave={() => setShowScrollHint(false)}
+                className="p-2 rounded transition-all duration-200 hover:opacity-70"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: color.primary.accent,
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              {showScrollHint && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: '0',
+                    marginTop: '4px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    color: 'white',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none',
+                    zIndex: 30,
+                  }}
+                >
+                  Scroll horizontally to see more columns
+                </div>
+              )}
+            </div>
+          )}
+          <div
+            ref={tableRef}
+            className={`${tw.rounded} ${tableWrapperClassName}`}
+            style={{
+              maxHeight: 'min(calc(100vh - 350px), 800px)',
+              minHeight: '300px',
+              overflowY: 'auto',
+              overflowX: 'auto',
+              userSelect: resizingColumn ? 'none' : 'auto',
+            }}
+          >
         <table className={`w-full ${tableClassName}`} style={{ borderCollapse: "separate", borderSpacing: rowSpacing }}>
             {/* Header */}
             <thead
@@ -816,6 +899,7 @@ export function Table<T extends { id?: number | string } = any>({
               })}
             </tbody>
           </table>
+            </div>
         </div>
       )}
 

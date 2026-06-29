@@ -416,7 +416,9 @@ export default function OfferCreativeFormModal({
         creativeData.title = formData.title;
       }
 
-      if (formData.channel !== "SMS" && formData.channel !== "SMS Flash") {
+      // Only include html_body for non-SMS channels
+      const isSmsPlatform = formData.channel?.toUpperCase().includes("SMS") || formData.channel?.toUpperCase().includes("USSD");
+      if (!isSmsPlatform && formData.html_body) {
         creativeData.html_body = formData.html_body;
       }
 
@@ -438,7 +440,7 @@ export default function OfferCreativeFormModal({
         title={`${mode === "create" ? "Add" : "Edit"} Creative`}
         size="2xl"
       >
-        <div className="space-y-3">
+        <div className="space-y-6">
 
             {/* Channel & Locale */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

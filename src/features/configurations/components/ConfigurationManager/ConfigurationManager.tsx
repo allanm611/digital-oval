@@ -71,16 +71,17 @@ export interface ConfigurationPageConfig {
 
 interface ConfigurationManagerProps {
   config: ConfigurationPageConfig;
+  loading?: boolean;
 }
 
 export default function ConfigurationManager({
   config,
+  loading = false,
 }: ConfigurationManagerProps) {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
 
   const [items, setItems] = useState<ConfigurationItem[]>(config.initialData);
-  const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
@@ -88,6 +89,11 @@ export default function ConfigurationManager({
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
+
+  // Sync items when initialData prop changes
+  useEffect(() => {
+    setItems(config.initialData);
+  }, [config.initialData]);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteItem } = useDeleteConfirm({
     onDelete: async (id) => {
