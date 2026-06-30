@@ -592,7 +592,7 @@ export default function CampaignDefinitionStep({
                     id: lob.id,
                   })),
               ]}
-              value={String((formData as { line_of_business_id?: number }).line_of_business_id || "")}
+              value={(formData as any)?.line_of_business ? String(linesOfBusiness.find((lob) => lob.name === (formData as any).line_of_business)?.id || "") : String((formData as { line_of_business_id?: number }).line_of_business_id || "")}
               onChange={(value) => {
                 const selected = linesOfBusiness.find((lob) => String(lob.id) === value);
                 setFormData({
@@ -600,6 +600,9 @@ export default function CampaignDefinitionStep({
                   line_of_business_id: value ? Number(value) : undefined,
                   line_of_business: selected?.name,
                 } as any);
+                if (validationErrors.line_of_business && clearValidationErrors) {
+                  clearValidationErrors();
+                }
               }}
               searchable={true}
               disabled={lobLoading}
@@ -620,7 +623,7 @@ export default function CampaignDefinitionStep({
                     id: dept.id,
                   })),
               ]}
-              value={String((formData as { department_id?: number }).department_id || "")}
+              value={(formData as any)?.department ? String(departmentsData.find((dept) => dept.name === (formData as any).department)?.id || "") : String((formData as { department_id?: number }).department_id || "")}
               onChange={(value) => {
                 const selected = departmentsData.find((dept) => String(dept.id) === value);
                 setFormData({
@@ -740,7 +743,7 @@ export default function CampaignDefinitionStep({
                     id: objective.id,
                   })),
               ]}
-              value={String(formData.objective || "")}
+              value={String(objectives.find((obj) => obj.name === formData.objective || String(obj.id) === String(formData.objective))?.id || formData.objective || "")}
               onChange={(value) => {
                 setFormData({
                   ...formData,

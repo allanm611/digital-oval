@@ -17,6 +17,13 @@ import { CampaignFlowConfig } from "../../types/campaignFlow";
 import { color, tw, components } from "../../../../shared/utils/utils";
 import DateFormatter from "../../../../shared/components/DateFormatter";
 
+interface ControlGroup {
+  enabled: boolean;
+  percentage?: number;
+  type?: string;
+  id?: number;
+}
+
 interface CampaignPreviewStepProps {
   formData: CreateCampaignRequest;
   selectedSegments: CampaignSegment[];
@@ -24,6 +31,7 @@ interface CampaignPreviewStepProps {
   campaignFlows?: CampaignFlowConfig[];
   seedListMode?: "all" | "per-segment";
   segmentSeedLists?: Record<string, string[]>;
+  controlGroup?: ControlGroup;
 }
 
 interface TestResult {
@@ -39,6 +47,7 @@ export default function CampaignPreviewStep({
   campaignFlows = [],
   seedListMode = "all",
   segmentSeedLists = {},
+  controlGroup,
 }: CampaignPreviewStepProps) {
   const [isTesting, setIsTesting] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
@@ -301,6 +310,43 @@ export default function CampaignPreviewStep({
             </div>
           </div>
 
+          {/* Control Group Section */}
+          {controlGroup && controlGroup.enabled && (
+            <div className={components.card.surface}>
+              <h3 className={`text-sm font-bold ${tw.textPrimary} mb-4`}>
+                Control Group Settings
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                  <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    Status
+                  </div>
+                  <div className="text-sm font-medium text-gray-600">
+                    {controlGroup.enabled ? "Enabled" : "Disabled"}
+                  </div>
+                </div>
+                <div>
+                  <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                    Percentage
+                  </div>
+                  <div className="text-sm font-medium text-gray-600">
+                    {controlGroup.percentage || 0}%
+                  </div>
+                </div>
+                {controlGroup.type && (
+                  <div>
+                    <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                      Type
+                    </div>
+                    <div className="text-sm font-medium text-gray-600 capitalize">
+                      {controlGroup.type}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Audience Summary */}
           <div className={components.card.surface}>
             <h3 className={`text-sm font-bold ${tw.textPrimary} mb-4`}>
@@ -336,7 +382,7 @@ export default function CampaignPreviewStep({
                       </div>
                       <div>
                         <div className="text-sm font-semibold text-gray-900">
-                          {segment.customer_count?.toLocaleString() || "0"}
+                          {segment.customer_count?.toLocaleString() || "—"}
                         </div>
                       </div>
                       <div>

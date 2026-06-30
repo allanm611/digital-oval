@@ -1314,9 +1314,8 @@ export default function CampaignsPage() {
             >
               {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
                 <>
-                  <PermissionGate permission="campaigns.run">
-                    {campaign.approval_status === "approved" &&
-                    campaign.is_active === true ? (
+                  <PermissionGate permission="campaigns.execute">
+                    {canShowCampaignButton(campaign, "execute") ? (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

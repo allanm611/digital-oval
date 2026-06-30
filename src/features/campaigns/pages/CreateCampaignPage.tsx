@@ -33,6 +33,7 @@ import { CreateCampaignRequest } from "../types/createCampaign";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { controlGroupService } from "../../control-groups/services/controlGroupService";
+import { segmentService } from "../../segments/services/segmentService";
 import {
   CampaignFlowConfig,
   CampaignFlowResponseData,
@@ -149,6 +150,11 @@ export default function CreateCampaignPage() {
     end_date: undefined,
     budget_allocated: undefined,
     priority: "low",
+    department_id: undefined,
+    department: undefined,
+    line_of_business_id: undefined,
+    line_of_business: undefined,
+    communication_policy: undefined,
   });
 
   const [selectedSegments, setSelectedSegments] = useState<CampaignSegment[]>(
@@ -330,7 +336,7 @@ export default function CreateCampaignPage() {
               ? parseFloat(campaign.budget_allocated)
               : undefined,
             priority: campaign?.priority || undefined,
-            // priority_rank: campaign?.priority_rank || undefined, // NOT ALLOWED
+            priority_rank: (campaign?.metadata as any)?.priority_rank || 1,
           };
           setFormData(newFormData);
 
@@ -352,20 +358,39 @@ export default function CreateCampaignPage() {
             campaignFlowService.getCampaignOffers(parseInt(campaignId), true),
           ]);
 
+
           if (segmentsResponse?.success && segmentsResponse.data?.length > 0) {
-            const validSegments: CampaignSegment[] = segmentsResponse.data
-              .map((segment: any) => {
+            // Fetch full segment details to get customer_count and other data
+            const fullSegments = await Promise.all(
+              segmentsResponse.data.map(async (segment: any) => {
                 if (!segment?.segment_id) return null;
-                return {
-                  id: String(segment.segment_id),
-                  name: segment.segment_name || "",
-                  customer_count: segment.customer_count || 0,
-                  criteria: {},
-                  created_at: segment.created_at || new Date().toISOString(),
-                  control_group_config: segment.control_group_config,
-                } as CampaignSegment;
+                try {
+                  // Fetch full segment details from segmentService
+                  const response = await segmentService.getSegmentById(segment.segment_id);
+                  const fullSegmentData = response?.data;
+                  return {
+                    id: String(segment.segment_id),
+                    name: segment.segment_name || fullSegmentData?.name || "",
+                    customer_count: fullSegmentData?.size_estimate,
+                    criteria: {},
+                    created_at: segment.created_at || new Date().toISOString(),
+                    control_group_config: segment.control_group_config,
+                  } as CampaignSegment;
+                } catch (segmentError) {
+                  console.error(`Failed to fetch segment details for ${segment.segment_id}:`, segmentError);
+                  // Fallback to campaign-flows data if full fetch fails
+                  return {
+                    id: String(segment.segment_id),
+                    name: segment.segment_name || "",
+                    customer_count: segment.size_estimate,
+                    criteria: {},
+                    created_at: segment.created_at || new Date().toISOString(),
+                    control_group_config: segment.control_group_config,
+                  } as CampaignSegment;
+                }
               })
-              .filter((s): s is CampaignSegment => s !== null);
+            );
+            const validSegments = fullSegments.filter((s): s is CampaignSegment => s !== null);
             setSelectedSegments(validSegments);
           }
 
@@ -584,7 +609,7 @@ export default function CreateCampaignPage() {
         if (!formData.category_id) {
           errors.category_id = "Campaign catalog is required";
         }
-        if (!(formData as any).line_of_business_id) {
+        if (!(formData as any).line_of_business_id && !(formData as any).line_of_business) {
           errors.line_of_business = "Line of Business is required";
         }
         if (!(formData as any).communication_policy) {
@@ -831,6 +856,12 @@ export default function CreateCampaignPage() {
           ...(controlGroup.percentage && {
             control_group_percentage: controlGroup.percentage,
           }),
+          ...((formData.scheduling || formData.priority_rank) && {
+            metadata: {
+              ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
+              ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+            },
+          }),
         };
         await campaignService.updateCampaign(parseInt(id), updateData);
 
@@ -916,6 +947,34 @@ export default function CreateCampaignPage() {
           }
         }
 
+        // Update segment control group configurations
+        if (selectedSegments?.length) {
+          for (const segment of selectedSegments) {
+            if (segment.control_group_config) {
+              try {
+                const controlConfig = segment.control_group_config;
+                const configPayload = {
+                  control_group_type: controlConfig.type || "none",
+                  config_method: controlConfig.control_group_method,
+                  percentage: controlConfig.percentage,
+                  fixed_number: controlConfig.fixed_number,
+                  advanced_params: controlConfig.advanced_params,
+                  control_group_id: controlConfig.selected_control_group_id,
+                };
+
+                await controlGroupService.updateSegmentControlConfig(
+                  parseInt(id),
+                  parseInt(segment.id),
+                  configPayload,
+                );
+              } catch (controlGroupError) {
+                console.error("Error updating segment control group config:", controlGroupError);
+                showToast("warning", "Failed to update control group configuration for a segment");
+              }
+            }
+          }
+        }
+
         showToast(
           "success",
           `"${formData.name}" ${t.campaigns.campaignDefinition.updateSuccess}`,
@@ -961,6 +1020,12 @@ export default function CreateCampaignPage() {
           control_group_enabled: controlGroup.enabled,
           ...(controlGroup.percentage && {
             control_group_percentage: controlGroup.percentage,
+          }),
+          ...((formData.scheduling || formData.priority_rank) && {
+            metadata: {
+              ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
+              ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+            },
           }),
         };
 
@@ -1093,7 +1158,6 @@ export default function CreateCampaignPage() {
           ...(ownerTeam && { owner_team: ownerTeam }),
           budget_allocated: String(formData.budget_allocated || 0),
           ...(formData.priority && { priority: formData.priority }),
-          // ...(formData.priority_rank && { priority_rank: formData.priority_rank }), // NOT ALLOWED
           ...((formData as any)?.line_of_business && {
             line_of_business: (formData as any).line_of_business,
           }),
@@ -1106,6 +1170,12 @@ export default function CreateCampaignPage() {
           control_group_enabled: controlGroup.enabled,
           ...(controlGroup.percentage && {
             control_group_percentage: controlGroup.percentage,
+          }),
+          ...((formData.scheduling || formData.priority_rank) && {
+            metadata: {
+              ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
+              ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+            },
           }),
         };
 
@@ -1382,6 +1452,9 @@ export default function CreateCampaignPage() {
         : undefined;
       const ownerTeam = department?.name || undefined;
 
+      console.log("[saveDraft] formData.scheduling at save time:", formData.scheduling);
+      console.log("[saveDraft] formData.priority_rank:", formData.priority_rank);
+
       const baseDraftData: CreateCampaignRequest = {
         name: formData.name,
         code: campaignCode,
@@ -1396,9 +1469,6 @@ export default function CreateCampaignPage() {
         ...(ownerTeam && { owner_team: ownerTeam }),
         budget_allocated: String(formData.budget_allocated || 0),
         ...(formData.priority && { priority: formData.priority }),
-        // ...(formData.priority_rank && { // NOT ALLOWED
-        //   priority_rank: formData.priority_rank,
-        // }),
         ...((formData as any)?.line_of_business && {
           line_of_business: (formData as any).line_of_business,
         }),
@@ -1411,6 +1481,12 @@ export default function CreateCampaignPage() {
         control_group_enabled: controlGroup.enabled,
         ...(controlGroup.percentage && {
           control_group_percentage: controlGroup.percentage,
+        }),
+        ...((formData.scheduling || formData.priority_rank) && {
+          metadata: {
+            ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
+            ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
+          },
         }),
       };
 
@@ -1432,6 +1508,7 @@ export default function CreateCampaignPage() {
           ...baseDraftData,
           created_by: user?.user_id ?? null,
         };
+        console.log("[CREATE DRAFT] draftData:", JSON.stringify(draftData, null, 2));
         const createResponse = await campaignService.createCampaign(draftData);
         campaignId = createResponse?.data?.id;
 

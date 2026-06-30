@@ -460,6 +460,7 @@ export default function RunCampaignModal({
                               ),
                             );
                           }}
+                          availableChannels={AVAILABLE_CHANNELS}
                         />
                       )}
                     </div>
@@ -517,11 +518,13 @@ export default function RunCampaignModal({
 interface ChannelSelectorProps {
   selectedChannels: string[];
   onChannelsChange: (channels: string[]) => void;
+  availableChannels: Array<{ code: string; label: string }>;
 }
 
 function ChannelSelector({
   selectedChannels,
   onChannelsChange,
+  availableChannels,
 }: ChannelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -548,7 +551,7 @@ function ChannelSelector({
   };
 
   const selectedLabels = selectedChannels
-    .map((code) => AVAILABLE_CHANNELS.find((ch) => ch.code === code)?.label)
+    .map((code) => availableChannels.find((ch) => ch.code === code)?.label)
     .filter(Boolean)
     .join(", ");
 
@@ -583,7 +586,7 @@ function ChannelSelector({
           }}
         >
           <div className="max-h-64 overflow-y-auto p-2 space-y-1">
-            {AVAILABLE_CHANNELS.map((channel) => {
+            {availableChannels.map((channel) => {
               const isSelected = selectedChannels.includes(channel.code);
               return (
                 <button

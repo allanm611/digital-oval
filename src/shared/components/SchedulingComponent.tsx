@@ -377,10 +377,11 @@ export default function SchedulingComponent({
                 <Input
                   type="time"
                   label="Start Time"
-                  value="08:00"
+                  value={scheduling.start_time || "08:00"}
                   onChange={(value) => {
                     if (value && scheduling.start_date) {
                       updateScheduling({
+                        start_time: String(value),
                         start_date:
                           scheduling.start_date.split("T")[0] +
                           "T" +

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { getUserDisplayName } from "../../../shared/utils/userNameCache";
@@ -101,6 +102,7 @@ export default function CampaignDetailsPage() {
   const location = useLocation();
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   // Check if we came from a catalog modal
   const returnTo = (
@@ -594,11 +596,15 @@ export default function CampaignDetailsPage() {
   const handleApproveCampaign = async () => {
     if (!id) return;
 
+    const userId = user?.user_id;
+    if (!userId) {
+      showToast("error", "User ID not available. Please log in again.");
+      return;
+    }
+
     try {
       setIsApproveLoading(true);
-      await campaignService.approveCampaign(parseInt(id), {
-        comments: "Approved from details page",
-      });
+      await campaignService.approveCampaign(parseInt(id), userId);
       showToast("success", "Campaign approved successfully");
       // Refresh campaign data with both approval_status and status updates
       if (campaign) {
@@ -978,7 +984,7 @@ export default function CampaignDetailsPage() {
           {/* Scheduled Run Clock Button */}
           <button
             onClick={() => setShowScheduledModal(true)}
-            className={`flex items-center justify-center p-0 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
+            className={`flex items-center justify-center p-1 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
             style={{ backgroundColor: color.primary.accent }}
             title="View campaign schedule"
           >
@@ -1042,8 +1048,7 @@ export default function CampaignDetailsPage() {
                 )}
 
               {/* Step 4: Execute Campaign (approved + is_active=true) */}
-              {campaign.approval_status === "approved" &&
-                campaign?.is_active === true && (
+              {canShowCampaignButton(campaign, "execute") && (
                   <PermissionGate permission="campaigns.execute">
                     <button
                       onClick={() => setShowRunModal(true)}
@@ -1554,6 +1559,62 @@ export default function CampaignDetailsPage() {
               <p className={`text-sm ${tw.textPrimary}`}>{getSettingsTimezone()}</p>
             </div>
           </div>
+
+          {/* Broadcast Schedule */}
+          {(campaign?.metadata as any)?.broadcast_schedule && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                Broadcast Schedule
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.type && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Schedule Type
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary} capitalize`}>
+                      {((campaign?.metadata as any)?.broadcast_schedule as any)?.type}
+                    </p>
+                  </div>
+                )}
+
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.recurrence_pattern && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Recurrence Pattern
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary} capitalize`}>
+                      {((campaign?.metadata as any)?.broadcast_schedule as any)?.recurrence_pattern}
+                    </p>
+                  </div>
+                )}
+
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.start_time && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Start Time
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary}`}>
+                      {((campaign?.metadata as any)?.broadcast_schedule as any)?.start_time}
+                    </p>
+                  </div>
+                )}
+
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.selected_days?.length > 0 && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Days
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary}`}>
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+                        .filter((_, idx) => ((campaign?.metadata as any)?.broadcast_schedule as any)?.selected_days?.includes(idx + 1) || ((campaign?.metadata as any)?.broadcast_schedule as any)?.selected_days?.includes(idx))
+                        .join(", ") || "—"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Divider */}
