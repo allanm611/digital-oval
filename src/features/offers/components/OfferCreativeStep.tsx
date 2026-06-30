@@ -631,7 +631,12 @@ export default function OfferCreativeStep({
     const fetchExistingCreatives = async () => {
       try {
         setExistingCreativesLoading(true);
-        const response = await offerCreativeService.superSearch({ limit: 1000, skipCache: true });
+        const channel = getDefaultChannelFromId(communicationChannelId);
+        const response = await offerCreativeService.superSearch({
+          channel,
+          limit: 100,
+          skipCache: true
+        });
         const creativesData = response?.data || [];
         setExistingCreatives(Array.isArray(creativesData) ? creativesData : []);
       } catch (error) {
@@ -642,7 +647,7 @@ export default function OfferCreativeStep({
       }
     };
     fetchExistingCreatives();
-  }, []);
+  }, [communicationChannelId]);
 
   // Handle language creation - auto-select it
   const handleLanguageCreated = async (newLanguage: Language) => {
@@ -696,6 +701,10 @@ export default function OfferCreativeStep({
       return creatives.length > 0 ? creatives[0].id : null;
     },
   );
+
+  // Track selected existing creative in dropdown
+  const [selectedExistingCreativeId, setSelectedExistingCreativeId] = useState("");
+
 
   // Get languages already used by other creatives
   const getUsedLanguages = (): string[] => {
@@ -1310,8 +1319,9 @@ export default function OfferCreativeStep({
                   {/* Select Existing Creative */}
                   <HeadlessSelect
                     label="Select Existing Creative"
-                    value=""
+                    value={selectedExistingCreativeId}
                     onChange={(value) => {
+                      setSelectedExistingCreativeId(value);
                       if (value) {
                         handleSelectExistingCreative(Number(value));
                       }
@@ -1702,6 +1712,8 @@ export default function OfferCreativeStep({
                     const variableKey = placeholder.slice(2, -2);
                     previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
                   });
+
+                  const replacedBody = replaceVariables(editingCreative.text_body || editingCreative.html_body || "", previewVars);
 
                   return (
                     <SimpleTextPreview
