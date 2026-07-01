@@ -2573,15 +2573,64 @@ export default function OfferDetailsPage() {
       </section>
 
       {/* Add Creative Modal */}
-      <RegularModal
+      <OfferCreativeFormModal
         isOpen={isAddCreativeModalOpen}
         onClose={() => {
           setIsAddCreativeModalOpen(false);
           resetNewCreativeForm();
         }}
-        title="Add Creative"
-        size="2xl"
-      >
+        onSave={async (creativeData) => {
+          if (!id || !user?.user_id) {
+            showError("Missing required information. Please refresh and try again.");
+            return;
+          }
+
+          try {
+            setIsCreatingCreative(true);
+
+            const createPayload = {
+              offer_id: Number(id),
+              channel: creativeData.channel,
+              locale: creativeData.locale,
+              title: creativeData.title,
+              text_body: creativeData.text_body,
+              html_body: creativeData.html_body,
+              is_active: creativeData.is_active,
+              created_by: user.user_id,
+            };
+
+            if (creativeData.sms_route) {
+              (createPayload as any).sms_route = creativeData.sms_route;
+            }
+
+            await offerCreativeService.create(createPayload);
+
+            setIsAddCreativeModalOpen(false);
+            resetNewCreativeForm();
+            loadCreatives(true);
+            success("Creative Created", "New creative has been added successfully.");
+          } catch (err) {
+            console.error("Failed to create creative:", err);
+            showError("Failed to create creative");
+            throw err;
+          } finally {
+            setIsCreatingCreative(false);
+          }
+        }}
+        initialCreative={{
+          channel: offer?.communication_channel_id ?
+            (offer.channel || "") : "",
+          locale: "en",
+          title: "",
+          text_body: "",
+          html_body: "",
+          is_active: true,
+        }}
+        mode="create"
+      />
+
+      {/* Placeholder div - removing old custom modal content */}
+      {false && (
         <div className="grid grid-cols-2 gap-6">
           {/* Left Column - Form Fields (1/2) */}
           <div className="space-y-4">
@@ -3046,8 +3095,28 @@ export default function OfferDetailsPage() {
               />
             </div>
           </div>
+
+          {/* Right Column - Preview Panel (1/2) */}
+          <div>
+            <div>
+              <PreviewPanel
+                channel={
+                  newCreativeForm.channel === "SMS"
+                    ? "SMS"
+                    : newCreativeForm.channel === "Email"
+                      ? "EMAIL"
+                      : newCreativeForm.channel === "WhatsApp"
+                        ? "WHATSAPP"
+                        : "PUSH"
+                }
+                title={newCreativeForm.title}
+                body={newCreativeForm.text_body || ""}
+              />
+            </div>
+          </div>
         </div>
-      </RegularModal>
+      )}
+
       {/* Edit Creative Modal */}
       <OfferCreativeFormModal
         isOpen={isEditCreativeModalOpen}

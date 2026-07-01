@@ -408,7 +408,7 @@ export default function UserProfilePage() {
             {/* Avatar */}
             <div
               className={`w-24 h-24 rounded-full flex items-center justify-center  text-4xl font-bold flex-shrink-0`}
-              style={{ backgroundColor: color.primary.accent }}
+              style={{ backgroundColor: color.primary.accent, color: 'white' }}
             >
               {user.first_name?.[0]?.toUpperCase() || ""}
               {user.last_name?.[0]?.toUpperCase() || ""}

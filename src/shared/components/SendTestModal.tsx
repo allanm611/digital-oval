@@ -95,48 +95,45 @@ export default function SendTestModal({
       <div className="space-y-6">
         {/* Channel & Content Preview */}
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Channel
-            </label>
-            <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-700">
-              {channel}
-            </div>
-          </div>
+          <Input
+            label="Channel"
+            value={channel}
+            onChange={() => {}}
+            disabled
+          />
 
           {title && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title / Subject
-              </label>
-              <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-700 break-words">
-                {title}
-              </div>
-            </div>
+            <Input
+              label="Title / Subject"
+              value={title}
+              onChange={() => {}}
+              disabled
+            />
           )}
 
           {textBody && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message Preview
-              </label>
-              <div className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-700 whitespace-pre-wrap max-h-32 overflow-y-auto">
-                {textBody}
-              </div>
-            </div>
+            <textarea
+              value={textBody}
+              disabled
+              className="w-full px-3 pt-3 pb-2 text-sm border rounded-lg resize-none max-h-32 overflow-y-auto relative"
+              style={{
+                paddingTop: '24px',
+                backgroundColor: 'var(--c-surface-cards)',
+                borderColor: 'var(--c-border-default)',
+                color: 'var(--c-text-secondary)',
+              }}
+              readOnly
+            />
           )}
         </div>
 
         {/* Recipient Input */}
-        <div>
-          <Input
-            label={getRecipientLabel() + " *"}
-            placeholder={getRecipientPlaceholder()}
-            value={recipient}
-            onChange={(value) => setRecipient(value)}
-
-          />
-        </div>
+        <Input
+          label={getRecipientLabel() + " *"}
+          placeholder={getRecipientPlaceholder()}
+          value={recipient}
+          onChange={(value) => setRecipient(value)}
+        />
 
         {/* Footer */}
         <ModalFooter
