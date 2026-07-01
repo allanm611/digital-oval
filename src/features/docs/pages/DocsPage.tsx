@@ -116,7 +116,7 @@ export function DocsPage() {
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }} />
-            <p style={{ color: '#9ca3af', marginTop: '16px' }}>{t.docs.loading}</p>
+            <p style={{ color: '#9ca3af', marginTop: '16px' }}>{t.docs?.loading || 'Loading documentation...'}</p>
           </div>
           <style>{`
             @keyframes spin {

@@ -1433,14 +1433,19 @@ export default function OfferDetailsPage() {
       // Check if this is the primary product
       const isPrimary = productToUnlink.productId === primaryProductId;
 
-      // Unlink the product completely (whether it was primary or not)
-      // The backend will automatically remove primary status if this is the primary product
-      await offerService.unlinkProductById(productToUnlink.linkId);
+      // Optimistically remove from linked products
+      setLinkedProducts((prev) =>
+        prev.filter((p) => p.link_id !== productToUnlink.linkId),
+      );
 
       // Clear primary product from state if it was the primary
       if (isPrimary) {
         setPrimaryProductId(null);
       }
+
+      // Unlink the product completely (whether it was primary or not)
+      // The backend will automatically remove primary status if this is the primary product
+      await offerService.unlinkProductById(productToUnlink.linkId);
 
       success(
         "Product Unlinked",
@@ -1449,8 +1454,9 @@ export default function OfferDetailsPage() {
 
       setShowUnlinkModal(false);
       setProductToUnlink(null);
-      loadProducts(true); // Skip cache to get fresh data after unlinking
     } catch {
+      // Revert on error
+      loadProducts(true);
       showError("Failed to unlink product");
     } finally {
       setUnlinkingProductId(null);

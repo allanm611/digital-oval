@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, CheckCircle2 } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Popover } from "@headlessui/react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
@@ -58,13 +58,44 @@ export default function ManageQuickListCustomersModal({
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalItems, setTotalItems] = useState(0);
+  const [existingMembers, setExistingMembers] = useState<Set<string>>(new Set());
+  const [loadingMembers, setLoadingMembers] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setPage(1);
       loadItems();
+      if (mode === "add") {
+        loadExistingMembers();
+      }
     }
   }, [isOpen, mode]);
+
+  const loadExistingMembers = useCallback(async () => {
+    if (!quicklist || mode !== "add") return;
+    setLoadingMembers(true);
+    try {
+      const response = await quicklistService.getMembers(quicklist.id, {
+        limit: 1000,
+        offset: 0,
+      });
+      const memberIdentifiers = new Set<string>();
+      (response.data || []).forEach((m: any) => {
+        if (m.subscriber_msisdn) memberIdentifiers.add(String(m.subscriber_msisdn).toLowerCase());
+        if (m.subscriber_email) memberIdentifiers.add(String(m.subscriber_email).toLowerCase());
+        memberIdentifiers.add(String(m.identifier).toLowerCase());
+        if (m.row_data) {
+          if (m.row_data.email) memberIdentifiers.add(String(m.row_data.email).toLowerCase());
+          if (m.row_data.msisdn) memberIdentifiers.add(String(m.row_data.msisdn).toLowerCase());
+        }
+      });
+      setExistingMembers(memberIdentifiers);
+    } catch (error) {
+      console.error("Failed to load existing members:", error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  }, [quicklist, mode]);
 
   const loadItems = useCallback(async () => {
     if (!quicklist) return;
@@ -150,6 +181,17 @@ export default function ManageQuickListCustomersModal({
     }
     const data = item as QuickListData;
     return data.id || data.customer_id;
+  };
+
+  const isCustomerAlreadyAdded = (item: Customer | QuickListData) => {
+    if (mode !== "add") return false;
+    const customer = item as Customer;
+    const msisdn = customer.msisdn?.toLowerCase();
+    const email = customer.email_address?.toLowerCase();
+    return (
+      (msisdn && existingMembers.has(msisdn)) ||
+      (email && existingMembers.has(email))
+    );
   };
 
   const handleToggleItem = (item: Customer | QuickListData) => {
@@ -432,11 +474,11 @@ export default function ManageQuickListCustomersModal({
 
         {/* Items List */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {itemLoading ? (
+          {itemLoading || loadingMembers ? (
             <div className="flex flex-col items-center justify-center py-12">
               <LoadingSpinner variant="modern" size="lg" color="primary" />
               <p className="text-sm text-black mt-4">
-                Loading {isAdd ? "customers" : "quicklist data"}...
+                {loadingMembers ? "Checking existing members..." : `Loading ${isAdd ? "customers" : "quicklist data"}...`}
               </p>
             </div>
           ) : filteredItems.length === 0 ? (
@@ -485,29 +527,34 @@ export default function ManageQuickListCustomersModal({
                     const isSelected = selectedCustomers.some(
                       (m) => String(m.customer_id) === itemId,
                     );
+                    const alreadyAdded = isCustomerAlreadyAdded(item);
 
                     return (
                       <tr
                         key={itemId}
                         onClick={() =>
-                          !isLoading && handleToggleItem(item)
+                          !isLoading && !alreadyAdded && handleToggleItem(item)
                         }
-                        className={`${!isLoading ? "cursor-pointer" : ""} transition-colors hover:bg-gray-50`}
+                        className={`${!isLoading && !alreadyAdded ? "cursor-pointer" : ""} transition-colors ${alreadyAdded ? "bg-gray-50" : "hover:bg-gray-50"}`}
                       >
                         <td
                           className="px-4 py-4 whitespace-nowrap"
                           onClick={(e) => {
                             e.stopPropagation();
-                            !isLoading && handleToggleItem(item);
+                            !isLoading && !alreadyAdded && handleToggleItem(item);
                           }}
                         >
                           <div className="flex items-center gap-2 cursor-pointer">
-                            <Checkbox
-                              id={`item-${item.customerId}`}
-                              checked={isSelected}
-                              onChange={() => handleToggleItem(item)}
-                              disabled={isLoading}
-                            />
+                            {alreadyAdded && mode === "add" ? (
+                              <CheckCircle2 className="w-5 h-5" style={{ color: color.primary.accent }} />
+                            ) : (
+                              <Checkbox
+                                id={`item-${item.customerId}`}
+                                checked={isSelected}
+                                onChange={() => handleToggleItem(item)}
+                                disabled={isLoading}
+                              />
+                            )}
                           </div>
                         </td>
                         {tableColumns.map((col) => (
@@ -515,9 +562,22 @@ export default function ManageQuickListCustomersModal({
                             key={col}
                             className="px-4 py-4 whitespace-nowrap"
                           >
-                            <span className="text-sm text-black">
-                              {getCellValue(item, col)}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-black">
+                                {getCellValue(item, col)}
+                              </span>
+                              {alreadyAdded && mode === "add" && col === tableColumns[0] && (
+                                <span
+                                  className="text-xs font-medium px-2 py-1 rounded"
+                                  style={{
+                                    backgroundColor: `${color.primary.accent}20`,
+                                    color: color.primary.accent,
+                                  }}
+                                >
+                                  Already added
+                                </span>
+                              )}
+                            </div>
                           </td>
                         ))}
                       </tr>

@@ -1817,10 +1817,12 @@ export default function CreateOfferPage({
       let offerTypeId: number | undefined;
       if (offer.offer_type_id) {
         offerTypeId = offer.offer_type_id;
-      } else if (offer.offer_type && offerTypes?.length > 0) {
+      } else if (offerTypes?.length > 0) {
         // Try to find the type ID by looking up the name (case-insensitive)
         const foundType = offerTypes.find(
-          (type) => type.name.toLowerCase() === offer.offer_type.toLowerCase()
+          (type) =>
+            type.name.toLowerCase() === offer.offer_type?.toLowerCase() ||
+            type.name.toLowerCase() === offer.offer_type_label?.toLowerCase()
         );
         offerTypeId = foundType?.id;
       }
@@ -1829,7 +1831,8 @@ export default function CreateOfferPage({
         name: isDuplicate ? `Copy of ${offer.name}` : offer.name || "",
         code: offer.code || "",
         description: offer.description || "",
-        offer_type_id: offerTypeId,
+        offer_type_id: offerTypeId || offer.offer_type_id,
+        offer_type: offer.offer_type || offer.offer_type_label,
         category_id: offer.category_id ? String(offer.category_id) : undefined,
         communication_channel_id: offer.communication_channel_id,
         route: offer.route,

@@ -1498,8 +1498,12 @@ export default function QuickListDetailsPage() {
                   showToast(
                     `${customers.length} customer${customers.length !== 1 ? "s" : ""} added to ${quicklist.name}`,
                   );
-                  // Reload quicklist data
-                  loadData();
+                  // Optimistic update: increment rows_imported immediately (no full reload)
+                  if (quicklist) {
+                    setQuicklist((prev) =>
+                      prev ? { ...prev, rows_imported: (prev.rows_imported ?? 0) + customers.length } : prev,
+                    );
+                  }
                 }
               } else {
                 // Remove customers one by one
@@ -1522,8 +1526,12 @@ export default function QuickListDetailsPage() {
                   showToast(
                     `${customers.length} customer${customers.length !== 1 ? "s" : ""} removed from ${quicklist.name}`,
                   );
-                  // Reload quicklist data
-                  loadData();
+                  // Optimistic update: decrement rows_imported immediately (no full reload)
+                  if (quicklist) {
+                    setQuicklist((prev) =>
+                      prev ? { ...prev, rows_imported: Math.max(0, (prev.rows_imported ?? 0) - customers.length) } : prev,
+                    );
+                  }
                 }
               }
 

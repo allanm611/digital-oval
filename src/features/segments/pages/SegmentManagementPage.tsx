@@ -598,17 +598,6 @@ export default function SegmentManagementPage() {
   };
 
   const handleSaveSegment = async (segment: Segment) => {
-    // Simplified: Update local state and show success message
-    if (selectedSegment) {
-      // Update existing segment
-      setSegments((prev) =>
-        prev.map((s) => (s.id === segment.id ? segment : s)),
-      );
-    } else {
-      // Add new segment to list - prepend to show at top
-      setSegments((prev) => [segment, ...prev]);
-    }
-
     // Show success message with segment name if available, otherwise generic message
     const isCreate = !selectedSegment;
     if (segment?.name) {
@@ -624,6 +613,17 @@ export default function SegmentManagementPage() {
         isCreate
           ? "Segment has been created successfully"
           : "Segment has been updated successfully",
+      );
+    }
+
+    // Optimistic update: add/update segment in local state (no reload)
+    if (isCreate) {
+      // Prepend new segment to list
+      setSegments((prev) => [segment, ...prev]);
+    } else {
+      // Update existing segment
+      setSegments((prev) =>
+        prev.map((s) => (s.id === segment.id ? segment : s)),
       );
     }
   };

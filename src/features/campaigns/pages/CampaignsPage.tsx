@@ -1024,14 +1024,15 @@ export default function CampaignsPage() {
       if (!userId) {
         throw new Error("User ID not available");
       }
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: "archived" } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: Math.max(0, prev.active - 1) } : prev);
       await campaignService.archiveCampaign(campaignId, userId);
       showToast("success", "Campaign archived successfully!");
       setShowActionMenu(null);
-      fetchCampaigns(); // Refresh campaigns list
-      fetchCampaignStats(); // Refresh stats cards
     } catch (error) {
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: c.status } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: prev.active + 1 } : prev);
       console.error("Failed to archive campaign:", error);
-      // Extract error message from backend response
       let errorMessage = "Failed to archive campaign";
 
       if (error instanceof Error) {
@@ -1058,12 +1059,14 @@ export default function CampaignsPage() {
       if (!userId) {
         throw new Error("User ID not available");
       }
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: "draft" } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: prev.active + 1 } : prev);
       await campaignService.unarchiveCampaign(campaignId, userId);
       showToast("success", "Campaign unarchived successfully!");
       setShowActionMenu(null);
-      fetchCampaigns();
-      fetchCampaignStats();
     } catch (error) {
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: "archived" } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: Math.max(0, prev.active - 1) } : prev);
       console.error("Failed to unarchive campaign:", error);
       let errorMessage = "Failed to unarchive campaign";
 
@@ -1598,9 +1601,9 @@ export default function CampaignsPage() {
                   e.stopPropagation();
                   handleDeleteCampaign(campaign.id, campaign.name);
                 }}
-                className={`w-full flex items-center px-4 py-3 text-sm icon-delete`}
+                className="w-full flex items-center px-4 py-3 text-sm text-black"
               >
-                <Trash2 className="w-4 h-4 mr-4" />
+                <Trash2 className={`w-4 h-4 mr-4 icon-delete`} />
                 Delete Campaign
               </button>
             </PermissionGate>

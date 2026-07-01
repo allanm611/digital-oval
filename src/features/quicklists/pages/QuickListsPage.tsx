@@ -825,6 +825,27 @@ export default function QuickListsPage() {
                   showToast(
                     `${customers.length} customer${customers.length !== 1 ? "s" : ""} added to ${selectedQuicklistForCustomer.name}`,
                   );
+                  // Optimistic update: increment rows_imported in the list
+                  setAllQuicklists((prev) =>
+                    prev.map((ql) =>
+                      ql.id === selectedQuicklistForCustomer.id
+                        ? { ...ql, rows_imported: (ql.rows_imported ?? 0) + customers.length }
+                        : ql,
+                    ),
+                  );
+                  // Update stats optimistically
+                  setStats((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          overall: {
+                            ...prev.overall,
+                            total_rows_imported:
+                              (prev.overall.total_rows_imported ?? 0) + customers.length,
+                          },
+                        }
+                      : prev,
+                  );
                 }
               } else {
                 // Remove customers one by one
@@ -844,6 +865,29 @@ export default function QuickListsPage() {
                 } else {
                   showToast(
                     `${customers.length} customer${customers.length !== 1 ? "s" : ""} removed from ${selectedQuicklistForCustomer.name}`,
+                  );
+                  // Optimistic update: decrement rows_imported in the list
+                  setAllQuicklists((prev) =>
+                    prev.map((ql) =>
+                      ql.id === selectedQuicklistForCustomer.id
+                        ? { ...ql, rows_imported: Math.max(0, (ql.rows_imported ?? 0) - customers.length) }
+                        : ql,
+                    ),
+                  );
+                  // Update stats optimistically
+                  setStats((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          overall: {
+                            ...prev.overall,
+                            total_rows_imported: Math.max(
+                              0,
+                              (prev.overall.total_rows_imported ?? 0) - customers.length,
+                            ),
+                          },
+                        }
+                      : prev,
                   );
                 }
               }

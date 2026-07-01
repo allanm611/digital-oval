@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, CheckCircle2 } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Popover } from "@headlessui/react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { customerService } from "../../customers360/services/customerServices";
+import { quicklistService } from "../services/quicklistService";
 import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Checkbox from "../../../shared/components/ui/Checkbox";
@@ -55,13 +56,35 @@ export default function AddCustomersToQuickListModal({
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCustomers, setTotalCustomers] = useState(0);
+  const [existingMembers, setExistingMembers] = useState<Set<string>>(new Set());
+  const [loadingMembers, setLoadingMembers] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setPage(1);
       loadCustomers();
+      loadExistingMembers();
     }
   }, [isOpen]);
+
+  const loadExistingMembers = useCallback(async () => {
+    if (!quicklist) return;
+    setLoadingMembers(true);
+    try {
+      const response = await quicklistService.getMembers(quicklist.id, {
+        limit: 1000,
+        offset: 0,
+      });
+      const memberIdentifiers = new Set(
+        (response.data || []).map((m) => String(m.identifier).toLowerCase()),
+      );
+      setExistingMembers(memberIdentifiers);
+    } catch (error) {
+      console.error("Failed to load existing members:", error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  }, [quicklist]);
 
   const loadCustomers = useCallback(async () => {
     setCustomerLoading(true);
@@ -112,6 +135,15 @@ export default function AddCustomersToQuickListModal({
 
   const getCustomerId = (customer: Customer) => {
     return customer.customerId || customer.id;
+  };
+
+  const isCustomerAlreadyAdded = (customer: Customer) => {
+    const msisdn = customer.msisdn?.toLowerCase();
+    const email = customer.email_address?.toLowerCase();
+    return (
+      (msisdn && existingMembers.has(msisdn)) ||
+      (email && existingMembers.has(email))
+    );
   };
 
   const handleToggleCustomer = (customer: Customer) => {
@@ -296,10 +328,12 @@ export default function AddCustomersToQuickListModal({
 
         {/* Customers List */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {customerLoading ? (
+          {customerLoading || loadingMembers ? (
             <div className="flex flex-col items-center justify-center py-12">
               <LoadingSpinner variant="modern" size="lg" color="primary" />
-              <p className="text-sm text-black mt-4">Loading customers...</p>
+              <p className="text-sm text-black mt-4">
+                {customerLoading ? "Loading customers..." : "Checking existing members..."}
+              </p>
             </div>
           ) : filteredCustomers.length === 0 ? (
             <div className="text-center py-12">
@@ -349,29 +383,34 @@ export default function AddCustomersToQuickListModal({
                     const isSelected = selectedCustomers.some(
                       (m) => m.customer_id === Number(customerId),
                     );
+                    const alreadyAdded = isCustomerAlreadyAdded(customer);
 
                     return (
                       <tr
                         key={customer.id || customerId}
                         onClick={() =>
-                          !isLoading && handleToggleCustomer(customer)
+                          !isLoading && !alreadyAdded && handleToggleCustomer(customer)
                         }
-                        className={`${!isLoading ? "cursor-pointer" : ""} transition-colors hover:bg-gray-50`}
+                        className={`${!isLoading && !alreadyAdded ? "cursor-pointer" : ""} transition-colors ${alreadyAdded ? "bg-gray-50" : "hover:bg-gray-50"}`}
                       >
                         <td
                           className="px-4 py-4 whitespace-nowrap"
                           onClick={(e) => {
                             e.stopPropagation();
-                            !isLoading && handleToggleCustomer(customer);
+                            !isLoading && !alreadyAdded && handleToggleCustomer(customer);
                           }}
                         >
                           <div className="flex items-center gap-2 cursor-pointer">
-                            <Checkbox
-                              id={`customer-${customer.id}`}
-                              checked={isSelected}
-                              onChange={() => handleToggleCustomer(customer)}
-                              disabled={isLoading}
-                            />
+                            {alreadyAdded ? (
+                              <CheckCircle2 className="w-5 h-5" style={{ color: color.primary.accent }} />
+                            ) : (
+                              <Checkbox
+                                id={`customer-${customer.id}`}
+                                checked={isSelected}
+                                onChange={() => handleToggleCustomer(customer)}
+                                disabled={isLoading}
+                              />
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-4">
@@ -391,9 +430,22 @@ export default function AddCustomersToQuickListModal({
                           </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm text-black">
-                            {customer.status || "—"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-black">
+                              {customer.status || "—"}
+                            </span>
+                            {alreadyAdded && (
+                              <span
+                                className="text-xs font-medium px-2 py-1 rounded"
+                                style={{
+                                  backgroundColor: `${color.primary.accent}20`,
+                                  color: color.primary.accent,
+                                }}
+                              >
+                                Already added
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
