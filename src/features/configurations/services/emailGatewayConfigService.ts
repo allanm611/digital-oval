@@ -63,6 +63,10 @@ export const EMAIL_GATEWAY_DUMMY_DATA: EmailGatewayConfig[] = [
 ];
 
 class EmailGatewayConfigService {
+  getDummyConfigs(): EmailGatewayConfig[] {
+    return EMAIL_GATEWAY_DUMMY_DATA;
+  }
+
   getAllConfigs(): Promise<EmailGatewayConfig[]> {
     return Promise.resolve(EMAIL_GATEWAY_DUMMY_DATA);
   }

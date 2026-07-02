@@ -42,6 +42,10 @@ export const PUSH_GATEWAY_DUMMY_DATA: PushGatewayConfig[] = [
 ];
 
 class PushGatewayConfigService {
+  getDummyConfigs(): PushGatewayConfig[] {
+    return PUSH_GATEWAY_DUMMY_DATA;
+  }
+
   getAllConfigs(): Promise<PushGatewayConfig[]> {
     return Promise.resolve(PUSH_GATEWAY_DUMMY_DATA);
   }

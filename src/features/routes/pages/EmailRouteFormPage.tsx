@@ -107,10 +107,10 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
 
       if (mode === "edit" && id) {
         await emailRouteService.updateRoute(Number(id), payloadData);
-        success("Success", "Email route updated successfully");
+        success(t.common.success, "Email route updated successfully");
       } else {
         await emailRouteService.createRoute(payloadData);
-        success("Success", "Email route created successfully");
+        success(t.common.success, "Email route created successfully");
       }
 
       navigate("/dashboard/email-routes");

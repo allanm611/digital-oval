@@ -56,7 +56,7 @@ export default function WhatsAppRouteDetailsPage() {
 
     try {
       await whatsappRouteService.deleteRoute(route.id);
-      success("Success", `"${route.name}" has been deleted successfully`);
+      success(t.common.success, `"${route.name}" has been deleted successfully`);
       closeDeleteConfirm();
       navigate("/dashboard/whatsapp-routes");
     } catch (err) {
@@ -124,10 +124,13 @@ export default function WhatsAppRouteDetailsPage() {
             onToggle={handleToggleStatus}
             disabled={deleting || togglingStatus}
             isLoading={togglingStatus}
+            variant="button"
             title={route.is_active ? t.common.deactivate : t.common.activate}
-          />
+          >
+            {route.is_active ? t.common.deactivate : t.common.activate}
+          </ActivateDeactivateButton>
           <button
-            onClick={() => navigate(`/dashboard/whatsapp-routes/${route.id}/edit`)}
+            onClick={() => navigate(`/dashboard/routes/edit/${route.id}`)}
             disabled={deleting}
             className={`p-2 text-black hover:bg-gray-100 ${tw.rounded} disabled:opacity-60`}
             title={t.common.edit}

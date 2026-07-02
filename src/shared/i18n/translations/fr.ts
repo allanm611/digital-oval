@@ -44,6 +44,8 @@ export const fr: Translations = {
     count: "Nombre",
     yes: "Oui",
     no: "Non",
+    success: "Succès",
+    error: "Erreur",
   },
   navigation: {
     dashboard: "Tableau de bord",

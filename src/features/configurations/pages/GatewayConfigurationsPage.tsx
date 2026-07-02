@@ -329,27 +329,24 @@ export default function GatewayConfigurationsPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/${config.channel_type}/details`)}
-            className={`p-0 rounded transition`}
-            style={{ color: 'var(--c-text-secondary)' }}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="View details"
           >
-            <Eye size={18} />
+            <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/edit`)}
-            className={`p-0 rounded transition`}
-            style={{ color: 'var(--c-text-secondary)' }}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit configuration"
           >
-            <Edit size={18} />
+            <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDeleteClick(config)}
-            className="p-0 rounded transition"
-            
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
             title="Delete configuration"
           >
-            <Trash2 size={18} />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ),
@@ -401,7 +398,7 @@ export default function GatewayConfigurationsPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage communication channel gateways (Email, SMS, WhatsApp, Push, USSD) and configure provider credentials for message delivery.
+          Manage communication channel gateways and configure provider credentials for message delivery.
         </p>
       </div>
 

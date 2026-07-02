@@ -44,6 +44,10 @@ export const WHATSAPP_GATEWAY_DUMMY_DATA: WhatsAppGatewayConfig[] = [
 ];
 
 class WhatsAppGatewayConfigService {
+  getDummyConfigs(): WhatsAppGatewayConfig[] {
+    return WHATSAPP_GATEWAY_DUMMY_DATA;
+  }
+
   getAllConfigs(): Promise<WhatsAppGatewayConfig[]> {
     return Promise.resolve(WHATSAPP_GATEWAY_DUMMY_DATA);
   }

@@ -98,7 +98,8 @@ export default function RouteDetailsPage() {
         await ussdRouteService.updateRoute(route.id, { is_active: newStatus });
       }
 
-      success(t.common.success, `Route ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`);
+      success(
+        "Success", `Route ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`);
       setRoute({ ...route, is_active: newStatus });
     } catch (err) {
       showError(t.common.error, extractBackendError(err, "Failed to update route status"));
@@ -126,7 +127,8 @@ export default function RouteDetailsPage() {
         await ussdRouteService.deleteRoute(route.id);
       }
 
-      success(t.common.success, `"${route.name}" has been deleted successfully`);
+      success(
+        "Success", `"${route.name}" has been deleted successfully`);
       navigate("/dashboard/routes");
     } catch (err) {
       showError(t.common.error, extractBackendError(err, "Failed to delete route"));
@@ -193,7 +195,7 @@ export default function RouteDetailsPage() {
             )}
           </button>
           <button
-            onClick={() => navigate(`/dashboard/routes/${route.id}/edit`)}
+            onClick={() => navigate(`/dashboard/routes/edit/${route.id}`)}
             className={`px-4 py-2 text-white text-xs ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 w-fit`}
             style={{ backgroundColor: color.primary.action }}
             onMouseEnter={(e) => {

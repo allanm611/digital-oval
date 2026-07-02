@@ -69,7 +69,8 @@ export default function SMSRouteDetailsPage() {
     try {
       setDeleting(true);
       await smsRouteService.deleteRoute(route.id);
-      success(t.common.success, `"${route.name}" ${t.routes.hasBeenDeleted}`);
+      success(
+        "Success", `"${route.name}" ${t.routes.hasBeenDeleted}`);
       navigate("/dashboard/sms-routes");
     } catch (err) {
       showError(t.common.error, t.routes.failedDeleteSmsRoute);
@@ -108,7 +109,7 @@ export default function SMSRouteDetailsPage() {
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => navigate(`/dashboard/sms-routes/${route.id}/edit`)}
+            onClick={() => navigate(`/dashboard/routes/edit/${route.id}`)}
             className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
             style={{ backgroundColor: color.primary.action }}
             onMouseEnter={(e) => {

@@ -132,22 +132,56 @@ export default function EditRoutePage() {
   const loadRouteData = async () => {
     if (!id) return;
     try {
+      const numId = Number(id);
+      let route: any = null;
+      let channel: Channel = "";
+
       // Try to load from each service
       const smsRoutes = await smsRouteService.getAllRoutes();
-      const route = smsRoutes.find((r) => r.id === Number(id));
+      route = smsRoutes.find((r) => r.id === numId);
+      if (route) {
+        channel = "SMS";
+      }
+
+      if (!route) {
+        const emailRoutes = await emailRouteService.getAllRoutes();
+        route = emailRoutes.find((r) => r.id === numId);
+        if (route) channel = "EMAIL";
+      }
+
+      if (!route) {
+        const pushRoutes = await pushNotificationRouteService.getAllRoutes();
+        route = pushRoutes.find((r) => r.id === numId);
+        if (route) channel = "PUSH";
+      }
+
+      if (!route) {
+        const whatsappRoutes = await whatsappRouteService.getAllRoutes();
+        route = whatsappRoutes.find((r) => r.id === numId);
+        if (route) channel = "WHATSAPP";
+      }
+
+      if (!route) {
+        const ussdRoutes = await ussdRouteService.getAllRoutes();
+        route = ussdRoutes.find((r) => r.id === numId);
+        if (route) channel = "USSD";
+      }
+
       if (route) {
         setFormData((prev) => ({
           ...prev,
-          channel: "SMS",
+          channel,
           name: route.name,
           description: route.description || "",
-          gateway_config_id: route.gateway_config_id,
+          gateway_config_id: route.gateway_config_id || route.gateway_config_id,
           is_active: route.is_active,
           backup_route_id: route.backup_route_id,
           use_backup_on_failure: route.use_backup_on_failure,
           retry_attempts: route.retry_attempts,
           senderId: route.sender_id || "",
         }));
+      } else {
+        showError("Error", "Route not found");
       }
     } catch (error) {
       console.error("Failed to load route:", error);

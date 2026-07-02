@@ -39,6 +39,34 @@ interface UnifiedRoute {
   originalRoute: SMSRoute | EmailRoute | PushNotificationRoute | WhatsAppRoute;
 }
 
+const formatDisplayValue = (value: string): string => {
+  if (!value) return "—";
+
+  const displayMap: Record<string, string> = {
+    SMS: "SMS",
+    EMAIL: "Email",
+    PUSH: "Push",
+    WHATSAPP: "WhatsApp",
+    USSD: "USSD",
+    SENDGRID: "SendGrid",
+    AWS_SES: "AWS SES",
+    MAILGUN: "Mailgun",
+    TWILIO: "Twilio",
+    MESSAGEBIRD: "MessageBird",
+    FIREBASE: "Firebase",
+    ONESIGNAL: "OneSignal",
+    APNS: "Apple APNS",
+    INFOBIP: "Infobip",
+    INTERNAL: "Internal",
+    EXTERNAL_PROVIDER_A: "External Provider A",
+  };
+
+  return displayMap[value] || value
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
 export default function RoutesManagementPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
@@ -78,7 +106,7 @@ export default function RoutesManagementPage() {
 
   useEffect(() => {
     loadAllRoutes();
-  }, [filterChannel]);
+  }, []);
 
   const loadAllRoutes = async () => {
     try {
@@ -91,6 +119,7 @@ export default function RoutesManagementPage() {
           whatsappRouteService.getAllRoutes(),
           ussdRouteService.getAllRoutes(),
         ]);
+
 
       const unifiedRoutes: UnifiedRoute[] = [];
 
@@ -201,7 +230,8 @@ export default function RoutesManagementPage() {
     const matchesSearch = route.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const matchesChannel = filterChannel === "all" || route.channel === filterChannel;
+    return matchesSearch && matchesChannel;
   });
 
   // Table columns definition
@@ -231,8 +261,8 @@ export default function RoutesManagementPage() {
       label: t.routes.channel,
       visible: true,
       render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={formatDisplayValue(value as string)}>
+          {formatDisplayValue(value as string)}
         </div>
       ),
     },
@@ -241,8 +271,8 @@ export default function RoutesManagementPage() {
       label: t.routes.gatewayProvider,
       visible: true,
       render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? String(value) : "—"}>
-          {value || "—"}
+        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? formatDisplayValue(String(value)) : "—"}>
+          {value ? formatDisplayValue(String(value)) : "—"}
         </div>
       ),
     },
@@ -277,21 +307,21 @@ export default function RoutesManagementPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/routes/${route.id}`)}
-            className={`p-0 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title={t.common.view}
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigateToEdit(route)}
-            className={`p-0 icon-delete ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title={t.common.edit}
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDeleteRoute(route)}
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
             title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
@@ -324,9 +354,10 @@ export default function RoutesManagementPage() {
   );
 
   // Reset to page 1 when search or filter changes
-  useEffect(() => {
-    tableHandlePageChange(1);
-  }, [searchTerm, filterChannel, tableHandlePageChange]);
+  // Removed: pagination reset was clearing routes during toggle
+  // useEffect(() => {
+  //   tableHandlePageChange(1);
+  // }, [searchTerm, filterChannel]);
 
   const handleDeleteRoute = (route: UnifiedRoute) => {
     setDeleteRouteData({ id: route.id, channel: route.channel });
@@ -334,18 +365,18 @@ export default function RoutesManagementPage() {
   };
 
   const handleToggleStatus = async (route: UnifiedRoute) => {
-    const oldRoutes = routes;
     try {
       setTogglingStatus({ id: route.id, channel: route.channel });
       const newStatus = !route.is_active;
 
-      setRoutes(
-        routes.map((r) =>
+      setRoutes((currentRoutes) => {
+        const updatedRoutes = currentRoutes.map((r) =>
           r.id === route.id && r.channel === route.channel
             ? { ...r, is_active: newStatus }
             : r
-        )
-      );
+        );
+        return updatedRoutes;
+      });
 
       if (route.channel === "SMS") {
         await smsRouteService.updateRoute(route.id, { is_active: newStatus });
@@ -359,9 +390,11 @@ export default function RoutesManagementPage() {
         await ussdRouteService.updateRoute(route.id, { is_active: newStatus });
       }
 
-      showSuccess(t.common.success, `${t.routes.route} ${newStatus ? t.routes.activated : t.routes.deactivated} ${t.routes.successfully}`);
+      showSuccess(
+        newStatus ? "Activated" : "Deactivated",
+        `${t.routes.route} has been ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`
+      );
     } catch (err) {
-      setRoutes(oldRoutes);
       showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setTogglingStatus(null);
@@ -369,17 +402,7 @@ export default function RoutesManagementPage() {
   };
 
   const navigateToEdit = (route: UnifiedRoute) => {
-    if (route.channel === "SMS") {
-      navigate(`/dashboard/sms-routes/edit/${route.id}`);
-    } else if (route.channel === "EMAIL") {
-      navigate(`/dashboard/email-routes/edit/${route.id}`);
-    } else if (route.channel === "PUSH") {
-      navigate(`/dashboard/push-notification-routes/edit/${route.id}`);
-    } else if (route.channel === "WHATSAPP") {
-      navigate(`/dashboard/whatsapp-routes/edit/${route.id}`);
-    } else if (route.channel === "USSD") {
-      navigate(`/dashboard/ussd-routes/edit/${route.id}`);
-    }
+    navigate(`/dashboard/routes/edit/${route.id}`);
   };
 
   const channelOptions = [

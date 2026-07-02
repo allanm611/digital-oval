@@ -63,7 +63,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     };
   }
 
-  const hasValue = value !== '' && value !== 0;
+  const hasValue = value !== '' && value !== null && value !== undefined;
   const shouldFloatLabel = isFocused || hasValue;
 
   // Without floating label (backward compatible)

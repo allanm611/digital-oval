@@ -155,17 +155,7 @@ export default function WhatsAppRoutesList() {
           />
           <button
             onClick={() => navigate(`/dashboard/whatsapp-routes/edit/${route.id}`)}
-            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
-            style={{
-              color: color.primary.action,
-              backgroundColor: "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -173,7 +163,7 @@ export default function WhatsAppRoutesList() {
           <button
             onClick={() => handleDeleteClick(route)}
             disabled={isDeleting && deleteConfirm.id === route.id}
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />
@@ -291,7 +281,7 @@ export default function WhatsAppRoutesList() {
         onConfirm={async () => {
           try {
             await confirmDeleteRoute(deleteConfirm.id);
-            success("Success", `Route deleted successfully`);
+            success(t.common.success, `Route deleted successfully`);
           } catch (err) {
             showError("Error", extractBackendError(err, "Error. Please try again."));
           }

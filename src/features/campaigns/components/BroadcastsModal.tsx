@@ -147,7 +147,7 @@ export default function BroadcastsModal({
                         {broadcast.messages_failed.toLocaleString()}
                       </td>
                       <td className="py-3 px-3 text-right font-semibold text-gray-900">
-                        {broadcast.delivery_rate.toFixed(2)}%
+                        {(Number(broadcast.delivery_rate) || 0).toFixed(2)}%
                       </td>
                     </tr>
                   ))}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
@@ -63,6 +63,8 @@ const ENCODING_OPTIONS = [
 ];
 
 export default function CreateRoutePage() {
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = !!id;
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
@@ -102,7 +104,7 @@ export default function CreateRoutePage() {
 
   useEffect(() => {
     loadInitialData();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (channels.length > 0) {
@@ -115,8 +117,65 @@ export default function CreateRoutePage() {
     try {
       setLoading(true);
       await loadChannels();
+      if (isEditMode && id) {
+        await loadRouteData();
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRouteData = async () => {
+    if (!id) return;
+    try {
+      const numId = Number(id);
+      let route: any = null;
+      let channel: Channel = "";
+
+      const smsRoutes = await smsRouteService.getAllRoutes();
+      route = smsRoutes.find((r) => r.id === numId);
+      if (route) channel = "SMS";
+
+      if (!route) {
+        const emailRoutes = await emailRouteService.getAllRoutes();
+        route = emailRoutes.find((r) => r.id === numId);
+        if (route) channel = "EMAIL";
+      }
+
+      if (!route) {
+        const pushRoutes = await pushNotificationRouteService.getAllRoutes();
+        route = pushRoutes.find((r) => r.id === numId);
+        if (route) channel = "PUSH";
+      }
+
+      if (!route) {
+        const whatsappRoutes = await whatsappRouteService.getAllRoutes();
+        route = whatsappRoutes.find((r) => r.id === numId);
+        if (route) channel = "WHATSAPP";
+      }
+
+      if (!route) {
+        const ussdRoutes = await ussdRouteService.getAllRoutes();
+        route = ussdRoutes.find((r) => r.id === numId);
+        if (route) channel = "USSD";
+      }
+
+      if (route) {
+        setFormData((prev) => ({
+          ...prev,
+          channel,
+          name: route.name,
+          description: route.description || "",
+          gateway_config_id: route.gateway_config_id || 0,
+          is_active: route.is_active !== undefined ? route.is_active : true,
+          backup_route_id: route.backup_route_id,
+          use_backup_on_failure: route.use_backup_on_failure || false,
+          retry_attempts: route.retry_attempts || 3,
+          senderId: route.sender_id || "",
+        }));
+      }
+    } catch (error) {
+      showError(t.common.error, "Failed to load route data");
     }
   };
 
@@ -140,25 +199,20 @@ export default function CreateRoutePage() {
     }
   };
 
-  const loadGatewayConfigs = async () => {
-    try {
-      let configs;
-      if (formData.channel === "SMS") {
-        configs = await smsGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "EMAIL") {
-        configs = await emailGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "PUSH") {
-        configs = await pushGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "WHATSAPP") {
-        configs = await whatsappGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "USSD") {
-        configs = await ussdGatewayConfigService.getAllConfigs();
-      }
-      setGatewayConfigs(configs || []);
-    } catch (error) {
-      console.error("Failed to load gateway configs:", error);
-      setGatewayConfigs([]);
+  const loadGatewayConfigs = () => {
+    let configs;
+    if (formData.channel === "SMS") {
+      configs = smsGatewayConfigService.getDummyConfigs();
+    } else if (formData.channel === "EMAIL") {
+      configs = emailGatewayConfigService.getDummyConfigs();
+    } else if (formData.channel === "PUSH") {
+      configs = pushGatewayConfigService.getDummyConfigs();
+    } else if (formData.channel === "WHATSAPP") {
+      configs = whatsappGatewayConfigService.getDummyConfigs();
+    } else if (formData.channel === "USSD") {
+      configs = ussdGatewayConfigService.getDummyConfigs();
     }
+    setGatewayConfigs(configs || []);
   };
 
   const loadBackupRoutes = async () => {
@@ -166,6 +220,8 @@ export default function CreateRoutePage() {
       let routes;
       if (formData.channel === "SMS") {
         routes = await smsRouteService.getAllRoutes();
+      } else if (formData.channel === "EMAIL") {
+        routes = await emailRouteService.getAllRoutes();
       } else if (formData.channel === "PUSH") {
         routes = await pushNotificationRouteService.getAllRoutes();
       } else if (formData.channel === "WHATSAPP") {
@@ -213,36 +269,68 @@ export default function CreateRoutePage() {
         retry_attempts: formData.retry_attempts,
       };
 
-      if (formData.channel === "SMS") {
-        await smsRouteService.createRoute(baseData);
-      } else if (formData.channel === "EMAIL") {
-        await emailRouteService.createRoute(baseData);
-      } else if (formData.channel === "PUSH") {
-        await pushNotificationRouteService.createRoute({
-          ...baseData,
-          platforms: formData.platforms || [],
-          default_ttl: formData.defaultTTL,
-          priority_level: formData.priorityLevel,
-          webhook_url: formData.webhookUrl || undefined,
-        });
-      } else if (formData.channel === "WHATSAPP") {
-        await whatsappRouteService.createRoute({
-          ...baseData,
-          webhook_url: formData.webhookUrl || undefined,
-          template_support: formData.templateSupport === "true",
-          quality_threshold: Number(formData.qualityThreshold),
-        });
-      } else if (formData.channel === "USSD") {
-        await ussdRouteService.createRoute({
-          ...baseData,
-          ussd_code: formData.ussdCode || undefined,
-          network_code: formData.networkCode || undefined,
-          session_timeout: Number(formData.sessionTimeout),
-          encoding: formData.encoding,
-        });
+      if (isEditMode && id) {
+        const numId = Number(id);
+        if (formData.channel === "SMS") {
+          await smsRouteService.updateRoute(numId, baseData);
+        } else if (formData.channel === "EMAIL") {
+          await emailRouteService.updateRoute(numId, baseData);
+        } else if (formData.channel === "PUSH") {
+          await pushNotificationRouteService.updateRoute(numId, {
+            ...baseData,
+            platforms: formData.platforms || [],
+            default_ttl: formData.defaultTTL,
+            priority_level: formData.priorityLevel,
+            webhook_url: formData.webhookUrl || undefined,
+          });
+        } else if (formData.channel === "WHATSAPP") {
+          await whatsappRouteService.updateRoute(numId, {
+            ...baseData,
+            webhook_url: formData.webhookUrl || undefined,
+            template_support: formData.templateSupport === "true",
+            quality_threshold: Number(formData.qualityThreshold),
+          });
+        } else if (formData.channel === "USSD") {
+          await ussdRouteService.updateRoute(numId, {
+            ...baseData,
+            ussd_code: formData.ussdCode || undefined,
+            network_code: formData.networkCode || undefined,
+            session_timeout: Number(formData.sessionTimeout),
+            encoding: formData.encoding,
+          });
+        }
+        success(t.common.success, "Route updated successfully");
+      } else {
+        if (formData.channel === "SMS") {
+          await smsRouteService.createRoute(baseData);
+        } else if (formData.channel === "EMAIL") {
+          await emailRouteService.createRoute(baseData);
+        } else if (formData.channel === "PUSH") {
+          await pushNotificationRouteService.createRoute({
+            ...baseData,
+            platforms: formData.platforms || [],
+            default_ttl: formData.defaultTTL,
+            priority_level: formData.priorityLevel,
+            webhook_url: formData.webhookUrl || undefined,
+          });
+        } else if (formData.channel === "WHATSAPP") {
+          await whatsappRouteService.createRoute({
+            ...baseData,
+            webhook_url: formData.webhookUrl || undefined,
+            template_support: formData.templateSupport === "true",
+            quality_threshold: Number(formData.qualityThreshold),
+          });
+        } else if (formData.channel === "USSD") {
+          await ussdRouteService.createRoute({
+            ...baseData,
+            ussd_code: formData.ussdCode || undefined,
+            network_code: formData.networkCode || undefined,
+            session_timeout: Number(formData.sessionTimeout),
+            encoding: formData.encoding,
+          });
+        }
+        success(t.common.success, "Route created successfully");
       }
-
-      success(t.common.success, "Route created successfully");
       navigate("/dashboard/routes");
     } catch (error) {
       showError(t.common.error, extractBackendError(error, "Failed to create route"));
@@ -263,10 +351,8 @@ export default function CreateRoutePage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <BackButton
-
         showBreadcrumb={true}
-
-        currentLabel={t.routes.createRoute}
+        currentLabel={isEditMode ? t.routes.editRoute : t.routes.createRoute}
       />
 
       {/* Form Container */}
@@ -283,28 +369,26 @@ export default function CreateRoutePage() {
               <div>
                 <HeadlessSelect
                   label={t.routes.channel}
-                  value={String(formData.channel_id || "")}
+                  value={formData.channel}
                   onChange={(value) => {
-                    const selectedChannel = channels.find((c) => c.id === Number(value));
-                    if (selectedChannel) {
-                      const channelType = getChannelType(selectedChannel.code);
-                      setFormData({
-                        ...formData,
-                        channel: channelType,
-                        channel_id: selectedChannel.id,
-                        gateway_config_id: 0,
-                        backup_route_id: undefined,
-                      });
-                      setErrors({});
-                    }
+                    const channelType = value as Channel;
+                    setFormData({
+                      ...formData,
+                      channel: channelType,
+                      gateway_config_id: 0,
+                      backup_route_id: undefined,
+                    });
+                    setErrors({});
                   }}
-                  options={channels.map((channel) => ({
-                    id: channel.id,
-                    value: String(channel.id),
-                    label: channel.name,
-                  }))}
+                  options={[
+                    { value: "SMS", label: t.routes.channels.sms },
+                    { value: "EMAIL", label: t.routes.channels.email },
+                    { value: "PUSH", label: t.routes.channels.push },
+                    { value: "WHATSAPP", label: t.routes.channels.whatsapp },
+                    { value: "USSD", label: t.routes.channels.ussd },
+                  ]}
                   placeholder="Select channel..."
-                  disabled={saving}
+                  disabled={saving || isEditMode}
                 />
               </div>
               {/* Name */}
@@ -571,7 +655,7 @@ export default function CreateRoutePage() {
             style={{ backgroundColor: color.primary.action }}
           >
             {saving && <LoadingSpinner size={16} />}
-            {saving ? "Creating..." : t.routes.createRoute}
+            {saving ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? t.routes.editRoute : t.routes.createRoute)}
           </button>
         </div>
       </form>

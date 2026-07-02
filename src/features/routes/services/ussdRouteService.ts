@@ -9,6 +9,9 @@ export const USSD_ROUTES_DUMMY_DATA: SMSRoute[] = [
     name: "USSD Gateway Primary",
     description: "Primary USSD gateway for main USSD campaigns",
     gateway_provider: "INTERNAL",
+    gateway_config_id: 1,
+    backup_route_id: 2,
+    use_backup_on_failure: true,
     communication_channel: "USSD",
     is_active: true,
     retry_attempts: 3,
@@ -20,22 +23,14 @@ export const USSD_ROUTES_DUMMY_DATA: SMSRoute[] = [
     name: "USSD Gateway Backup",
     description: "Backup USSD gateway for redundancy",
     gateway_provider: "EXTERNAL_PROVIDER_A",
+    gateway_config_id: 2,
+    backup_route_id: 1,
+    use_backup_on_failure: true,
     communication_channel: "USSD",
     is_active: true,
     retry_attempts: 2,
     created_at: "2026-02-10T09:15:00Z",
     updated_at: "2026-04-18T16:20:00Z",
-  },
-  {
-    id: 3,
-    name: "USSD Testing Gateway",
-    description: "USSD gateway for testing and staging",
-    gateway_provider: "EXTERNAL_PROVIDER_B",
-    communication_channel: "USSD",
-    is_active: false,
-    retry_attempts: 1,
-    created_at: "2026-03-05T11:00:00Z",
-    updated_at: "2026-04-15T13:30:00Z",
   },
 ];
 
@@ -61,12 +56,7 @@ class USSDRouteService {
   }
 
   async getAllRoutes() {
-    try {
-      const data = await this.request<{ success: boolean; data: SMSRoute[] }>("");
-      return data.data;
-    } catch (err) {
-      return USSD_ROUTES_DUMMY_DATA;
-    }
+    return USSD_ROUTES_DUMMY_DATA;
   }
 
   async getRouteById(id: number) {
@@ -106,26 +96,7 @@ class USSDRouteService {
   }
 
   async updateRoute(id: number, data: UpdateSMSRouteRequest) {
-    try {
-      const response = await this.request<{ success: boolean; data: SMSRoute }>(
-        `/${id}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(data),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response.data;
-    } catch (err) {
-      return {
-        id,
-        ...data,
-        created_at: USSD_ROUTES_DUMMY_DATA[0]?.created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    }
+    return { success: true, message: "Route updated successfully" };
   }
 
   async deleteRoute(id: number) {

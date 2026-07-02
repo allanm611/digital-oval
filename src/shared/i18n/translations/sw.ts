@@ -44,6 +44,8 @@ export const sw: Translations = {
     count: "Hesabu",
     yes: "Ndiyo",
     no: "Hapana",
+    success: "Ustawi",
+    error: "Kosa",
   },
   navigation: {
     dashboard: "Dashibodi",

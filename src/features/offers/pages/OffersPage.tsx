@@ -247,9 +247,9 @@ export default function OffersPage() {
     try {
       setLoading(true);
 
-      // Calculate offset from page number
-      const pageSize = filters.limit || 15;
-      const offset = (filters.page - 1) * pageSize;
+      // Calculate offset from page number and table page size
+      const pageSize = tablePageSize;
+      const offset = (tableCurrentPage - 1) * pageSize;
 
       // If category filter is applied, use the specific category endpoint
       if (filters.categoryId) {
@@ -306,11 +306,10 @@ export default function OffersPage() {
         // If response.success is false, fall through to error handling
       } else {
         // No category filter - use regular search
-        // Note: Backend doesn't support status filter, so we filter client-side
-        // When filtering client-side by status, we need to fetch all offers to get accurate totals
+        // Note: Backend doesn't support status filter, so we filter client-side when needed
+        // Only filter client-side when a specific status is selected
         const needsClientSideFiltering =
-          (selectedStatus && selectedStatus !== "all") ||
-          selectedStatus === "all";
+          selectedStatus && selectedStatus !== "all";
 
         if (needsClientSideFiltering) {
           // Fetch all offers in batches when we need to filter client-side
@@ -368,7 +367,7 @@ export default function OffersPage() {
 
           // Apply client-side pagination
           const page = filters.page || 1;
-          const pageSize = filters.pageSize || 10;
+          const pageSize = tablePageSize;
           const startIndex = (page - 1) * pageSize;
           const endIndex = startIndex + pageSize;
           const paginatedOffers = filteredOffers.slice(startIndex, endIndex);
@@ -557,6 +556,8 @@ export default function OffersPage() {
     selectedApproval,
     debouncedSearchTerm,
     location.key,
+    tablePageSize,
+    tableCurrentPage,
   ]);
 
   const handleSearch = (term: string) => {
