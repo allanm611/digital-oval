@@ -2603,8 +2603,8 @@ export default function OfferDetailsPage() {
       </section>
 
       {/* Used in Campaigns Section */}
-      <section className={`${tw.rounded} border-gray-200 py-6`}>
-        <div className="px-6 mb-6">
+      <section className="mt-12 space-y-4">
+        <div className="mb-4">
           <h3 className={`${tw.cardHeading}`}>
             Used in Campaigns ({campaignFlows.length})
           </h3>
@@ -2613,20 +2613,21 @@ export default function OfferDetailsPage() {
           </p>
         </div>
 
-        {isLoadingCampaignFlows ? (
-          <div className="px-6 flex justify-center py-8">
-            <LoadingSpinner variant="modern" size="md" color="primary" />
-          </div>
-        ) : campaignFlows.length === 0 ? (
-          <div className="px-6 text-center py-8">
-            <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className={`text-sm ${tw.textSecondary}`}>
-              This offer is not used in any campaigns yet
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className={`overflow-x-auto ${tw.rounded}`}>
+        <div className={`${tw.rounded} overflow-hidden`}>
+          {isLoadingCampaignFlows ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner variant="modern" size="md" color="primary" />
+            </div>
+          ) : campaignFlows.length === 0 ? (
+            <div className="text-center py-8">
+              <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className={`text-sm ${tw.textSecondary}`}>
+                This offer is not used in any campaigns yet
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
               <Table<CampaignFlowTableRow>
                 columns={[
                   {
@@ -2721,8 +2722,9 @@ export default function OfferDetailsPage() {
                 pageSize={20}
               />
             </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </section>
 
       {/* Add Creative Modal */}

@@ -342,12 +342,28 @@ export default function VIPListManagementPage() {
       setVipCustomers(allMembers);
     } catch (error) {
       console.error("Failed to fetch VIP members:", error);
-      showError(extractBackendError(err, "Failed to fetch VIP members. Please try again."));
+      showError(extractBackendError(error, "Failed to fetch VIP members. Please try again."));
       setVipCustomers([]);
     } finally {
       setLoading(false);
     }
   }, [vipLists, showError]);
+
+  const loadListMembers = useCallback(async (listId: number) => {
+    setIsLoadingListMembers(true);
+    try {
+      const members = await vipListService.getMembers(listId);
+      if (Array.isArray(members)) {
+        setListMembers(members);
+      }
+    } catch (error) {
+      console.error("Failed to fetch list members:", error);
+      showError(extractBackendError(error, "Failed to fetch list members. Please try again."));
+      setListMembers([]);
+    } finally {
+      setIsLoadingListMembers(false);
+    }
+  }, [showError]);
 
   useEffect(() => {
     if (activeTab === "customers" && vipLists.length > 0) {

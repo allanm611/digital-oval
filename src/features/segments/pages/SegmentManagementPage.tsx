@@ -92,11 +92,18 @@ export default function SegmentManagementPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalPages, setTotalPages] = useState(1);
-  const [sortBy] = useState<
-    "id" | "name" | "type" | "category" | "created_at" | "updated_at"
-  >("created_at");
-  const [sortDirection] = useState<SortDirection>("DESC");
   const [sortConfigs, setSortConfigs] = useState<Array<{ columnId: string; direction: "asc" | "desc"; priority: number }>>([]);
+
+  const getSortBy = (): "id" | "name" | "type" | "category" | "created_at" | "updated_at" => {
+    if (sortConfigs.length === 0) return "created_at";
+    const columnId = sortConfigs[0].columnId;
+    return (columnId as any) || "created_at";
+  };
+
+  const getSortDirection = (): SortDirection => {
+    if (sortConfigs.length === 0) return "DESC";
+    return sortConfigs[0].direction === "asc" ? "ASC" : "DESC";
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -1585,7 +1592,24 @@ export default function SegmentManagementPage() {
             {/* Table Component */}
             <Table<Segment>
               columns={segmentTableColumns}
-              data={segments}
+              data={(() => {
+                if (sortConfigs.length === 0) {
+                  return [...segments].sort((a, b) => {
+                    const dateA = new Date(a.created_at).getTime();
+                    const dateB = new Date(b.created_at).getTime();
+                    return dateB - dateA;
+                  });
+                }
+                const sortConfig = sortConfigs[0];
+                const sorted = [...segments].sort((a, b) => {
+                  const aValue = a[sortConfig.columnId as keyof Segment];
+                  const bValue = b[sortConfig.columnId as keyof Segment];
+                  if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+                  if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+                  return 0;
+                });
+                return sorted;
+              })()}
               totalItems={segments.length}
               currentPage={page}
               pageSize={pageSize}

@@ -860,29 +860,15 @@ export default function SegmentDetailsPage() {
   };
 
   const handleComputeSize = async () => {
-    console.log("=== handleComputeSize called ===");
-    if (!id) {
-      console.log("No ID provided");
-      return;
-    }
+    if (!id) return;
     setIsComputingSize(true);
     try {
-      console.log("Calling computeSegmentSize with id:", id);
       const response = await segmentService.computeSegmentSize(Number(id));
-      console.log("=== Full response ===", response);
-      console.log("=== response.data ===", response.data);
-      console.log("=== size_estimate ===", response.data?.size_estimate);
-      console.log("=== response.success ===", response.success);
 
       if (response.success) {
-        // Update the customer count with the backend response
         const computedSize = response.data?.size_estimate ? Number(response.data.size_estimate) : null;
-        console.log("=== Computed size (final) ===", computedSize);
         setSegmentSize(computedSize);
-
         success("Size computed", `Segment size: ${computedSize} customers`);
-      } else {
-        console.log("Response not successful:", response);
       }
     } catch (err) {
       console.error("=== Error in handleComputeSize ===", err);
