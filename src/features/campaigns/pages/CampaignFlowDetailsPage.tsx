@@ -38,7 +38,6 @@ export default function CampaignFlowDetailsPage() {
   const [segment, setSegment] = useState<CampaignSegmentDetail | null>(null);
   const [offer, setOffer] = useState<Offer | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
   const [activeSegments, setActiveSegments] = useState<SegmentType[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
@@ -46,6 +45,15 @@ export default function CampaignFlowDetailsPage() {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [rawConditionRuleInput, setRawConditionRuleInput] = useState<string>("");
   const [conditionRuleError, setConditionRuleError] = useState<string>("");
+
+  const deleteConfirm = useDeleteConfirm({
+    onDelete: async (id) => {
+      if (!flow) return;
+      await campaignFlowService.deleteCampaignFlow(flow.id);
+      navigate(-1);
+    },
+    itemLabel: "Flow",
+  });
 
   useEffect(() => {
     const loadFlowDetails = async () => {
@@ -220,27 +228,11 @@ export default function CampaignFlowDetailsPage() {
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!flow?.id) return;
-
-    try {
-      setIsActionLoading(true);
-      await campaignFlowService.deleteCampaignFlow(flow.id);
-      showToast("success", t.messages.deleted || "Flow deleted successfully");
-      setIsDeleteModalOpen(false);
-      navigate(-1);
-    } catch (error) {
-      console.error("Error deleting flow:", error);
-      showToast("error", t.common.error || "Failed to delete flow");
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <BackButton showBreadcrumb={true} currentLabel={t.campaigns.flowDetails || "Campaign Flow Details"} />
+        <BackButton showBreadcrumb={true} currentLabel={typeof t.campaigns.flowDetails === 'string' ? t.campaigns.flowDetails : t.campaigns.flowDetails?.title || "Campaign Flow Details"} />
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner variant="modern" size="xl" color="primary" className="mb-4" />
           <p className={`${tw.textMuted} font-medium text-sm`}>
@@ -254,7 +246,7 @@ export default function CampaignFlowDetailsPage() {
   if (!flow) {
     return (
       <div className="space-y-6">
-        <BackButton showBreadcrumb={true} currentLabel={t.campaigns.flowDetails || "Campaign Flow Details"} />
+        <BackButton showBreadcrumb={true} currentLabel={typeof t.campaigns.flowDetails === 'string' ? t.campaigns.flowDetails : t.campaigns.flowDetails?.title || "Campaign Flow Details"} />
         <div className="text-center py-12">
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
@@ -273,7 +265,7 @@ export default function CampaignFlowDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButton showBreadcrumb={true} currentLabel={t.campaigns.flowDetails || "Campaign Flow Details"} />
+          <BackButton showBreadcrumb={true} currentLabel={typeof t.campaigns.flowDetails === 'string' ? t.campaigns.flowDetails : t.campaigns.flowDetails?.title || "Campaign Flow Details"} />
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -287,7 +279,7 @@ export default function CampaignFlowDetailsPage() {
             {t.common.edit || "Edit"}
           </button>
           <button
-            onClick={() => setIsDeleteModalOpen(true)}
+            onClick={() => flow && deleteConfirm.openDeleteConfirm(flow.id, `Flow ${flow.step_order || ""}`)}
             className={`inline-flex items-center px-4 py-2 text-sm font-medium transition-colors ${tw.rounded}`}
             style={{
               backgroundColor: button.delete.background,
@@ -831,13 +823,13 @@ export default function CampaignFlowDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={isDeleteModalOpen && flow !== null}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeleteConfirm}
+        isOpen={deleteConfirm.isOpen}
+        onClose={deleteConfirm.closeDeleteConfirm}
+        onConfirm={deleteConfirm.handleDelete}
         title={t.campaigns.deleteFlow || "Delete Flow"}
         description={t.campaigns.deleteFlowConfirm || "Are you sure you want to delete this campaign flow? This action cannot be undone and the flow will be permanently removed."}
-        itemName={`Flow ${flow?.step_order || ""}`}
-        isLoading={isActionLoading}
+        itemName={deleteConfirm.deleteConfirm.itemName}
+        isLoading={deleteConfirm.isDeleting}
         confirmText={t.campaigns.deleteFlow || "Delete Flow"}
         cancelText={t.common.cancel || "Cancel"}
       />

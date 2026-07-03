@@ -248,7 +248,7 @@ export default function GatewayConfigurationsPage() {
 
       setConfigs(unifiedConfigs);
     } catch (err) {
-      showError(extractBackendError(error, "Failed to load gateway configurations. Please try again."));
+      showError(extractBackendError(err, "Failed to load gateway configurations. Please try again."));
     }
   };
 
@@ -335,7 +335,7 @@ export default function GatewayConfigurationsPage() {
             <Eye className="w-4 h-4" />
           </button>
           <button
-            onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/edit`)}
+            onClick={() => navigate(`/dashboard/gateway-configurations/${config.id}/edit?channel=${config.channel_type}`)}
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit configuration"
           >

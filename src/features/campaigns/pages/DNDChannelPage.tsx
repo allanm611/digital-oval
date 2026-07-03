@@ -94,7 +94,7 @@ export default function DNDChannelPage() {
       setDndTypes(types);
       setDndSubscriptions(subscriptions);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setLoadingDNDData(false);
     }
@@ -227,7 +227,7 @@ export default function DNDChannelPage() {
       setShowAddModal(false);
       await loadDNDData();
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsAddingCustomers(false);
     }
@@ -261,7 +261,7 @@ export default function DNDChannelPage() {
       setDeleteConfirmName("");
     } catch (err) {
       setDndSubscriptions(oldSubscriptions);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsRemoving(false);
     }

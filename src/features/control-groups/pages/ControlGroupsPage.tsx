@@ -166,7 +166,7 @@ export default function ControlGroupsPage() {
       setTotalCount(groupsResponse.total_count || 0);
       setStatistics(statsResponse);
     } catch (error) {
-      showError(t.controlGroups.failedToSaveGroup, extractBackendError(error, t.controlGroups.failedToSaveGroup));
+      showError(t.controlGroups.failedToSaveGroup, extractBackendError(err, t.controlGroups.failedToSaveGroup));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -194,7 +194,7 @@ export default function ControlGroupsPage() {
       setShowDeleteModal(false);
       setGroupToDelete(null);
     } catch (error) {
-      showError(t.controlGroups.failedToDeleteGroup, extractBackendError(error, t.controlGroups.failedToDeleteGroup));
+      showError(t.controlGroups.failedToDeleteGroup, extractBackendError(err, t.controlGroups.failedToDeleteGroup));
       console.error(error);
     } finally {
       setIsDeleting(null);
@@ -209,7 +209,7 @@ export default function ControlGroupsPage() {
       // Reload data to reflect any changes
       loadData();
     } catch (error) {
-      showError(t.controlGroups.failedToSaveGroup, extractBackendError(error, t.controlGroups.failedToSaveGroup));
+      showError(t.controlGroups.failedToSaveGroup, extractBackendError(err, t.controlGroups.failedToSaveGroup));
       console.error(error);
     } finally {
       setIsRunningScheduled(false);

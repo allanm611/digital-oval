@@ -453,7 +453,7 @@ export default function ConnectionProfilesPage() {
       }));
     } catch (err) {
       console.error("Failed to load connection profile stats", err);
-      showError("Unable to Load Statistics", extractBackendError(error, "Unable to Load Statistics. Please try again."));
+      showError("Unable to Load Statistics", extractBackendError(err, "Unable to Load Statistics. Please try again."));
     } finally {
       setLoadingStats(false);
     }
@@ -630,7 +630,7 @@ export default function ConnectionProfilesPage() {
       await loadStats();
     } catch (err) {
       await reloadProfiles();
-      showError("Unable to Activate Profiles", extractBackendError(error, "Unable to Activate Profiles. Please try again."));
+      showError("Unable to Activate Profiles", extractBackendError(err, "Unable to Activate Profiles. Please try again."));
     } finally {
       setBulkActionType(null);
       setBulkActionLoading(false);

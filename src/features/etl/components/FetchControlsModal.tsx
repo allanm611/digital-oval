@@ -112,7 +112,7 @@ export default function FetchControlsModal({
         errorMessage = err.message;
       }
 
-      showError("Fetch failed", extractBackendError(error, "Fetch failed. Please try again."));
+      showError("Fetch failed", extractBackendError(err, "Fetch failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -153,7 +153,7 @@ export default function FetchControlsModal({
         errorMessage = err.message;
       }
 
-      showError("Fetch failed", extractBackendError(error, "Fetch failed. Please try again."));
+      showError("Fetch failed", extractBackendError(err, "Fetch failed. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -209,7 +209,7 @@ export default function FetchControlsModal({
         errorMessage = err.message;
       }
 
-      showError("Fetch failed", extractBackendError(error, "Fetch failed. Please try again."));
+      showError("Fetch failed", extractBackendError(err, "Fetch failed. Please try again."));
     } finally {
       setIsLoading(false);
     }

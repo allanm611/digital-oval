@@ -88,7 +88,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
 
       setConfig(foundConfig);
     } catch (err) {
-      showError(extractBackendError(error, "Failed to load configuration. Please try again."));
+      showError(extractBackendError(err, "Failed to load configuration. Please try again."));
       navigate("/dashboard/gateway-configurations");
     } finally {
       setLoading(false);
@@ -129,7 +129,7 @@ export default function GatewayConfigDetailsPage({ channel }: GatewayConfigDetai
       showSuccess(`"${config.name}" has been deleted successfully.`);
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError(extractBackendError(error, "Failed to delete gateway configuration. Please try again."));
+      showError(extractBackendError(err, "Failed to delete gateway configuration. Please try again."));
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);

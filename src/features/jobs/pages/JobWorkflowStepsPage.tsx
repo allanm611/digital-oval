@@ -893,7 +893,7 @@ export default function JobWorkflowStepsPage() {
         );
       }
     } catch (err) {
-      showError("Validation failed", extractBackendError(error, "Validation failed. Please try again."));
+      showError("Validation failed", extractBackendError(err, "Validation failed. Please try again."));
     }
   };
 
@@ -1535,7 +1535,7 @@ export default function JobWorkflowStepsPage() {
             } catch (err) {
               const message =
                 err instanceof Error ? err.message : "Failed to delete workflow step";
-              showError("Unable to delete workflow step", extractBackendError(error, "Unable to delete workflow step. Please try again."));
+              showError("Unable to delete workflow step", extractBackendError(err, "Unable to delete workflow step. Please try again."));
             } finally {
               setIsDeleting(false);
             }

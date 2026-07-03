@@ -559,7 +559,7 @@ export default function JobTypesPage() {
         const message =
           err instanceof Error ? err.message : "Failed to search job types";
         setLoadError(message);
-        showError("Unable to search job types", extractBackendError(error, "Unable to search job types. Please try again."));
+        showError("Unable to search job types", extractBackendError(err, "Unable to search job types. Please try again."));
       } finally {
         setIsSearching(false);
       }
@@ -718,7 +718,7 @@ export default function JobTypesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save job type";
-      showError("Unable to save job type", extractBackendError(error, "Unable to save job type. Please try again."));
+      showError("Unable to save job type", extractBackendError(err, "Unable to save job type. Please try again."));
       throw err;
     } finally {
       setIsSaving(false);

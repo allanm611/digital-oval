@@ -46,8 +46,8 @@ class PushGatewayConfigService {
     return PUSH_GATEWAY_DUMMY_DATA;
   }
 
-  getAllConfigs(): Promise<PushGatewayConfig[]> {
-    return Promise.resolve(PUSH_GATEWAY_DUMMY_DATA);
+  async getAllConfigs(): Promise<PushGatewayConfig[]> {
+    return PUSH_GATEWAY_DUMMY_DATA;
   }
 
   getConfigById(id: number): Promise<PushGatewayConfig> {

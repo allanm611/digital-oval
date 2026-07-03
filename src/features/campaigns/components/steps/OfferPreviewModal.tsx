@@ -306,9 +306,8 @@ export default function OfferPreviewModal({
           </button>
           <button
             onClick={() => {
-              if (onEditOffer && offer) {
-                onEditOffer(Number(offer.id));
-                onClose();
+              if (offer) {
+                window.open(`/dashboard/offers/${offer.id}`, "_blank");
               }
             }}
             style={{

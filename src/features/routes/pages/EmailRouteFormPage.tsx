@@ -72,7 +72,7 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
         });
       }
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       navigate("/dashboard/email-routes");
     } finally {
       setLoading(false);
@@ -116,7 +116,7 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
       navigate("/dashboard/email-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

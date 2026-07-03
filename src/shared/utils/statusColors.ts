@@ -37,9 +37,9 @@ const WORKFLOW_STATUS_COLORS: Record<string, StatusColorConfig> = {
     borderHex: COLOR_PALETTE.YELLOW,
   },
   draft: {
-    bgHex: COLOR_PALETTE.GRAY_LIGHT,
-    textHex: COLOR_PALETTE.GRAY_DARK,
-    borderHex: COLOR_PALETTE.GRAY_LIGHT,
+    bgHex: "#92A6B0",
+    textHex: COLOR_PALETTE.WHITE,
+    borderHex: "#92A6B0",
   },
   completed: {
     bgHex: COLOR_PALETTE.BLUE,

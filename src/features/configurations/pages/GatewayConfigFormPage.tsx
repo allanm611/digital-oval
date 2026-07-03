@@ -31,11 +31,13 @@ interface GatewayConfigFormPageProps {
 
 export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPageProps) {
   const { id } = useParams<{ id: string }>();
+  const searchParams = new URLSearchParams(window.location.search);
+  const channelFromUrl = searchParams.get("channel");
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
 
-  const [selectedChannel, setSelectedChannel] = useState<ChannelType>(mode === "edit" ? "EMAIL" : "");
+  const [selectedChannel, setSelectedChannel] = useState<ChannelType>("");
   const [editingConfig, setEditingConfig] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(mode === "edit" && !!id);
@@ -48,8 +50,14 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
     }
   }, [mode, id]);
 
+  useEffect(() => {
+    if (mode === "create" && channelOptions.length > 0 && !selectedChannel) {
+      setSelectedChannel(channelOptions[0].value as ChannelType);
+    }
+  }, [channelOptions, mode]);
+
   const getBaseChannelType = (channelName: string): string => {
-    if (!channelName) return "EMAIL";
+    if (!channelName) return "DEFAULT";
     const name = channelName.toLowerCase();
     if (name.includes("sms")) return "SMS";
     if (name.includes("email")) return "EMAIL";
@@ -77,57 +85,102 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
       }));
       setChannelOptions(options);
     } catch (err) {
-      showError(extractBackendError(error, "Failed to load communication channels. Please try again."));
+      showError(extractBackendError(err, "Failed to load communication channels. Please try again."));
     }
   };
 
   const loadConfig = async () => {
     try {
       setIsLoading(true);
-      const emailConfigs = await emailGatewayConfigService.getAllConfigs();
-      const emailConfig = emailConfigs.find((c) => c.id === Number(id));
-      if (emailConfig) {
-        setEditingConfig(emailConfig);
-        setSelectedChannel("EMAIL");
-        return;
-      }
 
-      const smsConfigs = await smsGatewayConfigService.getAllConfigs();
-      const smsConfig = smsConfigs.find((c) => c.id === Number(id));
-      if (smsConfig) {
-        setEditingConfig(smsConfig);
-        setSelectedChannel("SMS");
-        return;
-      }
+      if (channelFromUrl) {
+        if (channelFromUrl === "EMAIL") {
+          const emailConfigs = await emailGatewayConfigService.getAllConfigs();
+          const emailConfig = emailConfigs.find((c) => c.id === Number(id));
+          if (emailConfig) {
+            setEditingConfig(emailConfig);
+            setSelectedChannel("EMAIL");
+            return;
+          }
+        } else if (channelFromUrl === "SMS") {
+          const smsConfigs = await smsGatewayConfigService.getAllConfigs();
+          const smsConfig = smsConfigs.find((c) => c.id === Number(id));
+          if (smsConfig) {
+            setEditingConfig(smsConfig);
+            setSelectedChannel("SMS");
+            return;
+          }
+        } else if (channelFromUrl === "WHATSAPP") {
+          const whatsappConfigs = await whatsappGatewayConfigService.getAllConfigs();
+          const whatsappConfig = whatsappConfigs.find((c) => c.id === Number(id));
+          if (whatsappConfig) {
+            setEditingConfig(whatsappConfig);
+            setSelectedChannel("WHATSAPP");
+            return;
+          }
+        } else if (channelFromUrl === "PUSH") {
+          const pushConfigs = await pushGatewayConfigService.getAllConfigs();
+          const pushConfig = pushConfigs.find((c) => c.id === Number(id));
+          if (pushConfig) {
+            setEditingConfig(pushConfig);
+            setSelectedChannel("PUSH");
+            return;
+          }
+        } else if (channelFromUrl === "USSD") {
+          const ussdConfigs = await ussdGatewayConfigService.getAllConfigs();
+          const ussdConfig = ussdConfigs.find((c) => c.id === Number(id));
+          if (ussdConfig) {
+            setEditingConfig(ussdConfig);
+            setSelectedChannel("USSD");
+            return;
+          }
+        }
+      } else {
+        const emailConfigs = await emailGatewayConfigService.getAllConfigs();
+        const emailConfig = emailConfigs.find((c) => c.id === Number(id));
+        if (emailConfig) {
+          setEditingConfig(emailConfig);
+          setSelectedChannel("EMAIL");
+          return;
+        }
 
-      const whatsappConfigs = await whatsappGatewayConfigService.getAllConfigs();
-      const whatsappConfig = whatsappConfigs.find((c) => c.id === Number(id));
-      if (whatsappConfig) {
-        setEditingConfig(whatsappConfig);
-        setSelectedChannel("WHATSAPP");
-        return;
-      }
+        const smsConfigs = await smsGatewayConfigService.getAllConfigs();
+        const smsConfig = smsConfigs.find((c) => c.id === Number(id));
+        if (smsConfig) {
+          setEditingConfig(smsConfig);
+          setSelectedChannel("SMS");
+          return;
+        }
 
-      const pushConfigs = await pushGatewayConfigService.getAllConfigs();
-      const pushConfig = pushConfigs.find((c) => c.id === Number(id));
-      if (pushConfig) {
-        setEditingConfig(pushConfig);
-        setSelectedChannel("PUSH");
-        return;
-      }
+        const whatsappConfigs = await whatsappGatewayConfigService.getAllConfigs();
+        const whatsappConfig = whatsappConfigs.find((c) => c.id === Number(id));
+        if (whatsappConfig) {
+          setEditingConfig(whatsappConfig);
+          setSelectedChannel("WHATSAPP");
+          return;
+        }
 
-      const ussdConfigs = await ussdGatewayConfigService.getAllConfigs();
-      const ussdConfig = ussdConfigs.find((c) => c.id === Number(id));
-      if (ussdConfig) {
-        setEditingConfig(ussdConfig);
-        setSelectedChannel("USSD");
-        return;
+        const pushConfigs = await pushGatewayConfigService.getAllConfigs();
+        const pushConfig = pushConfigs.find((c) => c.id === Number(id));
+        if (pushConfig) {
+          setEditingConfig(pushConfig);
+          setSelectedChannel("PUSH");
+          return;
+        }
+
+        const ussdConfigs = await ussdGatewayConfigService.getAllConfigs();
+        const ussdConfig = ussdConfigs.find((c) => c.id === Number(id));
+        if (ussdConfig) {
+          setEditingConfig(ussdConfig);
+          setSelectedChannel("USSD");
+          return;
+        }
       }
 
       showError("Configuration not found");
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError(extractBackendError(error, "Failed to load configuration. Please try again."));
+      showError(extractBackendError(err, "Failed to load configuration. Please try again."));
       navigate("/dashboard/gateway-configurations");
     } finally {
       setIsLoading(false);
@@ -183,7 +236,7 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
       );
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }

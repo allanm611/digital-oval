@@ -309,7 +309,7 @@ export default function ServerDetailsPage() {
         `Health check state for ${server.name} has been reset.`,
       );
     } catch (err) {
-      showError("Failed to reset health check", extractBackendError(error, "Failed to reset health check. Please try again."));
+      showError("Failed to reset health check", extractBackendError(err, "Failed to reset health check. Please try again."));
     } finally {
       setActionState(null);
     }
@@ -348,7 +348,7 @@ export default function ServerDetailsPage() {
       setShowPushHealthModal(false);
       setHealthResultDetails("");
     } catch (err) {
-      showError("Failed to push health check result", extractBackendError(error, "Failed to push health check result. Please try again."));
+      showError("Failed to push health check result", extractBackendError(err, "Failed to push health check result. Please try again."));
     } finally {
       setActionState(null);
     }

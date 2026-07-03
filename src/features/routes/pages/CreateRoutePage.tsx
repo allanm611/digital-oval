@@ -64,6 +64,8 @@ const ENCODING_OPTIONS = [
 
 export default function CreateRoutePage() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = new URLSearchParams(window.location.search);
+  const channelFromUrl = searchParams.get("channel") as Channel | null;
   const isEditMode = !!id;
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
@@ -132,32 +134,56 @@ export default function CreateRoutePage() {
       let route: any = null;
       let channel: Channel = "";
 
-      const smsRoutes = await smsRouteService.getAllRoutes();
-      route = smsRoutes.find((r) => r.id === numId);
-      if (route) channel = "SMS";
+      if (channelFromUrl) {
+        if (channelFromUrl === "SMS") {
+          const smsRoutes = await smsRouteService.getAllRoutes();
+          route = smsRoutes.find((r) => r.id === numId);
+          if (route) channel = "SMS";
+        } else if (channelFromUrl === "EMAIL") {
+          const emailRoutes = await emailRouteService.getAllRoutes();
+          route = emailRoutes.find((r) => r.id === numId);
+          if (route) channel = "EMAIL";
+        } else if (channelFromUrl === "PUSH") {
+          const pushRoutes = await pushNotificationRouteService.getAllRoutes();
+          route = pushRoutes.find((r) => r.id === numId);
+          if (route) channel = "PUSH";
+        } else if (channelFromUrl === "WHATSAPP") {
+          const whatsappRoutes = await whatsappRouteService.getAllRoutes();
+          route = whatsappRoutes.find((r) => r.id === numId);
+          if (route) channel = "WHATSAPP";
+        } else if (channelFromUrl === "USSD") {
+          const ussdRoutes = await ussdRouteService.getAllRoutes();
+          route = ussdRoutes.find((r) => r.id === numId);
+          if (route) channel = "USSD";
+        }
+      } else {
+        const smsRoutes = await smsRouteService.getAllRoutes();
+        route = smsRoutes.find((r) => r.id === numId);
+        if (route) channel = "SMS";
 
-      if (!route) {
-        const emailRoutes = await emailRouteService.getAllRoutes();
-        route = emailRoutes.find((r) => r.id === numId);
-        if (route) channel = "EMAIL";
-      }
+        if (!route) {
+          const emailRoutes = await emailRouteService.getAllRoutes();
+          route = emailRoutes.find((r) => r.id === numId);
+          if (route) channel = "EMAIL";
+        }
 
-      if (!route) {
-        const pushRoutes = await pushNotificationRouteService.getAllRoutes();
-        route = pushRoutes.find((r) => r.id === numId);
-        if (route) channel = "PUSH";
-      }
+        if (!route) {
+          const pushRoutes = await pushNotificationRouteService.getAllRoutes();
+          route = pushRoutes.find((r) => r.id === numId);
+          if (route) channel = "PUSH";
+        }
 
-      if (!route) {
-        const whatsappRoutes = await whatsappRouteService.getAllRoutes();
-        route = whatsappRoutes.find((r) => r.id === numId);
-        if (route) channel = "WHATSAPP";
-      }
+        if (!route) {
+          const whatsappRoutes = await whatsappRouteService.getAllRoutes();
+          route = whatsappRoutes.find((r) => r.id === numId);
+          if (route) channel = "WHATSAPP";
+        }
 
-      if (!route) {
-        const ussdRoutes = await ussdRouteService.getAllRoutes();
-        route = ussdRoutes.find((r) => r.id === numId);
-        if (route) channel = "USSD";
+        if (!route) {
+          const ussdRoutes = await ussdRouteService.getAllRoutes();
+          route = ussdRoutes.find((r) => r.id === numId);
+          if (route) channel = "USSD";
+        }
       }
 
       if (route) {
@@ -333,7 +359,7 @@ export default function CreateRoutePage() {
       }
       navigate("/dashboard/routes");
     } catch (error) {
-      showError(t.common.error, extractBackendError(error, "Failed to create route"));
+      showError(t.common.error, extractBackendError(err, "Failed to create route"));
     } finally {
       setSaving(false);
     }

@@ -78,7 +78,7 @@ export default function USSDRoutesList() {
           r.id === route.id ? { ...r, is_active: route.is_active } : r,
         ),
       );
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setTogglingStatus(null);
     }
@@ -268,7 +268,6 @@ export default function USSDRoutesList() {
         onConfirm={async () => {
           try {
             await confirmDeleteRoute(deleteConfirm.id);
-            success(t.common.success, `Route deleted successfully`);
           } catch (err) {
             showError("Error", extractBackendError(err, "Error. Please try again."));
           }

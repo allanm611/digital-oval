@@ -70,12 +70,6 @@ export const getAuthHeaders = (includeContentType: boolean = true) => {
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-  } else {
-    console.warn(
-      " WARNING: No auth token found in localStorage. Request will be sent without Authorization header."
-    );
-    console.warn(" Checked keys: 'authToken' and 'auth_token'");
-    console.warn(" Please ensure you are logged in.");
   }
 
   return headers;

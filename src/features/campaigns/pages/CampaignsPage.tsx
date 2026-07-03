@@ -326,7 +326,7 @@ export default function CampaignsPage() {
       sortable: false,
       isActionColumn: true,
       render: (value, campaign) => (
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
             className={`group p-0 ${tw.rounded} icon-edit`}

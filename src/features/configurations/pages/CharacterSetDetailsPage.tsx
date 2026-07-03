@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2, ArrowLeft } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { characterSetService, CharacterSet } from "../services/characterSetService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -11,10 +13,19 @@ import { color, tw } from "../../../shared/utils/utils";
 export default function CharacterSetDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { error: showError } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
   const { t } = useLanguage();
   const [characterSet, setCharacterSet] = useState<CharacterSet | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteCharacterSet } = useDeleteConfirm({
+    onDelete: async (charSetId) => {
+      await characterSetService.deleteCharacterSet(typeof charSetId === "string" ? Number(charSetId) : charSetId);
+      showSuccess(t("messages.success"), t("characterSets.deleteSuccess"));
+      navigate("/dashboard/character-sets");
+    },
+    itemLabel: "Character Set",
+  });
 
   useEffect(() => {
     loadCharacterSet();
@@ -31,6 +42,12 @@ export default function CharacterSetDetailsPage() {
       navigate("/dashboard/character-sets");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (characterSet) {
+      openDeleteConfirm(characterSet.id, characterSet.name);
     }
   };
 
@@ -61,16 +78,7 @@ export default function CharacterSetDetailsPage() {
             {t("common.edit")}
           </button>
           <button
-            onClick={async () => {
-              if (!characterSet) return;
-              try {
-                await characterSetService.deleteCharacterSet(Number(id));
-                showError(t("messages.success"), t("characterSets.deleteSuccess"));
-                navigate("/dashboard/character-sets");
-              } catch (err) {
-                showError(t("messages.error"), t("characterSets.deleteError"));
-              }
-            }}
+            onClick={handleDeleteClick}
             className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
             style={{ backgroundColor: "#DC2626" }}
           >
@@ -187,6 +195,16 @@ export default function CharacterSetDetailsPage() {
           </div>
         </div>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
+        onConfirm={confirmDeleteCharacterSet}
+        title={t("characterSets.deleteTitle") || "Delete Character Set"}
+        description={t("characterSets.deleteDescription") || "This action cannot be undone."}
+        itemName={deleteConfirm.itemName}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

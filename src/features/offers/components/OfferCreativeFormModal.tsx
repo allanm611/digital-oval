@@ -426,7 +426,7 @@ export default function OfferCreativeFormModal({
       success("Success", `Creative ${mode === "create" ? "created" : "updated"} successfully`);
       onClose();
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }

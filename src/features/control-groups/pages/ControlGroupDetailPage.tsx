@@ -61,7 +61,7 @@ export default function ControlGroupDetailPage() {
         const data = await controlGroupService.getControlGroupById(Number(id));
         setGroup(data);
       } catch (error) {
-        showError(t.controlGroups.failedToSaveGroup, extractBackendError(error, t.controlGroups.failedToSaveGroup));
+        showError(t.controlGroups.failedToSaveGroup, extractBackendError(err, t.controlGroups.failedToSaveGroup));
         console.error(error);
       } finally {
         setIsLoading(false);
@@ -91,7 +91,7 @@ export default function ControlGroupDetailPage() {
         });
         setExistingMemberIds(allMembersResponse.members.map((m) => m.subscriber_id));
       } catch (error) {
-        showError(t.controlGroups.failedToRemoveMember, extractBackendError(error, t.controlGroups.failedToRemoveMember));
+        showError(t.controlGroups.failedToRemoveMember, extractBackendError(err, t.controlGroups.failedToRemoveMember));
         console.error(error);
       } finally {
         setMembersLoading(false);
@@ -148,7 +148,7 @@ export default function ControlGroupDetailPage() {
       showSuccess(t.controlGroups.groupDeletedSuccessfully);
       navigate("/dashboard/control-groups");
     } catch (error) {
-      showError(extractBackendError(error, t.controlGroups.failedToDeleteGroup));
+      showError(extractBackendError(err, t.controlGroups.failedToDeleteGroup));
       console.error(error);
     } finally {
       setIsDeleting(false);
@@ -223,7 +223,7 @@ export default function ControlGroupDetailPage() {
       setShowRemoveModal(false);
       setMemberToRemove(null);
     } catch (error) {
-      showError(extractBackendError(error, t.controlGroups.failedToRemoveMember));
+      showError(extractBackendError(err, t.controlGroups.failedToRemoveMember));
       console.error(error);
     } finally {
       setRemovingMemberId(null);

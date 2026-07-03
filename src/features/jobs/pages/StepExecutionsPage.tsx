@@ -233,7 +233,7 @@ export default function StepExecutionsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to load step executions";
       setErrorMessage(message);
-      showError("Step Executions", extractBackendError(error, "Step Executions. Please try again."));
+      showError("Step Executions", extractBackendError(err, "Step Executions. Please try again."));
     } finally {
       setIsLoading(false);
     }

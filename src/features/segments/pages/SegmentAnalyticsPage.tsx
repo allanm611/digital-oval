@@ -217,7 +217,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
       }
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError("Analytics Error", extractBackendError(error, "Analytics Error. Please try again."));
+      showError("Analytics Error", extractBackendError(err, "Analytics Error. Please try again."));
     } finally {
       setIsLoading(false);
     }

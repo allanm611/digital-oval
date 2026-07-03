@@ -399,7 +399,7 @@ export default function OfferSelectionModal({
       await loadOffers();
     } catch (err) {
       console.error("Failed to submit offer for approval:", err);
-      showError(extractBackendError(error, "Failed to submit offer for approval. Please try again."));
+      showError(extractBackendError(err, "Failed to submit offer for approval. Please try again."));
     } finally {
       setUpdatingOfferId(null);
     }
@@ -427,7 +427,7 @@ export default function OfferSelectionModal({
       await loadOffers();
     } catch (err) {
       console.error("Failed to activate offer:", err);
-      showError(extractBackendError(error, "Failed to activate offer. Please try again."));
+      showError(extractBackendError(err, "Failed to activate offer. Please try again."));
     } finally {
       setUpdatingOfferId(null);
     }

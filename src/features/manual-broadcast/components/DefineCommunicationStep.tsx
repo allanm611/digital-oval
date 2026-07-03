@@ -609,7 +609,7 @@ export default function DefineCommunicationStep({
       setIsCustomizationModalOpen(false);
       setPolicyToCustomize(null);
 
-      showError(extractBackendError(error, "Failed to update policy. Changes reverted.. Please try again."));
+      showError(extractBackendError(err, "Failed to update policy. Changes reverted.. Please try again."));
     }
   };
 

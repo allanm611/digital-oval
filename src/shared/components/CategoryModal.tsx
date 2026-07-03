@@ -12,7 +12,7 @@ interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCategoryCreated?: (categoryId: number) => void;
-  onCategoryUpdated?: () => void;
+  onCategoryUpdated?: (updatedCategory: { id: number; name: string; description?: string }) => void;
   entityType?: "product" | "campaign" | "offer" | "segment";
   category?: { id?: number; name?: string; description?: string } | null;
 }
@@ -94,7 +94,13 @@ export default function CategoryModal({
         onClose();
         setNewCategoryName("");
         setNewCategoryDescription("");
-        onCategoryUpdated?.();
+        if (category?.id) {
+          onCategoryUpdated?.({
+            id: category.id,
+            name: newCategoryName.trim(),
+            description: newCategoryDescription.trim() || "",
+          });
+        }
       } else {
         // CREATE MODE
         // Ensure created_by is a number

@@ -294,7 +294,7 @@ export default function CampaignCategoriesPage() {
       } catch (err) {
         console.error("Failed to load Campaigns catalogs:", err);
         const errorMessage = extractBackendError(err, "Failed to load catalogs");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
         setCampaignCategories([]);
       } finally {
         setLoading(false);
@@ -377,7 +377,7 @@ export default function CampaignCategoriesPage() {
     } catch (err) {
       console.error("Failed to delete category:", err);
       const errorMessage = extractBackendError(err, "Failed to delete category");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", errorMessage);
       // Revert optimistic update on error
       setCampaignCategories(previousCategories);
     } finally {
@@ -418,9 +418,8 @@ export default function CampaignCategoriesPage() {
         // Revert optimistic update on error by reloading
         await loadCategories(true);
         // Display backend error message and bypass silent mode for important errors
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to update category";
-        showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
+        const errorMessage = extractBackendError(err, "Failed to update category");
+        showError("Toggle Failed", errorMessage);
       } finally {
         setTogglingCategoryId(null);
       }
@@ -433,12 +432,20 @@ export default function CampaignCategoriesPage() {
       try {
         setIsSaving(true);
         if (editingCategory) {
-          // Update existing category
+          // Optimistic update for existing category
+          const previousCategories = campaignCategories;
+          setCampaignCategories((prev) =>
+            prev.map((cat) =>
+              cat.id === editingCategory.id
+                ? { ...cat, ...categoryData, updated_at: new Date().toISOString() }
+                : cat
+            )
+          );
+
           await campaignService.updateCampaignCategory(
             editingCategory.id,
             categoryData,
           );
-          await loadCategories(true);
           showToast("Category updated successfully");
         } else {
           // Create new category - ensure created_by is a number
@@ -457,28 +464,44 @@ export default function CampaignCategoriesPage() {
             return;
           }
 
+          // Optimistic add to list - create with temp ID, will be updated when response comes back
+          const tempId = Math.min(...campaignCategories.map(c => c.id), 0) - 1;
+          const newCategory: CampaignCategory = {
+            id: tempId,
+            name: categoryData.name,
+            description: categoryData.description || "",
+            parent_category_id: null,
+            display_order: 10,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            campaign_count: 0,
+          };
+
+          setCampaignCategories((prev) => [newCategory, ...prev]);
+
           // Create new category with all required and optional fields
           await campaignService.createCampaignCategory({
             name: categoryData.name,
-            description: categoryData.description || "", // required, default to empty string
-            parent_category_id: null, // optional, default to null
-            display_order: 10, // optional, default to 10
-            is_active: true, // optional, default to true
-            created_by: createdByNumber, // required, must be a number
+            description: categoryData.description || "",
+            parent_category_id: null,
+            display_order: 10,
+            is_active: true,
+            created_by: createdByNumber,
           });
-          await loadCategories(true);
           showToast("Category created successfully");
         }
         setIsModalOpen(false);
         setEditingCategory(undefined);
       } catch (err) {
         const errorMessage = extractBackendError(err, "Failed to save category");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", errorMessage);
+        // Reload on error since optimistic update failed
+        await loadCategories(true);
       } finally {
         setIsSaving(false);
       }
     },
-    [editingCategory, loadCategories, showToast, showError, user],
+    [editingCategory, campaignCategories, loadCategories, showToast, showError, user],
   );
 
   const handleViewCampaigns = useCallback(
@@ -486,7 +509,7 @@ export default function CampaignCategoriesPage() {
       try {
         const categoryId = Number(category.id);
         if (isNaN(categoryId)) {
-          showError("Invalid category", extractBackendError(error, "Invalid category. Please try again."));
+          showError("Invalid category", extractBackendError(err, "Invalid category. Please try again."));
           return;
         }
 
@@ -534,7 +557,7 @@ export default function CampaignCategoriesPage() {
         setCampaigns(formattedCampaigns);
       } catch (err) {
         const errorMessage = extractBackendError(err, "Failed to load campaigns");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
         setCampaigns([]);
       } finally {
         setCampaignsLoading(false);
@@ -962,9 +985,18 @@ export default function CampaignCategoriesPage() {
           setEditingCategory(undefined);
         }}
         category={editingCategory}
-        onCategoryUpdated={async () => {
+        onCategoryUpdated={async (updatedCategory) => {
           setEditingCategory(undefined);
-          await loadCategories(true);
+          // Update local state with new data from modal
+          if (updatedCategory) {
+            setCampaignCategories((prev) =>
+              prev.map((cat) =>
+                cat.id === updatedCategory.id
+                  ? { ...cat, name: updatedCategory.name, description: updatedCategory.description }
+                  : cat
+              )
+            );
+          }
         }}
         onCategoryCreated={async () => {
           await loadCategories(true);

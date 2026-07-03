@@ -281,7 +281,6 @@ export default function WhatsAppRoutesList() {
         onConfirm={async () => {
           try {
             await confirmDeleteRoute(deleteConfirm.id);
-            success(t.common.success, `Route deleted successfully`);
           } catch (err) {
             showError("Error", extractBackendError(err, "Error. Please try again."));
           }

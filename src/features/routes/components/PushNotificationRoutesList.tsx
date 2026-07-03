@@ -73,7 +73,7 @@ export default function PushNotificationRoutesList() {
       ];
       setRoutes(data && data.length > 0 ? data : dummyRoutes);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       // Set dummy data on error too
       const dummyRoutes: PushNotificationRoute[] = [
         {
@@ -139,7 +139,7 @@ export default function PushNotificationRoutesList() {
           r.id === route.id ? { ...r, is_active: route.is_active } : r,
         ),
       );
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setTogglingStatus(null);
     }
@@ -329,7 +329,6 @@ export default function PushNotificationRoutesList() {
         onConfirm={async () => {
           try {
             await confirmDeleteRoute(deleteConfirm.id);
-            success(t.common.success, `Route deleted successfully`);
           } catch (err) {
             showError("Error", extractBackendError(err, "Error. Please try again."));
           }

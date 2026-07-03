@@ -192,19 +192,25 @@ export default function CampaignBroadcastsPage() {
       render: (_, row) => {
         const broadcast = filteredBroadcasts.find((b) => b.id === row.id);
         return (
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast?.id}`)}
-              className="text-black hover:text-gray-700 transition-colors"
+              className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
             </button>
             {broadcast?.status === "failed" && (
-              <button className="hover:opacity-80 transition-colors" title="Retry" style={{ color: "#EF4444" }}>
+              <button className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`} title="Retry" style={{ color: "#EF4444" }}>
                 <RotateCcw className="w-4 h-4" />
               </button>
             )}
+            <button
+              className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
+              title="Archive"
+            >
+              <Archive className="w-4 h-4" />
+            </button>
           </div>
         );
       },

@@ -55,7 +55,7 @@ export default function LanguagesPage() {
       const data = await languageService.getLanguages();
       setLanguages(data || []);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load languages. Please try again."));
+      showError(extractBackendError(err, "Failed to load languages. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +145,7 @@ export default function LanguagesPage() {
         `Language ${!language.is_active ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
-      showError("Failed to update language", extractBackendError(error, "Failed to update language. Please try again."));
+      showError("Failed to update language", extractBackendError(err, "Failed to update language. Please try again."));
     } finally {
       setToggling(null);
     }
@@ -450,7 +450,7 @@ export default function LanguagesPage() {
             await confirmDeleteLanguage(deleteConfirm.id);
             showSuccess("Language deleted successfully");
           } catch (error) {
-            showError("Failed to delete language", extractBackendError(error, "Failed to delete language. Please try again."));
+            showError("Failed to delete language", extractBackendError(err, "Failed to delete language. Please try again."));
           }
         }}
         title="Delete Language"

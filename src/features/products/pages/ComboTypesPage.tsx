@@ -52,7 +52,7 @@ export default function ComboTypesPage() {
       const response = await comboTypeService.getAllComboTypes();
       setComboTypes(response.data || []);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load combo types. Please try again."));
+      showError(extractBackendError(err, "Failed to load combo types. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -416,7 +416,7 @@ export default function ComboTypesPage() {
             await confirmDeleteCombo(deleteConfirm.id);
             showSuccess("Combo type deleted successfully");
           } catch (error) {
-            showError("Failed to delete combo type", extractBackendError(error, "Failed to delete combo type. Please try again."));
+            showError("Failed to delete combo type", extractBackendError(err, "Failed to delete combo type. Please try again."));
           }
         }}
         title="Delete Combo Type"

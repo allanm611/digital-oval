@@ -428,7 +428,7 @@ export default function CreateCommunicationModal({
       setPendingPolicyData(null);
     } catch (err) {
       console.error("Failed to save custom policy:", err);
-      showError(extractBackendError(error, "Failed to save custom policy. Please try again.. Please try again."));
+      showError(extractBackendError(err, "Failed to save custom policy. Please try again.. Please try again."));
     }
   };
 

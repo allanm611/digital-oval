@@ -111,7 +111,7 @@ export default function CreateEditUSSDRoutePage() {
         });
       }
     } catch (err) {
-      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(err, "Error. Please try again."));
       navigate("/dashboard/ussd-routes");
     } finally {
       setLoading(false);
@@ -158,7 +158,7 @@ export default function CreateEditUSSDRoutePage() {
       navigate("/dashboard/ussd-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

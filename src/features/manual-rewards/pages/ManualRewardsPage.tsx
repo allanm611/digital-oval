@@ -75,7 +75,7 @@ export default function ManualRewardsPage() {
       setRewardToDelete(null);
     } catch (err) {
       console.error("Failed to delete reward:", err);
-      showError("Failed to delete reward", extractBackendError(error, "Failed to delete reward. Please try again."));
+      showError("Failed to delete reward", extractBackendError(err, "Failed to delete reward. Please try again."));
     } finally {
       setIsDeleting(false);
     }

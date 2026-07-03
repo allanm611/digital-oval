@@ -126,7 +126,7 @@ export default function CreateControlGroupPage() {
       }
     } catch (error) {
       console.error("Failed to load control group:", error);
-      showError(t.controlGroups.failedToSaveGroup, extractBackendError(error, t.controlGroups.failedToSaveGroup));
+      showError(t.controlGroups.failedToSaveGroup, extractBackendError(err, t.controlGroups.failedToSaveGroup));
       handleBack();
     } finally {
       setIsLoading(false);

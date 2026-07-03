@@ -79,7 +79,7 @@ export default function NotificationTypeModal({
       setTableOptions(options);
     } catch (error) {
       console.error("Failed to load tables:", error);
-      showError(extractBackendError(error, "Failed to load tables. Please try again."));
+      showError(extractBackendError(err, "Failed to load tables. Please try again."));
     } finally {
       setIsLoadingTables(false);
     }
@@ -96,7 +96,7 @@ export default function NotificationTypeModal({
       setCategoryOptions(options);
     } catch (error) {
       console.error("Failed to load notification categories:", error);
-      showError(extractBackendError(error, "Failed to load categories. Please try again."));
+      showError(extractBackendError(err, "Failed to load categories. Please try again."));
     } finally {
       setIsLoadingCategories(false);
     }

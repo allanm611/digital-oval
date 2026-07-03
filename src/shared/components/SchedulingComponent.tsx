@@ -77,6 +77,7 @@ export default function SchedulingComponent({
   const [targetRenderTime, setTargetRenderTime] = useState("Real Time");
   const [startBroadcastBefore, setStartBroadcastBefore] = useState("Before");
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
+  const [broadcastStartTime, setBroadcastStartTime] = useState("12:00");
 
   // Notification preferences state
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference[]>(
@@ -450,7 +451,11 @@ export default function SchedulingComponent({
                 <Input
                   type="time"
                   label="End Time"
-                  value="23:59"
+                  value={
+                    scheduling.end_date
+                      ? scheduling.end_date.split("T")[1] || "23:59"
+                      : "23:59"
+                  }
                   onChange={(value) => {
                     if (value && scheduling.end_date) {
                       updateScheduling({
@@ -733,6 +738,7 @@ export default function SchedulingComponent({
                         <div>
                           <Input
                             type="time"
+                            label="Time"
                             value={entry.time}
                             onChange={(value) =>
                               updateSpecificDayRow(entry.id, {
@@ -851,14 +857,15 @@ export default function SchedulingComponent({
 
                 {startBroadcastBefore === "At" ? (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Time
-                    </label>
                     <Input
                       type="time"
-                      value="12:00"
-                      onChange={(_value) => {
-                        // Handle time change
+                      label="Time"
+                      value={broadcastStartTime}
+                      onChange={(value) => {
+                        setBroadcastStartTime(String(value));
+                        updateScheduling({
+                          broadcast_start_time: String(value),
+                        });
                       }}
                       className="w-full"
                       variant="default"

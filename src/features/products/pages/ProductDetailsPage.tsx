@@ -127,7 +127,7 @@ export default function ProductDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to toggle product status:", err);
-      showError("Failed to update product status", extractBackendError(error, "Failed to update product status. Please try again."));
+      showError("Failed to update product status", extractBackendError(err, "Failed to update product status. Please try again."));
       // Revert optimistic update on error
       setProduct((prev) =>
         prev ? { ...prev, is_active: !prev.is_active } : null
@@ -164,7 +164,7 @@ export default function ProductDetailsPage() {
           : null) ||
         "Failed to delete product. Please try again.";
       // Bypass silent mode for delete operations to always show error
-      showError("Cannot Delete Product", extractBackendError(error, "Cannot Delete Product. Please try again."));
+      showError("Cannot Delete Product", extractBackendError(err, "Cannot Delete Product. Please try again."));
     } finally {
       setIsDeleting(false);
     }

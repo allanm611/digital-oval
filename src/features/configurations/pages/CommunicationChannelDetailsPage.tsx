@@ -87,7 +87,7 @@ export default function CommunicationChannelDetailsPage() {
       );
     } catch (err) {
       console.error("Failed to toggle channel status:", err);
-      showError("Failed to update channel status", extractBackendError(error, "Failed to update channel status. Please try again."));
+      showError("Failed to update channel status", extractBackendError(err, "Failed to update channel status. Please try again."));
       setChannel((prev) =>
         prev ? { ...prev, is_active: !prev.is_active } : null
       );
@@ -146,7 +146,7 @@ export default function CommunicationChannelDetailsPage() {
       console.error("Failed to delete channel:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete channel. Please try again.";
-      showError("Cannot Delete Channel", extractBackendError(error, "Cannot Delete Channel. Please try again."));
+      showError("Cannot Delete Channel", extractBackendError(err, "Cannot Delete Channel. Please try again."));
     } finally {
       closeDeleteConfirm();
     }

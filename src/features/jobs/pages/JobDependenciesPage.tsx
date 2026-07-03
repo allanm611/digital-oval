@@ -1319,7 +1319,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency";
-      showError("Unable to load dependency", extractBackendError(error, "Unable to load dependency. Please try again."));
+      showError("Unable to load dependency", extractBackendError(err, "Unable to load dependency. Please try again."));
     }
   };
 
@@ -1342,7 +1342,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load blocking dependencies";
-      showError("Unable to load blocking dependencies", extractBackendError(error, "Unable to load blocking dependencies. Please try again."));
+      showError("Unable to load blocking dependencies", extractBackendError(err, "Unable to load blocking dependencies. Please try again."));
       setShowBlockingDependenciesModal(false);
     } finally {
       setIsLoadingBlockingDependencies(false);
@@ -1370,7 +1370,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency chain";
-      showError("Unable to load dependency chain", extractBackendError(error, "Unable to load dependency chain. Please try again."));
+      showError("Unable to load dependency chain", extractBackendError(err, "Unable to load dependency chain. Please try again."));
       setShowChainModal(false);
     } finally {
       setIsLoadingChain(false);
@@ -1395,7 +1395,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load critical path";
-      showError("Unable to load critical path", extractBackendError(error, "Unable to load critical path. Please try again."));
+      showError("Unable to load critical path", extractBackendError(err, "Unable to load critical path. Please try again."));
       setShowChainModal(false);
     } finally {
       setIsLoadingChain(false);
@@ -1421,7 +1421,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load immediate dependencies";
-      showError("Unable to load immediate dependencies", extractBackendError(error, "Unable to load immediate dependencies. Please try again."));
+      showError("Unable to load immediate dependencies", extractBackendError(err, "Unable to load immediate dependencies. Please try again."));
       setShowImmediateDependenciesModal(false);
     } finally {
       setIsLoadingImmediateDependencies(false);
@@ -1439,7 +1439,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependents";
-      showError("Unable to load dependents", extractBackendError(error, "Unable to load dependents. Please try again."));
+      showError("Unable to load dependents", extractBackendError(err, "Unable to load dependents. Please try again."));
       setShowAllDependentsModal(false);
     } finally {
       setIsLoadingAllDependents(false);
@@ -1469,7 +1469,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to check dependencies";
-      showError("Unable to check dependencies", extractBackendError(error, "Unable to check dependencies. Please try again."));
+      showError("Unable to check dependencies", extractBackendError(err, "Unable to check dependencies. Please try again."));
     }
   };
 
@@ -1491,7 +1491,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load unsatisfied dependencies";
-      showError("Unable to load unsatisfied dependencies", extractBackendError(error, "Unable to load unsatisfied dependencies. Please try again."));
+      showError("Unable to load unsatisfied dependencies", extractBackendError(err, "Unable to load unsatisfied dependencies. Please try again."));
       setShowUnsatisfiedDependenciesModal(false);
     } finally {
       setIsLoadingUnsatisfiedDependencies(false);
@@ -1522,7 +1522,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency status";
-      showError("Unable to load dependency status", extractBackendError(error, "Unable to load dependency status. Please try again."));
+      showError("Unable to load dependency status", extractBackendError(err, "Unable to load dependency status. Please try again."));
       setShowStatusModal(false);
     } finally {
       setIsLoadingStatus(false);
@@ -1572,7 +1572,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate dependencies";
-      showError("Unable to activate dependencies", extractBackendError(error, "Unable to activate dependencies. Please try again."));
+      showError("Unable to activate dependencies", extractBackendError(err, "Unable to activate dependencies. Please try again."));
     }
   };
 
@@ -1600,7 +1600,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to deactivate dependencies";
-      showError("Unable to deactivate dependencies", extractBackendError(error, "Unable to deactivate dependencies. Please try again."));
+      showError("Unable to deactivate dependencies", extractBackendError(err, "Unable to deactivate dependencies. Please try again."));
     }
   };
 
@@ -1616,7 +1616,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency graph";
-      showError("Unable to load dependency graph", extractBackendError(error, "Unable to load dependency graph. Please try again."));
+      showError("Unable to load dependency graph", extractBackendError(err, "Unable to load dependency graph. Please try again."));
       setShowGraphModal(false);
     } finally {
       setIsLoadingGraph(false);
@@ -1637,7 +1637,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load orphaned jobs";
-      showError("Unable to load orphaned jobs", extractBackendError(error, "Unable to load orphaned jobs. Please try again."));
+      showError("Unable to load orphaned jobs", extractBackendError(err, "Unable to load orphaned jobs. Please try again."));
     }
   };
 
@@ -1660,7 +1660,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load most depended jobs";
-      showError("Unable to load most depended jobs", extractBackendError(error, "Unable to load most depended jobs. Please try again."));
+      showError("Unable to load most depended jobs", extractBackendError(err, "Unable to load most depended jobs. Please try again."));
     }
   };
 
@@ -1676,7 +1676,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load complex dependencies";
-      showError("Unable to load complex dependencies", extractBackendError(error, "Unable to load complex dependencies. Please try again."));
+      showError("Unable to load complex dependencies", extractBackendError(err, "Unable to load complex dependencies. Please try again."));
       setShowComplexDependenciesModal(false);
     } finally {
       setIsLoadingComplexDependencies(false);
@@ -1713,7 +1713,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete dependencies";
-      showError("Unable to delete dependencies", extractBackendError(error, "Unable to delete dependencies. Please try again."));
+      showError("Unable to delete dependencies", extractBackendError(err, "Unable to delete dependencies. Please try again."));
     } finally {
       setIsDeletingAll(false);
     }

@@ -294,7 +294,7 @@ export default function EditRoutePage() {
       success(t.common.success, "Route updated successfully");
       navigate("/dashboard/routes");
     } catch (error) {
-      showError(t.common.error, extractBackendError(error, "Failed to update route"));
+      showError(t.common.error, extractBackendError(err, "Failed to update route"));
     } finally {
       setSaving(false);
     }

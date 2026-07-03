@@ -102,7 +102,7 @@ export default function OfferCreativesPage() {
       success("Success", creative.is_active ? "Creative deactivated" : "Creative activated");
     } catch (err) {
       setCreatives(originalCreatives);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsTogglingActive(null);
     }
@@ -130,7 +130,7 @@ export default function OfferCreativesPage() {
       setCreativeToDelete(null);
     } catch (err) {
       setCreatives(originalCreatives);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsDeleting(false);
     }

@@ -380,7 +380,7 @@ export default function SeedListManagementPage() {
       setRecipients(allMembers);
     } catch (error) {
       console.error("Failed to load members:", error);
-      showError("Unable to Load Members", extractBackendError(error, "Failed to load seed list members. Please try again later."));
+      showError("Unable to Load Members", extractBackendError(err, "Failed to load seed list members. Please try again later."));
     } finally {
       setLoading(false);
     }
@@ -436,7 +436,7 @@ export default function SeedListManagementPage() {
       );
     } catch (error) {
       console.error("Failed to load seed lists:", error);
-      showError("Unable to Load Seed Lists", extractBackendError(error, "Failed to load seed lists. Please try again later."));
+      showError("Unable to Load Seed Lists", extractBackendError(err, "Failed to load seed lists. Please try again later."));
       setSeedLists([]);
     }
   };
@@ -515,7 +515,7 @@ export default function SeedListManagementPage() {
       showToast("Recipient removed successfully");
     } catch (error) {
       console.error("Failed to remove recipient:", error);
-      showError(extractBackendError(error, "Failed to remove recipient. Please try again."));
+      showError(extractBackendError(err, "Failed to remove recipient. Please try again."));
     } finally {
       setIsRemovingRecipient(false);
       setRecipientToRemove(null);
@@ -550,7 +550,7 @@ export default function SeedListManagementPage() {
       }
     } catch (error) {
       console.error("Failed to load list members:", error);
-      showError(extractBackendError(error, "Failed to load list members. Please try again."));
+      showError(extractBackendError(err, "Failed to load list members. Please try again."));
       setListMembers([]);
     } finally {
       setIsLoadingListMembers(false);
@@ -601,7 +601,7 @@ export default function SeedListManagementPage() {
       showToast("Member removed successfully");
     } catch (error) {
       console.error("Failed to remove member:", error);
-      showError(extractBackendError(error, "Failed to remove member. Please try again."));
+      showError(extractBackendError(err, "Failed to remove member. Please try again."));
     } finally {
       setIsRemovingMember(false);
       setMemberToRemoveFromList(null);
@@ -627,7 +627,7 @@ export default function SeedListManagementPage() {
       setIsCreateListModalOpen(false);
     } catch (error) {
       console.error("Failed to create seed list:", error);
-      showError(extractBackendError(error, "Failed to create seed list. Please try again."));
+      showError(extractBackendError(err, "Failed to create seed list. Please try again."));
     } finally {
       setIsCreatingList(false);
     }
@@ -666,7 +666,7 @@ export default function SeedListManagementPage() {
       showToast("Seed list deleted successfully");
     } catch (error) {
       console.error("Failed to delete seed list:", error);
-      showError(extractBackendError(error, "Failed to delete seed list. Please try again."));
+      showError(extractBackendError(err, "Failed to delete seed list. Please try again."));
     } finally {
       setIsDeletingList(false);
       setListToDelete(null);
@@ -837,7 +837,7 @@ export default function SeedListManagementPage() {
       handleCloseModal();
     } catch (error) {
       console.error("Failed to add recipient:", error);
-      showError(extractBackendError(error, "Failed to add recipient. Please try again."));
+      showError(extractBackendError(err, "Failed to add recipient. Please try again."));
     } finally {
       setIsAddingRecipient(false);
     }

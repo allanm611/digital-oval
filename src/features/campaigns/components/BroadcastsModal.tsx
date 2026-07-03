@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, Loader, AlertCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { broadcastService } from "../services/broadcastService";
@@ -18,6 +19,7 @@ export default function BroadcastsModal({
   campaignName,
   campaignId,
 }: BroadcastsModalProps) {
+  const navigate = useNavigate();
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,43 +116,51 @@ export default function BroadcastsModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {broadcasts.map((broadcast) => (
-                    <tr
-                      key={broadcast.broadcast_id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-3 px-3 text-gray-900">{broadcast.broadcast_name}</td>
-                      <td className="py-3 px-3">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
-                            broadcast.status === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : broadcast.status === "running"
-                                ? "bg-blue-100 text-blue-800"
-                                : broadcast.status === "failed"
-                                  ? "bg-red-100 text-red-800"
-                                  : broadcast.status === "paused"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {broadcast.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-right text-gray-900">
-                        {broadcast.messages_sent.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-3 text-right text-gray-900">
-                        {broadcast.messages_delivered.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-3 text-right text-gray-900">
-                        {broadcast.messages_failed.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-3 text-right font-semibold text-gray-900">
-                        {(Number(broadcast.delivery_rate) || 0).toFixed(2)}%
-                      </td>
-                    </tr>
-                  ))}
+                  {broadcasts.map((broadcast) => {
+                    if (!broadcast || !broadcast.broadcast_id) return null;
+
+                    const broadcastName = broadcast.broadcast_name || "—";
+                    const status = broadcast.status || "unknown";
+                    const sent = broadcast.messages_sent ?? 0;
+                    const delivered = broadcast.messages_delivered ?? 0;
+                    const failed = broadcast.messages_failed ?? 0;
+                    const rate = Number(broadcast.delivery_rate) || 0;
+
+                    return (
+                      <tr
+                        key={broadcast.broadcast_id}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="py-3 px-3">
+                          <button
+                            onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast.broadcast_id}`, {
+                              state: { broadcast, campaignId, campaignName }
+                            })}
+                            className="text-sm font-medium transition-colors hover:opacity-80"
+                            style={{ color: color.primary.accent }}
+                            title="View details"
+                          >
+                            {broadcastName}
+                          </button>
+                        </td>
+                        <td className="py-3 px-3 text-gray-900">
+                          {status}
+                        </td>
+                        <td className="py-3 px-3 text-right text-gray-900">
+                          {sent.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 text-right text-gray-900">
+                          {delivered.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 text-right text-gray-900">
+                          {failed.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-3 text-right font-semibold text-gray-900">
+                          {rate.toFixed(2)}%
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

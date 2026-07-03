@@ -341,7 +341,7 @@ export default function JobExecutionsPage() {
         const message =
           err instanceof Error ? err.message : "Failed to load job executions";
         setErrorMessage(message);
-        showError("Job Executions", extractBackendError(error, "Job Executions. Please try again."));
+        showError("Job Executions", extractBackendError(err, "Job Executions. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -400,7 +400,7 @@ export default function JobExecutionsPage() {
       }
     } catch (err) {
       console.error("Failed to load stats:", err);
-      showError("Failed to load execution statistics", extractBackendError(error, "Failed to load execution statistics. Please try again."));
+      showError("Failed to load execution statistics", extractBackendError(err, "Failed to load execution statistics. Please try again."));
     } finally {
       setIsLoadingStats(false);
     }
@@ -653,7 +653,7 @@ export default function JobExecutionsPage() {
     } catch (err) {
       // Rollback optimistic update on error
       fetchExecutions();
-      showError("Action Failed", extractBackendError(error, "Action Failed. Please try again."));
+      showError("Action Failed", extractBackendError(err, "Action Failed. Please try again."));
     } finally {
       setIsProcessingAction(false);
     }
@@ -677,7 +677,7 @@ export default function JobExecutionsPage() {
     } catch (err) {
       showError(
         "Archive Old Failed",
-        extractBackendError(error, "Failed to archive old executions. Please try again."),
+        extractBackendError(err, "Failed to archive old executions. Please try again."),
       );
     } finally {
       setIsArchiveManagementProcessing(false);
@@ -702,7 +702,7 @@ export default function JobExecutionsPage() {
     } catch (err) {
       showError(
         "Cleanup Failed",
-        extractBackendError(error, "Failed to cleanup archived executions. Please try again."),
+        extractBackendError(err, "Failed to cleanup archived executions. Please try again."),
       );
     } finally {
       setIsArchiveManagementProcessing(false);

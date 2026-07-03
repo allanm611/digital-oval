@@ -302,7 +302,7 @@ export default function TeamRolesPermissionsPage() {
         }
       }
 
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setCloningRoleId(null);
     }

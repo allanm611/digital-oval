@@ -123,7 +123,7 @@ export default function JobWorkflowStepDetailsPage() {
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load workflow step";
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -148,7 +148,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       closeDeleteConfirm();
     }
@@ -171,7 +171,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to duplicate step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsDuplicating(false);
     }
@@ -192,7 +192,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsToggling(false);
     }
@@ -216,7 +216,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to deactivate step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsToggling(false);
     }

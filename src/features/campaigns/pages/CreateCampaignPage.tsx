@@ -987,7 +987,7 @@ export default function CreateCampaignPage() {
             showToast("success", "Campaign resubmitted for approval!");
           } catch (error) {
             console.error("Failed to resubmit campaign:", error);
-            const errorMessage = extractBackendError(error, "Failed to resubmit campaign for approval");
+            const errorMessage = extractBackendError(err, "Failed to resubmit campaign for approval");
             showToast("error", errorMessage);
           }
         }

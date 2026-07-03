@@ -618,7 +618,7 @@ export function Table<T extends { id?: number | string } = any>({
                         minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                       }}
                     >
-                      <div className={`flex items-center ${col.isActionColumn ? 'justify-end' : 'justify-between'}`}>
+                      <div className={`flex items-center ${col.isActionColumn ? 'justify-center' : 'justify-between'}`}>
                         <span className="truncate">{col.label}</span>
 
                         {/* Sort Icon & Menu */}
@@ -858,7 +858,7 @@ export function Table<T extends { id?: number | string } = any>({
                             minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                           }}
                         >
-                          <div className={`flex items-center gap-2 overflow-hidden ${col.isActionColumn ? 'justify-end' : ''}`}>
+                          <div className={`flex items-center gap-2 overflow-hidden ${col.isActionColumn ? 'justify-center' : ''}`}>
                             <div className={`${!col.isActionColumn ? 'truncate flex-1' : ''}`}>
                               {renderCellContent(col, row)}
                             </div>

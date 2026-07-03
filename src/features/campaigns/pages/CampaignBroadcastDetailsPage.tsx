@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Send, Radio, TrendingUp, CheckCircle, BarChart3 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface CampaignBroadcast {
-  id: number;
+  broadcast_id: string;
   campaign_id: number;
   campaign_name: string;
   status: "sent" | "in_progress" | "scheduled" | "failed" | "paused" | "completed";
@@ -21,30 +21,79 @@ interface CampaignBroadcast {
   failed: number;
   unsubscribed: number;
   created_by: string;
+  delivery_rate: string | number;
+  error_count: number;
+  messages_queued: number | string;
+  processed_count: number | string;
+  retry_count: number;
+  run_id: string;
+  total_batches: number;
 }
 
 export default function CampaignBroadcastDetailsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { broadcastId } = useParams();
+  const location = useLocation();
+  const [broadcast, setBroadcast] = useState<CampaignBroadcast | null>(null);
 
-  // Mock data - in real app this would come from API
-  const [broadcast] = useState<CampaignBroadcast>({
-    id: parseInt(broadcastId || "1"),
-    campaign_id: 101,
-    campaign_name: "Summer Promo Campaign",
-    status: "completed",
-    sent_at: "2026-03-18T10:30:00Z",
-    channels: ["email", "sms"],
-    total_recipients: 5000,
-    delivered: 4850,
-    opened: 2425,
-    clicked: 725,
-    conversions: 145,
-    failed: 150,
-    unsubscribed: 10,
-    created_by: "John Doe",
-  });
+  useEffect(() => {
+    // Get broadcast data from navigation state
+    const state = location.state as { broadcast?: any; campaignId?: number; campaignName?: string };
+
+    if (state?.broadcast) {
+      const b = state.broadcast;
+      // Map the API broadcast response to our interface
+      setBroadcast({
+        broadcast_id: b.broadcast_id || "unknown",
+        campaign_id: state.campaignId || 101,
+        campaign_name: state.campaignName || "Campaign",
+        status: (b.status as any) || "completed",
+        sent_at: b.actual_start_time || new Date().toISOString(),
+        channels: [],
+        total_recipients: parseInt(String(b.messages_sent || "0")),
+        delivered: parseInt(String(b.messages_delivered || "0")),
+        opened: 0,
+        clicked: 0,
+        conversions: 0,
+        failed: parseInt(String(b.messages_failed || "0")),
+        unsubscribed: 0,
+        created_by: "System",
+        delivery_rate: b.delivery_rate || "0.00",
+        error_count: b.error_count || 0,
+        messages_queued: b.messages_queued || "0",
+        processed_count: b.processed_count || "0",
+        retry_count: b.retry_count || 0,
+        run_id: b.run_id || "unknown",
+        total_batches: b.total_batches || 0,
+      });
+    } else {
+      // Fallback to sample data if no state
+      setBroadcast({
+        broadcast_id: broadcastId || "unknown",
+        campaign_id: 101,
+        campaign_name: "Summer Promo Campaign",
+        status: "completed",
+        sent_at: "2026-03-18T10:30:00Z",
+        channels: ["email", "sms"],
+        total_recipients: 5000,
+        delivered: 4850,
+        opened: 2425,
+        clicked: 725,
+        conversions: 145,
+        failed: 150,
+        unsubscribed: 10,
+        created_by: "John Doe",
+        delivery_rate: "97.00",
+        error_count: 0,
+        messages_queued: "0",
+        processed_count: "4850",
+        retry_count: 0,
+        run_id: "cb993b57-2213-4ceb-8150-28180297d126",
+        total_batches: 10,
+      });
+    }
+  }, [broadcastId, location.state]);
 
   const getStatusColor = (status: CampaignBroadcast["status"]) => {
     const colors: Record<string, string> = {
@@ -62,6 +111,15 @@ export default function CampaignBroadcastDetailsPage() {
     if (delivered === 0) return "0%";
     return `${((opened / delivered) * 100).toFixed(1)}%`;
   };
+
+  if (!broadcast) {
+    return (
+      <div className="space-y-6">
+        <BackButton showBreadcrumb={true} currentLabel="Broadcast Details" />
+        <p className="text-gray-600">Loading broadcast details...</p>
+      </div>
+    );
+  }
 
   const deliveryRate = ((broadcast.delivered / broadcast.total_recipients) * 100).toFixed(1);
   const conversionRate = ((broadcast.conversions / broadcast.delivered) * 100).toFixed(1);
@@ -140,6 +198,49 @@ export default function CampaignBroadcastDetailsPage() {
         </div>
       </div>
 
+      {/* Broadcast Information */}
+      <div
+        className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+        style={{ borderColor: color.border.default }}
+      >
+        <h3 className="text-base font-semibold text-black mb-4">Broadcast Information</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <p className="text-sm text-gray-600">Name</p>
+            <p className="mt-2 text-sm font-medium text-black">{broadcast.campaign_name}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Broadcast ID</p>
+            <p className="mt-2 text-sm font-medium text-black break-all">{broadcast.broadcast_id}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Run ID</p>
+            <p className="mt-2 text-sm font-medium text-black break-all">{broadcast.run_id}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Status</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium `}
+                style={{ backgroundColor: getStatusColor(broadcast.status) }}
+              >
+                {broadcast.status.replace(/_/g, " ")}
+              </span>
+            </div>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Campaign ID</p>
+            <p className="mt-2 text-sm font-medium" style={{ color: color.primary.accent }}>
+              {broadcast.campaign_id}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Delivery Rate</p>
+            <p className="mt-2 text-sm font-medium text-black">{broadcast.delivery_rate}%</p>
+          </div>
+        </div>
+      </div>
+
       {/* Detailed Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Delivery Breakdown */}
@@ -187,37 +288,32 @@ export default function CampaignBroadcastDetailsPage() {
         </div>
       </div>
 
-      {/* Broadcast Information */}
+      {/* Processing Metrics */}
       <div
         className={`${tw.rounded} border bg-white p-6 shadow-sm`}
         style={{ borderColor: color.border.default }}
       >
-        <h3 className="text-base font-semibold text-black mb-4">Broadcast Information</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <h3 className="text-base font-semibold text-black mb-4">Processing Metrics</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
-            <p className="text-sm text-gray-600">Name</p>
-            <p className="mt-2 text-sm font-medium text-black">{broadcast.campaign_name}</p>
+            <p className="text-sm text-gray-600">Messages Queued</p>
+            <p className="mt-2 text-sm font-medium text-black">{broadcast.messages_queued}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Broadcast ID</p>
-            <p className="mt-2 text-sm font-medium text-black">{broadcast.id}</p>
+            <p className="text-sm text-gray-600">Processed Count</p>
+            <p className="mt-2 text-sm font-medium text-black">{broadcast.processed_count}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Status</p>
-            <div className="mt-2 flex items-center gap-2">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium `}
-                style={{ backgroundColor: getStatusColor(broadcast.status) }}
-              >
-                {broadcast.status.replace(/_/g, " ")}
-              </span>
-            </div>
+            <p className="text-sm text-gray-600">Error Count</p>
+            <p className="mt-2 text-sm font-medium text-black">{broadcast.error_count}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Campaign ID</p>
-            <p className="mt-2 text-sm font-medium" style={{ color: color.primary.accent }}>
-              {broadcast.campaign_id}
-            </p>
+            <p className="text-sm text-gray-600">Retry Count</p>
+            <p className="mt-2 text-sm font-medium text-black">{broadcast.retry_count}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Total Batches</p>
+            <p className="mt-2 text-sm font-medium text-black">{broadcast.total_batches}</p>
           </div>
         </div>
       </div>

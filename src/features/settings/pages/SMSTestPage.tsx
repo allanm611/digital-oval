@@ -98,7 +98,7 @@ export default function SMSTestPage() {
         }
       } catch (err) {
         console.error("Failed to load communication channels:", err);
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoadingChannels(false);
       }
@@ -338,7 +338,7 @@ export default function SMSTestPage() {
         success: false,
         error: (err as Error).message,
       });
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsLoading(false);
     }

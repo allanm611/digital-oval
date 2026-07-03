@@ -348,6 +348,18 @@ export default function SegmentCategoriesPage() {
     description?: string;
   }) => {
     try {
+      // Optimistic add to list
+      const tempId = Math.min(...categories.map(c => c.id), 0) - 1;
+      const newCategory: SegmentCategory = {
+        id: tempId,
+        name: categoryData.name,
+        description: categoryData.description || "",
+        is_active: true,
+        created_at: new Date().toISOString(),
+        segment_count: 0,
+      };
+      setCategories((prev) => [newCategory, ...prev]);
+
       const request: CreateSegmentCategoryRequest = {
         name: categoryData.name,
         description: categoryData.description,
@@ -358,9 +370,9 @@ export default function SegmentCategoriesPage() {
         "Catalog created",
         `Segment catalog "${categoryData.name}" has been created successfully`,
       );
-      await loadCategories(true); // skipCache = true
     } catch (err) {
-      // Re-throw with actual backend error message
+      // Reload on error since optimistic update failed
+      await loadCategories(true);
       throw err;
     }
   };
@@ -372,6 +384,16 @@ export default function SegmentCategoriesPage() {
     if (!selectedCategory) return;
 
     try {
+      // Optimistic update
+      const previousCategories = categories;
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === selectedCategory.id
+            ? { ...cat, ...categoryData }
+            : cat
+        )
+      );
+
       const request: UpdateSegmentCategoryRequest = {
         name: categoryData.name,
         description: categoryData.description,
@@ -382,9 +404,9 @@ export default function SegmentCategoriesPage() {
         "Catalog updated",
         `Segment catalog "${categoryData.name}" has been updated successfully`,
       );
-      await loadCategories(true); // skipCache = true
     } catch (err) {
-      // Re-throw with actual backend error message
+      // Reload on error since optimistic update failed
+      await loadCategories(true);
       throw err;
     }
   };
@@ -424,9 +446,8 @@ export default function SegmentCategoriesPage() {
       // Revert optimistic update on error by reloading
       await loadCategories(true);
       // Display backend error message and bypass silent mode for important errors
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update category";
-      showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
+      const errorMessage = extractBackendError(err, "Failed to update category");
+      showError("Toggle Failed", errorMessage);
     } finally {
       setTogglingCategoryId(null);
     }
@@ -452,7 +473,7 @@ export default function SegmentCategoriesPage() {
       setCategoryToDelete(null);
     } catch (err) {
       const errorMsg2 = extractBackendError(err, "Failed to delete segment catalog");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       // Revert optimistic update on error
       setCategories(previousCategories);
     } finally {
@@ -871,11 +892,21 @@ export default function SegmentCategoriesPage() {
           setSelectedCategory(null);
         }}
         category={selectedCategory || undefined}
-        onCategoryUpdated={async () => {
+        onCategoryUpdated={async (updatedCategory) => {
           setSelectedCategory(null);
-          await loadCategories(true);
+          // Update local state with new data from modal
+          if (updatedCategory) {
+            setCategories((prev) =>
+              prev.map((cat) =>
+                cat.id === updatedCategory.id
+                  ? { ...cat, name: updatedCategory.name, description: updatedCategory.description }
+                  : cat
+              )
+            );
+          }
         }}
         onCategoryCreated={async () => {
+          // Reload to get new category (needed since modal creates)
           await loadCategories(true);
         }}
         entityType="segment"

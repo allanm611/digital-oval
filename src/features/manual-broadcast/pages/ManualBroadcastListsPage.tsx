@@ -117,7 +117,7 @@ export default function ManualBroadcastListsPage() {
       }
     } catch (err) {
       console.error("Failed to load manual broadcasts:", err);
-      showError(extractBackendError(error, "Failed to load manual broadcasts. Please try again."));
+      showError(extractBackendError(err, "Failed to load manual broadcasts. Please try again."));
     } finally {
       setLoading(false);
     }

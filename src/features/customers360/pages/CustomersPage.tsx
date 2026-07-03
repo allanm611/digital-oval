@@ -346,7 +346,7 @@ export default function CustomersPage() {
       setIsLoading(false);
     } catch (error) {
       console.error("Failed to load customers:", error);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       setIsLoading(false);
     }
   }, [filters, showError]);
@@ -651,7 +651,7 @@ export default function CustomersPage() {
       setDeleteModalOpen(false);
       setCustomerToDelete(null);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsDeleting(false);
     }

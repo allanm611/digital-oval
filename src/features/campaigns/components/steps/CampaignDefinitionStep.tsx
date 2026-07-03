@@ -335,7 +335,7 @@ export default function CampaignDefinitionStep({
       setIsCustomizationModalOpen(false);
       setPolicyToCustomize(null);
 
-      showError(extractBackendError(error, "Failed to update policy. Changes reverted.. Please try again."));
+      showError(extractBackendError(err, "Failed to update policy. Changes reverted.. Please try again."));
     }
   };
 
@@ -387,7 +387,7 @@ export default function CampaignDefinitionStep({
       showToast("Program created and selected!");
     } catch (error) {
       console.error("Failed to create program:", error);
-      showError(extractBackendError(error, "Failed to create program. Please try again.. Please try again."));
+      showError(extractBackendError(err, "Failed to create program. Please try again.. Please try again."));
     } finally {
       setIsCreatingProgram(false);
     }
@@ -470,7 +470,7 @@ export default function CampaignDefinitionStep({
       showToast("Communication policy created successfully");
     } catch (error) {
       console.error("Failed to create policy:", error);
-      showError(extractBackendError(error, "Failed to create communication policy. Please try again."));
+      showError(extractBackendError(err, "Failed to create communication policy. Please try again."));
     } finally {
       setIsCreatingPolicy(false);
     }

@@ -402,7 +402,7 @@ export default function RoutesManagementPage() {
   };
 
   const navigateToEdit = (route: UnifiedRoute) => {
-    navigate(`/dashboard/routes/edit/${route.id}`);
+    navigate(`/dashboard/routes/edit/${route.id}?channel=${route.channel}`);
   };
 
   const channelOptions = [

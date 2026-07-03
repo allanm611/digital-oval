@@ -109,7 +109,7 @@ export default function SMSRouteCreateModal({
         err instanceof Error
           ? err.message
           : `Failed to ${isEditMode ? "update" : "create"} route`;
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setLoading(false);
     }

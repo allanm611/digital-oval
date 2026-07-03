@@ -318,7 +318,7 @@ export default function VIPListManagementPage() {
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch VIP lists:", error);
-      showError(extractBackendError(error, "Failed to fetch VIP lists. Please try again."));
+      showError(extractBackendError(err, "Failed to fetch VIP lists. Please try again."));
       setVipLists([]);
       setLoading(false);
     }
@@ -342,7 +342,7 @@ export default function VIPListManagementPage() {
       setVipCustomers(allMembers);
     } catch (error) {
       console.error("Failed to fetch VIP members:", error);
-      showError(extractBackendError(error, "Failed to fetch VIP members. Please try again."));
+      showError(extractBackendError(err, "Failed to fetch VIP members. Please try again."));
       setVipCustomers([]);
     } finally {
       setLoading(false);
@@ -500,7 +500,7 @@ export default function VIPListManagementPage() {
       );
       await loadAllMembers();
     } catch (error) {
-      showError(extractBackendError(error, "Failed to add members. Please try again."));
+      showError(extractBackendError(err, "Failed to add members. Please try again."));
       throw error;
     } finally {
       setIsAddingMembers(false);
@@ -515,7 +515,7 @@ export default function VIPListManagementPage() {
       setListMembers(Array.isArray(members) ? members : []);
       setIsListMembersModalOpen(true);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to fetch list members. Please try again."));
+      showError(extractBackendError(err, "Failed to fetch list members. Please try again."));
       console.error("Error fetching members:", error);
     } finally {
       setIsLoadingListMembers(false);

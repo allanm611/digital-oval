@@ -47,7 +47,7 @@ export default function TeamRolesPage() {
       });
       setRoles(data || []);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load roles. Please try again."));
+      showError(extractBackendError(err, "Failed to load roles. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +75,7 @@ export default function TeamRolesPage() {
         `Role ${nextStatus ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
-      showError("Failed to update role", extractBackendError(error, "Failed to update role. Please try again."));
+      showError("Failed to update role", extractBackendError(err, "Failed to update role. Please try again."));
     } finally {
       setToggling(null);
     }
@@ -96,7 +96,7 @@ export default function TeamRolesPage() {
       showSuccess("Role deleted successfully");
       setRoleToDelete(null);
     } catch (error) {
-      showError("Failed to delete role", extractBackendError(error, "Failed to delete role. Please try again."));
+      showError("Failed to delete role", extractBackendError(err, "Failed to delete role. Please try again."));
     }
   };
 

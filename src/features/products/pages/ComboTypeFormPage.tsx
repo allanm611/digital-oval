@@ -149,7 +149,7 @@ export default function ComboTypeFormPage() {
           }
         } catch (err) {
           console.error("Failed to load combo type:", err);
-          showError("Error", extractBackendError(error, "Error. Please try again."));
+          showError("Error", extractBackendError(err, "Error. Please try again."));
           setError("Failed to load combo type");
         } finally {
           setIsLoading(false);

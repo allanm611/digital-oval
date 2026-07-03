@@ -262,7 +262,7 @@ function ProductsModal({
     } catch (err) {
       console.error("Failed to load products:", err);
       const errorMsg1 = extractBackendError(err, "Failed to load products");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       setError(""); // Clear error state
       return undefined;
     } finally {
@@ -630,9 +630,9 @@ export default function ProductCatalogsPage() {
     }
   };
 
-  const handleCategoryCreated = () => {
-    loadCategories();
-    loadStats(true);
+  const handleCategoryCreated = async () => {
+    // Reload after create to get new category (no need to optimize here since modal closes)
+    await Promise.all([loadCategories(), loadStats(true)]);
   };
 
   const handleEditCatalog = (category: ProductCategory) => {
@@ -651,6 +651,17 @@ export default function ProductCatalogsPage() {
 
     try {
       setIsUpdating(true);
+
+      // Optimistic update
+      const previousCategories = categories;
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === editingCatalog.id
+            ? { ...cat, name: editName.trim(), description: editDescription.trim() || "" }
+            : cat
+        )
+      );
+
       await productCategoryService.updateCategory(editingCatalog.id, {
         name: editName.trim(),
         description: editDescription.trim() || undefined,
@@ -660,11 +671,12 @@ export default function ProductCatalogsPage() {
       setEditingCatalog(null);
       setEditName("");
       setEditDescription("");
-      await Promise.all([loadCategories(), loadStats(true)]);
     } catch (err) {
       console.error("Failed to update category:", err);
-      const errorMsg3 = extractBackendError(err, t.productCatalogs.saveFailed);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      const errorMessage = extractBackendError(err, t.productCatalogs.saveFailed);
+      showError("Error", errorMessage);
+      // Reload on error since optimistic update failed
+      await Promise.all([loadCategories(), loadStats(true)]);
     } finally {
       setIsUpdating(false);
     }
@@ -706,9 +718,8 @@ export default function ProductCatalogsPage() {
       // Revert optimistic update on error by reloading
       await Promise.all([loadCategories(true), loadStats(true)]);
       // Display backend error message and bypass silent mode for important errors
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update category";
-      showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
+      const errorMessage = extractBackendError(err, "Failed to update category");
+      showError("Toggle Failed", errorMessage);
     } finally {
       setTogglingCategoryId(null);
     }
@@ -1428,11 +1439,20 @@ export default function ProductCatalogsPage() {
           setEditDescription("");
         }}
         onCategoryCreated={handleCategoryCreated}
-        onCategoryUpdated={async () => {
+        onCategoryUpdated={async (updatedCategory) => {
           setEditingCatalog(null);
           setEditName("");
           setEditDescription("");
-          await loadCategories(true);
+          // Update local state with new data from modal
+          if (updatedCategory) {
+            setCategories((prev) =>
+              prev.map((cat) =>
+                cat.id === updatedCategory.id
+                  ? { ...cat, name: updatedCategory.name, description: updatedCategory.description }
+                  : cat
+              )
+            );
+          }
         }}
         entityType="product"
         category={editingCatalog}

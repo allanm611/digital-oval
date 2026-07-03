@@ -108,7 +108,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
         });
       }
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       navigate("/dashboard/whatsapp-routes");
     } finally {
       setLoading(false);
@@ -152,7 +152,7 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
       navigate("/dashboard/whatsapp-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError(t.common.error, extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

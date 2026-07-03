@@ -168,7 +168,7 @@ export default function ProgramsPage() {
       setPrograms(response.data || []);
     } catch (err) {
       console.error("Failed to load programs:", err);
-      showError(extractBackendError(error, "Failed to load programs. Please try again."));
+      showError(extractBackendError(err, "Failed to load programs. Please try again."));
       setPrograms([]);
     } finally {
       setLoading(false);
@@ -279,7 +279,7 @@ export default function ProgramsPage() {
     } catch (err) {
       console.error("Failed to save program:", err);
       const errorMessage = err instanceof Error ? err.message : "Please try again later.";
-      showError("Failed to save program", extractBackendError(error, "Failed to save program. Please try again."));
+      showError("Failed to save program", extractBackendError(err, "Failed to save program. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -738,7 +738,7 @@ export default function ProgramsPage() {
             await loadPrograms(true);
             await loadStats();
           } catch (error) {
-            showError("Failed to delete program", extractBackendError(error, "Failed to delete program. Please try again."));
+            showError("Failed to delete program", extractBackendError(err, "Failed to delete program. Please try again."));
           }
         }}
         title="Delete Program"

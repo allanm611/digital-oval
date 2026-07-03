@@ -48,8 +48,8 @@ class WhatsAppGatewayConfigService {
     return WHATSAPP_GATEWAY_DUMMY_DATA;
   }
 
-  getAllConfigs(): Promise<WhatsAppGatewayConfig[]> {
-    return Promise.resolve(WHATSAPP_GATEWAY_DUMMY_DATA);
+  async getAllConfigs(): Promise<WhatsAppGatewayConfig[]> {
+    return WHATSAPP_GATEWAY_DUMMY_DATA;
   }
 
   getConfigById(id: number): Promise<WhatsAppGatewayConfig> {

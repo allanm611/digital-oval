@@ -342,7 +342,7 @@ export default function ManualRewardsTestPage() {
         success: false,
         error: (err as Error).message,
       });
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsLoading(false);
     }

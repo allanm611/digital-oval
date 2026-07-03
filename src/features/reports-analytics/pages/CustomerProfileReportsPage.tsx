@@ -677,7 +677,7 @@ export default function CustomerProfileReportsPage() {
 
         setApiCustomers(allCustomers);
       } catch (error) {
-        showError("Failed to Load Customers", extractBackendError(error, "Failed to Load Customers. Please try again."));
+        showError("Failed to Load Customers", extractBackendError(err, "Failed to Load Customers. Please try again."));
       } finally {
         setIsLoadingCustomers(false);
       }
@@ -728,7 +728,7 @@ export default function CustomerProfileReportsPage() {
           }
         } catch (error) {
           console.error("Failed to fetch customer by ID:", error);
-          showError("Customer Not Found", extractBackendError(error, "Customer Not Found. Please try again."));
+          showError("Customer Not Found", extractBackendError(err, "Customer Not Found. Please try again."));
         }
       };
 

@@ -314,7 +314,7 @@ export default function ConnectionProfileFormPage({
       });
     } catch (err) {
       console.error("Failed to load connection profile:", err);
-      showError("Unable to Load Profile", extractBackendError(error, "Unable to Load Profile. Please try again."));
+      showError("Unable to Load Profile", extractBackendError(err, "Unable to Load Profile. Please try again."));
     } finally {
       setLoading(false);
     }

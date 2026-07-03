@@ -86,15 +86,7 @@ class SMSGatewayConfigService {
   }
 
   async getAllConfigs(): Promise<SMSGatewayConfig[]> {
-    try {
-      const data = await this.request<{
-        success: boolean;
-        data: SMSGatewayConfig[];
-      }>("");
-      return data.data;
-    } catch (err) {
-      return SMS_GATEWAY_DUMMY_DATA;
-    }
+    return SMS_GATEWAY_DUMMY_DATA;
   }
 
   async getConfigById(id: number): Promise<SMSGatewayConfig> {

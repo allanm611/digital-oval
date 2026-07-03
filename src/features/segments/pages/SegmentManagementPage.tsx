@@ -708,7 +708,7 @@ export default function SegmentManagementPage() {
       );
     } catch (err: unknown) {
       const message = (err as Error).message || "Failed to compute segment";
-      showError("Compute failed", extractBackendError(error, "Compute failed. Please try again."));
+      showError("Compute failed", extractBackendError(err, "Compute failed. Please try again."));
     } finally {
       setComputingSegmentId(null);
       setComputeLocation(null);

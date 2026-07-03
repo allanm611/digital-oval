@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, Eye } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -82,6 +82,45 @@ function EmailRoutesListView() {
         </span>
       ),
     },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      isActionColumn: true,
+      render: (value, route) => (
+        <div className="flex items-center justify-center gap-2">
+          <ActivateDeactivateButton
+            isActive={route.isActive}
+            onToggle={() => handleToggleActive(route)}
+            disabled={togglingItemId === route.id}
+            isLoading={togglingItemId === route.id}
+            title={route.isActive ? "Deactivate" : "Activate"}
+          />
+          <button
+            onClick={() => handleViewDetails(route)}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleEditRoute(route)}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(route)}
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const {
@@ -111,6 +150,10 @@ function EmailRoutesListView() {
 
   const handleCreateRoute = () => {
     navigate("create");
+  };
+
+  const handleViewDetails = (route: EmailRoute) => {
+    navigate(`/dashboard/routes/${route.id}`);
   };
 
   const handleEditRoute = (route: EmailRoute) => {
@@ -161,7 +204,6 @@ function EmailRoutesListView() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
           }}
         />
       </div>
@@ -227,7 +269,6 @@ function EmailRoutesListView() {
         onConfirm={async () => {
           try {
             await confirmDeleteRoute(deleteConfirm.id);
-            showToast("Delete Email Route", `Route deleted successfully`);
           } catch (err) {
             showError(t.genericConfig.error, "Failed to delete email route");
           }

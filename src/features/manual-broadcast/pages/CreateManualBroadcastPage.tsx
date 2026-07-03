@@ -218,7 +218,7 @@ export default function CreateManualBroadcastPage() {
           setBroadcastData(prefillData);
         } catch (err) {
           console.error("Failed to load broadcast details:", err);
-          showError("Failed to load broadcast details", extractBackendError(error, "Failed to load broadcast details. Please try again."));
+          showError("Failed to load broadcast details", extractBackendError(err, "Failed to load broadcast details. Please try again."));
           navigate("/dashboard/manual-communications");
         } finally {
           setIsLoading(false);

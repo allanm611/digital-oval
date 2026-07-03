@@ -183,7 +183,7 @@ export default function QuickListsPage() {
       setAllQuicklists(allData);
     } catch (err) {
       console.error("Failed to load initial data:", err);
-      showError(extractBackendError(error, "Failed to load QuickLists. Please try again."));
+      showError(extractBackendError(err, "Failed to load QuickLists. Please try again."));
     } finally {
       setLoading(false);
     }

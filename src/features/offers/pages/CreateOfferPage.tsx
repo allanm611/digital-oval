@@ -2807,7 +2807,7 @@ export default function CreateOfferPage({
       } else if (hasMessageString(error)) {
         errorMessage = error.message;
       }
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSavingDraft(false);
     }

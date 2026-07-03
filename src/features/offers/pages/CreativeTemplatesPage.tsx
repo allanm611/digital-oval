@@ -63,7 +63,7 @@ export default function CreativeTemplatesPage() {
       const response = await creativeTemplateService.getCreativeTemplates();
       setTemplates(response.data || []);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load creative templates. Please try again."));
+      showError(extractBackendError(err, "Failed to load creative templates. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -411,7 +411,7 @@ export default function CreativeTemplatesPage() {
             await confirmDeleteTemplate(deleteConfirm.id);
             showSuccess("Creative Template deleted successfully");
           } catch (error) {
-            showError("Failed to delete creative template", extractBackendError(error, "Failed to delete creative template. Please try again."));
+            showError("Failed to delete creative template", extractBackendError(err, "Failed to delete creative template. Please try again."));
           }
         }}
         title="Delete Creative Template"

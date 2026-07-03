@@ -252,7 +252,7 @@ export default function CreateScheduledJobPage() {
             }
           }
         } catch (err) {
-          showError("Failed to load job", extractBackendError(error, "Failed to load job. Please try again."));
+          showError("Failed to load job", extractBackendError(err, "Failed to load job. Please try again."));
           navigate("/dashboard/scheduled-jobs");
         } finally {
           setIsLoading(false);

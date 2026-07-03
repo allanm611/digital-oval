@@ -105,7 +105,7 @@ export default function CreateEditTimezonePage() {
       }
     } catch (err) {
       console.error("Failed to load timezone:", err);
-      showError("Failed to load timezone", extractBackendError(error, "Failed to load timezone. Please try again."));
+      showError("Failed to load timezone", extractBackendError(err, "Failed to load timezone. Please try again."));
       navigate("/dashboard/timezones");
     } finally {
       setLoading(false);
@@ -168,7 +168,7 @@ export default function CreateEditTimezonePage() {
       navigate("/dashboard/timezones");
     } catch (err) {
       console.error("Failed to save timezone:", err);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

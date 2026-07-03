@@ -48,7 +48,7 @@ export default function WorkflowDetailsPage() {
         );
         setIsActive(activeCheck.is_active);
       } catch (err) {
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -92,7 +92,7 @@ export default function WorkflowDetailsPage() {
         setWorkflow({ ...workflow, is_active: !isActive });
       }
     } catch (err) {
-      showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
+      showError("Toggle Failed", extractBackendError(err, "Toggle Failed. Please try again."));
     } finally {
       setIsToggling(false);
     }
@@ -110,7 +110,7 @@ export default function WorkflowDetailsPage() {
       showToast("Success", "Workflow has been cloned successfully");
       navigate("/dashboard/workflows");
     } catch (err) {
-      showError("Clone Failed", extractBackendError(error, "Clone Failed. Please try again."));
+      showError("Clone Failed", extractBackendError(err, "Clone Failed. Please try again."));
     } finally {
       setIsCloning(false);
     }
@@ -124,7 +124,7 @@ export default function WorkflowDetailsPage() {
       showToast("Workflow deleted", "Workflow has been deleted successfully.");
       navigate("/dashboard/workflows");
     } catch (err) {
-      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
+      showError("Delete failed", extractBackendError(err, "Delete failed. Please try again."));
     } finally {
       closeDeleteConfirm();
     }

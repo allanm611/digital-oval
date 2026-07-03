@@ -112,7 +112,7 @@ export default function AssignPermissionsModal({
           : [];
         setAllPermissions(permsToSet);
       } catch (err) {
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -173,7 +173,7 @@ export default function AssignPermissionsModal({
 
       setAssignedPermissions(assigned);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -245,7 +245,7 @@ export default function AssignPermissionsModal({
 
     } catch (err) {
       console.error("Error toggling permission:", err);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       // Revert optimistic update on error
       if (isAssigned) {
         setAssignedPermissions([...assignedPermissions, permission]);
@@ -458,7 +458,7 @@ export default function AssignPermissionsModal({
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
     } catch (err) {
-      showError("Assignment Failed", extractBackendError(error, "Assignment Failed. Please try again."));
+      showError("Assignment Failed", extractBackendError(err, "Assignment Failed. Please try again."));
       // Revert optimistic update on error
       setAssignedPermissions(
         assignedPermissions.filter(
@@ -506,7 +506,7 @@ export default function AssignPermissionsModal({
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
     } catch (err) {
-      showError("Removal Failed", extractBackendError(error, "Removal Failed. Please try again."));
+      showError("Removal Failed", extractBackendError(err, "Removal Failed. Please try again."));
       // Revert optimistic update on error
       const removedIds = new Set(assignedToRemove);
       setAssignedPermissions((prev) => [

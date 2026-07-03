@@ -7,6 +7,7 @@ import {
   lazy,
   Suspense,
 } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useConfirm } from "../../../contexts/ConfirmContext";
@@ -35,6 +36,9 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import { TableColumn } from "../../../shared/components/Table/types";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
@@ -233,6 +237,69 @@ export default function OfferDetailsPage() {
   const [offerCreatives, setOfferCreatives] = useState<OfferCreative[]>([]);
   const [creativesLoading, setCreativesLoading] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Table management states and hooks
+  const [showLinkedProductsColumnPicker, setShowLinkedProductsColumnPicker] = useState(false);
+  const [showCampaignFlowsColumnPicker, setShowCampaignFlowsColumnPicker] = useState(false);
+
+  const linkedProductsTable = useTable({
+    tableId: "offer-linked-products-table",
+    defaultColumns: useMemo(() => [
+      { id: "id", label: "Product ID", width: "100px", visible: true, filterConfig: { type: "number" } },
+      { id: "name", label: "Product Name", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "quantity", label: "Quantity", width: "100px", visible: true, filterConfig: { type: "number" } },
+      { id: "actions", label: "Actions", width: "120px", visible: true, sortable: false, isActionColumn: true },
+    ], []),
+    defaultPageSize: 25,
+  });
+
+  const creativesTable = useTable({
+    tableId: "offer-creatives-table",
+    defaultColumns: useMemo(() => [
+      { id: "channel", label: "Channel", width: "120px", visible: true, filterConfig: { type: "text" } },
+      { id: "locale", label: "Locale", width: "100px", visible: true, filterConfig: { type: "text" } },
+      { id: "title", label: "Title", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "status", label: "Status", width: "100px", visible: true, filterConfig: { type: "text" } },
+      { id: "actions", label: "Actions", width: "120px", visible: true, sortable: false, isActionColumn: true },
+    ], []),
+    defaultPageSize: 25,
+  });
+
+  const campaignFlowsTable = useTable({
+    tableId: "offer-campaign-flows-table",
+    defaultColumns: useMemo(() => [
+      { id: "campaignId", label: "Campaign ID", width: "120px", visible: true, filterConfig: { type: "number" } },
+      { id: "campaignName", label: "Campaign Name", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "segmentName", label: "Segment", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "flowType", label: "Flow Type", width: "150px", visible: true, filterConfig: { type: "text" } },
+      { id: "status", label: "Status", width: "100px", visible: true, filterConfig: { type: "text" } },
+      { id: "actions", label: "Actions", width: "120px", visible: true, sortable: false, isActionColumn: true },
+    ], []),
+    defaultPageSize: 25,
+  });
+
+  // Dropdown menu state for product actions
+  const [openProductMenu, setOpenProductMenu] = useState<string | null>(null);
+  const productMenuRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [productMenuPosition, setProductMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const productMenuPortalRef = useRef<HTMLDivElement | null>(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    if (!openProductMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const menuButton = Object.values(productMenuRefs.current).find(
+        (btn) => btn && btn.contains(e.target as Node)
+      );
+      if (!menuButton && productMenuPortalRef.current && !productMenuPortalRef.current.contains(e.target as Node)) {
+        setOpenProductMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openProductMenu]);
 
   // Creative edit modal state
   const [isEditCreativeModalOpen, setIsEditCreativeModalOpen] = useState(false);
@@ -702,7 +769,7 @@ export default function OfferDetailsPage() {
         }
       } catch (err) {
         console.error("Failed to load offer:", err);
-        showError("Failed to load offer", extractBackendError(error, "Failed to load offer. Please try again."));
+        showError("Failed to load offer", extractBackendError(err, "Failed to load offer. Please try again."));
         setError(""); // Clear error state
       } finally {
         setLoading(false);
@@ -943,7 +1010,7 @@ export default function OfferDetailsPage() {
       );
     } catch (err) {
       console.error("Failed to delete creative:", err);
-      showError("Failed to delete creative", extractBackendError(error, "Failed to delete creative. Please try again."));
+      showError("Failed to delete creative", extractBackendError(err, "Failed to delete creative. Please try again."));
     } finally {
       setIsDeletingCreative(false);
     }
@@ -1045,7 +1112,7 @@ export default function OfferDetailsPage() {
       loadCreatives(true);
     } catch (err) {
       console.error("Failed to create creative:", err);
-      showError("Failed to create creative", extractBackendError(error, "Failed to create creative. Please try again."));
+      showError("Failed to create creative", extractBackendError(err, "Failed to create creative. Please try again."));
     } finally {
       setIsCreatingCreative(false);
     }
@@ -1206,7 +1273,7 @@ export default function OfferDetailsPage() {
       loadProducts(true);
     } catch (err) {
       console.error("Failed to link products:", err);
-      showError("Failed to link products", extractBackendError(error, "Failed to link products. Please try again."));
+      showError("Failed to link products", extractBackendError(err, "Failed to link products. Please try again."));
     } finally {
       setIsLinkingProducts(false);
     }
@@ -1493,7 +1560,7 @@ export default function OfferDetailsPage() {
           : null) ||
         "Failed to delete product. Please try again.";
       // Bypass silent mode for delete operations to always show error
-      showError("Cannot Delete Product", extractBackendError(error, "Cannot Delete Product. Please try again."));
+      showError("Cannot Delete Product", extractBackendError(err, "Cannot Delete Product. Please try again."));
     } finally {
       setIsDeletingProduct(false);
     }
@@ -1589,7 +1656,7 @@ export default function OfferDetailsPage() {
       );
     } catch (err) {
       // Failed to set primary product - show generic message only
-      showError("Failed to set primary", extractBackendError(error, "Failed to set primary. Please try again."));
+      showError("Failed to set primary", extractBackendError(err, "Failed to set primary. Please try again."));
     } finally {
       setSettingPrimaryId(null);
     }
@@ -2175,60 +2242,50 @@ export default function OfferDetailsPage() {
                         const isUnlinking = product.link_id && unlinkingProductId === product.link_id;
                         const isSettingPrimary = settingPrimaryId === productId;
                         return (
-                          <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-2 overflow-visible">
                             {hasValidProductId && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleEditProduct(productId)}
-                                  className="text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  title="Edit product"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setProductToDelete({ id: productId, name: row.name });
-                                    setShowDeleteProductModal(true);
-                                  }}
-                                  disabled={isDeletingProduct}
-                                  className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  title="Delete product"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete
-                                </button>
-                              </>
-                            )}
-                            {!isPrimary && (product.link_id || hasValidProductId) && (
                               <button
                                 type="button"
-                                onClick={() => handleSetPrimaryProduct(productId, row.name)}
-                                disabled={isSettingPrimary || isUnlinking}
-                                className="text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:underline"
-                                style={{ color: color.primary.accent }}
-                                title="Set as primary"
+                                onClick={() => handleEditProduct(productId)}
+                                className={`flex items-center justify-center p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="Edit product"
                               >
-                                {isSettingPrimary || isUnlinking ? "Setting..." : "Set Primary"}
+                                <Edit className="h-4 w-4 text-gray-600" />
                               </button>
                             )}
-                            {(product.link_id || hasValidProductId) && (
+                            {hasValidProductId && (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  if (!product.link_id) {
-                                    showError("Cannot unlink: Link ID not available. Product may need to be re-linked.");
-                                    return;
-                                  }
-                                  setProductToUnlink({ linkId: product.link_id, productId, name: row.name });
-                                  setShowUnlinkModal(true);
-                                }}
-                                disabled={isUnlinking || isSettingPrimary || !product.link_id}
-                                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => navigateToProductDetails(productId)}
+                                className={`flex items-center justify-center p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="View product"
                               >
-                                {isUnlinking ? "Unlinking..." : "Unlink"}
+                                <Eye className="h-4 w-4 text-gray-600" />
+                              </button>
+                            )}
+                            {hasValidProductId && (
+                              <button
+                                ref={(el) => {
+                                  if (el) productMenuRefs.current[String(productId)] = el;
+                                }}
+                                type="button"
+                                onClick={(e) => {
+                                  const menuId = String(productId);
+                                  const button = productMenuRefs.current[menuId];
+                                  if (button) {
+                                    const rect = button.getBoundingClientRect();
+                                    // Position menu below and to the left of button, accounting for menu width (192px)
+                                    setProductMenuPosition({
+                                      top: rect.bottom + 8,
+                                      left: Math.max(8, rect.right - 192 - 8),
+                                    });
+                                  }
+                                  setOpenProductMenu(openProductMenu === menuId ? null : menuId);
+                                }}
+                                className={`flex items-center justify-center p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="More options"
+                              >
+                                <MoreVertical className="h-4 w-4 text-gray-600" />
                               </button>
                             )}
                           </div>
@@ -2249,6 +2306,10 @@ export default function OfferDetailsPage() {
                       primary: isPrimary ? "Primary" : "—",
                     };
                   })}
+                  onSort={linkedProductsTable.handleSort}
+                  sortConfigs={linkedProductsTable.sortConfigs}
+                  onHideColumn={linkedProductsTable.toggleColumn}
+                  onManageColumnsClick={() => setShowLinkedProductsColumnPicker(true)}
                   rowSpacing="0 8px"
                   totalItems={linkedProducts.length}
                   currentPage={1}
@@ -2268,6 +2329,85 @@ export default function OfferDetailsPage() {
           )}
         </div>
       </section>
+
+      {/* Product Menu Portal */}
+      {openProductMenu &&
+        productMenuPosition &&
+        createPortal(
+          <div
+            ref={productMenuPortalRef}
+            className="fixed bg-white border border-gray-200 rounded shadow-lg z-50 w-48"
+            style={{
+              top: `${productMenuPosition.top}px`,
+              left: `${productMenuPosition.left}px`,
+              maxHeight: "200px",
+              overflowY: "auto",
+            }}
+          >
+            {(() => {
+              const product = linkedProducts.find(
+                (p) => String(p.product_id ?? p.id) === openProductMenu
+              );
+              if (!product) return null;
+
+              const productId = Number(product.product_id ?? product.id);
+              const isPrimary = product.is_primary || primaryProductId === productId;
+              const isUnlinking = product.link_id && unlinkingProductId === product.link_id;
+              const isSettingPrimary = settingPrimaryId === productId;
+
+              return (
+                <>
+                  {!isPrimary && (product.link_id || !Number.isNaN(productId)) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSetPrimaryProduct(productId, product.name || `Product ${productId}`);
+                        setOpenProductMenu(null);
+                      }}
+                      disabled={isSettingPrimary || isUnlinking}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isSettingPrimary || isUnlinking ? "Setting..." : "Set Primary"}
+                    </button>
+                  )}
+                  {(product.link_id || !Number.isNaN(productId)) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!product.link_id) {
+                          showError("Cannot unlink: Link ID not available. Product may need to be re-linked.");
+                          return;
+                        }
+                        setProductToUnlink({ linkId: product.link_id, productId, name: product.name || `Product ${productId}` });
+                        setShowUnlinkModal(true);
+                        setOpenProductMenu(null);
+                      }}
+                      disabled={isUnlinking || isSettingPrimary || !product.link_id}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isUnlinking ? "Unlinking..." : "Unlink"}
+                    </button>
+                  )}
+                  {(product.link_id || !Number.isNaN(productId)) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProductToDelete({ id: productId, name: product.name || `Product ${productId}` });
+                        setShowDeleteProductModal(true);
+                        setOpenProductMenu(null);
+                      }}
+                      disabled={isDeletingProduct}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isDeletingProduct ? "Deleting..." : "Delete"}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>,
+          document.body
+        )}
 
       {/* Offer Creatives Section */}
       <section className="mt-12 space-y-4">
@@ -2394,31 +2534,37 @@ export default function OfferDetailsPage() {
                         const creativeId = creative.id ? Number(creative.id) : null;
                         const hasCreativeId = creativeId !== null && !Number.isNaN(creativeId);
                         return (
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 overflow-visible">
                             {hasCreativeId && (
                               <button
                                 type="button"
                                 onClick={() => navigateToCreativeDetails(creativeId)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
                                 title="View details"
                               >
-                                <Eye className="w-4 h-4" />
+                                <Eye className="w-4 h-4 text-gray-600" />
                               </button>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => handleEditCreative(creative)}
-                              className="text-sm font-medium hover:underline text-gray-600"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCreative(creative)}
-                              className="text-sm font-medium text-red-600 hover:text-red-700"
-                            >
-                              Delete
-                            </button>
+                            {hasCreativeId && (
+                              <button
+                                type="button"
+                                onClick={() => handleEditCreative(creative)}
+                                className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="Edit creative"
+                              >
+                                <Edit className="w-4 h-4 text-gray-600" />
+                              </button>
+                            )}
+                            {hasCreativeId && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCreative(creative)}
+                                className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
+                                title="Delete creative"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </button>
+                            )}
                           </div>
                         );
                       },
@@ -2435,6 +2581,9 @@ export default function OfferDetailsPage() {
                       updated: creative.updated_at || creative.created_at || "",
                     };
                   })}
+                  onSort={creativesTable.handleSort}
+                  sortConfigs={creativesTable.sortConfigs}
+                  onHideColumn={creativesTable.toggleColumn}
                   rowSpacing="0 8px"
                   totalItems={offerCreatives.length}
                   currentPage={1}
@@ -2562,6 +2711,10 @@ export default function OfferDetailsPage() {
                   waitHours: flow.wait_interval_hours,
                   allocation: flow.bucket_allocation || "—",
                 }))}
+                onSort={campaignFlowsTable.handleSort}
+                sortConfigs={campaignFlowsTable.sortConfigs}
+                onHideColumn={campaignFlowsTable.toggleColumn}
+                onManageColumnsClick={() => setShowCampaignFlowsColumnPicker(true)}
                 rowSpacing="0 8px"
                 totalItems={campaignFlows.length}
                 currentPage={1}
@@ -3727,6 +3880,37 @@ export default function OfferDetailsPage() {
           )}
         </div>
       </RegularModal>
+
+      {/* Column Picker Modals */}
+      <ColumnPickerModal
+        isOpen={showLinkedProductsColumnPicker}
+        columns={linkedProductsTable.columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowLinkedProductsColumnPicker(false)}
+        onToggleColumn={linkedProductsTable.toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = linkedProductsTable.columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          linkedProductsTable.reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={linkedProductsTable.resetToDefaults}
+      />
+
+      <ColumnPickerModal
+        isOpen={showCampaignFlowsColumnPicker}
+        columns={campaignFlowsTable.columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowCampaignFlowsColumnPicker(false)}
+        onToggleColumn={campaignFlowsTable.toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = campaignFlowsTable.columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          campaignFlowsTable.reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={campaignFlowsTable.resetToDefaults}
+      />
     </div>
   );
 }

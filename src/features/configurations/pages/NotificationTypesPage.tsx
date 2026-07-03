@@ -52,7 +52,7 @@ export default function NotificationTypesPage() {
       });
       setCategoryMap(map);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load notification types. Please try again."));
+      showError(extractBackendError(err, "Failed to load notification types. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -284,7 +284,7 @@ export default function NotificationTypesPage() {
             await confirmDeleteRule(deleteConfirm.id);
             showSuccess("Notification type deleted successfully");
           } catch (error) {
-            showError("Failed to delete notification type", extractBackendError(error, "Failed to delete notification type. Please try again."));
+            showError("Failed to delete notification type", extractBackendError(err, "Failed to delete notification type. Please try again."));
           }
         }}
         title="Delete Notification Type"

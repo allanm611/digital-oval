@@ -587,7 +587,7 @@ export default function UserManagementPage() {
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
-        showError("Error loading users", extractBackendError(error, "Error loading users. Please try again."));
+        showError("Error loading users", extractBackendError(err, "Error loading users. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -755,7 +755,7 @@ export default function UserManagementPage() {
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
-        showError("Error loading data", extractBackendError(error, "Error loading data. Please try again."));
+        showError("Error loading data", extractBackendError(err, "Error loading data. Please try again."));
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -906,7 +906,7 @@ export default function UserManagementPage() {
         });
       }
     } catch (err) {
-      showError("Search Error", extractBackendError(error, "Search Error. Please try again."));
+      showError("Search Error", extractBackendError(err, "Search Error. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -1003,7 +1003,7 @@ export default function UserManagementPage() {
         `${t.userManagement.requestApproved} - ${request.first_name} ${request.last_name}`,
       );
     } catch (err) {
-      showError("Error approving request", extractBackendError(error, "Error approving request. Please try again."));
+      showError("Error approving request", extractBackendError(err, "Error approving request. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
@@ -1038,7 +1038,7 @@ export default function UserManagementPage() {
         `${request.first_name} ${request.last_name}'s request is now under review`,
       );
     } catch (err) {
-      showError("Error moving request", extractBackendError(error, "Error moving request. Please try again."));
+      showError("Error moving request", extractBackendError(err, "Error moving request. Please try again."));
     } finally {
       setLoadingActions((prev) => ({
         ...prev,
@@ -1073,7 +1073,7 @@ export default function UserManagementPage() {
         `${request.first_name} ${request.last_name}'s request is now pending approval`,
       );
     } catch (err) {
-      showError("Error moving request", extractBackendError(error, "Error moving request. Please try again."));
+      showError("Error moving request", extractBackendError(err, "Error moving request. Please try again."));
     } finally {
       setLoadingActions((prev) => ({
         ...prev,
@@ -1141,7 +1141,7 @@ export default function UserManagementPage() {
         `${request.first_name} ${request.last_name} has been added to the system`,
       );
     } catch (err) {
-      showError("Error creating user", extractBackendError(error, "Error creating user. Please try again."));
+      showError("Error creating user", extractBackendError(err, "Error creating user. Please try again."));
     } finally {
       setLoadingActions((prev) => ({
         ...prev,
@@ -1213,7 +1213,7 @@ export default function UserManagementPage() {
         `${t.userManagement.requestRejected} - ${rejectingRequest.first_name} ${rejectingRequest.last_name}`,
       );
     } catch (err) {
-      showError("Error rejecting request", extractBackendError(error, "Error rejecting request. Please try again."));
+      showError("Error rejecting request", extractBackendError(err, "Error rejecting request. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
@@ -1262,7 +1262,7 @@ export default function UserManagementPage() {
         ),
       );
     } catch (err) {
-      showError("Error updating status", extractBackendError(error, "Error updating status. Please try again."));
+      showError("Error updating status", extractBackendError(err, "Error updating status. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
@@ -1278,7 +1278,7 @@ export default function UserManagementPage() {
 
   const handleDeleteUser = (user: UserType) => {
     if (!authUser?.user_id) {
-      showError("Unable to delete user", extractBackendError(error, "Unable to delete user. Please try again."));
+      showError("Unable to delete user", extractBackendError(err, "Unable to delete user. Please try again."));
       return;
     }
     setUserToDelete(user);
@@ -1306,7 +1306,7 @@ export default function UserManagementPage() {
       closeDeleteConfirm();
       setUserToDelete(null);
     } catch (err) {
-      showError("Error deleting user", extractBackendError(error, "Error deleting user. Please try again."));
+      showError("Error deleting user", extractBackendError(err, "Error deleting user. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({

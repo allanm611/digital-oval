@@ -169,7 +169,7 @@ function OffersModal({
     } catch (err) {
       console.error("Failed to load offers:", err);
       const errorMsg1 = extractBackendError(err, "Failed to load offers");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       setModalError("Failed to load offers. Please try again later.");
     } finally {
       setLoading(false);
@@ -272,7 +272,7 @@ function OfferCategoriesPage() {
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteCategory } = useDeleteConfirm({
     onDelete: async (id) => {
       const numId = typeof id === "string" ? parseInt(id) : id;
-      setCategories((prev) => prev.filter((c) => c.id !== numId));
+      setOfferCategories((prev) => prev.filter((c) => c.id !== numId));
       await offerCategoryService.deleteCategory(numId);
     },
     itemLabel: "Offer Category",
@@ -695,7 +695,7 @@ function OfferCategoriesPage() {
     } catch (err) {
       console.error("Failed to load categories:", err);
       const errorMsg2 = extractBackendError(err, "Failed to load categories");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       setPageError("Failed to load offer catalogs. Please try again later.");
       setOfferCategories([]);
     } finally {
@@ -767,31 +767,50 @@ function OfferCategoriesPage() {
   }) => {
     try {
       if (editingCategory) {
-        // Update existing category
+        // Optimistic update for existing category
+        const previousCategories = offerCategories;
+        setOfferCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === editingCategory.id
+              ? { ...cat, ...categoryData, updated_at: new Date().toISOString() }
+              : cat
+          )
+        );
+
         await offerCategoryService.updateCategory(
           editingCategory.id,
           categoryData as UpdateOfferCategoryRequest,
         );
         success(t.offerCatalogs.updateSuccess);
       } else {
-        // Create new category
+        // Optimistic create for new category
+        const tempId = Math.min(...offerCategories.map(c => c.id), 0) - 1;
+        const newCategory = {
+          id: tempId,
+          name: categoryData.name,
+          description: categoryData.description || "",
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          offer_count: 0,
+        };
+
+        setOfferCategories((prev) => [newCategory, ...prev]);
+
         await offerCategoryService.createCategory(
           categoryData as CreateOfferCategoryRequest,
         );
         success(t.offerCatalogs.createSuccess);
       }
 
-      // Refresh both offers and categories to get updated counts
-      await loadAllOffers();
-      await loadCategories(true);
-      await loadStats(); // Refresh stats too
-
       setIsModalOpen(false);
       setEditingCategory(undefined);
     } catch (err) {
       console.error("Failed to save category:", err);
-      const errorMsg3 = extractBackendError(err, t.offerCatalogs.saveFailed);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      const errorMessage = extractBackendError(err, t.offerCatalogs.saveFailed);
+      showError("Error", errorMessage);
+      // Reload on error since optimistic update failed
+      await Promise.all([loadCategories(true), loadStats()]);
     }
   };
 
@@ -1400,10 +1419,20 @@ function OfferCategoriesPage() {
         onClose={() => setIsModalOpen(false)}
         category={editingCategory}
         onCategoryCreated={async () => {
-          await loadCategories(true);
+          // Reload to get new category (needed since modal creates)
+          await Promise.all([loadCategories(true), loadStats()]);
         }}
-        onCategoryUpdated={async () => {
-          await loadCategories(true);
+        onCategoryUpdated={async (updatedCategory) => {
+          // Update local state with new data from modal
+          if (updatedCategory) {
+            setOfferCategories((prev) =>
+              prev.map((cat) =>
+                cat.id === updatedCategory.id
+                  ? { ...cat, name: updatedCategory.name, description: updatedCategory.description }
+                  : cat
+              )
+            );
+          }
         }}
         entityType="offer"
       />
