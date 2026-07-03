@@ -366,7 +366,7 @@ const generateCustomerRows = (): CustomerRow[] => {
 };
 
 const fallbackCustomerRows: CustomerRow[] = generateCustomerRows();
-const CUSTOMER_TABLE_PAGE_SIZE = 10;
+const tablePageSize = 10;
 // Table headers will be translated inside the component
 const tableCellBackground: CSSProperties = {
   backgroundColor: color.surface.tablebodybg,
@@ -493,6 +493,7 @@ export default function CustomerProfileReportsPage() {
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
+  const [tablePageSize, setTablePageSize] = useState(DEFAULT_PAGE_SIZE);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [apiCustomers, setApiCustomers] = useState<
@@ -505,69 +506,95 @@ export default function CustomerProfileReportsPage() {
   const [isSearchingTable, setIsSearchingTable] = useState(false);
   const [useDummyData, setUseDummyData] = useState(true); // Charts use dummy data, table uses API data
 
-  const tableColumns: TableColumn<CustomerRow>[] = [
+  const tableColumns: TableColumn<any>[] = [
     {
-      id: "id",
+      id: "customerId",
       label: "Customer ID",
       visible: true,
       sortable: true,
       filterConfig: { type: "text" },
     },
     {
-      id: "email",
-      label: "Name",
+      id: "firstName",
+      label: "First Name",
       visible: true,
       sortable: true,
-      render: (_, row) => row.name,
     },
     {
-      id: "phone",
+      id: "lastName",
+      label: "Last Name",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "msisdn",
       label: "MSISDN",
       visible: true,
       sortable: true,
     },
     {
-      id: "segment",
+      id: "customerType",
       label: "Customer Type",
       visible: true,
       sortable: true,
-      filterConfig: { type: "select", options: ["Champions", "Loyalists", "Potential Loyalist", "At-Risk", "Reactivated"] },
     },
     {
-      id: "orders",
+      id: "status",
       label: "Status",
       visible: true,
       sortable: true,
     },
     {
-      id: "lifetimeValue",
+      id: "activationDate",
       label: "Activation Date",
       visible: true,
       sortable: true,
     },
     {
-      id: "location",
-      label: "City",
-      visible: true,
-      sortable: true,
-    },
-    {
-      id: "clv",
+      id: "email",
       label: "Email",
       visible: true,
       sortable: true,
+      render: (_, row) => row.email || "—",
     },
     {
-      id: "engagementScore",
+      id: "tariff",
+      label: "Tariff",
+      visible: true,
+      sortable: true,
+      render: (_, row) => row.tariff || "—",
+    },
+    {
+      id: "simType",
+      label: "SIM Type",
+      visible: true,
+      sortable: true,
+      render: (_, row) => row.simType || "—",
+    },
+    {
+      id: "actions",
       label: "Actions",
       visible: true,
+      sortable: false,
+      isActionColumn: true,
+      render: (_, row) => (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => navigate(`/dashboard/customers/details/${row.customerId}`)}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+            title={t.common.viewDetails}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
+      ),
     },
   ];
 
   const { columns: tableColumnsMemo, toggleColumn, reorderColumns, resetToDefaults } = useTable({
     tableId: "customer-reports-table",
     defaultColumns: tableColumns,
-    defaultPageSize: CUSTOMER_TABLE_PAGE_SIZE,
+    defaultPageSize: tablePageSize,
   });
 
   const locationState = location.state as
@@ -746,13 +773,11 @@ export default function CustomerProfileReportsPage() {
     // Updates when filters applied in the Table component
   };
 
-  // Convert API customers to CustomerRow format for table display (includes searched customers)
+  // Use raw API customer data for table display (includes searched customers)
   const apiCustomerRows = useMemo(() => {
     const allCustomers =
       searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
-    return allCustomers.map((subscription) =>
-      convertSubscriptionToCustomerRow(subscription),
-    );
+    return allCustomers;
   }, [apiCustomers, searchedApiCustomers]);
 
   // Build subscription lookup from API customers (includes searched customers)
@@ -1144,7 +1169,7 @@ export default function CustomerProfileReportsPage() {
     setTablePage((prev) => {
       const maxPage = Math.max(
         1,
-        Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE),
+        Math.ceil(tableCustomers.length / tablePageSize),
       );
       return Math.min(prev, maxPage);
     });
@@ -1212,7 +1237,7 @@ export default function CustomerProfileReportsPage() {
             type="button"
             onClick={handleCustomerSearch}
             disabled={isSearchingCustomer}
-            className={`px-6 py-3.5 text-sm font-semibold text-white ${tw.rounded} hover:opacity-95 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`px-4 py-2 text-sm font-semibold text-white ${tw.rounded} hover:opacity-95 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
           >
             {isSearchingCustomer
@@ -1902,7 +1927,7 @@ export default function CustomerProfileReportsPage() {
               data={apiCustomerRows}
               totalItems={apiCustomerRows.length}
               currentPage={tablePage}
-              pageSize={CUSTOMER_TABLE_PAGE_SIZE}
+              pageSize={tablePageSize}
               onPageChange={setTablePage}
               onFilteredCountChange={handleFilteredCountChange}
               clearFiltersKey={clearFiltersKey}
@@ -1918,9 +1943,13 @@ export default function CustomerProfileReportsPage() {
             {apiCustomerRows.length > 0 && (
               <Pagination
                 currentPage={tablePage}
-                pageSize={CUSTOMER_TABLE_PAGE_SIZE}
+                pageSize={tablePageSize}
                 totalItems={apiCustomerRows.length}
                 onPageChange={setTablePage}
+                onPageSizeChange={(size) => {
+                  setTablePageSize(size);
+                  setTablePage(1);
+                }}
               />
             )}
             {!tableCustomers.length && (

@@ -270,29 +270,26 @@ export default function ComboTypesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton
-       
-        showBreadcrumb={true}
-        currentLabel="Combo Types"
-      />
+      {/* Breadcrumb with Create Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
 
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Combo Types
-          </h1>
-          <p className={`text-sm ${tw.textSecondary} mt-1`}>
-            Define and manage different types of product combinations
-          </p>
+            showBreadcrumb={true}
+            currentLabel="Combo Types"
+          />
+          <button
+            onClick={() => navigate("/dashboard/combo-types/create")}
+            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create
+          </button>
         </div>
-        <button
-          onClick={() => navigate("/dashboard/combo-types/create")}
-          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create
-        </button>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Define and manage different types of product combinations
+        </p>
       </div>
 
       <div className="my-5">

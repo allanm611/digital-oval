@@ -17,7 +17,7 @@ export interface CustomerRow {
   lastInteractionDate: string;
   engagementScore: number;
   churnRisk: number;
-  preferredChannel: "Email" | "SMS" | "Push";
+  preferredChannel?: "Email" | "SMS" | "Push";
   location: string;
 }
 
@@ -71,27 +71,49 @@ export const convertSubscriptionToCustomerRow = (
 
   const activationDate = record.activationDate
     ? new Date(record.activationDate)
+    : record.created_at
+    ? new Date(record.created_at)
     : null;
   const lastInteractionDate = activationDate
     ? activationDate.toISOString().split("T")[0]
     : new Date().toISOString().split("T")[0];
 
+  // Calculate real metrics from API response
+  const totalRevenue = (
+    parseFloat(record.total_data_revenue_new || "0") +
+    parseFloat(record.total_voice_revenue_new || "0")
+  );
+  const currentBalance = parseFloat(record.current_balance || "0");
+  const smsUsage = record.total_sms_usage_new || 0;
+  const dataUsage = parseFloat(record.total_dou || "0");
+
+  // Derive engagement score from usage patterns
+  const engagementScore = Math.min(
+    100,
+    Math.round(
+      (smsUsage > 0 ? 20 : 0) +
+      (dataUsage > 0 ? 30 : 0) +
+      (totalRevenue > 0 ? 50 : 0)
+    )
+  );
+
   return {
     id: record.id || record.customerId.toString(),
     name,
-    segment: record.customerType ?? "General",
-    lifetimeValue: 0,
-    clv: 0,
-    orders: 0,
-    aov: 0,
+    email: record.email || record.email_address,
+    segment: record.customerType || undefined,
+    lifetimeValue: currentBalance,
+    clv: totalRevenue,
+    orders: smsUsage,
+    aov: smsUsage > 0 ? totalRevenue / smsUsage : 0,
     lastPurchase: activationDate
       ? activationDate.toLocaleDateString("en-KE")
       : "—",
     lastInteractionDate,
-    engagementScore: 70,
-    churnRisk: deriveChurnRisk(record.status),
-    preferredChannel: "SMS",
-    location: record.city ?? "Nairobi, KE",
+    engagementScore,
+    churnRisk: deriveChurnRisk(record.subscriber_status || record.status),
+    preferredChannel: (record.preferred_channel as "Email" | "SMS" | "Push") || (record.preferred_language as "Email" | "SMS" | "Push"),
+    location: record.city || undefined,
     msisdn: record.msisdn ? record.msisdn.toString() : undefined,
   };
 };

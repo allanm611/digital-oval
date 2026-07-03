@@ -306,29 +306,40 @@ export default function ConfigurationManager({
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
+      {/* Breadcrumb with Create Button and Description */}
       {showBackButton && (
-        <BackButton
-         
-          showBreadcrumb={true}
-          currentLabel={config.title}
-        />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <BackButton
+
+              showBreadcrumb={true}
+              currentLabel={config.title}
+            />
+            <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} label={config.createButtonText} />
+          </div>
+          {(config as any).description && (
+            <p className={`text-sm ${tw.textSecondary}`}>{(config as any).description}</p>
+          )}
+        </div>
       )}
       {!showBackButton && (
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            {config.title}
-          </h1>
-        </div>
-      )}
-
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
-        <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
-        <div className="flex items-center gap-3 w-auto ml-auto">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+          <div className="space-y-1.5">
+            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+              {config.title}
+            </h1>
+            <div className="space-y-1">
+              <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
+              {(config as any).description && (
+                <p className={`text-sm ${tw.textSecondary}`}>
+                  {(config as any).description}
+                </p>
+              )}
+            </div>
+          </div>
           <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} label={config.createButtonText} />
         </div>
-      </div>
+      )}
 
       {/* Search */}
       <div className="my-5">

@@ -365,23 +365,39 @@ export default function ConfigurationManagerAPI({
     <div className="space-y-6">
       {/* Breadcrumb */}
       {showBackButton && (
-        <div className="flex items-center justify-between">
-          <BackButton
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <BackButton
 
-            showBreadcrumb={true}
-            parentLabel={(config as any).parentLabel}
-            currentLabel={config.title}
-          />
-          {!config.disableCreate && <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} />}
+              showBreadcrumb={true}
+              parentLabel={(config as any).parentLabel}
+              currentLabel={config.title}
+            />
+            {!config.disableCreate && <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} />}
+          </div>
+
+          {/* Description Section */}
+          {(config as any).description && (
+            <p className={`text-sm ${tw.textSecondary}`}>
+              {(config as any).description}
+            </p>
+          )}
         </div>
       )}
       {!showBackButton && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+          <div className="space-y-1.5">
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}
             </h1>
-            <p className={`text-sm ${tw.textSecondary} mt-2`}>{config.subtitle}</p>
+            <div className="space-y-1">
+              <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
+              {(config as any).description && (
+                <p className={`text-sm ${tw.textSecondary}`}>
+                  {(config as any).description}
+                </p>
+              )}
+            </div>
           </div>
           {!config.disableCreate && (
             <div className="flex gap-3">
@@ -392,7 +408,7 @@ export default function ConfigurationManagerAPI({
       )}
 
       {/* Search */}
-      <div className="mt-12 mb-5">
+      <div className="pt-4 mb-5">
         <SearchInput
           placeholder={config.searchPlaceholder}
           value={searchTerm}

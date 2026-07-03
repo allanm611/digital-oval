@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Edit, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { kpiService, KPIProfile } from "../services/kpiService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
@@ -403,35 +404,15 @@ export default function KpiDetailsPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
-            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
-              Delete KPI
-            </h3>
-            <p className={`text-sm ${tw.textSecondary} mb-6`}>
-              Are you sure you want to delete "{kpi.field_name}"? This action
-              cannot be undone.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deleting}
-                className="px-4 py-2 text-xs font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={deleting}
-                className="px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-60"
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete KPI"
+        description="Are you sure you want to delete this KPI? This action cannot be undone."
+        itemName={kpi?.field_name || ""}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setShowDeleteModal(false)}
+        isLoading={deleting}
+      />
     </div>
   );
 }

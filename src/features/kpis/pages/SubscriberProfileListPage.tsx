@@ -78,7 +78,7 @@ export default function SubscriberProfileListPage() {
       sortable: false,
       isActionColumn: true,
       render: (_, row) => (
-        <div className="flex gap-1 justify-center items-center">
+        <div className="flex gap-3 justify-center items-center">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleActive(row)}
@@ -328,9 +328,10 @@ export default function SubscriberProfileListPage() {
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         title="Delete Profile Field"
-        message={`Are you sure you want to delete "${profileToDelete?.name}"? This action cannot be undone.`}
+        description="Are you sure you want to delete this profile field? This action cannot be undone."
+        itemName={profileToDelete?.name || ""}
         onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
+        onClose={handleCancelDelete}
         isLoading={isDeleting}
       />
 

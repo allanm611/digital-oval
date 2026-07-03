@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Mail, Trash2, Eye, X } from "lucide-react";
+import { Plus, Mail, Trash2, Eye, X, Edit } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -189,6 +189,16 @@ export default function SeedListManagementPage() {
         return (
           <div className="flex items-center justify-center gap-2">
             <button
+              onClick={() => navigate(`/dashboard/user-management/${row._full.customer_id}`)}
+              disabled={row._full.customer_id === 0}
+              className={`p-0 ${tw.rounded} transition-colors ${
+                row._full.customer_id === 0 ? "opacity-50 cursor-not-allowed" : "icon-edit"
+              }`}
+              title={row._full.customer_id === 0 ? "External customer - no details page" : "View customer details"}
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => handleRemoveRecipient(row._full)}
               className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title={row._full.status === "active" ? "Remove from Seed List" : "Delete from Seed List"}
@@ -246,6 +256,16 @@ export default function SeedListManagementPage() {
       isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => {
+              setEditingList(row._full);
+              setIsCreateListModalOpen(true);
+            }}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+            title="Edit seed list"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
           <button
             onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
             className={`p-0 icon-edit ${tw.rounded} transition-colors`}
@@ -608,28 +628,41 @@ export default function SeedListManagementPage() {
     }
   }, [memberToRemoveFromList, selectedListForMembers, listMembers, showToast, showError]);
 
+  const [editingList, setEditingList] = useState<SeedListTableRow | null>(null);
+
   const handleSaveTestList = async (data: { name: string; description?: string }) => {
     setIsCreatingList(true);
     try {
-      const newList = await seedListService.create({
-        name: data.name,
-        description: data.description,
-      });
-      setSeedLists([
-        ...seedLists,
-        {
-          id: newList.id,
-          name: newList.name,
-          description: newList.description,
-        },
-      ]);
-      showToast("Seed list created successfully");
+      if (editingList) {
+        await seedListService.update(editingList.id as number, data);
+        setSeedLists((prev) =>
+          prev.map((list) =>
+            list.id === editingList.id ? { ...list, ...data } : list
+          )
+        );
+        showToast("Seed list updated successfully");
+      } else {
+        const newList = await seedListService.create({
+          name: data.name,
+          description: data.description,
+        });
+        setSeedLists([
+          ...seedLists,
+          {
+            id: newList.id,
+            name: newList.name,
+            description: newList.description,
+          },
+        ]);
+        showToast("Seed list created successfully");
+      }
       setIsCreateListModalOpen(false);
     } catch (error) {
-      console.error("Failed to create seed list:", error);
-      showError(extractBackendError(err, "Failed to create seed list. Please try again."));
+      console.error(editingList ? "Failed to update seed list:" : "Failed to create seed list:", error);
+      showError(extractBackendError(error, editingList ? "Failed to update seed list. Please try again." : "Failed to create seed list. Please try again."));
     } finally {
       setIsCreatingList(false);
+      setEditingList(null);
     }
   };
 
@@ -1435,10 +1468,14 @@ export default function SeedListManagementPage() {
       {/* Create Test List Modal */}
       <CreateTestListModal
         isOpen={isCreateListModalOpen}
-        onClose={() => setIsCreateListModalOpen(false)}
+        onClose={() => {
+          setIsCreateListModalOpen(false);
+          setEditingList(null);
+        }}
         onSubmit={handleSaveTestList}
         isLoading={isCreatingList}
-        mode="create"
+        mode={editingList ? "edit" : "create"}
+        initialData={editingList ? { name: editingList.name, description: editingList.description } : undefined}
       />
 
       {/* List Members Modal */}

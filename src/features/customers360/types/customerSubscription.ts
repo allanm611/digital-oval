@@ -77,4 +77,12 @@ export interface CustomerSubscriptionRecord {
   customer_id?: number | null;
   subscription_id?: number | null;
   customer_type?: string | null;
+  // Financial & engagement metrics
+  current_balance?: string | number | null;
+  total_data_revenue_new?: string | number | null;
+  total_voice_revenue_new?: string | number | null;
+  total_sms_usage_new?: string | number | null;
+  total_dou?: string | number | null;
+  // Subscriber status
+  subscriber_status?: string | null;
 }

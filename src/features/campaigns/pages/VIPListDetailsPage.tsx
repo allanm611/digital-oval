@@ -4,6 +4,7 @@ import {
   Trash2,
   Edit,
   Download,
+  Eye,
 } from "lucide-react";
 import { vipListService } from "../../../shared/services/vipListService";
 import { userService } from "../../users/services/userService";
@@ -100,6 +101,18 @@ export default function VIPListDetailsPage() {
       </button>
     ) : <span className="text-sm">-</span> },
     { id: "status", label: "Status", visible: true, render: (_, row) => <span className="text-sm text-black">{row.status}</span> },
+    { id: "actions", label: "Actions", visible: true, isActionColumn: true, render: (_, row) => (
+      <button
+        onClick={() => navigate(`/dashboard/customers/details/${row._full.customer_id}`)}
+        disabled={row._full.customer_id === 0}
+        className={`p-0 ${tw.rounded} transition-colors ${
+          row._full.customer_id === 0 ? "opacity-50 cursor-not-allowed" : "icon-edit"
+        }`}
+        title={row._full.customer_id === 0 ? "External customer - no details page" : "View customer details"}
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+    ) },
   ] as TableColumn<any>[], []);
 
   const {

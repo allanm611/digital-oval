@@ -138,14 +138,15 @@ export default function OfferCreativesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton showBreadcrumb currentLabel="Offer Creatives" />
-
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
+      {/* Breadcrumb with Create Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <BackButton showBreadcrumb currentLabel="Offer Creatives" />
+          <FeatureActionButton featureId="offer-creatives" action="create" onClick={handleCreate} />
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage reusable creatives across different channels and locales
         </p>
-        <FeatureActionButton featureId="offer-creatives" action="create" onClick={handleCreate} />
       </div>
 
       {/* Search */}

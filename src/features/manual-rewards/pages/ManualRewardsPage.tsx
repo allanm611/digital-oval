@@ -178,7 +178,7 @@ export default function ManualRewardsPage() {
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleViewDetails(reward.id)}
-            className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -196,7 +196,7 @@ export default function ManualRewardsPage() {
           <PermissionGate permission="manual-rewards.delete">
             <button
               onClick={() => handleDelete(reward)}
-              className={`p-0 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />

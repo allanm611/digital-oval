@@ -39,7 +39,6 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
-import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useToast } from "../../../contexts/ToastContext";
 import {
   validatePhoneOnly,
@@ -147,16 +146,12 @@ export default function DefineCommunicationStep({
   >([]);
   const [selectedPolicy, setSelectedPolicy] =
     useState<CommunicationPolicyConfiguration | null>(null);
-  const [isPolicyDropdownOpen, setIsPolicyDropdownOpen] = useState(false);
   const [isCustomizationModalOpen, setIsCustomizationModalOpen] =
     useState(false);
   const [policyToCustomize, setPolicyToCustomize] =
     useState<CommunicationPolicyConfiguration | null>(null);
 
-  const policyDropdownRef = useRef<HTMLDivElement>(null);
   const { success: showToast, error: showError } = useToast();
-
-  useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
 
   // Fetch SMS routes on component mount
   useEffect(() => {
@@ -664,27 +659,34 @@ export default function DefineCommunicationStep({
           return; // Skip undefined variables
         }
         const key = `${(variable.sourceName || "source").toLowerCase().replace(/\s+/g, "_")}.${variable.value || "field"}`;
-        switch (variable.fieldType) {
-          case "text":
-            if ((variable.value || "").includes("name"))
-              sampleData[key] = "John Doe";
-            else if ((variable.value || "").includes("email"))
-              sampleData[key] = "john@example.com";
-            else if ((variable.value || "").includes("phone"))
-              sampleData[key] = "+1234567890";
-            else sampleData[key] = `Sample ${variable.name || "value"}`;
-            break;
-          case "numeric":
-            sampleData[key] = "12345";
-            break;
-          case "date":
-            sampleData[key] = formatDateWithTimezone(new Date(), getSettingsTimezoneOffset());
-            break;
-          case "boolean":
-            sampleData[key] = "Yes";
-            break;
-          default:
-            sampleData[key] = `[${variable.name || "value"}]`;
+
+        // Use KPI default value if available, otherwise use hardcoded sample values
+        const defaultVal = (variable as any).default_value ?? variable.defaultValue;
+        if (defaultVal !== undefined && defaultVal !== null) {
+          sampleData[key] = String(defaultVal);
+        } else {
+          switch (variable.fieldType) {
+            case "text":
+              if ((variable.value || "").includes("name"))
+                sampleData[key] = "John Doe";
+              else if ((variable.value || "").includes("email"))
+                sampleData[key] = "john@example.com";
+              else if ((variable.value || "").includes("phone"))
+                sampleData[key] = "+1234567890";
+              else sampleData[key] = `Sample ${variable.name || "value"}`;
+              break;
+            case "numeric":
+              sampleData[key] = "12345";
+              break;
+            case "date":
+              sampleData[key] = formatDateWithTimezone(new Date(), getSettingsTimezoneOffset());
+              break;
+            case "boolean":
+              sampleData[key] = "Yes";
+              break;
+            default:
+              sampleData[key] = `[${variable.name || "value"}]`;
+          }
         }
       });
     }
@@ -864,130 +866,69 @@ export default function DefineCommunicationStep({
         </div>
 
         {/* Communication Policy */}
-        <div className="mb-6">
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-            Communication Policy
-          </label>
-          <div className="relative" ref={policyDropdownRef}>
+        <HeadlessSelect
+          label="Communication Policy"
+          options={[
+            { value: "", label: "No Policy" },
+            ...(communicationPolicies && Array.isArray(communicationPolicies)
+              ? communicationPolicies
+                  .filter((policy) => policy && policy.is_active !== false)
+                  .map((policy) => ({
+                    value: policy.id.toString(),
+                    label: policy.name,
+                  }))
+              : []),
+          ]}
+          value={selectedPolicy?.id.toString() || ""}
+          onChange={(value) => {
+            if (value === "") {
+              setSelectedPolicy(null);
+              onUpdate({
+                selectedCommunicationPolicy: undefined,
+                selectedCommunicationPolicyId: undefined,
+              });
+            } else {
+              const policy = communicationPolicies?.find(
+                (p) => p?.id.toString() === value,
+              );
+              if (policy) {
+                setSelectedPolicy(policy);
+                onUpdate({
+                  selectedCommunicationPolicy: policy,
+                  selectedCommunicationPolicyId: policy.id,
+                });
+              }
+            }
+          }}
+          placeholder="Choose a communication policy (optional)"
+          zIndex={zIndex.popover}
+        />
+
+        {/* Customization Toggle */}
+        {selectedPolicy && (
+          <div
+            className={`flex items-center justify-between px-3 py-2 mt-4 rounded-md border`}
+            style={{
+              backgroundColor: color.surface.background,
+              borderColor: color.border.default,
+            }}
+          >
+            <span
+              className={`text-xs ${tw.textSecondary} flex items-center gap-2`}
+            >
+              <Settings className="w-3 h-3" />
+              Want to modify this policy?
+            </span>
             <button
               type="button"
-              onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
-              className={`${
-                components.input.default
-              } w-full px-3 py-2 text-left flex items-center justify-between ${
-                selectedPolicy ? "" : "text-gray-500"
-              }`}
+              onClick={() => handleCustomizePolicy(selectedPolicy)}
+              style={getButtonStyles(button.action)}
             >
-              <span className="text-sm">
-                {selectedPolicy
-                  ? selectedPolicy.name
-                  : "Choose a communication policy (optional)"}
-              </span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  isPolicyDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
+              <Settings className="w-3 h-3" />
+              Customize
             </button>
-
-            {isPolicyDropdownOpen && (
-              <div
-                className={`absolute z-50 w-full mt-1 bg-white border ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
-                style={{ borderColor: color.border.default }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPolicy(null);
-                    setIsPolicyDropdownOpen(false);
-                    onUpdate({
-                      selectedCommunicationPolicy: undefined,
-                      selectedCommunicationPolicyId: undefined,
-                    });
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
-                  style={{ borderColor: color.border.default }}
-                >
-                  <div className={`text-sm font-medium ${tw.textPrimary}`}>
-                    No Policy
-                  </div>
-                  <div className={`text-xs ${tw.textSecondary}`}>
-                    Broadcast will use default communication settings
-                  </div>
-                </button>
-
-                <div className="max-h-48 overflow-y-auto">
-                  {communicationPolicies && Array.isArray(communicationPolicies) ? (
-                    (() => {
-                      const activePolicies = communicationPolicies.filter(
-                        (policy) => policy && policy.is_active !== false
-                      );
-                      if (!activePolicies || activePolicies.length === 0) {
-                        return null;
-                      }
-                      return activePolicies.map((policy) => (
-                        <button
-                          key={policy.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPolicy(policy);
-                            setIsPolicyDropdownOpen(false);
-                            onUpdate({
-                              selectedCommunicationPolicy: policy,
-                              selectedCommunicationPolicyId: policy.id,
-                            });
-                          }}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
-                            selectedPolicy?.id === policy.id ? "bg-blue-50" : ""
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <div
-                              className={`text-sm font-medium ${tw.textPrimary}`}
-                            >
-                              {policy.name}
-                            </div>
-                          </div>
-                          {policy.description && (
-                            <div className={`text-xs ${tw.textSecondary} ml-4`}>
-                              {policy.description}
-                            </div>
-                          )}
-                        </button>
-                      ));
-                    })()
-                  ) : null}
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Customization Toggle */}
-          {selectedPolicy && (
-            <div
-              className={`flex items-center justify-between px-3 py-2 mt-2 rounded-md border`}
-              style={{
-                backgroundColor: color.surface.background,
-                borderColor: color.border.default,
-              }}
-            >
-              <span
-                className={`text-xs ${tw.textSecondary} flex items-center gap-2`}
-              >
-                <Settings className="w-3 h-3" />
-                Want to modify this policy?
-              </span>
-              <button
-                type="button"
-                onClick={() => handleCustomizePolicy(selectedPolicy)}
-                style={getButtonStyles(button.action)}
-              >
-                <Settings className="w-3 h-3" />
-                Customize
-              </button>
-            </div>
-          )}
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left Column - Message Editor (3/5) */}

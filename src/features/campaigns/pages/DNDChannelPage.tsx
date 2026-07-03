@@ -297,21 +297,19 @@ export default function DNDChannelPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb and Add Button */}
-      <div className="flex items-center justify-between gap-4">
-        <BackButton showBreadcrumb={true} currentLabel={channelInfo?.name || "Channel"} />
-        <button
-          onClick={() => setShowAddModal(true)}
-          className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-4 h-4" />
-          Add Customer
-        </button>
-      </div>
-
-      {/* Description */}
-      <div>
+      {/* Breadcrumb with Add Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton showBreadcrumb={true} currentLabel={channelInfo?.name || "Channel"} />
+          <button
+            onClick={() => setShowAddModal(true)}
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="w-4 h-4" />
+            Add Customer
+          </button>
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage Do Not Disturb lists for {channelInfo?.name || 'this channel'}. Add or remove customers who should not receive messages on this channel.
         </p>

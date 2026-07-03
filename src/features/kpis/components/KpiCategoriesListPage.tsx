@@ -68,7 +68,7 @@ export default function KpiCategoriesListPage() {
       sortable: false,
       isActionColumn: true,
       render: (_, row) => (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-3">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleActive(row)}

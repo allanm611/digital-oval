@@ -335,29 +335,25 @@ export default function ManualBroadcastListsPage() {
       isActionColumn: true,
       render: (value, broadcast) => (
         <div className="flex items-center justify-center space-x-2">
-          {broadcast.execution_id && (
-            <button
-              onClick={() => navigate(`/dashboard/manual-communications/${broadcast.execution_id}`)}
-              className={`p-1 ${tw.rounded} transition-colors cursor-pointer`}
-              style={{ color: 'var(--c-icon-table-view)' }}
-              title={t.common.view}
-            >
-              <Eye className="w-4 h-4" />
-            </button>
-          )}
-          {broadcast.execution_id && (
-            <button
-              onClick={() => handleViewDetails(broadcast)}
-              className={`p-1 ${tw.rounded} transition-colors cursor-pointer`}
-              style={{ color: 'var(--c-icon-table-edit)' }}
-              title={t.common.edit}
-            >
-              <Edit className="w-4 h-4" />
-            </button>
-          )}
+          <button
+            onClick={() => broadcast.execution_id && navigate(`/dashboard/manual-communications/${broadcast.execution_id}`)}
+            disabled={!broadcast.execution_id}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors ${!broadcast.execution_id ? "opacity-50 cursor-not-allowed" : ""}`}
+            title={broadcast.execution_id ? t.common.view : "No execution available"}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => broadcast.execution_id && handleViewDetails(broadcast)}
+            disabled={!broadcast.execution_id}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors ${!broadcast.execution_id ? "opacity-50 cursor-not-allowed" : ""}`}
+            title={broadcast.execution_id ? t.common.edit : "No execution available"}
+          >
+            <Edit className="w-4 h-4" />
+          </button>
           <button
             onClick={() => handleDelete(broadcast)}
-            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
@@ -423,7 +419,11 @@ export default function ManualBroadcastListsPage() {
                 <p className="text-sm font-medium text-black">{stat.name}</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
-                {stat.value}
+                {loading ? (
+                  <span className="text-gray-400">...</span>
+                ) : (
+                  stat.value
+                )}
               </p>
             </div>
           );

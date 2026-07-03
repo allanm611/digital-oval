@@ -22,7 +22,9 @@ import {
   Users2,
   Coins,
   Sparkles,
+  Eye,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import { colors } from "../../../shared/utils/tokens";
@@ -541,6 +543,7 @@ type OfferTableRow = {
 export default function OfferReportsPage() {
   const { t } = useLanguage();
   const { error: showError } = useToast();
+  const navigate = useNavigate();
   const [tableQuery, setTableQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
@@ -623,6 +626,24 @@ export default function OfferReportsPage() {
       label: "Last Updated",
       visible: true,
       sortable: true,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      isActionColumn: true,
+      render: (_, row) => (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => navigate(`/dashboard/offers/${row.id.split("-")[1]}`)}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
+      ),
     },
   ];
 

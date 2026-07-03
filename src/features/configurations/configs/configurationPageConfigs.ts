@@ -1259,10 +1259,11 @@ export const campaignObjectivesConfig: ConfigurationPageConfig = {
 };
 
 // Departments Configuration
-export const departmentsConfig: ConfigurationPageConfig = {
+export const departmentsConfig: ConfigurationPageConfig & { description?: string } = {
   // Page configuration
   title: "Departments",
   subtitle: "Define and manage your departments",
+  description: "Create and manage organizational departments for campaign targeting and seed list distribution.",
   entityName: "department",
   entityNamePlural: "departments",
   configType: "departments",
@@ -1305,10 +1306,11 @@ export const departmentsConfig: ConfigurationPageConfig = {
 };
 
 // Line of Business Configuration
-export const lineOfBusinessConfig: ConfigurationPageConfig = {
+export const lineOfBusinessConfig: ConfigurationPageConfig & { description?: string } = {
   // Page configuration
   title: "Line of Business",
   subtitle: "Define and manage your business lines and services",
+  description: "Organize and manage different business lines or service divisions within your organization.",
   entityName: "business line",
   entityNamePlural: "business lines",
   configType: "lineOfBusiness",
@@ -1351,10 +1353,11 @@ export const lineOfBusinessConfig: ConfigurationPageConfig = {
 };
 
 // Tracking Sources Configuration (Offer)
-export const trackingSourcesConfig: ConfigurationPageConfig = {
+export const trackingSourcesConfig: ConfigurationPageConfig & { description?: string } = {
   title: "Offer Tracking Sources",
   subtitle:
     "Manage tracking sources for measuring offer performance and analytics",
+  description: "Define tracking sources to measure and analyze offer performance across channels.",
   entityName: "tracking source",
   entityNamePlural: "tracking sources",
   configType: "trackingSources",
@@ -1439,10 +1442,11 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
 };
 
 // Creative Templates Configuration
-export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
+export const creativeTemplatesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Creative Templates",
   subtitle:
     "Manage reusable creative templates for SMS, Email, Push, and other channels",
+  description: "Create and manage message templates for reuse across multiple campaigns and channels.",
   entityName: "creative template",
   entityNamePlural: "creative templates",
   configType: "creativeTemplates",
@@ -1510,9 +1514,10 @@ export const offerCreativesConfig: TypeConfigurationPageConfig = {
 };
 
 // Reward Types Configuration
-export const rewardTypesConfig: TypeConfigurationPageConfig = {
+export const rewardTypesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Reward Types",
   subtitle: "Define reusable reward fulfilment types for offer rewards",
+  description: "Manage reward types used to fulfill offer rewards.",
   entityName: "reward type",
   entityNamePlural: "reward types",
   configType: "rewardTypes",
@@ -2363,9 +2368,10 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
 };
 
 // Combo Types Configuration
-export const comboTypesConfig: TypeConfigurationPageConfig = {
+export const comboTypesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Combo Types",
   subtitle: "Define and manage different types of product combinations",
+  description: "Create product combinations bundling data, voice, SMS, and other services together.",
   entityName: "combo type",
   entityNamePlural: "combo types",
   configType: "comboTypes",
@@ -2889,10 +2895,11 @@ const hardcodedCharacterSets: ConfigurationItem[] = [
 ];
 
 // Languages/Locales Configuration
-export const languagesConfig: TypeConfigurationPageConfig = {
+export const languagesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Languages",
   subtitle:
     "Manage available languages and locales for offer creatives. Each language can be used to create localized message content.",
+  description: "Define and manage languages available for localizing message content across your campaigns.",
   entityName: "language",
   entityNamePlural: "languages",
   configType: "languages",
@@ -2955,10 +2962,11 @@ export const languagesConfig: TypeConfigurationPageConfig = {
 };
 
 // Character Sets Configuration
-export const characterSetsConfig: TypeConfigurationPageConfig & { createEditPath?: string; detailsPath?: string } = {
+export const characterSetsConfig: TypeConfigurationPageConfig & { createEditPath?: string; detailsPath?: string; description?: string } = {
   title: "Character Sets",
   subtitle:
     "Manage character encoding sets for language support. Character sets determine how text is encoded and displayed for different languages.",
+  description: "Define character encoding sets for proper text rendering across different languages and locales.",
   entityName: "character set",
   entityNamePlural: "character sets",
   configType: "characterSets",
@@ -3025,9 +3033,10 @@ export const characterSetsConfig: TypeConfigurationPageConfig & { createEditPath
 };
 
 // Resource Types Configuration
-export const resourceTypesConfig: TypeConfigurationPageConfig = {
+export const resourceTypesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Resource Types",
   subtitle: "Define and manage resource types with their units and categories",
+  description: "Create and manage resource types with their corresponding units.",
   entityName: "resource type",
   entityNamePlural: "resource types",
   configType: "resourceTypes",
@@ -3089,9 +3098,10 @@ export const resourceTypesConfig: TypeConfigurationPageConfig = {
 };
 
 // Utilities Configuration
-export const utilitiesConfig: TypeConfigurationPageConfig = {
+export const utilitiesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Utilities",
   subtitle: "Define and manage utility services that can be included in combos",
+  description: "Manage utility services that can be included in product bundles.",
   entityName: "utility",
   entityNamePlural: "utilities",
   configType: "utilities",
@@ -3381,6 +3391,7 @@ export function getDNDTypesApiConfig(
   return {
     title: "DND Types",
     subtitle: "Manage Do Not Disturb configuration types",
+    description: "Define DND types to control which customer groups are restricted from receiving messages.",
     entityName: "DND type",
     entityNamePlural: "DND types",
     configType: "dndTypes",
@@ -3590,6 +3601,7 @@ export function getPolicyTypesApiConfig(
   return {
     title: "Policy Types",
     subtitle: "Define and manage communication policy types",
+    description: "Manage policy types used to control communication rules and frequency.",
     entityName: "policy type",
     entityNamePlural: "policy types",
     configType: "policyTypes",
@@ -3713,6 +3725,7 @@ export function getLineOfBusinessApiConfig(
   return {
     title: "Line of Business",
     subtitle: "Define and manage your business lines and services",
+    description: "Organize and manage different business lines or service divisions within your organization.",
     entityName: "business line",
     entityNamePlural: "business lines",
     configType: "lineOfBusiness",

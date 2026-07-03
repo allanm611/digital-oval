@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Star, Users, Trash2, X, Eye } from "lucide-react";
+import { Plus, Star, Users, Trash2, X, Eye, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -147,7 +147,17 @@ export default function VIPListManagementPage() {
       render: (_, row) => {
         if (!row._full) return null;
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => navigate(`/dashboard/customers/details/${row._full.customer_id}`)}
+              disabled={row._full.customer_id === 0}
+              className={`p-0 ${tw.rounded} transition-colors ${
+                row._full.customer_id === 0 ? "opacity-50 cursor-not-allowed" : "icon-edit"
+              }`}
+              title={row._full.customer_id === 0 ? "External customer - no details page" : "View customer details"}
+            >
+              <Eye className="w-4 h-4" />
+            </button>
             <button
               onClick={() => setMemberToRemove(row._full)}
               className={`p-0 icon-delete ${tw.rounded} transition-colors`}
@@ -247,6 +257,16 @@ export default function VIPListManagementPage() {
         if (!row._full) return null;
         return (
           <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => {
+                setEditingList(row._full);
+                setIsCreateListModalOpen(true);
+              }}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+              title="Edit VIP List"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
             <button
               onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
               className={`p-0 icon-edit ${tw.rounded} transition-colors`}
@@ -438,15 +458,19 @@ export default function VIPListManagementPage() {
         const response = await vipListService.update(editingList.id, data);
         if (response) {
           showToast("VIP list updated successfully");
+          setVipLists((prev) =>
+            prev.map((list) =>
+              list.id === editingList.id ? { ...list, ...data } : list
+            )
+          );
         }
       } else {
         const response = await vipListService.create(data);
         if (response) {
           showToast("VIP list created successfully");
+          setVipLists((prev) => [...prev, response]);
         }
       }
-
-      await loadVIPLists();
     } catch (error) {
       showError(
         editingList ? "Failed to update VIP list" : "Failed to create VIP list",

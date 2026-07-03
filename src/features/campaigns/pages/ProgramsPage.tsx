@@ -22,16 +22,17 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { programService } from "../services/programService";
 import { Program } from "../types/program";
 import ProgramModal from "../components/ProgramModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import Radio from "../../../shared/components/ui/Radio";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-
-const PAGE_SIZE = 20;
 
 export default function ProgramsPage() {
 
@@ -75,6 +76,11 @@ export default function ProgramsPage() {
     end_date_from?: string;
     end_date_to?: string;
   }>({});
+  const [toggling, setToggling] = useState<number | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [sortConfigs, setSortConfigs] = useState<Array<{ columnId: string; direction: "asc" | "desc"; priority: number }>>([]);
+  const [pageSize, setPageSize] = useState(getInitialPageSize());
+  const [clearFiltersKey, setClearFiltersKey] = useState(0);
 
   useEffect(() => {
     loadPrograms(true); // Always skip cache to get fresh data
@@ -210,6 +216,46 @@ export default function ProgramsPage() {
     openDeleteConfirm(program.id, program.name);
   };
 
+  const handleToggleActive = async (program: Program) => {
+    setToggling(program.id);
+    try {
+      await programService.updateProgram(Number(program.id), {
+        is_active: !program.is_active,
+      });
+      setPrograms((prev) =>
+        prev.map((p) =>
+          p.id === program.id ? { ...p, is_active: !p.is_active } : p
+        )
+      );
+      showToast(
+        `Program ${!program.is_active ? "activated" : "deactivated"} successfully`
+      );
+    } catch (err) {
+      showError("Failed to update program", extractBackendError(err, "Failed to update program. Please try again."));
+    } finally {
+      setToggling(null);
+    }
+  };
+
+  const handleSort = (columnId: string) => {
+    setSortConfigs((prev) => {
+      const existing = prev.find((s) => s.columnId === columnId);
+      if (existing) {
+        if (existing.direction === "asc") {
+          return [{ columnId, direction: "desc", priority: 0 }];
+        } else {
+          return [];
+        }
+      } else {
+        return [{ columnId, direction: "asc", priority: 0 }];
+      }
+    });
+  };
+
+  const handleFilteredCountChange = (count: number) => {
+    // Updates when filters applied in the Table component
+  };
+
   const handleProgramSaved = async (programData: {
     name: string;
     code: string;
@@ -258,10 +304,27 @@ export default function ProgramsPage() {
           });
         }
 
+        // Optimistic update: update the program in state
+        setPrograms((prev) =>
+          prev.map((p) =>
+            p.id === editingProgram.id
+              ? {
+                  ...p,
+                  name: programData.name,
+                  code: programData.code,
+                  description: programData.description,
+                  budget_total: programData.budget_total,
+                  start_date: programData.start_date || p.start_date,
+                  end_date: programData.end_date || p.end_date,
+                }
+              : p
+          )
+        );
+
         showToast("Program updated successfully!");
       } else {
         // Create new program
-        await programService.createProgram({
+        const newProgram = await programService.createProgram({
           name: programData.name,
           code: programData.code,
           description: programData.description,
@@ -270,12 +333,14 @@ export default function ProgramsPage() {
           end_date: programData.end_date || null,
           created_by: userId,
         });
+
+        // Optimistic update: add new program to state
+        setPrograms((prev) => [newProgram, ...prev]);
+
         showToast("Program created successfully!");
       }
       setIsModalOpen(false);
       setEditingProgram(undefined);
-      await loadPrograms(true); // Skip cache to get fresh data
-      await loadStats(); // Reload stats after creating/updating
     } catch (err) {
       console.error("Failed to save program:", err);
       const errorMessage = err instanceof Error ? err.message : "Please try again later.";
@@ -299,11 +364,82 @@ export default function ProgramsPage() {
       return dateB - dateA;
     });
 
+  const programTableColumns: TableColumn<Program>[] = [
+    {
+      id: "name",
+      label: "Program",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (value) => <span className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>{value}</span>,
+    },
+    {
+      id: "description",
+      label: "Description",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (value) => <span className={`text-sm ${tw.textSecondary}`}>{value || "No description"}</span>,
+    },
+    {
+      id: "is_active",
+      label: "Status",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
+      render: (value) => <span className={`text-sm ${tw.textPrimary}`}>{value ? "Active" : "Inactive"}</span>,
+    },
+    {
+      id: "created_at",
+      label: "Created At",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'date' },
+      render: (value) => <span className={`text-sm ${tw.textSecondary}`}>{value ? new Date(value as string).toLocaleDateString() : "-"}</span>,
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      isActionColumn: true,
+      render: (_, program) => (
+        <div className="flex items-center justify-center space-x-2">
+          <ActivateDeactivateButton
+            isActive={program.is_active}
+            onToggle={() => handleToggleActive(program)}
+            disabled={toggling === program.id}
+            isLoading={toggling === program.id}
+            title={program.is_active ? "Deactivate" : "Activate"}
+          />
+          <button
+            onClick={() => handleEditProgram(program)}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteProgram(program)}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  const { columns: tableColumns, toggleColumn, reorderColumns, resetToDefaults } = useTable({
+    tableId: "programs-table",
+    defaultColumns: programTableColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+  });
+
   const paginatedPrograms = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const endIndex = startIndex + PAGE_SIZE;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
     return filteredPrograms.slice(startIndex, endIndex);
-  }, [filteredPrograms, currentPage]);
+  }, [filteredPrograms, currentPage, pageSize]);
 
   const programStatsCards = [
     {
@@ -342,17 +478,15 @@ export default function ProgramsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <BackButton showBreadcrumb={true} currentLabel={t.programs.title} />
-
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
+      {/* Breadcrumb with Create Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <BackButton showBreadcrumb={true} currentLabel={t.programs.title} />
+          <FeatureActionButton featureId="programs" action="create" onClick={handleCreateProgram} />
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage marketing programs and initiatives. Define program details, budgets, timelines, and track spending to optimize your marketing efforts.
         </p>
-        <div className="flex items-center gap-3">
-          <FeatureActionButton featureId="programs" action="create" onClick={handleCreateProgram} />
-        </div>
       </div>
 
       {/* Stats Cards */}
@@ -433,117 +567,54 @@ export default function ProgramsPage() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table
-                className="w-full min-w-[720px]"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Program
-                    </th>
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Description
-                    </th>
-                    <th
-                      className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
-                      style={{ color: color.surface.tableHeaderText }}
-                    >
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedPrograms.map((program) => (
-                    <tr key={program.id} className="transition-colors">
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div
-                          className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
-                        >
-                          {program.name}
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className={`text-sm ${tw.textSecondary}`}>
-                          {program.description || "No description"}
-                        </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-center"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className={`text-sm ${tw.textPrimary}`}>
-                          {program.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-right"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="flex items-center justify-end space-x-2">
-                          <button
-                            onClick={() => handleEditProgram(program)}
-                            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
-                            style={{
-                              color: color.primary.action,
-                              backgroundColor: "transparent",
-                            }}
-                            onMouseEnter={(e) => {
-                              (
-                                e.target as HTMLButtonElement
-                              ).style.backgroundColor =
-                                `${color.primary.action}10`;
-                            }}
-                            onMouseLeave={(e) => {
-                              (
-                                e.target as HTMLButtonElement
-                              ).style.backgroundColor = "transparent";
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProgram(program)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {!loading && filteredPrograms.length > 0 && (
+            <Table<Program>
+              columns={tableColumns}
+              data={paginatedPrograms}
+              totalItems={filteredPrograms.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              onFilteredCountChange={handleFilteredCountChange}
+              clearFiltersKey={clearFiltersKey}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+            />
+            {filteredPrograms.length > 0 && (
               <Pagination
                 currentPage={currentPage}
-                pageSize={PAGE_SIZE}
+                pageSize={pageSize}
                 totalItems={filteredPrograms.length}
                 onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
               />
             )}
           </>
         )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={tableColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = tableColumns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
       </div>
 
       <ProgramModal

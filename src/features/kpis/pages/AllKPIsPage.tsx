@@ -205,7 +205,7 @@ export default function AllKPIsPage() {
       sortable: false,
       isActionColumn: true,
       render: (_, row) => (
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center justify-center gap-3">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleStatus(row)}

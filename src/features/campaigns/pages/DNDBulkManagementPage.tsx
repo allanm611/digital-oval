@@ -286,49 +286,49 @@ export default function DNDBulkManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <BackButton
-       
-        showBreadcrumb={true}
-        currentLabel="Bulk Management"
-      />
+      {/* Breadcrumb with Action Buttons and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
 
-      {/* Description and Action Buttons */}
-      <div className="flex items-center justify-between gap-4">
-        <p className={`text-sm ${tw.textSecondary} flex-1`}>
+            showBreadcrumb={true}
+            currentLabel="Bulk Management"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white whitespace-nowrap`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Customers
+            </button>
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                  setSelectedRows(new Set(filteredSubscriptions.map((sub) => sub.id)));
+                } else {
+                  setIsSelectionMode(false);
+                  setSelectedRows(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium whitespace-nowrap`}
+              style={{
+                backgroundColor: isSelectionMode ? color.primary.action : "transparent",
+                color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                borderColor: "var(--c-bordered-button-color)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+              }}
+            >
+              {isSelectionMode ? "Exit Selection" : "Select Customers"}
+            </button>
+          </div>
+        </div>
+        <p className={`text-sm ${tw.textSecondary}`}>
           Manage DND subscriptions across channels
         </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white whitespace-nowrap`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            Add Customers
-          </button>
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                setIsSelectionMode(true);
-                setSelectedRows(new Set(filteredSubscriptions.map((sub) => sub.id)));
-              } else {
-                setIsSelectionMode(false);
-                setSelectedRows(new Set());
-              }
-            }}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium whitespace-nowrap`}
-            style={{
-              backgroundColor: isSelectionMode ? color.primary.action : "transparent",
-              color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
-              borderColor: "var(--c-bordered-button-color)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-            }}
-          >
-            {isSelectionMode ? "Exit Selection" : "Select Customers"}
-          </button>
-        </div>
       </div>
 
       {/* Filters */}

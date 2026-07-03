@@ -18,7 +18,7 @@ export default function ComboTypeDetailsPage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await handleConfirmDelete() });
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async () => await handleConfirmDelete() });
 
   const [comboType, setComboType] = useState<ComboType | null>(null);
   const [loading, setLoading] = useState(!!id);
@@ -42,7 +42,7 @@ export default function ComboTypeDetailsPage() {
     }
   }, [id, showError]);
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
     openDeleteConfirm(comboType?.id || 0, comboType?.name || "");
   };
 
@@ -424,10 +424,11 @@ export default function ComboTypeDetailsPage() {
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
         title="Delete Combo Type"
-        message={`Are you sure you want to delete "${comboType.name}"? This action cannot be undone.`}
+        description="Are you sure you want to delete this combo type? This action cannot be undone."
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
-        onConfirm={confirmDeleteItem}
-        onCancel={() => closeDeleteConfirm()}
+        onConfirm={handleDelete}
+        onClose={closeDeleteConfirm}
       />
     </div>
   );

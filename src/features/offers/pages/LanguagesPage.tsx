@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Edit, Trash2, Plus, Loader2, Power, PowerOff, MoreHorizontal } from "lucide-react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useCallback } from "react";
+import { Edit, Trash2, Plus } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
-import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -39,15 +38,7 @@ export default function LanguagesPage() {
     itemLabel: "Language",
   });
 
-  const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<{
-    top: number;
-    left: number;
-    maxHeight: number;
-  } | null>(null);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
-  const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
-  const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   const loadLanguages = useCallback(async () => {
     setIsLoading(true);
@@ -65,70 +56,6 @@ export default function LanguagesPage() {
     loadLanguages();
   }, [loadLanguages]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      let isOutside = true;
-
-      Object.values(actionMenuRefs.current).forEach((ref) => {
-        if (ref && ref.contains(event.target as Node)) {
-          isOutside = false;
-        }
-      });
-
-      Object.values(dropdownMenuRefs.current).forEach((ref) => {
-        if (ref && ref.contains(event.target as Node)) {
-          isOutside = false;
-        }
-      });
-
-      if (isOutside) {
-        setShowActionMenu(null);
-        setDropdownPosition(null);
-      }
-    };
-
-    if (showActionMenu !== null) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showActionMenu]);
-
-  const handleActionMenuToggle = (
-    languageId: number,
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    if (showActionMenu === languageId) {
-      setShowActionMenu(null);
-      setDropdownPosition(null);
-    } else {
-      setShowActionMenu(languageId);
-
-      if (event && event.currentTarget) {
-        const button = event.currentTarget;
-        const buttonRect = button.getBoundingClientRect();
-        const dropdownWidth = 256;
-        const spacing = 4;
-        const padding = 8;
-
-        const top = buttonRect.bottom + spacing;
-        let left = buttonRect.right - dropdownWidth;
-
-        if (left + dropdownWidth > window.innerWidth - padding) {
-          left = window.innerWidth - dropdownWidth - padding;
-        }
-        if (left < padding) {
-          left = padding;
-        }
-
-        setDropdownPosition({
-          top,
-          left,
-          maxHeight: window.innerHeight - buttonRect.bottom - 16,
-        });
-      }
-    }
-  };
 
   const handleToggleActive = async (language: Language) => {
     setToggling(language.id);
@@ -204,6 +131,7 @@ export default function LanguagesPage() {
       label: "Status",
       visible: true,
       filterConfig: { type: 'select', options: ['active', 'inactive'] },
+      render: (value) => (value ? "Active" : "Inactive"),
     },
     {
       id: "description",
@@ -219,23 +147,6 @@ export default function LanguagesPage() {
       isActionColumn: true,
       render: (value, language) => (
         <div className="flex items-center justify-center space-x-2">
-          <button
-            onClick={() => handleOpenEditModal(language)}
-            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
-            style={{
-              color: color.primary.action,
-              backgroundColor: "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
-            title="Edit"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
           <ActivateDeactivateButton
             isActive={language.is_active}
             onToggle={() => handleToggleActive(language)}
@@ -243,27 +154,20 @@ export default function LanguagesPage() {
             isLoading={toggling === language.id}
             title={language.is_active ? "Deactivate" : "Activate"}
           />
-          <div className="relative" ref={(el) => {
-            actionMenuRefs.current[language.id] = el;
-          }}>
-            <button
-              onClick={(e) => handleActionMenuToggle(language.id, e)}
-              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
-              style={{
-                color: color.primary.action,
-                backgroundColor: "transparent",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
-              title="More options"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={() => handleOpenEditModal(language)}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(language)}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       ),
     },
@@ -305,29 +209,26 @@ export default function LanguagesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton
-       
-        showBreadcrumb={true}
-        currentLabel="Languages"
-      />
+      {/* Breadcrumb with Create Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
 
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Languages
-          </h1>
-          <p className={`text-sm ${tw.textSecondary} mt-1`}>
-            Manage available languages and locales for offer creatives
-          </p>
+            showBreadcrumb={true}
+            currentLabel="Languages"
+          />
+          <button
+            onClick={handleOpenCreateModal}
+            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create
+          </button>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create
-        </button>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Manage available languages and locales for offer creatives
+        </p>
       </div>
 
       <div className="my-5">
@@ -399,42 +300,6 @@ export default function LanguagesPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               />
             )}
-
-            {/* Action Menus via Portal */}
-            {paginatedLanguages.map((language) => {
-              if (showActionMenu === language.id && dropdownPosition) {
-                return createPortal(
-                  <div
-                    ref={(el) => {
-                      dropdownMenuRefs.current[language.id] = el;
-                    }}
-                    className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
-                    style={{
-                      zIndex: zIndex.popover,
-                      top: `${dropdownPosition.top}px`,
-                      left: `${dropdownPosition.left}px`,
-                      maxHeight: `${dropdownPosition.maxHeight}px`,
-                      overflowY: "auto",
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteClick(language);
-                      }}
-                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4 mr-4" />
-                      Delete
-                    </button>
-                  </div>,
-                  document.body,
-                );
-              }
-              return null;
-            })}
           </>
         )}
       </div>

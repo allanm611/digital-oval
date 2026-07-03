@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { X, Upload, FileText, AlertCircle, Download, Check, XCircle, Grid3x3 } from "lucide-react";
+import { X, Upload, FileText, AlertCircle, Download, Check, XCircle, Grid3x3, Search } from "lucide-react";
 import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
@@ -10,6 +10,7 @@ import { useMessageVariableFields } from "../../manual-broadcast/hooks/useMessag
 import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
 import { quicklistService } from "../services/quicklistService";
 import { useToast } from "../../../contexts/ToastContext";
+import { autoFillDefaults, columnsToDefaultsRecord } from "../utils/columnTypeDetector";
 
 export type QuickListFormValues = {
   list_id?: number;
@@ -71,6 +72,7 @@ export default function CreateQuickListModal({
   >([]);
   const [isLoadingUploadTypes, setIsLoadingUploadTypes] = useState(false);
   const [showDefaultsModal, setShowDefaultsModal] = useState(false);
+  const [defaultsSearchTerm, setDefaultsSearchTerm] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Hook for fetching filtered message variable fields
@@ -150,6 +152,12 @@ export default function CreateQuickListModal({
     loadUploadTypes();
   }, [isOpen]);
 
+  // Auto-fill defaults when file is uploaded and parsed
+  useEffect(() => {
+    if (form.file_text && form.list_headers && Object.keys(form.column_defaults || {}).length === 0) {
+      autoFillColumnDefaults();
+    }
+  }, [form.file_text, form.list_headers]);
 
   if (!isOpen) {
     return null;
@@ -425,6 +433,43 @@ export default function CreateQuickListModal({
     return { validRows, invalidRows };
   };
 
+  const autoFillColumnDefaults = () => {
+    if (!form.file_text || !form.list_headers) return;
+
+    try {
+      const lines = form.file_text.split(/\r?\n/).filter((line) => line.trim());
+      if (lines.length < 2) return; // Need at least header + 1 data row
+
+      const headerLine = lines[0];
+      const firstDataLine = lines[1];
+
+      const headers = headerLine
+        .split(form.file_delimiter)
+        .map((h) => h.trim().replace(/^["']|["']$/g, ""));
+      const firstDataValues = firstDataLine
+        .split(form.file_delimiter)
+        .map((v) => v.trim().replace(/^["']|["']$/g, ""));
+
+      // Use the utility to detect types and generate defaults
+      const columnDefaults = autoFillDefaults(firstDataValues, headers);
+      const defaultsRecord = columnsToDefaultsRecord(columnDefaults);
+
+      // Update form with auto-filled defaults
+      setForm((prev) => ({
+        ...prev,
+        column_defaults: defaultsRecord,
+      }));
+
+      // Clear any existing error for column_defaults
+      setErrors((prev) => ({
+        ...prev,
+        column_defaults: "",
+      }));
+    } catch (error) {
+      console.error("Error auto-filling defaults:", error);
+    }
+  };
+
   const validateForm = () => {
     const validationErrors: Record<string, string> = {};
 
@@ -471,9 +516,6 @@ export default function CreateQuickListModal({
         return cols[colIndex]?.trim() || '';
       }).filter(id => id);
 
-      console.log("subscriber_id_field_mapping:", form.subscriber_id_field_mapping);
-      console.log("identifiers:", identifiers);
-
       // Strip "p_" prefix to get the actual field name
       const identifierType = form.subscriber_id_field_mapping.startsWith("p_")
         ? form.subscriber_id_field_mapping.substring(2)
@@ -484,7 +526,6 @@ export default function CreateQuickListModal({
         identifier_type: identifierType,
       });
 
-      console.log("Validation result:", result);
       setValidationResults(result.data || result);
       setShowValidationModal(true);
     } catch (err) {
@@ -963,12 +1004,15 @@ export default function CreateQuickListModal({
                 className="hidden"
               />
 
-              {/* Set Default Values Button */}
+              {/* Check Prefilled Defaults Button */}
               {form.file_text && (
                 <div className="mt-4 flex gap-2 items-center">
                   <button
                     type="button"
-                    onClick={() => setShowDefaultsModal(true)}
+                    onClick={() => {
+                      setDefaultsSearchTerm("");
+                      setShowDefaultsModal(true);
+                    }}
                     disabled={isSubmitting}
                     className="text-sm font-medium disabled:opacity-50"
                     style={{
@@ -979,7 +1023,7 @@ export default function CreateQuickListModal({
                       padding: `${buttonTokens.bordered.paddingY} ${buttonTokens.bordered.paddingX}`,
                     }}
                   >
-                    Set Default Values
+                    Check Prefilled Defaults
                   </button>
                   {Object.keys(form.column_defaults || {}).length > 0 && (
                     <span className="text-xs text-green-600">
@@ -1290,7 +1334,7 @@ export default function CreateQuickListModal({
 
         return (
           <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/30 backdrop-blur-[1px] px-4 py-6">
-            <div className={`w-full max-w-md ${tw.rounded} bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}>
+            <div className={`w-full max-w-2xl ${tw.rounded} bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}>
               <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
                 <h3 className="text-lg font-semibold text-gray-900">Set Column Default Values</h3>
                 <button
@@ -1303,27 +1347,58 @@ export default function CreateQuickListModal({
 
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 <p className="text-sm text-gray-600">
-                  These will be used when this quicklist is referenced as a variable in manual communications.
+                  Default values have been auto-filled based on your data. You can edit any value below.
                 </p>
-                {columns.map((column) => (
-                  <div key={column}>
-                    <Input
-                      label={column}
-                      value={form.column_defaults?.[column] || ""}
-                      onChange={(value) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          column_defaults: {
-                            ...prev.column_defaults,
-                            [column]: String(value),
-                          },
-                        }))
-                      }
-                      placeholder={`e.g., "John Doe"`}
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                ))}
+
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search columns..."
+                    value={defaultsSearchTerm}
+                    onChange={(e) => setDefaultsSearchTerm(e.target.value.toLowerCase())}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                {(() => {
+                  const filteredColumns = columns.filter((column) =>
+                    column.toLowerCase().includes(defaultsSearchTerm)
+                  );
+
+                  if (filteredColumns.length === 0 && defaultsSearchTerm) {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-sm text-gray-500">Column doesn't exist</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-2 gap-4">
+                      {filteredColumns.map((column) => (
+                        <div key={column}>
+                          <Input
+                            label={column}
+                            value={form.column_defaults?.[column] || ""}
+                            onChange={(value) =>
+                              setForm((prev) => ({
+                                ...prev,
+                                column_defaults: {
+                                  ...prev.column_defaults,
+                                  [column]: String(value),
+                                },
+                              }))
+                            }
+                            placeholder={`e.g., "John Doe"`}
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
