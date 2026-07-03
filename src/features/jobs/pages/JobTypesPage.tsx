@@ -731,21 +731,19 @@ export default function JobTypesPage() {
     <>
       <div className="overflow-x-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <BackButton
-                showBreadcrumb={true}
-                currentLabel="Job Types"
-              />
-            </div>
-            <p className={`${tw.textSecondary} text-sm mt-1`}>
-              Manage the classification codes used when creating scheduled jobs.
-            </p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Job Types"
+            />
+            <PermissionGate permission="job-types.create">
+              <FeatureActionButton featureId="job-types" action="create" onClick={handleCreate} />
+            </PermissionGate>
           </div>
-          <PermissionGate permission="job-types.create">
-            <FeatureActionButton featureId="job-types" action="create" onClick={handleCreate} />
-          </PermissionGate>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Manage the classification codes used when creating scheduled jobs.
+          </p>
         </div>
 
         {/* Stats Cards */}

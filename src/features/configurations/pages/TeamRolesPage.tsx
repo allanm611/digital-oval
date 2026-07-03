@@ -219,12 +219,10 @@ export default function TeamRolesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <BackButton
-           
             showBreadcrumb={true}
-           
             currentLabel="Roles"
           />
           <button

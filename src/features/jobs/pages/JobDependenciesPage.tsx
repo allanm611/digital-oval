@@ -1751,14 +1751,8 @@ export default function JobDependenciesPage() {
                     setSelectedDependencyIds(new Set());
                   }
                 }}
-                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
-                style={{
-                  backgroundColor: isSelectionMode
-                    ? "var(--c-text-primary)"
-                    : "transparent",
-                  color: isSelectionMode ? "var(--c-surface-background)" : "var(--c-text-primary)",
-                  border: "1px solid var(--c-text-primary)",
-                }}
+                className="inline-flex items-center gap-2 transition-colors w-auto"
+                style={getButtonStyles(button.bordered)}
               >
                 {isSelectionMode ? (
                   <CheckSquare className="h-4 w-4" />
@@ -1766,7 +1760,7 @@ export default function JobDependenciesPage() {
                   <Square className="h-4 w-4" />
                 )}
                 <span className="hidden sm:inline">
-                  {isSelectionMode ? "Exit Selection" : "Select Dependencies"}
+                  {isSelectionMode ? "Exit Selection" : "Select"}
                 </span>
                 <span className="sm:hidden">
                   {isSelectionMode ? "Exit" : "Select"}
@@ -1943,7 +1937,7 @@ export default function JobDependenciesPage() {
       {isSelectionMode && selectedDependencyIds.size > 0 && (
         <PermissionGate permission="job-dependencies.update">
           <div
-            className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+            className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
           >
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">
@@ -2015,45 +2009,6 @@ export default function JobDependenciesPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<any>
               columns={[
-                ...(isSelectionMode
-                  ? [
-                      {
-                        id: "select",
-                        label: (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={handleSelectAll}
-                          >
-                            <Checkbox
-                              id="select-all-dependencies"
-                              checked={
-                                filteredDependencies.length > 0 &&
-                                selectedDependencyIds.size ===
-                                  filteredDependencies.length
-                              }
-                              onChange={handleSelectAll}
-                            />
-                          </div>
-                        ),
-                        visible: true,
-                        sortable: false,
-                        render: (_, dependency) => (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => handleToggleSelection(dependency.id)}
-                          >
-                            <Checkbox
-                              id={`dependency-${dependency.id}`}
-                              checked={selectedDependencyIds.has(dependency.id)}
-                              onChange={() =>
-                                handleToggleSelection(dependency.id)
-                              }
-                            />
-                          </div>
-                        ),
-                      } as TableColumn<any>,
-                    ]
-                  : []),
                 {
                   id: "job_id",
                   label: "Job Name",
@@ -2157,6 +2112,11 @@ export default function JobDependenciesPage() {
               totalItems={filteredDependencies.length}
               currentPage={currentPage}
               pageSize={PAGE_SIZE}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedDependencyIds)}
+              onRowSelectChange={(selected) => {
+                setSelectedDependencyIds(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

@@ -658,69 +658,26 @@ export default function AssignPermissionsModal({
             <div className={`${tw.rounded} overflow-hidden`}>
               <Table<Permission>
                 columns={[
-                  ...(isSelectionMode
-                    ? [
-                        {
-                          id: "select",
-                          label: (
-                            <div
-                              className="flex items-center gap-2 cursor-pointer"
-                              onClick={toggleSelectAllVisible}
-                            >
-                              <Checkbox
-                                ref={headerCheckboxRef}
-                                id="select-all-permissions"
-                                checked={allVisibleSelected}
-                                onChange={toggleSelectAllVisible}
-                                aria-label="Select all visible permissions"
-                                className="cursor-pointer w-4 h-4"
-                              />
-                            </div>
-                          ),
-                          visible: true,
-                          sortable: false,
-                          render: (_, permission) => {
-                            const isAssigned = assignedIds.has(permission.id);
-                            const isSelected = selectedPermissionIds.has(permission.id);
-                            return (
-                              <div
-                                className="flex items-center gap-2 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePermissionSelection(permission.id);
-                                }}
-                              >
-                                <Checkbox
-                                  id={`row-${permission.id}`}
-                                  checked={isSelected}
-                                  disabled={isAssigned}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                    togglePermissionSelection(permission.id);
-                                  }}
-                                  aria-label={`Select ${permission.name}`}
-                                  className={`cursor-pointer w-4 h-4 ${
-                                    isAssigned ? "opacity-50 cursor-not-allowed" : ""
-                                  }`}
-                                />
-                                {isAssigned && (
-                                  <span
-                                    className="ml-2 text-xs font-medium"
-                                    style={{ color: "var(--c-icon-table-delete)" }}
-                                  >
-                                    (Already assigned)
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          },
-                        } as TableColumn<Permission>,
-                      ]
-                    : []),
                   {
                     id: "name",
                     label: "Permission Name",
                     visible: true,
+                    render: (value, permission) => {
+                      const isAssigned = assignedIds.has(permission.id);
+                      return (
+                        <div className="flex items-center gap-2">
+                          <span>{value}</span>
+                          {isAssigned && (
+                            <span
+                              className="text-xs font-medium px-2 py-0.5 rounded"
+                              style={{ backgroundColor: "rgba(107, 114, 128, 0.1)", color: "var(--c-icon-table-delete)" }}
+                            >
+                              Already assigned
+                            </span>
+                          )}
+                        </div>
+                      );
+                    },
                   },
                   {
                     id: "code",
@@ -806,6 +763,11 @@ export default function AssignPermissionsModal({
                 totalItems={filteredPermissions.length}
                 currentPage={permissionsPaginationModel.page + 1}
                 pageSize={permissionsPaginationModel.pageSize}
+                enableRowSelection={isSelectionMode}
+                selectedRows={Array.from(selectedPermissionIds)}
+                onRowSelectChange={(selected) => {
+                  setSelectedPermissionIds(new Set(selected as number[]));
+                }}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,

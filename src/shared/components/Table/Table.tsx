@@ -551,7 +551,6 @@ export function Table<T extends { id?: number | string } = any>({
             className={`${tw.rounded} ${tableWrapperClassName}`}
             style={{
               maxHeight: 'min(calc(100vh - 350px), 800px)',
-              minHeight: '300px',
               overflowY: 'auto',
               overflowX: 'auto',
               userSelect: resizingColumn ? 'none' : 'auto',

@@ -30,7 +30,7 @@ import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pag
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Input from "../../../shared/components/ui/Input";
 import SelectJobTypeModal from "../components/SelectJobTypeModal";
-import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
+import { color, tw, zIndexTokens, button, getButtonStyles } from "../../../shared/utils/utils";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -593,73 +593,64 @@ export default function ScheduledJobsPage() {
   return (
     <>
       <div className="overflow-x-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <BackButton
-            showBreadcrumb={true}
-            currentLabel="Scheduled Jobs"
-          />
-          <div className="flex gap-3">
-          <button
-            onClick={() => navigate("/dashboard/scheduled-jobs/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: "transparent",
-              color: "var(--c-text-primary)",
-              border: "1px solid var(--c-text-primary)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            {t.jobs.analytics}
-          </button>
-          <PermissionGate permission="jobs.select">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Scheduled Jobs"
+            />
+            <div className="flex gap-3">
             <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  // Entering selection mode - select all visible jobs
-                  setIsSelectionMode(true);
-                  setSelectedJobs(new Set(filteredJobs.map((job) => job.id)));
-                } else {
-                  // Exiting selection mode - clear selection
-                  setIsSelectionMode(false);
-                  setSelectedJobs(new Set());
-                }
-              }}
+              onClick={() => navigate("/dashboard/scheduled-jobs/analytics")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
-                backgroundColor: isSelectionMode
-                  ? "var(--c-text-primary)"
-                  : "transparent",
-                color: isSelectionMode ? "var(--c-surface-background)" : "var(--c-text-primary)",
+                backgroundColor: "transparent",
+                color: "var(--c-text-primary)",
                 border: "1px solid var(--c-text-primary)",
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
             >
-              {isSelectionMode ? (
-                <CheckSquare className="h-4 w-4" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-              {isSelectionMode ? "Exit Selection" : "Select Jobs"}
+              <BarChart3 className="h-4 w-4" />
+              {t.jobs.analytics}
             </button>
-          </PermissionGate>
-          <PermissionGate permission="jobs.create">
-            <FeatureActionButton featureId="scheduled-jobs" action="create" onClick={() => setIsSelectTypeModalOpen(true)} />
-          </PermissionGate>
+            <PermissionGate permission="jobs.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    // Entering selection mode - select all visible jobs
+                    setIsSelectionMode(true);
+                    setSelectedJobs(new Set(filteredJobs.map((job) => job.id)));
+                  } else {
+                    // Exiting selection mode - clear selection
+                    setIsSelectionMode(false);
+                    setSelectedJobs(new Set());
+                  }
+                }}
+                className="inline-flex items-center gap-2 transition-colors w-auto"
+                style={getButtonStyles(button.bordered)}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select"}
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="jobs.create">
+              <FeatureActionButton featureId="scheduled-jobs" action="create" onClick={() => setIsSelectTypeModalOpen(true)} />
+            </PermissionGate>
+            </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            {t.jobs.scheduledJobsDescription}
+          </p>
         </div>
-        <div className="mt-4">
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Scheduled Jobs
-          </h1>
-        </div>
-        <p className={`${tw.textSecondary} text-sm mt-1`}>
-          {t.jobs.scheduledJobsDescription}
-        </p>
 
         <div className="mt-6">
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
@@ -792,7 +783,7 @@ export default function ScheduledJobsPage() {
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedJobs.size > 0 && (
         <div
-          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -886,6 +877,11 @@ export default function ScheduledJobsPage() {
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
               onManageColumnsClick={() => setShowColumnPicker(true)}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedJobs)}
+              onRowSelectChange={(selected) => {
+                setSelectedJobs(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

@@ -545,64 +545,47 @@ export default function TeamRolesPermissionsPage() {
   return (
     <div className="space-y-6 p-0">
       {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <BackButton
-           
             showBreadcrumb={true}
-           
             currentLabel="Access Control"
           />
-          {activeTab === "assign" && selectedRoleForAssign && (
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  setIsSelectionMode(true);
-                } else {
-                  setIsSelectionMode(false);
-                }
-              }}
-              disabled={!selectedRoleForAssign}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
-                isSelectionMode
-                  ? "text-white"
-                  : "border text-gray-700 bg-transparent hover:border-gray-400"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                borderColor: isSelectionMode
-                  ? "transparent"
-                  : color.primary.action + "40",
-                color: isSelectionMode ? "white" : color.primary.action,
-              }}
-            >
-              {isSelectionMode ? (
-                <>
+          <div className="flex items-center gap-3">
+            {activeTab === "assign" && selectedRoleForAssign && (
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    setIsSelectionMode(true);
+                  } else {
+                    setIsSelectionMode(false);
+                  }
+                }}
+                disabled={!selectedRoleForAssign}
+                className="inline-flex items-center gap-2 transition-colors w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                style={getButtonStyles(button.bordered)}
+              >
+                {isSelectionMode ? (
                   <CheckSquare className="w-4 h-4" />
-                  Exit Selection
-                </>
-              ) : (
-                <>
+                ) : (
                   <Square className="w-4 h-4" />
-                  Select Multiple
-                </>
-              )}
-            </button>
-          )}
-          {activeTab !== "assign" && (
-            <FeatureActionButton
-              featureId="team-roles"
-              action="create"
-              onClick={
-                activeTab === "roles" ? handleCreateRole : handleCreatePermission
-              }
-              label={activeTab === "roles" ? "Create Role" : "Create Permission"}
-            />
-          )}
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select"}
+              </button>
+            )}
+            {activeTab !== "assign" && (
+              <FeatureActionButton
+                featureId="team-roles"
+                action="create"
+                onClick={
+                  activeTab === "roles" ? handleCreateRole : handleCreatePermission
+                }
+                label={activeTab === "roles" ? "Create Role" : "Create Permission"}
+              />
+            )}
+          </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
+        <p className={`text-sm ${tw.textSecondary}`}>
           Manage roles, permissions, and access control
         </p>
       </div>

@@ -28,7 +28,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import Input from "../../../shared/components/ui/Input";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -125,6 +125,167 @@ export default function JobExecutionsPage() {
   const [isArchiveManagementProcessing, setIsArchiveManagementProcessing] = useState(false);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
   const filtersModalRef = useRef<HTMLDivElement>(null);
+
+  // Table columns definition - moved early so useTable can use it
+  const defaultColumns = useMemo(
+    () =>
+      [
+        {
+          id: "id",
+          label: "Execution ID",
+          visible: true,
+          render: (value) => `${(value as string).substring(0, 8)}...`,
+        },
+        {
+          id: "job_id",
+          label: "Job ID",
+          visible: true,
+          render: (value) => value,
+        },
+        {
+          id: "execution_status",
+          label: "Status",
+          visible: true,
+          render: (value) => value,
+        },
+        {
+          id: "started_at",
+          label: "Started At",
+          visible: true,
+          render: (value) => value ? new Date(value as string).toLocaleString() : "—",
+        },
+        {
+          id: "duration_seconds",
+          label: "Duration",
+          visible: true,
+          render: (value) => formatDuration(value as number | null),
+        },
+        {
+          id: "triggered_by",
+          label: "Triggered By",
+          visible: true,
+          render: (value) => {
+            const text = (value as string) || "—";
+            return text.charAt(0).toUpperCase() + text.slice(1);
+          },
+        },
+        {
+          id: "actions",
+          label: "Actions",
+          visible: true,
+          sortable: false,
+      isActionColumn: true,
+          render: (value, execution) => (
+            <div className="flex items-center justify-end space-x-2">
+              <button
+                onClick={() =>
+                  navigate(
+                    `/dashboard/job-executions/${execution.id}`,
+                  )
+                }
+                className={`p-0 icon-edit ${tw.rounded}`}
+                title="View details"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+              {canWrite && !execution.archived && (
+                <button
+                  onClick={() => handleAction(execution, "archive")}
+                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  title="Archive execution"
+                >
+                  <Archive className="w-4 h-4" />
+                </button>
+              )}
+              {canWrite && execution.archived && (
+                <button
+                  onClick={() => handleAction(execution, "unarchive")}
+                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  title="Unarchive execution"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              )}
+              {canWrite && (execution.execution_status === "running" || execution.execution_status === "failure") && (
+                <>
+                  <button
+                    ref={(el) => {
+                      if (el) menuRefs.current[execution.id] = el;
+                    }}
+                    data-execution-menu-button
+                    onClick={(e) => handleMenuToggle(execution.id, e)}
+                    className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                    title="More actions"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  {openMenuId === execution.id &&
+                    menuPosition &&
+                    createPortal(
+                      <div
+                        className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-lg z-50`}
+                        style={{
+                          top: `${menuPosition.top}px`,
+                          left: `${menuPosition.left}px`,
+                          width: "140px",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        {execution.execution_status === "running" && (
+                          <button
+                            onClick={() => {
+                              handleAction(execution, "abort");
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            Abort
+                          </button>
+                        )}
+                        {execution.execution_status === "failure" && (
+                          <button
+                            onClick={() => {
+                              handleAction(execution, "retry");
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            Retry
+                          </button>
+                        )}
+                      </div>,
+                      document.body,
+                    )}
+                </>
+              )}
+            </div>
+          ),
+        },
+      ] as TableColumn<JobExecution>[],
+    [canWrite, navigate],
+  );
+
+  // Initialize pagination and table state
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
+    sortConfigs,
+    handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+  } = useTable({
+    tableId: "job-executions-table",
+    defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
 
   useClickOutside(filtersModalRef, () => {
     if (showAdvancedFilters) {
@@ -709,242 +870,76 @@ export default function JobExecutionsPage() {
     }
   };
 
-  // Table columns definition
-  const defaultColumns = useMemo(
-    () =>
-      [
-        {
-          id: "id",
-          label: "Execution ID",
-          visible: true,
-          render: (value) => `${(value as string).substring(0, 8)}...`,
-        },
-        {
-          id: "job_id",
-          label: "Job ID",
-          visible: true,
-          render: (value) => value,
-        },
-        {
-          id: "execution_status",
-          label: "Status",
-          visible: true,
-          render: (value) => value,
-        },
-        {
-          id: "started_at",
-          label: "Started At",
-          visible: true,
-          render: (value) => value ? new Date(value as string).toLocaleString() : "—",
-        },
-        {
-          id: "duration_seconds",
-          label: "Duration",
-          visible: true,
-          render: (value) => formatDuration(value as number | null),
-        },
-        {
-          id: "triggered_by",
-          label: "Triggered By",
-          visible: true,
-          render: (value) => {
-            const text = (value as string) || "—";
-            return text.charAt(0).toUpperCase() + text.slice(1);
-          },
-        },
-        {
-          id: "actions",
-          label: "Actions",
-          visible: true,
-          sortable: false,
-      isActionColumn: true,
-          render: (value, execution) => (
-            <div className="flex items-center justify-end space-x-2">
-              <button
-                onClick={() =>
-                  navigate(
-                    `/dashboard/job-executions/${execution.id}`,
-                  )
-                }
-                className={`p-0 icon-edit ${tw.rounded}`}
-                title="View details"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
-              {canWrite && !execution.archived && (
-                <button
-                  onClick={() => handleAction(execution, "archive")}
-                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
-                  title="Archive execution"
-                >
-                  <Archive className="w-4 h-4" />
-                </button>
-              )}
-              {canWrite && execution.archived && (
-                <button
-                  onClick={() => handleAction(execution, "unarchive")}
-                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
-                  title="Unarchive execution"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-              )}
-              {canWrite && (execution.execution_status === "running" || execution.execution_status === "failure") && (
-                <>
-                  <button
-                    ref={(el) => {
-                      if (el) menuRefs.current[execution.id] = el;
-                    }}
-                    data-execution-menu-button
-                    onClick={(e) => handleMenuToggle(execution.id, e)}
-                    className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
-                    title="More actions"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                  {openMenuId === execution.id &&
-                    menuPosition &&
-                    createPortal(
-                      <div
-                        className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-lg z-50`}
-                        style={{
-                          top: `${menuPosition.top}px`,
-                          left: `${menuPosition.left}px`,
-                          width: "140px",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
-                        {execution.execution_status === "running" && (
-                          <button
-                            onClick={() => {
-                              handleAction(execution, "abort");
-                              setOpenMenuId(null);
-                              setMenuPosition(null);
-                            }}
-                            className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
-                          >
-                            Abort
-                          </button>
-                        )}
-                        {execution.execution_status === "failure" && (
-                          <button
-                            onClick={() => {
-                              handleAction(execution, "retry");
-                              setOpenMenuId(null);
-                              setMenuPosition(null);
-                            }}
-                            className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
-                          >
-                            Retry
-                          </button>
-                        )}
-                      </div>,
-                      document.body,
-                    )}
-                </>
-              )}
-            </div>
-          ),
-        },
-      ] as TableColumn<JobExecution>[],
-    [canWrite, navigate],
-  );
-
-  const {
-    columns,
-    currentPage: tableCurrentPage,
-    pageSize: tablePageSize,
-    handlePageChange: tableHandlePageChange,
-    handlePageSizeChange: tableHandlePageSizeChange,
-    sortConfigs,
-    handleSort,
-    toggleColumn,
-    reorderColumns,
-    resetToDefaults,
-  } = useTable({
-    tableId: "job-executions-table",
-    defaultColumns,
-    defaultPageSize: DEFAULT_PAGE_SIZE,
-    persistToLocalStorage: true,
-  });
-
   return (
     <>
       <div className="overflow-x-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <BackButton
-            showBreadcrumb={true}
-            currentLabel="Job Executions"
-          />
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate("/dashboard/job-executions/analytics")}
-              className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-              style={{
-                backgroundColor: "transparent",
-                color: "var(--c-bordered-button-color)",
-                borderColor: "var(--c-bordered-button-color)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-              }}
-            >
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </button>
-            <PermissionGate permission="job-executions.select">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Job Executions"
+            />
+            <div className="flex gap-3">
               <button
-                onClick={() => {
-                  if (!isSelectionMode) {
-                    setIsSelectionMode(true);
-                    setSelectedExecutions(
-                      new Set(filteredExecutions.map((exec) => exec.id)),
-                    );
-                  } else {
-                    setIsSelectionMode(false);
-                    setSelectedExecutions(new Set());
-                  }
-                }}
-                className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-                style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
-                  borderColor: "var(--c-bordered-button-color)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-                }}
-              >
-                {isSelectionMode ? (
-                  <CheckSquare className="h-4 w-4" />
-                ) : (
-                  <Square className="h-4 w-4" />
-                )}
-                {isSelectionMode ? "Exit Selection" : "Select Executions"}
-              </button>
-            </PermissionGate>
-            <PermissionGate permission="job-executions.write">
-              <button
-                onClick={() => setShowArchiveManagementModal(true)}
+                onClick={() => navigate("/dashboard/job-executions/analytics")}
                 className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
                   color: "var(--c-bordered-button-color)",
                   borderColor: "var(--c-bordered-button-color)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
                 }}
               >
-                <Archive className="h-4 w-4" />
-                Manage Archive
+                <BarChart3 className="h-4 w-4" />
+                Analytics
               </button>
-            </PermissionGate>
+              <PermissionGate permission="job-executions.select">
+                <button
+                  onClick={() => {
+                    if (!isSelectionMode) {
+                      setIsSelectionMode(true);
+                      setSelectedExecutions(
+                        new Set(filteredExecutions.map((exec) => exec.id)),
+                      );
+                    } else {
+                      setIsSelectionMode(false);
+                      setSelectedExecutions(new Set());
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 transition-colors w-auto"
+                  style={getButtonStyles(button.bordered)}
+                >
+                  {isSelectionMode ? (
+                    <CheckSquare className="h-4 w-4" />
+                  ) : (
+                    <Square className="h-4 w-4" />
+                  )}
+                  {isSelectionMode ? "Exit Selection" : "Select"}
+                </button>
+              </PermissionGate>
+              <PermissionGate permission="job-executions.write">
+                <button
+                  onClick={() => setShowArchiveManagementModal(true)}
+                  className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                  style={{
+                    backgroundColor: "transparent",
+                    color: "var(--c-bordered-button-color)",
+                    borderColor: "var(--c-bordered-button-color)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                  }}
+                >
+                  <Archive className="h-4 w-4" />
+                  Manage Archive
+                </button>
+              </PermissionGate>
+            </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Monitor and track all job execution records
+          </p>
         </div>
-        <p className={`${tw.textSecondary} text-sm mt-1`}>
-          Monitor and track all job execution records
-        </p>
 
       <div className="mt-6">
       {/* Stats Cards */}
@@ -1078,7 +1073,7 @@ export default function JobExecutionsPage() {
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedExecutions.size > 0 && (
         <div
-          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -1376,6 +1371,11 @@ export default function JobExecutionsPage() {
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
               onManageColumnsClick={() => setShowColumnPicker(true)}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedExecutions)}
+              onRowSelectChange={(selected) => {
+                setSelectedExecutions(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

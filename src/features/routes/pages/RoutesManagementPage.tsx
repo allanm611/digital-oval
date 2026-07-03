@@ -417,26 +417,24 @@ export default function RoutesManagementPage() {
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex flex-col gap-4 flex-1">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <BackButton
-
             showBreadcrumb={true}
-
             currentLabel={t.routes.routesManagement}
           />
-          <p className={`text-sm ${tw.textSecondary}`}>
-            {t.routes.manageAllRoutes}
-          </p>
+          <button
+            onClick={() => navigate("/dashboard/routes/create")}
+            className="inline-flex items-center gap-2 px-4 py-2 text-white font-semibold text-sm rounded transition-colors hover:opacity-90"
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="w-4 h-4" />
+            {t.routes.createRoute}
+          </button>
         </div>
-        <button
-          onClick={() => navigate("/dashboard/routes/create")}
-          className="inline-flex items-center gap-2 px-4 py-2 text-white font-semibold text-sm rounded transition-colors hover:opacity-90"
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-4 h-4" />
-          {t.routes.createRoute}
-        </button>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          {t.routes.manageAllRoutes}
+        </p>
       </div>
 
       {/* Filters */}

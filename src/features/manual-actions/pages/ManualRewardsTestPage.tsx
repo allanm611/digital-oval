@@ -405,6 +405,7 @@ export default function ManualRewardsTestPage() {
                   value={recipient}
                   onChange={setRecipient}
                   labelBgColor="var(--c-primary-background)"
+                  style={{ borderColor: '#cbd5e1' }}
                 />
               </div>
 
@@ -585,13 +586,14 @@ export default function ManualRewardsTestPage() {
                     value={ussdCode}
                     onChange={setUssdCode}
                     labelBgColor="var(--c-primary-background)"
+                    style={{ borderColor: '#cbd5e1' }}
                   />
                 </div>
               )}
 
               {/* Description/Body - not shown for USSD */}
               {channelCategory !== "USSD" && (
-                <div>
+                <div className="mb-6">
                   <Textarea
                     label={<>{channelCategory === "PUSH" ? "Body *" : "Description *"}</>}
                     value={description}
@@ -607,6 +609,7 @@ export default function ManualRewardsTestPage() {
                     rows={5}
                     hasError={!!descriptionError}
                     labelBgColor="var(--c-primary-background)"
+                    style={{ borderColor: '#cbd5e1' }}
                   />
                   {descriptionError ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">

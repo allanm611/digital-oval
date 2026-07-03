@@ -33,7 +33,7 @@ import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pag
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
-import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import { connectionProfileService } from "../services/connectionProfileService";
 import {
   ConnectionProfileEnvironmentStatsItem,
@@ -760,8 +760,8 @@ export default function ConnectionProfilesPage() {
   return (
     <>
       <div className="">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
             <BackButton
               fallbackTo="/dashboard"
               showBreadcrumb={true}
@@ -784,23 +784,15 @@ export default function ConnectionProfilesPage() {
                     setSelectedProfileIds(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
-                style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
-                  borderColor: "var(--c-bordered-button-color)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-                }}
+                className="inline-flex items-center gap-2 transition-colors w-auto"
+                style={getButtonStyles(button.bordered)}
               >
                 {isSelectionMode ? (
                   <CheckSquare size={16} />
                 ) : (
                   <Square size={16} />
                 )}
-                {isSelectionMode ? "Cancel Selection" : "Select Profiles"}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             </PermissionGate>
             <button
@@ -822,10 +814,10 @@ export default function ConnectionProfilesPage() {
             <FeatureActionButton featureId="connection-profiles" action="create" />
           </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Manage secure connections and governance for integration endpoints
+          </p>
         </div>
-        <p className={`${tw.textSecondary} text-sm mt-1`}>
-          Manage secure connections and governance for integration endpoints
-        </p>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
@@ -847,45 +839,6 @@ export default function ConnectionProfilesPage() {
             );
           })}
         </div>
-
-        {isSelectionMode && selectedProfileIds.size > 0 && (
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between`}
-          >
-            <div className="flex items-center gap-3 text-sm text-black">
-              <span>
-                {selectedCount} selected / {filteredProfiles.length} visible
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <button
-                type="button"
-                onClick={handleBulkActivateSelected}
-                disabled={!selectedCount || bulkActionLoading}
-                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-white disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {bulkActionLoading && bulkActionType === "activate" && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                )}
-                Activate
-              </button>
-              <button
-                type="button"
-                onClick={handleAutoDeactivateExpired}
-                disabled={bulkActionLoading}
-                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
-              >
-                {bulkActionLoading && bulkActionType === "auto" ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                Auto Deactivate Expired
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Search & Filters */}
         <div className="space-y-4 mt-6">
@@ -924,6 +877,46 @@ export default function ConnectionProfilesPage() {
           </div>
         </div>
 
+        {/* Batch Actions Toolbar */}
+        {isSelectionMode && selectedProfileIds.size > 0 && (
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mt-4 mb-6`}
+          >
+            <div className="flex items-center gap-3 text-sm text-black">
+              <span>
+                {selectedCount} selected / {filteredProfiles.length} visible
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <button
+                type="button"
+                onClick={handleBulkActivateSelected}
+                disabled={!selectedCount || bulkActionLoading}
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-white disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {bulkActionLoading && bulkActionType === "activate" && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
+                Activate
+              </button>
+              <button
+                type="button"
+                onClick={handleAutoDeactivateExpired}
+                disabled={bulkActionLoading}
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
+              >
+                {bulkActionLoading && bulkActionType === "auto" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                Auto Deactivate Expired
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Profiles */}
         {loadingProfiles ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -954,6 +947,11 @@ export default function ConnectionProfilesPage() {
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
               onManageColumnsClick={() => setShowColumnPicker(true)}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedProfileIds)}
+              onRowSelectChange={(selected) => {
+                setSelectedProfileIds(new Set(selected as number[]));
+              }}
             />
             {/* Pagination Controls */}
             {totalProfiles > 0 && (

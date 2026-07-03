@@ -322,25 +322,27 @@ export default function DataConnectors() {
   return (
     <div className="overflow-x-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton
-          showBreadcrumb={true}
-          currentLabel={t.dataConnectors.title}
-        />
-        <PermissionGate permission="servers.create">
-          <FeatureActionButton
-            featureId="data-connectors"
-            action="create"
-            onClick={() => {
-              setEditingConnector(null);
-              setShowCreateModal(true);
-            }}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
+            showBreadcrumb={true}
+            currentLabel={t.dataConnectors.title}
           />
-        </PermissionGate>
+          <PermissionGate permission="servers.create">
+            <FeatureActionButton
+              featureId="data-connectors"
+              action="create"
+              onClick={() => {
+                setEditingConnector(null);
+                setShowCreateModal(true);
+              }}
+            />
+          </PermissionGate>
+        </div>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          {t.dataConnectors.subtitle}
+        </p>
       </div>
-      <p className={`${tw.textSecondary} text-sm mt-1`}>
-        {t.dataConnectors.subtitle}
-      </p>
 
       {/* Stats Cards */}
       <div className="mt-6">

@@ -52,32 +52,41 @@ export default function MonitoringPage() {
       id: "type",
       label: "Type",
       visible: true,
+      render: (value) => {
+        if (!value) return "—";
+        return value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
       },
+    },
     {
       id: "recipientsCount",
       label: "Recipients",
       visible: true,
-      },
+      render: (value) => value || "—",
+    },
     {
       id: "status",
       label: "Status",
       visible: true,
+      render: (value) => value || "—",
     },
     {
       id: "successCount",
       label: "Success",
       visible: true,
-      },
+      render: (value) => value || "—",
+    },
     {
       id: "failureCount",
       label: "Failed",
       visible: true,
-      },
+      render: (value) => value || "—",
+    },
     {
       id: "duration",
       label: "Duration",
       visible: true,
-      },
+      render: (value) => value || "—",
+    },
     {
       id: "actions",
       label: "Actions",
@@ -86,7 +95,10 @@ export default function MonitoringPage() {
       isActionColumn: true,
       render: (_, execution) => (
         <div className="flex items-center justify-center gap-2">
-          <button onClick={() => handleRetry(execution)} className={`p-0 ${tw.rounded} transition-colors`} style={{ color: 'var(--c-text-primary)' }} title="Retry">
+          <button onClick={() => navigate(`/dashboard/monitoring/${execution.id}`)} className={`p-0 icon-edit ${tw.rounded} transition-colors`} title="View details">
+            <Eye className="w-4 h-4" />
+          </button>
+          <button onClick={() => handleRetry(execution)} className={`p-0 icon-edit ${tw.rounded} transition-colors`} title="Retry">
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
@@ -255,14 +267,12 @@ export default function MonitoringPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4">
+      <div className="space-y-2">
         <BackButton
-
           showBreadcrumb={true}
-
           currentLabel="Execution Monitoring"
         />
-        <p className={`${tw.textSecondary} text-sm`}>
+        <p className={`text-sm ${tw.textSecondary}`}>
           Monitor campaigns, broadcasts, rewards, and scheduled jobs execution status
         </p>
       </div>

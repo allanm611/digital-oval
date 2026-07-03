@@ -741,52 +741,54 @@ export default function ServersPage() {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton
-          showBreadcrumb={true}
-          currentLabel="Servers"
-        />
-        <div className="flex items-center gap-3">
-            <PermissionGate permission="servers.select">
-              <button
-                onClick={() => {
-                  if (!isSelectionMode) {
-                    // Entering selection mode - select all visible servers
-                    setIsSelectionMode(true);
-                    setSelectedServerIds(new Set(visibleIds));
-                  } else {
-                    // Exiting selection mode - clear selection
-                    setIsSelectionMode(false);
-                    setSelectedServerIds(new Set());
-                  }
-                }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-                style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
-                  borderColor: "var(--c-bordered-button-color)",
-                  borderWidth: "1px",
-                  borderStyle: "solid",
-                }}
-              >
-                {isSelectionMode ? (
-                  <CheckSquare size={16} />
-                ) : (
-                  <Square size={16} />
-                )}
-                {isSelectionMode
-                  ? t.servers.exitSelection
-                  : t.servers.selectServers}
-              </button>
-            </PermissionGate>
-            <FeatureActionButton featureId="servers" action="create" />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
+            showBreadcrumb={true}
+            currentLabel="Servers"
+          />
+          <div className="flex items-center gap-3">
+              <PermissionGate permission="servers.select">
+                <button
+                  onClick={() => {
+                    if (!isSelectionMode) {
+                      // Entering selection mode - select all visible servers
+                      setIsSelectionMode(true);
+                      setSelectedServerIds(new Set(visibleIds));
+                    } else {
+                      // Exiting selection mode - clear selection
+                      setIsSelectionMode(false);
+                      setSelectedServerIds(new Set());
+                    }
+                  }}
+                  className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                  style={{
+                    backgroundColor: isSelectionMode
+                      ? color.primary.action
+                      : "transparent",
+                    color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                    borderColor: "var(--c-bordered-button-color)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                  }}
+                >
+                  {isSelectionMode ? (
+                    <CheckSquare size={16} />
+                  ) : (
+                    <Square size={16} />
+                  )}
+                  {isSelectionMode
+                    ? t.servers.exitSelection
+                    : t.servers.selectServers}
+                </button>
+              </PermissionGate>
+              <FeatureActionButton featureId="servers" action="create" />
+          </div>
         </div>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          {t.servers.description}
+        </p>
       </div>
-      <p className={`${tw.textSecondary} text-sm mt-1`}>
-        {t.servers.description}
-      </p>
 
       <div className="mt-6">
         <ServerStatsCards
@@ -839,7 +841,7 @@ export default function ServersPage() {
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedServerIds.size > 0 && (
         <div
-          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -909,6 +911,11 @@ export default function ServersPage() {
               sortConfigs={sortConfigs}
               onHideColumn={toggleColumn}
               onManageColumnsClick={() => setShowColumnPicker(true)}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedServerIds)}
+              onRowSelectChange={(selected) => {
+                setSelectedServerIds(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

@@ -39,7 +39,7 @@ import SegmentModal from "../components/SegmentModal";
 import SegmentDetailsExpandedRow from "../components/SegmentDetailsExpandedRow";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw, button, zIndex } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex, getButtonStyles } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -1209,35 +1209,15 @@ export default function SegmentManagementPage() {
                     setSelectedSegmentIds(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-                style={{
-                  backgroundColor: isSelectionMode
-                    ? "var(--c-primary-action)"
-                    : "transparent",
-                  color: isSelectionMode ? "white" : "var(--c-text-primary)",
-                  border: `1px solid ${isSelectionMode ? "var(--c-primary-action)" : "var(--c-text-primary)"}`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelectionMode) {
-                    e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
-                  } else {
-                    e.currentTarget.style.opacity = "0.9";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelectionMode) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  } else {
-                    e.currentTarget.style.opacity = "1";
-                  }
-                }}
+                className="inline-flex items-center gap-2 transition-colors w-auto"
+                style={getButtonStyles(button.bordered)}
               >
                 {isSelectionMode ? (
                   <CheckSquare size={16} />
                 ) : (
                   <Square size={16} />
                 )}
-                {isSelectionMode ? "Exit Selection" : "Select Segments"}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             </PermissionGate>
             <PermissionGate permission="segments.create">

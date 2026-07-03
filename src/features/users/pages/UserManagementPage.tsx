@@ -33,7 +33,7 @@ import UserDetailsExpandedRow from "../components/UserDetailsExpandedRow";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ErrorState from "../../../shared/components/ui/ErrorState";
-import { color, tw, components, zIndex, button } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { roleService } from "../../roles/services/roleService";
@@ -1324,6 +1324,11 @@ export default function UserManagementPage() {
     setUserToDelete(null);
   };
 
+  const handleCancelSelection = () => {
+    setIsSelectionMode(false);
+    setSelectedUsers(new Set());
+  };
+
   // Derived analytics helpers
   const normalizeStatus = (user: UserType) => {
     const accountStatus = (user as unknown as { account_status?: string })
@@ -1788,19 +1793,13 @@ export default function UserManagementPage() {
     <>
       <div className="overflow-x-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <BackButton
-                showBreadcrumb={true}
-                currentLabel="Users"
-              />
-            </div>
-            <p className={`${tw.textSecondary} text-sm mt-1`}>
-              {t.userManagement.description}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Users"
+            />
+            <div className="flex items-center gap-3 flex-shrink-0">
             {activeTab === "users" && (
               <button
                 onClick={() => {
@@ -1812,14 +1811,8 @@ export default function UserManagementPage() {
                     setSelectedUsers(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-                style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
-                }}
+                className="inline-flex items-center gap-2 transition-colors w-auto"
+                style={getButtonStyles(button.bordered)}
                 title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
               >
                 {isSelectionMode ? (
@@ -1827,7 +1820,7 @@ export default function UserManagementPage() {
                 ) : (
                   <Square className="h-4 w-4" />
                 )}
-                {isSelectionMode ? "Exit Selection" : "Select Users"}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             )}
             <button
@@ -1850,7 +1843,11 @@ export default function UserManagementPage() {
                 {t.userManagement.addUser}
               </button>
             </PermissionGate>
+            </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            {t.userManagement.description}
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -2044,7 +2041,7 @@ export default function UserManagementPage() {
       {/* Batch Action Bar */}
       {isSelectionMode && selectedUsers.size > 0 && activeTab === "users" && (
         <div
-          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mb-6`}
+          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -2173,6 +2170,11 @@ export default function UserManagementPage() {
                 clearFiltersKey={clearFiltersKey}
                 onHideColumn={toggleColumn}
                 onManageColumnsClick={() => setShowColumnPicker(true)}
+                enableRowSelection={isSelectionMode}
+                selectedRows={Array.from(selectedUsers)}
+                onRowSelectChange={(selected) => {
+                  setSelectedUsers(new Set(selected as number[]));
+                }}
                 expandedContent={(user) => (
                   <UserDetailsExpandedRow user={user} colSpan={usersTableColumnsWithVisibility.filter((c) => c.visible).length} />
                 )}

@@ -9,6 +9,8 @@ import {
   Play,
   Pause,
   X,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Textarea from "../../../shared/components/ui/Textarea";
@@ -20,7 +22,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -478,22 +480,13 @@ export default function WorkflowsPage() {
     <>
       <div className="overflow-x-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <BackButton
-                showBreadcrumb={true}
-                currentLabel="Job Workflows"
-              />
-            </div>
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary} mt-4`}>
-              Job Workflows
-            </h1>
-            <p className={`${tw.textSecondary} text-sm mt-1`}>
-              Manage and monitor workflows
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Job Workflows"
+            />
+            <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/dashboard/workflows/analytics")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
@@ -523,20 +516,15 @@ export default function WorkflowsPage() {
                     setSelectedWorkflows(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium`}
-                style={{
-                  background: button.bordered.background,
-                  color: button.bordered.color,
-                  border: button.bordered.border,
-                  paddingTop: button.bordered.paddingY,
-                  paddingBottom: button.bordered.paddingY,
-                  paddingLeft: button.bordered.paddingX,
-                  paddingRight: button.bordered.paddingX,
-                  borderRadius: button.bordered.borderRadius,
-                  fontSize: button.bordered.fontSize,
-                }}
+                className="inline-flex items-center gap-2 transition-colors w-auto"
+                style={getButtonStyles(button.bordered)}
               >
-                {isSelectionMode ? "Cancel" : "Select"}
+                {isSelectionMode ? (
+                  <CheckSquare size={16} />
+                ) : (
+                  <Square size={16} />
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             </PermissionGate>
             <PermissionGate permission="job-workflows.create">
@@ -552,7 +540,11 @@ export default function WorkflowsPage() {
                 {t.workflows.createWorkflow}
               </button>
             </PermissionGate>
+            </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Manage and monitor workflows
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -655,7 +647,7 @@ export default function WorkflowsPage() {
         {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedWorkflows.size > 0 && (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}
+          className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-900">
@@ -748,6 +740,11 @@ export default function WorkflowsPage() {
             sortConfigs={sortConfigs}
             onHideColumn={toggleColumn}
             onManageColumnsClick={() => setShowColumnPicker(true)}
+            enableRowSelection={isSelectionMode}
+            selectedRows={Array.from(selectedWorkflows)}
+            onRowSelectChange={(selected) => {
+              setSelectedWorkflows(new Set(selected as number[]));
+            }}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,

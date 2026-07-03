@@ -251,12 +251,10 @@ export default function ControlGroupsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <BackButton
-
             showBreadcrumb={true}
-
             currentLabel={t.controlGroups.title}
           />
           <div className="flex gap-3">
@@ -283,7 +281,7 @@ export default function ControlGroupsPage() {
             </button>
           </div>
         </div>
-        <p className="text-gray-600 text-sm">{t.controlGroups.subtitle}</p>
+        <p className="text-sm text-gray-600">{t.controlGroups.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

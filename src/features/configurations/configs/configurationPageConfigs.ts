@@ -2539,10 +2539,11 @@ export const vipListsConfig: TypeConfigurationPageConfig = {
 };
 
 // Communication Channels Configuration
-export const communicationChannelsConfig: TypeConfigurationPageConfig = {
+export const communicationChannelsConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Communication Channels",
   subtitle:
     "Manage channels such as SMS, Email, USSD, Push and control their availability",
+  description: "Configure and manage communication channels for reaching customers across multiple platforms",
   entityName: "communication channel",
   entityNamePlural: "communication channels",
   configType: "communicationChannels",
@@ -2575,10 +2576,11 @@ export const communicationChannelsConfig: TypeConfigurationPageConfig = {
 };
 
 // Sender IDs Configuration
-export const senderIdsConfig: TypeConfigurationPageConfig = {
+export const senderIdsConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Sender IDs",
   subtitle:
     "Manage SMS sender IDs for branding and compliance. Only Super Admins can create or modify sender IDs.",
+  description: "Create and manage sender IDs for SMS authentication and branding compliance",
   entityName: "sender ID",
   entityNamePlural: "sender IDs",
   configType: "senderIds",
@@ -3462,10 +3464,11 @@ export function getCampaignObjectivesApiConfig(
 
 export function getTimezonesApiConfig(
   _t: (key: string) => string,
-): APIConfigurationPageConfig {
+): APIConfigurationPageConfig & { description?: string } {
   return {
     title: "Timezones",
     subtitle: "Manage available timezones for your organization",
+    description: "Configure timezone settings for accurate scheduling and time-based campaign execution",
     entityName: "timezone",
     entityNamePlural: "timezones",
     configType: "timezones",

@@ -236,87 +236,89 @@ export default function EtlFileRegistryPage() {
   return (
     <div className="overflow-x-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton
-          showBreadcrumb={true}
-          currentLabel="ETL"
-        />
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFetchDropdown(!showFetchDropdown)}
-            className="inline-flex items-center gap-2 transition-colors"
-            style={getButtonStyles(button.action)}
-          >
-            {t.etl.fetchControlsButton}
-            <ChevronDown
-              className={`h-4 w-4 transition-transform ${showFetchDropdown ? "rotate-180" : ""}`}
-            />{" "}
-          </button>
-
-          <div className="relative">
-            {showFetchDropdown && (
-              <div
-                className={`absolute top-full right-0 mt-2 ${tw.rounded} border shadow-lg z-40`}
-                style={{
-                  backgroundColor: color.surface.background,
-                  borderColor: color.border.default,
-                  minWidth: "200px",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleFetchModalOpen("immediate")}
-                  className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
-                >
-                  {t.etl.fetchNow}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFetchModalOpen("by-time")}
-                  className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
-                >
-                  {t.etl.fetchByTime}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFetchModalOpen("by-range")}
-                  className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
-                >
-                  {t.etl.fetchByDateRange}
-                </button>
-              </div>
-            )}
-          </div>
-          <PermissionGate permission="etl.create">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
+            showBreadcrumb={true}
+            currentLabel="ETL"
+          />
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setIsUploadModalOpen(true)}
+              onClick={() => setShowFetchDropdown(!showFetchDropdown)}
               className="inline-flex items-center gap-2 transition-colors"
               style={getButtonStyles(button.action)}
             >
-              <Upload className="h-4 w-4" />
-              Upload
+              {t.etl.fetchControlsButton}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showFetchDropdown ? "rotate-180" : ""}`}
+              />{" "}
             </button>
-          </PermissionGate>
 
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard/etl/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.borderedButton}`}
-            style={{
-              borderColor: "var(--c-bordered-button-color)",
-              color: "var(--c-bordered-button-color)",
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            {t.etl.analytics}
-          </button>
+            <div className="relative">
+              {showFetchDropdown && (
+                <div
+                  className={`absolute top-full right-0 mt-2 ${tw.rounded} border shadow-lg z-40`}
+                  style={{
+                    backgroundColor: color.surface.background,
+                    borderColor: color.border.default,
+                    minWidth: "200px",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleFetchModalOpen("immediate")}
+                    className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
+                  >
+                    {t.etl.fetchNow}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFetchModalOpen("by-time")}
+                    className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
+                  >
+                    {t.etl.fetchByTime}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFetchModalOpen("by-range")}
+                    className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
+                  >
+                    {t.etl.fetchByDateRange}
+                  </button>
+                </div>
+              )}
+            </div>
+            <PermissionGate permission="etl.create">
+              <button
+                type="button"
+                onClick={() => setIsUploadModalOpen(true)}
+                className="inline-flex items-center gap-2 transition-colors"
+                style={getButtonStyles(button.action)}
+              >
+                <Upload className="h-4 w-4" />
+                Upload
+              </button>
+            </PermissionGate>
+
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/etl/analytics")}
+              className={`inline-flex items-center gap-2 ${tw.borderedButton}`}
+              style={{
+                borderColor: "var(--c-bordered-button-color)",
+                color: "var(--c-bordered-button-color)",
+              }}
+            >
+              <BarChart3 className="h-4 w-4" />
+              {t.etl.analytics}
+            </button>
+          </div>
         </div>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          {t.etl.fileRegistryDescription}
+        </p>
       </div>
-      <p className={`${tw.textSecondary} text-sm mt-1`}>
-        {t.etl.fileRegistryDescription}
-      </p>
 
       <div className="mt-6">
       {/* Stats Cards */}
