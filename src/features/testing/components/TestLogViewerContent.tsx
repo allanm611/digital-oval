@@ -12,6 +12,7 @@ import PlaywrightReportPanel from './PlaywrightReportPanel';
 import { resolvePlaywrightHealthUrl } from '../services/healthApi';
 import type { ModuleStatus, TestRun, TestSuiteResult, TestStatus } from '../types/health';
 import { buildPlaywrightReport, type PlaywrightReportFilter } from '../utils/playwrightReportParser';
+import { computeRunTestStats, resolveRunTestSuiteScope } from '../utils/runTestStats';
 import { healthCheckPath } from '../constants/routes';
 
 const STATUS_ICON: Record<TestStatus, React.ReactNode> = {

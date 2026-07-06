@@ -21,6 +21,16 @@ import { AppErrorBoundary } from "./shared/components/AppErrorBoundary";
 import { SafeRoute } from "./shared/components/SafeRoute";
 import { ProtectedRoute } from "./shared/components/ProtectedRoute";
 import { NavigationHistoryProvider } from "./shared/contexts/NavigationHistoryContext";
+import {
+  TestingDashboardPage,
+  CreateModulePage,
+  AIInsightsPage,
+  HealthCheckNotificationsPage,
+  ModuleLogsPage,
+  EditModulePage,
+  ModuleSchedulePage,
+  ModuleDetailPage,
+} from "./features/testing/healthCheckPages";
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -102,7 +112,16 @@ function AppRoutes() {
             <Route path="/documentation/add" element={<EditDocsPage />} />
             <Route path="/documentation/manage-sidebar" element={<ManageSidebarPage />} />
             <Route path="/documentation/*" element={<DocsPage />} />
-            <Route path="/health-check/*" element={<HealthCheckApp />} />
+            <Route path="/health-check" element={<HealthCheckApp />}>
+              <Route index element={<TestingDashboardPage />} />
+              <Route path="create" element={<CreateModulePage />} />
+              <Route path="insights" element={<AIInsightsPage />} />
+              <Route path="notifications" element={<HealthCheckNotificationsPage />} />
+              <Route path=":id/logs" element={<ModuleLogsPage />} />
+              <Route path=":id/edit" element={<EditModulePage />} />
+              <Route path=":id/schedule" element={<ModuleSchedulePage />} />
+              <Route path=":id" element={<ModuleDetailPage />} />
+            </Route>
           </Route>
 
           {/* Default redirect */}

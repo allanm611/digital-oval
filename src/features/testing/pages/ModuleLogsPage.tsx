@@ -14,7 +14,7 @@ export default function ModuleLogsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { module, isLoading, isNotFound } = useModuleById(id);
+  const { module, isLoading, isNotFound, isError } = useModuleById(id);
 
   const selectedRunId = searchParams.get('runId');
   const moduleDetailPath = id ? healthCheckModulePath(id) : HEALTH_CHECK_BASE;
@@ -48,7 +48,27 @@ export default function ModuleLogsPage() {
         />
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-800">
           <p className="font-medium">Module not found</p>
-          <p className="text-sm mt-1">It may have been deleted or the link is invalid.</p>
+          <p className="text-sm mt-1">
+            {id
+              ? `No module with id "${id}" was found. It may have been deleted or the link is invalid.`
+              : 'No module id was provided in the URL.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-4">
+        <HealthModuleBreadcrumb
+          items={[healthCheckListCrumb(), { label: 'Run Logs' }]}
+        />
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-6 text-rose-800">
+          <p className="font-medium">Unable to load module</p>
+          <p className="text-sm mt-1">
+            The health-check service may be unavailable. Try refreshing or return to the dashboard.
+          </p>
         </div>
       </div>
     );
