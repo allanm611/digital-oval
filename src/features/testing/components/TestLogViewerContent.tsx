@@ -12,6 +12,7 @@ import PlaywrightReportPanel from './PlaywrightReportPanel';
 import { resolvePlaywrightHealthUrl } from '../services/healthApi';
 import type { ModuleStatus, TestRun, TestSuiteResult, TestStatus } from '../types/health';
 import { buildPlaywrightReport, type PlaywrightReportFilter } from '../utils/playwrightReportParser';
+import { healthCheckPath } from '../constants/routes';
 
 const STATUS_ICON: Record<TestStatus, React.ReactNode> = {
   pass:    <CheckCircle2 size={14} className="text-emerald-500" />,
@@ -141,9 +142,11 @@ const RunItem: React.FC<{
   run: TestRun;
   selected: boolean;
   onSelect: () => void;
-}> = ({ run, selected, onSelect }) => {
-  const passed = run.suites.reduce((sum, suite) => sum + suite.passed, 0);
-  const failed = run.suites.reduce((sum, suite) => sum + suite.failed, 0);
+  moduleTestSuites?: string[];
+}> = ({ run, selected, onSelect, moduleTestSuites }) => {
+  const stats = computeRunTestStats(run, moduleTestSuites);
+  const passed = stats.passed;
+  const failed = stats.failed;
 
   return (
     <button
@@ -224,16 +227,38 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
 
   const openAiInsights = () => {
     if (!selectedRunId) return;
-    navigate(`/dashboard/health-check/insights?runId=${selectedRunId}&tab=analysis`);
+    navigate(`${healthCheckPath('insights')}?runId=${selectedRunId}&tab=analysis`);
   };
 
   const metaText = tryFormatMeta(selectedRun?.meta);
   const suites = selectedRun?.suites ?? [];
 
-  const reportSummary = useMemo(
-    () => (selectedRun ? buildPlaywrightReport(selectedRun)?.summary : null),
-    [selectedRun],
+  const selectedRunStats = useMemo(
+    () => (selectedRun ? computeRunTestStats(selectedRun, module.testSuites) : null),
+    [selectedRun, module.testSuites],
   );
+
+  const runScopeSuites = useMemo(
+    () => resolveRunTestSuiteScope(selectedRun, module.testSuites),
+    [selectedRun, module.testSuites],
+  );
+
+  const reportSummary = useMemo(() => {
+    if (!selectedRun) return null;
+    const report = buildPlaywrightReport(selectedRun);
+    if (!report) return null;
+    if (selectedRunStats) {
+      return {
+        ...report.summary,
+        passed: selectedRunStats.passed,
+        failed: selectedRunStats.failed,
+        skipped: selectedRunStats.skipped,
+        flaky: selectedRunStats.flaky,
+        total: selectedRunStats.total,
+      };
+    }
+    return report.summary;
+  }, [selectedRun, selectedRunStats]);
 
   const handleMetricClick = (filter: PlaywrightReportFilter) => {
     setReportFilter(filter);
@@ -270,6 +295,7 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
                     run={run}
                     selected={selectedRunId === run.id}
                     onSelect={() => handleSelectRun(run.id)}
+                    moduleTestSuites={module.testSuites}
                   />
                 ))}
               </div>
@@ -402,6 +428,7 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
                   <div ref={reportRef}>
                     <PlaywrightReportPanel
                       run={selectedRun}
+                      moduleTestSuites={runScopeSuites}
                       filter={reportFilter}
                       onFilterChange={setReportFilter}
                     />

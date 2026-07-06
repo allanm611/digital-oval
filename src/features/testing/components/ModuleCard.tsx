@@ -83,9 +83,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   const statusCfg = STATUS_CONFIG[module.status] ?? STATUS_CONFIG.unknown;
   const isRunning = module.status === 'running' || isTriggering;
   const lastRun = module.lastRun;
-  const suites = lastRun?.suites ?? [];
-  const totalPassed = suites.reduce((sum, suite) => sum + suite.passed, 0);
-  const totalFailed = suites.reduce((sum, suite) => sum + suite.failed, 0);
+  const totalPassed = module.lastRunStats?.passed ?? 0;
+  const totalFailed = module.lastRunStats?.failed ?? 0;
 
   const actionIcons = (
     <>

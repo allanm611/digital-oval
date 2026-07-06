@@ -5,18 +5,21 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useAuth } from '../../../contexts/AuthContext';
 import { healthApi } from '../services/healthApi';
 import {
   buildDashboard,
   buildModuleStatus,
+  buildSummaryFromModules,
   mapAIAnalysis,
   normalizeRunDetail,
 } from '../utils/healthMappers';
 import type {
+  ArtifactPurgePayload,
   HealthDashboardData,
   ModuleConfig,
+  NotificationConfiguredSendPayload,
   NotificationSettings,
+  NotificationTestPayload,
   ScheduleUpdate,
   ModuleUpdate,
   TriggerRunRequest,
@@ -25,6 +28,8 @@ import type {
 export const HEALTH_QUERY_KEYS = {
   status: ['health', 'status'] as const,
   catalog: ['health', 'catalog'] as const,
+  serviceInfo: ['health', 'service-info'] as const,
+  artifactRetention: ['health', 'artifact-retention'] as const,
   module: (moduleId: string) => ['health', 'module', moduleId] as const,
   runs: (moduleId: string) => ['health', 'runs', moduleId] as const,
   runDetail: (runId: string) => ['health', 'run', runId] as const,
@@ -166,7 +171,10 @@ export function useRunHistory(moduleId: string, limit = 25) {
       return runs.map(normalizeRunDetail);
     },
     enabled: isAuthenticated && Boolean(moduleId),
-    refetchInterval: POLL_INTERVAL_MS,
+    refetchInterval: (query) => {
+      const hasActive = query.state.data?.some((run) => run.status === 'running');
+      return hasActive ? 5_000 : POLL_INTERVAL_MS;
+    },
   });
 }
 
@@ -177,16 +185,30 @@ export function useRunDetail(runId: string | null) {
     queryKey: HEALTH_QUERY_KEYS.runDetail(runId ?? ''),
     queryFn: async () => normalizeRunDetail(await healthApi.getRunDetail(runId!)),
     enabled: isAuthenticated && Boolean(runId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === 'running' ? 5_000 : false;
+    },
+  });
+}
+
+export function usePlaywrightServiceInfo() {
+  const { isAuthenticated } = useAuth();
+
+  return useQuery({
+    queryKey: HEALTH_QUERY_KEYS.serviceInfo,
+    queryFn: () => healthApi.getServiceInfo(),
+    enabled: isAuthenticated,
+    staleTime: 60_000,
   });
 }
 
 export function useTriggerRun() {
   const queryClient = useQueryClient();
-  const { token } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ moduleId, baseUrl }: TriggerRunRequest) => {
-      const raw = await healthApi.triggerRun(moduleId, { baseUrl, authToken: token });
+    mutationFn: async ({ moduleId }: TriggerRunRequest) => {
+      const raw = await healthApi.triggerRun(moduleId);
       return normalizeRunDetail(raw);
     },
     onSuccess: (run, { moduleId }) => {
@@ -244,8 +266,58 @@ export function useDeleteModule() {
 
   return useMutation({
     mutationFn: (moduleId: string) => healthApi.deleteModule(moduleId),
-    onSuccess: () => {
+    onMutate: async (moduleId) => {
+      await queryClient.cancelQueries({ queryKey: HEALTH_QUERY_KEYS.status });
+
+      const previous = queryClient.getQueryData<HealthDashboardData>(
+        HEALTH_QUERY_KEYS.status,
+      );
+
+      if (previous) {
+        const modules = previous.modules.filter((m) => m.id !== moduleId);
+        queryClient.setQueryData<HealthDashboardData>(HEALTH_QUERY_KEYS.status, {
+          ...previous,
+          modules,
+          summary: buildSummaryFromModules(modules),
+          lastUpdated: new Date().toISOString(),
+        });
+      }
+
+      queryClient.removeQueries({ queryKey: HEALTH_QUERY_KEYS.module(moduleId) });
+      queryClient.removeQueries({ queryKey: HEALTH_QUERY_KEYS.runs(moduleId) });
+
+      return { previous };
+    },
+    onError: (_err, _moduleId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(HEALTH_QUERY_KEYS.status, context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.status });
+    },
+  });
+}
+
+export function useArtifactRetention() {
+  const { isAuthenticated } = useAuth();
+
+  return useQuery({
+    queryKey: HEALTH_QUERY_KEYS.artifactRetention,
+    queryFn: () => healthApi.getArtifactRetention(),
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+}
+
+export function usePurgeArtifacts() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload?: ArtifactPurgePayload) => healthApi.purgeArtifacts(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.artifactRetention });
+      queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.serviceInfo });
     },
   });
 }
@@ -266,9 +338,23 @@ export function useUpdateNotificationSettings() {
   return useMutation({
     mutationFn: (settings: NotificationSettings) =>
       healthApi.updateNotificationSettings(settings),
-    onSuccess: (settings) => {
-      queryClient.setQueryData(HEALTH_QUERY_KEYS.notifications, settings);
+    onSuccess: (view) => {
+      queryClient.setQueryData(HEALTH_QUERY_KEYS.notifications, view);
     },
+  });
+}
+
+export function useSendTestNotification() {
+  return useMutation({
+    mutationFn: (payload?: NotificationTestPayload) =>
+      healthApi.sendTestNotification(payload),
+  });
+}
+
+export function useSendConfiguredNotification() {
+  return useMutation({
+    mutationFn: (payload?: NotificationConfiguredSendPayload) =>
+      healthApi.sendConfiguredNotification(payload),
   });
 }
 

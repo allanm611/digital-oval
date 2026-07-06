@@ -11,7 +11,7 @@ import HealthModuleBreadcrumb, {
 } from '../components/HealthModuleBreadcrumb';
 import type { ModuleConfig, ModuleUpdate } from '../types/health';
 
-const HEALTH_CHECK_LIST_PATH = '/dashboard/health-check';
+import { HEALTH_CHECK_BASE, healthCheckModulePath } from '../constants/routes';
 
 export default function EditModulePage() {
   const { id } = useParams<{ id: string }>();
@@ -22,10 +22,10 @@ export default function EditModulePage() {
 
   const handleBack = () => {
     if (id) {
-      navigate(`/dashboard/health-check/${id}`);
+      navigate(healthCheckModulePath(id));
       return;
     }
-    navigateBackOrFallback(navigate, HEALTH_CHECK_LIST_PATH);
+    navigateBackOrFallback(navigate, HEALTH_CHECK_BASE);
   };
 
   const handleSubmit = async (payload: Partial<ModuleConfig>) => {
@@ -45,7 +45,7 @@ export default function EditModulePage() {
     try {
       await updateModule.mutateAsync({ id: module.id, payload: updatePayload });
       toast.success('Module updated', `"${payload.name}" was saved successfully.`);
-      navigate(`/dashboard/health-check/${module.id}`);
+      navigate(healthCheckModulePath(module.id));
     } catch (err) {
       toast.error('Update failed', (err as Error)?.message ?? 'See console for details.');
       throw err;

@@ -7,7 +7,7 @@ import { useHealthStatus } from '../hooks/useHealthStatus';
 import AIInsightsContent from '../components/AIInsightsContent';
 import LoadingSpinner from '../../../shared/components/ui/LoadingSpinner';
 
-const HEALTH_CHECK_LIST_PATH = '/dashboard/health-check';
+import { HEALTH_CHECK_BASE } from '../constants/routes';
 
 type TabParam = 'overview' | 'analysis' | 'generate';
 
@@ -27,7 +27,7 @@ export default function AIInsightsPage() {
   const modules = useMemo(() => data?.modules ?? [], [data?.modules]);
 
   const handleBack = () => {
-    navigateBackOrFallback(navigate, HEALTH_CHECK_LIST_PATH);
+    navigateBackOrFallback(navigate, HEALTH_CHECK_BASE);
   };
 
   if (isLoading && !data) {

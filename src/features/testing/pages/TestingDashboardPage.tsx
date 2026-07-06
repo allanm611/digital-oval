@@ -2,8 +2,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Activity, Bell, Brain, LayoutGrid, List, Loader2, RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
-import BackButton from '../../../shared/components/ui/BackButton';
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import OutlinedActionButton from '../../../shared/components/ui/OutlinedActionButton';
 import FeatureActionButton from '../../../shared/components/FeatureActionButton';
@@ -12,12 +12,17 @@ import {
   useHealthStatus,
   useTriggerRun,
   useDeleteModule,
+  usePlaywrightServiceInfo,
 } from '../hooks/useHealthStatus';
 import { useToast } from '../../../contexts/ToastContext';
 import { HealthApiError } from '../services/healthApi';
 import { useAuth } from '../../../contexts/AuthContext';
 import ModuleCard from '../components/ModuleCard';
 import SummaryBar from '../components/SummaryBar';
+import DeleteConfirmModal from '../../../shared/components/ui/DeleteConfirmModal';
+import { useDeleteConfirm } from '../../../shared/hooks/useDeleteConfirm';
+import { describeRunTriggerResult, isE2eConfigured } from '../utils/healthMappers';
+import { healthCheckModulePath, healthCheckPath } from '../constants/routes';
 
 type ViewMode = 'grid' | 'list';
 type FilterStatus = 'all' | 'pass' | 'fail' | 'unknown' | 'running';
@@ -36,10 +41,22 @@ const TestingDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { data, isLoading, isError, refetch, isFetching, apiReachable, sseConnected } = useHealthStatus();
+  const { data: serviceInfo } = usePlaywrightServiceInfo();
   const triggerRun = useTriggerRun();
-  const deleteModule = useDeleteModule();
+  const deleteModuleMutation = useDeleteModule();
   const toast = useToast();
   const authToastShown = useRef(false);
+
+  const {
+    deleteConfirm,
+    isDeleting,
+    openDeleteConfirm,
+    closeDeleteConfirm,
+    handleDelete: confirmDeleteModule,
+  } = useDeleteConfirm({
+    onDelete: (id) => deleteModuleMutation.mutateAsync(String(id)),
+    itemLabel: 'Module',
+  });
 
   const safeSummary = data?.summary ?? defaultSummary;
   const safeModules = data?.modules ?? [];
@@ -74,34 +91,21 @@ const TestingDashboardPage: React.FC = () => {
     authToastShown.current = false;
   }, [isAuthenticated]);
 
-  const handleRunNow = useCallback(async (moduleId: string, baseUrl?: string) => {
+  const handleRunNow = useCallback(async (moduleId: string) => {
     try {
-      const run = await triggerRun.mutateAsync({ moduleId, baseUrl });
-      toast.success(
-        run.status === 'running' ? 'Run queued' : 'Run started',
-        run.status === 'running'
-          ? 'The module was submitted to the worker queue.'
-          : 'The module has been submitted for execution.',
-      );
+      const run = await triggerRun.mutateAsync({ moduleId });
+      const { title, message } = describeRunTriggerResult(run);
+      toast.success(title, message);
     } catch (err) {
       const message = (err as Error)?.message ?? 'See console for details.';
-      if (err instanceof HealthApiError && (err.status === 401 || err.status === 400)) {
-        toast.error('Cannot run tests', message);
+      if (err instanceof HealthApiError && err.status === 404) {
+        toast.error('Module not found', 'This module may have been deleted. Refresh the dashboard.');
       } else {
         toast.error('Run failed', message);
       }
       console.error('Trigger run failed:', err);
     }
   }, [triggerRun, toast]);
-
-  const handleDelete = useCallback(async (moduleId: string) => {
-    try {
-      await deleteModule.mutateAsync(moduleId);
-      toast.success('Deleted', 'Module removed successfully.');
-    } catch (err) {
-      toast.error('Delete failed', (err as Error)?.message ?? 'See console for details.');
-    }
-  }, [deleteModule, toast]);
 
   const filteredModules = React.useMemo(() => {
     return safeModules.filter((module) => {
@@ -134,12 +138,17 @@ const TestingDashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <BackButton
-          showBreadcrumb
-          parentLabel="Administration"
-          currentLabel="Health Check"
-          onClick={() => navigate('/dashboard/administration')}
-        />
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Health Check Dashboard</h1>
+          <p className={`${tw.textSecondary} text-sm mt-1`}>
+            Monitor Playwright health modules, schedules, and run outcomes.
+            {data?.lastUpdated && (
+              <span className="ml-2 text-gray-400">
+                Last updated {new Date(data.lastUpdated).toLocaleTimeString()}
+              </span>
+            )}
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -151,7 +160,7 @@ const TestingDashboardPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/dashboard/health-check/notifications')}
+            onClick={() => navigate(healthCheckPath('notifications'))}
             className={`p-2 icon-edit ${tw.rounded} transition-colors`}
             title="Notifications"
           >
@@ -159,7 +168,7 @@ const TestingDashboardPage: React.FC = () => {
           </button>
           <OutlinedActionButton
             icon={<Brain className="w-4 h-4" />}
-            onClick={() => navigate('/dashboard/health-check/insights')}
+            onClick={() => navigate(healthCheckPath('insights'))}
           >
             AI Insights
           </OutlinedActionButton>
@@ -167,21 +176,9 @@ const TestingDashboardPage: React.FC = () => {
             featureId="health-check"
             action="create"
             label="Add Module"
-            onClick={() => navigate('/dashboard/health-check/create')}
+            onClick={() => navigate(healthCheckPath('create'))}
           />
         </div>
-      </div>
-
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Health Check Dashboard</h1>
-        <p className={`${tw.textSecondary} text-sm mt-1`}>
-          Monitor Playwright health modules, schedules, and run outcomes.
-          {data?.lastUpdated && (
-            <span className="ml-2 text-gray-400">
-              Last updated {new Date(data.lastUpdated).toLocaleTimeString()}
-            </span>
-          )}
-        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -221,6 +218,25 @@ const TestingDashboardPage: React.FC = () => {
             className="shrink-0 px-4 py-2 text-sm rounded-md bg-amber-600 text-white hover:bg-amber-700"
           >
             Retry
+          </button>
+        </div>
+      )}
+
+      {apiReachable && serviceInfo?.e2e && !isE2eConfigured(serviceInfo.e2e) && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-sm text-amber-800 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            Server E2E credentials are missing or expired. Playwright runs use{' '}
+            <code className="text-xs">TEST_EMAIL</code>, <code className="text-xs">TEST_PASSWORD</code>, or{' '}
+            <code className="text-xs">TEST_AUTH_TOKEN</code> from the backend{' '}
+            <code className="text-xs">.env</code> — not your browser session.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate(healthCheckPath('notifications'))}
+            className="shrink-0 px-4 py-2 text-sm rounded-md border border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
+          >
+            View setup
           </button>
         </div>
       )}
@@ -303,23 +319,29 @@ const TestingDashboardPage: React.FC = () => {
               key={module.id}
               module={module}
               viewMode={viewMode}
-              onViewDetails={() => navigate(`/dashboard/health-check/${module.id}`)}
-              onEdit={() => navigate(`/dashboard/health-check/${module.id}/edit`)}
-              onRunNow={() => handleRunNow(module.id, module.baseUrl)}
-              onViewLogs={() => navigate(`/dashboard/health-check/${module.id}/logs`)}
-              onSchedule={() => navigate(`/dashboard/health-check/${module.id}/schedule`)}
+              onViewDetails={() => navigate(healthCheckModulePath(module.id))}
+              onEdit={() => navigate(healthCheckModulePath(module.id, 'edit'))}
+              onRunNow={() => handleRunNow(module.id)}
+              onViewLogs={() => navigate(healthCheckModulePath(module.id, 'logs'))}
+              onSchedule={() => navigate(healthCheckModulePath(module.id, 'schedule'))}
               isTriggering={
                 triggerRun.isPending && triggerRun.variables?.moduleId === module.id
               }
-              onDelete={() => {
-                if (window.confirm(`Delete "${module.name}"? This cannot be undone.`)) {
-                  void handleDelete(module.id);
-                }
-              }}
+              onDelete={() => openDeleteConfirm(module.id, module.name)}
             />
           ))
         )}
       </div>
+
+      <DeleteConfirmModal
+        isOpen={deleteConfirm.id !== null}
+        onClose={closeDeleteConfirm}
+        onConfirm={confirmDeleteModule}
+        title="Delete Module"
+        description="Are you sure you want to delete this module? This action cannot be undone."
+        itemName={deleteConfirm.itemName}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

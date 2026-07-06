@@ -1,15 +1,21 @@
 import { buildApiUrl, getAuthHeaders } from '../../../shared/services/api';
-import { buildRunAuthPayload, hasRunAuthMaterial, validateRunAuthForPlaywright } from '../utils/runAuthPayload';
 import type {
   AIBackendResponse,
+  AIRecommendation,
+  ArtifactPurgePayload,
+  ArtifactPurgeResult,
+  ArtifactRetentionConfig,
   HealthDashboardRaw,
   ModuleConfig,
-  NotificationSendPayload,
+  NotificationConfiguredSendPayload,
+  NotificationDeliveryResult,
   NotificationSettings,
+  NotificationSettingsView,
+  NotificationTestPayload,
+  PlaywrightServiceInfo,
   RunDetail,
   ScheduleUpdate,
   ModuleUpdate,
-  RunTriggerPayload,
   ServiceProbeResult,
   TestCatalogNode,
 } from '../types/health';
@@ -23,8 +29,9 @@ function getPlaywrightHealthBaseUrl(): string {
   return buildApiUrl('/playwright-health');
 }
 
-// const BASE_URL = getPlaywrightHealthBaseUrl();
-const BASE_URL = 'http://localhost:11008/playwright-health';
+const BASE_URL = getPlaywrightHealthBaseUrl();
+// const BASE_URL = 'http://localhost:11008/playwright-health';
+
 
 
 /** Resolve a playwright-health path (e.g. /playwright-health/v1/runs/.../artifacts/...) to a full URL. */
@@ -38,11 +45,19 @@ export function resolvePlaywrightHealthUrl(pathOrUrl: string): string {
 }
 export class HealthApiError extends Error {
   readonly status: number;
+  readonly code?: string;
+  readonly details?: string;
 
-  constructor(message: string, status: number) {
+  constructor(
+    message: string,
+    status: number,
+    options?: { code?: string; details?: string },
+  ) {
     super(message);
     this.name = 'HealthApiError';
     this.status = status;
+    this.code = options?.code;
+    this.details = options?.details;
   }
 }
 
@@ -104,12 +119,21 @@ class HealthApiService {
     }
 
     if (!response.ok) {
+      const body = parsed as {
+        error?: string;
+        message?: string;
+        code?: string;
+        details?: string;
+      };
       const errorMessage =
-        (parsed as { error?: string; message?: string })?.error ||
-        (parsed as { message?: string })?.message ||
+        body.error ||
+        body.message ||
         response.statusText ||
         'Unknown error';
-      throw new HealthApiError(errorMessage, response.status);
+      throw new HealthApiError(errorMessage, response.status, {
+        code: body.code,
+        details: body.details,
+      });
     }
 
     return parsed as T;
@@ -204,36 +228,19 @@ class HealthApiService {
     });
   }
 
-  async triggerRun(
-    moduleId: string,
-    options?: { baseUrl?: string; authToken?: string | null } & Partial<RunTriggerPayload>,
-  ): Promise<RunDetail> {
-    const { baseUrl, authToken, ...overrides } = options ?? {};
-    const payload: RunTriggerPayload = {
-      ...buildRunAuthPayload({ baseUrl, authToken }),
-      ...overrides,
-    };
-
-    if (!hasRunAuthMaterial(payload)) {
-      throw new HealthApiError(
-        'No session credentials available. Sign in again before running health checks.',
-        401,
-      );
-    }
-
-    try {
-      validateRunAuthForPlaywright(payload);
-    } catch (err) {
-      throw new HealthApiError(
-        (err as Error).message,
-        400,
-      );
-    }
-
+  /**
+   * Trigger a module run. The backend uses server-side E2E credentials
+   * (TEST_EMAIL / TEST_PASSWORD / TEST_AUTH_TOKEN in cvm-backend .env) and the
+   * module's configured baseUrl as FRONTEND_URL — no request body is required.
+   */
+  async triggerRun(moduleId: string): Promise<RunDetail> {
     return this.request<RunDetail>(`/v1/run/${encodeURIComponent(moduleId)}`, {
       method: 'POST',
-      body: JSON.stringify(payload),
     });
+  }
+
+  async getServiceInfo(): Promise<PlaywrightServiceInfo> {
+    return this.request<PlaywrightServiceInfo>('/');
   }
 
   async listRuns(moduleId: string, limit = 25): Promise<RunDetail[]> {
@@ -248,31 +255,45 @@ class HealthApiService {
     return this.request<RunDetail>(`/v1/runs/detail/${encodeURIComponent(runId)}`);
   }
 
-  async getNotificationSettings(): Promise<NotificationSettings> {
-    return this.request<NotificationSettings>('/v1/notifications/settings');
+  async getNotificationSettings(): Promise<NotificationSettingsView> {
+    return this.request<NotificationSettingsView>('/v1/notifications/settings');
   }
 
   async updateNotificationSettings(
     settings: NotificationSettings,
-  ): Promise<NotificationSettings> {
-    const response = await this.request<NotificationSettings & { message?: string }>(
+  ): Promise<NotificationSettingsView> {
+    await this.request<NotificationSettings & { message?: string }>(
       '/v1/notifications/settings',
       {
         method: 'POST',
         body: JSON.stringify(settings),
       },
     );
-    return {
-      enabled: response.enabled,
-      recipients: response.recipients,
-    };
+    return this.getNotificationSettings();
   }
 
-  async sendTestNotification(payload: NotificationSendPayload): Promise<void> {
-    await this.request('/v1/notifications/test', {
+  async sendTestNotification(
+    payload?: NotificationTestPayload,
+  ): Promise<NotificationDeliveryResult> {
+    const response = await this.request<
+      NotificationDeliveryResult & { message?: string }
+    >('/v1/notifications/test', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload ?? {}),
     });
+    return response;
+  }
+
+  async sendConfiguredNotification(
+    payload?: NotificationConfiguredSendPayload,
+  ): Promise<NotificationDeliveryResult> {
+    const response = await this.request<
+      NotificationDeliveryResult & { message?: string }
+    >('/v1/notifications/send', {
+      method: 'POST',
+      body: JSON.stringify(payload ?? {}),
+    });
+    return response;
   }
 
   async analyzeRun(runId: string): Promise<AIBackendResponse> {
@@ -289,6 +310,17 @@ class HealthApiService {
       method: 'POST',
     });
   }
+
+  async getArtifactRetention(): Promise<ArtifactRetentionConfig> {
+    return this.request<ArtifactRetentionConfig>('/v1/artifacts/retention');
+  }
+
+  async purgeArtifacts(payload?: ArtifactPurgePayload): Promise<ArtifactPurgeResult> {
+    return this.request<ArtifactPurgeResult>('/v1/artifacts/purge', {
+      method: 'POST',
+      body: JSON.stringify(payload ?? {}),
+    });
+  }
 }
 
 export const healthApi = new HealthApiService();
@@ -296,6 +328,8 @@ export const healthApi = new HealthApiService();
 export const fetchNotificationSettings = () => healthApi.getNotificationSettings();
 export const updateNotificationSettings = (settings: NotificationSettings) =>
   healthApi.updateNotificationSettings(settings);
-export const sendTestNotification = (payload: NotificationSendPayload) =>
+export const sendTestNotification = (payload?: NotificationTestPayload) =>
   healthApi.sendTestNotification(payload);
+export const sendConfiguredNotification = (payload?: NotificationConfiguredSendPayload) =>
+  healthApi.sendConfiguredNotification(payload);
 export const generateTestStubs = (moduleId: string) => healthApi.generateTests(moduleId);

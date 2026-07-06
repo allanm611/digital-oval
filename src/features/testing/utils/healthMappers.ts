@@ -2,6 +2,7 @@
 
 import type {
   AIAnalysis,
+  E2eEnvDiagnostics,
   HealthDashboardData,
   HealthDashboardRaw,
   ModuleConfig,
@@ -15,8 +16,19 @@ import type {
   AIRecommendation,
 } from '../types/health';
 
+import { computeRunTestStats, indexLatestRunByModule } from './runTestStats';
+export function buildSummaryFromModules(
+  modules: ModuleStatus[],
+): HealthDashboardData['summary'] {
+  return {
+    total: modules.length,
+    passing: modules.filter((m) => m.status === 'pass').length,
+    failing: modules.filter((m) => m.status === 'fail').length,
+    running: modules.filter((m) => m.status === 'running').length,
+    unknown: modules.filter((m) => m.status === 'unknown').length,
+  };
+}
 
-/** Maps backend RunStatus → frontend TestStatus */
 export const mapRunStatus = (status: RunStatus | string | undefined): TestStatus => {
   switch (status) {
     case 'passed':  return 'pass';
@@ -90,13 +102,8 @@ export const buildModuleStatus = (
   lastRun?: RunDetail | null,
 ): ModuleStatus => {
   const normalizedLastRun = lastRun ? normalizeRunDetail(lastRun) : null;
-  const suites = normalizedLastRun?.suites ?? [];
+  const runStats = computeRunTestStats(normalizedLastRun ?? lastRun, module.testSuites);
 
-  const totalTests  = suites.reduce((sum, s) => sum + s.passed + s.failed + s.skipped, 0);
-  const passedTests = suites.reduce((sum, s) => sum + s.passed, 0);
-
-  // If the module config already carries consecutiveFailures (future backend addition),
-  // respect it; otherwise fall back to a simple 0/1 from the last run.
   const consecutiveFailures =
     typeof module.consecutiveFailures === 'number'
       ? module.consecutiveFailures
@@ -110,9 +117,48 @@ export const buildModuleStatus = (
     nextScheduled:       module.nextScheduled ?? null,
     status:              normalizedLastRun ? normalizedLastRun.status : 'unknown',
     consecutiveFailures,
-    successRate:         totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0,
+    successRate:         runStats.successRate,
+    lastRunStats: {
+      passed: runStats.passed,
+      failed: runStats.failed,
+      skipped: runStats.skipped,
+      total: runStats.total,
+    },
   };
 };
+
+/** Whether the backend has usable E2E credentials in server .env */
+export function isE2eConfigured(e2e?: E2eEnvDiagnostics): boolean {
+  if (!e2e) return false;
+  if (e2e.tokenUsable) return true;
+  return e2e.hasEmail && e2e.hasPassword;
+}
+
+/** User-facing toast copy after POST /v1/run/:moduleId */
+export function describeRunTriggerResult(run: TestRun): { title: string; message: string } {
+  if (!run.finishedAt && run.status === 'running') {
+    return {
+      title: 'Run queued',
+      message: 'The module was submitted to the worker queue.',
+    };
+  }
+  if (run.status === 'pass') {
+    return {
+      title: 'Run passed',
+      message: 'All tests completed successfully.',
+    };
+  }
+  if (run.status === 'fail') {
+    return {
+      title: 'Run failed',
+      message: 'One or more tests failed. Open run logs for details.',
+    };
+  }
+  return {
+    title: 'Run started',
+    message: 'The module has been submitted for execution.',
+  };
+}
 
 // ── Dashboard assembly ────────────────────────────────────────────────────────
 
@@ -122,14 +168,7 @@ export const buildModuleStatus = (
  */
 export const buildDashboard = (raw: HealthDashboardRaw): HealthDashboardData => {
   const lastRuns = Array.isArray(raw.lastRuns) ? raw.lastRuns : [];
-  const lastRunByModule = new Map<string, RunDetail>();
-
-  for (const run of lastRuns) {
-    const key = String(run.moduleId);
-    if (!lastRunByModule.has(key)) {
-      lastRunByModule.set(key, run);
-    }
-  }
+  const lastRunByModule = indexLatestRunByModule(lastRuns);
 
   const modules: ModuleStatus[] = (Array.isArray(raw.modules) ? raw.modules : []).map((module) => {
     const lastRun = lastRunByModule.get(String(module.id)) ?? null;

@@ -8,21 +8,21 @@ import HealthModuleBreadcrumb, {
   healthCheckModuleCrumb,
 } from '../components/HealthModuleBreadcrumb';
 
-const HEALTH_CHECK_LIST_PATH = '/dashboard/health-check';
+import { HEALTH_CHECK_BASE, healthCheckModulePath } from '../constants/routes';
 
 export default function ModuleSchedulePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { module, isLoading, isNotFound } = useModuleById(id);
 
-  const moduleDetailPath = id ? `/dashboard/health-check/${id}` : HEALTH_CHECK_LIST_PATH;
+  const moduleDetailPath = id ? healthCheckModulePath(id) : HEALTH_CHECK_BASE;
 
   const handleBack = () => {
     if (id) {
       navigate(moduleDetailPath);
       return;
     }
-    navigateBackOrFallback(navigate, HEALTH_CHECK_LIST_PATH);
+    navigateBackOrFallback(navigate, HEALTH_CHECK_BASE);
   };
 
   const handleSaved = () => {

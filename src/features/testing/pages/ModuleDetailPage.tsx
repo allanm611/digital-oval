@@ -14,9 +14,12 @@ import { useDeleteModule, useTriggerRun } from '../hooks/useHealthStatus';
 import { useToast } from '../../../contexts/ToastContext';
 import { HealthApiError } from '../services/healthApi';
 import { cronToHuman } from '../utils/cronUtils';
+import { describeRunTriggerResult } from '../utils/healthMappers';
 import type { TestStatus } from '../types/health';
+import DeleteConfirmModal from '../../../shared/components/ui/DeleteConfirmModal';
+import { useDeleteConfirm } from '../../../shared/hooks/useDeleteConfirm';
 
-const HEALTH_CHECK_LIST_PATH = '/dashboard/health-check';
+import { HEALTH_CHECK_BASE, healthCheckModulePath, healthCheckPath } from '../constants/routes';
 
 const STATUS_STYLES: Record<TestStatus, string> = {
   pass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -50,44 +53,44 @@ export default function ModuleDetailPage() {
   const toast = useToast();
   const { module, isLoading, isNotFound } = useModuleById(id);
   const triggerRun = useTriggerRun();
-  const deleteModule = useDeleteModule();
+  const deleteModuleMutation = useDeleteModule();
+
+  const {
+    deleteConfirm,
+    isDeleting,
+    openDeleteConfirm,
+    closeDeleteConfirm,
+    handleDelete: confirmDeleteModule,
+  } = useDeleteConfirm({
+    onDelete: async (id) => {
+      await deleteModuleMutation.mutateAsync(String(id));
+      navigate(HEALTH_CHECK_BASE);
+    },
+    itemLabel: 'Module',
+  });
 
   const handleRunNow = async () => {
     if (!module) return;
     try {
-      const run = await triggerRun.mutateAsync({
-        moduleId: module.id,
-        baseUrl: module.baseUrl,
-      });
-      toast.success(
-        run.status === 'running' ? 'Run queued' : 'Run started',
-        run.status === 'running'
-          ? 'The module was submitted to the worker queue.'
-          : 'The module has been submitted for execution.',
-      );
+      const run = await triggerRun.mutateAsync({ moduleId: module.id });
+      const { title, message } = describeRunTriggerResult(run);
+      toast.success(title, message);
       navigate(
-        `/dashboard/health-check/${module.id}/logs${run.id ? `?runId=${run.id}` : ''}`,
+        `${healthCheckModulePath(module.id, 'logs')}${run.id ? `?runId=${run.id}` : ''}`,
       );
     } catch (err) {
       const message = (err as Error)?.message ?? 'See console for details.';
-      if (err instanceof HealthApiError && (err.status === 401 || err.status === 400)) {
-        toast.error('Cannot run tests', message);
+      if (err instanceof HealthApiError && err.status === 404) {
+        toast.error('Module not found', 'This module may have been deleted.');
       } else {
         toast.error('Run failed', message);
       }
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!module) return;
-    if (!window.confirm(`Delete "${module.name}"? This cannot be undone.`)) return;
-    try {
-      await deleteModule.mutateAsync(module.id);
-      toast.success('Deleted', 'Module removed successfully.');
-      navigate(HEALTH_CHECK_LIST_PATH);
-    } catch (err) {
-      toast.error('Delete failed', (err as Error)?.message ?? 'See console for details.');
-    }
+    openDeleteConfirm(module.id, module.name);
   };
 
   if (isLoading) {
@@ -117,6 +120,7 @@ export default function ModuleDetailPage() {
   const suites = lastRun?.suites ?? [];
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
@@ -148,13 +152,13 @@ export default function ModuleDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           <OutlinedActionButton
             icon={<Brain className="w-4 h-4" />}
-            onClick={() => navigate('/dashboard/health-check/insights')}
+            onClick={() => navigate(healthCheckPath('insights'))}
           >
             AI Insights
           </OutlinedActionButton>
           <button
             type="button"
-            onClick={() => navigate(`/dashboard/health-check/${module.id}/edit`)}
+            onClick={() => navigate(healthCheckModulePath(module.id, 'edit'))}
             className={`${tw.button} inline-flex items-center gap-2 px-4 py-2 text-sm`}
           >
             <Edit className="w-4 h-4" />
@@ -162,13 +166,13 @@ export default function ModuleDetailPage() {
           </button>
           <OutlinedActionButton
             icon={<Settings className="w-4 h-4" />}
-            onClick={() => navigate(`/dashboard/health-check/${module.id}/schedule`)}
+            onClick={() => navigate(healthCheckModulePath(module.id, 'schedule'))}
           >
             Schedule
           </OutlinedActionButton>
           <OutlinedActionButton
             icon={<FileText className="w-4 h-4" />}
-            onClick={() => navigate(`/dashboard/health-check/${module.id}/logs`)}
+            onClick={() => navigate(healthCheckModulePath(module.id, 'logs'))}
           >
             Logs
           </OutlinedActionButton>
@@ -188,7 +192,7 @@ export default function ModuleDetailPage() {
           <button
             type="button"
             onClick={handleDelete}
-            disabled={deleteModule.isPending}
+            disabled={deleteModuleMutation.isPending || isDeleting}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm border border-rose-200 rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-60"
           >
             <Trash2 className="w-4 h-4" />
@@ -311,7 +315,7 @@ export default function ModuleDetailPage() {
             </h2>
             <button
               type="button"
-              onClick={() => navigate(`/dashboard/health-check/${module.id}/logs?runId=${lastRun.id}`)}
+              onClick={() => navigate(`${healthCheckModulePath(module.id, 'logs')}?runId=${lastRun.id}`)}
               className="text-sm text-blue-600 hover:text-blue-700"
             >
               View in logs
@@ -326,5 +330,16 @@ export default function ModuleDetailPage() {
         </div>
       )}
     </div>
+
+    <DeleteConfirmModal
+      isOpen={deleteConfirm.id !== null}
+      onClose={closeDeleteConfirm}
+      onConfirm={confirmDeleteModule}
+      title="Delete Module"
+      description="Are you sure you want to delete this module? This action cannot be undone."
+      itemName={deleteConfirm.itemName}
+      isLoading={isDeleting}
+    />
+    </>
   );
 }

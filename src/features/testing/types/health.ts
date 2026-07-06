@@ -107,6 +107,13 @@ export interface ModuleStatus extends ModuleConfig {
   consecutiveFailures: number;
   /** 0–100 integer */
   successRate: number;
+  /** Accurate counts from the latest run (prefers meta.testCases). */
+  lastRunStats: {
+    passed: number;
+    failed: number;
+    skipped: number;
+    total: number;
+  };
 }
 
 /** Raw run shape from the backend before normalisation. */
@@ -162,10 +169,50 @@ export interface NotificationSettings {
   recipients: string[];
 }
 
-export interface NotificationSendPayload {
-  recipients: string[];
+/** SMTP readiness from GET /v1/notifications/settings */
+export interface NotificationDeliveryDiagnostics {
+  primaryConfigured: boolean;
+  fallbackConfigured: boolean;
+  fromAddress: string | null;
+}
+
+export interface NotificationSettingsView extends NotificationSettings {
+  delivery: NotificationDeliveryDiagnostics;
+}
+
+export type NotificationErrorCode =
+  | 'DISABLED'
+  | 'NO_RECIPIENTS'
+  | 'SMTP_NOT_CONFIGURED'
+  | 'DELIVERY_FAILED'
+  | 'VALIDATION_ERROR';
+
+/** POST /v1/notifications/test — recipients optional (falls back to saved settings) */
+export interface NotificationTestPayload {
+  recipients?: string[];
   subject?: string;
   message?: string;
+}
+
+/** POST /v1/notifications/send — uses configured recipients (notifications must be enabled) */
+export interface NotificationConfiguredSendPayload {
+  subject?: string;
+  message?: string;
+}
+
+/** Successful delivery response from test/send endpoints */
+export interface NotificationDeliveryResult {
+  delivered: true;
+  messageId: string;
+  recipients: string[];
+  channel: 'primary' | 'fallback';
+  subject: string;
+  message?: string;
+}
+
+/** @deprecated Use NotificationTestPayload */
+export interface NotificationSendPayload extends NotificationTestPayload {
+  recipients: string[];
 }
 
 export interface ScheduleUpdate {
@@ -203,33 +250,56 @@ export interface ServiceProbeResult {
   message?: string;
 }
 
-/** Nested credentials block — matches manual POST /v1/run/:moduleId REST examples. */
-export interface RunTriggerCredentials {
-  email?: string;
-  password?: string;
-  auth_token?: string;
-  session_id?: string;
-  auth_user?: Record<string, unknown>;
-  auth_permissions?: string[];
+/** Mirrors backend `getE2eEnvDiagnostics()` from GET /playwright-health/ */
+export interface E2eEnvDiagnostics {
+  envPath: string | null;
+  hasEmail: boolean;
+  hasPassword: boolean;
+  hasToken: boolean;
+  tokenUsable: boolean;
+  frontendUrl?: string;
+  keys: readonly string[];
 }
 
-/** Body for POST /v1/run/:moduleId — forwarded into Playwright run auth context. */
-export interface RunTriggerPayload {
-  credentials?: RunTriggerCredentials;
-  auth_token?: string;
-  session_id?: string;
-  email?: string;
-  password?: string;
-  auth_user: Record<string, unknown>;
-  auth_permissions: string[];
-  /** Playwright target URL — typically the module's `baseUrl`. */
-  frontendUrl: string;
+/** Mirrors backend `ArtifactRetentionConfig` */
+export interface ArtifactRetentionConfig {
+  enabled: boolean;
+  retentionDays: number;
+  purgeCron: string;
+  batchSize: number;
+}
+
+/** Mirrors backend `ArtifactPurgeResult` */
+export interface ArtifactPurgeResult {
+  enabled: boolean;
+  retentionDays: number;
+  cutoffAt: string;
+  dryRun: boolean;
+  scanned: number;
+  purged: number;
+  skipped: number;
+  deletedDirs: string[];
+  errors: string[];
+}
+
+export interface ArtifactPurgePayload {
+  dryRun?: boolean;
+  retentionDays?: number;
+  batchSize?: number;
+}
+
+/** Response from GET /playwright-health/ (service root) */
+export interface PlaywrightServiceInfo {
+  status: string;
+  service: string;
+  version: string;
+  executionMode?: string;
+  e2e?: E2eEnvDiagnostics;
+  artifactRetention?: ArtifactRetentionConfig;
 }
 
 export interface TriggerRunRequest {
   moduleId: string;
-  /** Module config `baseUrl` — preferred Playwright frontend target. */
-  baseUrl?: string;
 }
 
 export type TestCatalogKind = 'category' | 'spec' | 'case';

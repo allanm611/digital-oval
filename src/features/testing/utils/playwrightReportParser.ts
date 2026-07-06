@@ -1,4 +1,5 @@
 import type { PlaywrightTestCaseMeta, RunMeta, TestError, TestRun, TestSuiteResult } from '../types/health';
+import { filterModuleTestCases, resolveRunTestSuiteScope } from './runTestStats';
 
 export type PlaywrightReportFilter = 'all' | 'passed' | 'failed' | 'skipped' | 'flaky' | 'suites';
 
@@ -225,7 +226,10 @@ function groupBySpec(testCases: PlaywrightTestCase[]): PlaywrightSpecGroup[] {
   return [...groups.values()].sort((a, b) => a.specFile.localeCompare(b.specFile));
 }
 
-export function buildPlaywrightReport(run: TestRun | null): PlaywrightReportModel | null {
+export function buildPlaywrightReport(
+  run: TestRun | null,
+  options?: { moduleTestSuites?: string[] },
+): PlaywrightReportModel | null {
   if (!run) return null;
 
   const meta = extractRunMeta(run);
@@ -234,7 +238,9 @@ export function buildPlaywrightReport(run: TestRun | null): PlaywrightReportMode
   let testCases: PlaywrightTestCase[] = [];
 
   if (Array.isArray(meta?.testCases) && meta.testCases.length > 0) {
-    testCases = mapMetaTestCases(meta.testCases);
+    const scope = resolveRunTestSuiteScope(run, options?.moduleTestSuites);
+    const scoped = filterModuleTestCases(meta.testCases, scope);
+    testCases = mapMetaTestCases(scoped);
   } else {
     const errorsByTest = indexErrorsByTest(suites);
     testCases = parseOutputLines(run.output, errorsByTest);

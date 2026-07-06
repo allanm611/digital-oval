@@ -4,13 +4,13 @@ import BackButton from '../../../shared/components/ui/BackButton';
 import { navigateBackOrFallback } from '../../../shared/utils/navigation';
 import NotificationSettingsContent from '../components/NotificationSettingsContent';
 
-const HEALTH_CHECK_LIST_PATH = '/dashboard/health-check';
+import { HEALTH_CHECK_BASE } from '../constants/routes';
 
 export default function HealthCheckNotificationsPage() {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigateBackOrFallback(navigate, HEALTH_CHECK_LIST_PATH);
+    navigateBackOrFallback(navigate, HEALTH_CHECK_BASE);
   };
 
   return (

@@ -1,30 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import {
   Bell, Mail, Plus, Trash2, Save, Send,
-  CheckCircle2, AlertTriangle, Info, Loader2,
+  CheckCircle2, AlertTriangle, Info, Loader2, HardDrive,
 } from 'lucide-react';
 import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import Checkbox from '../../../shared/components/ui/Checkbox';
+import DeleteConfirmModal from '../../../shared/components/ui/DeleteConfirmModal';
 import { useToast } from '../../../contexts/ToastContext';
 import { tw, button, getButtonStyles } from '../../../shared/utils/utils';
 import {
+  useArtifactRetention,
   useNotificationSettings,
+  usePurgeArtifacts,
+  useSendConfiguredNotification,
+  useSendTestNotification,
   useUpdateNotificationSettings,
 } from '../hooks/useHealthStatus';
-import { sendTestNotification } from '../services/healthApi';
-import type { NotificationSettings, NotificationSendPayload } from '../types/health';
-import { useMutation } from '@tanstack/react-query';
-import { useAuth } from '../../../contexts/AuthContext';
+import type {
+  ArtifactPurgeResult,
+  NotificationDeliveryResult,
+  NotificationSettings,
+} from '../types/health';
 import {
-  clearStoredE2ePassword,
-  getStoredE2ePassword,
-  setStoredE2ePassword,
-} from '../utils/runAuthPayload';
+  formatDeliverySuccess,
+  formatNotificationError,
+  isSmtpConfigured,
+  smtpReadinessLabel,
+} from '../utils/notificationUtils';
 
 interface NotificationSettingsContentProps {
   onCancel?: () => void;
   showCancel?: boolean;
+}
+
+function formatPurgeSummary(result: ArtifactPurgeResult): string {
+  const action = result.dryRun ? 'would be purged' : 'purged';
+  return `${result.purged} folder(s) ${action} · ${result.scanned} scanned · ${result.skipped} skipped`;
 }
 
 const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = ({
@@ -32,13 +44,12 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
   showCancel = false,
 }) => {
   const toast = useToast();
-  const { user } = useAuth();
   const { data: existing, isLoading } = useNotificationSettings();
+  const { data: retention, isLoading: retentionLoading } = useArtifactRetention();
+  const purgeMutation = usePurgeArtifacts();
   const saveMutation = useUpdateNotificationSettings();
-
-  const testMutation = useMutation({
-    mutationFn: (payload: NotificationSendPayload) => sendTestNotification(payload),
-  });
+  const testMutation = useSendTestNotification();
+  const broadcastMutation = useSendConfiguredNotification();
 
   const [form, setForm] = useState<NotificationSettings>({
     enabled: false,
@@ -47,15 +58,26 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
   const [newEmail, setNewEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [testEmail, setTestEmail] = useState('');
-  const [testSubject, setTestSubject] = useState('Health-check alert test');
+  const [testSubject, setTestSubject] = useState('Playwright Health SMTP test');
   const [testMessage, setTestMessage] = useState(
-    'This is a test notification from the Playwright Health service.',
+    'If you receive this, notification delivery is working.',
   );
-  const [e2ePassword, setE2ePassword] = useState(() => getStoredE2ePassword() ?? '');
-  const [showE2ePassword, setShowE2ePassword] = useState(false);
+  const [broadcastSubject, setBroadcastSubject] = useState('Manual Playwright Health alert');
+  const [broadcastMessage, setBroadcastMessage] = useState(
+    'Example operational notification from the Health Check dashboard.',
+  );
+  const [lastDelivery, setLastDelivery] = useState<NotificationDeliveryResult | null>(null);
+  const [purgePreview, setPurgePreview] = useState<ArtifactPurgeResult | null>(null);
+  const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
+
+  const delivery = existing?.delivery;
+  const smtpStatus = smtpReadinessLabel(delivery);
+  const smtpReady = isSmtpConfigured(delivery);
 
   useEffect(() => {
-    if (existing) setForm(existing);
+    if (existing) {
+      setForm({ enabled: existing.enabled, recipients: existing.recipients });
+    }
   }, [existing]);
 
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -83,36 +105,85 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
   };
 
   const handleSave = async () => {
+    if (form.enabled && form.recipients.length === 0) {
+      toast.error('Recipients required', 'Add at least one recipient before enabling alerts.');
+      return;
+    }
     try {
       await saveMutation.mutateAsync(form);
       toast.success('Settings saved', 'Notification preferences were updated.');
     } catch (err) {
-      toast.error('Save failed', (err as Error)?.message ?? 'Could not save notification settings.');
+      toast.error('Save failed', formatNotificationError(err));
     }
-  };
-
-  const handleSaveE2ePassword = () => {
-    const trimmed = e2ePassword.trim();
-    if (!trimmed) {
-      clearStoredE2ePassword();
-      toast.success('E2E password cleared', 'Runs will rely on your auth token only.');
-      return;
-    }
-    setStoredE2ePassword(trimmed);
-    toast.success('E2E password saved', 'Stored for this browser session only.');
   };
 
   const handleTest = async () => {
-    if (!isValidEmail(testEmail)) return;
+    const trimmed = testEmail.trim();
+    const useOverride = trimmed.length > 0;
+
+    if (useOverride && !isValidEmail(trimmed)) {
+      toast.error('Invalid email', 'Enter a valid test recipient or leave blank to use saved recipients.');
+      return;
+    }
+
+    if (!useOverride && form.recipients.length === 0) {
+      toast.error('No recipients', 'Enter a test email or add recipients to notification settings.');
+      return;
+    }
+
     try {
-      await testMutation.mutateAsync({
-        recipients: [testEmail.trim()],
-        subject: testSubject || undefined,
-        message: testMessage || undefined,
+      const result = await testMutation.mutateAsync({
+        ...(useOverride ? { recipients: [trimmed] } : {}),
+        subject: testSubject.trim() || undefined,
+        message: testMessage.trim() || undefined,
       });
-      toast.success('Test queued', 'Check your inbox for the test email.');
+      setLastDelivery(result);
+      toast.success('Test delivered', formatDeliverySuccess(result));
     } catch (err) {
-      toast.error('Send failed', (err as Error)?.message ?? 'Could not send test notification.');
+      toast.error('Send failed', formatNotificationError(err));
+    }
+  };
+
+  const handleBroadcast = async () => {
+    if (!form.enabled) {
+      toast.error('Alerts disabled', 'Enable email alerts before sending to configured recipients.');
+      return;
+    }
+    if (form.recipients.length === 0) {
+      toast.error('No recipients', 'Add at least one recipient to notification settings.');
+      return;
+    }
+
+    try {
+      const result = await broadcastMutation.mutateAsync({
+        subject: broadcastSubject.trim() || undefined,
+        message: broadcastMessage.trim() || undefined,
+      });
+      setLastDelivery(result);
+      toast.success('Notification delivered', formatDeliverySuccess(result));
+    } catch (err) {
+      toast.error('Send failed', formatNotificationError(err));
+    }
+  };
+
+  const handleDryRunPurge = async () => {
+    try {
+      const result = await purgeMutation.mutateAsync({ dryRun: true });
+      setPurgePreview(result);
+      toast.success('Dry run complete', formatPurgeSummary(result));
+    } catch (err) {
+      toast.error('Dry run failed', (err as Error)?.message ?? 'Could not preview artifact purge.');
+    }
+  };
+
+  const handleConfirmPurge = async () => {
+    try {
+      const result = await purgeMutation.mutateAsync({ dryRun: false });
+      setPurgePreview(result);
+      setShowPurgeConfirm(false);
+      toast.success('Purge complete', formatPurgeSummary(result));
+    } catch (err) {
+      toast.error('Purge failed', (err as Error)?.message ?? 'Could not purge run artifacts.');
     }
   };
 
@@ -127,48 +198,147 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
   return (
     <div className="space-y-6">
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
-        <h2 className="text-lg font-semibold text-gray-900">E2E run credentials</h2>
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <HardDrive size={18} className="text-gray-500" />
+          Run artifact retention
+        </h2>
         <p className="text-sm text-gray-500">
-          Playwright login tests need a valid session token or email/password. Your signed-in email is
-          sent automatically; save a password here when the token is unavailable or expired (session
-          storage only — cleared when the tab closes).
+          Playwright reports, screenshots, and traces are stored on the server. Retention is
+          configured via environment variables; use purge to remove expired folders immediately.
         </p>
-        {user?.email && (
-          <p className="text-sm text-gray-700">
-            Run email: <span className="font-medium">{user.email}</span>
+
+        {retentionLoading ? (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading retention policy…
+          </div>
+        ) : retention ? (
+          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Status</dt>
+              <dd className="mt-0.5 text-gray-900">{retention.enabled ? 'Enabled' : 'Disabled'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Retention</dt>
+              <dd className="mt-0.5 text-gray-900">{retention.retentionDays} days</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Scheduled purge</dt>
+              <dd className="mt-0.5 text-gray-900 font-mono text-xs">{retention.purgeCron}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Batch size</dt>
+              <dd className="mt-0.5 text-gray-900">{retention.batchSize}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="text-xs text-gray-500">Could not load retention policy from the server.</p>
+        )}
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            type="button"
+            onClick={handleDryRunPurge}
+            disabled={purgeMutation.isPending || !retention?.enabled}
+            className={`${tw.button} inline-flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-60`}
+          >
+            {purgeMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Info className="w-4 h-4" />
+            )}
+            Preview purge (dry run)
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPurgeConfirm(true)}
+            disabled={purgeMutation.isPending || !retention?.enabled}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm border border-rose-200 rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+          >
+            <Trash2 className="w-4 h-4" />
+            Purge expired artifacts
+          </button>
+        </div>
+
+        {!retention?.enabled && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            Automatic retention is disabled on the server. Set{' '}
+            <code className="text-xs">PLAYWRIGHT_ARTIFACTS_RETENTION_ENABLED=true</code> in the backend{' '}
+            <code className="text-xs">.env</code>.
           </p>
         )}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <div className="flex-1 min-w-0">
-            <Input
-              label="E2E password (optional)"
-              type={showE2ePassword ? 'text' : 'password'}
-              placeholder="Same password used for UI login tests"
-              value={e2ePassword}
-              onChange={(value) => setE2ePassword(String(value))}
-            />
+
+        {purgePreview && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm space-y-2">
+            <p className="font-medium text-gray-900">
+              {purgePreview.dryRun ? 'Dry run result' : 'Purge result'}
+            </p>
+            <p className="text-gray-600">{formatPurgeSummary(purgePreview)}</p>
+            <p className="text-xs text-gray-500">
+              Cutoff: {new Date(purgePreview.cutoffAt).toLocaleString()}
+            </p>
+            {purgePreview.deletedDirs.length > 0 && (
+              <ul className="text-xs text-gray-600 list-disc pl-4 max-h-32 overflow-y-auto">
+                {purgePreview.deletedDirs.map((dir) => (
+                  <li key={dir} className="font-mono break-all">{dir}</li>
+                ))}
+              </ul>
+            )}
+            {purgePreview.errors.length > 0 && (
+              <p className="text-xs text-rose-600">
+                {purgePreview.errors.length} error(s) during purge — check server logs.
+              </p>
+            )}
           </div>
-          <div className="flex gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowE2ePassword(!showE2ePassword)}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-md text-gray-600 hover:bg-gray-50"
-            >
-              {showE2ePassword ? 'Hide' : 'Show'}
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveE2ePassword}
-              className={`${tw.button} px-4 py-2 text-sm`}
-            >
-              Save for session
-            </button>
+        )}
+      </div>
+
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Bell size={18} className="text-gray-500" />
+          SMTP delivery
+        </h2>
+        <p className="text-sm text-gray-500">
+          Email delivery is handled by the Playwright Health service. Configure SMTP in the backend{' '}
+          <code className="text-xs">.env</code> — settings below only control who receives alerts.
+        </p>
+
+        <div
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            smtpStatus.ready
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-amber-200 bg-amber-50 text-amber-800'
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            {smtpStatus.ready ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            )}
+            <div className="space-y-1">
+              <p className="font-medium">{smtpStatus.label}</p>
+              {delivery && (
+                <ul className="text-xs space-y-0.5 opacity-90">
+                  <li>Primary SMTP: {delivery.primaryConfigured ? 'configured' : 'missing'}</li>
+                  <li>Fallback (Mailtrap): {delivery.fallbackConfigured ? 'configured' : 'missing'}</li>
+                </ul>
+              )}
+              {smtpStatus.hint && <p className="text-xs opacity-90">{smtpStatus.hint}</p>}
+            </div>
           </div>
         </div>
-        <p className="text-xs text-gray-500 flex items-center gap-1">
-          <Info className="w-3 h-3" />
-          Matches the password in your manual POST /v1/run body under <code className="text-xs">credentials.password</code>.
-        </p>
+
+        {lastDelivery && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm space-y-1">
+            <p className="font-medium text-gray-900">Last delivery</p>
+            <p className="text-gray-600">{formatDeliverySuccess(lastDelivery)}</p>
+            <p className="text-xs text-gray-500 font-mono truncate" title={lastDelivery.messageId}>
+              Message ID: {lastDelivery.messageId}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
@@ -264,17 +434,20 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
           <Send size={18} className="text-gray-500" />
           Send test email
         </h2>
+        <p className="text-sm text-gray-500">
+          Verifies SMTP delivery. Leave recipient blank to use saved notification recipients.
+        </p>
 
         <Input
-          label="Recipient"
+          label="Recipient (optional)"
           type="email"
-          placeholder="recipient@company.com"
+          placeholder={form.recipients[0] ?? 'recipient@company.com'}
           value={testEmail}
           onChange={(value) => setTestEmail(String(value))}
         />
         <Input
           label="Subject (optional)"
-          placeholder="Health-check alert test"
+          placeholder="Playwright Health SMTP test"
           value={testSubject}
           onChange={(value) => setTestSubject(String(value))}
         />
@@ -289,7 +462,7 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
         <button
           type="button"
           onClick={handleTest}
-          disabled={testMutation.isPending || !isValidEmail(testEmail)}
+          disabled={testMutation.isPending || !smtpReady}
           className={`${tw.button} inline-flex items-center gap-2 px-5 py-2 text-sm disabled:opacity-60`}
         >
           {testMutation.isPending ? (
@@ -305,10 +478,66 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
           )}
         </button>
 
-        {!form.enabled && (
+        {!smtpReady && (
           <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-            Notifications are disabled — enable them above before sending alerts.
+            Configure SMTP on the server before sending test emails.
+          </p>
+        )}
+      </div>
+
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Mail size={18} className="text-gray-500" />
+          Send to configured recipients
+        </h2>
+        <p className="text-sm text-gray-500">
+          Uses <code className="text-xs">POST /v1/notifications/send</code> with all saved recipients.
+          Requires alerts to be enabled.
+        </p>
+
+        <Input
+          label="Subject (optional)"
+          placeholder="Manual Playwright Health alert"
+          value={broadcastSubject}
+          onChange={(value) => setBroadcastSubject(String(value))}
+        />
+        <Textarea
+          label="Message (optional)"
+          value={broadcastMessage}
+          onChange={setBroadcastMessage}
+          rows={3}
+          placeholder="Operational notification body…"
+        />
+
+        <button
+          type="button"
+          onClick={handleBroadcast}
+          disabled={
+            broadcastMutation.isPending ||
+            !smtpReady ||
+            !form.enabled ||
+            form.recipients.length === 0
+          }
+          className={`${tw.button} inline-flex items-center gap-2 px-5 py-2 text-sm disabled:opacity-60`}
+        >
+          {broadcastMutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Sending…
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              Send to {form.recipients.length || 0} recipient(s)
+            </>
+          )}
+        </button>
+
+        {(!form.enabled || form.recipients.length === 0) && (
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            Enable alerts and add recipients above before using broadcast send.
           </p>
         )}
       </div>
@@ -349,6 +578,18 @@ const NotificationSettingsContent: React.FC<NotificationSettingsContentProps> = 
           )}
         </button>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={showPurgeConfirm}
+        onClose={() => setShowPurgeConfirm(false)}
+        onConfirm={handleConfirmPurge}
+        title="Purge expired artifacts"
+        description="This permanently deletes Playwright report and artifact folders older than the retention policy. This cannot be undone."
+        itemName={`${retention?.retentionDays ?? 30}-day retention cutoff`}
+        isLoading={purgeMutation.isPending}
+        confirmText="Purge now"
+        variant="warning"
+      />
     </div>
   );
 };

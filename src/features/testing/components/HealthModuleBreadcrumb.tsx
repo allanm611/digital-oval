@@ -1,5 +1,6 @@
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { HEALTH_CHECK_BASE, healthCheckModulePath } from '../constants/routes';
 
 export interface HealthBreadcrumbItem {
   label: string;
@@ -10,9 +11,6 @@ interface HealthModuleBreadcrumbProps {
   items: HealthBreadcrumbItem[];
   className?: string;
 }
-
-const HEALTH_CHECK_LIST_PATH = '/dashboard/health-check';
-
 /**
  * Multi-level breadcrumb for health-check module flows:
  * Health Check > {module} > Edit / Schedule / Logs
@@ -36,7 +34,7 @@ export default function HealthModuleBreadcrumb({
       navigate(previous.path);
       return;
     }
-    navigate(HEALTH_CHECK_LIST_PATH);
+    navigate(HEALTH_CHECK_BASE);
   };
 
   return (
@@ -92,7 +90,7 @@ export default function HealthModuleBreadcrumb({
 }
 
 export function healthCheckListCrumb(): HealthBreadcrumbItem {
-  return { label: 'Health Check', path: HEALTH_CHECK_LIST_PATH };
+  return { label: 'Health Check', path: HEALTH_CHECK_BASE };
 }
 
 export function healthCheckModuleCrumb(
@@ -101,6 +99,6 @@ export function healthCheckModuleCrumb(
 ): HealthBreadcrumbItem {
   return {
     label: moduleName,
-    path: `/dashboard/health-check/${moduleId}`,
+    path: healthCheckModulePath(moduleId),
   };
 }

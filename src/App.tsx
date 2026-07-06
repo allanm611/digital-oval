@@ -42,6 +42,11 @@ const DocsPage = lazy(() =>
 );
 const EditDocsPage = lazy(() => import("./features/docs/pages/EditDocsPage"));
 const ManageSidebarPage = lazy(() => import("./features/docs/pages/ManageSidebarPage"));
+const HealthCheckApp = lazy(() =>
+  import("./features/testing/pages/HealthCheckApp").then((m) => ({
+    default: m.HealthCheckApp,
+  })),
+);
 const NotFoundPage = lazy(() => import("./shared/pages/NotFoundPage"));
 
 // Loading fallback component
@@ -97,6 +102,7 @@ function AppRoutes() {
             <Route path="/documentation/add" element={<EditDocsPage />} />
             <Route path="/documentation/manage-sidebar" element={<ManageSidebarPage />} />
             <Route path="/documentation/*" element={<DocsPage />} />
+            <Route path="/health-check/*" element={<HealthCheckApp />} />
           </Route>
 
           {/* Default redirect */}

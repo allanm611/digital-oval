@@ -139,12 +139,14 @@ const TestCaseRow: React.FC<{ testCase: PlaywrightTestCase }> = ({ testCase }) =
 
 interface PlaywrightReportPanelProps {
   run: TestRun;
+  moduleTestSuites?: string[];
   filter?: PlaywrightReportFilter;
   onFilterChange?: (filter: PlaywrightReportFilter) => void;
 }
 
 const PlaywrightReportPanel: React.FC<PlaywrightReportPanelProps> = ({
   run,
+  moduleTestSuites,
   filter: controlledFilter,
   onFilterChange,
 }) => {
@@ -160,7 +162,10 @@ const PlaywrightReportPanel: React.FC<PlaywrightReportPanelProps> = ({
   const [search, setSearch] = useState('');
   const [expandedSpecs, setExpandedSpecs] = useState<Record<string, boolean>>({});
 
-  const report = useMemo(() => buildPlaywrightReport(run), [run]);
+  const report = useMemo(
+    () => buildPlaywrightReport(run, { moduleTestSuites }),
+    [run, moduleTestSuites],
+  );
 
   const filtered = useMemo(() => {
     if (!report) return { testCases: [], specGroups: [] };

@@ -17,7 +17,13 @@ export function useModuleById(moduleId: string | undefined) {
 
   const moduleQuery = useQuery({
     queryKey: HEALTH_QUERY_KEYS.module(moduleId ?? ''),
-    queryFn: async () => buildModuleStatus(await healthApi.getModule(moduleId!)),
+    queryFn: async () => {
+      const [moduleConfig, runs] = await Promise.all([
+        healthApi.getModule(moduleId!),
+        healthApi.listRuns(moduleId!, 1),
+      ]);
+      return buildModuleStatus(moduleConfig, runs[0] ?? null);
+    },
     enabled: isAuthenticated && Boolean(moduleId) && !statusLoading && !cachedModule,
     retry: false,
   });

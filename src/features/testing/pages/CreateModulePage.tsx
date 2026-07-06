@@ -6,7 +6,7 @@ import { useCreateModule } from '../hooks/useHealthStatus';
 import ModuleForm from '../components/ModuleForm';
 import type { ModuleConfig } from '../types/health';
 
-const HEALTH_CHECK_LIST_PATH = '/dashboard/health-check';
+import { HEALTH_CHECK_BASE } from '../constants/routes';
 
 export default function CreateModulePage() {
   const navigate = useNavigate();
@@ -14,14 +14,14 @@ export default function CreateModulePage() {
   const createModule = useCreateModule();
 
   const handleCancel = () => {
-    navigateBackOrFallback(navigate, HEALTH_CHECK_LIST_PATH);
+    navigateBackOrFallback(navigate, HEALTH_CHECK_BASE);
   };
 
   const handleSubmit = async (payload: Partial<ModuleConfig>) => {
     try {
       await createModule.mutateAsync(payload);
       toast.success('Module created', `"${payload.name}" is now being monitored.`);
-      navigate(HEALTH_CHECK_LIST_PATH);
+      navigate(HEALTH_CHECK_BASE);
     } catch (err) {
       toast.error('Create failed', (err as Error)?.message ?? 'See console for details.');
       throw err;
