@@ -21,9 +21,9 @@ export function TestingHeader() {
         </div>
 
         <div className={styles.rightSection}>
-          <Link to="/dashboard" className={styles.dashboardLink}>
+          <Link to="/landingpage" className={styles.dashboardLink}>
             <LayoutDashboard size={16} />
-            Dashboard
+            Platform
           </Link>
         </div>
       </div>

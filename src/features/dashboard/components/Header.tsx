@@ -12,6 +12,7 @@ import { Role } from "../../roles/types/role";
 import { UserType as FullUserType } from "../../users/types/user";
 import GlobalSearch from "../../../shared/components/GlobalSearch";
 import NotificationDropdown from "../../../shared/components/NotificationDropdown";
+import { HEALTH_CHECK_BASE } from "../../testing/constants/routes";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -214,12 +215,20 @@ export function GuestHeader({
             )}
 
             {showUserInfo && (
-              <Link
-                to="/documentation"
-                className="flex items-center space-x-2 text-sm text-white/80 hover:text-white transition-colors p-2 rounded hover:bg-white/10"
-              >
-                <span className="hidden sm:inline">Documentation</span>
-              </Link>
+              <nav className="flex items-center gap-1 sm:gap-2" aria-label="Platform links">
+                <Link
+                  to="/documentation"
+                  className="text-sm text-white/80 hover:text-white transition-colors px-2 py-2 rounded hover:bg-white/10"
+                >
+                  Documentation
+                </Link>
+                <Link
+                  to={HEALTH_CHECK_BASE}
+                  className="text-sm text-white/80 hover:text-white transition-colors px-2 py-2 rounded hover:bg-white/10"
+                >
+                  Health Check
+                </Link>
+              </nav>
             )}
           </div>
 

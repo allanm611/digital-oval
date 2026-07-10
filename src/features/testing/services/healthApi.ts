@@ -1,4 +1,4 @@
-import { buildApiUrl, getAuthHeaders } from '../../../shared/services/api';
+import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../../../shared/services/api';
 import type {
   AIBackendResponse,
   AIRecommendation,
@@ -20,17 +20,20 @@ import type {
   TestCatalogNode,
 } from '../types/health';
 
-// Override with VITE_PLAYWRIGHT_HEALTH_BASE_URL for direct service access (e.g. http://localhost:11008/playwright-health)
-function getPlaywrightHealthBaseUrl(): string {
-  const override = import.meta.env.VITE_PLAYWRIGHT_HEALTH_BASE_URL;
-  if (typeof override === 'string' && override.trim()) {
-    return override.replace(/\/$/, '');
-  }
-  return buildApiUrl('/playwright-health');
-}
+// // Override with VITE_PLAYWRIGHT_HEALTH_BASE_URL for direct service access (e.g. http://localhost:11008/playwright-health)
+// function getPlaywrightHealthBaseUrl(): string {
+//   const override = import.meta.env.VITE_PLAYWRIGHT_HEALTH_BASE_URL;
+//   if (typeof override === 'string' && override.trim()) {
+//     return override.replace(/\/$/, '');
+//   }
+//   return buildApiUrl('/playwright-health');
+// }
 
-const BASE_URL = getPlaywrightHealthBaseUrl();
+// const BASE_URL = getPlaywrightHealthBaseUrl();
 // const BASE_URL = 'http://localhost:11008/playwright-health';
+
+
+const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.HEALTH);
 
 
 
