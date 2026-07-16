@@ -303,7 +303,7 @@ export default function CategoryDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`p-2 icon-delete ${tw.rounded}`} transition-colors`}
+              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
             >
               <MoreVertical className="w-5 h-5" />
             </button>

@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Activity, CheckCircle2, Clock, Edit, Eye, FileText, HelpCircle,
-  Loader2, Play, Settings, SkipForward, Trash2, XCircle,
+  Loader2, XOctagon, Play, Settings, SkipForward, Square, Trash2, XCircle,
 } from 'lucide-react';
 import { tw } from '../../../shared/utils/utils';
 import type { ModuleStatus, TestStatus } from '../types/health';
@@ -13,9 +13,11 @@ interface ModuleCardProps {
   onViewDetails: () => void;
   onEdit: () => void;
   onRunNow: () => void;
+  onStopRun: (runId: string) => void;
   onViewLogs: () => void;
   onSchedule: () => void;
   isTriggering: boolean;
+  isCancelling?: boolean;
   onDelete?: () => void;
 }
 
@@ -23,19 +25,21 @@ const STATUS_CONFIG: Record<
   TestStatus,
   { label: string; badge: string; border: string }
 > = {
-  pass:    { label: 'Passing',  badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', border: 'border-l-emerald-500' },
-  fail:    { label: 'Failing',  badge: 'bg-rose-50 text-rose-700 border-rose-200', border: 'border-l-rose-500' },
-  running: { label: 'Running',  badge: 'bg-blue-50 text-blue-700 border-blue-200', border: 'border-l-blue-500' },
-  unknown: { label: 'Unknown',  badge: 'bg-amber-50 text-amber-700 border-amber-200', border: 'border-l-amber-500' },
-  skipped: { label: 'Skipped',  badge: 'bg-gray-50 text-gray-600 border-gray-200', border: 'border-l-gray-400' },
+  pass:      { label: 'Passing',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', border: 'border-l-emerald-500' },
+  fail:      { label: 'Failing',   badge: 'bg-rose-50 text-rose-700 border-rose-200', border: 'border-l-rose-500' },
+  running:   { label: 'Running',   badge: 'bg-blue-50 text-blue-700 border-blue-200', border: 'border-l-blue-500' },
+  unknown:   { label: 'Unknown',   badge: 'bg-amber-50 text-amber-700 border-amber-200', border: 'border-l-amber-500' },
+  skipped:   { label: 'Skipped',   badge: 'bg-gray-50 text-gray-600 border-gray-200', border: 'border-l-gray-400' },
+  cancelled: { label: 'Cancelled', badge: 'bg-gray-100 text-gray-600 border-gray-300', border: 'border-l-gray-400' },
 };
 
 const STATUS_ICON: Record<TestStatus, React.ReactNode> = {
-  pass:    <CheckCircle2 size={14} className="text-emerald-500" />,
-  fail:    <XCircle size={14} className="text-rose-500" />,
-  running: <Loader2 size={14} className="text-blue-500 animate-spin" />,
-  unknown: <HelpCircle size={14} className="text-amber-500" />,
-  skipped: <SkipForward size={14} className="text-gray-400" />,
+  pass:      <CheckCircle2 size={14} className="text-emerald-500" />,
+  fail:      <XCircle size={14} className="text-rose-500" />,
+  running:   <Loader2 size={14} className="text-blue-500 animate-spin" />,
+  unknown:   <HelpCircle size={14} className="text-amber-500" />,
+  skipped:   <SkipForward size={14} className="text-gray-400" />,
+  cancelled: <XOctagon size={14} className="text-gray-500" />,
 };
 
 function formatRelativeTime(isoString: string | null): string {
@@ -75,14 +79,18 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   onViewDetails,
   onEdit,
   onRunNow,
+  onStopRun,
   onViewLogs,
   onSchedule,
   isTriggering,
+  isCancelling = false,
   onDelete,
 }) => {
   const statusCfg = STATUS_CONFIG[module.status] ?? STATUS_CONFIG.unknown;
-  const isRunning = module.status === 'running' || isTriggering;
   const lastRun = module.lastRun;
+  const isBackendRunning = module.status === 'running';
+  const isRunning = isBackendRunning || isTriggering;
+  const canStop = isBackendRunning && Boolean(lastRun?.id);
   const totalPassed = module.lastRunStats?.passed ?? 0;
   const totalFailed = module.lastRunStats?.failed ?? 0;
 
@@ -105,13 +113,28 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           <Trash2 className="w-4 h-4" />
         </IconAction>
       )}
-      <IconAction title="Run now" onClick={onRunNow} disabled={isRunning}>
-        {isRunning ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Play className="w-4 h-4" />
-        )}
-      </IconAction>
+      {canStop ? (
+        <IconAction
+          title="Stop run"
+          onClick={() => onStopRun(String(lastRun!.id))}
+          disabled={isCancelling}
+          danger
+        >
+          {isCancelling ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Square className="w-4 h-4" />
+          )}
+        </IconAction>
+      ) : (
+        <IconAction title="Run now" onClick={onRunNow} disabled={isRunning}>
+          {isRunning ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+        </IconAction>
+      )}
     </>
   );
 
@@ -172,7 +195,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
             >
               {module.name}
             </button>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+            <p className={`text-sm ${tw.textSecondary} mt-1 line-clamp-2`}>
               {module.description || 'No description'}
             </p>
           </div>

@@ -1,6 +1,5 @@
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { navigateBackOrFallback } from '../../../shared/utils/navigation';
 import { useModuleById } from '../hooks/useModuleById';
 import TestLogViewerContent from '../components/TestLogViewerContent';
 import HealthModuleBreadcrumb, {
@@ -8,24 +7,12 @@ import HealthModuleBreadcrumb, {
   healthCheckModuleCrumb,
 } from '../components/HealthModuleBreadcrumb';
 
-import { HEALTH_CHECK_BASE, healthCheckModulePath } from '../constants/routes';
-
 export default function ModuleLogsPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { module, isLoading, isNotFound, isError } = useModuleById(id);
 
   const selectedRunId = searchParams.get('runId');
-  const moduleDetailPath = id ? healthCheckModulePath(id) : HEALTH_CHECK_BASE;
-
-  const handleBack = () => {
-    if (id) {
-      navigate(moduleDetailPath);
-      return;
-    }
-    navigateBackOrFallback(navigate, HEALTH_CHECK_BASE);
-  };
 
   const handleSelectRun = (runId: string) => {
     setSearchParams({ runId }, { replace: true });

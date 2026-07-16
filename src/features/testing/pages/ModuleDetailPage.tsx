@@ -1,16 +1,15 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Activity, Bell, Brain, Clock, Edit, FileText, Loader2, Play, Settings, Trash2,
+  Activity, Bell, Brain, Clock, Edit, FileText, Loader2, Play, Settings, Square, Trash2,
 } from 'lucide-react';
 import OutlinedActionButton from '../../../shared/components/ui/OutlinedActionButton';
 import { tw } from '../../../shared/utils/utils';
 import HealthModuleBreadcrumb, {
   healthCheckListCrumb,
-  healthCheckModuleCrumb,
 } from '../components/HealthModuleBreadcrumb';
 import { useModuleById } from '../hooks/useModuleById';
-import { useDeleteModule, useTriggerRun } from '../hooks/useHealthStatus';
+import { useDeleteModule, useTriggerRun, useCancelRun } from '../hooks/useHealthStatus';
 import { useToast } from '../../../contexts/ToastContext';
 import { HealthApiError } from '../services/healthApi';
 import { cronToHuman } from '../utils/cronUtils';
@@ -27,6 +26,7 @@ const STATUS_STYLES: Record<TestStatus, string> = {
   running: 'bg-blue-50 text-blue-700 border-blue-200',
   unknown: 'bg-amber-50 text-amber-700 border-amber-200',
   skipped: 'bg-gray-50 text-gray-600 border-gray-200',
+  cancelled: 'bg-gray-100 text-gray-600 border-gray-300',
 };
 
 function formatRelativeTime(isoString: string | null): string {
@@ -53,6 +53,7 @@ export default function ModuleDetailPage() {
   const toast = useToast();
   const { module, isLoading, isNotFound } = useModuleById(id);
   const triggerRun = useTriggerRun();
+  const cancelRun = useCancelRun();
   const deleteModuleMutation = useDeleteModule();
 
   const {
@@ -84,6 +85,20 @@ export default function ModuleDetailPage() {
         toast.error('Module not found', 'This module may have been deleted.');
       } else {
         toast.error('Run failed', message);
+      }
+    }
+  };
+
+  const handleStopRun = async (runId: string) => {
+    try {
+      await cancelRun.mutateAsync(runId);
+      toast.success('Stop requested', 'The run will finish cancelling shortly.');
+    } catch (err) {
+      const message = (err as Error)?.message ?? 'See console for details.';
+      if (err instanceof HealthApiError && err.status === 409) {
+        toast.error('Run already finished', 'It could not be stopped because it already completed.');
+      } else {
+        toast.error('Stop failed', message);
       }
     }
   };
@@ -143,7 +158,7 @@ export default function ModuleDetailPage() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className={`text-sm ${tw.textSecondary} mt-1`}>
               {module.description || 'No description provided.'}
             </p>
           </div>
@@ -176,19 +191,35 @@ export default function ModuleDetailPage() {
           >
             Logs
           </OutlinedActionButton>
-          <button
-            type="button"
-            onClick={handleRunNow}
-            disabled={triggerRun.isPending}
-            className={`${tw.button} inline-flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-60`}
-          >
-            {triggerRun.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Play className="w-4 h-4" />
-            )}
-            Run now
-          </button>
+          {module.status === 'running' && module.lastRun?.id ? (
+            <button
+              type="button"
+              onClick={() => handleStopRun(String(module.lastRun!.id))}
+              disabled={cancelRun.isPending}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm border border-rose-200 rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+            >
+              {cancelRun.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+              Stop run
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleRunNow}
+              disabled={triggerRun.isPending || module.status === 'running'}
+              className={`${tw.button} inline-flex items-center gap-2 px-4 py-2 text-sm disabled:opacity-60`}
+            >
+              {triggerRun.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+              Run now
+            </button>
+          )}
           <button
             type="button"
             onClick={handleDelete}

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Brain, Sparkles, AlertTriangle, Lightbulb,
-  Code2, ChevronDown, ChevronUp, Copy, CheckCheck,
-  Loader2, Wand2, RefreshCw, BarChart3, TrendingUp,
-  ShieldAlert, Target,
+  Code2, ChevronDown, ChevronUp, ArrowRight,
+  Wand2, RefreshCw, BarChart3, TrendingUp,
+  ShieldAlert, Target, FileCode2, Clock,
 } from 'lucide-react';
 import { useAIAnalysis } from '../hooks/useHealthStatus';
-import { generateTestStubs } from '../services/healthApi';
+import { useGeneratedDrafts } from '../hooks/useTestGenerationDrafts';
 import { tw } from '../../../shared/utils/utils';
+import { healthCheckPath } from '../constants/routes';
 import type { ModuleStatus, AIAnalysis } from '../types/health';
 
 interface AIInsightsContentProps {
@@ -35,34 +37,6 @@ const ConfidenceBadge: React.FC<{ confidence: AIAnalysis['confidence'] }> = ({ c
     <span className={`inline-flex text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${cfg}`}>
       {label}
     </span>
-  );
-};
-
-const CodeBlock: React.FC<{ code: string; lang?: string }> = ({ code, lang = 'typescript' }) => {
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
-    await navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white">
-        <span className="text-[10px] uppercase tracking-wider text-gray-500 font-mono">{lang}</span>
-        <button
-          type="button"
-          onClick={copy}
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800"
-        >
-          {copied ? <><CheckCheck size={12} />Copied</> : <><Copy size={12} />Copy</>}
-        </button>
-      </div>
-      <pre className="m-0 p-4 overflow-x-auto text-xs leading-relaxed text-indigo-900 font-mono whitespace-pre">
-        <code>{code}</code>
-      </pre>
-    </div>
   );
 };
 
@@ -206,10 +180,9 @@ const AIInsightsContent: React.FC<AIInsightsContentProps> = ({
   runId = null,
   initialTab = 'overview',
 }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [selectedModuleId, setSelectedModuleId] = useState('');
-  const [generatedStubs, setGeneratedStubs] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const {
     data: analysis,
@@ -217,18 +190,11 @@ const AIInsightsContent: React.FC<AIInsightsContentProps> = ({
     refetch: refetchAnalysis,
   } = useAIAnalysis(activeTab === 'analysis' ? runId : null);
 
-  const handleGenerate = async () => {
-    if (!selectedModuleId) return;
-    setIsGenerating(true);
-    setGeneratedStubs(null);
-    try {
-      const result = await generateTestStubs(selectedModuleId);
-      setGeneratedStubs(result.stubs || result.message || '// No stubs returned by the backend.');
-    } catch {
-      setGeneratedStubs('// Error generating stubs. Please check your AI configuration.');
-    } finally {
-      setIsGenerating(false);
-    }
+  const { data: recentDrafts = [] } = useGeneratedDrafts();
+
+  const openGenerationStudio = () => {
+    const query = selectedModuleId ? `?moduleId=${encodeURIComponent(selectedModuleId)}` : '';
+    navigate(`${healthCheckPath('generate')}${query}`);
   };
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -308,8 +274,8 @@ const AIInsightsContent: React.FC<AIInsightsContentProps> = ({
           <div className="flex gap-3 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
             <Wand2 size={16} className="text-indigo-600 shrink-0 mt-0.5" />
             <p className="text-sm text-indigo-900 leading-relaxed">
-              Select a module and Claude will analyse its page structure and generate Playwright
-              test stubs covering required test types.
+              Pick a module, then open the Test Generation Studio — Claude drafts a Playwright
+              spec, and nothing is written to disk until you review and approve it there.
             </p>
           </div>
 
@@ -322,7 +288,7 @@ const AIInsightsContent: React.FC<AIInsightsContentProps> = ({
               value={selectedModuleId}
               onChange={(event) => setSelectedModuleId(event.target.value)}
             >
-              <option value="">— Choose a module —</option>
+              <option value="">— Standalone —</option>
               {modules.map((module) => (
                 <option key={module.id} value={module.id}>{module.name}</option>
               ))}
@@ -331,33 +297,47 @@ const AIInsightsContent: React.FC<AIInsightsContentProps> = ({
 
           <button
             type="button"
-            onClick={handleGenerate}
-            disabled={!selectedModuleId || isGenerating}
-            className={`${tw.button} inline-flex items-center gap-2 px-5 py-2.5 text-sm disabled:opacity-60`}
+            onClick={openGenerationStudio}
+            className={`${tw.button} inline-flex items-center gap-2 px-5 py-2.5 text-sm`}
           >
-            {isGenerating ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                Generating with Claude…
-              </>
-            ) : (
-              <>
-                <Sparkles size={14} />
-                Generate test stubs
-              </>
-            )}
+            <Sparkles size={14} />
+            Open Test Generation Studio
+            <ArrowRight size={14} />
           </button>
 
-          {generatedStubs && (
-            <div className="space-y-3">
+          {recentDrafts.length > 0 && (
+            <div className="space-y-2 pt-2">
               <h3 className="text-xs font-bold uppercase tracking-wide text-gray-500">
-                Generated stubs — review before committing
+                Recent drafts
               </h3>
-              <CodeBlock code={generatedStubs} />
-              <div className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                <AlertTriangle size={14} className="shrink-0 mt-0.5" />
-                Always review AI-generated tests before adding them to your suite.
-              </div>
+              {recentDrafts.slice(0, 5).map((draft) => (
+                <button
+                  key={draft.id}
+                  type="button"
+                  onClick={() => navigate(healthCheckPath('generate'))}
+                  className="w-full flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileCode2 size={14} className="text-gray-400 shrink-0" />
+                    <span className="text-sm font-medium text-gray-900 truncate">{draft.featureName}</span>
+                    <span className={`inline-flex text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border shrink-0 ${
+                      draft.status === 'approved'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : draft.status === 'rejected'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}>
+                      {draft.status}
+                    </span>
+                  </div>
+                  {draft.createdAt && (
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-400 shrink-0">
+                      <Clock size={11} />
+                      {new Date(draft.createdAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </div>

@@ -11,6 +11,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   variant?: 'default' | 'medium' | 'compact'; // default: px-4 py-2, medium: px-3 py-2, compact: px-3 py-1
   label?: string; // Floating label (optional)
   rows?: number;
+  style?: React.CSSProperties;
 }
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
@@ -23,6 +24,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   variant = 'medium',
   label,
   rows = 3,
+  style = {},
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -34,11 +36,32 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   // Determine border color based on error state
   const borderClass = hasError ? 'border-red-500' : 'border-gray-300';
 
-  // Determine background based on disabled/readOnly state
+  // Explicit theme-aware colors so typed text stays legible in both light and
+  // dark mode (mirrors Input.tsx — previously this relied on inherited text
+  // color, which washed out against dark-mode surfaces).
   const isReadOnly = rest.readOnly;
-  let bgClass = 'bg-white';
-  if (disabled) bgClass = 'bg-gray-100 cursor-not-allowed text-gray-500';
-  else if (isReadOnly) bgClass = 'bg-gray-50 cursor-default text-gray-600';
+  let textareaStyle: React.CSSProperties = {
+    backgroundColor: 'var(--c-input-bg)',
+    color: 'var(--c-text-primary)',
+    ...style,
+  };
+  let cursorClass = '';
+
+  if (disabled) {
+    textareaStyle = {
+      backgroundColor: 'var(--c-input-disabled-bg)',
+      color: 'var(--c-text-muted)',
+      ...style,
+    };
+    cursorClass = 'cursor-not-allowed';
+  } else if (isReadOnly) {
+    textareaStyle = {
+      backgroundColor: 'var(--c-input-bg)',
+      color: 'var(--c-text-primary)',
+      ...style,
+    };
+    cursorClass = 'cursor-default';
+  }
 
   const hasValue = value !== '';
   const shouldFloatLabel = isFocused || hasValue;
@@ -53,11 +76,12 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         rows={rows}
-        className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${borderClass} ${tw.rounded}
+        className={`w-full ${paddingClass} text-sm placeholder:text-sm placeholder:text-[var(--c-text-muted)] border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           resize-none
-          ${bgClass}
+          ${cursorClass}
           ${className}`}
+        style={textareaStyle}
         {...rest}
       />
     );
@@ -76,8 +100,9 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         className={`w-full px-3 py-3 text-sm border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           resize-none
-          ${bgClass}
+          ${cursorClass}
           ${className}`}
+        style={textareaStyle}
         {...rest}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
@@ -87,10 +112,14 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
       <label
         className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
-            ? 'top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700'
-            : 'top-3 text-sm text-gray-700'
+            ? 'top-0 -translate-y-1/2 px-1 text-xs'
+            : 'top-3 text-sm'
           }
         `}
+        style={{
+          color: 'var(--c-text-secondary)',
+          backgroundColor: shouldFloatLabel ? 'var(--c-input-bg)' : 'transparent',
+        }}
       >
         {label}
       </label>

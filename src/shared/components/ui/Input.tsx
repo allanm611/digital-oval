@@ -79,7 +79,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${borderClass} ${tw.rounded}
+        className={`w-full ${paddingClass} text-sm placeholder:text-sm placeholder:text-[var(--c-text-muted)] border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           ${className}`}
         style={inputStyle}
@@ -113,7 +113,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         onKeyDown={onKeyDown}
         className={`w-full px-4 pt-3 pb-2 text-sm leading-tight border ${borderClass} ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
-          ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
+          ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-[var(--c-text-muted)]' : ''}
           ${className}`}
         style={{
           ...inputStyle,
@@ -134,10 +134,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       <label
         className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
-            ? 'top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700'
-            : 'top-1/2 -translate-y-1/2 text-sm text-gray-700'
+            ? 'top-0 -translate-y-1/2 px-1 text-xs'
+            : 'top-1/2 -translate-y-1/2 text-sm'
           }
         `}
+        style={{
+          color: 'var(--c-text-secondary)',
+          backgroundColor: shouldFloatLabel ? 'var(--c-input-bg)' : 'transparent',
+        }}
       >
         {label}
       </label>

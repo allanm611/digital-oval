@@ -26,19 +26,25 @@ export function buildSummaryFromModules(
     failing: modules.filter((m) => m.status === 'fail').length,
     running: modules.filter((m) => m.status === 'running').length,
     unknown: modules.filter((m) => m.status === 'unknown').length,
+    cancelled: modules.filter((m) => m.status === 'cancelled').length,
   };
 }
 
 export const mapRunStatus = (status: RunStatus | string | undefined): TestStatus => {
   switch (status) {
-    case 'passed':  return 'pass';
-    case 'failed':  return 'fail';
-    case 'running': return 'running';
-    case 'pending': return 'running'; // show as running while queued
-    case 'skipped': return 'skipped';
-    default:        return 'unknown';
+    case 'passed':    return 'pass';
+    case 'failed':    return 'fail';
+    case 'running':   return 'running';
+    case 'pending':   return 'running'; // show as running while queued
+    case 'skipped':   return 'skipped';
+    case 'cancelled': return 'cancelled';
+    default:          return 'unknown';
   }
 };
+
+/** Whether a run in this status can still be stopped. */
+export const isRunStoppable = (status: RunStatus | TestStatus | string | undefined): boolean =>
+  status === 'pending' || status === 'running';
 
 /** Pull suite breakdown from top-level field or meta.suites (backend storage). */
 export const extractSuitesFromRun = (
@@ -175,13 +181,7 @@ export const buildDashboard = (raw: HealthDashboardRaw): HealthDashboardData => 
     return buildModuleStatus(module, lastRun);
   });
 
-  const summary = {
-    total:   modules.length,
-    passing: modules.filter((m) => m.status === 'pass').length,
-    failing: modules.filter((m) => m.status === 'fail').length,
-    running: modules.filter((m) => m.status === 'running').length,
-    unknown: modules.filter((m) => m.status === 'unknown').length,
-  };
+  const summary = buildSummaryFromModules(modules);
 
   return {
     modules,

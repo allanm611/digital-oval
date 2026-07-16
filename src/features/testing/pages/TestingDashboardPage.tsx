@@ -11,6 +11,7 @@ import { tw } from '../../../shared/utils/utils';
 import {
   useHealthStatus,
   useTriggerRun,
+  useCancelRun,
   useDeleteModule,
   usePlaywrightServiceInfo,
 } from '../hooks/useHealthStatus';
@@ -25,9 +26,9 @@ import { describeRunTriggerResult, isE2eConfigured } from '../utils/healthMapper
 import { healthCheckModulePath, healthCheckPath } from '../constants/routes';
 
 type ViewMode = 'grid' | 'list';
-type FilterStatus = 'all' | 'pass' | 'fail' | 'unknown' | 'running';
+type FilterStatus = 'all' | 'pass' | 'fail' | 'unknown' | 'running' | 'cancelled';
 
-const defaultSummary = { total: 0, passing: 0, failing: 0, running: 0, unknown: 0 };
+const defaultSummary = { total: 0, passing: 0, failing: 0, running: 0, unknown: 0, cancelled: 0 };
 
 const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -35,6 +36,7 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'fail', label: 'Failing' },
   { value: 'running', label: 'Running' },
   { value: 'unknown', label: 'Unknown' },
+  { value: 'cancelled', label: 'Cancelled' },
 ];
 
 const TestingDashboardPage: React.FC = () => {
@@ -43,6 +45,7 @@ const TestingDashboardPage: React.FC = () => {
   const { data, isLoading, isError, refetch, isFetching, apiReachable, sseConnected } = useHealthStatus();
   const { data: serviceInfo } = usePlaywrightServiceInfo();
   const triggerRun = useTriggerRun();
+  const cancelRun = useCancelRun();
   const deleteModuleMutation = useDeleteModule();
   const toast = useToast();
   const authToastShown = useRef(false);
@@ -59,7 +62,7 @@ const TestingDashboardPage: React.FC = () => {
   });
 
   const safeSummary = data?.summary ?? defaultSummary;
-  const safeModules = data?.modules ?? [];
+  const safeModules = React.useMemo(() => data?.modules ?? [], [data?.modules]);
   const offlineMode = isError && !data;
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -106,6 +109,21 @@ const TestingDashboardPage: React.FC = () => {
       console.error('Trigger run failed:', err);
     }
   }, [triggerRun, toast]);
+
+  const handleStopRun = useCallback(async (runId: string) => {
+    try {
+      await cancelRun.mutateAsync(runId);
+      toast.success('Stop requested', 'The run will finish cancelling shortly.');
+    } catch (err) {
+      const message = (err as Error)?.message ?? 'See console for details.';
+      if (err instanceof HealthApiError && err.status === 409) {
+        toast.error('Run already finished', 'It could not be stopped because it already completed.');
+      } else {
+        toast.error('Stop failed', message);
+      }
+      console.error('Cancel run failed:', err);
+    }
+  }, [cancelRun, toast]);
 
   const filteredModules = React.useMemo(() => {
     return safeModules.filter((module) => {
@@ -322,10 +340,14 @@ const TestingDashboardPage: React.FC = () => {
               onViewDetails={() => navigate(healthCheckModulePath(module.id))}
               onEdit={() => navigate(healthCheckModulePath(module.id, 'edit'))}
               onRunNow={() => handleRunNow(module.id)}
+              onStopRun={handleStopRun}
               onViewLogs={() => navigate(healthCheckModulePath(module.id, 'logs'))}
               onSchedule={() => navigate(healthCheckModulePath(module.id, 'schedule'))}
               isTriggering={
                 triggerRun.isPending && triggerRun.variables?.moduleId === module.id
+              }
+              isCancelling={
+                cancelRun.isPending && cancelRun.variables === module.lastRun?.id
               }
               onDelete={() => openDeleteConfirm(module.id, module.name)}
             />

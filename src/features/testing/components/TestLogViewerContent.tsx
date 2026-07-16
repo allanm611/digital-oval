@@ -3,30 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle2, XCircle, Loader2, Clock, ChevronDown, ChevronRight,
   Camera, Code2, GitMerge, Eye, Activity, Zap, Shield,
-  AlertTriangle, SkipForward, Download, Brain,
+  AlertTriangle, SkipForward, Download, Brain, XOctagon, Square, Globe,
 } from 'lucide-react';
 import { tw } from '../../../shared/utils/utils';
 import OutlinedActionButton from '../../../shared/components/ui/OutlinedActionButton';
-import { useRunHistory, useRunDetail } from '../hooks/useHealthStatus';
+import { useRunHistory, useRunDetail, useCancelRun } from '../hooks/useHealthStatus';
+import { useToast } from '../../../contexts/ToastContext';
+import { HealthApiError } from '../services/healthApi';
 import PlaywrightReportPanel from './PlaywrightReportPanel';
 import { resolvePlaywrightHealthUrl } from '../services/healthApi';
 import type { ModuleStatus, TestRun, TestSuiteResult, TestStatus } from '../types/health';
 import { buildPlaywrightReport, type PlaywrightReportFilter } from '../utils/playwrightReportParser';
 import { computeRunTestStats, resolveRunTestSuiteScope } from '../utils/runTestStats';
+import { isRunStoppable } from '../utils/healthMappers';
 import { healthCheckPath } from '../constants/routes';
 
 const STATUS_ICON: Record<TestStatus, React.ReactNode> = {
-  pass:    <CheckCircle2 size={14} className="text-emerald-500" />,
-  fail:    <XCircle size={14} className="text-rose-500" />,
-  running: <Loader2 size={14} className="text-blue-500 animate-spin" />,
-  unknown: <AlertTriangle size={14} className="text-amber-500" />,
-  skipped: <SkipForward size={14} className="text-gray-400" />,
+  pass:      <CheckCircle2 size={14} className="text-emerald-500" />,
+  fail:      <XCircle size={14} className="text-rose-500" />,
+  running:   <Loader2 size={14} className="text-blue-500 animate-spin" />,
+  unknown:   <AlertTriangle size={14} className="text-amber-500" />,
+  skipped:   <SkipForward size={14} className="text-gray-400" />,
+  cancelled: <XOctagon size={14} className="text-gray-500" />,
 };
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
   unit:          <Code2 size={12} />,
   integration:   <GitMerge size={12} />,
   e2e:           <Eye size={12} />,
+  api:           <Globe size={12} />,
   regression:    <Activity size={12} />,
   performance:   <Zap size={12} />,
   smoke:         <Activity size={12} />,
@@ -39,6 +44,7 @@ const TYPE_COLOR: Record<string, string> = {
   unit: 'text-violet-500',
   integration: 'text-blue-500',
   e2e: 'text-emerald-500',
+  api: 'text-sky-500',
   regression: 'text-amber-500',
   performance: 'text-orange-500',
   smoke: 'text-cyan-500',
@@ -188,6 +194,8 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
   onSelectRun,
 }) => {
   const navigate = useNavigate();
+  const toast = useToast();
+  const cancelRun = useCancelRun();
   const reportRef = useRef<HTMLDivElement>(null);
   const [internalRunId, setInternalRunId] = useState<string | null>(controlledRunId ?? null);
   const [reportFilter, setReportFilter] = useState<PlaywrightReportFilter>('all');
@@ -229,6 +237,21 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
   const openAiInsights = () => {
     if (!selectedRunId) return;
     navigate(`${healthCheckPath('insights')}?runId=${selectedRunId}&tab=analysis`);
+  };
+
+  const handleStopRun = async () => {
+    if (!selectedRunId) return;
+    try {
+      await cancelRun.mutateAsync(selectedRunId);
+      toast.success('Stop requested', 'The run will finish cancelling shortly.');
+    } catch (err) {
+      const message = (err as Error)?.message ?? 'See console for details.';
+      if (err instanceof HealthApiError && err.status === 409) {
+        toast.error('Run already finished', 'It could not be stopped because it already completed.');
+      } else {
+        toast.error('Stop failed', message);
+      }
+    }
   };
 
   const metaText = tryFormatMeta(selectedRun?.meta);
@@ -328,6 +351,21 @@ const TestLogViewerContent: React.FC<TestLogViewerContentProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
+                    {isRunStoppable(selectedRun.status) && (
+                      <button
+                        type="button"
+                        onClick={handleStopRun}
+                        disabled={cancelRun.isPending}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-rose-200 rounded-md text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+                      >
+                        {cancelRun.isPending ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Square className="w-3.5 h-3.5" />
+                        )}
+                        Stop run
+                      </button>
+                    )}
                     <OutlinedActionButton
                       icon={<Brain className="w-3.5 h-3.5" />}
                       onClick={openAiInsights}

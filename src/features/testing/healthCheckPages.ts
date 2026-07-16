@@ -29,3 +29,9 @@ export const ModuleSchedulePage = lazy(
 export const ModuleDetailPage = lazy(
   () => import('./pages/ModuleDetailPageWrapper'),
 );
+export const ApiTestBuilderPage = lazy(
+  () => import('./pages/ApiTestBuilderPageWrapper'),
+);
+export const DynamicTestBuilderPage = lazy(
+  () => import('./pages/DynamicTestBuilderPageWrapper'),
+);

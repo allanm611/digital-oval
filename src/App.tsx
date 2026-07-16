@@ -30,6 +30,8 @@ import {
   EditModulePage,
   ModuleSchedulePage,
   ModuleDetailPage,
+  ApiTestBuilderPage,
+  DynamicTestBuilderPage,
 } from "./features/testing/healthCheckPages";
 
 // Lazy load all pages for better performance
@@ -117,6 +119,8 @@ function AppRoutes() {
               <Route path="create" element={<CreateModulePage />} />
               <Route path="insights" element={<AIInsightsPage />} />
               <Route path="notifications" element={<HealthCheckNotificationsPage />} />
+              <Route path="api-tests" element={<ApiTestBuilderPage />} />
+              <Route path="generate" element={<DynamicTestBuilderPage />} />
               <Route path=":id/logs" element={<ModuleLogsPage />} />
               <Route path=":id/edit" element={<EditModulePage />} />
               <Route path=":id/schedule" element={<ModuleSchedulePage />} />

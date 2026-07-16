@@ -1,10 +1,15 @@
 import { API_CONFIG, buildApiUrl, getAuthHeaders } from '../../../shared/services/api';
 import type {
   AIBackendResponse,
-  AIRecommendation,
+  ApiTestCase,
+  ApiTestCasePayload,
+  ApiTestCaseResult,
   ArtifactPurgePayload,
   ArtifactPurgeResult,
   ArtifactRetentionConfig,
+  GenerateTestRequestPayload,
+  GeneratedTestDraft,
+  GeneratedTestDraftStatus,
   HealthDashboardRaw,
   ModuleConfig,
   NotificationConfiguredSendPayload,
@@ -14,28 +19,13 @@ import type {
   NotificationTestPayload,
   PlaywrightServiceInfo,
   RunDetail,
-  ScheduleUpdate,
   ModuleUpdate,
   ServiceProbeResult,
   TestCatalogNode,
 } from '../types/health';
 
-// // Override with VITE_PLAYWRIGHT_HEALTH_BASE_URL for direct service access (e.g. http://localhost:11008/playwright-health)
-// function getPlaywrightHealthBaseUrl(): string {
-//   const override = import.meta.env.VITE_PLAYWRIGHT_HEALTH_BASE_URL;
-//   if (typeof override === 'string' && override.trim()) {
-//     return override.replace(/\/$/, '');
-//   }
-//   return buildApiUrl('/playwright-health');
-// }
-
-// const BASE_URL = getPlaywrightHealthBaseUrl();
-// const BASE_URL = 'http://localhost:11008/playwright-health';
-
-
-const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.HEALTH);
-
-
+// const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.HEALTH);
+const BASE_URL = "http://localhost:11008/playwright-health"; // For local development, override the base URL to point to the local playwright-health service
 
 /** Resolve a playwright-health path (e.g. /playwright-health/v1/runs/.../artifacts/...) to a full URL. */
 export function resolvePlaywrightHealthUrl(pathOrUrl: string): string {
@@ -242,6 +232,18 @@ class HealthApiService {
     });
   }
 
+  /**
+   * Requests that a pending or running module run be stopped. Pending runs
+   * are cancelled immediately; running runs are stopped cooperatively and
+   * may take a few seconds to fully finalize (poll run detail / watch SSE).
+   */
+  async cancelRun(runId: string): Promise<RunDetail> {
+    return this.request<RunDetail>(
+      `/v1/runs/detail/${encodeURIComponent(runId)}/cancel`,
+      { method: 'POST' },
+    );
+  }
+
   async getServiceInfo(): Promise<PlaywrightServiceInfo> {
     return this.request<PlaywrightServiceInfo>('/');
   }
@@ -323,6 +325,92 @@ class HealthApiService {
       method: 'POST',
       body: JSON.stringify(payload ?? {}),
     });
+  }
+
+  // ===================================
+  // Dynamic API test cases (data-driven, no code — run via api/dynamic-api.spec.ts)
+  // ===================================
+
+  async listApiTestCases(moduleId?: string): Promise<ApiTestCase[]> {
+    const query = moduleId ? `?moduleId=${encodeURIComponent(moduleId)}` : '';
+    const response = await this.request<ApiTestCase[]>(`/v1/api-tests${query}`);
+    return Array.isArray(response) ? response : [];
+  }
+
+  async getApiTestCase(id: string): Promise<ApiTestCase> {
+    return this.request<ApiTestCase>(`/v1/api-tests/${encodeURIComponent(id)}`);
+  }
+
+  async createApiTestCase(payload: ApiTestCasePayload): Promise<ApiTestCase> {
+    return this.request<ApiTestCase>('/v1/api-tests', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateApiTestCase(
+    id: string,
+    payload: Partial<ApiTestCasePayload>,
+  ): Promise<ApiTestCase> {
+    return this.request<ApiTestCase>(`/v1/api-tests/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteApiTestCase(id: string): Promise<void> {
+    await this.request<void>(`/v1/api-tests/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /** Executes a case immediately without saving — pass an `id` to try a saved case, or a full draft payload. */
+  async tryApiTestCase(payload: Partial<ApiTestCasePayload> & { id?: string }): Promise<ApiTestCaseResult> {
+    return this.request<ApiTestCaseResult>('/v1/api-tests/try', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // ===================================
+  // AI-assisted dynamic test creation (draft -> human review -> approve/reject)
+  // ===================================
+
+  async requestTestGeneration(payload: GenerateTestRequestPayload): Promise<GeneratedTestDraft> {
+    return this.request<GeneratedTestDraft>('/v1/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async listGeneratedDrafts(filter?: {
+    moduleId?: string;
+    status?: GeneratedTestDraftStatus;
+  }): Promise<GeneratedTestDraft[]> {
+    const params = new URLSearchParams();
+    if (filter?.moduleId) params.set('moduleId', filter.moduleId);
+    if (filter?.status) params.set('status', filter.status);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const response = await this.request<GeneratedTestDraft[]>(`/v1/ai/generate/drafts${query}`);
+    return Array.isArray(response) ? response : [];
+  }
+
+  async getGeneratedDraft(id: string): Promise<GeneratedTestDraft> {
+    return this.request<GeneratedTestDraft>(`/v1/ai/generate/drafts/${encodeURIComponent(id)}`);
+  }
+
+  async approveGeneratedDraft(id: string): Promise<GeneratedTestDraft> {
+    return this.request<GeneratedTestDraft>(
+      `/v1/ai/generate/drafts/${encodeURIComponent(id)}/approve`,
+      { method: 'POST' },
+    );
+  }
+
+  async rejectGeneratedDraft(id: string): Promise<GeneratedTestDraft> {
+    return this.request<GeneratedTestDraft>(
+      `/v1/ai/generate/drafts/${encodeURIComponent(id)}/reject`,
+      { method: 'POST' },
+    );
   }
 }
 

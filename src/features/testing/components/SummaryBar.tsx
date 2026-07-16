@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Activity, CheckCircle2, HelpCircle, Layers, Loader2, XCircle,
+  Activity, CheckCircle2, HelpCircle, Layers, Loader2, XOctagon, XCircle,
 } from 'lucide-react';
 import { tw, color } from '../../../shared/utils/utils';
 import type { HealthDashboardData } from '../types/health';
@@ -15,6 +15,7 @@ const defaultSummary = {
   failing: 0,
   running: 0,
   unknown: 0,
+  cancelled: 0,
 };
 
 const SummaryBar: React.FC<SummaryBarProps> = ({ summary = defaultSummary }) => {
@@ -53,10 +54,16 @@ const SummaryBar: React.FC<SummaryBarProps> = ({ summary = defaultSummary }) => 
       value: summaryData.unknown,
       icon: <HelpCircle className="h-5 w-5 text-amber-500" />,
     },
+    {
+      key: 'cancelled',
+      label: 'Cancelled',
+      value: summaryData.cancelled,
+      icon: <XOctagon className="h-5 w-5 text-gray-500" />,
+    },
   ] as const;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
       {cards.map((card) => (
         <div
           key={card.key}

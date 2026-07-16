@@ -46,7 +46,7 @@ export interface PlaywrightReportModel {
 }
 
 const OUTPUT_LINE =
-  /^\s*([✓✘×\-])\s+\d+\s+(?:\[(?<project>[^\]]+)\]\s+)?›\s+(?<file>.+?):(?<line>\d+):(?<col>\d+)\s+›\s+(?<title>.+?)(?:\s+\((?<dur>[\d.]+)(?<unit>ms|s)\))?\s*$/u;
+  /^\s*([✓✘×-])\s+\d+\s+(?:\[(?<project>[^\]]+)\]\s+)?›\s+(?<file>.+?):(?<line>\d+):(?<col>\d+)\s+›\s+(?<title>.+?)(?:\s+\((?<dur>[\d.]+)(?<unit>ms|s)\))?\s*$/u;
 
 function parseDurationMs(value: string | undefined, unit: string | undefined): number {
   if (!value) return 0;
@@ -155,6 +155,13 @@ function parseOutputLines(output: string | undefined, errorsByTest: Map<string, 
   return [...byKey.values()];
 }
 
+/**
+ * Fallback for legacy/older runs stored before per-test detail (meta.testCases)
+ * was recorded: only aggregate pass/fail/skip counts per suite are known, not
+ * which specific tests they belong to. Placeholder rows are labelled clearly
+ * as unnamed so the UI never implies real test names/identities that were
+ * never captured — do not rename these to look like real test titles.
+ */
 function synthesizeFromSuites(suites: TestSuiteResult[]): PlaywrightTestCase[] {
   const cases: PlaywrightTestCase[] = [];
 
@@ -175,7 +182,7 @@ function synthesizeFromSuites(suites: TestSuiteResult[]): PlaywrightTestCase[] {
     for (let index = 0; index < suite.passed; index += 1) {
       cases.push({
         id: `passed-${suite.type}-${index}`,
-        title: `Passed test ${index + 1}`,
+        title: `Unnamed passed test ${index + 1} (detail not recorded for this run)`,
         specFile: suite.type,
         durationMs: 0,
         status: 'passed',
@@ -185,7 +192,7 @@ function synthesizeFromSuites(suites: TestSuiteResult[]): PlaywrightTestCase[] {
     for (let index = 0; index < suite.skipped; index += 1) {
       cases.push({
         id: `skipped-${suite.type}-${index}`,
-        title: `Skipped test ${index + 1}`,
+        title: `Unnamed skipped test ${index + 1} (detail not recorded for this run)`,
         specFile: suite.type,
         durationMs: 0,
         status: 'skipped',

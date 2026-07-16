@@ -8,7 +8,6 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { healthApi } from '../services/healthApi';
 import {
   buildDashboard,
-  buildModuleStatus,
   buildSummaryFromModules,
   mapAIAnalysis,
   normalizeRunDetail,
@@ -35,6 +34,11 @@ export const HEALTH_QUERY_KEYS = {
   runDetail: (runId: string) => ['health', 'run', runId] as const,
   notifications: ['notificationSettings'] as const,
   ai: (runId: string) => ['health', 'ai', runId] as const,
+  apiTests: (moduleId?: string) => ['health', 'api-tests', moduleId ?? null] as const,
+  apiTest: (id: string) => ['health', 'api-tests', 'item', id] as const,
+  drafts: (filter?: { moduleId?: string; status?: string }) =>
+    ['health', 'drafts', filter?.moduleId ?? null, filter?.status ?? null] as const,
+  draft: (id: string) => ['health', 'drafts', 'item', id] as const,
 };
 
 const SSE_RECONNECT_MS = 12_000;
@@ -217,6 +221,22 @@ export function useTriggerRun() {
       if (run.id) {
         queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.runDetail(run.id) });
       }
+    },
+  });
+}
+
+export function useCancelRun() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (runId: string) => {
+      const raw = await healthApi.cancelRun(runId);
+      return normalizeRunDetail(raw);
+    },
+    onSuccess: (run) => {
+      queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.status });
+      queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.runs(run.moduleId) });
+      queryClient.invalidateQueries({ queryKey: HEALTH_QUERY_KEYS.runDetail(run.id) });
     },
   });
 }

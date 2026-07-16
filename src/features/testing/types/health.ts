@@ -1,7 +1,7 @@
 // src/features/testing/types/health.ts
 
-export type TestStatus = 'pass' | 'fail' | 'running' | 'unknown' | 'skipped';
-export type RunStatus = 'pending' | 'running' | 'passed' | 'failed' | 'unknown';
+export type TestStatus = 'pass' | 'fail' | 'running' | 'unknown' | 'skipped' | 'cancelled';
+export type RunStatus = 'pending' | 'running' | 'passed' | 'failed' | 'cancelled' | 'unknown';
 export type PlaywrightCaseStatus = 'passed' | 'failed' | 'skipped' | 'flaky' | 'unknown';
 
 export interface PlaywrightTestCaseMeta {
@@ -34,6 +34,7 @@ export type TestType =
   | 'unit'
   | 'integration'
   | 'e2e'
+  | 'api'
   | 'regression'
   | 'performance'
   | 'smoke'
@@ -73,6 +74,7 @@ export interface TestRun {
   output?: string;
   errors?: string;
   meta?: unknown;
+  cancelRequested?: boolean;
 }
 
 export interface ModuleThresholds {
@@ -129,6 +131,9 @@ export interface RunDetail {
   output?: string;
   errors?: string;
   meta?: unknown;
+  cancelRequested?: boolean;
+  cancelledAt?: string | null;
+  cancelledBy?: string | null;
 }
 
 export interface AIRecommendation {
@@ -159,6 +164,7 @@ export interface HealthDashboardData {
     failing: number;
     unknown: number;
     running: number;
+    cancelled: number;
   };
   lastUpdated: string;
   executionMode?: string;
@@ -311,4 +317,97 @@ export interface TestCatalogNode {
   /** Path stored in module.testSuites */
   value?: string;
   children?: TestCatalogNode[];
+}
+
+// ===================================
+// Dynamic test creation + API-based tests
+// ===================================
+
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD';
+
+export type ApiAssertionType = 'status' | 'jsonPath' | 'header' | 'bodyContains' | 'responseTimeMs';
+
+export type ApiAssertionOperator =
+  | 'equals'
+  | 'notEquals'
+  | 'contains'
+  | 'lessThan'
+  | 'greaterThan'
+  | 'exists';
+
+export interface ApiAssertion {
+  type: ApiAssertionType;
+  /** jsonPath expression (e.g. "data.items[0].id") or header name. Unused for bodyContains/responseTimeMs. */
+  path?: string;
+  operator: ApiAssertionOperator;
+  value?: unknown;
+}
+
+export interface ApiTestCase {
+  id: string;
+  /** Nullable — a case can be reusable/standalone or scoped to one module. */
+  moduleId: string | null;
+  name: string;
+  method: HttpMethod;
+  url: string;
+  headers?: Record<string, string>;
+  queryParams?: Record<string, string>;
+  body?: unknown;
+  expectedStatus: number[];
+  assertions: ApiAssertion[];
+  timeoutMs: number;
+  active: boolean;
+  tags?: string[];
+  createdBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Payload accepted by POST/PUT /v1/api-tests (id/timestamps are server-assigned). */
+export type ApiTestCasePayload = Omit<ApiTestCase, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>;
+
+export interface ApiAssertionResult {
+  assertion: ApiAssertion;
+  passed: boolean;
+  message: string;
+  actual?: unknown;
+}
+
+export interface ApiTestCaseResult {
+  caseId?: string;
+  name: string;
+  requestUrl: string;
+  method: HttpMethod;
+  status: number;
+  durationMs: number;
+  ok: boolean;
+  assertionResults: ApiAssertionResult[];
+  responseBodyPreview?: string;
+  error?: string;
+}
+
+export type GeneratedTestDraftStatus = 'draft' | 'approved' | 'rejected';
+
+export interface GeneratedTestDraft {
+  id: string;
+  moduleId: string | null;
+  featureName: string;
+  sourceUrl?: string | null;
+  prompt?: string | null;
+  generatedCode: string;
+  specPath?: string | null;
+  status: GeneratedTestDraftStatus;
+  safetyWarnings: string[];
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  createdBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GenerateTestRequestPayload {
+  moduleId?: string;
+  featureName: string;
+  url: string;
+  prompt?: string;
 }
