@@ -36,6 +36,8 @@ export const HEALTH_QUERY_KEYS = {
   ai: (runId: string) => ['health', 'ai', runId] as const,
   apiTests: (moduleId?: string) => ['health', 'api-tests', moduleId ?? null] as const,
   apiTest: (id: string) => ['health', 'api-tests', 'item', id] as const,
+  uiFlowTests: (moduleId?: string) => ['health', 'ui-tests', moduleId ?? null] as const,
+  uiFlowTest: (id: string) => ['health', 'ui-tests', 'item', id] as const,
   drafts: (filter?: { moduleId?: string; status?: string }) =>
     ['health', 'drafts', filter?.moduleId ?? null, filter?.status ?? null] as const,
   draft: (id: string) => ['health', 'drafts', 'item', id] as const,

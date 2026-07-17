@@ -4,7 +4,7 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Brain, Bell, PlusCircle, Globe, Wand2 } from 'lucide-react';
+import { Activity, Brain, Bell, PlusCircle, Globe, Wand2, MousePointerClick } from 'lucide-react';
 import { HEALTH_CHECK_BASE, healthCheckPath } from '../constants/routes';
 import styles from './TestingSidebar.module.css';
 
@@ -19,6 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Modules', path: HEALTH_CHECK_BASE, icon: Activity, exact: true },
   { label: 'AI Insights', path: healthCheckPath('insights'), icon: Brain },
   { label: 'API Tests', path: healthCheckPath('api-tests'), icon: Globe },
+  { label: 'UI Flow Tests', path: healthCheckPath('ui-tests'), icon: MousePointerClick },
   { label: 'Generate Tests', path: healthCheckPath('generate'), icon: Wand2 },
   { label: 'Notifications', path: healthCheckPath('notifications'), icon: Bell },
   { label: 'Add Module', path: healthCheckPath('create'), icon: PlusCircle },

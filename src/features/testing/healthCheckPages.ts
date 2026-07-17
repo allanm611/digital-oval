@@ -32,6 +32,9 @@ export const ModuleDetailPage = lazy(
 export const ApiTestBuilderPage = lazy(
   () => import('./pages/ApiTestBuilderPageWrapper'),
 );
+export const UiFlowTestBuilderPage = lazy(
+  () => import('./pages/UiFlowTestBuilderPageWrapper'),
+);
 export const DynamicTestBuilderPage = lazy(
   () => import('./pages/DynamicTestBuilderPageWrapper'),
 );

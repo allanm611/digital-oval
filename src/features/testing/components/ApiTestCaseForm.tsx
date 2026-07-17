@@ -356,7 +356,14 @@ const ApiTestCaseForm: React.FC<ApiTestCaseFormProps> = ({
 
         <Input label="Name" value={name} onChange={(v) => setName(String(v))} placeholder="Get campaigns returns 200" />
 
-        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3">
+        {/*
+          Method uses a static label above a <select>; Input's `label` prop is a
+          *floating* label rendered inside the box instead, which gives the two
+          controls different vertical offsets in the same row. Using a matching
+          static label + plain (label-less) Input here keeps both boxes aligned
+          on the same baseline regardless of grid column width.
+        */}
+        <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3 sm:items-start">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Method</label>
             <select className={selectClass} value={method} onChange={(e) => setMethod(e.target.value as HttpMethod)}>
@@ -365,12 +372,14 @@ const ApiTestCaseForm: React.FC<ApiTestCaseFormProps> = ({
               ))}
             </select>
           </div>
-          <Input
-            label="URL"
-            value={url}
-            onChange={(v) => setUrl(String(v))}
-            placeholder="https://api.example.com/campaigns"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">URL</label>
+            <Input
+              value={url}
+              onChange={(v) => setUrl(String(v))}
+              placeholder="https://api.example.com/campaigns"
+            />
+          </div>
         </div>
 
         <div>

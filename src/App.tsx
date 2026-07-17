@@ -31,6 +31,7 @@ import {
   ModuleSchedulePage,
   ModuleDetailPage,
   ApiTestBuilderPage,
+  UiFlowTestBuilderPage,
   DynamicTestBuilderPage,
 } from "./features/testing/healthCheckPages";
 
@@ -120,6 +121,7 @@ function AppRoutes() {
               <Route path="insights" element={<AIInsightsPage />} />
               <Route path="notifications" element={<HealthCheckNotificationsPage />} />
               <Route path="api-tests" element={<ApiTestBuilderPage />} />
+              <Route path="ui-tests" element={<UiFlowTestBuilderPage />} />
               <Route path="generate" element={<DynamicTestBuilderPage />} />
               <Route path=":id/logs" element={<ModuleLogsPage />} />
               <Route path=":id/edit" element={<EditModulePage />} />

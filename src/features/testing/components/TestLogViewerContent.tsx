@@ -4,6 +4,7 @@ import {
   CheckCircle2, XCircle, Loader2, Clock, ChevronDown, ChevronRight,
   Camera, Code2, GitMerge, Eye, Activity, Zap, Shield,
   AlertTriangle, SkipForward, Download, Brain, XOctagon, Square, Globe,
+  MousePointerClick,
 } from 'lucide-react';
 import { tw } from '../../../shared/utils/utils';
 import OutlinedActionButton from '../../../shared/components/ui/OutlinedActionButton';
@@ -32,6 +33,7 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   integration:   <GitMerge size={12} />,
   e2e:           <Eye size={12} />,
   api:           <Globe size={12} />,
+  ui:            <MousePointerClick size={12} />,
   regression:    <Activity size={12} />,
   performance:   <Zap size={12} />,
   smoke:         <Activity size={12} />,
@@ -45,6 +47,7 @@ const TYPE_COLOR: Record<string, string> = {
   integration: 'text-blue-500',
   e2e: 'text-emerald-500',
   api: 'text-sky-500',
+  ui: 'text-fuchsia-500',
   regression: 'text-amber-500',
   performance: 'text-orange-500',
   smoke: 'text-cyan-500',

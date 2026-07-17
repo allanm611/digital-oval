@@ -35,6 +35,7 @@ export type TestType =
   | 'integration'
   | 'e2e'
   | 'api'
+  | 'ui'
   | 'regression'
   | 'performance'
   | 'smoke'
@@ -410,4 +411,73 @@ export interface GenerateTestRequestPayload {
   featureName: string;
   url: string;
   prompt?: string;
+}
+
+// ===================================
+// Dynamic UI flow tests (non-AI, data-driven browser steps)
+// ===================================
+
+export type UiStepAction =
+  | 'goto'
+  | 'click'
+  | 'fill'
+  | 'check'
+  | 'uncheck'
+  | 'selectOption'
+  | 'press'
+  | 'waitForSelector'
+  | 'expectVisible'
+  | 'expectText'
+  | 'expectURL'
+  | 'expectCount';
+
+/**
+ * Small locator DSL, e.g. role=button[name="Submit"], label=Email,
+ * text=Sign in, testid=login-btn, placeholder=Search, css=#id, or a bare
+ * CSS selector. Not used by goto/expectURL.
+ */
+export interface UiFlowStep {
+  action: UiStepAction;
+  locator?: string;
+  /** fill text / selectOption value / press key / expectText or expectURL match value / goto target */
+  value?: string;
+  /** expectCount target */
+  count?: number;
+  timeoutMs?: number;
+  description?: string;
+}
+
+export interface UiFlowTestCase {
+  id: string;
+  moduleId: string | null;
+  name: string;
+  startUrl: string;
+  steps: UiFlowStep[];
+  timeoutMs: number;
+  active: boolean;
+  tags?: string[];
+  createdBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type UiFlowTestCasePayload = Omit<UiFlowTestCase, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>;
+
+export interface UiFlowStepResult {
+  index: number;
+  step: UiFlowStep;
+  passed: boolean;
+  skipped: boolean;
+  message: string;
+  durationMs: number;
+  screenshotBase64?: string;
+}
+
+export interface UiFlowTestCaseResult {
+  caseId?: string;
+  name: string;
+  ok: boolean;
+  durationMs: number;
+  steps: UiFlowStepResult[];
+  error?: string;
 }

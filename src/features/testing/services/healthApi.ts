@@ -22,6 +22,9 @@ import type {
   ModuleUpdate,
   ServiceProbeResult,
   TestCatalogNode,
+  UiFlowTestCase,
+  UiFlowTestCasePayload,
+  UiFlowTestCaseResult,
 } from '../types/health';
 
 // const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.HEALTH);
@@ -367,6 +370,53 @@ class HealthApiService {
   /** Executes a case immediately without saving — pass an `id` to try a saved case, or a full draft payload. */
   async tryApiTestCase(payload: Partial<ApiTestCasePayload> & { id?: string }): Promise<ApiTestCaseResult> {
     return this.request<ApiTestCaseResult>('/v1/api-tests/try', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  // ===================================
+  // Dynamic UI flow test cases (data-driven browser steps — run via ui/dynamic-ui.spec.ts)
+  // ===================================
+
+  async listUiFlowTestCases(moduleId?: string): Promise<UiFlowTestCase[]> {
+    const query = moduleId ? `?moduleId=${encodeURIComponent(moduleId)}` : '';
+    const response = await this.request<UiFlowTestCase[]>(`/v1/ui-tests${query}`);
+    return Array.isArray(response) ? response : [];
+  }
+
+  async getUiFlowTestCase(id: string): Promise<UiFlowTestCase> {
+    return this.request<UiFlowTestCase>(`/v1/ui-tests/${encodeURIComponent(id)}`);
+  }
+
+  async createUiFlowTestCase(payload: UiFlowTestCasePayload): Promise<UiFlowTestCase> {
+    return this.request<UiFlowTestCase>('/v1/ui-tests', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateUiFlowTestCase(
+    id: string,
+    payload: Partial<UiFlowTestCasePayload>,
+  ): Promise<UiFlowTestCase> {
+    return this.request<UiFlowTestCase>(`/v1/ui-tests/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteUiFlowTestCase(id: string): Promise<void> {
+    await this.request<void>(`/v1/ui-tests/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /** Executes a flow immediately without saving — pass an `id` to try a saved case, or a full draft payload. */
+  async tryUiFlowTestCase(
+    payload: Partial<UiFlowTestCasePayload> & { id?: string },
+  ): Promise<UiFlowTestCaseResult> {
+    return this.request<UiFlowTestCaseResult>('/v1/ui-tests/try', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
