@@ -30,7 +30,7 @@ import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pag
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import Input from "../../../shared/components/ui/Input";
 import SelectJobTypeModal from "../components/SelectJobTypeModal";
-import { color, tw, zIndexTokens, button, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -631,8 +631,12 @@ export default function ScheduledJobsPage() {
                     setSelectedJobs(new Set());
                   }
                 }}
-                className="inline-flex items-center gap-2 transition-colors w-auto"
-                style={getButtonStyles(button.bordered)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 {isSelectionMode ? (
                   <CheckSquare className="h-4 w-4" />

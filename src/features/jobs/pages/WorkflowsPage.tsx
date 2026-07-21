@@ -22,7 +22,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
-import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -516,8 +516,12 @@ export default function WorkflowsPage() {
                     setSelectedWorkflows(new Set());
                   }
                 }}
-                className="inline-flex items-center gap-2 transition-colors w-auto"
-                style={getButtonStyles(button.bordered)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 {isSelectionMode ? (
                   <CheckSquare size={16} />

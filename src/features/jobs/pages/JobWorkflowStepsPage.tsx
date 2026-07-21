@@ -990,8 +990,12 @@ export default function JobWorkflowStepsPage() {
                     setSelectedSteps(new Set());
                   }
                 }}
-                className="inline-flex items-center gap-2 transition-colors w-auto"
-                style={getButtonStyles(button.bordered)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 {isSelectionMode ? (
                   <CheckSquare className="h-4 w-4" />

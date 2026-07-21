@@ -27,7 +27,7 @@ import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pag
 import DateFormatter from "../../../shared/components/DateFormatter";
 import Input from "../../../shared/components/ui/Input";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -1751,8 +1751,12 @@ export default function JobDependenciesPage() {
                     setSelectedDependencyIds(new Set());
                   }
                 }}
-                className="inline-flex items-center gap-2 transition-colors w-auto"
-                style={getButtonStyles(button.bordered)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 {isSelectionMode ? (
                   <CheckSquare className="h-4 w-4" />

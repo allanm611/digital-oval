@@ -39,7 +39,7 @@ import SegmentModal from "../components/SegmentModal";
 import SegmentDetailsExpandedRow from "../components/SegmentDetailsExpandedRow";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw, button, zIndex, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -1209,8 +1209,12 @@ export default function SegmentManagementPage() {
                     setSelectedSegmentIds(new Set());
                   }
                 }}
-                className="inline-flex items-center gap-2 transition-colors w-auto"
-                style={getButtonStyles(button.bordered)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 {isSelectionMode ? (
                   <CheckSquare size={16} />

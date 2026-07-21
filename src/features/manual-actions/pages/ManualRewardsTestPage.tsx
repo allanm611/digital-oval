@@ -609,7 +609,6 @@ export default function ManualRewardsTestPage() {
                     rows={5}
                     hasError={!!descriptionError}
                     labelBgColor="var(--c-primary-background)"
-                    style={{ borderColor: '#cbd5e1' }}
                   />
                   {descriptionError ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">

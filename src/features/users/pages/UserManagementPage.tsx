@@ -33,7 +33,7 @@ import UserDetailsExpandedRow from "../components/UserDetailsExpandedRow";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ErrorState from "../../../shared/components/ui/ErrorState";
-import { color, tw, components, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { roleService } from "../../roles/services/roleService";
@@ -1811,8 +1811,12 @@ export default function UserManagementPage() {
                     setSelectedUsers(new Set());
                   }
                 }}
-                className="inline-flex items-center gap-2 transition-colors w-auto"
-                style={getButtonStyles(button.bordered)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
                 title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
               >
                 {isSelectionMode ? (
