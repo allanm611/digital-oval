@@ -11,8 +11,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "analyze": "vite-bundle-analyzer",
-    "deploy:prod": "rm .vercel/project.json 2>/dev/null; vercel --local-config vercel.prod.json --prod --yes",
-    "deploy:staging": "rm .vercel/project.json 2>/dev/null; vercel --local-config vercel.staging.json --prod --yes"
+    "deploy:prod": "node -e \"const fs = require('fs'); try { fs.unlinkSync('.vercel/project.json'); } catch(e) {}\" && vercel --local-config vercel.prod.json --prod --yes",
+    "deploy:staging": "node -e \"const fs = require('fs'); try { fs.unlinkSync('.vercel/project.json'); } catch(e) {}\" && vercel --local-config vercel.staging.json --prod --yes"
   },
   "dependencies": {
     "@codemirror/lang-html": "^6.4.11",
