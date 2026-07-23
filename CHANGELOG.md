@@ -1,3 +1,10 @@
+## [1.4.20](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.19...v1.4.20) (2026-07-23)
+
+
+### Bug Fixes
+
+* fixing offer creatives ([4b5789f](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/4b5789fa5de857b995817804371c65c73d17740b))
+
 ## [1.4.19](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.18...v1.4.19) (2026-06-29)
 
 
