@@ -878,6 +878,16 @@ export default function OfferCreativeStep({
 
   const selectedCreativeData = filteredCreatives.find((c) => c.id === selectedCreative) || creatives.find((c) => c.id === selectedCreative);
 
+  // Auto-enable Rich Text for Email channels
+  useEffect(() => {
+    if (selectedCreativeData?.channel === "Email" && selectedCreativeData.id) {
+      setIsRichTextMap((prev) => ({
+        ...prev,
+        [selectedCreativeData.id]: true,
+      }));
+    }
+  }, [selectedCreativeData?.channel, selectedCreativeData?.id]);
+
   // Use draft creative if none selected (for inline creation flow)
   const editingCreative = selectedCreativeData || {
     id: 'temp-draft',
@@ -1057,13 +1067,19 @@ export default function OfferCreativeStep({
         }
       }, 0);
     } else {
-      if (selectedCreativeData.channel === "Email" && isRichText) {
+      const isRichText = selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id];
+
+      if (isRichText) {
+        // For Rich Text mode: append variable (simpler, works with React's state management)
         const placeholder = formatVariablePlaceholder(variable);
-        const newBody = `${selectedCreativeData.text_body || ""} ${placeholder} `;
-        updateCreative(selectedCreativeData.id, { text_body: newBody });
+        const bodyField = selectedCreativeData.channel === "Email" ? (selectedCreativeData.html_body || "") : (selectedCreativeData.text_body || "");
+        const newBody = `${bodyField} ${placeholder} `;
+        updateCreative(selectedCreativeData.id, {
+          ...(selectedCreativeData.channel === "Email" ? { html_body: newBody, text_body: newBody } : { text_body: newBody }),
+        });
         setVariableError("");
       } else {
-        // Validate cursor position before insertion
+        // For Plain Text mode: use cursor-based insertion
         const positionError = validateInsertPosition(
           selectedCreativeData.text_body || "",
           actualCursorPosition,
@@ -1542,14 +1558,6 @@ export default function OfferCreativeStep({
                       </div>
                     )} */}
 
-                    {/* Email HTML Body Requirement Hint */}
-                    {editingCreative.channel === "Email" && (
-                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                        <p className="text-xs text-blue-700">
-                          ℹ️ For Email channels, you need to enable <strong>Rich Text</strong> mode to generate the HTML body required by the backend.
-                        </p>
-                      </div>
-                    )}
 
                     {/* Message content toolbar */}
                     <div
@@ -1560,10 +1568,11 @@ export default function OfferCreativeStep({
                         {t.offers.messageContent.label}
                       </span>
                       <div className="flex items-center gap-2">
-                        {(editingCreative.channel === "Email" ||
+                        {editingCreative.channel !== "Email" && (
                           editingCreative.channel === "SMS" ||
                           editingCreative.channel === "WhatsApp" ||
-                          editingCreative.channel === "Push") && (
+                          editingCreative.channel === "Push"
+                        ) && (
                           <button
                             type="button"
                             onClick={() =>
@@ -1624,20 +1633,21 @@ export default function OfferCreativeStep({
                     </div>
 
                     {/* Message Body */}
-                    {selectedCreativeData && isRichTextMap[selectedCreativeData.id] ? (
+                    {selectedCreativeData && (selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id]) ? (
                         <div
                           onClick={() => setActiveField("body")}
                           onFocus={() => setActiveField("body")}
                         >
                           <RichTextEditor
-                            value={editingCreative.text_body || ""}
+                            value={selectedCreativeData.channel === "Email" ? (editingCreative.html_body || "") : (editingCreative.text_body || "")}
                             onChange={(value) => {
                               selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                                text_body: value,
+                                ...(selectedCreativeData.channel === "Email" ? { html_body: value, text_body: value } : { text_body: value }),
                               });
                             }}
                             placeholder={t.offers.messageBody.placeholder}
                             minHeight="250px"
+                            onVariableError={setVariableError}
                           />
                         </div>
                       ) : (
@@ -1647,16 +1657,20 @@ export default function OfferCreativeStep({
                           value={editingCreative.text_body || ""}
                           onChange={(value) => {
                             setActiveField("body");
-                            // Validate and show error, but allow text update
-                            const editError = validateNoEditInsideVariables(editingCreative.text_body || "", value);
-                            if (editError) {
-                              setVariableError(editError);
+                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
+                              text_body: value,
+                              ...(selectedCreativeData.channel === "Email" && { html_body: value }),
+                            });
+                          }}
+                          onKeyDown={(e) => {
+                            const textarea = e.currentTarget;
+                            const cursorPos = textarea.selectionStart || 0;
+                            if (isCursorInsideVariable(editingCreative.text_body || "", cursorPos)) {
+                              e.preventDefault();
+                              setVariableError("You can't edit inside a variable");
                             } else {
                               setVariableError("");
                             }
-                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                              text_body: value,
-                            });
                           }}
                           onClickCapture={(e) => {
                             setActiveField("body");

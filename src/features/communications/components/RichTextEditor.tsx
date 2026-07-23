@@ -11,12 +11,14 @@ import {
 } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { isCursorInsideVariable } from "../../../shared/utils/variableInsertion";
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   minHeight?: string;
+  onVariableError?: (error: string) => void;
 }
 
 export default function RichTextEditor({
@@ -24,6 +26,7 @@ export default function RichTextEditor({
   onChange,
   placeholder = "Enter your message...",
   minHeight = "200px",
+  onVariableError,
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -102,6 +105,22 @@ export default function RichTextEditor({
 
         <div className="flex-1" />
 
+        {/* Heading Selector */}
+        <HeadlessSelect
+          value=""
+          onChange={(value) => {
+            if (value) execCommand("formatBlock", value as string);
+          }}
+          options={[
+            { label: "Paragraph", value: "<p>" },
+            { label: "Heading 1", value: "<h1>" },
+            { label: "Heading 2", value: "<h2>" },
+            { label: "Heading 3", value: "<h3>" },
+          ]}
+          placeholder="Format"
+          className="w-auto min-w-[100px]"
+        />
+
         {/* Font Size Selector */}
         <HeadlessSelect
           value="3"
@@ -126,6 +145,23 @@ export default function RichTextEditor({
         onInput={handleInput}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
+        onKeyDown={(e) => {
+          if (editorRef.current) {
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              const textContent = editorRef.current.textContent || "";
+              const cursorPosition = range.startOffset;
+
+              if (isCursorInsideVariable(textContent, cursorPosition)) {
+                e.preventDefault();
+                onVariableError?.("You can't edit inside a variable");
+              } else {
+                onVariableError?.("");
+              }
+            }
+          }
+        }}
         className="p-4 outline-none"
         style={{
           minHeight,
