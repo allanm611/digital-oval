@@ -1,242 +1,156 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import { color, tw } from "../../../shared/utils/utils";
-import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { emailGatewayConfigService } from "../services/emailGatewayConfigService";
-import { smsGatewayConfigService } from "../services/smsGatewayConfigService";
-import { whatsappGatewayConfigService } from "../services/whatsappGatewayConfigService";
-import { pushGatewayConfigService } from "../services/pushGatewayConfigService";
-import { ussdGatewayConfigService } from "../services/ussdGatewayConfigService";
-import { genericGatewayConfigService } from "../services/genericGatewayConfigService";
-import EmailGatewayForm from "../components/gateway-forms/EmailGatewayForm";
-import SMSGatewayForm from "../components/gateway-forms/SMSGatewayForm";
-import WhatsAppGatewayForm from "../components/gateway-forms/WhatsAppGatewayForm";
-import PushGatewayForm from "../components/gateway-forms/PushGatewayForm";
-import USSDGatewayForm from "../components/gateway-forms/USSDGatewayForm";
-import GenericGatewayForm from "../components/gateway-forms/GenericGatewayForm";
-
-type ChannelType = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH" | "USSD" | string;
-
+import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { tw } from "../../../shared/utils/utils";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import {
+  gatewayProviderService,
+  GatewayProvider,
+} from "../services/gatewayProviderService";
+import { gatewayConfigurationService } from "../services/gatewayConfigurationService";
+import {
+  CreateGatewayConfigurationRequest,
+  GatewayConfiguration,
+  UpdateGatewayConfigurationRequest,
+} from "../types/gatewayConfiguration";
+import GatewayConfigurationForm from "../components/gateway-forms/GatewayConfigurationForm";
 
 interface GatewayConfigFormPageProps {
   mode: "create" | "edit";
 }
 
-export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPageProps) {
+export default function GatewayConfigFormPage({
+  mode,
+}: GatewayConfigFormPageProps) {
   const { id } = useParams<{ id: string }>();
-  const searchParams = new URLSearchParams(window.location.search);
-  const channelFromUrl = searchParams.get("channel");
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
 
-  const [selectedChannel, setSelectedChannel] = useState<ChannelType>("");
-  const [editingConfig, setEditingConfig] = useState<any>(null);
+  const [channelOptions, setChannelOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [selectedChannelId, setSelectedChannelId] = useState("");
+  const [providers, setProviders] = useState<GatewayProvider[]>([]);
+  const [providersLoading, setProvidersLoading] = useState(false);
+  const [editingConfig, setEditingConfig] =
+    useState<GatewayConfiguration | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(mode === "edit" && !!id);
-  const [channelOptions, setChannelOptions] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
     loadChannels();
+  }, []);
+
+  useEffect(() => {
     if (mode === "edit" && id) {
-      loadConfig();
+      loadConfig(Number(id));
     }
   }, [mode, id]);
 
   useEffect(() => {
-    if (mode === "create" && channelOptions.length > 0 && !selectedChannel) {
-      setSelectedChannel(channelOptions[0].value as ChannelType);
+    if (!selectedChannelId) {
+      setProviders([]);
+      return;
     }
-  }, [channelOptions, mode]);
-
-  const getBaseChannelType = (channelName: string): string => {
-    if (!channelName) return "DEFAULT";
-    const name = channelName.toLowerCase();
-    if (name.includes("sms")) return "SMS";
-    if (name.includes("email")) return "EMAIL";
-    if (name.includes("whatsapp")) return "WHATSAPP";
-    if (name.includes("push") || name.includes("firebase")) return "PUSH";
-    if (name.includes("ussd")) return "USSD";
-    return channelName;
-  };
+    loadProviders(Number(selectedChannelId));
+  }, [selectedChannelId]);
 
   const loadChannels = async () => {
     try {
-      const url = buildApiUrl("/communication-channels");
-      const response = await fetch(url, {
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch channels: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const options = data.data.map((channel: any) => ({
-        value: channel.name,
-        label: channel.name,
-      }));
+      const data = await communicationChannelService.getAll();
+      const options = (data || [])
+        .filter((ch) => ch.is_active !== false)
+        .map((ch) => ({
+          value: String(ch.id),
+          label: ch.name || ch.code,
+        }));
       setChannelOptions(options);
+      if (mode === "create" && options.length > 0 && !selectedChannelId) {
+        setSelectedChannelId(options[0].value);
+      }
     } catch (err) {
-      showError(extractBackendError(err, "Failed to load communication channels. Please try again."));
+      showError(
+        extractBackendError(
+          err,
+          "Failed to load communication channels. Please try again.",
+        ),
+      );
     }
   };
 
-  const loadConfig = async () => {
+  const loadProviders = async (channelId: number) => {
+    try {
+      setProvidersLoading(true);
+      const data = await gatewayProviderService.getAll({
+        channel_id: channelId,
+      });
+      setProviders(data);
+    } catch (err) {
+      showError(
+        extractBackendError(
+          err,
+          "Failed to load gateway providers. Please try again.",
+        ),
+      );
+      setProviders([]);
+    } finally {
+      setProvidersLoading(false);
+    }
+  };
+
+  const loadConfig = async (configId: number) => {
     try {
       setIsLoading(true);
-
-      if (channelFromUrl) {
-        if (channelFromUrl === "EMAIL") {
-          const emailConfigs = await emailGatewayConfigService.getAllConfigs();
-          const emailConfig = emailConfigs.find((c) => c.id === Number(id));
-          if (emailConfig) {
-            setEditingConfig(emailConfig);
-            setSelectedChannel("EMAIL");
-            return;
-          }
-        } else if (channelFromUrl === "SMS") {
-          const smsConfigs = await smsGatewayConfigService.getAllConfigs();
-          const smsConfig = smsConfigs.find((c) => c.id === Number(id));
-          if (smsConfig) {
-            setEditingConfig(smsConfig);
-            setSelectedChannel("SMS");
-            return;
-          }
-        } else if (channelFromUrl === "WHATSAPP") {
-          const whatsappConfigs = await whatsappGatewayConfigService.getAllConfigs();
-          const whatsappConfig = whatsappConfigs.find((c) => c.id === Number(id));
-          if (whatsappConfig) {
-            setEditingConfig(whatsappConfig);
-            setSelectedChannel("WHATSAPP");
-            return;
-          }
-        } else if (channelFromUrl === "PUSH") {
-          const pushConfigs = await pushGatewayConfigService.getAllConfigs();
-          const pushConfig = pushConfigs.find((c) => c.id === Number(id));
-          if (pushConfig) {
-            setEditingConfig(pushConfig);
-            setSelectedChannel("PUSH");
-            return;
-          }
-        } else if (channelFromUrl === "USSD") {
-          const ussdConfigs = await ussdGatewayConfigService.getAllConfigs();
-          const ussdConfig = ussdConfigs.find((c) => c.id === Number(id));
-          if (ussdConfig) {
-            setEditingConfig(ussdConfig);
-            setSelectedChannel("USSD");
-            return;
-          }
-        }
-      } else {
-        const emailConfigs = await emailGatewayConfigService.getAllConfigs();
-        const emailConfig = emailConfigs.find((c) => c.id === Number(id));
-        if (emailConfig) {
-          setEditingConfig(emailConfig);
-          setSelectedChannel("EMAIL");
-          return;
-        }
-
-        const smsConfigs = await smsGatewayConfigService.getAllConfigs();
-        const smsConfig = smsConfigs.find((c) => c.id === Number(id));
-        if (smsConfig) {
-          setEditingConfig(smsConfig);
-          setSelectedChannel("SMS");
-          return;
-        }
-
-        const whatsappConfigs = await whatsappGatewayConfigService.getAllConfigs();
-        const whatsappConfig = whatsappConfigs.find((c) => c.id === Number(id));
-        if (whatsappConfig) {
-          setEditingConfig(whatsappConfig);
-          setSelectedChannel("WHATSAPP");
-          return;
-        }
-
-        const pushConfigs = await pushGatewayConfigService.getAllConfigs();
-        const pushConfig = pushConfigs.find((c) => c.id === Number(id));
-        if (pushConfig) {
-          setEditingConfig(pushConfig);
-          setSelectedChannel("PUSH");
-          return;
-        }
-
-        const ussdConfigs = await ussdGatewayConfigService.getAllConfigs();
-        const ussdConfig = ussdConfigs.find((c) => c.id === Number(id));
-        if (ussdConfig) {
-          setEditingConfig(ussdConfig);
-          setSelectedChannel("USSD");
-          return;
-        }
+      const config = await gatewayConfigurationService.getById(configId);
+      setEditingConfig(config);
+      if (config.channel_id) {
+        setSelectedChannelId(String(config.channel_id));
       }
-
-      showError("Configuration not found");
-      navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError(extractBackendError(err, "Failed to load configuration. Please try again."));
+      showError(
+        extractBackendError(
+          err,
+          "Failed to load configuration. Please try again.",
+        ),
+      );
       navigate("/dashboard/gateway-configurations");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (
+    payload:
+      | CreateGatewayConfigurationRequest
+      | UpdateGatewayConfigurationRequest,
+  ) => {
     try {
       setIsSaving(true);
-      const baseChannelType = getBaseChannelType(selectedChannel);
-
-      if (baseChannelType === "EMAIL") {
-        if (mode === "edit" && id) {
-          await emailGatewayConfigService.updateConfig(Number(id), data);
-        } else {
-          await emailGatewayConfigService.createConfig(data);
-        }
-      } else if (baseChannelType === "SMS") {
-        if (mode === "edit" && id) {
-          await smsGatewayConfigService.updateConfig(Number(id), data);
-        } else {
-          await smsGatewayConfigService.createConfig(data);
-        }
-      } else if (baseChannelType === "WHATSAPP") {
-        if (mode === "edit" && id) {
-          await whatsappGatewayConfigService.updateConfig(Number(id), data);
-        } else {
-          await whatsappGatewayConfigService.createConfig(data);
-        }
-      } else if (baseChannelType === "PUSH") {
-        if (mode === "edit" && id) {
-          await pushGatewayConfigService.updateConfig(Number(id), data);
-        } else {
-          await pushGatewayConfigService.createConfig(data);
-        }
-      } else if (baseChannelType === "USSD") {
-        if (mode === "edit" && id) {
-          await ussdGatewayConfigService.updateConfig(Number(id), data);
-        } else {
-          await ussdGatewayConfigService.createConfig(data);
-        }
+      if (mode === "edit" && id) {
+        await gatewayConfigurationService.update(
+          Number(id),
+          payload as UpdateGatewayConfigurationRequest,
+        );
       } else {
-        if (mode === "edit" && id) {
-          await genericGatewayConfigService.updateConfig(Number(id), data);
-        } else {
-          await genericGatewayConfigService.createConfig(data);
-        }
+        await gatewayConfigurationService.create(
+          payload as CreateGatewayConfigurationRequest,
+        );
       }
-
       success(
         t.common.save,
-        `Gateway configuration ${mode === "edit" ? t.common.update : t.common.create}d successfully`
+        `Gateway configuration ${mode === "edit" ? "updated" : "created"} successfully`,
       );
       navigate("/dashboard/gateway-configurations");
     } catch (err) {
-      showError("Error", extractBackendError(err, "Error. Please try again."));
+      showError(
+        "Error",
+        extractBackendError(err, "Failed to save gateway configuration."),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -246,7 +160,9 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading configuration...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>
+          Loading configuration...
+        </p>
       </div>
     );
   }
@@ -254,88 +170,28 @@ export default function GatewayConfigFormPage({ mode }: GatewayConfigFormPagePro
   return (
     <div className="space-y-6">
       <BackButton
-
         showBreadcrumb={true}
-        currentLabel={mode === "create" ? (t.configurations.createGatewayConfiguration || "Create Gateway Configuration") : (t.configurations.editGatewayConfiguration || "Edit Gateway Configuration")}
+        currentLabel={
+          mode === "create"
+            ? t.configurations.createGatewayConfiguration ||
+              "Create Gateway Configuration"
+            : t.configurations.editGatewayConfiguration ||
+              "Edit Gateway Configuration"
+        }
       />
 
-      <div className="space-y-6">
-
-        {getBaseChannelType(selectedChannel) === "EMAIL" && (
-          <EmailGatewayForm
-            onSave={handleSave}
-            initialData={editingConfig}
-            isLoading={isSaving}
-            onCancel={() => navigate("/dashboard/gateway-configurations")}
-            mode={mode}
-            selectedChannel={selectedChannel}
-            onChannelChange={(value) => setSelectedChannel(value as ChannelType)}
-            channelOptions={channelOptions}
-          />
-        )}
-
-        {getBaseChannelType(selectedChannel) === "SMS" && (
-          <SMSGatewayForm
-            onSave={handleSave}
-            initialData={editingConfig}
-            isLoading={isSaving}
-            onCancel={() => navigate("/dashboard/gateway-configurations")}
-            mode={mode}
-            selectedChannel={selectedChannel}
-            onChannelChange={(value) => setSelectedChannel(value as ChannelType)}
-            channelOptions={channelOptions}
-          />
-        )}
-
-        {getBaseChannelType(selectedChannel) === "WHATSAPP" && (
-          <WhatsAppGatewayForm
-            onSave={handleSave}
-            initialData={editingConfig}
-            isLoading={isSaving}
-            onCancel={() => navigate("/dashboard/gateway-configurations")}
-            mode={mode}
-            selectedChannel={selectedChannel}
-            onChannelChange={(value) => setSelectedChannel(value as ChannelType)}
-            channelOptions={channelOptions}
-          />
-        )}
-
-        {getBaseChannelType(selectedChannel) === "PUSH" && (
-          <PushGatewayForm
-            onSave={handleSave}
-            initialData={editingConfig}
-            isLoading={isSaving}
-            onCancel={() => navigate("/dashboard/gateway-configurations")}
-            mode={mode}
-            selectedChannel={selectedChannel}
-            onChannelChange={(value) => setSelectedChannel(value as ChannelType)}
-            channelOptions={channelOptions}
-          />
-        )}
-
-        {getBaseChannelType(selectedChannel) === "USSD" && (
-          <USSDGatewayForm
-            onSave={handleSave}
-            initialData={editingConfig}
-            isLoading={isSaving}
-            onCancel={() => navigate("/dashboard/gateway-configurations")}
-            mode={mode}
-          />
-        )}
-
-        {!["EMAIL", "SMS", "WHATSAPP", "PUSH", "USSD"].includes(getBaseChannelType(selectedChannel)) && (
-          <GenericGatewayForm
-            onSave={handleSave}
-            initialData={editingConfig}
-            isLoading={isSaving}
-            onCancel={() => navigate("/dashboard/gateway-configurations")}
-            mode={mode}
-            selectedChannel={selectedChannel}
-            onChannelChange={(value) => setSelectedChannel(value as ChannelType)}
-            channelOptions={channelOptions}
-          />
-        )}
-      </div>
+      <GatewayConfigurationForm
+        mode={mode}
+        isLoading={isSaving}
+        channels={channelOptions}
+        providers={providers}
+        providersLoading={providersLoading}
+        initialData={editingConfig}
+        selectedChannelId={selectedChannelId}
+        onChannelChange={setSelectedChannelId}
+        onCancel={() => navigate("/dashboard/gateway-configurations")}
+        onSave={handleSave}
+      />
     </div>
   );
 }

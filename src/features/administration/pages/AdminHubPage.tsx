@@ -182,6 +182,14 @@ export default function AdminHubPage() {
       description: "Configure channels, routes, and messaging gateways",
       cards: [
         {
+          title: "Gateway Providers",
+          description:
+            "Define provider templates and field schemas used by gateway configurations",
+          icon: Plug,
+          href: "/dashboard/gateway-providers",
+          category: "Communication & Messaging",
+        },
+        {
           title: "Gateway Configurations",
           description: "Configure message delivery gateways and endpoints",
           icon: Network,

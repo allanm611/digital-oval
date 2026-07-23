@@ -9,7 +9,10 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { PushNotificationRoute, CreatePushNotificationRouteRequest } from "../types/pushNotificationRoute";
 import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
-import { pushGatewayConfigService } from "../../configurations/services/pushGatewayConfigService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -77,8 +80,12 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
   const loadGatewayConfigs = async () => {
     try {
       setIsLoadingConfigs(true);
-      const configs = await pushGatewayConfigService.getAllConfigs();
-      setGatewayConfigs(configs);
+      const configs = await gatewayConfigurationService.getAll();
+      setGatewayConfigs(
+        filterGatewayConfigsByChannelType(configs, "PUSH").filter(
+          (c) => c.is_active !== false,
+        ),
+      );
     } catch (err) {
       showError(t.common.error, "Failed to load gateway configurations");
     } finally {

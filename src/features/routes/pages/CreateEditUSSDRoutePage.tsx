@@ -9,7 +9,10 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { SMSRoute, CreateSMSRouteRequest } from "../types/smsRoute";
 import { ussdRouteService } from "../services/ussdRouteService";
-import { ussdGatewayConfigService } from "../../configurations/services/ussdGatewayConfigService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
@@ -67,8 +70,12 @@ export default function CreateEditUSSDRoutePage() {
     const loadGatewayConfigs = async () => {
       try {
         setIsLoadingConfigs(true);
-        const configs = await ussdGatewayConfigService.getAllConfigs();
-        setGatewayConfigs(configs);
+        const configs = await gatewayConfigurationService.getAll();
+        setGatewayConfigs(
+          filterGatewayConfigsByChannelType(configs, "USSD").filter(
+            (c) => c.is_active !== false,
+          ),
+        );
       } catch (err) {
         showError(t.common.error, "Failed to load gateway configurations");
       } finally {

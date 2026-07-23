@@ -73,7 +73,10 @@ import { useBackendOfferTypeData } from "../../../shared/hooks/useBackendOfferTy
 import { Step } from "../../../shared/components/ui/ProgressStepper";
 import CategoryModal from "../../../shared/components/CategoryModal";
 import CreateOfferTypeModal from "../components/CreateOfferTypeModal";
-import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
+import {
+  requiresHtmlBody,
+  ensureEmailHtmlBody,
+} from "../utils/channelUtils";
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative } from "../types/offerCreative";
@@ -2209,10 +2212,13 @@ export default function CreateOfferPage({
         if (creatives.length === 0) return false;
 
         return creatives.every((creative) => {
-          const hasLanguage = creative.locale && creative.locale.trim() !== "";
-          const hasTextBody = creative.text_body && creative.text_body.trim() !== "";
-          const isEmailWithHtml = requiresHtmlBody(creative.channel)
-            ? creative.html_body && creative.html_body.trim() !== ""
+          const normalized = ensureEmailHtmlBody(creative);
+          const hasLanguage =
+            normalized.locale && normalized.locale.trim() !== "";
+          const hasTextBody =
+            normalized.text_body && normalized.text_body.trim() !== "";
+          const isEmailWithHtml = requiresHtmlBody(normalized.channel)
+            ? normalized.html_body && normalized.html_body.trim() !== ""
             : true;
 
           return hasLanguage && hasTextBody && isEmailWithHtml;
@@ -2278,6 +2284,18 @@ export default function CreateOfferPage({
 
   const handleNext = useCallback(() => {
     if (validateCurrentStep() && currentStep < totalSteps) {
+      // Persist recovered html_body before leaving the Creative step
+      if (currentStep === 3 && creatives.length > 0) {
+        const normalizedCreatives = creatives.map(ensureEmailHtmlBody);
+        const needsSync = normalizedCreatives.some(
+          (c, i) =>
+            c.html_body !== creatives[i].html_body ||
+            c.text_body !== creatives[i].text_body,
+        );
+        if (needsSync) {
+          setCreatives(normalizedCreatives);
+        }
+      }
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       setVisitedSteps((prev) => new Set(prev).add(nextStep));
@@ -2319,10 +2337,20 @@ export default function CreateOfferPage({
         if (creatives.length === 0) {
           errors.creatives = "At least one creative is required";
         } else {
+          // Persist recovered html_body for Email creatives that only had text_body
+          const normalizedCreatives = creatives.map(ensureEmailHtmlBody);
+          const needsSync = normalizedCreatives.some(
+            (c, i) => c.html_body !== creatives[i].html_body,
+          );
+          if (needsSync) {
+            setCreatives(normalizedCreatives);
+          }
+
           const creativeErrors: string[] = [];
-          creatives.forEach((creative, index) => {
+          normalizedCreatives.forEach((creative, index) => {
             const hasLanguage = creative.locale && creative.locale.trim() !== "";
-            const hasTextBody = creative.text_body && creative.text_body.trim() !== "";
+            const hasTextBody =
+              creative.text_body && creative.text_body.trim() !== "";
             const isEmailWithHtml = requiresHtmlBody(creative.channel)
               ? creative.html_body && creative.html_body.trim() !== ""
               : true;
@@ -2331,10 +2359,14 @@ export default function CreateOfferPage({
               creativeErrors.push(`Creative ${index + 1}: Language is required`);
             }
             if (!hasTextBody) {
-              creativeErrors.push(`Creative ${index + 1}: Message body is required`);
+              creativeErrors.push(
+                `Creative ${index + 1}: Message body is required`,
+              );
             }
             if (requiresHtmlBody(creative.channel) && !isEmailWithHtml) {
-              creativeErrors.push(`Creative ${index + 1}: For Email channels, HTML body is required`);
+              creativeErrors.push(
+                `Creative ${index + 1}: For Email channels, HTML body is required`,
+              );
             }
           });
           if (creativeErrors.length > 0) {
@@ -2544,8 +2576,11 @@ export default function CreateOfferPage({
           }
 
           // Create creatives for each channel/locale combination
-          const creativePromises = creatives.map(async (creative) => {
+          const creativePromises = creatives.map(async (creativeInput) => {
             try {
+              // Ensure Email creatives always send html_body (recover from text_body if needed)
+              const creative = ensureEmailHtmlBody(creativeInput);
+
               // Parse variables to get actual values (templates are frontend-only)
               const variables = parseVariables(creative.variables);
 

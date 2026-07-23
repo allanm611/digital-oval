@@ -9,7 +9,10 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { EmailRoute, CreateEmailRouteRequest } from "../types/emailRoute";
 import { emailRouteService } from "../services/emailRouteService";
-import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
@@ -50,8 +53,12 @@ export default function EmailRouteFormPage({ mode }: EmailRouteFormPageProps) {
 
   const loadGatewayConfigs = async () => {
     try {
-      const configs = await emailGatewayConfigService.getAllConfigs();
-      setGatewayConfigs(configs);
+      const configs = await gatewayConfigurationService.getAll();
+      setGatewayConfigs(
+        filterGatewayConfigsByChannelType(configs, "EMAIL").filter(
+          (c) => c.is_active !== false,
+        ),
+      );
     } catch (err) {
       showError("Error", "Failed to load gateway configurations");
     }

@@ -14,7 +14,11 @@ import {
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
-import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
+import {
+  requiresHtmlBody,
+  stripHtmlTags,
+  ensureEmailHtmlBody,
+} from "../utils/channelUtils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
@@ -878,6 +882,27 @@ export default function OfferCreativeStep({
 
   const selectedCreativeData = filteredCreatives.find((c) => c.id === selectedCreative) || creatives.find((c) => c.id === selectedCreative);
 
+  // Email requires html_body — default Rich Text on so the editor writes HTML
+  useEffect(() => {
+    if (
+      selectedCreativeData &&
+      requiresHtmlBody(selectedCreativeData.channel) &&
+      !isRichTextMap[selectedCreativeData.id]
+    ) {
+      setIsRichTextMap((prev) => ({
+        ...prev,
+        [selectedCreativeData.id]: true,
+      }));
+      const normalized = ensureEmailHtmlBody(selectedCreativeData);
+      if (normalized.html_body !== selectedCreativeData.html_body) {
+        updateCreative(selectedCreativeData.id, {
+          html_body: normalized.html_body,
+          text_body: normalized.text_body,
+        });
+      }
+    }
+  }, [selectedCreativeData?.id, selectedCreativeData?.channel]);
+
   // Use draft creative if none selected (for inline creation flow)
   const editingCreative = selectedCreativeData || {
     id: 'temp-draft',
@@ -1059,8 +1084,15 @@ export default function OfferCreativeStep({
     } else {
       if (selectedCreativeData.channel === "Email" && isRichText) {
         const placeholder = formatVariablePlaceholder(variable);
-        const newBody = `${selectedCreativeData.text_body || ""} ${placeholder} `;
-        updateCreative(selectedCreativeData.id, { text_body: newBody });
+        const currentHtml =
+          selectedCreativeData.html_body ||
+          selectedCreativeData.text_body ||
+          "";
+        const newHtml = `${currentHtml} ${placeholder} `;
+        updateCreative(selectedCreativeData.id, {
+          html_body: newHtml,
+          text_body: stripHtmlTags(newHtml),
+        });
         setVariableError("");
       } else {
         // Validate cursor position before insertion
@@ -1566,13 +1598,32 @@ export default function OfferCreativeStep({
                           editingCreative.channel === "Push") && (
                           <button
                             type="button"
-                            onClick={() =>
-                              selectedCreativeData && setIsRichTextMap((prev) => ({
+                            onClick={() => {
+                              if (!selectedCreativeData) return;
+                              const enabling =
+                                !isRichTextMap[selectedCreativeData.id];
+                              setIsRichTextMap((prev) => ({
                                 ...prev,
-                                [selectedCreativeData.id]:
-                                  !prev[selectedCreativeData.id],
-                              }))
-                            }
+                                [selectedCreativeData.id]: enabling,
+                              }));
+                              // When enabling Rich Text for Email, sync html_body from text_body
+                              if (
+                                enabling &&
+                                requiresHtmlBody(selectedCreativeData.channel)
+                              ) {
+                                const normalized =
+                                  ensureEmailHtmlBody(selectedCreativeData);
+                                if (
+                                  normalized.html_body !==
+                                  selectedCreativeData.html_body
+                                ) {
+                                  updateCreative(selectedCreativeData.id, {
+                                    html_body: normalized.html_body,
+                                    text_body: normalized.text_body,
+                                  });
+                                }
+                              }
+                            }}
                             className="px-3 py-1.5 text-sm rounded-md border transition-colors"
                             style={{
                               backgroundColor: selectedCreativeData && isRichTextMap[
@@ -1630,11 +1681,17 @@ export default function OfferCreativeStep({
                           onFocus={() => setActiveField("body")}
                         >
                           <RichTextEditor
-                            value={editingCreative.text_body || ""}
+                            value={
+                              editingCreative.html_body ||
+                              editingCreative.text_body ||
+                              ""
+                            }
                             onChange={(value) => {
-                              selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                                text_body: value,
-                              });
+                              selectedCreativeData &&
+                                updateCreative(selectedCreativeData.id, {
+                                  html_body: value,
+                                  text_body: stripHtmlTags(value),
+                                });
                             }}
                             placeholder={t.offers.messageBody.placeholder}
                             minHeight="250px"

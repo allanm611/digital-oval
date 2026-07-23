@@ -16,7 +16,10 @@ import { senderIdService } from "../../configurations/services/senderIdService";
 import ConfigurationModal from "../../configurations/components/ConfigurationManager/ConfigurationModal";
 import { getSenderIdsApiConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { smsGatewayConfigService } from "../../configurations/services/smsGatewayConfigService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 
 const STATUS_OPTIONS = (t: any) => [
   { label: t.common.active, value: "true" },
@@ -70,8 +73,12 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
 
     const loadGatewayConfigs = async () => {
       try {
-        const configs = await smsGatewayConfigService.getAllConfigs();
-        setGatewayConfigs(configs);
+        const configs = await gatewayConfigurationService.getAll();
+        setGatewayConfigs(
+          filterGatewayConfigsByChannelType(configs, "SMS").filter(
+            (c) => c.is_active !== false,
+          ),
+        );
       } catch (err) {
         // Silent fail
       }

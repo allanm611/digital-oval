@@ -1,0 +1,315 @@
+import { extractErrorMessage } from "../../../shared/utils/errorHandler";
+import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import {
+  gatewayConfigurationService,
+} from "../../configurations/services/gatewayConfigurationService";
+import {
+  CreateSMSRouteRequest,
+  RouteChannelType,
+  SMSRoute,
+  UpdateSMSRouteRequest,
+} from "../types/smsRoute";
+
+const BASE_URL = buildApiUrl("/routes");
+
+/** Map communication channel codes to UI channel buckets. */
+export function resolveChannelType(codeOrName?: string | null): RouteChannelType {
+  const value = (codeOrName || "").toUpperCase();
+  if (!value) return "";
+  if (value.includes("SMS")) return "SMS";
+  if (value.includes("EMAIL")) return "EMAIL";
+  if (value.includes("PUSH")) return "PUSH";
+  if (value.includes("WHATSAPP") || value.includes("MESSENGER")) return "WHATSAPP";
+  if (value.includes("USSD")) return "USSD";
+  return "";
+}
+
+function readFailoverFromConfig(config?: Record<string, unknown>) {
+  if (!config || typeof config !== "object") {
+    return {
+      backup_route_id: undefined as number | null | undefined,
+      use_backup_on_failure: false,
+      retry_attempts: 3,
+    };
+  }
+  const backupRaw = config.backup_route_id;
+  const backup =
+    backupRaw == null || backupRaw === "" || backupRaw === 0
+      ? null
+      : Number(backupRaw);
+
+  return {
+    backup_route_id: Number.isFinite(backup as number) ? (backup as number) : null,
+    use_backup_on_failure: Boolean(config.use_backup_on_failure),
+    retry_attempts:
+      config.retry_attempts != null && config.retry_attempts !== ""
+        ? Number(config.retry_attempts)
+        : 3,
+  };
+}
+
+function normalizeRoute(raw: SMSRoute): SMSRoute {
+  const configurationId =
+    raw.configuration_id ?? raw.gateway_config_id ?? null;
+  const failover = readFailoverFromConfig(raw.config);
+
+  return {
+    ...raw,
+    configuration_id: configurationId,
+    gateway_config_id: configurationId ?? undefined,
+    is_active: raw.is_active !== false,
+    backup_route_id:
+      raw.backup_route_id !== undefined
+        ? raw.backup_route_id
+        : failover.backup_route_id,
+    use_backup_on_failure:
+      raw.use_backup_on_failure !== undefined
+        ? raw.use_backup_on_failure
+        : failover.use_backup_on_failure,
+    retry_attempts:
+      raw.retry_attempts !== undefined
+        ? raw.retry_attempts
+        : failover.retry_attempts,
+  };
+}
+
+/**
+ * Build API body matching backend Joi schemas.
+ * Failover UI fields are folded into `config` JSONB (supported by create + update).
+ * Create accepts configuration_id; update may reject it until backend is extended.
+ */
+function toApiPayload(
+  data: CreateSMSRouteRequest | UpdateSMSRouteRequest,
+  _mode: "create" | "update",
+): Record<string, unknown> {
+  const configurationId =
+    data.configuration_id ?? data.gateway_config_id ?? undefined;
+
+  const payload: Record<string, unknown> = {};
+
+  if (data.name !== undefined) payload.name = data.name;
+  if (data.description !== undefined) payload.description = data.description;
+  if (data.is_active !== undefined) payload.is_active = data.is_active;
+  if (data.communication_channel_id !== undefined) {
+    payload.communication_channel_id = data.communication_channel_id;
+  }
+  if (data.gateway_provider !== undefined) {
+    payload.gateway_provider = data.gateway_provider;
+  }
+
+  const hasFailoverInput =
+    data.backup_route_id !== undefined ||
+    data.use_backup_on_failure !== undefined ||
+    data.retry_attempts !== undefined;
+
+  if (data.config !== undefined || hasFailoverInput) {
+    const baseConfig =
+      data.config && typeof data.config === "object" ? { ...data.config } : {};
+
+    if (data.use_backup_on_failure !== undefined) {
+      baseConfig.use_backup_on_failure = data.use_backup_on_failure;
+    }
+    if (data.backup_route_id !== undefined) {
+      baseConfig.backup_route_id =
+        data.backup_route_id && data.backup_route_id > 0
+          ? data.backup_route_id
+          : null;
+    }
+    if (data.retry_attempts !== undefined) {
+      baseConfig.retry_attempts = data.retry_attempts;
+    }
+
+    // When failover is off, clear backup linkage but keep retry preference
+    if (baseConfig.use_backup_on_failure === false) {
+      baseConfig.backup_route_id = null;
+    }
+
+    payload.config = baseConfig;
+  }
+
+  if (configurationId != null && configurationId > 0) {
+    payload.configuration_id = configurationId;
+  }
+
+  return payload;
+}
+
+class RouteService {
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<T> {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        ...getAuthHeaders(),
+        ...options.headers,
+      },
+      ...options,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(extractErrorMessage(errorBody, response.status));
+    }
+
+    const json = await response.json();
+    if (json && json.success === false) {
+      throw new Error(json.error || json.message || "Request failed");
+    }
+    return json;
+  }
+
+  async getAllRoutes(): Promise<SMSRoute[]> {
+    const result = await this.request<{ success: boolean; data: SMSRoute[] }>("");
+    return (result.data || []).map(normalizeRoute);
+  }
+
+  /**
+   * Enrich routes with channel + gateway config display fields.
+   * Channel type comes from communication_channel_id or linked configuration.
+   */
+  async getAllRoutesEnriched(): Promise<SMSRoute[]> {
+    const [routes, configs, channels] = await Promise.all([
+      this.getAllRoutes(),
+      gatewayConfigurationService.getAll().catch(() => []),
+      communicationChannelService.getAll().catch(() => []),
+    ]);
+
+    const configById = new Map(configs.map((c) => [c.id, c]));
+    const channelById = new Map(channels.map((c) => [c.id, c]));
+
+    return routes.map((route) => {
+      const config =
+        route.configuration_id != null
+          ? configById.get(route.configuration_id)
+          : undefined;
+      const channelId = route.communication_channel_id ?? config?.channel_id;
+      const channel = channelId != null ? channelById.get(channelId) : undefined;
+      const channelCode =
+        channel?.code || config?.channel_value || undefined;
+      const channelType = resolveChannelType(channelCode || channel?.name);
+
+      return {
+        ...route,
+        channel_type: channelType || undefined,
+        channel_code: channelCode,
+        channel_name: channel?.name || config?.channel_label,
+        configuration_name: config?.name,
+        provider_name: config?.provider_name || route.gateway_provider,
+        gateway_provider:
+          config?.provider_name || route.gateway_provider || undefined,
+      };
+    });
+  }
+
+  async getRoutesByChannel(channelType: RouteChannelType): Promise<SMSRoute[]> {
+    if (!channelType) return this.getAllRoutesEnriched();
+    const enriched = await this.getAllRoutesEnriched();
+    return enriched.filter((r) => r.channel_type === channelType);
+  }
+
+  async getRouteById(id: number): Promise<SMSRoute> {
+    const result = await this.request<{ success: boolean; data: SMSRoute }>(
+      `/${id}`,
+    );
+    return normalizeRoute(result.data);
+  }
+
+  async getRouteByIdEnriched(id: number): Promise<SMSRoute> {
+    const [route, configs, channels] = await Promise.all([
+      this.getRouteById(id),
+      gatewayConfigurationService.getAll().catch(() => []),
+      communicationChannelService.getAll().catch(() => []),
+    ]);
+
+    const config =
+      route.configuration_id != null
+        ? configs.find((c) => c.id === route.configuration_id)
+        : undefined;
+    const channelId = route.communication_channel_id ?? config?.channel_id;
+    const channel =
+      channelId != null ? channels.find((c) => c.id === channelId) : undefined;
+    const channelCode = channel?.code || config?.channel_value;
+    const channelType = resolveChannelType(channelCode || channel?.name);
+
+    return {
+      ...route,
+      channel_type: channelType || undefined,
+      channel_code: channelCode,
+      channel_name: channel?.name || config?.channel_label,
+      configuration_name: config?.name,
+      provider_name: config?.provider_name || route.gateway_provider,
+      gateway_provider:
+        config?.provider_name || route.gateway_provider || undefined,
+    };
+  }
+
+  async createRoute(data: CreateSMSRouteRequest): Promise<SMSRoute> {
+    const result = await this.request<{ success: boolean; data: SMSRoute }>(
+      "",
+      {
+        method: "POST",
+        body: JSON.stringify(toApiPayload(data, "create")),
+      },
+    );
+    return normalizeRoute(result.data);
+  }
+
+  async updateRoute(
+    id: number,
+    data: UpdateSMSRouteRequest,
+  ): Promise<SMSRoute> {
+    const payload = toApiPayload(data, "update");
+
+    // Backend update Joi currently may reject configuration_id.
+    // Retry without it if validation fails so name/status updates still work.
+    try {
+      const result = await this.request<{ success: boolean; data: SMSRoute }>(
+        `/${id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        },
+      );
+      return normalizeRoute(result.data);
+    } catch (err) {
+      if (
+        payload.configuration_id != null &&
+        err instanceof Error &&
+        /configuration_id|not allowed|must be/i.test(err.message)
+      ) {
+        const { configuration_id: _, ...withoutConfigId } = payload;
+        if (Object.keys(withoutConfigId).length === 0) {
+          throw new Error(
+            "Changing gateway configuration requires a backend update to accept configuration_id on PUT /routes/:id",
+          );
+        }
+        const result = await this.request<{ success: boolean; data: SMSRoute }>(
+          `/${id}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(withoutConfigId),
+          },
+        );
+        return normalizeRoute(result.data);
+      }
+      throw err;
+    }
+  }
+
+  async deleteRoute(id: number): Promise<{ success: boolean; message?: string }> {
+    return this.request<{ success: boolean; message?: string }>(`/${id}`, {
+      method: "DELETE",
+    });
+  }
+}
+
+/** Canonical multi-channel route client for `/routes`. */
+export const routeService = new RouteService();
+
+/**
+ * Historical export name — SMS UI and offers still import this.
+ * Prefer `routeService` for new code; use getRoutesByChannel("SMS") when filtering.
+ */
+export const smsRouteService = routeService;

@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Edit, Trash2, Eye } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -13,8 +13,10 @@ import Pagination, {
 } from "../../../shared/components/ui/Pagination";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
-import { gatewayConfigurationService } from "../services/gatewayConfigurationService";
-import { GatewayConfiguration } from "../types/gatewayConfiguration";
+import {
+  gatewayProviderService,
+  GatewayProvider,
+} from "../services/gatewayProviderService";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import {
@@ -23,21 +25,10 @@ import {
   type TableColumn,
 } from "../../../shared/components/Table";
 
-function channelDisplay(config: GatewayConfiguration): string {
-  return (
-    config.channel_label ||
-    config.channel_value ||
-    (config.channel_id != null ? `Channel #${config.channel_id}` : "—")
-  );
-}
-
-export default function GatewayConfigurationsPage() {
+export default function GatewayProvidersPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const providerFilterFromUrl = searchParams.get("provider_id");
   const { success: showSuccess, error: showError } = useToast();
-
-  const [configs, setConfigs] = useState<GatewayConfiguration[]>([]);
+  const [providers, setProviders] = useState<GatewayProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
@@ -45,29 +36,29 @@ export default function GatewayConfigurationsPage() {
     { value: string; label: string }[]
   >([]);
   const [togglingId, setTogglingId] = useState<number | null>(null);
-  const [configToDelete, setConfigToDelete] =
-    useState<GatewayConfiguration | null>(null);
+  const [providerToDelete, setProviderToDelete] =
+    useState<GatewayProvider | null>(null);
 
   const {
     deleteConfirm,
     isDeleting,
     openDeleteConfirm,
     closeDeleteConfirm,
-    handleDelete: confirmDeleteConfig,
+    handleDelete: confirmDeleteProvider,
   } = useDeleteConfirm({
     onDelete: async (id) => {
-      if (!configToDelete) return;
-      await gatewayConfigurationService.delete(Number(id));
-      setConfigs((prev) => prev.filter((c) => c.id !== Number(id)));
-      showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
+      if (!providerToDelete) return;
+      await gatewayProviderService.delete(Number(id));
+      setProviders((prev) => prev.filter((p) => p.id !== Number(id)));
+      showSuccess(`"${providerToDelete.name}" has been deleted successfully.`);
     },
-    itemLabel: "Gateway Configuration",
+    itemLabel: "Gateway Provider",
   });
 
   useEffect(() => {
     loadChannels();
-    loadConfigs();
-  }, [providerFilterFromUrl]);
+    loadProviders();
+  }, []);
 
   const loadChannels = async () => {
     try {
@@ -85,89 +76,77 @@ export default function GatewayConfigurationsPage() {
     }
   };
 
-  const loadConfigs = async () => {
+  const loadProviders = async () => {
     try {
       setLoading(true);
-      const params: { provider_id?: number; channel_id?: number } = {};
-      if (providerFilterFromUrl) {
-        params.provider_id = Number(providerFilterFromUrl);
-      }
-      const data = await gatewayConfigurationService.getAll(params);
-      setConfigs(data);
+      const data = await gatewayProviderService.getAll();
+      setProviders(data);
     } catch (err) {
       showError(
         extractBackendError(
           err,
-          "Failed to load gateway configurations. Please try again.",
+          "Failed to load gateway providers. Please try again.",
         ),
       );
-      setConfigs([]);
+      setProviders([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteClick = (config: GatewayConfiguration) => {
-    setConfigToDelete(config);
-    openDeleteConfirm(config.id, config.name);
+  const handleDeleteClick = (provider: GatewayProvider) => {
+    setProviderToDelete(provider);
+    openDeleteConfirm(provider.id, provider.name);
   };
 
-  const handleToggleActive = async (config: GatewayConfiguration) => {
-    const newActive = !(config.is_active !== false);
-    setTogglingId(config.id);
-    setConfigs((prev) =>
-      prev.map((c) =>
-        c.id === config.id ? { ...c, is_active: newActive } : c,
+  const handleToggleActive = async (provider: GatewayProvider) => {
+    const newActive = !(provider.is_active !== false);
+    setTogglingId(provider.id);
+    setProviders((prev) =>
+      prev.map((p) =>
+        p.id === provider.id ? { ...p, is_active: newActive } : p,
       ),
     );
 
     try {
-      await gatewayConfigurationService.update(config.id, {
+      await gatewayProviderService.update(provider.id, {
         is_active: newActive,
       });
       showSuccess(
         newActive ? "Activated" : "Deactivated",
         newActive
-          ? `${config.name} has been activated`
-          : `${config.name} has been deactivated`,
+          ? `${provider.name} has been activated`
+          : `${provider.name} has been deactivated`,
       );
     } catch (err) {
-      setConfigs((prev) =>
-        prev.map((c) =>
-          c.id === config.id ? { ...c, is_active: !newActive } : c,
+      setProviders((prev) =>
+        prev.map((p) =>
+          p.id === provider.id
+            ? { ...p, is_active: provider.is_active !== false }
+            : p,
         ),
       );
       showError(
-        extractBackendError(
-          err,
-          "Failed to update configuration status. Please try again.",
-        ),
+        extractBackendError(err, "Failed to update provider status"),
       );
     } finally {
       setTogglingId(null);
     }
   };
 
-  const filteredConfigs = useMemo(() => {
-    const term = searchTerm.toLowerCase().trim();
-    return configs.filter((config) => {
-      if (channelFilter && String(config.channel_id) !== channelFilter) {
-        return false;
-      }
-      if (!term) return true;
-      const haystack = [
-        config.name,
-        config.provider_name,
-        channelDisplay(config),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [configs, searchTerm, channelFilter]);
+  const filteredProviders = providers.filter((provider) => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      !term ||
+      provider.name.toLowerCase().includes(term) ||
+      (provider.channel_label || "").toLowerCase().includes(term) ||
+      (provider.channel_value || "").toLowerCase().includes(term);
+    const matchesChannel =
+      !channelFilter || String(provider.channel_id) === channelFilter;
+    return matchesSearch && matchesChannel;
+  });
 
-  const defaultColumns: TableColumn<GatewayConfiguration>[] = [
+  const defaultColumns: TableColumn<GatewayProvider>[] = [
     {
       id: "name",
       label: "Name",
@@ -177,15 +156,15 @@ export default function GatewayConfigurationsPage() {
       id: "channel_label",
       label: "Channel",
       visible: true,
-      render: (_value, config) => channelDisplay(config),
+      render: (_value, row) => row.channel_label || row.channel_value || "—",
     },
     {
-      id: "provider_name",
-      label: "Provider",
+      id: "field_schema",
+      label: "Fields",
       visible: true,
-      render: (value, config) =>
-        (value as string) ||
-        (config.provider_id != null ? `#${config.provider_id}` : "—"),
+      sortable: false,
+      render: (_value, row) =>
+        `${row.field_schema?.fields?.length ?? 0} field(s)`,
     },
     {
       id: "is_active",
@@ -203,18 +182,16 @@ export default function GatewayConfigurationsPage() {
       visible: true,
       sortable: false,
       isActionColumn: true,
-      render: (_value, config) => (
+      render: (_value, provider) => (
         <div className="flex items-center justify-center gap-2">
           <ActivateDeactivateButton
-            isActive={config.is_active !== false}
-            isLoading={togglingId === config.id}
-            onToggle={() => handleToggleActive(config)}
+            isActive={provider.is_active !== false}
+            isLoading={togglingId === provider.id}
+            onToggle={() => handleToggleActive(provider)}
           />
           <button
             onClick={() =>
-              navigate(
-                `/dashboard/gateway-configurations/${config.id}/details`,
-              )
+              navigate(`/dashboard/gateway-providers/${provider.id}/details`)
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="View details"
@@ -223,17 +200,17 @@ export default function GatewayConfigurationsPage() {
           </button>
           <button
             onClick={() =>
-              navigate(`/dashboard/gateway-configurations/${config.id}/edit`)
+              navigate(`/dashboard/gateway-providers/${provider.id}/edit`)
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
-            title="Edit configuration"
+            title="Edit provider"
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleDeleteClick(config)}
+            onClick={() => handleDeleteClick(provider)}
             className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
-            title="Delete configuration"
+            title="Delete provider"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -252,13 +229,13 @@ export default function GatewayConfigurationsPage() {
     handleSort,
     toggleColumn,
   } = useTable({
-    tableId: "gateway-configurations-table",
+    tableId: "gateway-providers-table",
     defaultColumns,
     defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
   });
 
-  const paginatedConfigs = filteredConfigs.slice(
+  const paginatedProviders = filteredProviders.slice(
     (tableCurrentPage - 1) * tablePageSize,
     tableCurrentPage * tablePageSize,
   );
@@ -273,84 +250,69 @@ export default function GatewayConfigurationsPage() {
         <div className="flex items-center justify-between gap-4">
           <BackButton
             showBreadcrumb={true}
-            currentLabel="Gateway Configurations"
+            currentLabel="Gateway Providers"
           />
           <FeatureActionButton
-            featureId="gateway-configurations"
+            featureId="gateway-providers"
             action="create"
-            onClick={() => navigate("/dashboard/gateway-configurations/create")}
+            onClick={() => navigate("/dashboard/gateway-providers/create")}
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage gateway credentials for message delivery. Configurations are
-          linked to gateway providers and inherit their credential fields.
+          Define gateway provider templates and their configuration field
+          schemas. Configurations and routes depend on these providers.
         </p>
-        {providerFilterFromUrl && (
-          <p className={`text-xs ${tw.textMuted}`}>
-            Filtered by provider ID {providerFilterFromUrl}.{" "}
-            <button
-              type="button"
-              className="underline"
-              onClick={() => navigate("/dashboard/gateway-configurations")}
-            >
-              Clear filter
-            </button>
-          </p>
-        )}
       </div>
 
-      <div className="my-5 flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
+      <div className="my-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2">
           <SearchInput
-            placeholder="Search by name, provider, or channel..."
+            placeholder="Search providers by name or channel..."
             value={searchTerm}
             onChange={setSearchTerm}
           />
         </div>
-        <div className="sm:w-56">
-          <HeadlessSelect
-            value={channelFilter}
-            onChange={setChannelFilter}
-            options={[
-              { value: "", label: "All Channels" },
-              ...channelOptions,
-            ]}
-            placeholder="Filter by channel"
-          />
-        </div>
+        <HeadlessSelect
+          label=""
+          value={channelFilter}
+          onChange={setChannelFilter}
+          options={[
+            { value: "", label: "All channels" },
+            ...channelOptions,
+          ]}
+          placeholder="Filter by channel"
+        />
       </div>
 
       <div className={`${tw.rounded} overflow-hidden`}>
-        {!loading && filteredConfigs.length === 0 ? (
+        {filteredProviders.length === 0 && !loading ? (
           <div className="text-center py-12">
-            <div className="w-12 h-12 text-gray-400 mx-auto mb-4">⚙️</div>
+            <div className="w-12 h-12 text-gray-400 mx-auto mb-4">🔌</div>
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
               {searchTerm || channelFilter
-                ? "No configurations found"
-                : "No gateway configurations yet"}
+                ? "No providers found"
+                : "No gateway providers yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm || channelFilter
-                ? "Try adjusting your search or filters"
-                : "Create a gateway provider first, then add a configuration with its credentials."}
+                ? "Try adjusting your search or channel filter"
+                : "Create a provider template before adding gateway configurations"}
             </p>
             {!searchTerm && !channelFilter && (
               <FeatureActionButton
-                featureId="gateway-configurations"
+                featureId="gateway-providers"
                 action="create"
-                onClick={() =>
-                  navigate("/dashboard/gateway-configurations/create")
-                }
+                onClick={() => navigate("/dashboard/gateway-providers/create")}
                 className="mx-auto"
               />
             )}
           </div>
         ) : (
           <>
-            <Table<GatewayConfiguration>
+            <Table<GatewayProvider>
               columns={columns}
-              data={paginatedConfigs}
-              totalItems={filteredConfigs.length}
+              data={paginatedProviders}
+              totalItems={filteredProviders.length}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={loading}
@@ -368,12 +330,12 @@ export default function GatewayConfigurationsPage() {
               }}
             />
 
-            {paginatedConfigs.length > 0 && filteredConfigs.length > 0 && (
+            {paginatedProviders.length > 0 && filteredProviders.length > 0 && (
               <div className="mt-4">
                 <Pagination
                   currentPage={tableCurrentPage}
                   pageSize={tablePageSize}
-                  totalItems={filteredConfigs.length}
+                  totalItems={filteredProviders.length}
                   onPageChange={tableHandlePageChange}
                   onPageSizeChange={tableHandlePageSizeChange}
                 />
@@ -386,9 +348,9 @@ export default function GatewayConfigurationsPage() {
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
         onClose={closeDeleteConfirm}
-        onConfirm={confirmDeleteConfig}
-        title="Delete Gateway Configuration"
-        description="This may affect routes and message delivery that reference this configuration."
+        onConfirm={confirmDeleteProvider}
+        title="Delete Gateway Provider"
+        description="Existing gateway configurations that use this provider may break. Prefer deactivating instead if the provider is in use."
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
       />
