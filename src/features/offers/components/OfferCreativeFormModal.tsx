@@ -33,6 +33,7 @@ import {
   formatVariablePlaceholder,
   validateInsertPosition,
   validateNoEditInsideVariables,
+  isCursorInsideVariable,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
@@ -274,19 +275,26 @@ export default function OfferCreativeFormModal({
     });
   }, [formData.title, formData.text_body, formData.html_body]);
 
+  // Auto-enable Rich Text for Email channels
+  useEffect(() => {
+    if (formData.channel === "Email") {
+      setIsRichText(true);
+    }
+  }, [formData.channel]);
+
   const handleVariableSelect = (variable: TemplateVariable) => {
     if (!selectedVariables.find((v) => v.id === variable.id)) {
       setSelectedVariables((prev) => [...prev, variable]);
     }
 
-    let actualCursorPosition = cursorPosition;
-    if (activeField === "title" && titleInputRef.current) {
-      actualCursorPosition = titleInputRef.current.selectionStart || 0;
-    } else if (activeField === "body" && bodyTextareaRef.current) {
-      actualCursorPosition = bodyTextareaRef.current.selectionStart || 0;
-    }
+    const isRichTextMode = formData.channel === "Email" || isRichText;
 
     if (activeField === "title") {
+      let actualCursorPosition = cursorPosition;
+      if (titleInputRef.current) {
+        actualCursorPosition = titleInputRef.current.selectionStart || 0;
+      }
+
       const positionError = validateInsertPosition(formData.title || "", actualCursorPosition);
       if (positionError) {
         setVariableError(positionError);
@@ -307,25 +315,43 @@ export default function OfferCreativeFormModal({
         }
       }, 0);
     } else {
-      const positionError = validateInsertPosition(formData.text_body || "", actualCursorPosition);
-      if (positionError) {
-        setVariableError(positionError);
-        return;
-      }
-
-      const result = insertVariableAtCursor(formData.text_body || "", actualCursorPosition, variable);
-      if (result.error) {
-        setVariableError(result.error);
-        return;
-      }
-
-      setFormData((prev) => ({ ...prev, text_body: result.newText }));
-      setTimeout(() => {
+      if (isRichTextMode) {
+        // For Rich Text mode: append variable
+        const placeholder = formatVariablePlaceholder(variable);
+        const bodyField = formData.channel === "Email" ? (formData.html_body || "") : (formData.text_body || "");
+        const newBody = `${bodyField} ${placeholder} `;
+        setFormData((prev) => ({
+          ...prev,
+          ...(formData.channel === "Email" ? { html_body: newBody, text_body: newBody } : { text_body: newBody }),
+        }));
+        setVariableError("");
+      } else {
+        // For Plain Text mode: cursor-based insertion
+        let actualCursorPosition = cursorPosition;
         if (bodyTextareaRef.current) {
-          bodyTextareaRef.current.setSelectionRange(result.newCursorPosition, result.newCursorPosition);
-          bodyTextareaRef.current.focus();
+          actualCursorPosition = bodyTextareaRef.current.selectionStart || 0;
         }
-      }, 0);
+
+        const positionError = validateInsertPosition(formData.text_body || "", actualCursorPosition);
+        if (positionError) {
+          setVariableError(positionError);
+          return;
+        }
+
+        const result = insertVariableAtCursor(formData.text_body || "", actualCursorPosition, variable);
+        if (result.error) {
+          setVariableError(result.error);
+          return;
+        }
+
+        setFormData((prev) => ({ ...prev, text_body: result.newText }));
+        setTimeout(() => {
+          if (bodyTextareaRef.current) {
+            bodyTextareaRef.current.setSelectionRange(result.newCursorPosition, result.newCursorPosition);
+            bodyTextareaRef.current.focus();
+          }
+        }, 0);
+      }
     }
 
     setShowVariableSelector(false);
@@ -575,18 +601,20 @@ export default function OfferCreativeFormModal({
                 Message Content
               </span>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsRichText((prev) => !prev)}
-                  className="px-3 py-1.5 text-sm rounded-md border transition-colors"
-                  style={{
-                    backgroundColor: isRichText ? `${color.primary.accent}10` : "white",
-                    borderColor: isRichText ? color.primary.accent : color.border.default,
-                    color: isRichText ? color.primary.accent : color.text.secondary,
-                  }}
-                >
-                  {isRichText ? "Rich Text" : "Plain Text"}
-                </button>
+                {formData.channel !== "Email" && (
+                  <button
+                    type="button"
+                    onClick={() => setIsRichText((prev) => !prev)}
+                    className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                    style={{
+                      backgroundColor: isRichText ? `${color.primary.accent}10` : "white",
+                      borderColor: isRichText ? color.primary.accent : color.border.default,
+                      color: isRichText ? color.primary.accent : color.text.secondary,
+                    }}
+                  >
+                    {isRichText ? "Rich Text" : "Plain Text"}
+                  </button>
+                )}
                 <div className="relative">
                   <button
                     type="button"
@@ -616,16 +644,22 @@ export default function OfferCreativeFormModal({
 
             {/* Message Body */}
             <div>
-              {isRichText ? (
+              {formData.channel === "Email" || isRichText ? (
                 <div
                   onClick={() => setActiveField("body")}
                   onFocus={() => setActiveField("body")}
                 >
                   <RichTextEditor
-                    value={formData.html_body || ""}
-                    onChange={(value) => setFormData((prev) => ({ ...prev, html_body: value, text_body: value.replace(/<[^>]*>/g, '') }))}
+                    value={formData.channel === "Email" ? (formData.html_body || "") : (formData.text_body || "")}
+                    onChange={(value) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        ...(formData.channel === "Email" ? { html_body: value, text_body: value } : { text_body: value }),
+                      }));
+                    }}
                     placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
                     minHeight="250px"
+                    onVariableError={setVariableError}
                   />
                 </div>
               ) : (
@@ -638,14 +672,17 @@ export default function OfferCreativeFormModal({
                     if (bodyTextareaRef.current) {
                       setCursorPosition(bodyTextareaRef.current.selectionStart || 0);
                     }
-                    // Validate and show error, but allow text update
-                    const editError = validateNoEditInsideVariables(formData.text_body || "", value);
-                    if (editError) {
-                      setVariableError(editError);
+                    setFormData((prev) => ({ ...prev, text_body: value, ...(formData.channel === "Email" && { html_body: value }) }));
+                  }}
+                  onKeyDown={(e) => {
+                    const textarea = e.currentTarget;
+                    const cursorPos = textarea.selectionStart || 0;
+                    if (isCursorInsideVariable(formData.text_body || "", cursorPos)) {
+                      e.preventDefault();
+                      setVariableError("You can't edit inside a variable");
                     } else {
                       setVariableError("");
                     }
-                    setFormData((prev) => ({ ...prev, text_body: value }));
                   }}
                   onClick={(e) => {
                     setActiveField("body");
