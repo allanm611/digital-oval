@@ -9,6 +9,7 @@ import Checkbox from '../../../shared/components/ui/Checkbox';
 import { useToast } from '../../../contexts/ToastContext';
 import { tw, button, getButtonStyles } from '../../../shared/utils/utils';
 import { useCreateApiTestCase, useTryApiTestCase, useUpdateApiTestCase } from '../hooks/useApiTestCases';
+import AttachModuleField from './AttachModuleField';
 import type {
   ApiAssertion,
   ApiAssertionOperator,
@@ -39,6 +40,28 @@ interface KeyValueRow {
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'];
 const ASSERTION_TYPES: ApiAssertionType[] = ['status', 'jsonPath', 'header', 'bodyContains', 'responseTimeMs'];
 const OPERATORS: ApiAssertionOperator[] = ['equals', 'notEquals', 'contains', 'lessThan', 'greaterThan', 'exists'];
+
+/**
+ * Sensible success codes per verb. Create endpoints commonly return 201;
+ * deletes often return 204. Listing several codes means any one of them passes.
+ */
+function defaultExpectedStatusForMethod(method: HttpMethod): number[] {
+  switch (method) {
+    case 'POST':
+      return [200, 201];
+    case 'PUT':
+    case 'PATCH':
+      return [200, 201, 204];
+    case 'DELETE':
+      return [200, 204];
+    default:
+      return [200];
+  }
+}
+
+function formatExpectedStatus(statuses: number[]): string {
+  return statuses.join(', ');
+}
 
 function recordToRows(record?: Record<string, string>): KeyValueRow[] {
   return Object.entries(record ?? {}).map(([key, value]) => ({ key, value }));
@@ -261,8 +284,16 @@ const ApiTestCaseForm: React.FC<ApiTestCaseFormProps> = ({
   const [bodyText, setBodyText] = useState(
     initialCase?.body !== undefined ? JSON.stringify(initialCase.body, null, 2) : '',
   );
+  const initialMethod = initialCase?.method ?? 'GET';
   const [expectedStatus, setExpectedStatus] = useState(
-    (initialCase?.expectedStatus ?? [200]).join(', '),
+    formatExpectedStatus(
+      initialCase?.expectedStatus ?? defaultExpectedStatusForMethod(initialMethod),
+    ),
+  );
+  // When the user hasn't customized expected statuses, keep them in sync with the HTTP method
+  // (e.g. switching GET→POST upgrades "200" to "200, 201").
+  const [expectedStatusTouched, setExpectedStatusTouched] = useState(
+    Boolean(initialCase?.expectedStatus),
   );
   const [assertions, setAssertions] = useState<ApiAssertion[]>(initialCase?.assertions ?? []);
   const [timeoutMs, setTimeoutMs] = useState(initialCase?.timeoutMs ?? 15000);
@@ -306,7 +337,7 @@ const ApiTestCaseForm: React.FC<ApiTestCaseFormProps> = ({
       headers: rowsToRecord(headerRows),
       queryParams: rowsToRecord(queryRows),
       body,
-      expectedStatus: statuses.length > 0 ? statuses : [200],
+      expectedStatus: statuses.length > 0 ? statuses : defaultExpectedStatusForMethod(method),
       assertions,
       timeoutMs,
       active,
@@ -366,7 +397,17 @@ const ApiTestCaseForm: React.FC<ApiTestCaseFormProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-3 sm:items-start">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Method</label>
-            <select className={selectClass} value={method} onChange={(e) => setMethod(e.target.value as HttpMethod)}>
+            <select
+              className={selectClass}
+              value={method}
+              onChange={(e) => {
+                const nextMethod = e.target.value as HttpMethod;
+                setMethod(nextMethod);
+                if (!expectedStatusTouched) {
+                  setExpectedStatus(formatExpectedStatus(defaultExpectedStatusForMethod(nextMethod)));
+                }
+              }}
+            >
               {HTTP_METHODS.map((m) => (
                 <option key={m} value={m}>{m}</option>
               ))}
@@ -382,17 +423,13 @@ const ApiTestCaseForm: React.FC<ApiTestCaseFormProps> = ({
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Attach to module (optional — enables the module&apos;s baseUrl for the SSRF allow-list)
-          </label>
-          <select className={selectClass} value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
-            <option value="">— Standalone / reusable —</option>
-            {moduleOptions.map((option) => (
-              <option key={option.id} value={option.id}>{option.name}</option>
-            ))}
-          </select>
-        </div>
+        <AttachModuleField
+          label="Attach to module (optional — enables the module's baseUrl for the SSRF allow-list)"
+          placeholderOptionLabel="— Standalone / reusable —"
+          moduleId={moduleId}
+          moduleOptions={moduleOptions}
+          onChange={setModuleId}
+        />
 
         <KeyValueEditor title="Headers" rows={headerRows} onChange={setHeaderRows} keyPlaceholder="Authorization" valuePlaceholder="Bearer ..." />
         <KeyValueEditor title="Query parameters" rows={queryRows} onChange={setQueryRows} keyPlaceholder="page" valuePlaceholder="1" />
@@ -406,12 +443,21 @@ const ApiTestCaseForm: React.FC<ApiTestCaseFormProps> = ({
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            label="Expected status codes (comma-separated)"
-            value={expectedStatus}
-            onChange={(v) => setExpectedStatus(String(v))}
-            placeholder="200, 201"
-          />
+          <div>
+            <Input
+              label="Expected status codes (comma-separated)"
+              value={expectedStatus}
+              onChange={(v) => {
+                setExpectedStatusTouched(true);
+                setExpectedStatus(String(v));
+              }}
+              placeholder="200, 201"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Any listed code passes. POST creates often return 201 — include both
+              {' '}<code className="font-mono">200, 201</code> when either is valid.
+            </p>
+          </div>
           <Input
             label="Timeout (ms)"
             type="number"

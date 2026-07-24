@@ -5,9 +5,11 @@ import {
 } from 'lucide-react';
 import Input from '../../../shared/components/ui/Input';
 import Checkbox from '../../../shared/components/ui/Checkbox';
+import ImageLightbox from '../../../shared/components/ui/ImageLightbox';
 import { useToast } from '../../../contexts/ToastContext';
 import { tw, button, getButtonStyles } from '../../../shared/utils/utils';
 import { useCreateUiFlowTestCase, useTryUiFlowTestCase, useUpdateUiFlowTestCase } from '../hooks/useUiFlowTestCases';
+import AttachModuleField from './AttachModuleField';
 import type {
   UiFlowStep,
   UiFlowTestCase,
@@ -145,12 +147,19 @@ const StepEditor: React.FC<{
             </div>
 
             {NEEDS_LOCATOR[step.action] && (
-              <Input
-                variant="compact"
-                placeholder='Locator, e.g. role=button[name="Submit"], label=Email, text=Sign in, css=#id'
-                value={step.locator ?? ''}
-                onChange={(value) => update(index, { locator: String(value) })}
-              />
+              <>
+                <Input
+                  variant="compact"
+                  placeholder='Exactly ONE locator — e.g. role=button[name="Submit"] (see format hint below)'
+                  value={step.locator ?? ''}
+                  onChange={(value) => update(index, { locator: String(value) })}
+                />
+                <p className="text-xs text-gray-400">
+                  Pick one format: role=&lt;role&gt;[name=&quot;...&quot;] · label=&lt;text&gt; · placeholder=&lt;text&gt; ·
+                  text=&lt;text&gt; · testid=&lt;id&gt; · alt=&lt;text&gt; · title=&lt;text&gt; · css=&lt;selector&gt;.
+                  Don&apos;t combine several of these with commas — that&apos;s not a valid locator.
+                </p>
+              </>
             )}
             {NEEDS_VALUE[step.action] && (
               <Input
@@ -189,7 +198,17 @@ const StepEditor: React.FC<{
   );
 };
 
-const TryResultPanel: React.FC<{ result: UiFlowTestCaseResult }> = ({ result }) => (
+const TryResultPanel: React.FC<{
+  result: UiFlowTestCaseResult;
+  onScreenshotClick: (screenshotIndex: number) => void;
+}> = ({ result, onScreenshotClick }) => {
+  // Maps each step's own index to its position within the ordered list of steps that actually
+  // have a screenshot, so the lightbox can navigate across just those (skipping steps without one).
+  const shotPositionByStepIndex = new Map(
+    result.steps.filter((s) => s.screenshotBase64).map((s, position) => [s.index, position]),
+  );
+
+  return (
   <div
     className={`rounded-lg border p-4 space-y-3 ${
       result.ok ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'
@@ -238,18 +257,32 @@ const TryResultPanel: React.FC<{ result: UiFlowTestCaseResult }> = ({ result }) 
               {' — '}{stepResult.message}
             </span>
             {stepResult.screenshotBase64 && (
-              <img
-                src={`data:image/jpeg;base64,${stepResult.screenshotBase64}`}
-                alt={`Screenshot after step ${stepResult.index + 1}`}
-                className="mt-1 h-24 rounded border border-gray-200 object-cover object-top"
-              />
+              <button
+                type="button"
+                onClick={() => onScreenshotClick(shotPositionByStepIndex.get(stepResult.index) ?? 0)}
+                className="mt-1 block rounded border border-gray-200 hover:border-indigo-300 hover:ring-2 hover:ring-indigo-100 transition-all cursor-zoom-in"
+                aria-label={`View full-size screenshot after step ${stepResult.index + 1}`}
+                title="Click to view full size"
+              >
+                <img
+                  src={`data:image/jpeg;base64,${stepResult.screenshotBase64}`}
+                  alt={`Screenshot after step ${stepResult.index + 1}`}
+                  className="max-h-40 w-auto max-w-full rounded bg-white object-contain"
+                />
+              </button>
             )}
           </div>
         </li>
       ))}
     </ul>
+    <p className="text-[11px] text-gray-500">
+      Blank or solid-color screenshots usually mean the page hadn&apos;t finished rendering,
+      or the route requires login (headless browser starts with an empty session). Add login
+      steps first, then assert a visible element before relying on the screenshot.
+    </p>
   </div>
-);
+  );
+};
 
 const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
   moduleOptions,
@@ -270,6 +303,14 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
   const [active, setActive] = useState(initialCase?.active ?? true);
   const [tryResult, setTryResult] = useState<UiFlowTestCaseResult | null>(null);
   const [formError, setFormError] = useState('');
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const lightboxImages = (tryResult?.steps ?? [])
+    .filter((stepResult) => stepResult.screenshotBase64)
+    .map((stepResult) => ({
+      src: `data:image/jpeg;base64,${stepResult.screenshotBase64}`,
+      alt: `Screenshot after step ${stepResult.index + 1}`,
+    }));
 
   useEffect(() => {
     setTryResult(null);
@@ -369,17 +410,13 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
           placeholder="/login or https://app.example.com/login"
         />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Attach to module (required for relative URLs — resolves against the module&apos;s baseUrl)
-          </label>
-          <select className={selectClass} value={moduleId} onChange={(e) => setModuleId(e.target.value)}>
-            <option value="">— Standalone / reusable (absolute URLs only) —</option>
-            {moduleOptions.map((option) => (
-              <option key={option.id} value={option.id}>{option.name}</option>
-            ))}
-          </select>
-        </div>
+        <AttachModuleField
+          label="Attach to module (required for relative URLs — resolves against the module's baseUrl)"
+          placeholderOptionLabel="— Standalone / reusable (absolute URLs only) —"
+          moduleId={moduleId}
+          moduleOptions={moduleOptions}
+          onChange={setModuleId}
+        />
 
         <Input
           label="Timeout per step (ms)"
@@ -404,7 +441,10 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
         <h2 className="text-lg font-semibold text-gray-900">Steps</h2>
         <p className="text-sm text-gray-500">
           Executed in order after navigating to the start URL. If a step fails, the rest are
-          skipped — mirrors how a real user flow depends on each prior action.
+          skipped — mirrors how a real user flow depends on each prior action. After a Go to URL /
+          Click that changes the page, add <span className="font-medium">Assert visible</span> so
+          the SPA finishes rendering before you rely on screenshots (protected routes also need
+          login steps first — the headless browser starts with an empty session).
         </p>
         <StepEditor steps={steps} onChange={setSteps} />
       </div>
@@ -416,7 +456,14 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
         </div>
       )}
 
-      {tryResult && <TryResultPanel result={tryResult} />}
+      {tryResult && <TryResultPanel result={tryResult} onScreenshotClick={setLightboxIndex} />}
+
+      <ImageLightbox
+        images={lightboxImages}
+        index={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onNavigate={setLightboxIndex}
+      />
 
       <div className="flex items-center justify-between border-t border-gray-200 pt-4">
         <button

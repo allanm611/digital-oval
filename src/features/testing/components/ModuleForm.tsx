@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, Plus, Trash2, Info } from 'lucide-react';
+import { Loader2, Plus, Trash2, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import Checkbox from '../../../shared/components/ui/Checkbox';
@@ -7,6 +7,15 @@ import { tw, button, getButtonStyles } from '../../../shared/utils/utils';
 import TestSuitePicker from './TestSuitePicker';
 import { CRON_PRESETS, validateCron } from '../utils/cronUtils';
 import type { ModuleConfig } from '../types/health';
+
+/** Lowercase, hyphenated slug derived from a free-text name (e.g. for the module ID). */
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 interface ModuleFormProps {
   mode?: 'create' | 'edit';
@@ -16,6 +25,14 @@ interface ModuleFormProps {
   isSubmitting?: boolean;
   submitLabel?: string;
   submittingLabel?: string;
+  /**
+   * Trims the form for "quick attach" flows (e.g. creating a module inline from a test case
+   * builder): test suites, schedule, and notifications collapse into an optional "Advanced
+   * settings" section (with sensible defaults already applied) so only identity + base URL
+   * are front-and-center. Nothing is removed — the same validated fields/logic are still used,
+   * just progressively disclosed.
+   */
+  compact?: boolean;
 }
 
 const ModuleForm: React.FC<ModuleFormProps> = ({
@@ -26,6 +43,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
   isSubmitting = false,
   submitLabel,
   submittingLabel,
+  compact = false,
 }) => {
   const isEdit = mode === 'edit';
   const resolvedSubmitLabel = submitLabel ?? (isEdit ? 'Save Changes' : 'Create Module');
@@ -46,6 +64,12 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
   const [notifyOnFailure, setNotifyOnFailure] = useState(initialValues?.notifyOnFailure ?? true);
   const [notifyEmails, setNotifyEmails] = useState<string[]>(initialValues?.notifyEmails ?? []);
   const [newEmail, setNewEmail] = useState('');
+  // Tracks whether the user has typed directly into the ID field — once they have, stop
+  // overwriting it from the auto-slug so manual overrides always win.
+  const [idManuallyEdited, setIdManuallyEdited] = useState(isEdit || Boolean(initialValues?.id));
+  // In compact mode, test suites / schedule / notifications start collapsed behind "Advanced
+  // settings" since sensible defaults are already applied — expand on demand.
+  const [showAdvanced, setShowAdvanced] = useState(!compact);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -110,9 +134,8 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
     const nextErrors: Record<string, string> = {};
     if (!isEdit && !id.trim()) nextErrors.id = 'Module ID is required';
     if (!name.trim()) nextErrors.name = 'Name is required';
-    if (selectedSuites.length === 0) {
-      nextErrors.testSuites = 'Select at least one test suite';
-    }
+    // Test suites are optional: a module can exist purely as a baseUrl namespace for dynamic
+    // API/UI test cases to attach to, with catalog suites added later once they exist.
 
     const cronErr = validateCron(effectiveCron);
     if (cronErr) nextErrors.cron = cronErr;
@@ -148,11 +171,35 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Input
+              label="Name*"
+              placeholder="My Module"
+              value={name}
+              onChange={(value) => {
+                setName(value);
+                if (!isEdit && !idManuallyEdited) {
+                  setId(slugify(value));
+                }
+                if (errors.name) {
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.name;
+                    return next;
+                  });
+                }
+              }}
+              hasError={!!errors.name}
+            />
+            {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+          </div>
+
+          <div>
+            <Input
               label="ID (slug)*"
               placeholder="my-module-slug"
               value={id}
               onChange={(value) => {
-                setId(value.replace(/\s+/g, '-').toLowerCase());
+                setIdManuallyEdited(true);
+                setId(slugify(value));
                 if (errors.id) {
                   setErrors((prev) => {
                     const next = { ...prev };
@@ -170,52 +217,22 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
               <p className="mt-1 text-xs text-gray-500">
                 {isEdit
                   ? 'Module ID cannot be changed after creation.'
-                  : 'Unique lowercase identifier used in API URLs.'}
+                  : 'Auto-filled from Name — edit it directly to override.'}
               </p>
             )}
           </div>
 
-          <div>
-            <Input
-              label="Name*"
-              placeholder="My Module"
-              value={name}
-              onChange={(value) => {
-                setName(value);
-                if (errors.name) {
-                  setErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.name;
-                    return next;
-                  });
-                }
-              }}
-              hasError={!!errors.name}
-            />
-            {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
-          </div>
-
-          <div className="md:col-span-2">
-            <Textarea
-              label="Description"
-              placeholder="Short description"
-              value={description}
-              onChange={setDescription}
-              rows={2}
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <TestSuitePicker selected={selectedSuites} onChange={setSelectedSuites} />
-            {errors.testSuites ? (
-              <p className="mt-1 text-xs text-red-500">{errors.testSuites}</p>
-            ) : (
-              <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
-                <Info className="w-3 h-3" />
-                Select folders, spec files, or individual test cases from the live catalog.
-              </p>
-            )}
-          </div>
+          {!compact && (
+            <div className="md:col-span-2">
+              <Textarea
+                label="Description"
+                placeholder="Short description"
+                value={description}
+                onChange={setDescription}
+                rows={2}
+              />
+            </div>
+          )}
 
           <div className="md:col-span-2">
             <Input
@@ -236,9 +253,48 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
             />
             {errors.baseUrl && <p className="mt-1 text-xs text-red-500">{errors.baseUrl}</p>}
           </div>
+
+          {compact && !showAdvanced && (
+            <div className="md:col-span-2">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(true)}
+                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                <ChevronRight className="w-4 h-4" />
+                Advanced settings (test suites, schedule, notifications)
+              </button>
+              <p className="mt-1 text-xs text-gray-500">
+                Optional — this module will be created with no test suites and a default
+                schedule. Attach suites or tune the schedule any time from the Modules page.
+              </p>
+            </div>
+          )}
+
+          {showAdvanced && (
+            <div className="md:col-span-2">
+              {compact && (
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(false)}
+                  className="mb-2 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  Hide advanced settings
+                </button>
+              )}
+              <TestSuitePicker selected={selectedSuites} onChange={setSelectedSuites} />
+              <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                <Info className="w-3 h-3" />
+                Optional — select folders, spec files, or individual test cases from the live
+                catalog. Leave empty if this module only groups dynamic test cases for now.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
+      {showAdvanced && (
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Schedule</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -302,7 +358,9 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
           </div>
         )}
       </div>
+      )}
 
+      {showAdvanced && (
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
         <h2 className="text-lg font-semibold text-gray-900">Status &amp; Notifications</h2>
 
@@ -402,6 +460,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({
           </div>
         )}
       </div>
+      )}
 
       <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
         <button

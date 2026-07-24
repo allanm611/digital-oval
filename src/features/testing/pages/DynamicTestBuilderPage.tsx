@@ -10,6 +10,7 @@ import { navigateBackOrFallback } from '../../../shared/utils/navigation';
 import { tw } from '../../../shared/utils/utils';
 import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
+import AttachModuleField from '../components/AttachModuleField';
 import { useHealthStatus } from '../hooks/useHealthStatus';
 import {
   useApproveGeneratedDraft,
@@ -236,21 +237,13 @@ export default function DynamicTestBuilderPage() {
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
         <h2 className="text-lg font-semibold text-gray-900">New generation request</h2>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Attach to module (optional)
-          </label>
-          <select
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
-            value={moduleId}
-            onChange={(event) => setModuleId(event.target.value)}
-          >
-            <option value="">— Standalone —</option>
-            {moduleOptions.map((option) => (
-              <option key={option.id} value={option.id}>{option.name}</option>
-            ))}
-          </select>
-        </div>
+        <AttachModuleField
+          label="Attach to module (optional)"
+          placeholderOptionLabel="— Standalone —"
+          moduleId={moduleId}
+          moduleOptions={moduleOptions}
+          onChange={setModuleId}
+        />
 
         <Input
           label="Feature name"

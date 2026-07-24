@@ -82,10 +82,9 @@ const ScheduleFormContent: React.FC<ScheduleFormContentProps> = ({
       setCronError(err);
       return;
     }
-    if (!selectedSuites.length) {
-      toast.error('Validation', 'Select at least one test suite / spec / case.');
-      return;
-    }
+    // Test suites are optional — a module can be saved with none (e.g. it exists only as a
+    // baseUrl namespace for dynamic API/UI test cases), so scheduled runs simply no-op until
+    // suites are attached.
 
     const payload: ScheduleUpdate = {
       cron: effectiveCron,

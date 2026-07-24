@@ -4,6 +4,7 @@ import {
   FileCode2, AlertTriangle, ExternalLink, Camera, Film,
 } from 'lucide-react';
 import SearchInput from '../../../shared/components/ui/SearchInput';
+import ImageLightbox from '../../../shared/components/ui/ImageLightbox';
 import { tw } from '../../../shared/utils/utils';
 import { resolvePlaywrightHealthUrl } from '../services/healthApi';
 import type { TestRun } from '../types/health';
@@ -42,7 +43,10 @@ const FILTER_OPTIONS: {
   { id: 'suites', label: 'Suites', countKey: 'suites', activeClass: 'border-blue-600 bg-blue-50 text-blue-700' },
 ];
 
-const TestCaseRow: React.FC<{ testCase: PlaywrightTestCase }> = ({ testCase }) => {
+const TestCaseRow: React.FC<{
+  testCase: PlaywrightTestCase;
+  onScreenshotClick: () => void;
+}> = ({ testCase, onScreenshotClick }) => {
   const [open, setOpen] = useState(
     (testCase.status === 'failed' || testCase.status === 'flaky') && Boolean(testCase.error),
   );
@@ -123,13 +127,19 @@ const TestCaseRow: React.FC<{ testCase: PlaywrightTestCase }> = ({ testCase }) =
             )}
           </div>
           {screenshotUrl && (
-            <a href={screenshotUrl} target="_blank" rel="noreferrer" className="block">
+            <button
+              type="button"
+              onClick={onScreenshotClick}
+              className="block hover:ring-2 hover:ring-indigo-100 rounded-lg transition-all cursor-zoom-in"
+              aria-label={`View full-size screenshot for ${testCase.title}`}
+              title="Click to view full size"
+            >
               <img
                 src={screenshotUrl}
                 alt={`Screenshot for ${testCase.title}`}
                 className="max-h-48 rounded-lg border border-gray-200"
               />
-            </a>
+            </button>
           )}
         </div>
       )}
@@ -151,6 +161,7 @@ const PlaywrightReportPanel: React.FC<PlaywrightReportPanelProps> = ({
   onFilterChange,
 }) => {
   const [internalFilter, setInternalFilter] = useState<PlaywrightReportFilter>('all');
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const filter = controlledFilter ?? internalFilter;
 
   const setFilter = (next: PlaywrightReportFilter) => {
@@ -171,6 +182,31 @@ const PlaywrightReportPanel: React.FC<PlaywrightReportPanelProps> = ({
     if (!report) return { testCases: [], specGroups: [] };
     return filterPlaywrightReport(report, filter, search);
   }, [report, filter, search]);
+
+  // Flat, visually-ordered list of every screenshot currently on screen (across suite groups or
+  // the flat test list, whichever is active) so the lightbox can arrow-key through all of them.
+  const screenshotList = useMemo(() => {
+    const source = filter === 'suites'
+      ? filtered.specGroups.flatMap((group) => group.tests)
+      : filtered.testCases;
+    return source
+      .map((testCase) => ({
+        id: testCase.id,
+        title: testCase.title,
+        url: testCase.error?.screenshot ? resolvePlaywrightHealthUrl(testCase.error.screenshot) : undefined,
+      }))
+      .filter((item): item is { id: string; title: string; url: string } => Boolean(item.url));
+  }, [filter, filtered]);
+
+  const screenshotIndexById = useMemo(
+    () => new Map(screenshotList.map((item, position) => [item.id, position])),
+    [screenshotList],
+  );
+
+  const handleScreenshotClick = (testCaseId: string) => {
+    const position = screenshotIndexById.get(testCaseId);
+    if (position != null) setLightboxIndex(position);
+  };
 
   if (!report || report.summary.total === 0) {
     return (
@@ -282,7 +318,11 @@ const PlaywrightReportPanel: React.FC<PlaywrightReportPanelProps> = ({
                   {isOpen && (
                     <div className="bg-gray-50/60">
                       {group.tests.map((testCase) => (
-                        <TestCaseRow key={testCase.id} testCase={testCase} />
+                        <TestCaseRow
+                          key={testCase.id}
+                          testCase={testCase}
+                          onScreenshotClick={() => handleScreenshotClick(testCase.id)}
+                        />
                       ))}
                     </div>
                   )}
@@ -294,10 +334,25 @@ const PlaywrightReportPanel: React.FC<PlaywrightReportPanelProps> = ({
           <div className="py-10 text-center text-sm text-gray-500">No tests match your filters.</div>
         ) : (
           filtered.testCases.map((testCase) => (
-            <TestCaseRow key={testCase.id} testCase={testCase} />
+            <TestCaseRow
+              key={testCase.id}
+              testCase={testCase}
+              onScreenshotClick={() => handleScreenshotClick(testCase.id)}
+            />
           ))
         )}
       </div>
+
+      <ImageLightbox
+        images={screenshotList.map((item) => ({
+          src: item.url,
+          alt: `Screenshot for ${item.title}`,
+          downloadHref: item.url,
+        }))}
+        index={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onNavigate={setLightboxIndex}
+      />
     </div>
   );
 };
