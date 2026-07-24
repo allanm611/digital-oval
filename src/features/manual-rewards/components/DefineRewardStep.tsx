@@ -24,7 +24,6 @@ import { EmailRoute } from "../../routes/types/emailRoute";
 import { color, tw, zIndex, components, getButtonStyles, button } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
@@ -95,12 +94,9 @@ export default function DefineRewardStep({
   );
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
   const [smsRoute, setSmsRoute] = useState("");
+  const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
   const [emailRoute, setEmailRoute] = useState("");
   const [rewardTitle, setRewardTitle] = useState("");
-
-  // Load email routes from configuration (dummy data)
-  const emailRoutesConfig = useConfigurationData("emailRoutes");
-  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -109,18 +105,30 @@ export default function DefineRewardStep({
   const [selectedPolicy, setSelectedPolicy] =
     useState<CommunicationPolicyConfiguration | null>(null);
 
-  // Fetch SMS routes
+  // Fetch SMS and Email routes from API
   useEffect(() => {
-    const fetchSmsRoutes = async () => {
+    const fetchRoutes = async () => {
       try {
         const routes = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(routes) ? routes : []);
+        setSmsRoutes(
+          Array.isArray(routes) ? routes.filter((r) => r.is_active) : [],
+        );
       } catch (error) {
         console.error("Failed to fetch SMS routes:", error);
         setSmsRoutes([]);
       }
+
+      try {
+        const routes = await emailRouteService.getAllRoutes();
+        setEmailRoutes(
+          Array.isArray(routes) ? routes.filter((r) => r.is_active) : [],
+        );
+      } catch (error) {
+        console.error("Failed to fetch Email routes:", error);
+        setEmailRoutes([]);
+      }
     };
-    fetchSmsRoutes();
+    fetchRoutes();
   }, []);
 
 
@@ -574,12 +582,10 @@ export default function DefineRewardStep({
                 label="SMS Route *"
                 options={[
                   { value: "", label: "Select SMS Route" },
-                  ...(smsRoutes || [])
-                    .filter((route) => route.is_active)
-                    .map((route) => ({
-                      value: route.id.toString(),
-                      label: route.name,
-                    })),
+                  ...(smsRoutes || []).map((route) => ({
+                    value: route.id.toString(),
+                    label: route.name,
+                  })),
                 ]}
                 value={smsRoute}
                 onChange={(value) => {
@@ -598,7 +604,7 @@ export default function DefineRewardStep({
                 label="Email Route *"
                 options={[
                   { value: "", label: "Select Email Route" },
-                  ...(emailRoutes || []).map((route: any) => ({
+                  ...(emailRoutes || []).map((route) => ({
                     value: route.id.toString(),
                     label: route.name,
                   })),

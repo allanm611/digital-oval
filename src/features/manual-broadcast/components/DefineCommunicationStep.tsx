@@ -32,7 +32,6 @@ import {
   validateNoEditInsideVariables,
   isCursorInsideVariable,
 } from "../../../shared/utils/variableInsertion";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
@@ -77,6 +76,7 @@ export default function DefineCommunicationStep({
 }: DefineCommunicationStepProps) {
   const { t } = useLanguage();
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
+  const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
   const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
 
   const [selectedChannel, setSelectedChannel] = useState<Channel>(
@@ -86,7 +86,7 @@ export default function DefineCommunicationStep({
   const [messageBody, setMessageBody] = useState(data.messageBody || "");
   const [isRichText, setIsRichText] = useState(data.isRichText || false);
   const [smsRoute, setSmsRoute] = useState(data.smsRoute || "");
-  const [emailRoute, setEmailRoute] = useState("");
+  const [emailRoute, setEmailRoute] = useState(data.emailRoute || "");
   const [loadedQuicklist, setLoadedQuicklist] = useState<any>(null);
 
   // Load quicklist data columns if we have quicklistId
@@ -113,9 +113,6 @@ export default function DefineCommunicationStep({
   const quicklistData = loadedQuicklist || data.quicklist;
   const quicklistColumns = quicklistData?.columns || [];
 
-  // Load email routes from configuration (dummy data)
-  const emailRoutesConfig = useConfigurationData("emailRoutes");
-  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
   const [error, setError] = useState("");
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
@@ -153,18 +150,26 @@ export default function DefineCommunicationStep({
 
   const { success: showToast, error: showError } = useToast();
 
-  // Fetch SMS routes on component mount
+  // Fetch SMS and Email routes on component mount
   useEffect(() => {
-    const fetchSmsRoutes = async () => {
+    const fetchRoutes = async () => {
       try {
         const routes = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(routes) ? routes : []);
+        setSmsRoutes(Array.isArray(routes) ? routes.filter((r) => r.is_active) : []);
       } catch (error) {
         console.error("Failed to fetch SMS routes:", error);
         setSmsRoutes([]);
       }
+
+      try {
+        const routes = await emailRouteService.getAllRoutes();
+        setEmailRoutes(Array.isArray(routes) ? routes.filter((r) => r.is_active) : []);
+      } catch (error) {
+        console.error("Failed to fetch Email routes:", error);
+        setEmailRoutes([]);
+      }
     };
-    fetchSmsRoutes();
+    fetchRoutes();
   }, []);
 
 
@@ -384,6 +389,7 @@ export default function DefineCommunicationStep({
     if (data.messageBody) setMessageBody(data.messageBody);
     if (data.isRichText !== undefined) setIsRichText(data.isRichText);
     if (data.smsRoute) setSmsRoute(data.smsRoute);
+    if (data.emailRoute) setEmailRoute(data.emailRoute);
   }, []);
 
   // Sync selectedPolicy with parent data
@@ -407,8 +413,9 @@ export default function DefineCommunicationStep({
       messageBody: messageBody,
       isRichText: isRichText,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      emailRoute: selectedChannel === "EMAIL" ? emailRoute : undefined,
     });
-  }, [selectedChannel, messageBody, messageTitle, isRichText, smsRoute]);
+  }, [selectedChannel, messageBody, messageTitle, isRichText, smsRoute, emailRoute]);
 
   const handleVariableSelect = (variable: TemplateVariable) => {
     // Validate input data
@@ -733,6 +740,10 @@ export default function DefineCommunicationStep({
         setError(titleSyntaxError);
         return;
       }
+      if (!emailRoute || typeof emailRoute !== "string" || !emailRoute.trim()) {
+        setError("Please select an email route");
+        return;
+      }
     }
 
     // Validate SMS requirements
@@ -765,6 +776,7 @@ export default function DefineCommunicationStep({
       messageBody: messageBody.trim(),
       isRichText,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      emailRoute: selectedChannel === "EMAIL" ? emailRoute : undefined,
       selectedVariables: validatedVariables,
       // Add communication policy data
       selectedCommunicationPolicy: selectedPolicy || undefined,
@@ -817,9 +829,7 @@ export default function DefineCommunicationStep({
                 label="SMS Route *"
                 options={[
                   { value: "", label: "Select SMS Route" },
-                  ...(smsRoutes || [])
-                    .filter((route) => route.is_active)
-                    .map((route) => ({
+                  ...(smsRoutes || []).map((route) => ({
                       value: route.id.toString(),
                       label: route.name,
                     })),
@@ -845,7 +855,7 @@ export default function DefineCommunicationStep({
                 label="Email Route *"
                 options={[
                   { value: "", label: "Select Email Route" },
-                  ...(emailRoutes || []).map((route: any) => ({
+                  ...(emailRoutes || []).map((route) => ({
                     value: route.id.toString(),
                     label: route.name,
                   })),

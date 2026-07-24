@@ -53,7 +53,6 @@ import { SMSRoute } from "../../routes/types/smsRoute";
 import { EmailRoute } from "../../routes/types/emailRoute";
 import { WhatsAppRoute } from "../../routes/types/whatsappRoute";
 import { PushNotificationRoute } from "../../routes/types/pushNotificationRoute";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 // import { productCategoryService } from "../../products/services/productCategoryService";
 import { OfferCategoryType } from "../types/offerCategory";
 import ProductSelector from "../../products/components/ProductSelector";
@@ -1984,14 +1983,11 @@ export default function CreateOfferPage({
     loadOfferCategories();
   }, []);
 
-  // Load SMS routes from API endpoint and Email routes from configuration
+  // Load SMS, Email, WhatsApp, USSD, and Push Notification routes from API
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
-  const emailRoutesConfig = useConfigurationData("emailRoutes");
-  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
-  const emailRoutesLoading = !emailRoutesConfig;
-
-  // Load WhatsApp, USSD, and Push Notification routes
+  const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
+  const [emailRoutesLoading, setEmailRoutesLoading] = useState(false);
   const [whatsappRoutes, setWhatsappRoutes] = useState<WhatsAppRoute[]>([]);
   const [whatsappRoutesLoading, setWhatsappRoutesLoading] = useState(false);
   const [ussdRoutes, setUssdRoutes] = useState<SMSRoute[]>([]);
@@ -2010,6 +2006,17 @@ export default function CreateOfferPage({
         setSmsRoutes([]);
       } finally {
         setSmsRoutesLoading(false);
+      }
+
+      // Load Email routes
+      try {
+        setEmailRoutesLoading(true);
+        const emailRoutesData = await emailRouteService.getAllRoutes();
+        setEmailRoutes(Array.isArray(emailRoutesData) ? emailRoutesData.filter((r: any) => r.is_active) : []);
+      } catch {
+        setEmailRoutes([]);
+      } finally {
+        setEmailRoutesLoading(false);
       }
 
       // Load WhatsApp routes

@@ -36,7 +36,6 @@ import CascadingVariableSelector from "../../features/manual-broadcast/component
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Input from "./ui/Input";
 import Textarea from "./ui/Textarea";
-import { useConfigurationData } from "../services/configurationDataService";
 import { useToast } from "../../contexts/ToastContext";
 import { extractBackendError } from "../utils/errorHandler";;;
 import { useAuth } from "../../contexts/AuthContext";
@@ -57,7 +56,9 @@ import Checkbox from "./ui/Checkbox";
 import type { CustomerSubscriptionRecord } from "../../features/customers360/types/customerSubscription";
 import { communicationChannelService } from "../services/communicationChannelService";
 import { smsRouteService } from "../../features/routes/services/smsRouteService";
-
+import { emailRouteService } from "../../features/routes/services/emailRouteService";
+import type { EmailRoute } from "../../features/routes/types/emailRoute";
+import type { SMSRoute } from "../../features/routes/types/smsRoute";
 interface CreateCommunicationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -77,12 +78,12 @@ export default function CreateCommunicationModal({
   customerRecord,
   onSuccess,
 }: CreateCommunicationModalProps) {
-  const { data: emailRoutesData } = useConfigurationData("emailRoutes");
   const { error: showError } = useToast();
   const { user } = useAuth();
 
-  const emailRoutes = emailRoutesData?.filter((r: any) => r.isActive || r.is_active) || [];
-  const [smsRoutes, setSmsRoutes] = useState<any[]>([]);
+  const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
+  const [emailRoutesLoading, setEmailRoutesLoading] = useState(false);
+  const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
 
   const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
@@ -173,7 +174,7 @@ export default function CreateCommunicationModal({
       try {
         setSmsRoutesLoading(true);
         const smsRoutesData = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r: any) => r.is_active) : []);
+        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r) => r.is_active) : []);
       } catch (error) {
         console.error("Failed to fetch SMS routes:", error);
         setSmsRoutes([]);
@@ -182,9 +183,23 @@ export default function CreateCommunicationModal({
       }
     };
 
+    const fetchEmailRoutes = async () => {
+      try {
+        setEmailRoutesLoading(true);
+        const emailRoutesData = await emailRouteService.getAllRoutes();
+        setEmailRoutes(Array.isArray(emailRoutesData) ? emailRoutesData.filter((r) => r.is_active) : []);
+      } catch (error) {
+        console.error("Failed to fetch Email routes:", error);
+        setEmailRoutes([]);
+      } finally {
+        setEmailRoutesLoading(false);
+      }
+    };
+
     if (isOpen) {
       fetchChannels();
       fetchSmsRoutes();
+      fetchEmailRoutes();
     }
   }, [isOpen]);
 
@@ -839,7 +854,7 @@ export default function CreateCommunicationModal({
                         label="Email Route *"
                         options={[
                           { value: "", label: "Select Email Route" },
-                          ...(emailRoutes || []).map((route: any) => ({
+                          ...(emailRoutes || []).map((route) => ({
                             value: route.id.toString(),
                             label: route.name,
                           })),
@@ -849,7 +864,7 @@ export default function CreateCommunicationModal({
                           setEmailRoute(value);
                           setError("");
                         }}
-                        placeholder="Select Email Route"
+                        placeholder={emailRoutesLoading ? "Loading..." : "Select Email Route"}
                         zIndex={zIndex.popover}
                       />
                       {!emailRoute && error?.includes("email route") && (

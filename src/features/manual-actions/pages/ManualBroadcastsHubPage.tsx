@@ -5,16 +5,28 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function ManualBroadcastsHubPage() {
   const navigate = useNavigate();
-  const { t } = useLanguage() as { t: { manualActions: { manualCommunications: string; sendTargetedMessages: string; manualRewards: string; distributeRewards: string; manualBroadcasts: string; chooseAction: string } } };
+  const { t } = useLanguage() as {
+    t: {
+      manualActions: {
+        manualCommunications: string;
+        sendTargetedMessages: string;
+        manualRewards: string;
+        distributeRewards: string;
+        manualBroadcasts: string;
+        chooseAction: string;
+      };
+    };
+  };
 
   const actions = [
     {
       title: t.manualActions.manualCommunications,
       description: t.manualActions.sendTargetedMessages,
       icon: Mail,
-      onClick: () => navigate("/dashboard/manual-communications", {
-        state: { returnTo: { pathname: "/dashboard/manual-broadcasts" } }
-      }),
+      onClick: () =>
+        navigate("/dashboard/manual-communications", {
+          state: { returnTo: { pathname: "/dashboard/manual-broadcasts" } },
+        }),
     },
     {
       title: t.manualActions.manualRewards,
@@ -38,7 +50,6 @@ export default function ManualBroadcastsHubPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
           {t.manualActions.manualBroadcasts}
@@ -48,7 +59,6 @@ export default function ManualBroadcastsHubPage() {
         </p>
       </div>
 
-      {/* Action Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {actions.map((action) => {
           const Icon = action.icon;
@@ -71,7 +81,7 @@ export default function ManualBroadcastsHubPage() {
               <div className="flex items-center gap-4">
                 <Icon
                   className="w-8 h-8 flex-shrink-0"
-                  style={{ color: 'var(--c-icon-color)' }}
+                  style={{ color: "var(--c-icon-color)" }}
                 />
                 <div className="flex-1">
                   <h3

@@ -50,6 +50,7 @@ export interface ManualBroadcastData {
   messageBody?: string;
   isRichText?: boolean;
   smsRoute?: string;
+  emailRoute?: string;
   selectedVariables?: TemplateVariable[];
   selectedCommunicationPolicy?: CommunicationPolicyConfiguration;
   selectedCommunicationPolicyId?: number;
@@ -271,7 +272,9 @@ export default function CreateManualBroadcastPage() {
         return !!(
           broadcastData.channel &&
           broadcastData.messageBody &&
-          (broadcastData.channel !== "EMAIL" || broadcastData.messageTitle)
+          (broadcastData.channel !== "EMAIL" ||
+            (broadcastData.messageTitle && broadcastData.emailRoute)) &&
+          (broadcastData.channel !== "SMS" || broadcastData.smsRoute)
         );
       case 3: // Schedule
         if (broadcastData.scheduleType === "later") {
