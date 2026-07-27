@@ -1,3 +1,59 @@
+# 1.0.0 (2026-07-27)
+
+
+### Bug Fixes
+
+* add icons on catalogs, floating labels in create communciaiton modal, fixes in manual communicaitons, integration of add and remove endpoints of quicklists, preview on manual communicaitons on a quicklist ([c7c52d3](https://github.com/allanm611/digital-oval/commit/c7c52d34ae1ba9094444c6a09a2059d22964ce5e))
+* add missing REVENUE_METRICS and USAGE_METRICS constants ([76c86e5](https://github.com/allanm611/digital-oval/commit/76c86e5e40c325421eec6b1828fb5d83c290284e))
+* add quicklist columns, fix reordering in the column component, add a search modal on customers page ([916435b](https://github.com/allanm611/digital-oval/commit/916435b13c8ce428c467603b8542cb76ee9d7d60))
+* added more languages, fixed quciklist tables ([9c8e14d](https://github.com/allanm611/digital-oval/commit/9c8e14de6e586fbd58a80b68f5968dd91adce162))
+* added more props to the offers, products and customers tables ([959c842](https://github.com/allanm611/digital-oval/commit/959c842b41e9a43fbe40b1bf5b6d1ebbbe4e7dd3))
+* added save button on settings card , added a notificaiton setitngs button on the notificaitons page, added timezone display on all components displaying data ([8f9c0c0](https://github.com/allanm611/digital-oval/commit/8f9c0c09c21c3e126d8193eeeead8692b635a471))
+* added the country,currency and timezone in the footer ([44f5272](https://github.com/allanm611/digital-oval/commit/44f52722d49f22a779060c0492bc6b0148b26b46))
+* added thesave button on each card on the settings page and also fixed the notificaitons settings page ([08e8c42](https://github.com/allanm611/digital-oval/commit/08e8c42a5b629c0e1f00f59012a51c16b09a52e1))
+* added timezone converison function, added a test modal on creatives ([b3d6409](https://github.com/allanm611/digital-oval/commit/b3d6409b90d78b35bfb2b61566cd21a084cba6f3))
+* applying floating labels on the remaining inputs ([d7d1958](https://github.com/allanm611/digital-oval/commit/d7d1958597c001c921b712e9426e8a9c22498f59))
+* changes to the landing page ,table compoent ([7eb5e1c](https://github.com/allanm611/digital-oval/commit/7eb5e1cb9870a92f2acd5fceeb9855aad5e594c2))
+* comprehensive translation keys audit and remediation ([8b5dfc6](https://github.com/allanm611/digital-oval/commit/8b5dfc63957e5a557c788109f4c3faff6af5387a))
+* creating a consistent pattern on all cretae/update and cancle buttons in forms and modals ([0d47556](https://github.com/allanm611/digital-oval/commit/0d47556c77f81a7b5caef38bb2b98cd407cad22a))
+* data connectors and connection profiles fixed ([685ff7b](https://github.com/allanm611/digital-oval/commit/685ff7bf58115bc8fb4dc0fa53a55f71b35d1aee))
+* finish the documentation ([bb369e7](https://github.com/allanm611/digital-oval/commit/bb369e7c96b18daf28e6d601c3886830670fa6cf))
+* fix build ([eca4eca](https://github.com/allanm611/digital-oval/commit/eca4eca77c32fa2fc55aff7d321241550b8709a2))
+* fix the map fields in create quicklists and segments and also add field value in kpi creation ([e0a1104](https://github.com/allanm611/digital-oval/commit/e0a1104935952d3145b9de1449cf47fb2d819f2e))
+* fixed all pages to use the usedelete hook and also finished the theme on profile, adminsitraiton and configuraiton page ([b5e38a2](https://github.com/allanm611/digital-oval/commit/b5e38a2a4945ef8846befe8bd96399fd90f6adfb))
+* fixed and tested different features ([56330a9](https://github.com/allanm611/digital-oval/commit/56330a9da1bfd5649cd85843a3d1a5881c52fbe7))
+* fixed message varibales and customers table ([fd0ccaa](https://github.com/allanm611/digital-oval/commit/fd0ccaa63c79f689d3249268cf253b6bbc91fc56))
+* fixed paginaiton also created a button component for managing create and update buttons ([a49fdf6](https://github.com/allanm611/digital-oval/commit/a49fdf67d63f754d545437549cd6e4b12e8fee9e))
+* fixed the filtering logic in the table compoent ([d121e00](https://github.com/allanm611/digital-oval/commit/d121e00e130f8e030480ad2f8f27268cd1450103))
+* fixed the route manageemnt and gateway config create forms ([5726faf](https://github.com/allanm611/digital-oval/commit/5726faf5bc7de157c7a810ae77ccdcf77d96d13c))
+* fixing different bugs, translaitons,ui changes ([2f5ac75](https://github.com/allanm611/digital-oval/commit/2f5ac75524407312b1a2dcc1a7a9493d11f72330))
+* fixing offer creatives ([4b5789f](https://github.com/allanm611/digital-oval/commit/4b5789fa5de857b995817804371c65c73d17740b))
+* fixing preview button of sql type ([3f3c60c](https://github.com/allanm611/digital-oval/commit/3f3c60c5b774da597ae4b7f66dabab2998050355))
+* fixing the breadcrumb of admin feature pages ([2e8ecf4](https://github.com/allanm611/digital-oval/commit/2e8ecf486dfa0784fbfe05101eb0329f1bdd61d7))
+* fixing the dark theme ([75106c6](https://github.com/allanm611/digital-oval/commit/75106c6d341c844557b9df7a3f03e71ca0fb2676))
+* fixing the input error ([b445d8e](https://github.com/allanm611/digital-oval/commit/b445d8e6b62ac7e39888e9e1f04e6dece8863a27))
+* fixing the remove modal on quicklists, remove dummy data from segment details, set up a campaign reports page ([bbcab02](https://github.com/allanm611/digital-oval/commit/bbcab02fcfe1cbda6f22a9773ca2e73f5f0f0a16))
+* integrated kpis enpoints and also created a page for route management creaiton ([579c28a](https://github.com/allanm611/digital-oval/commit/579c28a54c4cc0150a6bf04b386a884dc3b1f06a))
+* making all buttons be consistent ([73c51e8](https://github.com/allanm611/digital-oval/commit/73c51e8139286bab1184fb999f6a678fc3f566af))
+* merge staging-changes into main ([d83530d](https://github.com/allanm611/digital-oval/commit/d83530d2418fc07bb18f6050ec2db4612821a2f4))
+* setting up a new version of the documentation ([e7f7895](https://github.com/allanm611/digital-oval/commit/e7f7895f0d9cda526e61b51ccb8c7e10ad6a1c43))
+* setting up another verison of the documentation and fixing import error ([91099cc](https://github.com/allanm611/digital-oval/commit/91099ccc4aa044b8751c3afc9f79d4f1603eb35d))
+* setting up app themes ([3819d32](https://github.com/allanm611/digital-oval/commit/3819d32d1b36e207b84d401b81afc29e982d5b60))
+* setting up the message varibales config ([ad24693](https://github.com/allanm611/digital-oval/commit/ad24693fef88c4de98d5c0903a402440bf356bf3))
+* setup of the table component ([accfd1d](https://github.com/allanm611/digital-oval/commit/accfd1db512b52c89766134d7b9bbd3fdf0109c6))
+* the delete hook and also more pages converted to use the table compoent ([a0e28e9](https://github.com/allanm611/digital-oval/commit/a0e28e98b2f661dd857998026163e2caca6c96f0))
+* updated the settings notificaitons page to group notificaitons by categories and also udpated the create notificaitons rule modal to have the catgeoreis drodpown ([26e99ab](https://github.com/allanm611/digital-oval/commit/26e99abd36d1a17e530c1a3b42247966864b3d1b))
+* validate quciklists and segments counts before there creation has been added, integrated ccustomer staticisc endpoint ([e954e5f](https://github.com/allanm611/digital-oval/commit/e954e5f0af4f86654b1f33845dbe6a7df1b78ce6))
+
+
+### Features
+
+* initialize semantic versioning ([ff5b89a](https://github.com/allanm611/digital-oval/commit/ff5b89aae2216a4ef72f7b31a99eb3e211082e5c))
+* initialize semantic versioning with automatic version management ([bab3dbe](https://github.com/allanm611/digital-oval/commit/bab3dbe467f5058a1491b5630696ed1c582e0a72))
+* integrated endpoints for kpi categories, kpis and notificaiton categories ([dfa8f37](https://github.com/allanm611/digital-oval/commit/dfa8f377aafe412c4bdc7eac745474926c14fc99))
+* Redesign dashboard UI with new design system and consistent styling ([5eafa2e](https://github.com/allanm611/digital-oval/commit/5eafa2e95fc003b94247583256b64608a4ec40dc))
+* set up sql editor for segment rules and fixed the sms routes, removed vip and seedlist from the admin page ([8d2eb12](https://github.com/allanm611/digital-oval/commit/8d2eb12a05cbe7b659e242fbbbba65380494bb1e))
+
 ## [1.4.20](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.19...v1.4.20) (2026-07-23)
 
 
