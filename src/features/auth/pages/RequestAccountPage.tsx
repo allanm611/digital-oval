@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import logo from "/img/sentra1.webp";
+//import logo from "/img/sentra1.webp";
+import logo from "../../../assets/logo.png"
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { accountService } from "../../account/services/accountService";
 import { useToast } from "../../../contexts/ToastContext";
