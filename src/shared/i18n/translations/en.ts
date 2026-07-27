@@ -3019,7 +3019,7 @@ export const en: Translations = {
   },
   auth: {
     login: {
-      title: "Sign in to Sentra",
+      title: "Sign in to Digital Oval",
       headline: "Engage, Predict, Grow",
       subheading:
         "The intelligent customer engagement platform. Create impactful campaigns, understand your audience, and act in real time.",
