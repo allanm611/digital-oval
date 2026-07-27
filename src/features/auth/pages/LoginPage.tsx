@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
-import logo from "/img/sentra1.webp";
+//import logo from "/img/sentra1.webp";
+import logo from "../../../assets/logo.png"
 import {
   PlayCircle,
   CheckCircle2,
@@ -14,6 +15,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import Footer from "../../../shared/components/Footer";
 
 const LoginPage: React.FC = () => {
   const { login, requestPasswordReset } = useAuth();
@@ -320,6 +322,8 @@ const LoginPage: React.FC = () => {
           </div>
         </section>
       </div>
+
+      <Footer />
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (

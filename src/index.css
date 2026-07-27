@@ -52,13 +52,25 @@
 /* New Login Page Styles */
 .sentra-landing {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   min-height: 100vh;
   position: relative;
   background-color: #0a192f;
   overflow: hidden;
   color: #ffffff;
+}
+
+.sentra-landing > .content-wrap {
+  flex: 1;
+  align-self: center;
+}
+
+.sentra-landing > footer {
+  position: relative !important;
+  bottom: auto !important;
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 /* Background elements */
