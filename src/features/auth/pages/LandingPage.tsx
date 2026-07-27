@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "/img/sentra.webp";
 import logoLight from "/img/sentra1.webp";
-import effortelLogo from "../../../assets/Effortel_logo.svg";
+import effortelLogo from "../../../assets/logo.svg";
 import {
   ArrowRight,
   Target,

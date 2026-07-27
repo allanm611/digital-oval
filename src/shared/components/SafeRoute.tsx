@@ -1,6 +1,6 @@
 import React from "react";
 import { tw, color, button } from "../utils/utils";
-import logo from "../../assets/Effortel_logo.svg";
+import logo from "../../assets/logo.png";
 
 interface SafeRouteProps {
   children: React.ReactNode;

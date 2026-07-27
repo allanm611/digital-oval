@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import logo from "../../../assets/Effortel_logo.svg";
+import logo from "../../../assets/logo.png";
 import { User as UserType } from "../../../features/auth/types/auth";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";

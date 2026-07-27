@@ -46,7 +46,7 @@ import {
   Zap,
   BookOpen,
 } from "lucide-react";
-import logo from "../../../assets/Effortel_logo.svg";
+import logo from "../../../assets/logo.png";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
