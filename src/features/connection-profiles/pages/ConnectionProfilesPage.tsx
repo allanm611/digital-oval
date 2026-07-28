@@ -33,7 +33,7 @@ import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pag
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
-import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { connectionProfileService } from "../services/connectionProfileService";
 import {
   ConnectionProfileEnvironmentStatsItem,
@@ -784,8 +784,12 @@ export default function ConnectionProfilesPage() {
                     setSelectedProfileIds(new Set());
                   }
                 }}
-                className="inline-flex items-center gap-2 transition-colors w-auto"
-                style={getButtonStyles(button.bordered)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 {isSelectionMode ? (
                   <CheckSquare size={16} />

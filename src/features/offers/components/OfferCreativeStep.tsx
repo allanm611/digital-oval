@@ -14,11 +14,7 @@ import {
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
-import {
-  requiresHtmlBody,
-  stripHtmlTags,
-  ensureEmailHtmlBody,
-} from "../utils/channelUtils";
+import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
@@ -882,26 +878,15 @@ export default function OfferCreativeStep({
 
   const selectedCreativeData = filteredCreatives.find((c) => c.id === selectedCreative) || creatives.find((c) => c.id === selectedCreative);
 
-  // Email requires html_body — default Rich Text on so the editor writes HTML
+  // Auto-enable Rich Text for Email channels
   useEffect(() => {
-    if (
-      selectedCreativeData &&
-      requiresHtmlBody(selectedCreativeData.channel) &&
-      !isRichTextMap[selectedCreativeData.id]
-    ) {
+    if (selectedCreativeData?.channel === "Email" && selectedCreativeData.id) {
       setIsRichTextMap((prev) => ({
         ...prev,
         [selectedCreativeData.id]: true,
       }));
-      const normalized = ensureEmailHtmlBody(selectedCreativeData);
-      if (normalized.html_body !== selectedCreativeData.html_body) {
-        updateCreative(selectedCreativeData.id, {
-          html_body: normalized.html_body,
-          text_body: normalized.text_body,
-        });
-      }
     }
-  }, [selectedCreativeData?.id, selectedCreativeData?.channel]);
+  }, [selectedCreativeData?.channel, selectedCreativeData?.id]);
 
   // Use draft creative if none selected (for inline creation flow)
   const editingCreative = selectedCreativeData || {
@@ -1082,20 +1067,19 @@ export default function OfferCreativeStep({
         }
       }, 0);
     } else {
-      if (selectedCreativeData.channel === "Email" && isRichText) {
+      const isRichText = selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id];
+
+      if (isRichText) {
+        // For Rich Text mode: append variable (simpler, works with React's state management)
         const placeholder = formatVariablePlaceholder(variable);
-        const currentHtml =
-          selectedCreativeData.html_body ||
-          selectedCreativeData.text_body ||
-          "";
-        const newHtml = `${currentHtml} ${placeholder} `;
+        const bodyField = selectedCreativeData.channel === "Email" ? (selectedCreativeData.html_body || "") : (selectedCreativeData.text_body || "");
+        const newBody = `${bodyField} ${placeholder} `;
         updateCreative(selectedCreativeData.id, {
-          html_body: newHtml,
-          text_body: stripHtmlTags(newHtml),
+          ...(selectedCreativeData.channel === "Email" ? { html_body: newBody, text_body: newBody } : { text_body: newBody }),
         });
         setVariableError("");
       } else {
-        // Validate cursor position before insertion
+        // For Plain Text mode: use cursor-based insertion
         const positionError = validateInsertPosition(
           selectedCreativeData.text_body || "",
           actualCursorPosition,
@@ -1574,14 +1558,6 @@ export default function OfferCreativeStep({
                       </div>
                     )} */}
 
-                    {/* Email HTML Body Requirement Hint */}
-                    {editingCreative.channel === "Email" && (
-                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                        <p className="text-xs text-blue-700">
-                          ℹ️ For Email channels, you need to enable <strong>Rich Text</strong> mode to generate the HTML body required by the backend.
-                        </p>
-                      </div>
-                    )}
 
                     {/* Message content toolbar */}
                     <div
@@ -1592,38 +1568,20 @@ export default function OfferCreativeStep({
                         {t.offers.messageContent.label}
                       </span>
                       <div className="flex items-center gap-2">
-                        {(editingCreative.channel === "Email" ||
+                        {editingCreative.channel !== "Email" && (
                           editingCreative.channel === "SMS" ||
                           editingCreative.channel === "WhatsApp" ||
-                          editingCreative.channel === "Push") && (
+                          editingCreative.channel === "Push"
+                        ) && (
                           <button
                             type="button"
-                            onClick={() => {
-                              if (!selectedCreativeData) return;
-                              const enabling =
-                                !isRichTextMap[selectedCreativeData.id];
-                              setIsRichTextMap((prev) => ({
+                            onClick={() =>
+                              selectedCreativeData && setIsRichTextMap((prev) => ({
                                 ...prev,
-                                [selectedCreativeData.id]: enabling,
-                              }));
-                              // When enabling Rich Text for Email, sync html_body from text_body
-                              if (
-                                enabling &&
-                                requiresHtmlBody(selectedCreativeData.channel)
-                              ) {
-                                const normalized =
-                                  ensureEmailHtmlBody(selectedCreativeData);
-                                if (
-                                  normalized.html_body !==
-                                  selectedCreativeData.html_body
-                                ) {
-                                  updateCreative(selectedCreativeData.id, {
-                                    html_body: normalized.html_body,
-                                    text_body: normalized.text_body,
-                                  });
-                                }
-                              }
-                            }}
+                                [selectedCreativeData.id]:
+                                  !prev[selectedCreativeData.id],
+                              }))
+                            }
                             className="px-3 py-1.5 text-sm rounded-md border transition-colors"
                             style={{
                               backgroundColor: selectedCreativeData && isRichTextMap[
@@ -1675,26 +1633,21 @@ export default function OfferCreativeStep({
                     </div>
 
                     {/* Message Body */}
-                    {selectedCreativeData && isRichTextMap[selectedCreativeData.id] ? (
+                    {selectedCreativeData && (selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id]) ? (
                         <div
                           onClick={() => setActiveField("body")}
                           onFocus={() => setActiveField("body")}
                         >
                           <RichTextEditor
-                            value={
-                              editingCreative.html_body ||
-                              editingCreative.text_body ||
-                              ""
-                            }
+                            value={selectedCreativeData.channel === "Email" ? (editingCreative.html_body || "") : (editingCreative.text_body || "")}
                             onChange={(value) => {
-                              selectedCreativeData &&
-                                updateCreative(selectedCreativeData.id, {
-                                  html_body: value,
-                                  text_body: stripHtmlTags(value),
-                                });
+                              selectedCreativeData && updateCreative(selectedCreativeData.id, {
+                                ...(selectedCreativeData.channel === "Email" ? { html_body: value, text_body: value } : { text_body: value }),
+                              });
                             }}
                             placeholder={t.offers.messageBody.placeholder}
                             minHeight="250px"
+                            onVariableError={setVariableError}
                           />
                         </div>
                       ) : (
@@ -1704,16 +1657,20 @@ export default function OfferCreativeStep({
                           value={editingCreative.text_body || ""}
                           onChange={(value) => {
                             setActiveField("body");
-                            // Validate and show error, but allow text update
-                            const editError = validateNoEditInsideVariables(editingCreative.text_body || "", value);
-                            if (editError) {
-                              setVariableError(editError);
+                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
+                              text_body: value,
+                              ...(selectedCreativeData.channel === "Email" && { html_body: value }),
+                            });
+                          }}
+                          onKeyDown={(e) => {
+                            const textarea = e.currentTarget;
+                            const cursorPos = textarea.selectionStart || 0;
+                            if (isCursorInsideVariable(editingCreative.text_body || "", cursorPos)) {
+                              e.preventDefault();
+                              setVariableError("You can't edit inside a variable");
                             } else {
                               setVariableError("");
                             }
-                            selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                              text_body: value,
-                            });
                           }}
                           onClickCapture={(e) => {
                             setActiveField("body");

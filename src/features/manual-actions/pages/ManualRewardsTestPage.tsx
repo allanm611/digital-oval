@@ -417,7 +417,6 @@ export default function ManualRewardsTestPage() {
                   {fieldError}
                 </p>
               )}
-
               <button
                 onClick={handleSendTest}
                 disabled={isLoading}
