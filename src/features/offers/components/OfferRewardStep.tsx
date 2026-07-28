@@ -8,6 +8,11 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import { rewardTypeService, RewardType } from "../services/rewardTypeService";
+import {
+  RULE_REWARD_TYPE_LABELS,
+  type RuleRewardType,
+} from "../../../shared/data/rewardProviders";
+import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
 
 interface RewardRule {
   id: string;
@@ -16,7 +21,7 @@ interface RewardRule {
   priority: number;
   condition: string;
   value: string;
-  reward_type: "bundle" | "points" | "discount" | "cashback";
+  reward_type: RuleRewardType;
   reward_value: string;
   fulfillment_response: string;
   success_text: string;
@@ -38,23 +43,17 @@ interface OfferRewardStepProps {
   onRewardsChange: (rewards: OfferReward[]) => void;
 }
 
-const BUNDLE_TRACKS = [
-  "R2TPersAdjustBalCount2",
-  "SelectDependantProduct",
-  "SYSDATE",
-];
-
-const REWARD_RULE_TYPES = [
-  { value: "bundle", label: "Bundle" },
-  { value: "points", label: "Points" },
-  { value: "discount", label: "Discount" },
-  { value: "cashback", label: "Cashback" },
-];
-
 export default function OfferRewardStep({
   rewards,
   onRewardsChange,
 }: OfferRewardStepProps) {
+  const {
+    providerOptions,
+    defaultProviderKey,
+    loading: loadingRewardProviders,
+    getAllowedTypes,
+    resolveType,
+  } = useRewardProviders();
   const [selectedReward, setSelectedReward] = useState<string | null>(
     rewards.length > 0 ? rewards[0].id : null
   );
@@ -121,14 +120,15 @@ export default function OfferRewardStep({
   };
 
   const addRule = () => {
+    const defaultProvider = defaultProviderKey;
     const newRule: RewardRule = {
       id: generateId(),
       name: "New Rule",
-      bundle_subscription_track: "R2TPersAdjustBalCount2",
+      bundle_subscription_track: defaultProvider,
       priority: 1,
       condition: "",
       value: "",
-      reward_type: "bundle",
+      reward_type: resolveType(defaultProvider, "bundle"),
       reward_value: "",
       fulfillment_response: "success",
       success_text: "",
@@ -366,7 +366,15 @@ export default function OfferRewardStep({
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => {
-                                    setEditingRule(rule);
+                                    const nextType = resolveType(
+                                      rule.bundle_subscription_track,
+                                      rule.reward_type,
+                                    );
+                                    setEditingRule(
+                                      nextType === rule.reward_type
+                                        ? rule
+                                        : { ...rule, reward_type: nextType },
+                                    );
                                     setShowRuleModal(true);
                                   }}
                                   className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
@@ -384,7 +392,7 @@ export default function OfferRewardStep({
                               </div>
                             </div>
                             <div className="text-sm text-gray-600 space-y-1">
-                              <div>Track: {rule.bundle_subscription_track}</div>
+                              <div>Provider: {rule.bundle_subscription_track}</div>
                               <div>
                                 Type: {rule.reward_type} - Value:{" "}
                                 {rule.reward_value}
@@ -470,19 +478,30 @@ export default function OfferRewardStep({
 
                 <div>
                   <HeadlessSelect
-                    label="Bundle Subscription Track"
-                    options={BUNDLE_TRACKS.map((track) => ({
-                      value: track,
-                      label: track,
-                    }))}
+                    label="Reward Provider"
+                    options={providerOptions}
                     value={editingRule.bundle_subscription_track}
-                    onChange={(value) =>
+                    onChange={(value) => {
+                      const providerId = value as string;
+                      const nextType = resolveType(
+                        providerId,
+                        editingRule.reward_type,
+                      );
                       setEditingRule({
                         ...editingRule,
-                        bundle_subscription_track: value as string,
-                      })
+                        bundle_subscription_track: providerId,
+                        reward_type: nextType,
+                        ...(nextType !== editingRule.reward_type
+                          ? { reward_value: "" }
+                          : {}),
+                      });
+                    }}
+                    placeholder={
+                      loadingRewardProviders
+                        ? "Loading providers..."
+                        : "Select reward provider"
                     }
-                    placeholder="Select bundle track"
+                    disabled={loadingRewardProviders}
                     zIndex={zIndex.popover}
                   />
                 </div>
@@ -491,19 +510,18 @@ export default function OfferRewardStep({
                   <div>
                     <HeadlessSelect
                       label="Reward Type"
-                      options={REWARD_RULE_TYPES.map((type) => ({
-                        value: type.value,
-                        label: type.label,
+                      options={getAllowedTypes(
+                        editingRule.bundle_subscription_track,
+                      ).map((type) => ({
+                        value: type,
+                        label: RULE_REWARD_TYPE_LABELS[type],
                       }))}
                       value={editingRule.reward_type}
                       onChange={(value) =>
                         setEditingRule({
                           ...editingRule,
-                          reward_type: value as
-                            | "bundle"
-                            | "points"
-                            | "discount"
-                            | "cashback",
+                          reward_type: value as RuleRewardType,
+                          reward_value: "",
                         })
                       }
                       placeholder="Select reward type"

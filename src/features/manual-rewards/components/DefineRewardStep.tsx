@@ -35,6 +35,10 @@ import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsH
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { SeedListRecipient } from "../../../shared/services/seedListService";
 import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
+import {
+  type RuleRewardType,
+} from "../../../shared/data/rewardProviders";
+import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -43,7 +47,7 @@ interface DefineRewardStepProps {
   onPrevious: () => void;
 }
 
-type RewardType = "bundle" | "points" | "discount" | "cashback";
+type RewardType = RuleRewardType;
 type Channel = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
 
 interface RewardSeedTestResult {
@@ -52,12 +56,6 @@ interface RewardSeedTestResult {
   message: string;
 }
 
-const BUNDLE_TRACKS = [
-  "R2TPersAdjustBalCount2",
-  "SelectDependantProduct",
-  "SYSDATE",
-];
-
 export default function DefineRewardStep({
   data,
   onUpdate,
@@ -65,13 +63,19 @@ export default function DefineRewardStep({
   onPrevious,
 }: DefineRewardStepProps) {
   const { t } = useLanguage();
+  const {
+    providerOptions,
+    defaultProviderKey,
+    loading: loadingRewardProviders,
+    getAllowedTypes,
+    resolveType,
+  } = useRewardProviders();
+  const [providersInitialized, setProvidersInitialized] = useState(false);
+  const [bundleTrack, setBundleTrack] = useState(data.bundleTrack || "");
   const [rewardType, setRewardType] = useState<RewardType>(
     (data.rewardType as RewardType) || "bundle",
   );
   const [rewardValue, setRewardValue] = useState(data.rewardValue || "");
-  const [bundleTrack, setBundleTrack] = useState(
-    data.bundleTrack || BUNDLE_TRACKS[0],
-  );
   const [description, setDescription] = useState(data.description || "");
   const [error, setError] = useState("");
   const [isTesting, setIsTesting] = useState(false);
@@ -97,6 +101,27 @@ export default function DefineRewardStep({
   const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
   const [emailRoute, setEmailRoute] = useState("");
   const [rewardTitle, setRewardTitle] = useState("");
+
+  useEffect(() => {
+    if (loadingRewardProviders || providersInitialized) return;
+    const savedKey = data.bundleTrack;
+    const key =
+      savedKey && providerOptions.some((o) => o.value === savedKey)
+        ? savedKey
+        : defaultProviderKey;
+    const nextType = resolveType(key, (data.rewardType as RewardType) || "bundle");
+    setBundleTrack(key);
+    setRewardType(nextType);
+    setProvidersInitialized(true);
+  }, [
+    loadingRewardProviders,
+    providersInitialized,
+    data.bundleTrack,
+    data.rewardType,
+    defaultProviderKey,
+    providerOptions,
+    resolveType,
+  ]);
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -237,6 +262,11 @@ export default function DefineRewardStep({
     },
   ];
 
+  const allowedRewardTypeIds = getAllowedTypes(bundleTrack);
+  const availableRewardTypes = rewardTypes.filter((type) =>
+    allowedRewardTypeIds.includes(type.id),
+  );
+
   const activeSeedRecipients: SeedListRecipient[] = selectedRecipients;
 
   const availableSeedContacts = activeSeedRecipients
@@ -357,8 +387,30 @@ export default function DefineRewardStep({
     resetRewardValidation();
   };
 
+  const handleRewardProviderChange = (providerId: string) => {
+    const nextType = resolveType(providerId, rewardType);
+    setBundleTrack(providerId);
+    setRewardType(nextType);
+    if (nextType !== rewardType) {
+      setRewardValue("");
+      onUpdate({
+        bundleTrack: providerId,
+        rewardType: nextType,
+        rewardValue: "",
+      });
+    } else {
+      onUpdate({ bundleTrack: providerId });
+    }
+    resetRewardValidation();
+  };
+
   const handleNext = () => {
     // Validation
+    if (!bundleTrack) {
+      setError(t.manualRewards.errorBundleTrackRequired);
+      return;
+    }
+
     if (!rewardValue.trim()) {
       setError(t.manualRewards.errorRewardValueRequired);
       return;
@@ -371,8 +423,7 @@ export default function DefineRewardStep({
       return;
     }
 
-    // For bundle type, validate bundle track
-    if (rewardType === "bundle" && !bundleTrack) {
+    if (!allowedRewardTypeIds.includes(rewardType)) {
       setError(t.manualRewards.errorBundleTrackRequired);
       return;
     }
@@ -388,7 +439,7 @@ export default function DefineRewardStep({
     onUpdate({
       rewardType: rewardType,
       rewardValue: rewardValue.trim(),
-      bundleTrack: rewardType === "bundle" ? bundleTrack : undefined,
+      bundleTrack,
       description: description.trim() || undefined,
       channel: selectedChannel,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
@@ -418,68 +469,94 @@ export default function DefineRewardStep({
       </div>
 
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Reward Type Selection */}
+        {/* Reward Provider — select first; filters available reward types */}
+        <div>
+          <HeadlessSelect
+            label={t.manualRewards.bundleTrackLabel}
+            options={providerOptions}
+            value={bundleTrack}
+            onChange={(value) => handleRewardProviderChange(value as string)}
+            placeholder={
+              loadingRewardProviders
+                ? "Loading providers..."
+                : t.manualRewards.bundleTrackPlaceholder
+            }
+            disabled={loadingRewardProviders}
+            zIndex={zIndex.popover}
+          />
+          <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+            {t.manualRewards.bundleTrackHelper}
+          </p>
+        </div>
+
+        {/* Reward Type Selection (filtered by provider) */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
             {t.manualRewards.rewardTypeLabel}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2">
-            {rewardTypes.map((type) => {
-              const Icon = type.icon;
-              const isSelected = rewardType === type.id;
-              return (
-                <button
-                  key={`${type.id}-${isSelected}`}
-                  type="button"
-                  onClick={() => handleRewardTypeSelect(type.id)}
-                  className={`flex flex-col items-center justify-center gap-1.5 p-2.5 ${tw.rounded} bg-white`}
-                  style={{
-                    borderWidth: "2px",
-                    borderStyle: "solid",
-                    borderColor: isSelected
-                      ? color.primary.accent
-                      : color.border.default,
-                  }}
-                >
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
+          {availableRewardTypes.length === 0 ? (
+            <p className={`text-sm ${tw.textSecondary}`}>
+              {t.manualRewards.errorBundleTrackRequired}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2">
+              {availableRewardTypes.map((type) => {
+                const Icon = type.icon;
+                const isSelected = rewardType === type.id;
+                return (
+                  <button
+                    key={`${type.id}-${isSelected}`}
+                    type="button"
+                    onClick={() => handleRewardTypeSelect(type.id)}
+                    className={`flex flex-col items-center justify-center gap-1.5 p-2.5 ${tw.rounded} bg-white`}
                     style={{
-                      backgroundColor: isSelected
+                      borderWidth: "2px",
+                      borderStyle: "solid",
+                      borderColor: isSelected
                         ? color.primary.accent
-                        : color.surface.cards,
+                        : color.border.default,
                     }}
                   >
-                    <Icon
-                      className="w-4 h-4"
-                      style={{
-                        color: isSelected ? "white" : color.text.secondary,
-                      }}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <p
-                      className={`text-sm font-semibold ${
-                        isSelected ? tw.textPrimary : tw.textSecondary
-                      }`}
-                    >
-                      {type.name}
-                    </p>
-                    <p
-                      className={`text-xs ${tw.textMuted} mt-0.5 hidden sm:block`}
-                    >
-                      {type.description}
-                    </p>
-                  </div>
-                  {isSelected && (
                     <div
-                      className="w-1 h-1 rounded-full"
-                      style={{ backgroundColor: color.primary.accent }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{
+                        backgroundColor: isSelected
+                          ? color.primary.accent
+                          : color.surface.cards,
+                      }}
+                    >
+                      <Icon
+                        className="w-4 h-4"
+                        style={{
+                          color: isSelected ? "white" : color.text.secondary,
+                        }}
+                      />
+                    </div>
+                    <div className="text-center">
+                      <p
+                        className={`text-sm font-semibold ${
+                          isSelected ? tw.textPrimary : tw.textSecondary
+                        }`}
+                      >
+                        {type.name}
+                      </p>
+                      <p
+                        className={`text-xs ${tw.textMuted} mt-0.5 hidden sm:block`}
+                      >
+                        {type.description}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <div
+                        className="w-1 h-1 rounded-full"
+                        style={{ backgroundColor: color.primary.accent }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Reward Value */}
@@ -530,30 +607,6 @@ export default function DefineRewardStep({
                   : t.manualRewards.rewardValueHelperCashback}
           </p>
         </div>
-
-        {/* Bundle Track (only for bundle type) */}
-        {rewardType === "bundle" && (
-          <div>
-            <HeadlessSelect
-              label={t.manualRewards.bundleTrackLabel}
-              options={BUNDLE_TRACKS.map((track) => ({
-                value: track,
-                label: track,
-              }))}
-              value={bundleTrack}
-              onChange={(value) => {
-                setBundleTrack(value as string);
-                onUpdate({ bundleTrack: value as string });
-                resetRewardValidation();
-              }}
-              placeholder={t.manualRewards.bundleTrackPlaceholder}
-              zIndex={zIndex.popover}
-            />
-            <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-              {t.manualRewards.bundleTrackHelper}
-            </p>
-          </div>
-        )}
 
         {/* Communication Channel, SMS Route, and Email Route */}
         <div className="flex gap-4 mb-6">

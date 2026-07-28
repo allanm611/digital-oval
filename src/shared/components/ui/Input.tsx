@@ -1,4 +1,5 @@
 import React, { forwardRef, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { tw } from '../../utils/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -14,6 +15,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string; // Floating label
   labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
   style?: React.CSSProperties;
+  /** Show eye toggle for password fields. Defaults to true when type is password. */
+  showPasswordToggle?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -29,9 +32,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   label,
   labelBgColor,
   style = {},
+  showPasswordToggle,
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isPasswordType = type === 'password';
+  const shouldShowToggle = isPasswordType && showPasswordToggle !== false;
+  const inputType = shouldShowToggle && showPassword ? 'text' : type;
 
   let paddingClass = 'px-4 py-2'; // default
   if (variant === 'medium') paddingClass = 'px-3 py-2';
@@ -66,12 +75,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   const hasValue = value !== '' && value !== null && value !== undefined;
   const shouldFloatLabel = isFocused || hasValue;
 
+  const passwordToggleButton = shouldShowToggle ? (
+    <button
+      type="button"
+      tabIndex={-1}
+      onClick={() => setShowPassword((prev) => !prev)}
+      disabled={disabled}
+      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={showPassword ? 'Hide password' : 'Show password'}
+    >
+      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  ) : null;
+
   // Without floating label (backward compatible)
   if (!label) {
-    return (
+    const inputEl = (
       <input
         ref={ref}
-        type={type}
+        type={inputType}
         placeholder={placeholder}
         value={value}
         onChange={(e) => {
@@ -82,10 +104,22 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         onKeyDown={onKeyDown}
         className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          ${shouldShowToggle ? 'pr-10' : ''}
           ${className}`}
         style={inputStyle}
         {...rest}
       />
+    );
+
+    if (!shouldShowToggle) {
+      return inputEl;
+    }
+
+    return (
+      <div className="relative w-full">
+        {inputEl}
+        {passwordToggleButton}
+      </div>
     );
   }
 
@@ -103,7 +137,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     <div className="relative w-full">
       <input
         ref={ref}
-        type={type}
+        type={inputType}
         placeholder={shouldFloatLabel ? placeholder : " "}
         value={value}
         onChange={(e) => {
@@ -115,6 +149,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         className={`w-full px-3 pt-3 pb-2 text-sm leading-tight border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
           ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
+          ${shouldShowToggle ? 'pr-10' : ''}
           ${className}`}
         style={{
           ...inputStyle,
@@ -147,6 +182,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
       >
         {label}
       </label>
+
+      {passwordToggleButton}
     </div>
   );
 });

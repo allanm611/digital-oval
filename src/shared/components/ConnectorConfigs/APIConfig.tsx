@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import Input from "../ui/Input";
 import Textarea from "../ui/Textarea";
 import HeadlessSelect from "../ui/HeadlessSelect";
@@ -9,8 +9,6 @@ import { ConfigComponentProps } from "./types";
 export const APIConfig: React.FC<ConfigComponentProps> = ({
   config,
   updateConfiguration,
-  showPasswords,
-  togglePasswordVisibility,
 }) => {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
@@ -58,23 +56,12 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
           onChange={(value) => updateConfiguration("username", value)}
         />
         <Input
-          type={showPasswords.api_password ? "text" : "password"}
+          type="password"
           label="Password"
           value={config.password || ""}
           onChange={(value) => updateConfiguration("password", String(value))}
           placeholder="••••••••"
         />
-        <button
-          type="button"
-          onClick={() => togglePasswordVisibility("api_password")}
-          className="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600"
-        >
-          {showPasswords.api_password ? (
-            <EyeOff size={14} />
-          ) : (
-            <Eye size={14} />
-          )}
-        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-6">

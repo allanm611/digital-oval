@@ -255,6 +255,20 @@ export default function AdminHubPage() {
       ],
     },
     {
+      name: "Rewards & Offers",
+      description: "Configure reward providers, types, and fulfilment settings",
+      cards: [
+        {
+          title: "Reward Providers",
+          description:
+            "Define provider integrations and which reward types each can fulfil",
+          icon: Gift,
+          href: "/dashboard/reward-providers",
+          category: "Rewards & Offers",
+        },
+      ],
+    },
+    {
       name: "System Configuration",
       description: "System settings and administrative configurations",
       cards: [

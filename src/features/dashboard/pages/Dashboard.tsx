@@ -590,6 +590,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/GatewayProvidersContainer"),
   ),
+  RewardProvidersPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/RewardProvidersContainer"),
+  ),
   DNDTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
@@ -1318,6 +1322,10 @@ export default function Dashboard() {
           <Route
             path="/gateway-providers/*"
             element={<SettingsPages.GatewayProvidersPage />}
+          />
+          <Route
+            path="/reward-providers/*"
+            element={<SettingsPages.RewardProvidersPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />

@@ -234,6 +234,16 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/reward-types",
       },
       {
+        id: "reward-providers",
+        name: "Reward Providers",
+        description:
+          "Define reward provider integrations and allowed reward types for offers and manual rewards",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/reward-providers",
+      },
+      {
         id: "segment-catalogs",
         name: "segment catalogs",
         description: "Manage segment catalogs and classifications",
