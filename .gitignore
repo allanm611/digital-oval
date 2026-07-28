@@ -27,7 +27,6 @@ build_output.log
 .env
 .vercel
 .env*.local
-CLAUDE.md
 .env*
 .qodo
 .bolt

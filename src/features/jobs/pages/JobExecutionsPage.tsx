@@ -28,7 +28,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import Input from "../../../shared/components/ui/Input";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { color, tw, button, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -907,8 +907,12 @@ export default function JobExecutionsPage() {
                       setSelectedExecutions(new Set());
                     }
                   }}
-                  className="inline-flex items-center gap-2 transition-colors w-auto"
-                  style={getButtonStyles(button.bordered)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                  style={{
+                    backgroundColor: "transparent",
+                    borderColor: "var(--c-bordered-button-color)",
+                    color: "var(--c-bordered-button-color)",
+                  }}
                 >
                   {isSelectionMode ? (
                     <CheckSquare className="h-4 w-4" />

@@ -603,7 +603,6 @@ export default function SMSTestPage() {
                     rows={5}
                     hasError={!!messageError}
                     labelBgColor="var(--c-primary-background)"
-                    style={{ borderColor: '#cbd5e1' }}
                   />
                   {messageError ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">
