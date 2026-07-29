@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { rewardProviderService } from "../../features/configurations/services/rewardProviderService";
 import {
+  filterProvidersByRewardType,
   getDefaultRewardProviderId,
   getRewardProviderById,
   getRewardProviderOptions,
@@ -12,13 +13,13 @@ import {
 } from "../data/rewardProviders";
 
 export interface UseRewardProvidersOptions {
-  /** Filter providers by UI reward type (maps to backend reward_type query) */
+  /** Filter providers by UI reward type (matches provider.reward_type / reward_key) */
   rewardType?: RuleRewardType | string | null;
 }
 
 export function useRewardProviders(options: UseRewardProvidersOptions = {}) {
   const { rewardType = null } = options;
-  const [providers, setProviders] = useState<RewardProviderRecord[]>([]);
+  const [allProviders, setAllProviders] = useState<RewardProviderRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,23 +28,28 @@ export function useRewardProviders(options: UseRewardProvidersOptions = {}) {
     [rewardType],
   );
 
+  const providers = useMemo(
+    () => filterProvidersByRewardType(allProviders, rewardType),
+    [allProviders, rewardType],
+  );
+
   const loadProviders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await rewardProviderService.getAll(
-        providerQueryType ? { reward_type: providerQueryType } : undefined,
-      );
-      setProviders(data.map(mapApiRewardProvider));
+      const data = (await rewardProviderService.getAll())
+        .map(mapApiRewardProvider)
+        .filter((p) => p.isActive !== false);
+      setAllProviders(data);
     } catch (err) {
-      setProviders([]);
+      setAllProviders([]);
       setError(
         err instanceof Error ? err.message : "Failed to load reward providers",
       );
     } finally {
       setLoading(false);
     }
-  }, [providerQueryType]);
+  }, []);
 
   useEffect(() => {
     loadProviders();
@@ -67,12 +73,13 @@ export function useRewardProviders(options: UseRewardProvidersOptions = {}) {
 
   const getProvider = useCallback(
     (providerId: string | number | undefined | null) =>
-      getRewardProviderById(providers, providerId),
-    [providers],
+      getRewardProviderById(allProviders, providerId),
+    [allProviders],
   );
 
   return {
     providers,
+    allProviders,
     providerOptions,
     defaultProviderId,
     loading,

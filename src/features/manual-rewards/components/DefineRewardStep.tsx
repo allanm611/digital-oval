@@ -63,18 +63,19 @@ export default function DefineRewardStep({
   onPrevious,
 }: DefineRewardStepProps) {
   const { t } = useLanguage();
+  const [providersInitialized, setProvidersInitialized] = useState(false);
+  const [bundleTrack, setBundleTrack] = useState(data.bundleTrack || "");
+  const [rewardType, setRewardType] = useState<RewardType>(
+    (data.rewardType as RewardType) || "bundle",
+  );
   const {
     providerOptions,
     defaultProviderId,
     loading: loadingRewardProviders,
     resolveProvider,
     getProvider,
+    error: providerLoadError,
   } = useRewardProviders({ rewardType });
-  const [providersInitialized, setProvidersInitialized] = useState(false);
-  const [bundleTrack, setBundleTrack] = useState(data.bundleTrack || "");
-  const [rewardType, setRewardType] = useState<RewardType>(
-    (data.rewardType as RewardType) || "bundle",
-  );
   const [rewardValue, setRewardValue] = useState(data.rewardValue || "");
   const [description, setDescription] = useState(data.description || "");
   const [error, setError] = useState("");
@@ -527,9 +528,13 @@ export default function DefineRewardStep({
             zIndex={zIndex.popover}
           />
           <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            {getProvider(bundleTrack)?.name
-              ? `Selected: ${getProvider(bundleTrack)?.name}`
-              : t.manualRewards.bundleTrackHelper}
+            {providerLoadError
+              ? providerLoadError
+              : getProvider(bundleTrack)?.name
+                ? `Selected: ${getProvider(bundleTrack)?.name}`
+                : !loadingRewardProviders && providerOptions.length === 0
+                  ? `No active providers for "${rewardType}". Add one under Configurations → Reward Providers.`
+                  : t.manualRewards.bundleTrackHelper}
           </p>
         </div>
 

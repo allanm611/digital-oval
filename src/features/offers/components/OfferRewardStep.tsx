@@ -47,20 +47,21 @@ export default function OfferRewardStep({
   rewards,
   onRewardsChange,
 }: OfferRewardStepProps) {
-  const { getProvider } = useRewardProviders();
-  const {
-    providerOptions,
-    defaultProviderId,
-    loading: loadingRewardProviders,
-    resolveProvider,
-  } = useRewardProviders({
-    rewardType: editingRule?.reward_type ?? null,
-  });
   const [selectedReward, setSelectedReward] = useState<string | null>(
     rewards.length > 0 ? rewards[0].id : null
   );
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [editingRule, setEditingRule] = useState<RewardRule | null>(null);
+  const {
+    providerOptions,
+    defaultProviderId,
+    loading: loadingRewardProviders,
+    resolveProvider,
+    getProvider,
+    error: providerLoadError,
+  } = useRewardProviders({
+    rewardType: showRuleModal ? editingRule?.reward_type ?? null : null,
+  });
   const [rewardTypes, setRewardTypes] = useState<RewardType[]>([]);
   const [loadingRewardTypes, setLoadingRewardTypes] = useState(false);
 
@@ -551,6 +552,14 @@ export default function OfferRewardStep({
                     }
                     zIndex={zIndex.popover}
                   />
+                  {providerLoadError ? (
+                    <p className="mt-1 text-xs text-red-600">{providerLoadError}</p>
+                  ) : !loadingRewardProviders && providerOptions.length === 0 ? (
+                    <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                      No active providers for &quot;{editingRule.reward_type}&quot;.
+                      Add one under Configurations → Reward Providers.
+                    </p>
+                  ) : null}
                 </div>
 
                 <Textarea

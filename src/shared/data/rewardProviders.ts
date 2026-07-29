@@ -2,7 +2,7 @@
  * Reward provider runtime helpers.
  *
  * Backend model (cvm.reward_providers):
- * - Each provider has a single `reward_type` and integration schemas
+ * - Each provider has a single `reward_type` (matches reward_types.reward_key)
  * - GET /reward-providers?reward_type= filters providers for a fulfilment type
  *
  * Offers / manual rewards store provider id in bundleTrack / bundle_subscription_track.
@@ -26,19 +26,45 @@ export const RULE_REWARD_TYPE_LABELS: Record<RuleRewardType, string> = {
   cashback: "Cashback",
 };
 
-/** Maps UI rule reward types to backend provider.reward_type query values */
+/**
+ * Legacy aliases where UI keys and stored provider.reward_type differ.
+ * Prefer matching reward_types.reward_key exactly when configuring providers.
+ */
+export const REWARD_TYPE_ALIASES: Record<string, readonly string[]> = {
+  bundle: ["bundle", "bonus_units"],
+  bonus_units: ["bundle", "bonus_units"],
+  airtime: ["airtime"],
+  points: ["points"],
+  discount: ["discount"],
+  cashback: ["cashback"],
+};
+
+export function normalizeRewardTypeKey(
+  value: string | undefined | null,
+): string {
+  if (!value) return "";
+  return String(value).trim().toLowerCase();
+}
+
+/** All backend reward_type values that satisfy a UI / rule reward type */
+export function getRewardTypeMatchKeys(
+  ruleType: RuleRewardType | string | undefined | null,
+): string[] {
+  const key = normalizeRewardTypeKey(ruleType);
+  if (!key) return [];
+  const aliases = REWARD_TYPE_ALIASES[key];
+  return aliases ? [...aliases] : [key];
+}
+
+/**
+ * Maps UI rule reward types to backend provider.reward_type query values.
+ * Uses reward_key as-is; aliases are resolved client-side when filtering.
+ */
 export function mapRuleRewardTypeToProviderQuery(
   ruleType: RuleRewardType | string | undefined | null,
 ): string | undefined {
-  if (!ruleType) return undefined;
-  const mapping: Record<string, string> = {
-    bundle: "bonus_units",
-    airtime: "airtime",
-    points: "points",
-    discount: "discount",
-    cashback: "cashback",
-  };
-  return mapping[ruleType] ?? ruleType;
+  const key = normalizeRewardTypeKey(ruleType);
+  return key || undefined;
 }
 
 export interface RewardProviderRecord {
@@ -63,6 +89,28 @@ export function mapApiRewardProvider(
     isActive: provider.is_active !== false,
     description: provider.description,
   };
+}
+
+export function providerMatchesRewardType(
+  provider: RewardProviderRecord,
+  ruleType: RuleRewardType | string | undefined | null,
+): boolean {
+  const matchKeys = getRewardTypeMatchKeys(ruleType);
+  if (matchKeys.length === 0) return true;
+  const providerType = normalizeRewardTypeKey(provider.rewardType);
+  return matchKeys.includes(providerType);
+}
+
+export function filterProvidersByRewardType(
+  providers: readonly RewardProviderRecord[],
+  ruleType: RuleRewardType | string | undefined | null,
+): RewardProviderRecord[] {
+  const active = providers.filter((p) => p.isActive !== false);
+  const matchKeys = getRewardTypeMatchKeys(ruleType);
+  if (matchKeys.length === 0) return active;
+  return active.filter((p) =>
+    matchKeys.includes(normalizeRewardTypeKey(p.rewardType)),
+  );
 }
 
 export function getRewardProviderOptions(
