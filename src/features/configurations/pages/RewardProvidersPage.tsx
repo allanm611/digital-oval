@@ -11,18 +11,19 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import Pagination, {
   DEFAULT_PAGE_SIZE,
 } from "../../../shared/components/ui/Pagination";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
 import {
   rewardProviderService,
   RewardProvider,
 } from "../services/rewardProviderService";
+import { rewardTypeService } from "../../offers/services/rewardTypeService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import {
   Table,
   useTable,
   type TableColumn,
 } from "../../../shared/components/Table";
-import { RULE_REWARD_TYPE_LABELS } from "../../../shared/data/rewardProviders";
 
 export default function RewardProvidersPage() {
   const navigate = useNavigate();
@@ -30,6 +31,10 @@ export default function RewardProvidersPage() {
   const [providers, setProviders] = useState<RewardProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [rewardTypeFilter, setRewardTypeFilter] = useState("");
+  const [rewardTypeOptions, setRewardTypeOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [providerToDelete, setProviderToDelete] =
     useState<RewardProvider | null>(null);
@@ -45,19 +50,42 @@ export default function RewardProvidersPage() {
       if (!providerToDelete) return;
       await rewardProviderService.delete(Number(id));
       setProviders((prev) => prev.filter((p) => p.id !== Number(id)));
-      showSuccess(`"${providerToDelete.name}" has been deleted successfully.`);
+      showSuccess(`"${providerToDelete.name}" has been deactivated.`);
     },
     itemLabel: "Reward Provider",
   });
 
   useEffect(() => {
+    loadRewardTypes();
     loadProviders();
   }, []);
+
+  useEffect(() => {
+    loadProviders();
+  }, [rewardTypeFilter]);
+
+  const loadRewardTypes = async () => {
+    try {
+      const response = await rewardTypeService.getAllRewardTypes();
+      setRewardTypeOptions(
+        (response.data || [])
+          .filter((rt) => rt.is_active !== false)
+          .map((rt) => ({
+            value: rt.reward_key,
+            label: rt.name || rt.reward_key,
+          })),
+      );
+    } catch {
+      setRewardTypeOptions([]);
+    }
+  };
 
   const loadProviders = async () => {
     try {
       setLoading(true);
-      const data = await rewardProviderService.getAll();
+      const data = await rewardProviderService.getAll(
+        rewardTypeFilter ? { reward_type: rewardTypeFilter } : undefined,
+      );
       setProviders(data);
     } catch (err) {
       showError(
@@ -80,32 +108,29 @@ export default function RewardProvidersPage() {
   const handleToggleActive = async (provider: RewardProvider) => {
     const newActive = !(provider.is_active !== false);
     setTogglingId(provider.id);
-    setProviders((prev) =>
-      prev.map((p) =>
-        p.id === provider.id ? { ...p, is_active: newActive } : p,
-      ),
-    );
+
+    if (!newActive) {
+      try {
+        await rewardProviderService.delete(provider.id);
+        setProviders((prev) => prev.filter((p) => p.id !== provider.id));
+        showSuccess("Deactivated", `${provider.name} has been deactivated`);
+      } catch (err) {
+        showError(
+          extractBackendError(err, "Failed to deactivate reward provider"),
+        );
+      } finally {
+        setTogglingId(null);
+      }
+      return;
+    }
 
     try {
-      await rewardProviderService.update(provider.id, {
-        is_active: newActive,
-      });
-      showSuccess(
-        newActive ? "Activated" : "Deactivated",
-        newActive
-          ? `${provider.name} has been activated`
-          : `${provider.name} has been deactivated`,
-      );
+      await rewardProviderService.update(provider.id, { is_active: true });
+      showSuccess("Activated", `${provider.name} has been activated`);
+      await loadProviders();
     } catch (err) {
-      setProviders((prev) =>
-        prev.map((p) =>
-          p.id === provider.id
-            ? { ...p, is_active: provider.is_active !== false }
-            : p,
-        ),
-      );
       showError(
-        extractBackendError(err, "Failed to update provider status"),
+        extractBackendError(err, "Failed to activate reward provider"),
       );
     } finally {
       setTogglingId(null);
@@ -117,34 +142,39 @@ export default function RewardProvidersPage() {
     return (
       !term ||
       provider.name.toLowerCase().includes(term) ||
-      provider.provider_key.toLowerCase().includes(term) ||
+      provider.reward_type.toLowerCase().includes(term) ||
+      provider.api_path.toLowerCase().includes(term) ||
       (provider.description || "").toLowerCase().includes(term)
     );
   });
 
   const defaultColumns: TableColumn<RewardProvider>[] = [
+    { id: "name", label: "Name", visible: true },
     {
-      id: "name",
-      label: "Name",
-      visible: true,
-    },
-    {
-      id: "provider_key",
-      label: "Provider Key",
+      id: "reward_type",
+      label: "Reward Type",
       visible: true,
       render: (value) => (
         <span className="font-mono text-sm">{String(value)}</span>
       ),
     },
     {
-      id: "allowed_reward_types",
-      label: "Allowed Types",
+      id: "api_path",
+      label: "API Path",
+      visible: true,
+      render: (value, row) => (
+        <span className="text-sm">
+          <span className="font-mono">{row.http_method}</span> {String(value)}
+        </span>
+      ),
+    },
+    {
+      id: "auth_schema",
+      label: "Schemas",
       visible: true,
       sortable: false,
       render: (_value, row) =>
-        (row.allowed_reward_types || [])
-          .map((t) => RULE_REWARD_TYPE_LABELS[t] || t)
-          .join(", ") || "—",
+        `${row.auth_schema?.fields?.length ?? 0} auth / ${row.payload_schema?.fields?.length ?? 0} payload fields`,
     },
     {
       id: "is_active",
@@ -190,7 +220,7 @@ export default function RewardProvidersPage() {
           <button
             onClick={() => handleDeleteClick(provider)}
             className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
-            title="Delete provider"
+            title="Deactivate provider"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -222,7 +252,7 @@ export default function RewardProvidersPage() {
 
   useEffect(() => {
     tableHandlePageChange(1);
-  }, [searchTerm, tableHandlePageChange]);
+  }, [searchTerm, rewardTypeFilter, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -236,17 +266,29 @@ export default function RewardProvidersPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Define reward provider integrations and which reward types each
-          provider can fulfil. Offers and manual rewards use these providers to
-          filter available reward types.
+          Define reward fulfilment provider templates (auth schema, payload
+          schema, request template, and API path). Create reward configurations
+          from these templates for use in offers and manual rewards.
         </p>
       </div>
 
-      <div className="my-5">
-        <SearchInput
-          placeholder="Search by name, provider key, or description..."
-          value={searchTerm}
-          onChange={setSearchTerm}
+      <div className="my-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="md:col-span-2">
+          <SearchInput
+            placeholder="Search by name, reward type, API path..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
+        </div>
+        <HeadlessSelect
+          label=""
+          value={rewardTypeFilter}
+          onChange={setRewardTypeFilter}
+          options={[
+            { value: "", label: "All reward types" },
+            ...rewardTypeOptions,
+          ]}
+          placeholder="Filter by reward type"
         />
       </div>
 
@@ -255,14 +297,16 @@ export default function RewardProvidersPage() {
           <div className="text-center py-12">
             <div className="w-12 h-12 text-gray-400 mx-auto mb-4">🎁</div>
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm ? "No providers found" : "No reward providers yet"}
+              {searchTerm || rewardTypeFilter
+                ? "No providers found"
+                : "No reward providers yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
-              {searchTerm
-                ? "Try adjusting your search"
-                : "Create a reward provider before configuring offers or manual rewards"}
+              {searchTerm || rewardTypeFilter
+                ? "Try adjusting your search or filter"
+                : "Create a reward provider template before adding configurations"}
             </p>
-            {!searchTerm && (
+            {!searchTerm && !rewardTypeFilter && (
               <FeatureActionButton
                 featureId="reward-providers"
                 action="create"
@@ -313,8 +357,8 @@ export default function RewardProvidersPage() {
         isOpen={deleteConfirm.id !== null}
         onClose={closeDeleteConfirm}
         onConfirm={confirmDeleteProvider}
-        title="Delete Reward Provider"
-        description="Existing offer rules and manual rewards that reference this provider key may break. Prefer deactivating instead if the provider is in use."
+        title="Deactivate Reward Provider"
+        description="This soft-deactivates the provider. Existing reward configurations referencing it may stop working."
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
       />

@@ -266,6 +266,14 @@ export default function AdminHubPage() {
           href: "/dashboard/reward-providers",
           category: "Rewards & Offers",
         },
+        {
+          title: "Reward Configurations",
+          description:
+            "Configure auth credentials and payload values for reward delivery",
+          icon: Gift,
+          href: "/dashboard/reward-configurations",
+          category: "Rewards & Offers",
+        },
       ],
     },
     {

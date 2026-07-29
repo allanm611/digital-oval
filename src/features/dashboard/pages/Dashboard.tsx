@@ -594,6 +594,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/RewardProvidersContainer"),
   ),
+  RewardConfigurationsPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/RewardConfigurationsContainer"),
+  ),
   DNDTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
@@ -1326,6 +1330,10 @@ export default function Dashboard() {
           <Route
             path="/reward-providers/*"
             element={<SettingsPages.RewardProvidersPage />}
+          />
+          <Route
+            path="/reward-configurations/*"
+            element={<SettingsPages.RewardConfigurationsPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />

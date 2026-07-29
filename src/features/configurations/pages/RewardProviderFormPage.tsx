@@ -5,6 +5,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { tw } from "../../../shared/utils/utils";
+import { rewardTypeService } from "../../offers/services/rewardTypeService";
 import {
   rewardProviderService,
   RewardProvider,
@@ -26,6 +27,9 @@ export default function RewardProviderFormPage({
 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [rewardTypeOptions, setRewardTypeOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
   const [editingProvider, setEditingProvider] =
     useState<RewardProvider | null>(null);
 
@@ -36,6 +40,29 @@ export default function RewardProviderFormPage({
   const loadInitial = async () => {
     try {
       setIsLoading(true);
+
+      try {
+        const rewardTypesResponse = await rewardTypeService.getAllRewardTypes();
+        const activeTypes = (rewardTypesResponse.data || []).filter(
+          (rt) => rt.is_active !== false,
+        );
+        setRewardTypeOptions(
+          activeTypes.map((rt) => ({
+            value: rt.reward_key,
+            label: rt.name || rt.reward_key,
+          })),
+        );
+      } catch {
+        setRewardTypeOptions([
+          { value: "bonus_units", label: "Bonus Units" },
+          { value: "airtime", label: "Airtime" },
+          { value: "bundle", label: "Bundle" },
+          { value: "points", label: "Points" },
+          { value: "discount", label: "Discount" },
+          { value: "cashback", label: "Cashback" },
+        ]);
+      }
+
       if (mode === "edit" && id) {
         const provider = await rewardProviderService.getById(Number(id));
         setEditingProvider(provider);
@@ -100,6 +127,7 @@ export default function RewardProviderFormPage({
       <RewardProviderForm
         mode={mode}
         isLoading={isSaving}
+        rewardTypeOptions={rewardTypeOptions}
         initialData={editingProvider}
         onCancel={() => navigate("/dashboard/reward-providers")}
         onSave={handleSave}

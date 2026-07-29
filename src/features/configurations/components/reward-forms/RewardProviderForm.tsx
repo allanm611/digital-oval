@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Input from "../../../../shared/components/ui/Input";
 import Textarea from "../../../../shared/components/ui/Textarea";
+import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import {
   color,
@@ -8,22 +9,27 @@ import {
   button,
   getButtonStyles,
 } from "../../../../shared/utils/utils";
-import {
+import type {
   CreateRewardProviderRequest,
   RewardProvider,
+  RewardProviderHttpMethod,
+  RewardProviderSchemaField,
   UpdateRewardProviderRequest,
-} from "../../services/rewardProviderService";
-import {
-  validateProviderKey,
-  type RuleRewardType,
-} from "../../../../shared/data/rewardProviders";
-import RewardProviderAllowedTypesEditor, {
-  validateAllowedTypesSelection,
-} from "./RewardProviderAllowedTypesEditor";
+} from "../../types/rewardProvider";
+import RewardProviderFieldSchemaEditor, {
+  validateRewardFieldSchema,
+} from "./RewardProviderFieldSchemaEditor";
+
+interface RewardTypeOption {
+  value: string;
+  label: string;
+}
 
 interface RewardProviderFormProps {
   mode: "create" | "edit";
   isLoading: boolean;
+  rewardTypeOptions: RewardTypeOption[];
+  rewardTypesLoading?: boolean;
   initialData?: RewardProvider | null;
   onCancel: () => void;
   onSave: (
@@ -31,55 +37,122 @@ interface RewardProviderFormProps {
   ) => void;
 }
 
+const HTTP_METHODS: { value: RewardProviderHttpMethod; label: string }[] = [
+  { value: "POST", label: "POST" },
+  { value: "PUT", label: "PUT" },
+  { value: "PATCH", label: "PATCH" },
+  { value: "GET", label: "GET" },
+];
+
+const DEFAULT_REQUEST_TEMPLATE = `{
+  "channel": "{{config.channel}}",
+  "subscriber": [
+    {
+      "msisdn": "{{subscriber.msisdn}}",
+      "action": "{{config.action}}"
+    }
+  ]
+}`;
+
+function normalizeFields(
+  fields: RewardProviderSchemaField[],
+): RewardProviderSchemaField[] {
+  return fields.map((field) => ({
+    name: field.name.trim(),
+    label: field.label.trim(),
+    type: field.type,
+    required: !!field.required,
+    ...(field.placeholder?.trim()
+      ? { placeholder: field.placeholder.trim() }
+      : {}),
+    ...(field.default !== undefined && field.default !== ""
+      ? { default: field.default }
+      : {}),
+    ...(field.type === "select"
+      ? {
+          options: (field.options || [])
+            .map((o) => o.trim())
+            .filter(Boolean),
+        }
+      : {}),
+  }));
+}
+
 export default function RewardProviderForm({
   mode,
   isLoading,
+  rewardTypeOptions,
+  rewardTypesLoading = false,
   initialData,
   onCancel,
   onSave,
 }: RewardProviderFormProps) {
-  const [providerKey, setProviderKey] = useState(
-    initialData?.provider_key || "",
-  );
   const [name, setName] = useState(initialData?.name || "");
+  const [rewardType, setRewardType] = useState(initialData?.reward_type || "");
   const [description, setDescription] = useState(
     initialData?.description || "",
   );
+  const [apiPath, setApiPath] = useState(initialData?.api_path || "");
+  const [httpMethod, setHttpMethod] = useState<RewardProviderHttpMethod>(
+    initialData?.http_method || "POST",
+  );
   const [isActive, setIsActive] = useState(initialData?.is_active !== false);
-  const [allowedTypes, setAllowedTypes] = useState<RuleRewardType[]>(
-    initialData?.allowed_reward_types?.length
-      ? [...initialData.allowed_reward_types]
-      : ["bundle"],
+  const [authFields, setAuthFields] = useState<RewardProviderSchemaField[]>(
+    initialData?.auth_schema?.fields?.length
+      ? initialData.auth_schema.fields
+      : [],
+  );
+  const [payloadFields, setPayloadFields] = useState<RewardProviderSchemaField[]>(
+    initialData?.payload_schema?.fields?.length
+      ? initialData.payload_schema.fields
+      : [],
+  );
+  const [requestTemplateText, setRequestTemplateText] = useState(
+    JSON.stringify(initialData?.request_template || {}, null, 2),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!initialData) return;
-    setProviderKey(initialData.provider_key || "");
     setName(initialData.name || "");
+    setRewardType(initialData.reward_type || "");
     setDescription(initialData.description || "");
+    setApiPath(initialData.api_path || "");
+    setHttpMethod(initialData.http_method || "POST");
     setIsActive(initialData.is_active !== false);
-    setAllowedTypes(
-      initialData.allowed_reward_types?.length
-        ? [...initialData.allowed_reward_types]
-        : ["bundle"],
+    setAuthFields(initialData.auth_schema?.fields || []);
+    setPayloadFields(initialData.payload_schema?.fields || []);
+    setRequestTemplateText(
+      JSON.stringify(initialData.request_template || {}, null, 2),
     );
   }, [initialData]);
 
   const validate = (): boolean => {
     const next: Record<string, string> = {};
 
-    if (mode === "create") {
-      const keyError = validateProviderKey(providerKey);
-      if (keyError) next.provider_key = keyError;
-    }
-
-    if (!name.trim()) next.name = "Display name is required";
+    if (!name.trim()) next.name = "Provider name is required";
     else if (name.trim().length > 100) {
-      next.name = "Display name must be 100 characters or less";
+      next.name = "Provider name must be 100 characters or less";
     }
 
-    Object.assign(next, validateAllowedTypesSelection(allowedTypes));
+    if (!rewardType) next.reward_type = "Reward type is required";
+    if (!apiPath.trim()) next.api_path = "API path is required";
+
+    Object.assign(next, validateRewardFieldSchema(authFields, "auth_schema"));
+    Object.assign(
+      next,
+      validateRewardFieldSchema(payloadFields, "payload_schema"),
+    );
+
+    try {
+      const parsed = JSON.parse(requestTemplateText || "{}");
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        next.request_template = "Request template must be a JSON object";
+      }
+    } catch {
+      next.request_template = "Request template must be valid JSON";
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -88,23 +161,24 @@ export default function RewardProviderForm({
     e.preventDefault();
     if (!validate()) return;
 
+    const payloadBase = {
+      name: name.trim(),
+      reward_type: rewardType,
+      description: description.trim() || null,
+      auth_schema: { fields: normalizeFields(authFields) },
+      payload_schema: { fields: normalizeFields(payloadFields) },
+      request_template: JSON.parse(requestTemplateText || "{}"),
+      api_path: apiPath.trim(),
+      http_method: httpMethod,
+      is_active: isActive,
+    };
+
     if (mode === "create") {
-      onSave({
-        provider_key: providerKey.trim(),
-        name: name.trim(),
-        description: description.trim() || undefined,
-        allowed_reward_types: allowedTypes,
-        is_active: isActive,
-      } as CreateRewardProviderRequest);
+      onSave(payloadBase as CreateRewardProviderRequest);
       return;
     }
 
-    onSave({
-      name: name.trim(),
-      description: description.trim() || undefined,
-      allowed_reward_types: allowedTypes,
-      is_active: isActive,
-    } as UpdateRewardProviderRequest);
+    onSave(payloadBase as UpdateRewardProviderRequest);
   };
 
   return (
@@ -117,46 +191,12 @@ export default function RewardProviderForm({
         </h2>
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {mode === "create" ? (
-              <div>
-                <Input
-                  label="Provider Key *"
-                  value={providerKey}
-                  onChange={setProviderKey}
-                  placeholder="e.g. R2TPersAdjustBalCount2"
-                  disabled={isLoading}
-                  hasError={!!errors.provider_key}
-                  required
-                />
-                {errors.provider_key && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.provider_key}
-                  </p>
-                )}
-                <p className={`text-xs ${tw.textMuted} mt-1`}>
-                  Stable identifier sent to fulfilment systems. Cannot be changed
-                  after creation.
-                </p>
-              </div>
-            ) : (
-              <div>
-                <p className={`text-xs uppercase ${tw.textMuted}`}>
-                  Provider Key
-                </p>
-                <p className={`text-sm font-mono ${tw.textPrimary} mt-1`}>
-                  {initialData?.provider_key}
-                </p>
-                <p className={`text-xs ${tw.textMuted} mt-1`}>
-                  Provider key is immutable after creation.
-                </p>
-              </div>
-            )}
             <div>
               <Input
-                label="Display Name *"
+                label="Provider Name *"
                 value={name}
                 onChange={setName}
-                placeholder="e.g. Personal Balance Adjustment"
+                placeholder="e.g. MICA Bonus Units Provider"
                 disabled={isLoading}
                 hasError={!!errors.name}
                 required
@@ -165,16 +205,60 @@ export default function RewardProviderForm({
                 <p className="text-red-500 text-xs mt-1">{errors.name}</p>
               )}
             </div>
+            <div>
+              <HeadlessSelect
+                label="Reward Type *"
+                value={rewardType}
+                onChange={setRewardType}
+                options={rewardTypeOptions}
+                placeholder={
+                  rewardTypesLoading
+                    ? "Loading reward types..."
+                    : "Select reward type"
+                }
+                disabled={isLoading || rewardTypesLoading}
+                error={!!errors.reward_type}
+              />
+              {errors.reward_type && (
+                <p className="text-red-500 text-xs mt-1">{errors.reward_type}</p>
+              )}
+            </div>
           </div>
 
           <Textarea
             label="Description"
             value={description}
             onChange={setDescription}
-            placeholder="Optional notes about this provider integration..."
+            placeholder="Describe this provider integration..."
             rows={2}
             disabled={isLoading}
           />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Input
+                label="API Path *"
+                value={apiPath}
+                onChange={setApiPath}
+                placeholder="e.g. /apigw/om/MICA/bonusUnits"
+                disabled={isLoading}
+                hasError={!!errors.api_path}
+                required
+              />
+              {errors.api_path && (
+                <p className="text-red-500 text-xs mt-1">{errors.api_path}</p>
+              )}
+            </div>
+            <div>
+              <HeadlessSelect
+                label="HTTP Method *"
+                value={httpMethod}
+                onChange={(v) => setHttpMethod(v as RewardProviderHttpMethod)}
+                options={HTTP_METHODS}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
 
           <label className="flex items-center gap-2 cursor-pointer">
             <Checkbox
@@ -195,18 +279,52 @@ export default function RewardProviderForm({
       <div
         className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
       >
-        <RewardProviderAllowedTypesEditor
-          selectedTypes={allowedTypes}
+        <RewardProviderFieldSchemaEditor
+          title="Auth Schema"
+          description="Authentication fields collected when creating a reward configuration (e.g. base_url, username, password)."
+          schemaErrorKey="auth_schema"
+          fields={authFields}
+          errors={errors}
           disabled={isLoading}
-          error={errors.allowed_reward_types}
-          onChange={setAllowedTypes}
+          onChange={setAuthFields}
         />
-        {mode === "edit" && (
-          <p className={`text-xs ${tw.textSecondary} mt-4`}>
-            Removing a reward type may invalidate existing offer rules or manual
-            rewards that use this provider with that type. Prefer deactivating
-            the provider if it is in use.
-          </p>
+      </div>
+
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
+        <RewardProviderFieldSchemaEditor
+          title="Payload Schema"
+          description="Business payload fields required by this provider (e.g. channel, unitAmount, durationType)."
+          schemaErrorKey="payload_schema"
+          fields={payloadFields}
+          errors={errors}
+          disabled={isLoading}
+          onChange={setPayloadFields}
+        />
+      </div>
+
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
+        <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
+          Request Template *
+        </h2>
+        <p className={`text-xs ${tw.textSecondary} mb-4`}>
+          JSON body template with placeholders such as{" "}
+          <code className="font-mono">{`{{config.channel}}`}</code> and{" "}
+          <code className="font-mono">{`{{subscriber.msisdn}}`}</code>.
+        </p>
+        <Textarea
+          label=""
+          value={requestTemplateText}
+          onChange={setRequestTemplateText}
+          placeholder={DEFAULT_REQUEST_TEMPLATE}
+          rows={12}
+          disabled={isLoading}
+        />
+        {errors.request_template && (
+          <p className="text-red-500 text-xs mt-1">{errors.request_template}</p>
         )}
       </div>
 

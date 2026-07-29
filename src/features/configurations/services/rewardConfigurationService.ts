@@ -1,15 +1,22 @@
 import { extractErrorMessage } from "../../../shared/utils/errorHandler";
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 import type {
-  CreateRewardProviderRequest,
-  RewardProvider,
-  RewardProviderListParams,
-  UpdateRewardProviderRequest,
-} from "../types/rewardProvider";
+  CreateRewardConfigurationRequest,
+  RewardConfiguration,
+  RewardConfigurationListParams,
+  UpdateRewardConfigurationRequest,
+} from "../types/rewardConfiguration";
 
-const BASE_URL = buildApiUrl("/reward-providers");
+export type {
+  CreateRewardConfigurationRequest,
+  RewardConfiguration,
+  RewardConfigurationListParams,
+  UpdateRewardConfigurationRequest,
+} from "../types/rewardConfiguration";
 
-class RewardProviderService {
+const BASE_URL = buildApiUrl("/reward-configurations");
+
+class RewardConfigurationService {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -31,35 +38,39 @@ class RewardProviderService {
     return response.json();
   }
 
-  /** GET /reward-providers — active providers only; optional ?reward_type= filter */
-  async getAll(params?: RewardProviderListParams): Promise<RewardProvider[]> {
+  /** GET /reward-configurations — active configurations only; optional ?provider_id= filter */
+  async getAll(
+    params?: RewardConfigurationListParams,
+  ): Promise<RewardConfiguration[]> {
     const query = new URLSearchParams();
-    if (params?.reward_type) {
-      query.set("reward_type", params.reward_type);
+    if (params?.provider_id != null) {
+      query.set("provider_id", String(params.provider_id));
     }
     const qs = query.toString();
     const result = await this.request<{
       success: boolean;
-      data: RewardProvider[];
+      data: RewardConfiguration[];
       total?: number;
     }>(qs ? `?${qs}` : "");
     return result.data || [];
   }
 
-  /** GET /reward-providers/:id */
-  async getById(id: number): Promise<RewardProvider> {
+  /** GET /reward-configurations/:id */
+  async getById(id: number): Promise<RewardConfiguration> {
     const result = await this.request<{
       success: boolean;
-      data: RewardProvider;
+      data: RewardConfiguration;
     }>(`/${id}`);
     return result.data;
   }
 
-  /** POST /reward-providers */
-  async create(data: CreateRewardProviderRequest): Promise<RewardProvider> {
+  /** POST /reward-configurations */
+  async create(
+    data: CreateRewardConfigurationRequest,
+  ): Promise<RewardConfiguration> {
     const result = await this.request<{
       success: boolean;
-      data: RewardProvider;
+      data: RewardConfiguration;
     }>("", {
       method: "POST",
       body: JSON.stringify(data),
@@ -67,14 +78,14 @@ class RewardProviderService {
     return result.data;
   }
 
-  /** PUT /reward-providers/:id */
+  /** PUT /reward-configurations/:id */
   async update(
     id: number,
-    data: UpdateRewardProviderRequest,
-  ): Promise<RewardProvider> {
+    data: UpdateRewardConfigurationRequest,
+  ): Promise<RewardConfiguration> {
     const result = await this.request<{
       success: boolean;
-      data: RewardProvider;
+      data: RewardConfiguration;
     }>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -82,7 +93,7 @@ class RewardProviderService {
     return result.data;
   }
 
-  /** DELETE /reward-providers/:id — soft-deactivates provider */
+  /** DELETE /reward-configurations/:id — soft-deactivates configuration */
   async delete(id: number): Promise<{ success: boolean; message?: string }> {
     return this.request<{ success: boolean; message?: string }>(`/${id}`, {
       method: "DELETE",
@@ -90,11 +101,4 @@ class RewardProviderService {
   }
 }
 
-export const rewardProviderService = new RewardProviderService();
-
-export type {
-  CreateRewardProviderRequest,
-  RewardProvider,
-  RewardProviderListParams,
-  UpdateRewardProviderRequest,
-} from "../types/rewardProvider";
+export const rewardConfigurationService = new RewardConfigurationService();

@@ -244,6 +244,16 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/reward-providers",
       },
       {
+        id: "reward-configurations",
+        name: "Reward Configurations",
+        description:
+          "Manage auth and payload settings for reward delivery via provider integrations",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/reward-configurations",
+      },
+      {
         id: "segment-catalogs",
         name: "segment catalogs",
         description: "Manage segment catalogs and classifications",

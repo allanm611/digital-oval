@@ -47,13 +47,15 @@ export default function OfferRewardStep({
   rewards,
   onRewardsChange,
 }: OfferRewardStepProps) {
+  const { getProvider } = useRewardProviders();
   const {
     providerOptions,
-    defaultProviderKey,
+    defaultProviderId,
     loading: loadingRewardProviders,
-    getAllowedTypes,
-    resolveType,
-  } = useRewardProviders();
+    resolveProvider,
+  } = useRewardProviders({
+    rewardType: editingRule?.reward_type ?? null,
+  });
   const [selectedReward, setSelectedReward] = useState<string | null>(
     rewards.length > 0 ? rewards[0].id : null
   );
@@ -120,15 +122,14 @@ export default function OfferRewardStep({
   };
 
   const addRule = () => {
-    const defaultProvider = defaultProviderKey;
     const newRule: RewardRule = {
       id: generateId(),
       name: "New Rule",
-      bundle_subscription_track: defaultProvider,
+      bundle_subscription_track: "",
       priority: 1,
       condition: "",
       value: "",
-      reward_type: resolveType(defaultProvider, "bundle"),
+      reward_type: "bundle",
       reward_value: "",
       fulfillment_response: "success",
       success_text: "",
@@ -141,6 +142,25 @@ export default function OfferRewardStep({
     setEditingRule(newRule);
     setShowRuleModal(true);
   };
+
+  useEffect(() => {
+    if (!showRuleModal || !editingRule || loadingRewardProviders) return;
+    if (editingRule.bundle_subscription_track) return;
+    if (!defaultProviderId) return;
+    setEditingRule((prev) =>
+      prev
+        ? {
+            ...prev,
+            bundle_subscription_track: defaultProviderId,
+          }
+        : prev,
+    );
+  }, [
+    showRuleModal,
+    editingRule,
+    loadingRewardProviders,
+    defaultProviderId,
+  ]);
 
   const saveRule = (rewardId: string, rule: RewardRule) => {
     const reward = rewards.find((r) => r.id === rewardId);
@@ -366,15 +386,12 @@ export default function OfferRewardStep({
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => {
-                                    const nextType = resolveType(
-                                      rule.bundle_subscription_track,
-                                      rule.reward_type,
-                                    );
-                                    setEditingRule(
-                                      nextType === rule.reward_type
-                                        ? rule
-                                        : { ...rule, reward_type: nextType },
-                                    );
+                                    setEditingRule({
+                                      ...rule,
+                                      bundle_subscription_track: resolveProvider(
+                                        rule.bundle_subscription_track,
+                                      ),
+                                    });
                                     setShowRuleModal(true);
                                   }}
                                   className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
@@ -392,7 +409,7 @@ export default function OfferRewardStep({
                               </div>
                             </div>
                             <div className="text-sm text-gray-600 space-y-1">
-                              <div>Provider: {rule.bundle_subscription_track}</div>
+                              <div>Provider: {getProvider(rule.bundle_subscription_track)?.name || rule.bundle_subscription_track || "—"}</div>
                               <div>
                                 Type: {rule.reward_type} - Value:{" "}
                                 {rule.reward_value}
@@ -476,51 +493,19 @@ export default function OfferRewardStep({
                   />
                 </div>
 
-                <div>
-                  <HeadlessSelect
-                    label="Reward Provider"
-                    options={providerOptions}
-                    value={editingRule.bundle_subscription_track}
-                    onChange={(value) => {
-                      const providerId = value as string;
-                      const nextType = resolveType(
-                        providerId,
-                        editingRule.reward_type,
-                      );
-                      setEditingRule({
-                        ...editingRule,
-                        bundle_subscription_track: providerId,
-                        reward_type: nextType,
-                        ...(nextType !== editingRule.reward_type
-                          ? { reward_value: "" }
-                          : {}),
-                      });
-                    }}
-                    placeholder={
-                      loadingRewardProviders
-                        ? "Loading providers..."
-                        : "Select reward provider"
-                    }
-                    disabled={loadingRewardProviders}
-                    zIndex={zIndex.popover}
-                  />
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <HeadlessSelect
                       label="Reward Type"
-                      options={getAllowedTypes(
-                        editingRule.bundle_subscription_track,
-                      ).map((type) => ({
-                        value: type,
-                        label: RULE_REWARD_TYPE_LABELS[type],
-                      }))}
+                      options={Object.entries(RULE_REWARD_TYPE_LABELS).map(
+                        ([value, label]) => ({ value, label }),
+                      )}
                       value={editingRule.reward_type}
                       onChange={(value) =>
                         setEditingRule({
                           ...editingRule,
                           reward_type: value as RuleRewardType,
+                          bundle_subscription_track: "",
                           reward_value: "",
                         })
                       }
@@ -540,6 +525,31 @@ export default function OfferRewardStep({
                       })
                     }
                     placeholder="Enter reward value..."
+                  />
+                </div>
+
+                <div>
+                  <HeadlessSelect
+                    label="Reward Provider"
+                    options={providerOptions}
+                    value={editingRule.bundle_subscription_track}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        bundle_subscription_track: value as string,
+                      })
+                    }
+                    placeholder={
+                      loadingRewardProviders
+                        ? "Loading providers..."
+                        : providerOptions.length === 0
+                          ? "No providers for this reward type"
+                          : "Select reward provider"
+                    }
+                    disabled={
+                      loadingRewardProviders || providerOptions.length === 0
+                    }
+                    zIndex={zIndex.popover}
                   />
                 </div>
 

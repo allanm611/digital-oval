@@ -1498,7 +1498,7 @@ export const en: Translations = {
     rewardValueHelperCashback: "Enter cashback amount",
     bundleTrackLabel: "Reward Provider *",
     bundleTrackPlaceholder: "Select reward provider",
-    bundleTrackHelper: "Select the reward provider, then choose an allowed reward type",
+    bundleTrackHelper: "Select a reward type first, then choose a provider for that type",
     descriptionLabel: "Description",
     descriptionPlaceholder: "Optional description or notes...",
     optional: "optional",

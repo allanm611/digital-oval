@@ -71,6 +71,7 @@ const ROUTE_MAP: Record<string, string> = {
   'gateway-configurations': '/dashboard/gateway-configurations',
   'gateway-providers': '/dashboard/gateway-providers',
   'reward-providers': '/dashboard/reward-providers',
+  'reward-configurations': '/dashboard/reward-configurations',
   'job-workflow-steps': '/dashboard/job-workflow-steps',
   'team-roles': '/dashboard/team-roles',
   'segment-management': '/dashboard/segments',

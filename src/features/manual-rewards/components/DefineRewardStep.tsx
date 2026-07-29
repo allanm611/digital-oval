@@ -65,11 +65,11 @@ export default function DefineRewardStep({
   const { t } = useLanguage();
   const {
     providerOptions,
-    defaultProviderKey,
+    defaultProviderId,
     loading: loadingRewardProviders,
-    getAllowedTypes,
-    resolveType,
-  } = useRewardProviders();
+    resolveProvider,
+    getProvider,
+  } = useRewardProviders({ rewardType });
   const [providersInitialized, setProvidersInitialized] = useState(false);
   const [bundleTrack, setBundleTrack] = useState(data.bundleTrack || "");
   const [rewardType, setRewardType] = useState<RewardType>(
@@ -108,20 +108,21 @@ export default function DefineRewardStep({
     const key =
       savedKey && providerOptions.some((o) => o.value === savedKey)
         ? savedKey
-        : defaultProviderKey;
-    const nextType = resolveType(key, (data.rewardType as RewardType) || "bundle");
+        : defaultProviderId;
     setBundleTrack(key);
-    setRewardType(nextType);
     setProvidersInitialized(true);
   }, [
     loadingRewardProviders,
     providersInitialized,
     data.bundleTrack,
-    data.rewardType,
-    defaultProviderKey,
+    defaultProviderId,
     providerOptions,
-    resolveType,
   ]);
+
+  useEffect(() => {
+    if (loadingRewardProviders) return;
+    setBundleTrack((current) => resolveProvider(current));
+  }, [rewardType, loadingRewardProviders, defaultProviderId, resolveProvider]);
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -262,10 +263,57 @@ export default function DefineRewardStep({
     },
   ];
 
-  const allowedRewardTypeIds = getAllowedTypes(bundleTrack);
-  const availableRewardTypes = rewardTypes.filter((type) =>
-    allowedRewardTypeIds.includes(type.id),
-  );
+  const handleRewardTypeSelect = (type: RewardType) => {
+    setRewardType(type);
+    setRewardValue("");
+    setBundleTrack("");
+    onUpdate({ rewardType: type, rewardValue: "", bundleTrack: "" });
+    resetRewardValidation();
+  };
+
+  const handleRewardProviderChange = (providerId: string) => {
+    setBundleTrack(providerId);
+    onUpdate({ bundleTrack: providerId });
+    resetRewardValidation();
+  };
+
+  const handleNext = () => {
+    if (!bundleTrack) {
+      setError(t.manualRewards.errorBundleTrackRequired);
+      return;
+    }
+
+    if (!rewardValue.trim()) {
+      setError(t.manualRewards.errorRewardValueRequired);
+      return;
+    }
+
+    const numValue = parseFloat(rewardValue);
+    if (isNaN(numValue) || numValue <= 0) {
+      setError(t.manualRewards.errorRewardValueInvalid);
+      return;
+    }
+
+    if (!data.rewardValidation?.completed) {
+      setError("Run seed-list testing before continuing");
+      return;
+    }
+
+    setError("");
+
+    onUpdate({
+      rewardType: rewardType,
+      rewardValue: rewardValue.trim(),
+      bundleTrack,
+      description: description.trim() || undefined,
+      channel: selectedChannel,
+      smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      rewardTitle: selectedChannel === "EMAIL" ? rewardTitle : undefined,
+      selectedCommunicationPolicyId: selectedPolicy?.id,
+    });
+
+    onNext();
+  };
 
   const activeSeedRecipients: SeedListRecipient[] = selectedRecipients;
 
@@ -379,78 +427,6 @@ export default function DefineRewardStep({
     setIsTesting(false);
   };
 
-  const handleRewardTypeSelect = (type: RewardType) => {
-    setRewardType(type);
-    // Reset value when changing type
-    setRewardValue("");
-    onUpdate({ rewardType: type, rewardValue: "" });
-    resetRewardValidation();
-  };
-
-  const handleRewardProviderChange = (providerId: string) => {
-    const nextType = resolveType(providerId, rewardType);
-    setBundleTrack(providerId);
-    setRewardType(nextType);
-    if (nextType !== rewardType) {
-      setRewardValue("");
-      onUpdate({
-        bundleTrack: providerId,
-        rewardType: nextType,
-        rewardValue: "",
-      });
-    } else {
-      onUpdate({ bundleTrack: providerId });
-    }
-    resetRewardValidation();
-  };
-
-  const handleNext = () => {
-    // Validation
-    if (!bundleTrack) {
-      setError(t.manualRewards.errorBundleTrackRequired);
-      return;
-    }
-
-    if (!rewardValue.trim()) {
-      setError(t.manualRewards.errorRewardValueRequired);
-      return;
-    }
-
-    // Validate numeric value
-    const numValue = parseFloat(rewardValue);
-    if (isNaN(numValue) || numValue <= 0) {
-      setError(t.manualRewards.errorRewardValueInvalid);
-      return;
-    }
-
-    if (!allowedRewardTypeIds.includes(rewardType)) {
-      setError(t.manualRewards.errorBundleTrackRequired);
-      return;
-    }
-
-    if (!data.rewardValidation?.completed) {
-      setError("Run seed-list testing before continuing");
-      return;
-    }
-
-    setError("");
-
-    // Update data
-    onUpdate({
-      rewardType: rewardType,
-      rewardValue: rewardValue.trim(),
-      bundleTrack,
-      description: description.trim() || undefined,
-      channel: selectedChannel,
-      smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
-      rewardTitle: selectedChannel === "EMAIL" ? rewardTitle : undefined,
-      selectedCommunicationPolicyId: selectedPolicy?.id,
-    });
-
-    // Move to next step
-    onNext();
-  };
-
   return (
     <div
       className={`bg-white ${tw.rounded} shadow-sm border`}
@@ -469,7 +445,71 @@ export default function DefineRewardStep({
       </div>
 
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-        {/* Reward Provider — select first; filters available reward types */}
+        {/* Reward Type Selection */}
+        <div>
+          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+            {t.manualRewards.rewardTypeLabel}
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2">
+            {rewardTypes.map((type) => {
+              const Icon = type.icon;
+              const isSelected = rewardType === type.id;
+              return (
+                <button
+                  key={`${type.id}-${isSelected}`}
+                  type="button"
+                  onClick={() => handleRewardTypeSelect(type.id)}
+                  className={`flex flex-col items-center justify-center gap-1.5 p-2.5 ${tw.rounded} bg-white`}
+                  style={{
+                    borderWidth: "2px",
+                    borderStyle: "solid",
+                    borderColor: isSelected
+                      ? color.primary.accent
+                      : color.border.default,
+                  }}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{
+                      backgroundColor: isSelected
+                        ? color.primary.accent
+                        : color.surface.cards,
+                    }}
+                  >
+                    <Icon
+                      className="w-4 h-4"
+                      style={{
+                        color: isSelected ? "white" : color.text.secondary,
+                      }}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p
+                      className={`text-sm font-semibold ${
+                        isSelected ? tw.textPrimary : tw.textSecondary
+                      }`}
+                    >
+                      {type.name}
+                    </p>
+                    <p
+                      className={`text-xs ${tw.textMuted} mt-0.5 hidden sm:block`}
+                    >
+                      {type.description}
+                    </p>
+                  </div>
+                  {isSelected && (
+                    <div
+                      className="w-1 h-1 rounded-full"
+                      style={{ backgroundColor: color.primary.accent }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Reward Provider (filtered by reward type via API) */}
         <div>
           <HeadlessSelect
             label={t.manualRewards.bundleTrackLabel}
@@ -479,84 +519,18 @@ export default function DefineRewardStep({
             placeholder={
               loadingRewardProviders
                 ? "Loading providers..."
-                : t.manualRewards.bundleTrackPlaceholder
+                : providerOptions.length === 0
+                  ? "No providers for this reward type"
+                  : t.manualRewards.bundleTrackPlaceholder
             }
-            disabled={loadingRewardProviders}
+            disabled={loadingRewardProviders || providerOptions.length === 0}
             zIndex={zIndex.popover}
           />
           <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            {t.manualRewards.bundleTrackHelper}
+            {getProvider(bundleTrack)?.name
+              ? `Selected: ${getProvider(bundleTrack)?.name}`
+              : t.manualRewards.bundleTrackHelper}
           </p>
-        </div>
-
-        {/* Reward Type Selection (filtered by provider) */}
-        <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            {t.manualRewards.rewardTypeLabel}
-          </label>
-          {availableRewardTypes.length === 0 ? (
-            <p className={`text-sm ${tw.textSecondary}`}>
-              {t.manualRewards.errorBundleTrackRequired}
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2">
-              {availableRewardTypes.map((type) => {
-                const Icon = type.icon;
-                const isSelected = rewardType === type.id;
-                return (
-                  <button
-                    key={`${type.id}-${isSelected}`}
-                    type="button"
-                    onClick={() => handleRewardTypeSelect(type.id)}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-2.5 ${tw.rounded} bg-white`}
-                    style={{
-                      borderWidth: "2px",
-                      borderStyle: "solid",
-                      borderColor: isSelected
-                        ? color.primary.accent
-                        : color.border.default,
-                    }}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{
-                        backgroundColor: isSelected
-                          ? color.primary.accent
-                          : color.surface.cards,
-                      }}
-                    >
-                      <Icon
-                        className="w-4 h-4"
-                        style={{
-                          color: isSelected ? "white" : color.text.secondary,
-                        }}
-                      />
-                    </div>
-                    <div className="text-center">
-                      <p
-                        className={`text-sm font-semibold ${
-                          isSelected ? tw.textPrimary : tw.textSecondary
-                        }`}
-                      >
-                        {type.name}
-                      </p>
-                      <p
-                        className={`text-xs ${tw.textMuted} mt-0.5 hidden sm:block`}
-                      >
-                        {type.description}
-                      </p>
-                    </div>
-                    {isSelected && (
-                      <div
-                        className="w-1 h-1 rounded-full"
-                        style={{ backgroundColor: color.primary.accent }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
 
         {/* Reward Value */}

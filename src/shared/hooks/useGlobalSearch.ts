@@ -174,6 +174,16 @@ const allConfigurations = [
     navigationPath: "/dashboard/reward-providers",
   },
   {
+    id: "reward-configurations",
+    name: "Reward Configurations",
+    description:
+      "Manage auth and payload settings for reward delivery integrations",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/reward-configurations",
+  },
+  {
     id: "sender-ids",
     name: "Sender IDs",
     description: "Manage SMS sender IDs for branding and compliance",
