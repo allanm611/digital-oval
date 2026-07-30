@@ -7,8 +7,11 @@ import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { manualRewardService } from "../services/manualRewardService";
 import { buildCreateManualRewardPayload } from "../utils/buildCreateManualRewardPayload";
+import { buildUpdateManualRewardPayload } from "../utils/buildUpdateManualRewardPayload";
 import { parseRecipientMsisdns } from "../utils/parseRecipientMsisdns";
-import type { CreateManualRewardImmediateData } from "../types/manualRewardApi";
+import { mapManualRewardResourceToFormData } from "../utils/mapManualRewardResourceToFormData";
+import { resolveCreatedRewardId } from "../utils/resolveCreatedRewardId";
+import type { ManualRewardApiStatus } from "../types/manualRewardApi";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   useFormDataPersistence,
@@ -22,8 +25,6 @@ import PreviewRewardStep from "../components/PreviewRewardStep";
 import ApplyRewardStep from "../components/ApplyRewardStep";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
-import { dummyManualRewards } from "../data/dummyManualRewards";
-import type { ManualReward } from "../types/manualReward";
 
 export interface ManualRewardData {
   // Step 1: Audience
@@ -112,22 +113,55 @@ export default function CreateManualRewardPage() {
   const [rewardData, setRewardData] = useState<ManualRewardData>({});
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSaving, setIsSaving] = useState(false);
+  const [editBlockedMessage, setEditBlockedMessage] = useState("");
+  const [loadedEditStatus, setLoadedEditStatus] =
+    useState<ManualRewardApiStatus | null>(null);
 
-  // Load reward data in edit mode
+  // Load reward data in edit mode (GET /manual-reward/:id)
   useEffect(() => {
-    if (isEditMode && rewardId) {
-      const parsedId = Number(rewardId);
-      const reward = dummyManualRewards.find((r) => r.id === parsedId);
-      if (reward) {
-        setRewardData({
-          audienceName: reward.name,
-          rewardType: reward.rewardType,
-          rewardValue: reward.rewardValue.replace(/[^0-9.]/g, ""),
-          description: "",
-        });
-      }
-      setIsLoading(false);
+    if (!isEditMode || !rewardId) {
+      return;
     }
+
+    const parsedId = Number(rewardId);
+    if (!Number.isFinite(parsedId)) {
+      setEditBlockedMessage("Invalid reward id.");
+      setIsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        setIsLoading(true);
+        const row = await manualRewardService.getById(parsedId);
+        if (cancelled) return;
+
+        if (row.status === "applied") {
+          setEditBlockedMessage(
+            "Applied rewards cannot be edited. View details or create a new grant.",
+          );
+          return;
+        }
+
+        setLoadedEditStatus(row.status);
+        setRewardData(mapManualRewardResourceToFormData(row));
+      } catch (err) {
+        if (!cancelled) {
+          setEditBlockedMessage(
+            extractBackendError(err, "Failed to load reward for editing."),
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isEditMode, rewardId]);
 
   // Persist form data to localStorage (only in create mode)
@@ -194,6 +228,13 @@ export default function CreateManualRewardPage() {
         }
         return false;
       case 2: // Define Reward
+        if (isEditMode) {
+          return !!(
+            rewardData.rewardConfigurationId &&
+            rewardData.rewardValue &&
+            rewardData.rewardValue.trim()
+          );
+        }
         return !!(
           rewardData.rewardConfigurationId &&
           rewardData.rewardValue &&
@@ -213,13 +254,34 @@ export default function CreateManualRewardPage() {
   };
 
   const handleSubmit = async () => {
-    if (isEditMode) {
-      showError("Editing manual rewards is not supported yet.");
-      return;
-    }
-
     setIsSaving(true);
     try {
+      if (isEditMode && rewardId) {
+        const parsedId = Number(rewardId);
+        const updatePayload = buildUpdateManualRewardPayload(rewardData);
+        await manualRewardService.update(parsedId, updatePayload);
+
+        if (
+          rewardData.applyType === "now" &&
+          loadedEditStatus &&
+          loadedEditStatus !== "applied"
+        ) {
+          const applyResult = await manualRewardService.apply(parsedId);
+          showToast(
+            applyResult.message ||
+              t.manualRewards.updatedSuccess ||
+              "Reward updated and applied.",
+          );
+        } else {
+          showToast(
+            t.manualRewards.updatedSuccess || "Reward updated successfully",
+          );
+        }
+
+        navigate(`/dashboard/manual-rewards/${parsedId}`);
+        return;
+      }
+
       const payload = buildCreateManualRewardPayload(rewardData);
       const result = await manualRewardService.create(payload);
 
@@ -232,17 +294,11 @@ export default function CreateManualRewardPage() {
         return;
       }
 
-      showToast(
-        result.message ||
-          t.manualRewards.createdSuccess,
-      );
+      showToast(result.message || t.manualRewards.createdSuccess);
 
       clearPersistedFormData("reward_form_data");
 
-      const immediate = result.data as CreateManualRewardImmediateData | undefined;
-      const createdId =
-        immediate?.reward_id ??
-        (result.data as { id?: number } | undefined)?.id;
+      const createdId = resolveCreatedRewardId(result);
 
       if (createdId) {
         navigate(`/dashboard/manual-rewards/${createdId}`);
@@ -250,8 +306,16 @@ export default function CreateManualRewardPage() {
         navigate("/dashboard/manual-rewards");
       }
     } catch (err) {
-      console.error("Failed to create manual reward:", err);
-      showError(extractBackendError(err, t.manualRewards.createFailed));
+      console.error(
+        `Failed to ${isEditMode ? "update" : "create"} manual reward:`,
+        err,
+      );
+      showError(
+        extractBackendError(
+          err,
+          isEditMode ? "Update failed" : t.manualRewards.createFailed,
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -265,6 +329,7 @@ export default function CreateManualRewardPage() {
             data={rewardData}
             onUpdate={updateRewardData}
             onNext={handleNext}
+            readOnly={isEditMode}
           />
         );
       case 2:
@@ -274,6 +339,7 @@ export default function CreateManualRewardPage() {
             onUpdate={updateRewardData}
             onNext={handleNext}
             onPrevious={handlePrevious}
+            isEditMode={isEditMode}
           />
         );
       case 3:
@@ -305,6 +371,24 @@ export default function CreateManualRewardPage() {
         <p className={`${tw.textMuted} font-medium text-sm`}>
           Loading reward details...
         </p>
+      </div>
+    );
+  }
+
+  if (isEditMode && editBlockedMessage) {
+    return (
+      <div className="space-y-4">
+        <p className={`text-sm ${tw.textSecondary}`}>{editBlockedMessage}</p>
+        <button
+          type="button"
+          onClick={() =>
+            navigate(returnTo?.pathname || "/dashboard/manual-rewards")
+          }
+          className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded}`}
+          style={{ backgroundColor: color.primary.action }}
+        >
+          Back to Manual Rewards
+        </button>
       </div>
     );
   }

@@ -16,6 +16,8 @@ interface SelectCustomersStepProps {
   data: ManualRewardData;
   onUpdate: (data: Partial<ManualRewardData>) => void;
   onNext: () => void;
+  /** Edit mode: audience MSISDNs cannot be changed via PUT */
+  readOnly?: boolean;
 }
 
 const listTypeOptions = [
@@ -37,6 +39,7 @@ export default function SelectCustomersStep({
   data,
   onUpdate,
   onNext,
+  readOnly = false,
 }: SelectCustomersStepProps) {
   const { t } = useLanguage();
   const [listName, setListName] = useState(data.audienceName || "");
@@ -176,6 +179,11 @@ export default function SelectCustomersStep({
         <p className={`text-sm ${tw.textSecondary} mt-1`}>
           {t.manualRewards.selectCustomersSubtitle}
         </p>
+        {readOnly && (
+          <p className={`text-xs mt-2 ${tw.textMuted}`}>
+            Recipients are locked for existing rewards. You can change the reward name in edit mode; create a new reward to target different MSISDNs.
+          </p>
+        )}
       </div>
 
       <div className="p-6 space-y-6">
@@ -208,7 +216,7 @@ export default function SelectCustomersStep({
               setError("");
             }}
             placeholder="Select list type"
-            disabled={isSubmitting}
+            disabled={isSubmitting || readOnly}
             zIndex={zIndex.popover}
           />
         </div>
@@ -228,7 +236,7 @@ export default function SelectCustomersStep({
               setError("");
             }}
             placeholder={t.manualRewards.inputMethodLabel}
-            disabled={isSubmitting}
+            disabled={isSubmitting || readOnly}
             zIndex={zIndex.popover}
           />
         </div>
@@ -276,7 +284,7 @@ export default function SelectCustomersStep({
                 <button
                   type="button"
                   onClick={() => setShowPickerModal(true)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || readOnly}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
                 >
                   <List className="w-4 h-4" />
@@ -285,7 +293,7 @@ export default function SelectCustomersStep({
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(true)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || readOnly}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors `}
                   style={{ backgroundColor: color.primary.action }}
                 >
@@ -318,7 +326,7 @@ export default function SelectCustomersStep({
               className="font-mono"
               placeholder={t.manualRewards.manualEntryPlaceholder}
               rows={10}
-              disabled={isSubmitting}
+              disabled={isSubmitting || readOnly}
             />
             {manualInput.trim() && (
               <div className="mt-3 flex items-center gap-4 text-sm">

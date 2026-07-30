@@ -91,6 +91,48 @@ export default function ManualRewardDetailsExpandedRow({
 
         <div className="flex flex-col gap-1">
           <label className={`text-xs font-medium ${tw.textMuted}`}>
+            Failed Count
+          </label>
+          <div className={`text-sm ${tw.textPrimary}`}>
+            {reward.failedCount?.toLocaleString() ?? "—"}
+          </div>
+        </div>
+
+        {reward.applyType && (
+          <div className="flex flex-col gap-1">
+            <label className={`text-xs font-medium ${tw.textMuted}`}>
+              Apply Mode
+            </label>
+            <div className={`text-sm ${tw.textPrimary}`}>
+              {reward.applyType === "later" ? "Scheduled" : "Immediate"}
+            </div>
+          </div>
+        )}
+
+        {reward.audienceType && (
+          <div className="flex flex-col gap-1">
+            <label className={`text-xs font-medium ${tw.textMuted}`}>
+              Audience
+            </label>
+            <div className={`text-sm ${tw.textPrimary}`}>
+              {reward.audienceType}
+            </div>
+          </div>
+        )}
+
+        {reward.rewardConfigurationId != null && (
+          <div className="flex flex-col gap-1">
+            <label className={`text-xs font-medium ${tw.textMuted}`}>
+              Config ID
+            </label>
+            <div className={`text-sm ${tw.textPrimary}`}>
+              {reward.rewardConfigurationId}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1">
+          <label className={`text-xs font-medium ${tw.textMuted}`}>
             Status
           </label>
           <div className={`text-sm ${tw.textPrimary}`}>

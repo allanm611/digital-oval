@@ -1,13 +1,17 @@
 import { extractErrorMessage } from "../../../shared/utils/errorHandler";
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { MANUAL_REWARD_API } from "../constants/manualRewardEndpoints";
 import type {
+  ApplyManualRewardResponse,
   CreateManualRewardRequest,
   CreateManualRewardResponse,
   ManualRewardListParams,
   ManualRewardResource,
+  UpdateManualRewardRequest,
+  UpdateManualRewardResponse,
 } from "../types/manualRewardApi";
 
-const BASE_URL = buildApiUrl("/manual-reward");
+const BASE_URL = buildApiUrl(MANUAL_REWARD_API.base);
 
 class ManualRewardService {
   private async request<T>(
@@ -45,11 +49,11 @@ class ManualRewardService {
     return body;
   }
 
-  /** POST /manual-reward — creates job; with applyType "now" may fulfill immediately */
+  /** POST /manual-reward */
   async create(
     payload: CreateManualRewardRequest,
   ): Promise<CreateManualRewardResponse> {
-    return this.request<CreateManualRewardResponse>("", {
+    return this.request<CreateManualRewardResponse>(MANUAL_REWARD_API.create, {
       method: "POST",
       body: JSON.stringify(payload),
     });
@@ -68,7 +72,7 @@ class ManualRewardService {
     const result = await this.request<{
       success: boolean;
       data: ManualRewardResource[];
-    }>(qs ? `?${qs}` : "");
+    }>(qs ? `?${qs}` : MANUAL_REWARD_API.list);
     return result.data || [];
   }
 
@@ -77,22 +81,39 @@ class ManualRewardService {
     const result = await this.request<{
       success: boolean;
       data: ManualRewardResource;
-    }>(`/${id}`);
+    }>(MANUAL_REWARD_API.byId(id));
     return result.data;
   }
 
-  /** DELETE /manual-reward/:id — soft delete */
+  /** PUT /manual-reward/:id */
+  async update(
+    id: number,
+    payload: UpdateManualRewardRequest,
+  ): Promise<ManualRewardResource> {
+    const result = await this.request<UpdateManualRewardResponse>(
+      MANUAL_REWARD_API.byId(id),
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+    );
+    return result.data;
+  }
+
+  /** DELETE /manual-reward/:id */
   async delete(id: number): Promise<{ success: boolean; message?: string }> {
-    return this.request<{ success: boolean; message?: string }>(`/${id}`, {
-      method: "DELETE",
-    });
+    return this.request<{ success: boolean; message?: string }>(
+      MANUAL_REWARD_API.byId(id),
+      { method: "DELETE" },
+    );
   }
 
   /** POST /manual-reward/:id/apply */
-  async apply(
-    id: number,
-  ): Promise<{ success: boolean; data?: { applied?: number; failed?: number } }> {
-    return this.request(`/${id}/apply`, { method: "POST", body: "{}" });
+  async apply(id: number): Promise<ApplyManualRewardResponse> {
+    return this.request<ApplyManualRewardResponse>(MANUAL_REWARD_API.apply(id), {
+      method: "POST",
+      body: "{}",
+    });
   }
 }
 

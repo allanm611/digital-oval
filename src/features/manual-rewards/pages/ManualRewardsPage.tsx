@@ -8,11 +8,13 @@ import {
   CheckCircle,
   Clock,
   Users,
+  Play,
+  Loader2,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -21,11 +23,11 @@ import FeatureActionButton from "../../../shared/components/FeatureActionButton"
 import BackButton from "../../../shared/components/ui/BackButton";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
+import type { ManualRewardApiStatus, ManualRewardApiType } from "../types/manualRewardApi";
 import { manualRewardService } from "../services/manualRewardService";
 import { mapManualRewardFromApi } from "../utils/mapManualRewardFromApi";
-import { parseRecipientMsisdns } from "../utils/parseRecipientMsisdns";
+import { canApplyManualReward } from "../utils/canApplyManualReward";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
@@ -47,16 +49,22 @@ export default function ManualRewardsPage() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
-  const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [applyingId, setApplyingId] = useState<number | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(getInitialPageSize());
 
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+
   const loadRewards = async () => {
     try {
       setLoading(true);
-      const data = await manualRewardService.getAll({ limit: 500 });
+      const data = await manualRewardService.getAll({
+        limit: 500,
+        status: (selectedStatus || undefined) as ManualRewardApiStatus | undefined,
+        rewardType: (selectedType || undefined) as ManualRewardApiType | undefined,
+      });
       setRewards(data.map(mapManualRewardFromApi));
     } catch (err) {
       showError(
@@ -71,7 +79,29 @@ export default function ManualRewardsPage() {
 
   useEffect(() => {
     loadRewards();
-  }, []);
+  }, [selectedStatus, selectedType]);
+
+  const handleApply = async (reward: ManualReward) => {
+    if (!canApplyManualReward(reward.status)) {
+      return;
+    }
+    setApplyingId(reward.id);
+    try {
+      const result = await manualRewardService.apply(reward.id);
+      showToast(
+        result.message ||
+          `Applied ${result.data?.applied ?? 0} recipient(s), ${result.data?.failed ?? 0} failed.`,
+      );
+      await loadRewards();
+    } catch (err) {
+      showError(
+        "Apply failed",
+        extractBackendError(err, "Could not apply this manual reward."),
+      );
+    } finally {
+      setApplyingId(null);
+    }
+  };
 
   const stats = useMemo(() => {
     return {
@@ -205,6 +235,20 @@ export default function ManualRewardsPage() {
       isActionColumn: true,
       render: (_, reward) => (
         <div className="flex items-center justify-center space-x-2">
+          {canApplyManualReward(reward.status) && (
+            <button
+              onClick={() => handleApply(reward)}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+              title="Apply reward now"
+              disabled={applyingId === reward.id}
+            >
+              {applyingId === reward.id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </button>
+          )}
           <button
             onClick={() => handleViewDetails(reward.id)}
             className={`p-0 icon-edit ${tw.rounded} transition-colors`}
@@ -253,7 +297,10 @@ export default function ManualRewardsPage() {
       !searchTerm ||
       reward.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !selectedStatus || reward.status === selectedStatus;
-    const matchesType = !selectedType || reward.rewardType === selectedType;
+    const matchesType =
+      !selectedType ||
+      reward.rewardType === selectedType ||
+      (selectedType === "airtime" && reward.rewardType === "airtime");
     return matchesSearch && matchesStatus && matchesType;
   });
 

@@ -45,6 +45,7 @@ interface DefineRewardStepProps {
   onUpdate: (data: Partial<ManualRewardData>) => void;
   onNext: () => void;
   onPrevious: () => void;
+  isEditMode?: boolean;
 }
 
 type RewardType = RuleRewardType;
@@ -101,6 +102,7 @@ export default function DefineRewardStep({
   onUpdate,
   onNext,
   onPrevious,
+  isEditMode = false,
 }: DefineRewardStepProps) {
   const { t } = useLanguage();
   const [rewardConfigurationId, setRewardConfigurationId] = useState<
@@ -383,7 +385,7 @@ export default function DefineRewardStep({
       return;
     }
 
-    if (!data.rewardValidation?.completed) {
+    if (!data.rewardValidation?.completed && !isEditMode) {
       setError("Run seed-list testing before continuing");
       return;
     }
@@ -619,7 +621,9 @@ export default function DefineRewardStep({
                   : "Select configuration..."
             }
             disabled={
-              loadingConfigurations || configurationOptions.length === 0
+              isEditMode ||
+              loadingConfigurations ||
+              configurationOptions.length === 0
             }
             zIndex={zIndex.popover}
           />

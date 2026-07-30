@@ -90,3 +90,35 @@ export interface ManualRewardListParams {
   status?: ManualRewardApiStatus;
   rewardType?: ManualRewardApiType;
 }
+
+/** PUT /manual-reward/:id — matches backend Joi body (camelCase) */
+export interface UpdateManualRewardRequest {
+  audienceName?: string;
+  audienceDescription?: string;
+  uploadType?: "file" | "quicklist";
+  quicklistId?: number;
+  rowCount?: number;
+  rewardType?: ManualRewardApiType;
+  rewardValue?: string;
+  bundleTrack?: string;
+  description?: string;
+  applyType?: "now" | "later";
+  applyDate?: string;
+  applyTime?: string;
+  status?: ManualRewardApiStatus;
+}
+
+export interface UpdateManualRewardResponse {
+  success: boolean;
+  data: ManualRewardResource;
+}
+
+export interface ApplyManualRewardResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    success?: boolean;
+    applied?: number;
+    failed?: number;
+  };
+}
