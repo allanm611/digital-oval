@@ -62,4 +62,6 @@ export interface UpdateRewardProviderRequest {
 
 export interface RewardProviderListParams {
   reward_type?: string;
+  /** When true, list includes inactive providers (configuration management UI) */
+  include_inactive?: boolean;
 }

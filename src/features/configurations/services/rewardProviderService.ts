@@ -31,11 +31,14 @@ class RewardProviderService {
     return response.json();
   }
 
-  /** GET /reward-providers — active providers only; optional ?reward_type= filter */
+  /** GET /reward-providers — active by default; ?include_inactive=true for admin lists */
   async getAll(params?: RewardProviderListParams): Promise<RewardProvider[]> {
     const query = new URLSearchParams();
     if (params?.reward_type) {
       query.set("reward_type", params.reward_type);
+    }
+    if (params?.include_inactive) {
+      query.set("include_inactive", "true");
     }
     const qs = query.toString();
     const result = await this.request<{

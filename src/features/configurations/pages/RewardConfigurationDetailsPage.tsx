@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Trash2, Gift } from "lucide-react";
+import { Edit, Gift, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -103,8 +103,8 @@ export default function RewardConfigurationDetailsPage() {
   const [payloadFields, setPayloadFields] = useState<
     RewardProviderSchemaField[]
   >([]);
-  const [deleting, setDeleting] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
@@ -176,7 +176,7 @@ export default function RewardConfigurationDetailsPage() {
     try {
       setDeleting(true);
       await rewardConfigurationService.delete(config.id);
-      showSuccess(`"${config.name}" has been deleted successfully.`);
+      showSuccess(`"${config.name}" has been deactivated.`);
       navigate("/dashboard/reward-configurations");
     } catch (err) {
       showError(
@@ -411,7 +411,7 @@ export default function RewardConfigurationDetailsPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Reward Configuration"
-        description="This action cannot be undone and may affect offers and manual rewards using this configuration."
+        description="This sets the configuration to inactive. Offers and manual rewards using it may fail until another configuration is assigned."
         itemName={config.name}
         isLoading={deleting}
       />

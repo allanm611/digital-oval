@@ -32,4 +32,6 @@ export interface UpdateRewardConfigurationRequest {
 
 export interface RewardConfigurationListParams {
   provider_id?: number;
+  /** When true, list includes inactive configurations (configuration management UI) */
+  include_inactive?: boolean;
 }

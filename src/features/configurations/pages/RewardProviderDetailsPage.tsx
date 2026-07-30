@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Trash2, Gift } from "lucide-react";
+import { Edit, Gift, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button } from "../../../shared/utils/utils";
 import {
   rewardProviderService,
   RewardProvider,
@@ -70,8 +70,8 @@ export default function RewardProviderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState<RewardProvider | null>(null);
   const [configCount, setConfigCount] = useState(0);
-  const [deleting, setDeleting] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
@@ -88,6 +88,7 @@ export default function RewardProviderDetailsPage() {
       try {
         const configs = await rewardConfigurationService.getAll({
           provider_id: Number(id),
+          include_inactive: true,
         });
         setConfigCount(configs.length);
       } catch {
@@ -110,31 +111,28 @@ export default function RewardProviderDetailsPage() {
     if (!provider) return;
     const newActive = !(provider.is_active !== false);
     setToggling(true);
-
-    if (!newActive) {
-      try {
-        await rewardProviderService.delete(provider.id);
-        showSuccess("Deactivated", `${provider.name} has been deactivated`);
-        navigate("/dashboard/reward-providers");
-      } catch (err) {
-        showError(
-          extractBackendError(err, "Failed to deactivate reward provider"),
-        );
-      } finally {
-        setToggling(false);
-      }
-      return;
-    }
+    setProvider((prev) => (prev ? { ...prev, is_active: newActive } : prev));
 
     try {
       const updated = await rewardProviderService.update(provider.id, {
-        is_active: true,
+        is_active: newActive,
       });
-      setProvider({ ...provider, ...updated, is_active: true });
-      showSuccess("Activated", `${provider.name} has been activated`);
+      setProvider({ ...provider, ...updated, is_active: newActive });
+      showSuccess(
+        newActive ? "Activated" : "Deactivated",
+        newActive
+          ? `${provider.name} has been activated`
+          : `${provider.name} has been deactivated`,
+      );
     } catch (err) {
+      setProvider((prev) =>
+        prev ? { ...prev, is_active: !newActive } : prev,
+      );
       showError(
-        extractBackendError(err, "Failed to activate reward provider"),
+        extractBackendError(
+          err,
+          "Failed to update provider status. Please try again.",
+        ),
       );
     } finally {
       setToggling(false);
@@ -152,7 +150,7 @@ export default function RewardProviderDetailsPage() {
       showError(
         extractBackendError(
           err,
-          "Failed to deactivate reward provider. Please try again.",
+          "Failed to delete reward provider. Please try again.",
         ),
       );
     } finally {
@@ -183,7 +181,9 @@ export default function RewardProviderDetailsPage() {
             isActive={provider.is_active !== false}
             isLoading={toggling}
             onToggle={handleToggleActive}
-          />
+          >
+            {provider.is_active !== false ? "Deactivate" : "Activate"}
+          </ActivateDeactivateButton>
           <button
             onClick={() =>
               navigate(`/dashboard/reward-providers/${provider.id}/edit`)
@@ -196,10 +196,18 @@ export default function RewardProviderDetailsPage() {
           </button>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-md hover:bg-red-50"
+            className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-xs w-fit`}
+            style={{
+              backgroundColor: button.delete.background,
+              color: button.delete.color,
+              border: button.delete.border,
+              padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
+              borderRadius: button.delete.borderRadius,
+              fontSize: button.delete.fontSize,
+            }}
           >
             <Trash2 className="w-4 h-4" />
-            Deactivate
+            Delete
           </button>
         </div>
       </div>
@@ -317,8 +325,8 @@ export default function RewardProviderDetailsPage() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
-        title="Deactivate Reward Provider"
-        description="This soft-deactivates the provider. Reward configurations using it may fail until a new configuration is assigned."
+        title="Delete Reward Provider"
+        description="This soft-deactivates the provider. Existing configurations may stop fulfilling until reactivated."
         itemName={provider.name}
         isLoading={deleting}
       />

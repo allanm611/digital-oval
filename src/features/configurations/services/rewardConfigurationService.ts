@@ -46,6 +46,9 @@ class RewardConfigurationService {
     if (params?.provider_id != null) {
       query.set("provider_id", String(params.provider_id));
     }
+    if (params?.include_inactive) {
+      query.set("include_inactive", "true");
+    }
     const qs = query.toString();
     const result = await this.request<{
       success: boolean;

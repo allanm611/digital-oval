@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Edit, Eye, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -25,6 +25,8 @@ import {
   type TableColumn,
 } from "../../../shared/components/Table";
 
+type StatusFilter = "" | "active" | "inactive";
+
 export default function RewardProvidersPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
@@ -32,6 +34,7 @@ export default function RewardProvidersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [rewardTypeFilter, setRewardTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [rewardTypeOptions, setRewardTypeOptions] = useState<
     { value: string; label: string }[]
   >([]);
@@ -49,7 +52,11 @@ export default function RewardProvidersPage() {
     onDelete: async (id) => {
       if (!providerToDelete) return;
       await rewardProviderService.delete(Number(id));
-      setProviders((prev) => prev.filter((p) => p.id !== Number(id)));
+      setProviders((prev) =>
+        prev.map((p) =>
+          p.id === Number(id) ? { ...p, is_active: false } : p,
+        ),
+      );
       showSuccess(`"${providerToDelete.name}" has been deactivated.`);
     },
     itemLabel: "Reward Provider",
@@ -83,9 +90,10 @@ export default function RewardProvidersPage() {
   const loadProviders = async () => {
     try {
       setLoading(true);
-      const data = await rewardProviderService.getAll(
-        rewardTypeFilter ? { reward_type: rewardTypeFilter } : undefined,
-      );
+      const data = await rewardProviderService.getAll({
+        reward_type: rewardTypeFilter || undefined,
+        include_inactive: true,
+      });
       setProviders(data);
     } catch (err) {
       showError(
@@ -108,29 +116,33 @@ export default function RewardProvidersPage() {
   const handleToggleActive = async (provider: RewardProvider) => {
     const newActive = !(provider.is_active !== false);
     setTogglingId(provider.id);
-
-    if (!newActive) {
-      try {
-        await rewardProviderService.delete(provider.id);
-        setProviders((prev) => prev.filter((p) => p.id !== provider.id));
-        showSuccess("Deactivated", `${provider.name} has been deactivated`);
-      } catch (err) {
-        showError(
-          extractBackendError(err, "Failed to deactivate reward provider"),
-        );
-      } finally {
-        setTogglingId(null);
-      }
-      return;
-    }
+    setProviders((prev) =>
+      prev.map((p) =>
+        p.id === provider.id ? { ...p, is_active: newActive } : p,
+      ),
+    );
 
     try {
-      await rewardProviderService.update(provider.id, { is_active: true });
-      showSuccess("Activated", `${provider.name} has been activated`);
-      await loadProviders();
+      await rewardProviderService.update(provider.id, {
+        is_active: newActive,
+      });
+      showSuccess(
+        newActive ? "Activated" : "Deactivated",
+        newActive
+          ? `${provider.name} has been activated`
+          : `${provider.name} has been deactivated`,
+      );
     } catch (err) {
+      setProviders((prev) =>
+        prev.map((p) =>
+          p.id === provider.id ? { ...p, is_active: !newActive } : p,
+        ),
+      );
       showError(
-        extractBackendError(err, "Failed to activate reward provider"),
+        extractBackendError(
+          err,
+          "Failed to update provider status. Please try again.",
+        ),
       );
     } finally {
       setTogglingId(null);
@@ -138,6 +150,12 @@ export default function RewardProvidersPage() {
   };
 
   const filteredProviders = providers.filter((provider) => {
+    if (statusFilter === "active" && provider.is_active === false) {
+      return false;
+    }
+    if (statusFilter === "inactive" && provider.is_active !== false) {
+      return false;
+    }
     const term = searchTerm.toLowerCase();
     return (
       !term ||
@@ -220,7 +238,7 @@ export default function RewardProvidersPage() {
           <button
             onClick={() => handleDeleteClick(provider)}
             className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
-            title="Deactivate provider"
+            title="Delete (deactivate) provider"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -252,7 +270,7 @@ export default function RewardProvidersPage() {
 
   useEffect(() => {
     tableHandlePageChange(1);
-  }, [searchTerm, rewardTypeFilter, tableHandlePageChange]);
+  }, [searchTerm, rewardTypeFilter, statusFilter, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -266,13 +284,11 @@ export default function RewardProvidersPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Define reward fulfilment provider templates (auth schema, payload
-          schema, request template, and API path). Create reward configurations
-          from these templates for use in offers and manual rewards.
+          Define reward fulfilment provider templates.
         </p>
       </div>
 
-      <div className="my-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="my-5 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2">
           <SearchInput
             placeholder="Search by name, reward type, API path..."
@@ -290,6 +306,17 @@ export default function RewardProvidersPage() {
           ]}
           placeholder="Filter by reward type"
         />
+        <HeadlessSelect
+          label=""
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as StatusFilter)}
+          options={[
+            { value: "", label: "All statuses" },
+            { value: "active", label: "Active only" },
+            { value: "inactive", label: "Inactive only" },
+          ]}
+          placeholder="Filter by status"
+        />
       </div>
 
       <div className={`${tw.rounded} overflow-hidden`}>
@@ -297,16 +324,16 @@ export default function RewardProvidersPage() {
           <div className="text-center py-12">
             <div className="w-12 h-12 text-gray-400 mx-auto mb-4">🎁</div>
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm || rewardTypeFilter
+              {searchTerm || rewardTypeFilter || statusFilter
                 ? "No providers found"
                 : "No reward providers yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
-              {searchTerm || rewardTypeFilter
+              {searchTerm || rewardTypeFilter || statusFilter
                 ? "Try adjusting your search or filter"
                 : "Create a reward provider template before adding configurations"}
             </p>
-            {!searchTerm && !rewardTypeFilter && (
+            {!searchTerm && !rewardTypeFilter && !statusFilter && (
               <FeatureActionButton
                 featureId="reward-providers"
                 action="create"
@@ -357,8 +384,8 @@ export default function RewardProvidersPage() {
         isOpen={deleteConfirm.id !== null}
         onClose={closeDeleteConfirm}
         onConfirm={confirmDeleteProvider}
-        title="Deactivate Reward Provider"
-        description="This soft-deactivates the provider. Existing reward configurations referencing it may stop working."
+        title="Delete Reward Provider"
+        description="This soft-deactivates the provider. Existing configurations may stop fulfilling until reactivated."
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
       />

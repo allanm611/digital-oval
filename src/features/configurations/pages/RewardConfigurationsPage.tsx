@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Edit, Trash2, Eye } from "lucide-react";
+import { Edit, Eye, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -24,6 +24,8 @@ import {
   type TableColumn,
 } from "../../../shared/components/Table";
 
+type StatusFilter = "" | "active" | "inactive";
+
 export default function RewardConfigurationsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -37,6 +39,7 @@ export default function RewardConfigurationsPage() {
   const [providerFilter, setProviderFilter] = useState(
     providerFilterFromUrl || "",
   );
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [rewardTypeOptions, setRewardTypeOptions] = useState<
     { value: string; label: string }[]
   >([]);
@@ -57,8 +60,12 @@ export default function RewardConfigurationsPage() {
     onDelete: async (id) => {
       if (!configToDelete) return;
       await rewardConfigurationService.delete(Number(id));
-      setConfigs((prev) => prev.filter((c) => c.id !== Number(id)));
-      showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
+      setConfigs((prev) =>
+        prev.map((c) =>
+          c.id === Number(id) ? { ...c, is_active: false } : c,
+        ),
+      );
+      showSuccess(`"${configToDelete.name}" has been deactivated.`);
     },
     itemLabel: "Reward Configuration",
   });
@@ -96,14 +103,12 @@ export default function RewardConfigurationsPage() {
 
   const loadProviders = async () => {
     try {
-      const data = await rewardProviderService.getAll();
+      const data = await rewardProviderService.getAll({ include_inactive: true });
       setProviderOptions(
-        (data || [])
-          .filter((p) => p.is_active !== false)
-          .map((p) => ({
-            value: String(p.id),
-            label: p.name,
-          })),
+        (data || []).map((p) => ({
+          value: String(p.id),
+          label: `${p.name}${p.is_active === false ? " (inactive)" : ""}`,
+        })),
       );
     } catch {
       setProviderOptions([]);
@@ -113,7 +118,9 @@ export default function RewardConfigurationsPage() {
   const loadConfigs = async () => {
     try {
       setLoading(true);
-      const params: { provider_id?: number } = {};
+      const params: { provider_id?: number; include_inactive?: boolean } = {
+        include_inactive: true,
+      };
       if (providerFilterFromUrl) {
         params.provider_id = Number(providerFilterFromUrl);
       }
@@ -156,9 +163,6 @@ export default function RewardConfigurationsPage() {
           ? `${config.name} has been activated`
           : `${config.name} has been deactivated`,
       );
-      if (!newActive) {
-        setConfigs((prev) => prev.filter((c) => c.id !== config.id));
-      }
     } catch (err) {
       setConfigs((prev) =>
         prev.map((c) =>
@@ -179,6 +183,12 @@ export default function RewardConfigurationsPage() {
   const filteredConfigs = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
     return configs.filter((config) => {
+      if (statusFilter === "active" && config.is_active === false) {
+        return false;
+      }
+      if (statusFilter === "inactive" && config.is_active !== false) {
+        return false;
+      }
       if (providerFilter && String(config.provider_id) !== providerFilter) {
         return false;
       }
@@ -201,7 +211,7 @@ export default function RewardConfigurationsPage() {
         .toLowerCase();
       return haystack.includes(term);
     });
-  }, [configs, searchTerm, providerFilter, rewardTypeFilter]);
+  }, [configs, searchTerm, providerFilter, rewardTypeFilter, statusFilter]);
 
   const defaultColumns: TableColumn<RewardConfiguration>[] = [
     {
@@ -277,7 +287,7 @@ export default function RewardConfigurationsPage() {
           <button
             onClick={() => handleDeleteClick(config)}
             className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
-            title="Delete configuration"
+            title="Delete (deactivate) configuration"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -309,7 +319,7 @@ export default function RewardConfigurationsPage() {
 
   useEffect(() => {
     tableHandlePageChange(1);
-  }, [searchTerm, providerFilter, rewardTypeFilter, tableHandlePageChange]);
+  }, [searchTerm, providerFilter, rewardTypeFilter, statusFilter, tableHandlePageChange]);
 
   const createUrl = providerFilterFromUrl
     ? `/dashboard/reward-configurations/create?provider_id=${providerFilterFromUrl}`
@@ -330,9 +340,7 @@ export default function RewardConfigurationsPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage reward delivery credentials and payload settings. Each
-          configuration is linked to a reward provider and used by offers and
-          manual rewards.
+          Manage reward delivery credentials and payload settings. 
         </p>
         {providerFilterFromUrl && (
           <p className={`text-xs ${tw.textMuted}`}>
@@ -359,7 +367,7 @@ export default function RewardConfigurationsPage() {
         <div className="sm:w-56">
           <HeadlessSelect
             value={providerFilter}
-            onChange={setProviderFilter}
+            onChange={(v) => setProviderFilter(String(v))}
             options={[
               { value: "", label: "All Providers" },
               ...providerOptions,
@@ -370,12 +378,24 @@ export default function RewardConfigurationsPage() {
         <div className="sm:w-56">
           <HeadlessSelect
             value={rewardTypeFilter}
-            onChange={setRewardTypeFilter}
+            onChange={(v) => setRewardTypeFilter(String(v))}
             options={[
               { value: "", label: "All Reward Types" },
               ...rewardTypeOptions,
             ]}
             placeholder="Filter by reward type"
+          />
+        </div>
+        <div className="sm:w-48">
+          <HeadlessSelect
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v as StatusFilter)}
+            options={[
+              { value: "", label: "All statuses" },
+              { value: "active", label: "Active only" },
+              { value: "inactive", label: "Inactive only" },
+            ]}
+            placeholder="Filter by status"
           />
         </div>
       </div>
@@ -385,16 +405,19 @@ export default function RewardConfigurationsPage() {
           <div className="text-center py-12">
             <div className="w-12 h-12 text-gray-400 mx-auto mb-4">🎁</div>
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm || providerFilter || rewardTypeFilter
+              {searchTerm || providerFilter || rewardTypeFilter || statusFilter
                 ? "No configurations found"
                 : "No reward configurations yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
-              {searchTerm || providerFilter || rewardTypeFilter
+              {searchTerm || providerFilter || rewardTypeFilter || statusFilter
                 ? "Try adjusting your search or filters"
                 : "Create a reward provider first, then add a configuration with auth and payload values."}
             </p>
-            {!searchTerm && !providerFilter && !rewardTypeFilter && (
+            {!searchTerm &&
+              !providerFilter &&
+              !rewardTypeFilter &&
+              !statusFilter && (
               <FeatureActionButton
                 featureId="reward-configurations"
                 action="create"
@@ -446,7 +469,7 @@ export default function RewardConfigurationsPage() {
         onClose={closeDeleteConfirm}
         onConfirm={confirmDeleteConfig}
         title="Delete Reward Configuration"
-        description="This may affect offers and manual rewards that reference this configuration."
+        description="This sets the configuration to inactive. Offers and manual rewards referencing it may fail until a new configuration is used."
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
       />
