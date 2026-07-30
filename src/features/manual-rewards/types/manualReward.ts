@@ -1,7 +1,7 @@
 export interface ManualReward {
   id: number;
   name: string;
-  rewardType: "bundle" | "points" | "discount" | "cashback";
+  rewardType: "bundle" | "airtime" | "points" | "discount" | "cashback";
   rewardValue: string;
   recipientCount: number;
   status: "pending" | "applied" | "scheduled" | "failed";

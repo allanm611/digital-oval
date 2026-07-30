@@ -47,7 +47,7 @@ export default function SelectCustomersStep({
   const [selectedQuickList, setSelectedQuickList] =
     useState<QuickListItem | null>(null);
   const [isQuickListCreated, setIsQuickListCreated] = useState(false);
-  const [manualInput, setManualInput] = useState("");
+  const [manualInput, setManualInput] = useState(data.audienceFileText || "");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPickerModal, setShowPickerModal] = useState(false);

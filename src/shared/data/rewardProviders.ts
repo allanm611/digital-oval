@@ -10,10 +10,16 @@
 
 import type { RewardProvider } from "../../features/configurations/types/rewardProvider";
 
-export type RuleRewardType = "bundle" | "points" | "discount" | "cashback";
+export type RuleRewardType =
+  | "bundle"
+  | "airtime"
+  | "points"
+  | "discount"
+  | "cashback";
 
 export const ALL_RULE_REWARD_TYPES: readonly RuleRewardType[] = [
   "bundle",
+  "airtime",
   "points",
   "discount",
   "cashback",
@@ -21,6 +27,7 @@ export const ALL_RULE_REWARD_TYPES: readonly RuleRewardType[] = [
 
 export const RULE_REWARD_TYPE_LABELS: Record<RuleRewardType, string> = {
   bundle: "Bundle",
+  airtime: "Airtime",
   points: "Points",
   discount: "Discount",
   cashback: "Cashback",

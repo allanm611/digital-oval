@@ -15,6 +15,7 @@ import {
   Phone,
   Bell,
   Loader,
+  Smartphone,
 } from "lucide-react";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
@@ -35,10 +36,9 @@ import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsH
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { SeedListRecipient } from "../../../shared/services/seedListService";
 import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
-import {
-  type RuleRewardType,
-} from "../../../shared/data/rewardProviders";
-import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
+import { type RuleRewardType } from "../../../shared/data/rewardProviders";
+import { rewardConfigurationService } from "../../configurations/services/rewardConfigurationService";
+import type { RewardConfiguration } from "../../configurations/types/rewardConfiguration";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -49,6 +49,46 @@ interface DefineRewardStepProps {
 
 type RewardType = RuleRewardType;
 type Channel = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
+
+function getRewardValuePlaceholder(
+  type: RewardType,
+  t: ReturnType<typeof useLanguage>["t"],
+): string {
+  switch (type) {
+    case "bundle":
+      return t.manualRewards.rewardValuePlaceholderBundle;
+    case "airtime":
+      return t.manualRewards.rewardValuePlaceholderAirtime;
+    case "points":
+      return t.manualRewards.rewardValuePlaceholderPoints;
+    case "discount":
+      return t.manualRewards.rewardValuePlaceholderDiscount;
+    case "cashback":
+      return t.manualRewards.rewardValuePlaceholderCashback;
+    default:
+      return "";
+  }
+}
+
+function getRewardValueHelper(
+  type: RewardType,
+  t: ReturnType<typeof useLanguage>["t"],
+): string {
+  switch (type) {
+    case "bundle":
+      return t.manualRewards.rewardValueHelperBundle;
+    case "airtime":
+      return t.manualRewards.rewardValueHelperAirtime;
+    case "points":
+      return t.manualRewards.rewardValueHelperPoints;
+    case "discount":
+      return t.manualRewards.rewardValueHelperDiscount;
+    case "cashback":
+      return t.manualRewards.rewardValueHelperCashback;
+    default:
+      return "";
+  }
+}
 
 interface RewardSeedTestResult {
   contact: string;
@@ -63,19 +103,17 @@ export default function DefineRewardStep({
   onPrevious,
 }: DefineRewardStepProps) {
   const { t } = useLanguage();
-  const [providersInitialized, setProvidersInitialized] = useState(false);
-  const [bundleTrack, setBundleTrack] = useState(data.bundleTrack || "");
+  const [rewardConfigurationId, setRewardConfigurationId] = useState<
+    number | undefined
+  >(data.rewardConfigurationId);
+  const [configurations, setConfigurations] = useState<RewardConfiguration[]>(
+    [],
+  );
+  const [loadingConfigurations, setLoadingConfigurations] = useState(true);
+  const [configurationLoadError, setConfigurationLoadError] = useState("");
   const [rewardType, setRewardType] = useState<RewardType>(
     (data.rewardType as RewardType) || "bundle",
   );
-  const {
-    providerOptions,
-    defaultProviderId,
-    loading: loadingRewardProviders,
-    resolveProvider,
-    getProvider,
-    error: providerLoadError,
-  } = useRewardProviders({ rewardType });
   const [rewardValue, setRewardValue] = useState(data.rewardValue || "");
   const [description, setDescription] = useState(data.description || "");
   const [error, setError] = useState("");
@@ -104,26 +142,56 @@ export default function DefineRewardStep({
   const [rewardTitle, setRewardTitle] = useState("");
 
   useEffect(() => {
-    if (loadingRewardProviders || providersInitialized) return;
-    const savedKey = data.bundleTrack;
-    const key =
-      savedKey && providerOptions.some((o) => o.value === savedKey)
-        ? savedKey
-        : defaultProviderId;
-    setBundleTrack(key);
-    setProvidersInitialized(true);
-  }, [
-    loadingRewardProviders,
-    providersInitialized,
-    data.bundleTrack,
-    defaultProviderId,
-    providerOptions,
-  ]);
+    let cancelled = false;
+    const loadConfigurations = async () => {
+      try {
+        setLoadingConfigurations(true);
+        setConfigurationLoadError("");
+        const all = await rewardConfigurationService.getAll();
+        const filtered = all.filter(
+          (config) =>
+            config.is_active !== false &&
+            (config.reward_type || "").toLowerCase() ===
+              rewardType.toLowerCase(),
+        );
+        if (!cancelled) {
+          setConfigurations(filtered);
+          setRewardConfigurationId((current) => {
+            if (current && filtered.some((c) => c.id === current)) {
+              return current;
+            }
+            return filtered[0]?.id;
+          });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setConfigurations([]);
+          setConfigurationLoadError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load reward configurations",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingConfigurations(false);
+        }
+      }
+    };
+    loadConfigurations();
+    return () => {
+      cancelled = true;
+    };
+  }, [rewardType]);
 
-  useEffect(() => {
-    if (loadingRewardProviders) return;
-    setBundleTrack((current) => resolveProvider(current));
-  }, [rewardType, loadingRewardProviders, defaultProviderId, resolveProvider]);
+  const configurationOptions = configurations.map((config) => ({
+    value: String(config.id),
+    label: `${config.name}${config.provider_name ? ` (${config.provider_name})` : ""}`,
+  }));
+
+  const selectedConfiguration = configurations.find(
+    (c) => c.id === rewardConfigurationId,
+  );
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -245,6 +313,12 @@ export default function DefineRewardStep({
       description: t.manualRewards.rewardTypeBundleDesc,
     },
     {
+      id: "airtime" as RewardType,
+      name: t.manualRewards.rewardTypeAirtime,
+      icon: Smartphone,
+      description: t.manualRewards.rewardTypeAirtimeDesc,
+    },
+    {
       id: "points" as RewardType,
       name: t.manualRewards.rewardTypePoints,
       icon: Coins,
@@ -267,20 +341,34 @@ export default function DefineRewardStep({
   const handleRewardTypeSelect = (type: RewardType) => {
     setRewardType(type);
     setRewardValue("");
-    setBundleTrack("");
-    onUpdate({ rewardType: type, rewardValue: "", bundleTrack: "" });
+    setRewardConfigurationId(undefined);
+    onUpdate({
+      rewardType: type,
+      rewardValue: "",
+      rewardConfigurationId: undefined,
+      rewardConfigurationName: undefined,
+      bundleTrack: "",
+    });
     resetRewardValidation();
   };
 
-  const handleRewardProviderChange = (providerId: string) => {
-    setBundleTrack(providerId);
-    onUpdate({ bundleTrack: providerId });
+  const handleConfigurationChange = (configId: string) => {
+    const parsed = Number(configId);
+    const config = configurations.find((c) => c.id === parsed);
+    setRewardConfigurationId(parsed);
+    onUpdate({
+      rewardConfigurationId: parsed,
+      rewardConfigurationName: config?.name,
+      bundleTrack: config?.name,
+    });
     resetRewardValidation();
   };
 
   const handleNext = () => {
-    if (!bundleTrack) {
-      setError(t.manualRewards.errorBundleTrackRequired);
+    if (!rewardConfigurationId) {
+      setError(
+        "Select a reward configuration (Configurations → Reward Configurations).",
+      );
       return;
     }
 
@@ -305,7 +393,9 @@ export default function DefineRewardStep({
     onUpdate({
       rewardType: rewardType,
       rewardValue: rewardValue.trim(),
-      bundleTrack,
+      rewardConfigurationId,
+      rewardConfigurationName: selectedConfiguration?.name,
+      bundleTrack: selectedConfiguration?.name,
       description: description.trim() || undefined,
       channel: selectedChannel,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
@@ -451,7 +541,7 @@ export default function DefineRewardStep({
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
             {t.manualRewards.rewardTypeLabel}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2">
             {rewardTypes.map((type) => {
               const Icon = type.icon;
               const isSelected = rewardType === type.id;
@@ -510,31 +600,37 @@ export default function DefineRewardStep({
           </div>
         </div>
 
-        {/* Reward Provider (filtered by reward type via API) */}
+        {/* Reward configuration (auth + payload sent to provider) */}
         <div>
           <HeadlessSelect
-            label={t.manualRewards.bundleTrackLabel}
-            options={providerOptions}
-            value={bundleTrack}
-            onChange={(value) => handleRewardProviderChange(value as string)}
-            placeholder={
-              loadingRewardProviders
-                ? "Loading providers..."
-                : providerOptions.length === 0
-                  ? "No providers for this reward type"
-                  : t.manualRewards.bundleTrackPlaceholder
+            label="Reward configuration *"
+            options={configurationOptions}
+            value={
+              rewardConfigurationId != null
+                ? String(rewardConfigurationId)
+                : ""
             }
-            disabled={loadingRewardProviders || providerOptions.length === 0}
+            onChange={(value) => handleConfigurationChange(value as string)}
+            placeholder={
+              loadingConfigurations
+                ? "Loading configurations..."
+                : configurationOptions.length === 0
+                  ? "No configurations for this reward type"
+                  : "Select configuration..."
+            }
+            disabled={
+              loadingConfigurations || configurationOptions.length === 0
+            }
             zIndex={zIndex.popover}
           />
           <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            {providerLoadError
-              ? providerLoadError
-              : getProvider(bundleTrack)?.name
-                ? `Selected: ${getProvider(bundleTrack)?.name}`
-                : !loadingRewardProviders && providerOptions.length === 0
-                  ? `No active providers for "${rewardType}". Add one under Configurations → Reward Providers.`
-                  : t.manualRewards.bundleTrackHelper}
+            {configurationLoadError
+              ? configurationLoadError
+              : selectedConfiguration
+                ? `Provider: ${selectedConfiguration.provider_name || "—"} · ${selectedConfiguration.api_path || "API path N/A"}`
+                : !loadingConfigurations && configurationOptions.length === 0
+                  ? `No active configurations for "${rewardType}". Create one under Configurations → Reward Configurations.`
+                  : "This configuration determines credentials and payload for reward delivery."}
           </p>
         </div>
 
@@ -557,15 +653,7 @@ export default function DefineRewardStep({
                 borderColor: color.border.default,
                 color: color.text.primary,
               }}
-              placeholder={
-                rewardType === "bundle"
-                  ? t.manualRewards.rewardValuePlaceholderBundle
-                  : rewardType === "points"
-                    ? t.manualRewards.rewardValuePlaceholderPoints
-                    : rewardType === "discount"
-                      ? t.manualRewards.rewardValuePlaceholderDiscount
-                      : t.manualRewards.rewardValuePlaceholderCashback
-              }
+              placeholder={getRewardValuePlaceholder(rewardType, t)}
               min="0"
               step="0.01"
             />
@@ -577,13 +665,7 @@ export default function DefineRewardStep({
             </span>
           </div>
           <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            {rewardType === "bundle"
-              ? t.manualRewards.rewardValueHelperBundle
-              : rewardType === "points"
-                ? t.manualRewards.rewardValueHelperPoints
-                : rewardType === "discount"
-                  ? t.manualRewards.rewardValueHelperDiscount
-                  : t.manualRewards.rewardValueHelperCashback}
+            {getRewardValueHelper(rewardType, t)}
           </p>
         </div>
 

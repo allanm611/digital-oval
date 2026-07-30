@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -15,18 +16,57 @@ import {
 import BackButton from "../../../shared/components/ui/BackButton";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
-import { dummyManualRewards } from "../data/dummyManualRewards";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import { manualRewardService } from "../services/manualRewardService";
+import { mapManualRewardFromApi } from "../utils/mapManualRewardFromApi";
+import type { ManualReward } from "../types/manualReward";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 
 export default function ManualRewardDetailsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [reward, setReward] = useState<ManualReward | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const reward = useMemo(() => {
-    if (!id) return undefined;
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     const parsedId = Number(id);
-    if (!Number.isFinite(parsedId)) return undefined;
-    return dummyManualRewards.find((entry) => entry.id === parsedId);
+    if (!Number.isFinite(parsedId)) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        setLoadError("");
+        const row = await manualRewardService.getById(parsedId);
+        if (!cancelled) {
+          setReward(mapManualRewardFromApi(row));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setReward(null);
+          setLoadError(
+            extractBackendError(err, "Failed to load manual reward details."),
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const getStatusBadge = (status: string) => {
@@ -56,11 +96,21 @@ export default function ManualRewardDetailsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner variant="modern" size="xl" color="primary" />
+        <p className={`${tw.textMuted} font-medium text-sm mt-4`}>
+          Loading reward details...
+        </p>
+      </div>
+    );
+  }
+
   if (!reward) {
     return (
       <div className="space-y-6">
         <BackButton
-         
           showBreadcrumb={true}
           currentLabel="Manual Reward Details"
         />
@@ -72,8 +122,8 @@ export default function ManualRewardDetailsPage() {
               Manual reward not found
             </h2>
             <p className={`text-sm ${tw.textMuted} mb-6`}>
-              We could not find a manual reward matching this ID in the dummy
-              dataset.
+              {loadError ||
+                "We could not find a manual reward matching this ID."}
             </p>
             <button
               onClick={() => navigate("/dashboard/manual-rewards")}
@@ -91,16 +141,11 @@ export default function ManualRewardDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <BackButton
-         
-          showBreadcrumb={true}
-          currentLabel="Manual Reward Details"
-        />
+        <BackButton showBreadcrumb={true} currentLabel={reward.name} />
         <button
           onClick={handleEdit}
-          className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
-          style={{ backgroundColor: color.primary.action }}
-          title="Edit reward"
+          className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium ${tw.rounded} border`}
+          style={{ borderColor: color.border.default }}
         >
           <Edit className="w-4 h-4" />
           Edit
@@ -108,129 +153,76 @@ export default function ManualRewardDetailsPage() {
       </div>
 
       <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-        <div>
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <Gift className="w-6 h-6" style={{ color: color.primary.accent }} />
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
             {reward.name}
           </h1>
-          <p className={`text-sm ${tw.textMuted} mt-1`}>
-            Reward ID: {reward.id}
-          </p>
-        </div>
-        <div className="mt-4 flex items-center gap-3">
           <span
-            className={`inline-flex w-fit items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(reward.status)}`}
+            className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(reward.status)}`}
           >
             {statusLabel}
           </span>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <div className="flex items-center gap-2">
-            <Users
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <DetailItem
+            icon={Gift}
+            label="Reward type"
+            value={reward.rewardType}
+          />
+          <DetailItem icon={Gift} label="Value" value={reward.rewardValue} />
+          <DetailItem
+            icon={Users}
+            label={t.manualRewards.recipients}
+            value={String(reward.recipientCount)}
+          />
+          <DetailItem
+            icon={CheckCircle}
+            label="Applied"
+            value={String(reward.appliedCount)}
+          />
+          <DetailItem
+            icon={XCircle}
+            label="Failed"
+            value={String(reward.failedCount)}
+          />
+          <DetailItem
+            icon={Calendar}
+            label="Created"
+            value={<DateFormatter date={reward.createdAt} />}
+          />
+          {reward.scheduledAt && (
+            <DetailItem
+              icon={Clock}
+              label="Scheduled"
+              value={<DateFormatter date={reward.scheduledAt} />}
             />
-            <p className="text-sm font-medium text-gray-600">Recipients</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {reward.recipientCount.toLocaleString()}
-          </p>
-        </div>
-
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <div className="flex items-center gap-2">
-            <CheckCircle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Applied</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {reward.appliedCount.toLocaleString()}
-          </p>
-        </div>
-
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <div className="flex items-center gap-2">
-            <XCircle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Failed</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {reward.failedCount.toLocaleString()}
-          </p>
-        </div>
-
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <div className="flex items-center gap-2">
-            <Gift className="h-5 w-5" style={{ color: color.primary.accent }} />
-            <p className="text-sm font-medium text-gray-600">Reward Value</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {reward.rewardValue}
-          </p>
+          )}
+          <DetailItem icon={User} label="Created by" value={reward.createdBy} />
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-        <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-          Reward Information
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div>
-            <p className={`text-xs uppercase tracking-wide ${tw.textMuted}`}>
-              Reward Type
-            </p>
-            <p className={`mt-1 text-sm font-medium ${tw.textPrimary}`}>
-              {reward.rewardType}
-            </p>
-          </div>
-
-          <div>
-            <p className={`text-xs uppercase tracking-wide ${tw.textMuted}`}>
-              Created By
-            </p>
-            <div className="mt-1 flex items-center gap-2">
-              <User className="w-4 h-4 text-gray-500" />
-              <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                {reward.createdBy}
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <p className={`text-xs uppercase tracking-wide ${tw.textMuted}`}>
-              Created At
-            </p>
-            <div className="mt-1 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                <DateFormatter date={reward.createdAt} />
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <p className={`text-xs uppercase tracking-wide ${tw.textMuted}`}>
-              Scheduled At
-            </p>
-            <div className="mt-1 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-500" />
-              <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                {reward.scheduledAt ? (
-                  <DateFormatter date={reward.scheduledAt} />
-                ) : (
-                  "Not scheduled"
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Gift;
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="w-5 h-5 mt-0.5" style={{ color: color.text.muted }} />
+      <div>
+        <p className={`text-xs font-medium uppercase ${tw.textMuted}`}>
+          {label}
+        </p>
+        <p className={`text-sm font-semibold ${tw.textPrimary}`}>{value}</p>
       </div>
     </div>
   );

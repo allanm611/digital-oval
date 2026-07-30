@@ -4,7 +4,11 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Users, Gift, Eye, Calendar } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { manualRewardService } from "../services/manualRewardService";
+import { buildCreateManualRewardPayload } from "../utils/buildCreateManualRewardPayload";
+import { parseRecipientMsisdns } from "../utils/parseRecipientMsisdns";
+import type { CreateManualRewardImmediateData } from "../types/manualRewardApi";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   useFormDataPersistence,
@@ -33,7 +37,10 @@ export interface ManualRewardData {
   inputMethod?: "file" | "manual";
 
   // Step 2: Reward & Communication Policy
-  rewardType?: "bundle" | "points" | "discount" | "cashback";
+  rewardType?: "bundle" | "airtime" | "points" | "discount" | "cashback";
+  /** Active reward configuration used for RewardDeliveryService */
+  rewardConfigurationId?: number;
+  rewardConfigurationName?: string;
   rewardValue?: string;
   bundleTrack?: string;
   description?: string;
@@ -182,12 +189,13 @@ export default function CreateManualRewardPage() {
         if (rewardData.inputMethod === "manual") {
           return (
             !!rewardData.audienceFileText &&
-            validateManualInput(rewardData.audienceFileText)
+            parseRecipientMsisdns(rewardData).length > 0
           );
         }
         return false;
       case 2: // Define Reward
         return !!(
+          rewardData.rewardConfigurationId &&
           rewardData.rewardValue &&
           rewardData.rewardValue.trim() &&
           rewardData.rewardValidation?.completed
@@ -205,27 +213,45 @@ export default function CreateManualRewardPage() {
   };
 
   const handleSubmit = async () => {
+    if (isEditMode) {
+      showError("Editing manual rewards is not supported yet.");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      // TODO: Save manual reward to database
-      if (isEditMode) {
-        showToast(t.manualRewards.updatedSuccess || "Reward updated successfully");
-      } else {
-        showToast(t.manualRewards.createdSuccess);
+      const payload = buildCreateManualRewardPayload(rewardData);
+      const result = await manualRewardService.create(payload);
+
+      if (!result.success) {
+        showError(
+          result.message ||
+            result.error ||
+            "Reward could not be granted. Check configuration and MSISDN.",
+        );
+        return;
       }
 
-      // Clear localStorage form data after successful creation
+      showToast(
+        result.message ||
+          t.manualRewards.createdSuccess,
+      );
+
       clearPersistedFormData("reward_form_data");
 
-      // Navigate back to details or list
-      if (isEditMode && rewardId) {
-        navigate(`/dashboard/manual-rewards/${rewardId}`);
+      const immediate = result.data as CreateManualRewardImmediateData | undefined;
+      const createdId =
+        immediate?.reward_id ??
+        (result.data as { id?: number } | undefined)?.id;
+
+      if (createdId) {
+        navigate(`/dashboard/manual-rewards/${createdId}`);
       } else {
         navigate("/dashboard/manual-rewards");
       }
     } catch (err) {
-      console.error(`Failed to ${isEditMode ? "update" : "create"} manual reward:`, err);
-      showError(isEditMode ? "Update failed" : t.manualRewards.createFailed);
+      console.error("Failed to create manual reward:", err);
+      showError(extractBackendError(err, t.manualRewards.createFailed));
     } finally {
       setIsSaving(false);
     }

@@ -21,6 +21,7 @@ export default function ManualRewardDetailsExpandedRow({
   const getRewardTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       bundle: "Bundle",
+      airtime: "Airtime",
       points: "Points",
       discount: "Discount",
       cashback: "Cashback",

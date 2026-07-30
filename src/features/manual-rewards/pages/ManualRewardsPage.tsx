@@ -23,6 +23,9 @@ import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shar
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
+import { manualRewardService } from "../services/manualRewardService";
+import { mapManualRewardFromApi } from "../utils/mapManualRewardFromApi";
+import { parseRecipientMsisdns } from "../utils/parseRecipientMsisdns";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
@@ -32,6 +35,8 @@ export default function ManualRewardsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
+  const [rewards, setRewards] = useState<ManualReward[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [rewardToDelete, setRewardToDelete] = useState<ManualReward | null>(
     null,
@@ -48,15 +53,34 @@ export default function ManualRewardsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(getInitialPageSize());
 
-  // Dummy stats (matching actual dummy data: 5 rewards, 1 scheduled)
-  // Recipients: 125 + 250 + 350 + 80 + 200 = 1005
-  // Applied: 123 + 345 + 150 = 618
-  const stats = {
-    totalRewards: 5,
-    totalRecipients: 1005,
-    appliedCount: 618,
-    scheduledCount: 1,
+  const loadRewards = async () => {
+    try {
+      setLoading(true);
+      const data = await manualRewardService.getAll({ limit: 500 });
+      setRewards(data.map(mapManualRewardFromApi));
+    } catch (err) {
+      showError(
+        "Failed to load manual rewards",
+        extractBackendError(err, "Failed to load manual rewards. Please try again."),
+      );
+      setRewards([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadRewards();
+  }, []);
+
+  const stats = useMemo(() => {
+    return {
+      totalRewards: rewards.length,
+      totalRecipients: rewards.reduce((sum, r) => sum + r.recipientCount, 0),
+      appliedCount: rewards.reduce((sum, r) => sum + r.appliedCount, 0),
+      scheduledCount: rewards.filter((r) => r.status === "scheduled").length,
+    };
+  }, [rewards]);
 
   const handleDelete = (reward: ManualReward) => {
     setRewardToDelete(reward);
@@ -68,11 +92,11 @@ export default function ManualRewardsPage() {
 
     setIsDeleting(true);
     try {
-      // TODO: Implement actual delete API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await manualRewardService.delete(rewardToDelete.id);
       showToast(`Reward "${rewardToDelete.name}" deleted successfully!`);
       setShowDeleteModal(false);
       setRewardToDelete(null);
+      await loadRewards();
     } catch (err) {
       console.error("Failed to delete reward:", err);
       showError("Failed to delete reward", extractBackendError(err, "Failed to delete reward. Please try again."));
@@ -96,6 +120,8 @@ export default function ManualRewardsPage() {
     switch (type) {
       case "bundle":
         return t.manualRewards.rewardTypeBundle;
+      case "airtime":
+        return t.manualRewards.rewardTypeAirtime;
       case "points":
         return t.manualRewards.rewardTypePoints;
       case "discount":
@@ -137,7 +163,10 @@ export default function ManualRewardsPage() {
       id: "rewardType",
       label: "Type",
       visible: true,
-      filterConfig: { type: "select", options: ["bundle", "points", "discount", "cashback"] },
+      filterConfig: {
+        type: "select",
+        options: ["bundle", "airtime", "points", "discount", "cashback"],
+      },
       render: (_, reward) => getRewardTypeLabel(reward.rewardType),
     },
     {
@@ -219,7 +248,7 @@ export default function ManualRewardsPage() {
   };
 
   // Filter rewards based on search and filters
-  const filteredRewards = dummyManualRewards.filter((reward) => {
+  const filteredRewards = rewards.filter((reward) => {
     const matchesSearch =
       !searchTerm ||
       reward.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -341,6 +370,7 @@ export default function ManualRewardsPage() {
             options={[
               { value: "", label: "All Types" },
               { value: "bundle", label: t.manualRewards.rewardTypeBundle },
+              { value: "airtime", label: t.manualRewards.rewardTypeAirtime },
               { value: "points", label: t.manualRewards.rewardTypePoints },
               { value: "discount", label: t.manualRewards.rewardTypeDiscount },
               { value: "cashback", label: t.manualRewards.rewardTypeCashback },
@@ -355,7 +385,11 @@ export default function ManualRewardsPage() {
 
       {/* Table */}
       <div className={`${tw.rounded} overflow-hidden`}>
-        {filteredRewards.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className={`${tw.textSecondary} text-center`}>Loading manual rewards...</p>
+          </div>
+        ) : filteredRewards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Gift
               className="w-12 h-12 mb-4"
