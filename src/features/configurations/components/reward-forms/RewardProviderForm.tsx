@@ -19,6 +19,7 @@ import type {
 import RewardProviderFieldSchemaEditor, {
   validateRewardFieldSchema,
 } from "./RewardProviderFieldSchemaEditor";
+import { coerceSchemaDefaultValue } from "./rewardSchemaFieldUtils";
 
 interface RewardTypeOption {
   value: string;
@@ -66,7 +67,10 @@ function normalizeFields(
       ? { placeholder: field.placeholder.trim() }
       : {}),
     ...(field.default !== undefined && field.default !== ""
-      ? { default: field.default }
+      ? (() => {
+          const defaultVal = coerceSchemaDefaultValue(field, field.default);
+          return defaultVal !== undefined ? { default: defaultVal } : {};
+        })()
       : {}),
     ...(field.type === "select"
       ? {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, Gift, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
@@ -13,30 +13,9 @@ import {
   type RuleRewardType,
 } from "../../../shared/data/rewardProviders";
 import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
-
-interface RewardRule {
-  id: string;
-  name: string;
-  bundle_subscription_track: string;
-  priority: number;
-  condition: string;
-  value: string;
-  reward_type: RuleRewardType;
-  reward_value: string;
-  fulfillment_response: string;
-  success_text: string;
-  default_failure: string;
-  error_group: string;
-  failure_text: string;
-  enabled: boolean;
-}
-
-interface OfferReward {
-  id: string;
-  name: string;
-  type: "default" | "sms_night" | "custom";
-  rules: RewardRule[];
-}
+import { useRewardProviderConfigurations } from "../../../shared/hooks/useRewardProviderConfigurations";
+import RewardConfigurationReadOnlyPanel from "../../configurations/components/reward-forms/RewardConfigurationReadOnlyPanel";
+import type { OfferReward, OfferRewardRule } from "../types/offerReward";
 
 interface OfferRewardStepProps {
   rewards: OfferReward[];
@@ -51,7 +30,8 @@ export default function OfferRewardStep({
     rewards.length > 0 ? rewards[0].id : null
   );
   const [showRuleModal, setShowRuleModal] = useState(false);
-  const [editingRule, setEditingRule] = useState<RewardRule | null>(null);
+  const [editingRule, setEditingRule] = useState<OfferRewardRule | null>(null);
+  const [ruleModalError, setRuleModalError] = useState("");
   const {
     providerOptions,
     defaultProviderId,
@@ -123,10 +103,12 @@ export default function OfferRewardStep({
   };
 
   const addRule = () => {
-    const newRule: RewardRule = {
+    const newRule: OfferRewardRule = {
       id: generateId(),
       name: "New Rule",
       bundle_subscription_track: "",
+      reward_configuration_id: "",
+      reward_configuration_name: "",
       priority: 1,
       condition: "",
       value: "",
@@ -141,8 +123,49 @@ export default function OfferRewardStep({
     };
 
     setEditingRule(newRule);
+    setRuleModalError("");
     setShowRuleModal(true);
   };
+
+  const selectedProviderId = editingRule?.bundle_subscription_track ?? "";
+
+  const { configurations: providerConfigurations, loading: loadingConfigurations } =
+    useRewardProviderConfigurations({
+      providerId: selectedProviderId,
+      rewardType: editingRule?.reward_type ?? null,
+      enabled: showRuleModal && !!selectedProviderId,
+    });
+
+  const configurationOptions = useMemo(() => {
+    const opts = providerConfigurations.map((c) => ({
+      value: String(c.id),
+      label: c.name,
+    }));
+    const currentId = editingRule?.reward_configuration_id;
+    if (
+      currentId &&
+      !opts.some((o) => o.value === String(currentId))
+    ) {
+      opts.unshift({
+        value: String(currentId),
+        label:
+          editingRule?.reward_configuration_name ||
+          `Configuration #${currentId}`,
+      });
+    }
+    return opts;
+  }, [
+    providerConfigurations,
+    editingRule?.reward_configuration_id,
+    editingRule?.reward_configuration_name,
+  ]);
+
+  const selectedConfigurationId = useMemo(() => {
+    const raw = editingRule?.reward_configuration_id;
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }, [editingRule?.reward_configuration_id]);
 
   useEffect(() => {
     if (!showRuleModal || !editingRule || loadingRewardProviders) return;
@@ -163,7 +186,16 @@ export default function OfferRewardStep({
     defaultProviderId,
   ]);
 
-  const saveRule = (rewardId: string, rule: RewardRule) => {
+  const saveRule = (rewardId: string, rule: OfferRewardRule) => {
+    if (!rule.bundle_subscription_track?.trim()) {
+      setRuleModalError("Select a reward provider.");
+      return;
+    }
+    if (!rule.reward_configuration_id?.trim()) {
+      setRuleModalError("Select a reward configuration for this provider.");
+      return;
+    }
+
     const reward = rewards.find((r) => r.id === rewardId);
     if (!reward) return;
 
@@ -180,6 +212,7 @@ export default function OfferRewardStep({
     updateReward(rewardId, { rules: updatedRules });
     setShowRuleModal(false);
     setEditingRule(null);
+    setRuleModalError("");
   };
 
   const removeRule = (rewardId: string, ruleId: string) => {
@@ -333,7 +366,7 @@ export default function OfferRewardStep({
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-medium text-gray-900">
-                        Reward Rules
+                        Reward Configurations
                       </h4>
                       <button
                         onClick={() => addRule()}
@@ -341,14 +374,14 @@ export default function OfferRewardStep({
                         style={{ backgroundColor: color.primary.action }}
                       >
                         <Plus className="w-4 h-4 mr-1" />
-                        Add Rule
+                        Add Reward Configuration
                       </button>
                     </div>
 
                     {selectedRewardData.rules.length === 0 ? (
                       <div className={`text-center py-8 border-2 border-dashed border-gray-200 ${tw.rounded}`}>
                         <p className="text-gray-500 text-sm mb-4">
-                          No rules configured
+                          No reward configuration added
                         </p>
                         <button
                           onClick={() => addRule()}
@@ -356,7 +389,7 @@ export default function OfferRewardStep({
                           style={{ backgroundColor: color.primary.action }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Add Rule
+                          Add Reward Configuration
                         </button>
                       </div>
                     ) : (
@@ -393,6 +426,7 @@ export default function OfferRewardStep({
                                         rule.bundle_subscription_track,
                                       ),
                                     });
+                                    setRuleModalError("");
                                     setShowRuleModal(true);
                                   }}
                                   className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
@@ -410,10 +444,23 @@ export default function OfferRewardStep({
                               </div>
                             </div>
                             <div className="text-sm text-gray-600 space-y-1">
-                              <div>Provider: {getProvider(rule.bundle_subscription_track)?.name || rule.bundle_subscription_track || "—"}</div>
                               <div>
-                                Type: {rule.reward_type} - Value:{" "}
-                                {rule.reward_value}
+                                Provider:{" "}
+                                {getProvider(rule.bundle_subscription_track)
+                                  ?.name ||
+                                  rule.bundle_subscription_track ||
+                                  "—"}
+                              </div>
+                              <div>
+                                Configuration:{" "}
+                                {rule.reward_configuration_name ||
+                                  (rule.reward_configuration_id
+                                    ? `#${rule.reward_configuration_id}`
+                                    : "—")}
+                              </div>
+                              <div>
+                                Type: {rule.reward_type} — Value:{" "}
+                                {rule.reward_value || "—"}
                               </div>
                               <div>
                                 Success:{" "}
@@ -452,15 +499,16 @@ export default function OfferRewardStep({
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
             style={{ zIndex: zIndex.modal - 1 }}
           >
-            <div className={`bg-white ${tw.rounded} p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto`}>
+            <div className={`bg-white ${tw.rounded} p-6 w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {editingRule.id ? "Edit Reward Rule" : "Add Reward Rule"}
+                  {editingRule.id ? "Edit Reward Configuration" : "Add Reward Configuration"}
                 </h3>
                 <button
                   onClick={() => {
                     setShowRuleModal(false);
                     setEditingRule(null);
+                    setRuleModalError("");
                   }}
                   className="p-1 text-gray-400 hover:text-gray-600"
                 >
@@ -471,13 +519,13 @@ export default function OfferRewardStep({
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Rule Name"
+                    label="Configuration Name"
                     type="text"
                     value={editingRule.name}
                     onChange={(value) =>
                       setEditingRule({ ...editingRule, name: String(value) })
                     }
-                    placeholder="Rule name"
+                    placeholder="Configuration name"
                   />
 
                   <Input
@@ -507,6 +555,8 @@ export default function OfferRewardStep({
                           ...editingRule,
                           reward_type: value as RuleRewardType,
                           bundle_subscription_track: "",
+                          reward_configuration_id: "",
+                          reward_configuration_name: "",
                           reward_value: "",
                         })
                       }
@@ -529,38 +579,94 @@ export default function OfferRewardStep({
                   />
                 </div>
 
-                <div>
-                  <HeadlessSelect
-                    label="Reward Provider"
-                    options={providerOptions}
-                    value={editingRule.bundle_subscription_track}
-                    onChange={(value) =>
-                      setEditingRule({
-                        ...editingRule,
-                        bundle_subscription_track: value as string,
-                      })
-                    }
-                    placeholder={
-                      loadingRewardProviders
-                        ? "Loading providers..."
-                        : providerOptions.length === 0
-                          ? "No providers for this reward type"
-                          : "Select reward provider"
-                    }
-                    disabled={
-                      loadingRewardProviders || providerOptions.length === 0
-                    }
-                    zIndex={zIndex.popover}
-                  />
-                  {providerLoadError ? (
-                    <p className="mt-1 text-xs text-red-600">{providerLoadError}</p>
-                  ) : !loadingRewardProviders && providerOptions.length === 0 ? (
-                    <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                      No active providers for &quot;{editingRule.reward_type}&quot;.
-                      Add one under Configurations → Reward Providers.
-                    </p>
-                  ) : null}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <HeadlessSelect
+                      label="Reward Provider"
+                      options={providerOptions}
+                      value={editingRule.bundle_subscription_track}
+                      onChange={(value) =>
+                        setEditingRule({
+                          ...editingRule,
+                          bundle_subscription_track: value as string,
+                          reward_configuration_id: "",
+                          reward_configuration_name: "",
+                        })
+                      }
+                      placeholder={
+                        loadingRewardProviders
+                          ? "Loading providers..."
+                          : providerOptions.length === 0
+                            ? "No providers for this reward type"
+                            : "Select reward provider"
+                      }
+                      disabled={
+                        loadingRewardProviders || providerOptions.length === 0
+                      }
+                      zIndex={zIndex.popover}
+                    />
+                    {providerLoadError ? (
+                      <p className="mt-1 text-xs text-red-600">
+                        {providerLoadError}
+                      </p>
+                    ) : !loadingRewardProviders &&
+                      providerOptions.length === 0 ? (
+                      <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                        No active providers for &quot;{editingRule.reward_type}
+                        &quot;. Add one under Configurations → Reward Providers.
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <HeadlessSelect
+                      label="Reward Configuration"
+                      options={configurationOptions}
+                      value={editingRule.reward_configuration_id ?? ""}
+                      onChange={(value) => {
+                        const config = providerConfigurations.find(
+                          (c) => String(c.id) === String(value),
+                        );
+                        setEditingRule({
+                          ...editingRule,
+                          reward_configuration_id: value as string,
+                          reward_configuration_name: config?.name,
+                        });
+                      }}
+                      placeholder={
+                        !editingRule.bundle_subscription_track
+                          ? "Select a provider first"
+                          : loadingConfigurations
+                            ? "Loading configurations..."
+                            : configurationOptions.length === 0
+                              ? "No configurations for this provider"
+                              : "Select reward configuration"
+                      }
+                      disabled={
+                        !editingRule.bundle_subscription_track ||
+                        loadingConfigurations ||
+                        configurationOptions.length === 0
+                      }
+                      zIndex={zIndex.popover}
+                    />
+                    {editingRule.bundle_subscription_track &&
+                    !loadingConfigurations &&
+                    configurationOptions.length === 0 ? (
+                      <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                        No active configurations for this provider. Create one
+                        under Configurations → Reward Configurations.
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
+
+                <RewardConfigurationReadOnlyPanel
+                  configurationId={selectedConfigurationId}
+                />
+
+                {ruleModalError ? (
+                  <p className="text-sm text-red-600">{ruleModalError}</p>
+                ) : null}
 
                 <Textarea
                   label="Success Text"
@@ -631,6 +737,7 @@ export default function OfferRewardStep({
                   onClick={() => {
                     setShowRuleModal(false);
                     setEditingRule(null);
+                    setRuleModalError("");
                   }}
                   className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded}`}
                 >
@@ -644,7 +751,7 @@ export default function OfferRewardStep({
                   className={`px-4 py-2 text-white ${tw.rounded}`}
                   style={{ backgroundColor: color.primary.action }}
                 >
-                  Save Rule
+                  Save Reward Configuration
                 </button>
               </div>
             </div>

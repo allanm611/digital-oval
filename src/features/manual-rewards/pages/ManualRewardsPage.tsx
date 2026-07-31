@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Gift,
   Eye,
-  Edit,
   Trash2,
   CheckCircle,
   Clock,
@@ -28,6 +27,7 @@ import type { ManualRewardApiStatus, ManualRewardApiType } from "../types/manual
 import { manualRewardService } from "../services/manualRewardService";
 import { mapManualRewardFromApi } from "../utils/mapManualRewardFromApi";
 import { canApplyManualReward } from "../utils/canApplyManualReward";
+import { canEditManualReward } from "../utils/canEditManualReward";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
@@ -256,16 +256,18 @@ export default function ManualRewardsPage() {
           >
             <Eye className="w-4 h-4" />
           </button>
-          <FeatureActionButton
-            featureId="manual-rewards"
-            action="edit"
-            itemId={reward.id}
-            navigationState={{
-              returnTo: {
-                pathname: "/dashboard/manual-rewards",
-              },
-            }}
-          />
+          {canEditManualReward(reward.status) && (
+            <FeatureActionButton
+              featureId="manual-rewards"
+              action="edit"
+              itemId={reward.id}
+              navigationState={{
+                returnTo: {
+                  pathname: "/dashboard/manual-rewards",
+                },
+              }}
+            />
+          )}
           <PermissionGate permission="manual-rewards.delete">
             <button
               onClick={() => handleDelete(reward)}

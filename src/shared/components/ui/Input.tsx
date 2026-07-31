@@ -41,6 +41,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   const isPasswordType = type === 'password';
   const shouldShowToggle = isPasswordType && showPasswordToggle !== false;
   const inputType = shouldShowToggle && showPassword ? 'text' : type;
+  /** Hides Edge/IE native reveal so only our single eye control is shown */
+  const passwordToggleInputClass = shouldShowToggle
+    ? 'c-input--password-toggle pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden'
+    : '';
 
   let paddingClass = 'px-4 py-2'; // default
   if (variant === 'medium') paddingClass = 'px-3 py-2';
@@ -93,7 +97,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     const inputEl = (
       <input
         ref={ref}
-        type={inputType}
         placeholder={placeholder}
         value={value}
         onChange={(e) => {
@@ -104,10 +107,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         onKeyDown={onKeyDown}
         className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-          ${shouldShowToggle ? 'pr-10' : ''}
+          ${passwordToggleInputClass}
           ${className}`}
         style={inputStyle}
         {...rest}
+        type={inputType}
       />
     );
 
@@ -137,7 +141,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     <div className="relative w-full">
       <input
         ref={ref}
-        type={inputType}
         placeholder={shouldFloatLabel ? placeholder : " "}
         value={value}
         onChange={(e) => {
@@ -149,13 +152,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         className={`w-full px-3 pt-3 pb-2 text-sm leading-tight border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
           ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
-          ${shouldShowToggle ? 'pr-10' : ''}
+          ${passwordToggleInputClass}
           ${className}`}
         style={{
           ...inputStyle,
           ...transparentStyle,
         }}
         {...rest}
+        type={inputType}
         onFocus={(e) => {
           setIsFocused(true);
           // Auto-select all text for number inputs so user can immediately type to replace

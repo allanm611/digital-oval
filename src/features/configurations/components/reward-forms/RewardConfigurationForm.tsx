@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import Input from "../../../../shared/components/ui/Input";
+import RewardSchemaFieldControl from "./RewardSchemaFieldControl";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw, button, getButtonStyles } from "../../../../shared/utils/utils";
 import { RewardProvider } from "../../services/rewardProviderService";
 import { RewardProviderSchemaField } from "../../types/rewardProvider";
+import {
+  coerceConfigValue,
+  normalizeConfigValueForApi,
+  validateRequiredSchemaValue,
+} from "./rewardSchemaFieldUtils";
 import {
   CreateRewardConfigurationRequest,
   RewardConfiguration,
@@ -33,20 +39,14 @@ function buildInitialConfigValues(
   const values: Record<string, unknown> = {};
   fields.forEach((field) => {
     if (existing && existing[field.name] !== undefined) {
-      values[field.name] = existing[field.name];
+      values[field.name] = coerceConfigValue(field, existing[field.name]);
       return;
     }
     if (field.default !== undefined && field.default !== "") {
-      values[field.name] = field.default;
+      values[field.name] = coerceConfigValue(field, field.default);
       return;
     }
-    if (field.type === "boolean") {
-      values[field.name] = false;
-    } else if (field.type === "number") {
-      values[field.name] = "";
-    } else {
-      values[field.name] = "";
-    }
+    values[field.name] = coerceConfigValue(field, undefined);
   });
   return values;
 }
@@ -144,11 +144,12 @@ export default function RewardConfigurationForm({
     next: Record<string, string>,
   ) => {
     fields.forEach((field) => {
-      if (!field.required) return;
-      const value = values[field.name];
-      if (field.type === "boolean") return;
-      if (value === undefined || value === null || String(value).trim() === "") {
-        next[`${section}.${field.name}`] = `${field.label} is required`;
+      const message = validateRequiredSchemaValue(
+        field,
+        values[field.name],
+      );
+      if (message) {
+        next[`${section}.${field.name}`] = message;
       }
     });
   };
@@ -177,15 +178,10 @@ export default function RewardConfigurationForm({
   ): Record<string, unknown> => {
     const config: Record<string, unknown> = {};
     fields.forEach((field) => {
-      const raw = values[field.name];
-      if (field.type === "boolean") {
-        config[field.name] = Boolean(raw);
-      } else if (field.type === "number") {
-        const n = Number(raw);
-        config[field.name] = Number.isFinite(n) ? n : raw;
-      } else {
-        config[field.name] = raw ?? "";
-      }
+      config[field.name] = normalizeConfigValueForApi(
+        field,
+        values[field.name],
+      );
     });
     return config;
   };
@@ -232,72 +228,17 @@ export default function RewardConfigurationForm({
     field: RewardProviderSchemaField,
     section: "auth" | "payload",
     values: Record<string, unknown>,
-  ) => {
-    const value = values[field.name];
-    const error = errors[`${section}.${field.name}`];
-
-    if (field.type === "boolean") {
-      return (
-        <div key={`${section}-${field.name}`} className="pt-1">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              id={`${section}-field-${field.name}`}
-              checked={Boolean(value)}
-              onChange={(e) =>
-                setFieldValue(section, field.name, e.target.checked)
-              }
-            />
-            <span className={`text-sm font-medium ${tw.textPrimary}`}>
-              {field.label}
-            </span>
-          </label>
-        </div>
-      );
-    }
-
-    if (field.type === "select") {
-      return (
-        <div key={`${section}-${field.name}`}>
-          <label className={`text-sm font-medium ${tw.textMuted} mb-2 block`}>
-            {field.label}
-            {field.required ? " *" : ""}
-          </label>
-          <HeadlessSelect
-            value={value != null ? String(value) : ""}
-            onChange={(v) => setFieldValue(section, field.name, v)}
-            options={(field.options || []).map((o) => ({
-              value: o,
-              label: o,
-            }))}
-            placeholder={field.placeholder || `Select ${field.label}`}
-          />
-          {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-        </div>
-      );
-    }
-
-    return (
-      <div key={`${section}-${field.name}`}>
-        <label className={`text-sm font-medium ${tw.textMuted} mb-2 block`}>
-          {field.label}
-          {field.required ? " *" : ""}
-        </label>
-        <Input
-          type={
-            field.type === "password"
-              ? "password"
-              : field.type === "number"
-                ? "number"
-                : "text"
-          }
-          value={value != null ? String(value) : ""}
-          onChange={(v) => setFieldValue(section, field.name, v)}
-          placeholder={field.placeholder || field.label}
-        />
-        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-      </div>
-    );
-  };
+  ) => (
+    <div key={`${section}-${field.name}`}>
+      <RewardSchemaFieldControl
+        field={field}
+        value={values[field.name]}
+        onChange={(v) => setFieldValue(section, field.name, v)}
+        showFieldLabel
+        error={errors[`${section}.${field.name}`]}
+      />
+    </div>
+  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

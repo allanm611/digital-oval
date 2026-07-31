@@ -9,6 +9,7 @@ import { manualRewardService } from "../services/manualRewardService";
 import { buildCreateManualRewardPayload } from "../utils/buildCreateManualRewardPayload";
 import { buildUpdateManualRewardPayload } from "../utils/buildUpdateManualRewardPayload";
 import { parseRecipientMsisdns } from "../utils/parseRecipientMsisdns";
+import { canEditManualReward } from "../utils/canEditManualReward";
 import { mapManualRewardResourceToFormData } from "../utils/mapManualRewardResourceToFormData";
 import { resolveCreatedRewardId } from "../utils/resolveCreatedRewardId";
 import type { ManualRewardApiStatus } from "../types/manualRewardApi";
@@ -39,6 +40,8 @@ export interface ManualRewardData {
 
   // Step 2: Reward & Communication Policy
   rewardType?: "bundle" | "airtime" | "points" | "discount" | "cashback";
+  /** Selected reward provider (Configurations → Reward Providers) */
+  rewardProviderId?: string;
   /** Active reward configuration used for RewardDeliveryService */
   rewardConfigurationId?: number;
   rewardConfigurationName?: string;
@@ -137,7 +140,7 @@ export default function CreateManualRewardPage() {
         const row = await manualRewardService.getById(parsedId);
         if (cancelled) return;
 
-        if (row.status === "applied") {
+        if (!canEditManualReward(row.status)) {
           setEditBlockedMessage(
             "Applied rewards cannot be edited. View details or create a new grant.",
           );
@@ -257,6 +260,12 @@ export default function CreateManualRewardPage() {
     setIsSaving(true);
     try {
       if (isEditMode && rewardId) {
+        if (loadedEditStatus && !canEditManualReward(loadedEditStatus)) {
+          showError(
+            "Applied rewards cannot be edited. View details or create a new grant.",
+          );
+          return;
+        }
         const parsedId = Number(rewardId);
         const updatePayload = buildUpdateManualRewardPayload(rewardData);
         await manualRewardService.update(parsedId, updatePayload);

@@ -51,6 +51,7 @@ import { manualRewardService } from "../services/manualRewardService";
 import { mapManualRewardFromApi } from "../utils/mapManualRewardFromApi";
 
 import { canApplyManualReward } from "../utils/canApplyManualReward";
+import { canEditManualReward } from "../utils/canEditManualReward";
 
 import { formatManualRewardDisplayValue } from "../utils/formatManualRewardDisplayValue";
 
@@ -322,7 +323,7 @@ export default function ManualRewardDetailsPage() {
 
   const handleEdit = () => {
 
-    if (reward && id) {
+    if (reward && id && canEditManualReward(reward.status)) {
 
       navigate(`/dashboard/manual-rewards/${id}/edit`, {
 
@@ -644,7 +645,7 @@ export default function ManualRewardDetailsPage() {
 
           )}
 
-          {reward.status !== "applied" && (
+          {canEditManualReward(reward.status) && (
 
             <button
 

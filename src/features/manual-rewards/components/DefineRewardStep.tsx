@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import {
@@ -37,8 +37,10 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import { SeedListRecipient } from "../../../shared/services/seedListService";
 import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
 import { type RuleRewardType } from "../../../shared/data/rewardProviders";
+import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
+import { useRewardProviderConfigurations } from "../../../shared/hooks/useRewardProviderConfigurations";
 import { rewardConfigurationService } from "../../configurations/services/rewardConfigurationService";
-import type { RewardConfiguration } from "../../configurations/types/rewardConfiguration";
+import RewardConfigurationReadOnlyPanel from "../../configurations/components/reward-forms/RewardConfigurationReadOnlyPanel";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -105,14 +107,12 @@ export default function DefineRewardStep({
   isEditMode = false,
 }: DefineRewardStepProps) {
   const { t } = useLanguage();
+  const [rewardProviderId, setRewardProviderId] = useState<string>(
+    data.rewardProviderId ?? "",
+  );
   const [rewardConfigurationId, setRewardConfigurationId] = useState<
     number | undefined
   >(data.rewardConfigurationId);
-  const [configurations, setConfigurations] = useState<RewardConfiguration[]>(
-    [],
-  );
-  const [loadingConfigurations, setLoadingConfigurations] = useState(true);
-  const [configurationLoadError, setConfigurationLoadError] = useState("");
   const [rewardType, setRewardType] = useState<RewardType>(
     (data.rewardType as RewardType) || "bundle",
   );
@@ -143,57 +143,122 @@ export default function DefineRewardStep({
   const [emailRoute, setEmailRoute] = useState("");
   const [rewardTitle, setRewardTitle] = useState("");
 
+  const {
+    providerOptions,
+    defaultProviderId,
+    loading: loadingRewardProviders,
+    error: providerLoadError,
+    getProvider,
+  } = useRewardProviders({ rewardType });
+
+  const {
+    configurations: providerConfigurations,
+    loading: loadingConfigurations,
+    error: configurationLoadError,
+  } = useRewardProviderConfigurations({
+    providerId: rewardProviderId,
+    rewardType,
+    enabled: !!rewardProviderId,
+  });
+
+  const configurationOptions = useMemo(() => {
+    const opts = providerConfigurations.map((c) => ({
+      value: String(c.id),
+      label: c.name,
+    }));
+    const currentId = rewardConfigurationId;
+    if (
+      currentId != null &&
+      !opts.some((o) => o.value === String(currentId))
+    ) {
+      opts.unshift({
+        value: String(currentId),
+        label:
+          data.rewardConfigurationName || `Configuration #${currentId}`,
+      });
+    }
+    return opts;
+  }, [
+    providerConfigurations,
+    rewardConfigurationId,
+    data.rewardConfigurationName,
+  ]);
+
+  const selectedConfiguration = providerConfigurations.find(
+    (c) => c.id === rewardConfigurationId,
+  );
+
+  const selectedProvider = getProvider(rewardProviderId);
+
+  const selectedConfigurationIdForPanel = useMemo(() => {
+    if (rewardConfigurationId == null) return null;
+    return Number.isFinite(rewardConfigurationId)
+      ? rewardConfigurationId
+      : null;
+  }, [rewardConfigurationId]);
+
+  const resolvedProviderFromConfigRef = useRef(false);
+  const defaultedProviderRef = useRef(false);
+
   useEffect(() => {
+    if (rewardProviderId || !data.rewardConfigurationId) return;
+    if (resolvedProviderFromConfigRef.current) return;
+    resolvedProviderFromConfigRef.current = true;
     let cancelled = false;
-    const loadConfigurations = async () => {
+    (async () => {
       try {
-        setLoadingConfigurations(true);
-        setConfigurationLoadError("");
-        const all = await rewardConfigurationService.getAll();
-        const filtered = all.filter(
-          (config) =>
-            config.is_active !== false &&
-            (config.reward_type || "").toLowerCase() ===
-              rewardType.toLowerCase(),
+        const cfg = await rewardConfigurationService.getById(
+          data.rewardConfigurationId!,
         );
-        if (!cancelled) {
-          setConfigurations(filtered);
-          setRewardConfigurationId((current) => {
-            if (current && filtered.some((c) => c.id === current)) {
-              return current;
-            }
-            return filtered[0]?.id;
-          });
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setConfigurations([]);
-          setConfigurationLoadError(
-            err instanceof Error
-              ? err.message
-              : "Failed to load reward configurations",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoadingConfigurations(false);
-        }
+        if (cancelled || !cfg.provider_id) return;
+        const pid = String(cfg.provider_id);
+        setRewardProviderId(pid);
+        onUpdate({ rewardProviderId: pid });
+      } catch {
+        resolvedProviderFromConfigRef.current = false;
       }
-    };
-    loadConfigurations();
+    })();
     return () => {
       cancelled = true;
     };
-  }, [rewardType]);
+  }, [data.rewardConfigurationId, rewardProviderId]);
 
-  const configurationOptions = configurations.map((config) => ({
-    value: String(config.id),
-    label: `${config.name}${config.provider_name ? ` (${config.provider_name})` : ""}`,
-  }));
+  useEffect(() => {
+    if (isEditMode || loadingRewardProviders) return;
+    if (rewardProviderId) return;
+    if (!defaultProviderId) return;
+    if (defaultedProviderRef.current) return;
+    defaultedProviderRef.current = true;
+    setRewardProviderId(defaultProviderId);
+    onUpdate({ rewardProviderId: defaultProviderId });
+  }, [
+    isEditMode,
+    loadingRewardProviders,
+    rewardProviderId,
+    defaultProviderId,
+  ]);
 
-  const selectedConfiguration = configurations.find(
-    (c) => c.id === rewardConfigurationId,
-  );
+  useEffect(() => {
+    if (rewardConfigurationId == null || !rewardProviderId) return;
+    if (
+      providerConfigurations.some((c) => c.id === rewardConfigurationId)
+    ) {
+      return;
+    }
+    if (loadingConfigurations) return;
+    setRewardConfigurationId(undefined);
+    onUpdate({
+      rewardConfigurationId: undefined,
+      rewardConfigurationName: undefined,
+      bundleTrack: "",
+    });
+  }, [
+    rewardConfigurationId,
+    rewardProviderId,
+    providerConfigurations,
+    loadingConfigurations,
+    onUpdate,
+  ]);
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -341,12 +406,28 @@ export default function DefineRewardStep({
   ];
 
   const handleRewardTypeSelect = (type: RewardType) => {
+    defaultedProviderRef.current = false;
+    resolvedProviderFromConfigRef.current = false;
     setRewardType(type);
     setRewardValue("");
+    setRewardProviderId("");
     setRewardConfigurationId(undefined);
     onUpdate({
       rewardType: type,
       rewardValue: "",
+      rewardProviderId: undefined,
+      rewardConfigurationId: undefined,
+      rewardConfigurationName: undefined,
+      bundleTrack: "",
+    });
+    resetRewardValidation();
+  };
+
+  const handleProviderChange = (providerId: string) => {
+    setRewardProviderId(providerId);
+    setRewardConfigurationId(undefined);
+    onUpdate({
+      rewardProviderId: providerId,
       rewardConfigurationId: undefined,
       rewardConfigurationName: undefined,
       bundleTrack: "",
@@ -356,7 +437,7 @@ export default function DefineRewardStep({
 
   const handleConfigurationChange = (configId: string) => {
     const parsed = Number(configId);
-    const config = configurations.find((c) => c.id === parsed);
+    const config = providerConfigurations.find((c) => c.id === parsed);
     setRewardConfigurationId(parsed);
     onUpdate({
       rewardConfigurationId: parsed,
@@ -367,9 +448,16 @@ export default function DefineRewardStep({
   };
 
   const handleNext = () => {
+    if (!rewardProviderId.trim()) {
+      setError(
+        "Select a reward provider (Configurations → Reward Providers).",
+      );
+      return;
+    }
+
     if (!rewardConfigurationId) {
       setError(
-        "Select a reward configuration (Configurations → Reward Configurations).",
+        "Select a reward configuration for this provider (Configurations → Reward Configurations).",
       );
       return;
     }
@@ -395,6 +483,7 @@ export default function DefineRewardStep({
     onUpdate({
       rewardType: rewardType,
       rewardValue: rewardValue.trim(),
+      rewardProviderId,
       rewardConfigurationId,
       rewardConfigurationName: selectedConfiguration?.name,
       bundleTrack: selectedConfiguration?.name,
@@ -602,41 +691,90 @@ export default function DefineRewardStep({
           </div>
         </div>
 
-        {/* Reward configuration (auth + payload sent to provider) */}
-        <div>
-          <HeadlessSelect
-            label="Reward configuration *"
-            options={configurationOptions}
-            value={
-              rewardConfigurationId != null
-                ? String(rewardConfigurationId)
-                : ""
-            }
-            onChange={(value) => handleConfigurationChange(value as string)}
-            placeholder={
-              loadingConfigurations
-                ? "Loading configurations..."
-                : configurationOptions.length === 0
-                  ? "No configurations for this reward type"
-                  : "Select configuration..."
-            }
-            disabled={
-              isEditMode ||
-              loadingConfigurations ||
-              configurationOptions.length === 0
-            }
-            zIndex={zIndex.popover}
-          />
-          <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            {configurationLoadError
-              ? configurationLoadError
-              : selectedConfiguration
-                ? `Provider: ${selectedConfiguration.provider_name || "—"} · ${selectedConfiguration.api_path || "API path N/A"}`
-                : !loadingConfigurations && configurationOptions.length === 0
-                  ? `No active configurations for "${rewardType}". Create one under Configurations → Reward Configurations.`
-                  : "This configuration determines credentials and payload for reward delivery."}
-          </p>
+        {/* Reward provider & configuration */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <HeadlessSelect
+              label="Reward Provider *"
+              options={providerOptions}
+              value={rewardProviderId}
+              onChange={(value) => handleProviderChange(value as string)}
+              placeholder={
+                loadingRewardProviders
+                  ? "Loading providers..."
+                  : providerOptions.length === 0
+                    ? "No providers for this reward type"
+                    : "Select reward provider"
+              }
+              disabled={
+                isEditMode ||
+                loadingRewardProviders ||
+                providerOptions.length === 0
+              }
+              zIndex={zIndex.popover}
+            />
+            {providerLoadError ? (
+              <p className="mt-1 text-xs text-red-600">{providerLoadError}</p>
+            ) : selectedProvider ? (
+              <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                API: {selectedProvider.apiPath || "—"}
+              </p>
+            ) : !loadingRewardProviders && providerOptions.length === 0 ? (
+              <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                No active providers for &quot;{rewardType}&quot;. Add one under
+                Configurations → Reward Providers.
+              </p>
+            ) : (
+              <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                Providers are filtered by the selected reward type.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <HeadlessSelect
+              label="Reward Configuration *"
+              options={configurationOptions}
+              value={
+                rewardConfigurationId != null
+                  ? String(rewardConfigurationId)
+                  : ""
+              }
+              onChange={(value) => handleConfigurationChange(value as string)}
+              placeholder={
+                !rewardProviderId
+                  ? "Select a provider first"
+                  : loadingConfigurations
+                    ? "Loading configurations..."
+                    : configurationOptions.length === 0
+                      ? "No configurations for this provider"
+                      : "Select reward configuration"
+              }
+              disabled={
+                isEditMode ||
+                !rewardProviderId ||
+                loadingConfigurations ||
+                configurationOptions.length === 0
+              }
+              zIndex={zIndex.popover}
+            />
+            <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+              {configurationLoadError
+                ? configurationLoadError
+                : rewardProviderId &&
+                    !loadingConfigurations &&
+                    configurationOptions.length === 0
+                  ? `No active configurations for this provider and "${rewardType}". Create one under Configurations → Reward Configurations.`
+                  : selectedConfiguration
+                    ? `${selectedConfiguration.api_path || "API path N/A"}`
+                    : "Credentials and payload template come from the selected configuration."}
+            </p>
+          </div>
         </div>
+
+        <RewardConfigurationReadOnlyPanel
+          configurationId={selectedConfigurationIdForPanel}
+        />
 
         {/* Reward Value */}
         <div>

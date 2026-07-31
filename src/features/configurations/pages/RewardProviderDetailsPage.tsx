@@ -14,6 +14,23 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import type { RewardProviderSchemaField } from "../types/rewardProvider";
+
+function formatSchemaDefaultDisplay(field: RewardProviderSchemaField): string {
+  if (field.default === undefined || field.default === "") {
+    if (field.type === "select") {
+      return (field.options || []).length > 0
+        ? `(options: ${(field.options || []).join(", ")})`
+        : "—";
+    }
+    return field.placeholder || "—";
+  }
+  if (field.type === "password") return "••••••••";
+  if (field.type === "boolean") {
+    return field.default === true || field.default === "true" ? "True" : "False";
+  }
+  return String(field.default);
+}
 
 function SchemaTable({
   fields,
@@ -48,11 +65,7 @@ function SchemaTable({
                 {field.required ? "Yes" : "No"}
               </td>
               <td className={`py-3 ${tw.textSecondary}`}>
-                {field.default != null && field.default !== ""
-                  ? String(field.default)
-                  : field.type === "select"
-                    ? (field.options || []).join(", ")
-                    : field.placeholder || "—"}
+                {formatSchemaDefaultDisplay(field)}
               </td>
             </tr>
           ))}

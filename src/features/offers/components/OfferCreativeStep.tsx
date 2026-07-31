@@ -43,6 +43,7 @@ import {
   formatVariablePlaceholder,
   validateInsertPosition,
   validateNoEditInsideVariables,
+  isCursorInsideVariable,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
@@ -1657,6 +1658,15 @@ export default function OfferCreativeStep({
                           value={editingCreative.text_body || ""}
                           onChange={(value) => {
                             setActiveField("body");
+                            const editError = validateNoEditInsideVariables(
+                              editingCreative.text_body || "",
+                              value,
+                            );
+                            if (editError) {
+                              setVariableError(editError);
+                            } else {
+                              setVariableError("");
+                            }
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               text_body: value,
                               ...(selectedCreativeData.channel === "Email" && { html_body: value }),

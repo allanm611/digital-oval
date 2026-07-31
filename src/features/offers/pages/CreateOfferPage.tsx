@@ -59,6 +59,7 @@ import ProductSelector from "../../products/components/ProductSelector";
 import OfferCreativeStep from "../components/OfferCreativeStep";
 import OfferTrackingStep from "../components/OfferTrackingStep";
 import OfferRewardStep from "../components/OfferRewardStep";
+import type { OfferReward } from "../types/offerReward";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -76,6 +77,18 @@ import {
   requiresHtmlBody,
   ensureEmailHtmlBody,
 } from "../utils/channelUtils";
+import {
+  collectOfferRouteValidationErrors,
+  getEffectiveRouteIdForChannel,
+  hydrateOfferRouteFields,
+  resolveCommunicationChannelKind,
+} from "../utils/offerChannelRoute";
+import {
+  buildOfferCreatePayload,
+  buildOfferUpdatePayload,
+  parseOfferWizardMetadata,
+  withChannelRouteSelected,
+} from "../utils/offerWizardPersistence";
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative } from "../types/offerCreative";
@@ -155,30 +168,6 @@ interface TrackingSource {
   type: "recharge" | "usage_metric" | "custom";
   enabled: boolean;
   rules: TrackingRule[];
-}
-
-interface RewardRule {
-  id: string;
-  name: string;
-  bundle_subscription_track: string;
-  priority: number;
-  condition: string;
-  value: string;
-  reward_type: "bundle" | "points" | "discount" | "cashback";
-  reward_value: string;
-  fulfillment_response: string;
-  success_text: string;
-  default_failure: string;
-  error_group: string;
-  failure_text: string;
-  enabled: boolean;
-}
-
-interface OfferReward {
-  id: string;
-  name: string;
-  type: "default" | "sms_night" | "custom";
-  rules: RewardRule[];
 }
 
 interface StepProps {
@@ -509,14 +498,16 @@ function BasicInfoStep({
                       ? String(formData.sms_route_id)
                       : ""
                   }
-                  onChange={(value) => {
-                    if (!value) return;
-                    setFormData({
-                      ...formData,
-                      sms_route_id: Number(value),
-                      route: Number(value),
-                    });
-                  }}
+                    onChange={(value) => {
+                      if (!value) return;
+                      setFormData(
+                        withChannelRouteSelected(
+                          formData,
+                          Number(value),
+                          "sms",
+                        ),
+                      );
+                    }}
                   placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
                 />
               </FormField>
@@ -546,10 +537,13 @@ function BasicInfoStep({
                     }
                     onChange={(value) => {
                       if (!value) return;
-                      setFormData({
-                        ...formData,
-                        email_route_id: Number(value),
-                      });
+                      setFormData(
+                        withChannelRouteSelected(
+                          formData,
+                          Number(value),
+                          "email",
+                        ),
+                      );
                     }}
                     placeholder={emailRoutesLoading ? "Loading..." : "Select email route"}
                   />
@@ -580,10 +574,13 @@ function BasicInfoStep({
                   }
                   onChange={(value) => {
                     if (!value) return;
-                    setFormData({
-                      ...formData,
-                      whatsapp_route_id: Number(value),
-                    });
+                    setFormData(
+                      withChannelRouteSelected(
+                        formData,
+                        Number(value),
+                        "whatsapp",
+                      ),
+                    );
                   }}
                   placeholder={whatsappRoutesLoading ? "Loading..." : "Select WhatsApp route"}
                 />
@@ -614,10 +611,13 @@ function BasicInfoStep({
                   }
                   onChange={(value) => {
                     if (!value) return;
-                    setFormData({
-                      ...formData,
-                      ussd_route_id: Number(value),
-                    });
+                    setFormData(
+                      withChannelRouteSelected(
+                        formData,
+                        Number(value),
+                        "ussd",
+                      ),
+                    );
                   }}
                   placeholder={ussdRoutesLoading ? "Loading..." : "Select USSD route"}
                 />
@@ -648,10 +648,13 @@ function BasicInfoStep({
                   }
                   onChange={(value) => {
                     if (!value) return;
-                    setFormData({
-                      ...formData,
-                      push_notification_route_id: Number(value),
-                    });
+                    setFormData(
+                      withChannelRouteSelected(
+                        formData,
+                        Number(value),
+                        "push",
+                      ),
+                    );
                   }}
                   placeholder={pushRoutesLoading ? "Loading..." : "Select push notification route"}
                 />
@@ -1126,6 +1129,24 @@ function ReviewStep({
                 {validationErrors.category_id && (
                   <li>{validationErrors.category_id}</li>
                 )}
+                {validationErrors.communication_channel && (
+                  <li>{validationErrors.communication_channel}</li>
+                )}
+                {validationErrors.sms_route && (
+                  <li>{validationErrors.sms_route}</li>
+                )}
+                {validationErrors.email_route && (
+                  <li>{validationErrors.email_route}</li>
+                )}
+                {validationErrors.whatsapp_route && (
+                  <li>{validationErrors.whatsapp_route}</li>
+                )}
+                {validationErrors.ussd_route && (
+                  <li>{validationErrors.ussd_route}</li>
+                )}
+                {validationErrors.push_route && (
+                  <li>{validationErrors.push_route}</li>
+                )}
                 {validationErrors.creatives && (
                   <li>{validationErrors.creatives}</li>
                 )}
@@ -1571,8 +1592,12 @@ export default function CreateOfferPage({
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isDuplicateMode, setIsDuplicateMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(
+    () => Boolean(id || duplicateIdParam),
+  );
+  const [isDuplicateMode, setIsDuplicateMode] = useState(
+    () => Boolean(duplicateIdParam),
+  );
   const [isLoadingOffer, setIsLoadingOffer] = useState(false);
   const totalSteps = 6;
 
@@ -1850,8 +1875,29 @@ export default function CreateOfferPage({
         eligibility_rules: offer.eligibility_rules || {},
         is_reusable: offer.is_reusable || false,
         supports_multi_language: offer.supports_multi_language || false,
+        metadata: offer.metadata || {},
       };
-      setFormData(newFormData);
+
+      const wizardData = parseOfferWizardMetadata(offer.metadata);
+      let formForUi = newFormData;
+      if (
+        wizardData.channelRouteId != null &&
+        wizardData.channelRouteKind
+      ) {
+        formForUi = withChannelRouteSelected(
+          newFormData,
+          wizardData.channelRouteId,
+          wizardData.channelRouteKind,
+        );
+      }
+      setFormData(formForUi);
+
+      if (wizardData.rewards.length > 0) {
+        setRewards(wizardData.rewards);
+      }
+      if (wizardData.trackingSources.length > 0) {
+        setTrackingSources(wizardData.trackingSources as TrackingSource[]);
+      }
       // Trigger category refresh to ensure categories are loaded and can be selected
       setCategoryRefreshTrigger((prev) => prev + 1);
 
@@ -1949,7 +1995,7 @@ export default function CreateOfferPage({
     } finally {
       setIsLoadingOffer(false);
     }
-  }, [id, navigate, setFormData, setCreatives]);
+  }, [id, navigate, setFormData, setCreatives, offerTypes, setRewards, setTrackingSources]);
 
   // Offer categories state
   const [offerCategories, setOfferCategories] = useState<OfferCategoryType[]>(
@@ -2105,8 +2151,9 @@ export default function CreateOfferPage({
   // When offerTypes load and we're in edit mode without a type ID, try to find it by name
   useEffect(() => {
     if (isEditMode && formData.offer_type && !formData.offer_type_id && offerTypes?.length > 0) {
+      const normalizedType = formData.offer_type.toLowerCase();
       const foundType = offerTypes.find(
-        (type) => type.name.toLowerCase() === formData.offer_type.toLowerCase()
+        (type) => type.name.toLowerCase() === normalizedType,
       );
       if (foundType) {
         setFormData((prev) => ({ ...prev, offer_type_id: foundType.id }));
@@ -2114,11 +2161,42 @@ export default function CreateOfferPage({
     }
   }, [offerTypes, isEditMode, formData.offer_type, formData.offer_type_id, setFormData]);
 
+  // After channels load, map legacy `route` → typed *_route_id (edit/duplicate offers from API)
+  useEffect(() => {
+    if (!isEditMode && !isDuplicateMode) return;
+    if (!formData.communication_channel_id || communicationChannels.length === 0) {
+      return;
+    }
+
+    const channel = communicationChannels.find(
+      (ch) => String(ch.id) === String(formData.communication_channel_id),
+    );
+    const channelKind = resolveCommunicationChannelKind(channel?.name);
+    if (!channelKind) return;
+
+    setFormData((prev) => {
+      const hydrated = hydrateOfferRouteFields(prev, channelKind);
+      const unchanged =
+        hydrated.sms_route_id === prev.sms_route_id &&
+        hydrated.email_route_id === prev.email_route_id &&
+        hydrated.whatsapp_route_id === prev.whatsapp_route_id &&
+        hydrated.ussd_route_id === prev.ussd_route_id &&
+        hydrated.push_notification_route_id ===
+          prev.push_notification_route_id;
+      return unchanged ? prev : { ...prev, ...hydrated };
+    });
+  }, [
+    isEditMode,
+    isDuplicateMode,
+    communicationChannels,
+    formData.communication_channel_id,
+    setFormData,
+  ]);
+
   // Validation functions
-  const validateForm = useCallback(() => {
+  const buildOfferValidationErrors = useCallback((): Record<string, string> => {
     const errors: Record<string, string> = {};
 
-    // Required fields validation
     if (!formData.name?.trim()) {
       errors.name = "Offer name is required";
     }
@@ -2139,32 +2217,22 @@ export default function CreateOfferPage({
       errors.communication_channel = "Communication channel is required";
     }
 
-    // Route validation for all channels that require it
     const selectedChannel = communicationChannels?.find(
-      (ch) => String(ch.id) === String(formData.communication_channel_id)
+      (ch) => String(ch.id) === String(formData.communication_channel_id),
     );
-    const channelName = selectedChannel?.name?.toUpperCase();
+    Object.assign(
+      errors,
+      collectOfferRouteValidationErrors(formData, selectedChannel?.name),
+    );
 
-    if (channelName === "SMS" && !formData.sms_route_id) {
-      errors.sms_route = "SMS route is required";
-    } else if (channelName === "EMAIL" && !formData.email_route_id) {
-      errors.email_route = "Email route is required";
-    } else if (channelName === "WHATSAPP" && !formData.whatsapp_route_id) {
-      errors.whatsapp_route = "WhatsApp route is required";
-    } else if (channelName === "USSD" && !formData.ussd_route_id) {
-      errors.ussd_route = "USSD route is required";
-    } else if ((channelName === "PUSH" || channelName === "PUSH NOTIFICATION") && !formData.push_notification_route_id) {
-      errors.push_route = "Push notification route is required";
-    }
+    return errors;
+  }, [formData, communicationChannels]);
 
-    // Product selection is optional; remove validation
-    // if (!formData.product_id) {
-    //   errors.product_id = "Product selection is required";
-    // }
-
+  const validateForm = useCallback(() => {
+    const errors = buildOfferValidationErrors();
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
-  }, [formData]);
+  }, [buildOfferValidationErrors]);
 
   const clearValidationErrors = useCallback(() => {
     setValidationErrors({});
@@ -2182,33 +2250,17 @@ export default function CreateOfferPage({
 
         if (!isBasicInfoValid) return false;
 
-        // Get selected channel
-        const selectedChannel = communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id));
+        const selectedChannel = communicationChannels?.find(
+          (ch) => String(ch.id) === String(formData.communication_channel_id),
+        );
+        const channelKind = resolveCommunicationChannelKind(
+          selectedChannel?.name,
+        );
+        if (!channelKind) return true;
 
-        // Route validation for all channels that require it
-        const channelName = selectedChannel?.name?.toUpperCase();
-
-        if (channelName === "SMS") {
-          return formData.sms_route_id !== undefined;
-        }
-
-        if (channelName === "EMAIL") {
-          return formData.email_route_id !== undefined;
-        }
-
-        if (channelName === "WHATSAPP") {
-          return formData.whatsapp_route_id !== undefined;
-        }
-
-        if (channelName === "USSD") {
-          return formData.ussd_route_id !== undefined;
-        }
-
-        if (channelName === "PUSH" || channelName === "PUSH NOTIFICATION") {
-          return formData.push_notification_route_id !== undefined;
-        }
-
-        return true;
+        return (
+          getEffectiveRouteIdForChannel(formData, channelKind) !== undefined
+        );
       case 2: // Products step
         return true; // Products are optional; allow proceeding
       case 3: // Creative step
@@ -2245,20 +2297,17 @@ export default function CreateOfferPage({
 
         if (!isReviewValid) return false;
 
-        // Get selected channel
-        const reviewSelectedChannel = communicationChannels?.find(ch => String(ch.id) === String(formData.communication_channel_id));
+        const reviewSelectedChannel = communicationChannels?.find(
+          (ch) => String(ch.id) === String(formData.communication_channel_id),
+        );
+        const reviewKind = resolveCommunicationChannelKind(
+          reviewSelectedChannel?.name,
+        );
+        if (!reviewKind) return true;
 
-        // If SMS channel is selected, SMS route is required
-        if (reviewSelectedChannel?.name?.toUpperCase() === "SMS") {
-          return formData.sms_route_id !== undefined;
-        }
-
-        // If EMAIL channel is selected, EMAIL route is required
-        if (reviewSelectedChannel?.name?.toUpperCase() === "EMAIL") {
-          return formData.email_route_id !== undefined;
-        }
-
-        return true;
+        return (
+          getEffectiveRouteIdForChannel(formData, reviewKind) !== undefined
+        );
       default:
         return false;
     }
@@ -2321,24 +2370,12 @@ export default function CreateOfferPage({
 
         // Check route requirements based on selected channel
         const selectedChannel = communicationChannels?.find(
-          (ch) => String(ch.id) === String(formData.communication_channel_id)
+          (ch) => String(ch.id) === String(formData.communication_channel_id),
         );
-        const channelName = selectedChannel?.name?.toUpperCase();
-        if (channelName === "SMS" && !formData.sms_route_id) {
-          errors.sms_route = "SMS route is required";
-        }
-        if (channelName === "EMAIL" && !formData.email_route_id) {
-          errors.email_route = "Email route is required";
-        }
-        if (channelName === "WHATSAPP" && !formData.whatsapp_route_id) {
-          errors.whatsapp_route = "WhatsApp route is required";
-        }
-        if (channelName === "USSD" && !formData.ussd_route_id) {
-          errors.ussd_route = "USSD route is required";
-        }
-        if ((channelName === "PUSH" || channelName === "PUSH NOTIFICATION") && !formData.push_notification_route_id) {
-          errors.push_notification_route = "Push notification route is required";
-        }
+        Object.assign(
+          errors,
+          collectOfferRouteValidationErrors(formData, selectedChannel?.name),
+        );
       } else if (currentStep === 3) {
         // Step 3: Creative validation errors
         if (creatives.length === 0) {
@@ -2385,7 +2422,16 @@ export default function CreateOfferPage({
         if (!formData.code?.trim()) errors.code = "Offer code is required";
         if (!formData.offer_type_id) errors.offer_type = "Offer type is required";
         if (!formData.category_id) errors.category_id = "Catalog is required";
-        // Tracking sources are optional
+        if (!formData.communication_channel_id) {
+          errors.communication_channel = "Communication channel is required";
+        }
+        const reviewChannel = communicationChannels?.find(
+          (ch) => String(ch.id) === String(formData.communication_channel_id),
+        );
+        Object.assign(
+          errors,
+          collectOfferRouteValidationErrors(formData, reviewChannel?.name),
+        );
       }
       setValidationErrors(errors);
     }
@@ -2396,6 +2442,7 @@ export default function CreateOfferPage({
     creatives,
     formData,
     trackingSources,
+    communicationChannels,
   ]);
 
   const handlePrev = useCallback(() => {
@@ -2423,33 +2470,58 @@ export default function CreateOfferPage({
 
       // Validate form before submission
       if (!validateForm()) {
+        const submitErrors = buildOfferValidationErrors();
+        setValidationErrors(submitErrors);
         setError("Please fix the validation errors before submitting");
+        const needsBasicInfoStep =
+          submitErrors.name ||
+          submitErrors.code ||
+          submitErrors.offer_type ||
+          submitErrors.category_id ||
+          submitErrors.communication_channel ||
+          submitErrors.sms_route ||
+          submitErrors.email_route ||
+          submitErrors.whatsapp_route ||
+          submitErrors.ussd_route ||
+          submitErrors.push_route;
+        if (needsBasicInfoStep) {
+          setCurrentStep(1);
+        }
+        setIsLoading(false);
         return;
       }
 
-      // Prepare API data - remove empty description if not provided
-      // Backend doesn't accept empty strings for description
-      const { description, communication_channel_id, route, sms_route_id, email_route_id, whatsapp_route_id, ussd_route_id, push_notification_route_id, offer_type, ...formDataWithoutDescription } = formData;
-
-      const apiData: CreateOfferRequest = {
-        ...formDataWithoutDescription,
-        // TODO: Backend only accepts offer_type_id, not offer_type
-        // offer_type: offerTypeName,
-        ...(description?.trim() ? { description: description.trim() } : {}),
-        ...(communication_channel_id && { communication_channel_id }),
-        ...(route && { route }),
-      };
+      // Prepare API payload (routes + wizard rewards/tracking in metadata)
+      const selectedChannel = communicationChannels.find(
+        (ch) => String(ch.id) === String(formData.communication_channel_id),
+      );
 
       let offerId: number;
 
       if (isEditMode && id) {
+        const apiData = buildOfferUpdatePayload(formData, {
+          channelName: selectedChannel?.name,
+          rewards,
+          trackingSources,
+          updatedBy: user?.user_id,
+        });
         await offerService.updateOffer(parseInt(id), apiData);
         offerId = parseInt(id);
       } else if (createdOfferId) {
-        // Session draft exists: use update endpoint
+        const apiData = buildOfferUpdatePayload(formData, {
+          channelName: selectedChannel?.name,
+          rewards,
+          trackingSources,
+          updatedBy: user?.user_id,
+        });
         await offerService.updateOffer(createdOfferId, apiData);
         offerId = createdOfferId;
       } else {
+        const apiData = buildOfferCreatePayload(formData, {
+          channelName: selectedChannel?.name,
+          rewards,
+          trackingSources,
+        });
         const createdOfferResponse = await offerService.createOffer(apiData);
 
         // Extract offer ID from response - BaseResponse wraps the Offer in .data
@@ -2781,6 +2853,7 @@ export default function CreateOfferPage({
     isEditMode,
     id,
     validateForm,
+    buildOfferValidationErrors,
     clearValidationErrors,
     formData,
     selectedProducts,
@@ -2791,6 +2864,9 @@ export default function CreateOfferPage({
     navigate,
     showError,
     showToast,
+    rewards,
+    trackingSources,
+    communicationChannels,
   ]);
 
   const handleSaveDraft = useCallback(async () => {
@@ -2801,25 +2877,19 @@ export default function CreateOfferPage({
         return;
       }
 
-      const baseDraftData = {
-        name: formData.name,
-        code: formData.code,
-        offer_type_id: formData.offer_type_id,
-        max_usage_per_customer: formData.max_usage_per_customer,
-        ...(formData.description && { description: formData.description }),
-        ...(formData.category_id && { category_id: formData.category_id }),
-        ...(formData.communication_channel_id && { communication_channel_id: formData.communication_channel_id }),
-        ...(formData.route && { route: formData.route }),
-        ...(formData.primary_product_id && { primary_product_id: formData.primary_product_id }),
-        ...(formData.eligibility_rules && { eligibility_rules: formData.eligibility_rules }),
-        ...(formData.is_reusable !== undefined && { is_reusable: formData.is_reusable }),
-        ...(formData.supports_multi_language !== undefined && { supports_multi_language: formData.supports_multi_language }),
-      };
+      const selectedChannel = communicationChannels.find(
+        (ch) => String(ch.id) === String(formData.communication_channel_id),
+      );
+
+      const baseDraftData = buildOfferUpdatePayload(formData, {
+        channelName: selectedChannel?.name,
+        rewards,
+        trackingSources,
+        updatedBy: user?.user_id,
+      });
 
       if (isEditMode && id) {
-        // Edit mode: update existing offer from list
-        const updateData: UpdateOfferRequest = { ...baseDraftData, updated_by: user?.user_id };
-        await offerService.updateOffer(parseInt(id), updateData);
+        await offerService.updateOffer(parseInt(id), baseDraftData);
         showToast(t.offers.draftSaveSuccess || "Draft updated successfully!");
       } else if (createdOfferId) {
         // Session draft exists: update the already-created draft
@@ -2827,8 +2897,14 @@ export default function CreateOfferPage({
         await offerService.updateOffer(createdOfferId, updateData);
         showToast(t.offers.draftSaveSuccess || "Draft saved successfully!");
       } else {
-        // New draft: create for the first time
-        const createData: CreateOfferRequest = { ...baseDraftData, created_by: user?.user_id };
+        const createData: CreateOfferRequest = {
+          ...buildOfferCreatePayload(formData, {
+            channelName: selectedChannel?.name,
+            rewards,
+            trackingSources,
+          }),
+          ...(user?.user_id != null ? { created_by: user.user_id } : {}),
+        };
         const createResponse = await offerService.createOffer(createData);
         const offerId = createResponse?.data?.id;
         if (!offerId) throw new Error("Offer created but ID not returned");
@@ -2853,7 +2929,19 @@ export default function CreateOfferPage({
     } finally {
       setIsSavingDraft(false);
     }
-  }, [formData, isEditMode, id, createdOfferId, user, showError, showToast, t]);
+  }, [
+    formData,
+    isEditMode,
+    id,
+    createdOfferId,
+    user,
+    showError,
+    showToast,
+    t,
+    rewards,
+    trackingSources,
+    communicationChannels,
+  ]);
 
   const handleCancel = useCallback(() => {
     navigate("/dashboard/offers");

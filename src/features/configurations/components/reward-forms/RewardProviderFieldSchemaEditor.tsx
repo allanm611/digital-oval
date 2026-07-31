@@ -1,9 +1,11 @@
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import Input from "../../../../shared/components/ui/Input";
+import RewardSchemaFieldControl from "./RewardSchemaFieldControl";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw } from "../../../../shared/utils/utils";
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
+import { patchFieldForTypeChange } from "./rewardSchemaFieldUtils";
 
 const FIELD_TYPES: {
   value: RewardProviderSchemaField["type"];
@@ -82,6 +84,23 @@ export function validateRewardFieldSchema(
       if (options.length === 0) {
         errors[`${prefix}_options`] =
           "Select fields need at least one option (comma-separated)";
+      } else if (
+        field.default !== undefined &&
+        field.default !== "" &&
+        !options.includes(String(field.default))
+      ) {
+        errors[`${prefix}_default`] = "Default must be one of the select options";
+      }
+    }
+
+    if (
+      field.type === "number" &&
+      field.default !== undefined &&
+      field.default !== ""
+    ) {
+      const n = Number(field.default);
+      if (!Number.isFinite(n)) {
+        errors[`${prefix}_default`] = "Default must be a valid number";
       }
     }
   });
@@ -210,9 +229,10 @@ export default function RewardProviderFieldSchemaEditor({
                       value={field.type}
                       onChange={(v) =>
                         updateField(index, {
-                          type: v as RewardProviderSchemaField["type"],
-                          options:
-                            v === "select" ? field.options || [] : undefined,
+                          ...patchFieldForTypeChange(
+                            field,
+                            v as RewardProviderSchemaField["type"],
+                          ),
                         })
                       }
                       options={FIELD_TYPES}
@@ -220,14 +240,14 @@ export default function RewardProviderFieldSchemaEditor({
                     />
                   </div>
                   <div>
-                    <Input
-                      label="Default value"
-                      value={
-                        field.default != null ? String(field.default) : ""
-                      }
+                    <RewardSchemaFieldControl
+                      field={field}
+                      controlLabel="Default value"
+                      value={field.default}
                       onChange={(v) => updateField(index, { default: v })}
-                      placeholder="Optional default"
-                      disabled={disabled || field.type === "boolean"}
+                      disabled={disabled}
+                      allowEmptyDefault
+                      error={errors[`${prefix}_default`]}
                     />
                   </div>
                   <div className="md:col-span-2">
