@@ -8,6 +8,9 @@ export interface OfferRewardRule {
   /** Selected reward configuration id */
   reward_configuration_id?: string;
   reward_configuration_name?: string;
+  /** Runtime overrides for provider auth/payload (stored on offer metadata) */
+  auth_config?: Record<string, unknown>;
+  payload_config?: Record<string, unknown>;
   priority: number;
   condition: string;
   value: string;

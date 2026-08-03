@@ -40,7 +40,7 @@ import { type RuleRewardType } from "../../../shared/data/rewardProviders";
 import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
 import { useRewardProviderConfigurations } from "../../../shared/hooks/useRewardProviderConfigurations";
 import { rewardConfigurationService } from "../../configurations/services/rewardConfigurationService";
-import RewardConfigurationReadOnlyPanel from "../../configurations/components/reward-forms/RewardConfigurationReadOnlyPanel";
+import RewardConfigurationParametersEditor from "../../configurations/components/reward-forms/RewardConfigurationParametersEditor";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -119,6 +119,8 @@ export default function DefineRewardStep({
   const [rewardValue, setRewardValue] = useState(data.rewardValue || "");
   const [description, setDescription] = useState(data.description || "");
   const [error, setError] = useState("");
+  const [configurationParametersValid, setConfigurationParametersValid] =
+    useState(true);
   const [isTesting, setIsTesting] = useState(false);
   const [seedTestError, setSeedTestError] = useState("");
   const [selectedSeedContactIds, setSelectedSeedContactIds] = useState<Set<number>>(
@@ -418,8 +420,11 @@ export default function DefineRewardStep({
       rewardProviderId: undefined,
       rewardConfigurationId: undefined,
       rewardConfigurationName: undefined,
+      rewardAuthConfig: undefined,
+      rewardPayloadConfig: undefined,
       bundleTrack: "",
     });
+    setConfigurationParametersValid(true);
     resetRewardValidation();
   };
 
@@ -430,8 +435,11 @@ export default function DefineRewardStep({
       rewardProviderId: providerId,
       rewardConfigurationId: undefined,
       rewardConfigurationName: undefined,
+      rewardAuthConfig: undefined,
+      rewardPayloadConfig: undefined,
       bundleTrack: "",
     });
+    setConfigurationParametersValid(true);
     resetRewardValidation();
   };
 
@@ -442,8 +450,11 @@ export default function DefineRewardStep({
     onUpdate({
       rewardConfigurationId: parsed,
       rewardConfigurationName: config?.name,
+      rewardAuthConfig: undefined,
+      rewardPayloadConfig: undefined,
       bundleTrack: config?.name,
     });
+    setConfigurationParametersValid(true);
     resetRewardValidation();
   };
 
@@ -459,6 +470,11 @@ export default function DefineRewardStep({
       setError(
         "Select a reward configuration for this provider (Configurations → Reward Configurations).",
       );
+      return;
+    }
+
+    if (!configurationParametersValid) {
+      setError("Complete all required configuration parameters.");
       return;
     }
 
@@ -486,6 +502,8 @@ export default function DefineRewardStep({
       rewardProviderId,
       rewardConfigurationId,
       rewardConfigurationName: selectedConfiguration?.name,
+      rewardAuthConfig: data.rewardAuthConfig,
+      rewardPayloadConfig: data.rewardPayloadConfig,
       bundleTrack: selectedConfiguration?.name,
       description: description.trim() || undefined,
       channel: selectedChannel,
@@ -772,8 +790,21 @@ export default function DefineRewardStep({
           </div>
         </div>
 
-        <RewardConfigurationReadOnlyPanel
+        <RewardConfigurationParametersEditor
+          key={selectedConfigurationIdForPanel ?? "none"}
           configurationId={selectedConfigurationIdForPanel}
+          value={{
+            auth_config: data.rewardAuthConfig,
+            payload_config: data.rewardPayloadConfig,
+          }}
+          disabled={isEditMode}
+          onChange={({ auth_config, payload_config }) =>
+            onUpdate({
+              rewardAuthConfig: auth_config,
+              rewardPayloadConfig: payload_config,
+            })
+          }
+          onValidationChange={setConfigurationParametersValid}
         />
 
         {/* Reward Value */}

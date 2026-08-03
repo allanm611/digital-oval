@@ -14,7 +14,7 @@ import {
 } from "../../../shared/data/rewardProviders";
 import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
 import { useRewardProviderConfigurations } from "../../../shared/hooks/useRewardProviderConfigurations";
-import RewardConfigurationReadOnlyPanel from "../../configurations/components/reward-forms/RewardConfigurationReadOnlyPanel";
+import RewardConfigurationParametersEditor from "../../configurations/components/reward-forms/RewardConfigurationParametersEditor";
 import type { OfferReward, OfferRewardRule } from "../types/offerReward";
 
 interface OfferRewardStepProps {
@@ -32,6 +32,7 @@ export default function OfferRewardStep({
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [editingRule, setEditingRule] = useState<OfferRewardRule | null>(null);
   const [ruleModalError, setRuleModalError] = useState("");
+  const [ruleParametersValid, setRuleParametersValid] = useState(true);
   const {
     providerOptions,
     defaultProviderId,
@@ -124,6 +125,7 @@ export default function OfferRewardStep({
 
     setEditingRule(newRule);
     setRuleModalError("");
+    setRuleParametersValid(true);
     setShowRuleModal(true);
   };
 
@@ -193,6 +195,10 @@ export default function OfferRewardStep({
     }
     if (!rule.reward_configuration_id?.trim()) {
       setRuleModalError("Select a reward configuration for this provider.");
+      return;
+    }
+    if (rule.reward_configuration_id && !ruleParametersValid) {
+      setRuleModalError("Complete all required configuration parameters.");
       return;
     }
 
@@ -427,6 +433,7 @@ export default function OfferRewardStep({
                                       ),
                                     });
                                     setRuleModalError("");
+                                    setRuleParametersValid(true);
                                     setShowRuleModal(true);
                                   }}
                                   className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
@@ -585,14 +592,17 @@ export default function OfferRewardStep({
                       label="Reward Provider"
                       options={providerOptions}
                       value={editingRule.bundle_subscription_track}
-                      onChange={(value) =>
+                      onChange={(value) => {
                         setEditingRule({
                           ...editingRule,
                           bundle_subscription_track: value as string,
                           reward_configuration_id: "",
                           reward_configuration_name: "",
-                        })
-                      }
+                          auth_config: undefined,
+                          payload_config: undefined,
+                        });
+                        setRuleParametersValid(true);
+                      }}
                       placeholder={
                         loadingRewardProviders
                           ? "Loading providers..."
@@ -631,7 +641,10 @@ export default function OfferRewardStep({
                           ...editingRule,
                           reward_configuration_id: value as string,
                           reward_configuration_name: config?.name,
+                          auth_config: undefined,
+                          payload_config: undefined,
                         });
+                        setRuleParametersValid(true);
                       }}
                       placeholder={
                         !editingRule.bundle_subscription_track
@@ -660,8 +673,21 @@ export default function OfferRewardStep({
                   </div>
                 </div>
 
-                <RewardConfigurationReadOnlyPanel
+                <RewardConfigurationParametersEditor
+                  key={selectedConfigurationId ?? "none"}
                   configurationId={selectedConfigurationId}
+                  value={{
+                    auth_config: editingRule.auth_config,
+                    payload_config: editingRule.payload_config,
+                  }}
+                  onChange={({ auth_config, payload_config }) =>
+                    setEditingRule((prev) =>
+                      prev
+                        ? { ...prev, auth_config, payload_config }
+                        : prev,
+                    )
+                  }
+                  onValidationChange={setRuleParametersValid}
                 />
 
                 {ruleModalError ? (

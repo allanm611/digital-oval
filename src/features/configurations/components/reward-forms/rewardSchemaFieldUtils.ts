@@ -131,3 +131,48 @@ export function patchFieldForTypeChange(
       newType === "boolean" || newType === "select" ? "" : field.placeholder,
   };
 }
+
+export function buildInitialConfigValues(
+  fields: RewardProviderSchemaField[],
+  existing?: Record<string, unknown>,
+): Record<string, unknown> {
+  const values: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    if (existing && existing[field.name] !== undefined) {
+      values[field.name] = coerceConfigValue(field, existing[field.name]);
+      return;
+    }
+    if (field.default !== undefined && field.default !== "") {
+      values[field.name] = coerceConfigValue(field, field.default);
+      return;
+    }
+    values[field.name] = coerceConfigValue(field, undefined);
+  });
+  return values;
+}
+
+export function normalizeConfigFields(
+  fields: RewardProviderSchemaField[],
+  values: Record<string, unknown>,
+): Record<string, unknown> {
+  const config: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    config[field.name] = normalizeConfigValueForApi(field, values[field.name]);
+  });
+  return config;
+}
+
+export function collectSchemaFieldErrors(
+  fields: RewardProviderSchemaField[],
+  values: Record<string, unknown>,
+  section: string,
+): Record<string, string> {
+  const errors: Record<string, string> = {};
+  fields.forEach((field) => {
+    const message = validateRequiredSchemaValue(field, values[field.name]);
+    if (message) {
+      errors[`${section}.${field.name}`] = message;
+    }
+  });
+  return errors;
+}

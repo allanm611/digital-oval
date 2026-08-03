@@ -45,6 +45,9 @@ export interface ManualRewardData {
   /** Active reward configuration used for RewardDeliveryService */
   rewardConfigurationId?: number;
   rewardConfigurationName?: string;
+  /** Runtime auth/payload overrides for this grant */
+  rewardAuthConfig?: Record<string, unknown>;
+  rewardPayloadConfig?: Record<string, unknown>;
   rewardValue?: string;
   bundleTrack?: string;
   description?: string;

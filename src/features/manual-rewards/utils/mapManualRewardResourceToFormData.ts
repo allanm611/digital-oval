@@ -49,6 +49,12 @@ export function mapManualRewardResourceToFormData(
     bundleTrack: row.bundle_track,
     rewardConfigurationId: readConfigId(preview),
     rewardConfigurationName: row.bundle_track,
+    rewardAuthConfig:
+      (preview.auth_config as Record<string, unknown> | undefined) ??
+      undefined,
+    rewardPayloadConfig:
+      (preview.payload_config as Record<string, unknown> | undefined) ??
+      undefined,
     quicklistId: row.quicklist_id,
     rowCount: row.recipient_count,
     inputMethod,
