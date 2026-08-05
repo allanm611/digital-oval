@@ -106,6 +106,8 @@ export interface UpdateManualRewardRequest {
   applyDate?: string;
   applyTime?: string;
   status?: ManualRewardApiStatus;
+  /** Merged into existing preview_data (runtime config overrides, config link) */
+  previewData?: Record<string, unknown>;
 }
 
 export interface UpdateManualRewardResponse {

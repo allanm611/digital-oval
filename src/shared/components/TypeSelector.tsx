@@ -10,6 +10,7 @@ interface TypeSelectorProps {
   disabled?: boolean;
   allowCreate?: boolean;
   onCreate?: () => void;
+  createTitle?: string;
   className?: string;
   error?: boolean;
   label?: string;
@@ -23,6 +24,7 @@ export default function TypeSelector({
   disabled = false,
   allowCreate = false,
   onCreate,
+  createTitle = "Create new",
   className = "",
   error = false,
   label,
@@ -74,7 +76,7 @@ export default function TypeSelector({
             borderColor: color.primary.action,
             border: "1px solid",
           }}
-          title="Create new type"
+          title={createTitle}
         >
           <Plus className="w-4 h-4" />
         </button>

@@ -1,9 +1,12 @@
 import { createPortal } from "react-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Loader, AlertCircle } from "lucide-react";
+import { X, Loader, AlertCircle, RefreshCw } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import { getStatusBadgeConfig } from "../../../shared/utils/statusColors";
+import DateFormatter from "../../../shared/components/DateFormatter";
 import { broadcastService } from "../services/broadcastService";
+import { formatBroadcastStatusLabel } from "../utils/normalizeCampaignBroadcast";
 import { Broadcast } from "../types/broadcast";
 
 interface BroadcastsModalProps {
@@ -11,6 +14,10 @@ interface BroadcastsModalProps {
   onClose: () => void;
   campaignName: string;
   campaignId: number;
+}
+
+function broadcastRowKey(broadcast: Broadcast): string {
+  return `${broadcast.broadcast_id}:${broadcast.run_id || "plan"}`;
 }
 
 export default function BroadcastsModal({
@@ -24,29 +31,43 @@ export default function BroadcastsModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadBroadcasts = useCallback(async () => {
+    if (!campaignId) {
+      setError("Campaign ID is missing");
+      setBroadcasts([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await broadcastService.getAllCampaignBroadcasts(campaignId);
+      if (response.success) {
+        setBroadcasts(response.data ?? []);
+      } else {
+        setError("Failed to load broadcasts");
+        setBroadcasts([]);
+      }
+    } catch (err) {
+      console.error("Failed to load broadcasts:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load broadcasts",
+      );
+      setBroadcasts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [campaignId]);
+
   useEffect(() => {
     if (isOpen && campaignId) {
       loadBroadcasts();
     }
-  }, [isOpen, campaignId]);
-
-  const loadBroadcasts = async () => {
-    try {
-      setLoading(true);
+    if (!isOpen) {
+      setBroadcasts([]);
       setError(null);
-      const response = await broadcastService.getBroadcastsByCampaign(campaignId);
-      if (response.success && response.data) {
-        setBroadcasts(response.data);
-      } else {
-        setError("Failed to load broadcasts");
-      }
-    } catch (err) {
-      console.error("Failed to load broadcasts:", err);
-      setError("Failed to load broadcasts");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isOpen, campaignId, loadBroadcasts]);
 
   if (!isOpen) return null;
 
@@ -57,24 +78,39 @@ export default function BroadcastsModal({
       onClick={onClose}
     >
       <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col`}
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[80vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-lg font-semibold text-black">Campaign Broadcasts</h2>
             <p className="text-sm text-gray-600 mt-1">{campaignName}</p>
+            {!loading && !error && (
+              <p className="text-xs text-gray-500 mt-1">
+                {broadcasts.length} broadcast{broadcasts.length === 1 ? "" : "s"} for campaign #{campaignId}
+              </p>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={loadBroadcasts}
+              disabled={loading}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -82,13 +118,25 @@ export default function BroadcastsModal({
               <p className="text-gray-500">Loading broadcasts...</p>
             </div>
           ) : error ? (
-            <div className="flex items-center justify-center py-12">
-              <AlertCircle className="w-6 h-6 text-red-400 mr-2" />
-              <p className="text-red-500">{error}</p>
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="flex items-center">
+                <AlertCircle className="w-6 h-6 text-red-400 mr-2" />
+                <p className="text-red-500">{error}</p>
+              </div>
+              <button
+                type="button"
+                onClick={loadBroadcasts}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Try again
+              </button>
             </div>
           ) : broadcasts.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="text-center py-8 space-y-2">
               <p className="text-gray-500">No broadcasts found for this campaign</p>
+              <p className="text-xs text-gray-400 max-w-md mx-auto">
+                Broadcasts are created when a campaign is scheduled or executed. Draft campaigns may not have any yet.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -96,10 +144,16 @@ export default function BroadcastsModal({
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-3 px-3 font-semibold text-gray-700">
-                      Broadcast Name
+                      Broadcast
                     </th>
                     <th className="text-left py-3 px-3 font-semibold text-gray-700">
                       Status
+                    </th>
+                    <th className="text-left py-3 px-3 font-semibold text-gray-700">
+                      Channel
+                    </th>
+                    <th className="text-left py-3 px-3 font-semibold text-gray-700">
+                      Start
                     </th>
                     <th className="text-right py-3 px-3 font-semibold text-gray-700">
                       Sent
@@ -117,10 +171,12 @@ export default function BroadcastsModal({
                 </thead>
                 <tbody>
                   {broadcasts.map((broadcast) => {
-                    if (!broadcast || !broadcast.broadcast_id) return null;
+                    if (!broadcast.broadcast_id) return null;
 
-                    const broadcastName = broadcast.broadcast_name || "—";
-                    const status = broadcast.status || "unknown";
+                    const { className, style } = getStatusBadgeConfig(
+                      broadcast.status,
+                      "broadcast",
+                    );
                     const sent = broadcast.messages_sent ?? 0;
                     const delivered = broadcast.messages_delivered ?? 0;
                     const failed = broadcast.messages_failed ?? 0;
@@ -128,23 +184,46 @@ export default function BroadcastsModal({
 
                     return (
                       <tr
-                        key={broadcast.broadcast_id}
+                        key={broadcastRowKey(broadcast)}
                         className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                       >
                         <td className="py-3 px-3">
                           <button
-                            onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast.broadcast_id}`, {
-                              state: { broadcast, campaignId, campaignName }
-                            })}
-                            className="text-sm font-medium transition-colors hover:opacity-80"
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/campaign-broadcasts/${broadcast.broadcast_id}`,
+                                {
+                                  state: { broadcast, campaignId, campaignName },
+                                },
+                              )
+                            }
+                            className="text-left text-sm font-medium transition-colors hover:opacity-80 block max-w-xs truncate"
                             style={{ color: color.primary.accent }}
-                            title="View details"
+                            title={broadcast.broadcast_name}
                           >
-                            {broadcastName}
+                            {broadcast.broadcast_name || "—"}
                           </button>
+                          {broadcast.segment_name && (
+                            <p className="text-xs text-gray-500 truncate max-w-xs">
+                              {broadcast.segment_name}
+                            </p>
+                          )}
                         </td>
-                        <td className="py-3 px-3 text-gray-900">
-                          {status}
+                        <td className="py-3 px-3">
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${className}`} style={style}>
+                            {formatBroadcastStatusLabel(broadcast.status)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-gray-700 uppercase text-xs">
+                          {broadcast.channel_code || "—"}
+                        </td>
+                        <td className="py-3 px-3 text-gray-700 whitespace-nowrap">
+                          {broadcast.actual_start_time ? (
+                            <DateFormatter date={broadcast.actual_start_time} />
+                          ) : (
+                            "—"
+                          )}
                         </td>
                         <td className="py-3 px-3 text-right text-gray-900">
                           {sent.toLocaleString()}
@@ -167,9 +246,19 @@ export default function BroadcastsModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-gray-200 flex justify-end">
+        <div className="px-6 py-3 border-t border-gray-200 flex justify-between items-center">
           <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/campaign-broadcasts?campaignId=${campaignId}`)
+            }
+            className="text-sm font-medium transition-colors hover:opacity-80"
+            style={{ color: color.primary.accent }}
+          >
+            Open Campaign Broadcasts
+          </button>
+          <button
+            type="button"
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
           >

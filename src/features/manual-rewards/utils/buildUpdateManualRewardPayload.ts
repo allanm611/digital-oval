@@ -1,6 +1,30 @@
 import type { UpdateManualRewardRequest } from "../types/manualRewardApi";
 import type { ManualRewardData } from "../pages/CreateManualRewardPage";
 
+function buildPreviewDataPatch(
+  data: ManualRewardData,
+): Record<string, unknown> | undefined {
+  const patch: Record<string, unknown> = {};
+
+  if (data.rewardConfigurationId != null) {
+    patch.reward_configuration_id = data.rewardConfigurationId;
+  }
+  if (data.rewardProviderId) {
+    const asNum = Number(data.rewardProviderId);
+    patch.reward_provider_id = Number.isFinite(asNum)
+      ? asNum
+      : data.rewardProviderId;
+  }
+  if (data.rewardAuthConfig) {
+    patch.auth_config = data.rewardAuthConfig;
+  }
+  if (data.rewardPayloadConfig) {
+    patch.payload_config = data.rewardPayloadConfig;
+  }
+
+  return Object.keys(patch).length > 0 ? patch : undefined;
+}
+
 export function buildUpdateManualRewardPayload(
   data: ManualRewardData,
 ): UpdateManualRewardRequest {
@@ -36,6 +60,11 @@ export function buildUpdateManualRewardPayload(
   }
   if (data.applyTime) {
     payload.applyTime = data.applyTime;
+  }
+
+  const previewData = buildPreviewDataPatch(data);
+  if (previewData) {
+    payload.previewData = previewData;
   }
 
   return payload;

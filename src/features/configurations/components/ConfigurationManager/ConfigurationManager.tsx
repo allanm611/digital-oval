@@ -3,7 +3,7 @@ import { Edit, Trash2, X, LucideIcon } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../../shared/utils/errorHandler";
 import { useToast } from "../../../../contexts/ToastContext";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
@@ -30,13 +30,25 @@ export interface ConfigurationItem {
 export interface MetadataField {
   label: string;
   key: string;
-  type: "text" | "select" | "toggle" | "textarea" | "date" | "number";
+  type:
+    | "text"
+    | "select"
+    | "multiselect"
+    | "toggle"
+    | "textarea"
+    | "date"
+    | "number";
   required?: boolean;
   options?: { value: string | number | boolean; label: string }[];
-  loadOptions?: (formData?: Record<string, any>) => Promise<{ value: string | number; label: string }[]>;
+  loadOptions?: (
+    formData?: Record<string, any>,
+  ) => Promise<{ value: string | number; label: string }[]>;
   placeholder?: string;
   condition?: (values: Record<string, any>) => boolean;
   row?: number;
+  /** When true, empty arrays fail required validation for multiselect */
+  /** Allow typing custom values into multiselect (e.g. custom tracking parameters) */
+  allowCustomValues?: boolean;
 }
 
 export interface ConfigurationPageConfig {
@@ -60,6 +72,21 @@ export interface ConfigurationPageConfig {
   nameMaxLength: number;
   descriptionMaxLength: number;
   metadataFields?: MetadataField[];
+  /**
+   * When a metadata field changes, return extra field patches
+   * (e.g. type change → default parameters / displayMetrics).
+   */
+  getFieldDefaultsOnChange?: (
+    changedKey: string,
+    value: unknown,
+    current: Record<string, any>,
+  ) => Record<string, any>;
+  /** Optional extra table columns beyond name/description/status */
+  extraColumns?: Array<{
+    id: string;
+    label: string;
+    render: (item: ConfigurationItem) => React.ReactNode;
+  }>;
   deleteConfirmTitle: string;
   deleteConfirmMessage: (name: string) => string;
   deleteSuccessMessage: (name: string) => string;
@@ -67,16 +94,32 @@ export interface ConfigurationPageConfig {
   updateSuccessMessage: string;
   deleteErrorMessage: string;
   saveErrorMessage: string;
+  configType?: string;
+  modalWidth?: string | number;
 }
 
 interface ConfigurationManagerProps {
   config: ConfigurationPageConfig;
   loading?: boolean;
+  /** When provided, create/update/delete/toggle persist through these callbacks */
+  persistence?: {
+    onCreate: (data: Record<string, any>) => Promise<ConfigurationItem>;
+    onUpdate: (
+      id: number | string,
+      data: Record<string, any>,
+    ) => Promise<ConfigurationItem>;
+    onDelete: (id: number | string) => Promise<void>;
+    onToggleActive?: (
+      id: number | string,
+      isActive: boolean,
+    ) => Promise<ConfigurationItem | void>;
+  };
 }
 
 export default function ConfigurationManager({
   config,
   loading = false,
+  persistence,
 }: ConfigurationManagerProps) {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
@@ -97,8 +140,10 @@ export default function ConfigurationManager({
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteItem } = useDeleteConfirm({
     onDelete: async (id) => {
-      const numId = typeof id === "string" ? parseInt(id) : id;
-      setItems((prev) => prev.filter((i) => i.id !== numId));
+      if (persistence) {
+        await persistence.onDelete(id);
+      }
+      setItems((prev) => prev.filter((i) => String(i.id) !== String(id)));
       showToast(
         config.deleteConfirmTitle,
         config.deleteSuccessMessage(itemToDelete?.name || "")
@@ -122,49 +167,103 @@ export default function ConfigurationManager({
     openDeleteConfirm(item.id, item.name);
   };
 
-  const handleToggleActive = (item: ConfigurationItem) => {
+  const handleToggleActive = async (item: ConfigurationItem) => {
     const newActive = !(item.isActive ?? true);
     setTogglingItemId(item.id);
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === item.id ? { ...i, isActive: newActive } : i
-      )
-    );
-    setTimeout(() => setTogglingItemId(null), 300);
-    showToast(
-      newActive ? "Activated" : "Deactivated",
-      newActive
-        ? `${item.name} has been activated`
-        : `${item.name} has been deactivated`
-    );
+    try {
+      if (persistence?.onToggleActive) {
+        const updated = await persistence.onToggleActive(item.id, newActive);
+        if (updated && typeof updated === "object") {
+          setItems((prev) =>
+            prev.map((i) =>
+              String(i.id) === String(item.id)
+                ? { ...i, ...updated, isActive: newActive }
+                : i,
+            ),
+          );
+        } else {
+          setItems((prev) =>
+            prev.map((i) =>
+              String(i.id) === String(item.id)
+                ? { ...i, isActive: newActive }
+                : i,
+            ),
+          );
+        }
+      } else {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === item.id ? { ...i, isActive: newActive } : i,
+          ),
+        );
+      }
+      showToast(
+        newActive ? "Activated" : "Deactivated",
+        newActive
+          ? `${item.name} has been activated`
+          : `${item.name} has been deactivated`,
+      );
+    } catch (err) {
+      showError(
+        t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
+        extractBackendError(err, config.saveErrorMessage),
+      );
+    } finally {
+      setTogglingItemId(null);
+    }
   };
 
   const handleItemSaved = async (itemData: Record<string, any>) => {
     try {
       setIsSaving(true);
       if (editingItem) {
-        // Update existing item
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === editingItem.id
-              ? {
-                  ...item,
-                  ...itemData,
-                  updated_at: new Date().toISOString(),
-                }
-              : item
-          )
-        );
+        if (persistence) {
+          const updated = await persistence.onUpdate(editingItem.id, itemData);
+          setItems((prev) =>
+            prev.map((item) =>
+              String(item.id) === String(editingItem.id)
+                ? {
+                    ...item,
+                    ...updated,
+                    updated_at: new Date().toISOString(),
+                  }
+                : item,
+            ),
+          );
+        } else {
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === editingItem.id
+                ? {
+                    ...item,
+                    ...itemData,
+                    updated_at: new Date().toISOString(),
+                  }
+                : item,
+            ),
+          );
+        }
         showToast(config.updateSuccessMessage);
       } else {
-        // Create new item
-        const newItem: ConfigurationItem = {
-          id: Math.max(...items.map((i) => (i.id as number) || 0)) + 1,
-          ...itemData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setItems((prev) => [...prev, newItem]);
+        if (persistence) {
+          const created = await persistence.onCreate(itemData);
+          setItems((prev) => {
+            if (prev.some((i) => String(i.id) === String(created.id))) {
+              return prev.map((i) =>
+                String(i.id) === String(created.id) ? { ...i, ...created } : i,
+              );
+            }
+            return [...prev, created];
+          });
+        } else {
+          const newItem: ConfigurationItem = {
+            id: Math.max(...items.map((i) => (i.id as number) || 0), 0) + 1,
+            ...itemData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          setItems((prev) => [...prev, newItem]);
+        }
         showToast(config.createSuccessMessage);
       }
       setIsModalOpen(false);
@@ -172,7 +271,7 @@ export default function ConfigurationManager({
     } catch (err) {
       showError(
         t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
-        config.saveErrorMessage
+        extractBackendError(err, config.saveErrorMessage),
       );
     } finally {
       setIsSaving(false);
@@ -224,6 +323,13 @@ export default function ConfigurationManager({
         value !== false ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'
       ),
     },
+    ...(config.extraColumns || []).map((col) => ({
+      id: col.id,
+      label: col.label,
+      visible: true,
+      sortable: false,
+      render: (_value: unknown, item: ConfigurationItem) => col.render(item),
+    })),
     {
       id: "actions",
       label: t.genericConfig.actions,

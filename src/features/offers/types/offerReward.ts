@@ -11,6 +11,13 @@ export interface OfferRewardRule {
   /** Runtime overrides for provider auth/payload (stored on offer metadata) */
   auth_config?: Record<string, unknown>;
   payload_config?: Record<string, unknown>;
+  /** Offer wizard tracking source id — fulfillment runs when this source’s rules match */
+  tracking_source_id?: string;
+  /**
+   * Specific tracking rule id within the linked tracking source.
+   * Fulfilment for this configuration runs when that rule matches.
+   */
+  tracking_rule_id?: string;
   priority: number;
   condition: string;
   value: string;
@@ -19,6 +26,9 @@ export interface OfferRewardRule {
   fulfillment_response: string;
   success_text: string;
   default_failure: string;
+  /** Stable catalog id when selected from Error Group dropdown */
+  error_group_id?: string;
+  /** Display label / legacy free-text (kept for API compatibility) */
   error_group: string;
   failure_text: string;
   enabled: boolean;
@@ -26,7 +36,23 @@ export interface OfferRewardRule {
 
 export interface OfferReward {
   id: string;
+  /**
+   * Display name — auto-derived from the linked tracking source when set.
+   * Kept for API / review compatibility (no longer edited in the UI).
+   */
   name: string;
-  type: "default" | "sms_night" | "custom";
+  /** Legacy catalog key; retained for API compatibility */
+  type: "default" | "sms_night" | "custom" | string;
+  /**
+   * Seeding (and similar) offers carry a tracking-independent default reward.
+   * Default rewards always exist for seeding and do not require tracking.
+   */
+  is_default?: boolean;
+  /**
+   * Offer-wizard tracking source this reward is bound to.
+   * One reward per tracking source; rules inherit this id.
+   * Omitted for default / seeding rewards.
+   */
+  tracking_source_id?: string;
   rules: OfferRewardRule[];
 }

@@ -1,253 +1,273 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, BarChart3, Settings, Edit, X } from "lucide-react";
-import { color , tw} from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
-
-interface TrackingRule {
-  id: string;
-  name: string;
-  priority: number;
-  parameter: string;
-  condition: "equals" | "greater_than" | "less_than" | "contains" | "is_any_of";
-  value: string;
-  enabled: boolean;
-}
-
-interface TrackingSource {
-  id: string;
-  name: string;
-  type: "recharge" | "usage_metric" | "custom";
-  enabled: boolean;
-  rules: TrackingRule[];
-}
+import {
+  conditions as CONDITION_OPTIONS,
+  formatTrackingKeyLabel,
+  getParameterOptionsByType,
+  getParametersByType,
+  normalizeParameterKey,
+  PARAMETER_LABELS,
+  TRACKING_TYPE_OPTIONS,
+} from "../utils/trackingSourcesConfig";
+import { trackingSourceService } from "../../configurations/services/trackingSourceService";
+import type { TrackingSourceCatalogItem } from "../../configurations/types/trackingSource";
+import type {
+  OfferTrackingRule,
+  OfferTrackingSource,
+} from "../types/offerTrackingSource";
 
 interface OfferTrackingStepProps {
-  trackingSources: TrackingSource[];
-  onTrackingSourcesChange: (sources: TrackingSource[]) => void;
+  trackingSources: OfferTrackingSource[];
+  onTrackingSourcesChange: (sources: OfferTrackingSource[]) => void;
 }
-
-const TRACKING_TYPES = [
-  {
-    value: "recharge",
-    label: "Recharge TrackSource",
-    description: "Track recharge-based activities",
-  },
-  {
-    value: "usage_metric",
-    label: "Usage Metric",
-    description: "Track usage-based metrics",
-  },
-  {
-    value: "custom",
-    label: "Custom Tracking",
-    description: "Custom tracking parameters",
-  },
-];
-
-const PARAMETERS = [
-  "Amount",
-  "Channel",
-  "Customer_Segment",
-  "Product_Type",
-  "Transaction_Type",
-  "Location",
-  "Time_Period",
-  "Usage_Volume",
-  "Frequency",
-];
-
-const CONDITIONS = [
-  { value: "equals", label: "Equals" },
-  { value: "greater_than", label: "Greater than" },
-  { value: "less_than", label: "Less than" },
-  { value: "contains", label: "Contains" },
-  { value: "is_any_of", label: "Is any of" },
-];
-
-// Pre-created Tracking Sources from Configuration
-const PRE_CREATED_TRACKING_SOURCES = [
-  {
-    id: "pre_1",
-    name: "Recharge Tracking",
-    type: "recharge",
-    rules: [
-      {
-        id: "rule_1",
-        name: "Amount > 1000",
-        priority: 1,
-        parameter: "Amount",
-        condition: "greater_than",
-        value: "1000",
-        enabled: true,
-      },
-    ],
-  },
-  {
-    id: "pre_2",
-    name: "Usage Metric Tracking",
-    type: "usage_metric",
-    rules: [
-      {
-        id: "rule_2",
-        name: "Data > 500MB",
-        priority: 1,
-        parameter: "Usage_Volume",
-        condition: "greater_than",
-        value: "500",
-        enabled: true,
-      },
-      {
-        id: "rule_3",
-        name: "Within 7 days",
-        priority: 2,
-        parameter: "Time_Period",
-        condition: "less_than",
-        value: "7",
-        enabled: true,
-      },
-    ],
-  },
-  {
-    id: "pre_3",
-    name: "Engagement Tracking",
-    type: "engagement",
-    rules: [
-      {
-        id: "rule_4",
-        name: "Click Rate",
-        priority: 1,
-        parameter: "Frequency",
-        condition: "greater_than",
-        value: "0",
-        enabled: true,
-      },
-    ],
-  },
-];
 
 export default function OfferTrackingStep({
   trackingSources = [],
   onTrackingSourcesChange,
 }: OfferTrackingStepProps) {
   const [selectedSource, setSelectedSource] = useState<string | null>(
-    trackingSources && trackingSources.length > 0 ? trackingSources[0].id : null
+    trackingSources.length > 0 ? trackingSources[0].id : null,
   );
   const [showRuleModal, setShowRuleModal] = useState(false);
-  const [editingRule, setEditingRule] = useState<TrackingRule | null>(null);
+  const [editingRule, setEditingRule] = useState<OfferTrackingRule | null>(
+    null,
+  );
+  const [ruleModalError, setRuleModalError] = useState("");
+  const [catalogSources, setCatalogSources] = useState<
+    TrackingSourceCatalogItem[]
+  >([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
+  const [sourceActionError, setSourceActionError] = useState("");
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const addTrackingSource = (sourceId: string) => {
-    // If "custom" is selected, create an empty source
-    if (sourceId === "custom") {
-      const newSource: TrackingSource = {
-        id: generateId(),
-        name: "",
-        type: "" as any,
-        enabled: true,
-        rules: [],
-      };
-      const updatedSources = [...trackingSources, newSource];
-      onTrackingSourcesChange(updatedSources);
-      setSelectedSource(newSource.id);
-      return;
-    }
-
-    // Otherwise, load pre-created source
-    const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
-      (s) => s.id === sourceId
-    );
-    if (!preCreated) return;
-
-    // Create a copy with new ID
-    const newSource: TrackingSource = {
-      id: generateId(),
-      name: preCreated.name,
-      type: preCreated.type,
-      enabled: true,
-      rules: preCreated.rules.map((rule) => ({
-        ...rule,
-        id: generateId(),
-      })),
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingCatalog(true);
+      setCatalogError("");
+      try {
+        const sources = await trackingSourceService.getAll({ activeOnly: true });
+        if (!cancelled) setCatalogSources(sources);
+      } catch {
+        if (!cancelled) {
+          setCatalogSources([]);
+          setCatalogError("Could not load tracking source catalog.");
+        }
+      } finally {
+        if (!cancelled) setLoadingCatalog(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
+  }, []);
 
+  const catalogOptions = useMemo(() => {
+    const usedCatalogIds = new Set(
+      trackingSources
+        .map((s) => s.catalog_source_id)
+        .filter((id) => id != null)
+        .map(String),
+    );
+    return catalogSources
+      .filter((c) => !usedCatalogIds.has(String(c.id)))
+      .map((c) => ({
+        value: String(c.id),
+        label: c.name,
+      }));
+  }, [catalogSources, trackingSources]);
+
+  const selectedSourceData = trackingSources.find(
+    (s) => s.id === selectedSource,
+  );
+
+  const parameterOptionsForSelected = useMemo(() => {
+    if (!selectedSourceData) return [];
+    const catalog = catalogSources.find(
+      (c) => String(c.id) === String(selectedSourceData.catalog_source_id),
+    );
+    const keys =
+      catalog?.parameters?.length
+        ? catalog.parameters
+        : getParametersByType(selectedSourceData.type);
+    const opts = keys.map((value) => ({
+      value,
+      label: formatTrackingKeyLabel(value, PARAMETER_LABELS),
+    }));
+    // Keep legacy/custom parameter on the rule selectable
+    if (
+      editingRule?.parameter &&
+      !opts.some((o) => o.value === editingRule.parameter)
+    ) {
+      const normalized = normalizeParameterKey(editingRule.parameter);
+      opts.unshift({
+        value: normalized || editingRule.parameter,
+        label: formatTrackingKeyLabel(
+          normalized || editingRule.parameter,
+          PARAMETER_LABELS,
+        ),
+      });
+    }
+    if (opts.length === 0) {
+      return getParameterOptionsByType(selectedSourceData.type || "custom");
+    }
+    return opts;
+  }, [selectedSourceData, catalogSources, editingRule?.parameter]);
+
+  const addBlankSource = () => {
+    const newSource: OfferTrackingSource = {
+      id: generateId(),
+      name: "",
+      type: "custom",
+      enabled: true,
+      rules: [],
+    };
     const updatedSources = [...trackingSources, newSource];
     onTrackingSourcesChange(updatedSources);
     setSelectedSource(newSource.id);
   };
 
+  const isCatalogIdInUse = (
+    catalogId: string,
+    exceptInstanceId?: string,
+  ): boolean => {
+    return trackingSources.some(
+      (s) =>
+        s.catalog_source_id != null &&
+        String(s.catalog_source_id) === String(catalogId) &&
+        s.id !== exceptInstanceId,
+    );
+  };
+
+  const applyCatalogSource = (
+    catalogId: string,
+    targetInstanceId?: string,
+  ) => {
+    const catalog = catalogSources.find((c) => String(c.id) === catalogId);
+    if (!catalog) return;
+
+    if (isCatalogIdInUse(catalogId, targetInstanceId)) {
+      setSourceActionError(
+        `"${catalog.name}" is already added. Each tracking source can only be used once.`,
+      );
+      return;
+    }
+
+    setSourceActionError("");
+    const mapped: OfferTrackingSource = {
+      id: targetInstanceId || generateId(),
+      name: catalog.name,
+      type: String(catalog.type),
+      enabled: true,
+      rules: targetInstanceId
+        ? trackingSources.find((s) => s.id === targetInstanceId)?.rules || []
+        : [],
+      catalog_source_id: catalog.id,
+    };
+
+    if (targetInstanceId) {
+      onTrackingSourcesChange(
+        trackingSources.map((s) =>
+          s.id === targetInstanceId
+            ? { ...s, ...mapped, id: targetInstanceId }
+            : s,
+        ),
+      );
+      setSelectedSource(targetInstanceId);
+    } else {
+      const updated = [...trackingSources, mapped];
+      onTrackingSourcesChange(updated);
+      setSelectedSource(mapped.id);
+    }
+  };
+
   const removeTrackingSource = (id: string) => {
     const updatedSources = trackingSources.filter((s) => s.id !== id);
     onTrackingSourcesChange(updatedSources);
-
     if (selectedSource === id) {
       setSelectedSource(
-        updatedSources.length > 0 ? updatedSources[0].id : null
+        updatedSources.length > 0 ? updatedSources[0].id : null,
       );
     }
   };
 
   const updateTrackingSource = (
     id: string,
-    updates: Partial<TrackingSource>
+    updates: Partial<OfferTrackingSource>,
   ) => {
-    const updatedSources = trackingSources.map((s) =>
-      s.id === id ? { ...s, ...updates } : s
+    onTrackingSourcesChange(
+      trackingSources.map((s) => (s.id === id ? { ...s, ...updates } : s)),
     );
-    onTrackingSourcesChange(updatedSources);
   };
 
   const addRule = () => {
-    const newRule: TrackingRule = {
+    const defaultParam =
+      parameterOptionsForSelected[0]?.value ||
+      getParametersByType(selectedSourceData?.type || "recharge")[0] ||
+      "amount";
+    setEditingRule({
       id: generateId(),
       name: "New Rule",
       priority: 1,
-      parameter: "Amount",
+      parameter: defaultParam,
       condition: "equals",
       value: "",
       enabled: true,
-    };
-
-    setEditingRule(newRule);
+    });
+    setRuleModalError("");
     setShowRuleModal(true);
   };
 
-  const saveRule = (sourceId: string, rule: TrackingRule) => {
+  const saveRule = (sourceId: string, rule: OfferTrackingRule) => {
+    if (!rule.parameter?.trim()) {
+      setRuleModalError("Select a parameter for this rule.");
+      return;
+    }
+    if (!rule.name?.trim()) {
+      setRuleModalError("Rule name is required.");
+      return;
+    }
+
+    const normalized: OfferTrackingRule = {
+      ...rule,
+      parameter: normalizeParameterKey(rule.parameter) || rule.parameter,
+    };
+
     const source = trackingSources.find((s) => s.id === sourceId);
     if (!source) return;
 
-    const existingRuleIndex = source.rules.findIndex((r) => r.id === rule.id);
-    let updatedRules;
-
-    if (existingRuleIndex >= 0) {
-      updatedRules = [...source.rules];
-      updatedRules[existingRuleIndex] = rule;
-    } else {
-      updatedRules = [...source.rules, rule];
-    }
+    const existingRuleIndex = source.rules.findIndex(
+      (r) => r.id === normalized.id,
+    );
+    const updatedRules =
+      existingRuleIndex >= 0
+        ? source.rules.map((r, i) =>
+            i === existingRuleIndex ? normalized : r,
+          )
+        : [...source.rules, normalized];
 
     updateTrackingSource(sourceId, { rules: updatedRules });
     setShowRuleModal(false);
     setEditingRule(null);
+    setRuleModalError("");
   };
 
   const removeRule = (sourceId: string, ruleId: string) => {
     const source = trackingSources.find((s) => s.id === sourceId);
     if (!source) return;
-
-    const updatedRules = source.rules.filter((r) => r.id !== ruleId);
-    updateTrackingSource(sourceId, { rules: updatedRules });
+    updateTrackingSource(sourceId, {
+      rules: source.rules.filter((r) => r.id !== ruleId),
+    });
   };
 
-  const selectedSourceData = trackingSources.find(
-    (s) => s.id === selectedSource
-  );
-
-  // Ensure selectedSourceData exists before rendering - reset if it doesn't match
   if (selectedSource && !selectedSourceData && trackingSources.length > 0) {
     setSelectedSource(trackingSources[0].id);
   }
@@ -255,77 +275,99 @@ export default function OfferTrackingStep({
   return (
     <div className="space-y-6">
       {trackingSources.length === 0 ? (
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}>
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}
+        >
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <BarChart3 className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Tracking Sources Added
           </h3>
-          <p className="text-gray-500 text-sm mb-6">
-            Set up how you'll track customer engagement and measure offer
-            performance
+          <p className="text-gray-500 text-sm mb-4">
+            Add a source from Configuration → Offer Tracking Sources, then
+            define rules using its parameters.
           </p>
-          <button
-            onClick={() => {
-              const newSource: TrackingSource = {
-                id: generateId(),
-                name: "",
-                type: "recharge",
-                enabled: true,
-                rules: [],
-              };
-              const updatedSources = [...trackingSources, newSource];
-              onTrackingSourcesChange(updatedSources);
-              setSelectedSource(newSource.id);
-            }}
-            className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-colors`}
-            style={{ backgroundColor: color.primary.action }}
-            onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor =
-                color.primary.hover;
-            }}
-            onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor =
-                color.primary.action;
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Tracking Source
-          </button>
+          {catalogError ? (
+            <p className="text-sm text-red-600 mb-4">{catalogError}</p>
+          ) : null}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <div className="w-full max-w-sm">
+              <HeadlessSelect
+                label="Catalog source"
+                options={[
+                  { value: "", label: loadingCatalog ? "Loading..." : "Select from catalog..." },
+                  ...catalogOptions,
+                ]}
+                value=""
+                onChange={(value) => {
+                  if (value) applyCatalogSource(String(value));
+                }}
+                disabled={loadingCatalog || catalogOptions.length === 0}
+                placeholder="Select from catalog..."
+              />
+            </div>
+            <button
+              type="button"
+              onClick={addBlankSource}
+              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add blank source
+            </button>
+          </div>
+          {!loadingCatalog && catalogOptions.length === 0 ? (
+            <p className={`mt-3 text-xs ${tw.textSecondary}`}>
+              No active catalog sources available. Create one under
+              Configuration → Offer Tracking Sources.
+            </p>
+          ) : null}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Tracking Sources List */}
           <div className="lg:col-span-1">
             <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
-              <button
-                onClick={() => {
-                  const newSource: TrackingSource = {
-                    id: generateId(),
-                    name: "",
-                    type: "" as any,
-                    enabled: true,
-                    rules: [],
-                  };
-                  const updatedSources = [...trackingSources, newSource];
-                  onTrackingSourcesChange(updatedSources);
-                  setSelectedSource(newSource.id);
-                }}
-                className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} transition-colors whitespace-nowrap mb-4`}
-                style={{ backgroundColor: color.primary.action }}
-                onMouseEnter={(e) => {
-                  (e.target as HTMLButtonElement).style.backgroundColor =
-                    color.primary.hover;
-                }}
-                onMouseLeave={(e) => {
-                  (e.target as HTMLButtonElement).style.backgroundColor =
-                    color.primary.action;
-                }}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Source
-              </button>
+              <div className="mb-4 space-y-2">
+                <HeadlessSelect
+                  label="Add from catalog"
+                  options={[
+                    {
+                      value: "",
+                      label: loadingCatalog
+                        ? "Loading..."
+                        : catalogOptions.length === 0
+                          ? "No unused catalog sources"
+                          : "Select catalog source...",
+                    },
+                    ...catalogOptions,
+                  ]}
+                  value=""
+                  onChange={(value) => {
+                    if (value) applyCatalogSource(String(value));
+                  }}
+                  disabled={loadingCatalog || catalogOptions.length === 0}
+                />
+                {sourceActionError ? (
+                  <p className="text-xs text-red-600">{sourceActionError}</p>
+                ) : (
+                  <p className={`text-xs ${tw.textSecondary}`}>
+                    Each catalog tracking source can only be added once per offer.
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSourceActionError("");
+                    addBlankSource();
+                  }}
+                  className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} w-full justify-center`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add blank source
+                </button>
+              </div>
 
               <div className="space-y-2">
                 {trackingSources.map((source) => (
@@ -339,11 +381,9 @@ export default function OfferTrackingStep({
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 min-w-0">
                         <div
-                          className={`w-8 h-8 ${tw.rounded} flex items-center justify-center ${
-                            source.enabled ? "bg-gray-100" : "bg-gray-100"
-                          }`}
+                          className={`w-8 h-8 ${tw.rounded} flex items-center justify-center bg-gray-100 shrink-0`}
                         >
                           <BarChart3
                             className={`w-4 h-4 ${
@@ -351,20 +391,19 @@ export default function OfferTrackingStep({
                             }`}
                           />
                         </div>
-                        <div>
-                          <div className="font-medium text-sm text-gray-900">
-                            {source.name}
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm text-gray-900 truncate">
+                            {source.name || "Untitled source"}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {
-                              TRACKING_TYPES.find(
-                                (t) => t.value === source.type
-                              )?.label
-                            }
+                          <div className="text-sm text-gray-500 truncate">
+                            {TRACKING_TYPE_OPTIONS.find(
+                              (t) => t.value === source.type,
+                            )?.label || source.type}
                           </div>
                         </div>
                       </div>
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeTrackingSource(source.id);
@@ -384,89 +423,78 @@ export default function OfferTrackingStep({
             </div>
           </div>
 
-          {/* Tracking Configuration */}
           <div className="lg:col-span-2">
             {selectedSourceData ? (
-              <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}>
+              <div
+                className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}
+              >
                 <div className="space-y-6">
-                  {/* Source Selection Dropdown */}
-                  <HeadlessSelect
-                    label="Select Tracking Source"
-                    options={[
-                      { value: "", label: "Select a tracking source..." },
-                      { value: "custom", label: "Create Custom" },
-                      ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
-                        value: source.id,
-                        label: source.name,
-                      })),
-                    ]}
-                    value=""
-                    onChange={(value) => {
-                      if (value && selectedSourceData) {
-                        if (value === "custom") {
-                          // Clear current source for custom creation
-                          updateTrackingSource(selectedSourceData.id, {
-                            name: "",
-                            rules: [],
-                          });
-                        } else {
-                          // Load pre-created source into current card
-                          const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
-                            (s) => s.id === value
-                          );
-                          if (preCreated) {
-                            updateTrackingSource(selectedSourceData.id, {
-                              name: preCreated.name,
-                              type: preCreated.type,
-                              rules: preCreated.rules.map((rule) => ({
-                                ...rule,
-                                id: generateId(),
-                              })),
-                            });
-                          }
-                        }
-                      }
-                    }}
-                    placeholder="Select a tracking source..."
-                    className="w-full text-sm"
-                  />
-
-                  {/* Source Settings */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Input
-                        label="Source Name"
-                        type="text"
-                        placeholder="Enter source name"
-                        value={selectedSourceData.name}
-                        onChange={(value) =>
-                          updateTrackingSource(selectedSourceData.id, {
-                            name: String(value),
-                          })
-                        }
-                      />
-                    </div>
-
+                  {!selectedSourceData.catalog_source_id ? (
                     <div>
                       <HeadlessSelect
-                        label="Type"
-                        options={TRACKING_TYPES.map((type) => ({
-                          value: type.value,
-                          label: type.label,
-                        }))}
-                        value={selectedSourceData.type}
-                        onChange={(value) =>
-                          updateTrackingSource(selectedSourceData.id, {
-                            type: value as
-                              | "recharge"
-                              | "usage_metric"
-                              | "custom",
-                          })
-                        }
-                        placeholder="Select tracking type"
-                        className="w-full text-sm"
+                        label="Link catalog source"
+                        options={[
+                          { value: "", label: "Select a catalog source..." },
+                          ...catalogOptions,
+                        ]}
+                        value=""
+                        onChange={(value) => {
+                          if (value) {
+                            applyCatalogSource(
+                              String(value),
+                              selectedSourceData.id,
+                            );
+                          }
+                        }}
+                        placeholder="Select a catalog source..."
+                        disabled={catalogOptions.length === 0}
                       />
+                      {sourceActionError ? (
+                        <p className="mt-1 text-xs text-red-600">
+                          {sourceActionError}
+                        </p>
+                      ) : catalogOptions.length === 0 ? (
+                        <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                          All catalog sources are already in use on this offer.
+                        </p>
+                      ) : null}
                     </div>
+                  ) : (
+                    <p className={`text-xs ${tw.textSecondary}`}>
+                      Linked to catalog #
+                      {String(selectedSourceData.catalog_source_id)}
+                      . Parameters come from that source&apos;s configuration.
+                    </p>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Source Name"
+                      type="text"
+                      placeholder="Enter source name"
+                      value={selectedSourceData.name}
+                      onChange={(value) =>
+                        updateTrackingSource(selectedSourceData.id, {
+                          name: String(value),
+                        })
+                      }
+                    />
+
+                    <HeadlessSelect
+                      label="Type"
+                      options={TRACKING_TYPE_OPTIONS.map((type) => ({
+                        value: type.value,
+                        label: type.label,
+                      }))}
+                      value={selectedSourceData.type}
+                      onChange={(value) =>
+                        updateTrackingSource(selectedSourceData.id, {
+                          type: String(value),
+                        })
+                      }
+                      placeholder="Select tracking type"
+                      className="w-full text-sm"
+                    />
                   </div>
 
                   <div
@@ -486,30 +514,21 @@ export default function OfferTrackingStep({
                         })
                       }
                     />
-                    <span className="ml-2 text-sm text-gray-700">Set as default tracking source
+                    <span className="ml-2 text-sm text-gray-700">
+                      Enable this tracking source
                     </span>
                   </div>
 
-                  {/* Rules Section */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-medium text-sm text-gray-900">
                         Tracking Rules
                       </h4>
                       <button
-                        onClick={() => addRule()}
-                        className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} transition-colors`}
+                        type="button"
+                        onClick={addRule}
+                        className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded}`}
                         style={{ backgroundColor: color.primary.action }}
-                        onMouseEnter={(e) => {
-                          (
-                            e.target as HTMLButtonElement
-                          ).style.backgroundColor = color.primary.hover;
-                        }}
-                        onMouseLeave={(e) => {
-                          (
-                            e.target as HTMLButtonElement
-                          ).style.backgroundColor = color.primary.action;
-                        }}
                       >
                         <Plus className="w-4 h-4 mr-1" />
                         Add Rule
@@ -517,13 +536,16 @@ export default function OfferTrackingStep({
                     </div>
 
                     {selectedSourceData.rules.length === 0 ? (
-                      <div className={`text-center py-8 border-2 border-dashed border-gray-200 ${tw.rounded}`}>
+                      <div
+                        className={`text-center py-8 border-2 border-dashed border-gray-200 ${tw.rounded}`}
+                      >
                         <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                         <p className="text-gray-500 text-sm mb-4">
                           No rules configured
                         </p>
                         <button
-                          onClick={() => addRule()}
+                          type="button"
+                          onClick={addRule}
                           className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
                           style={{ backgroundColor: color.primary.action }}
                         >
@@ -539,7 +561,7 @@ export default function OfferTrackingStep({
                             className={`p-4 border border-gray-200 ${tw.rounded}`}
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center space-x-3">
+                              <div className="flex items-center space-x-3 flex-wrap gap-y-1">
                                 <span className="font-medium text-sm text-gray-900">
                                   {rule.name}
                                 </span>
@@ -558,8 +580,15 @@ export default function OfferTrackingStep({
                               </div>
                               <div className="flex items-center space-x-2">
                                 <button
+                                  type="button"
                                   onClick={() => {
-                                    setEditingRule(rule);
+                                    setEditingRule({
+                                      ...rule,
+                                      parameter: normalizeParameterKey(
+                                        rule.parameter,
+                                      ) || rule.parameter,
+                                    });
+                                    setRuleModalError("");
                                     setShowRuleModal(true);
                                   }}
                                   className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
@@ -567,6 +596,7 @@ export default function OfferTrackingStep({
                                   <Edit className="w-4 h-4" />
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() =>
                                     removeRule(selectedSourceData.id, rule.id)
                                   }
@@ -577,11 +607,15 @@ export default function OfferTrackingStep({
                               </div>
                             </div>
                             <div className="text-sm text-gray-600">
-                              {rule.parameter}{" "}
-                              {CONDITIONS.find(
-                                (c) => c.value === rule.condition
+                              {formatTrackingKeyLabel(
+                                normalizeParameterKey(rule.parameter) ||
+                                  rule.parameter,
+                                PARAMETER_LABELS,
+                              )}{" "}
+                              {CONDITION_OPTIONS.find(
+                                (c) => c.value === rule.condition,
                               )?.label.toLowerCase()}{" "}
-                              "{rule.value}"
+                              &quot;{rule.value}&quot;
                             </div>
                           </div>
                         ))}
@@ -591,7 +625,9 @@ export default function OfferTrackingStep({
                 </div>
               </div>
             ) : (
-              <div className={`bg-gray-50 ${tw.rounded} border border-gray-200 p-8 text-center`}>
+              <div
+                className={`bg-gray-50 ${tw.rounded} border border-gray-200 p-8 text-center`}
+              >
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <BarChart3 className="w-8 h-8 text-gray-400" />
                 </div>
@@ -599,8 +635,7 @@ export default function OfferTrackingStep({
                   No Source Selected
                 </h3>
                 <p className="text-gray-500 text-sm">
-                  Select a tracking source from the list above to start
-                  configuring.
+                  Select a tracking source from the list to configure it.
                 </p>
               </div>
             )}
@@ -608,23 +643,29 @@ export default function OfferTrackingStep({
         </div>
       )}
 
-      {/* Rule Modal */}
       {showRuleModal &&
         editingRule &&
+        selectedSourceData &&
         createPortal(
           <div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
             style={{ zIndex: zIndex.modal - 1 }}
           >
-            <div className={`bg-white ${tw.rounded} p-6 w-full max-w-md mx-4`}>
+            <div
+              className={`bg-white ${tw.rounded} p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto`}
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {editingRule.id ? "Edit Rule" : "Add Rule"}
+                  {selectedSourceData.rules.some((r) => r.id === editingRule.id)
+                    ? "Edit Tracking Rule"
+                    : "Add Tracking Rule"}
                 </h3>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowRuleModal(false);
                     setEditingRule(null);
+                    setRuleModalError("");
                   }}
                   className="p-1 text-gray-400 hover:text-gray-600"
                 >
@@ -636,7 +677,7 @@ export default function OfferTrackingStep({
                 <Input
                   label="Rule Name"
                   type="text"
-                  placeholder="Rule name"
+                  placeholder="Enter rule name"
                   value={editingRule.name}
                   onChange={(value) =>
                     setEditingRule({ ...editingRule, name: String(value) })
@@ -652,55 +693,48 @@ export default function OfferTrackingStep({
                   onChange={(value) =>
                     setEditingRule({
                       ...editingRule,
-                      priority: parseInt(String(value)) || 1,
+                      priority: parseInt(String(value), 10) || 1,
                     })
                   }
                 />
 
-                <div>
-                  <HeadlessSelect
-                    label="Parameter"
-                    options={PARAMETERS.map((param) => ({
-                      value: param,
-                      label: param,
-                    }))}
-                    value={editingRule.parameter}
-                    onChange={(value) =>
-                      setEditingRule({
-                        ...editingRule,
-                        parameter: value as string,
-                      })
-                    }
-                    placeholder="Select parameter"
-                    className="w-full text-sm"
-                    zIndex={zIndex.popover}
-                  />
-                </div>
+                <HeadlessSelect
+                  label="Parameter"
+                  options={parameterOptionsForSelected}
+                  value={editingRule.parameter}
+                  onChange={(value) =>
+                    setEditingRule({
+                      ...editingRule,
+                      parameter: String(value),
+                    })
+                  }
+                  placeholder={
+                    parameterOptionsForSelected.length === 0
+                      ? "No parameters configured for this source"
+                      : "Select parameter"
+                  }
+                  disabled={parameterOptionsForSelected.length === 0}
+                  className="w-full text-sm"
+                  zIndex={zIndex.popover}
+                />
 
-                <div>
-                  <HeadlessSelect
-                    label="Condition"
-                    options={CONDITIONS.map((condition) => ({
-                      value: condition.value,
-                      label: condition.label,
-                    }))}
-                    value={editingRule.condition}
-                    onChange={(value) =>
-                      setEditingRule({
-                        ...editingRule,
-                        condition: value as
-                          | "equals"
-                          | "greater_than"
-                          | "less_than"
-                          | "contains"
-                          | "is_any_of",
-                      })
-                    }
-                    placeholder="Select condition"
-                    className="w-full text-sm"
-                    zIndex={zIndex.popover}
-                  />
-                </div>
+                <HeadlessSelect
+                  label="Condition"
+                  options={CONDITION_OPTIONS.map((condition) => ({
+                    value: condition.value,
+                    label: condition.label,
+                  }))}
+                  value={editingRule.condition}
+                  onChange={(value) =>
+                    setEditingRule({
+                      ...editingRule,
+                      condition: value as OfferTrackingRule["condition"],
+                    })
+                  }
+                  placeholder="Select condition"
+                  className="w-full text-sm"
+                  zIndex={zIndex.popover}
+                />
 
                 <Input
                   label="Value"
@@ -708,9 +742,16 @@ export default function OfferTrackingStep({
                   placeholder="Enter value..."
                   value={editingRule.value}
                   onChange={(value) =>
-                    setEditingRule({ ...editingRule, value: String(value) })
+                    setEditingRule({
+                      ...editingRule,
+                      value: String(value),
+                    })
                   }
                 />
+
+                {ruleModalError ? (
+                  <p className="text-sm text-red-600">{ruleModalError}</p>
+                ) : null}
 
                 <div
                   className="flex items-center cursor-pointer"
@@ -731,25 +772,27 @@ export default function OfferTrackingStep({
                       })
                     }
                   />
-                  <span className="ml-2 text-sm text-gray-700">Enable this rule</span>
+                  <span className="ml-2 text-sm text-gray-700">
+                    Enable this rule
+                  </span>
                 </div>
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowRuleModal(false);
                     setEditingRule(null);
+                    setRuleModalError("");
                   }}
                   className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded}`}
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() =>
-                    selectedSourceData &&
-                    saveRule(selectedSourceData.id, editingRule)
-                  }
+                  type="button"
+                  onClick={() => saveRule(selectedSourceData.id, editingRule)}
                   className={`px-4 py-2 text-white ${tw.rounded}`}
                   style={{ backgroundColor: color.primary.action }}
                 >
@@ -758,7 +801,7 @@ export default function OfferTrackingStep({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

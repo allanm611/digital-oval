@@ -1,221 +1,193 @@
-import { useState, useCallback, useEffect } from "react";
-import { Eye, Filter, BarChart3, Send, Radio, TrendingUp, CheckCircle, RotateCcw, Archive, AlertCircle, Loader } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import {
+  Eye,
+  Archive,
+  Radio,
+  Send,
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { useLanguage } from "../../../contexts/LanguageContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useToast } from "../../../contexts/ToastContext";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
+import { getStatusBadgeConfig } from "../../../shared/utils/statusColors";
 import { broadcastService } from "../services/broadcastService";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
-import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
-
-interface CampaignBroadcast {
-  id: number;
-  campaign_id: number;
-  campaign_name: string;
-  status: "sent" | "in_progress" | "scheduled" | "failed" | "paused" | "completed";
-  sent_at: string;
-  channels: string[];
-  total_recipients: number;
-  delivered: number;
-  opened: number;
-  clicked: number;
-  conversions: number;
-  failed: number;
-  unsubscribed: number;
-  created_by: string;
-}
+import {
+  Broadcast,
+  BroadcastStatus,
+  BROADCAST_STATUS_LABELS,
+} from "../types/broadcast";
+import { formatBroadcastStatusLabel } from "../utils/normalizeCampaignBroadcast";
 
 interface BroadcastTableRow {
-  id: number;
+  id: string;
   campaignName: string;
+  broadcastName: string;
   status: string;
+  statusRaw: BroadcastStatus;
   sentDate: string;
   channels: string;
-  recipients: string;
-  opened: number;
-  conversions: number;
+  sent: number;
+  failed: number;
+  deliveryRate: string;
 }
 
 const statusOptions = [
   { value: "all", label: "All Status" },
-  { value: "sent", label: "Sent" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "scheduled", label: "Scheduled" },
-  { value: "completed", label: "Completed" },
-  { value: "failed", label: "Failed" },
-  { value: "paused", label: "Paused" },
+  { value: "scheduled", label: BROADCAST_STATUS_LABELS.scheduled },
+  { value: "pending", label: BROADCAST_STATUS_LABELS.pending },
+  { value: "running", label: BROADCAST_STATUS_LABELS.running },
+  { value: "paused", label: BROADCAST_STATUS_LABELS.paused },
+  { value: "completed", label: BROADCAST_STATUS_LABELS.completed },
+  { value: "failed", label: BROADCAST_STATUS_LABELS.failed },
+  { value: "aborted", label: BROADCAST_STATUS_LABELS.aborted },
+  { value: "cancelled", label: BROADCAST_STATUS_LABELS.cancelled },
+  { value: "draft", label: BROADCAST_STATUS_LABELS.draft },
 ];
 
 export default function CampaignBroadcastsPage() {
-  const { t } = useLanguage();
-  const { showToast, error: showError } = useToast();
+  const { error: showError } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const campaignIdFilter = searchParams.get("campaignId");
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [broadcasts, setBroadcasts] = useState<CampaignBroadcast[]>([
-    {
-      id: 1,
-      campaign_id: 101,
-      campaign_name: "Summer Promo Campaign",
-      status: "running",
-      sent_at: "2026-04-10T10:30:00Z",
-      channels: ["email", "sms"],
-      total_recipients: 5000,
-      delivered: 4850,
-      opened: 2425,
-      clicked: 725,
-      conversions: 145,
-      failed: 150,
-      unsubscribed: 10,
-      created_by: "System Administrator",
-    },
-    {
-      id: 2,
-      campaign_id: 102,
-      campaign_name: "Flash Sale Alert",
-      status: "running",
-      sent_at: "2026-04-10T14:00:00Z",
-      channels: ["push", "email"],
-      total_recipients: 3500,
-      delivered: 2800,
-      opened: 1120,
-      clicked: 280,
-      conversions: 42,
-      failed: 700,
-      unsubscribed: 5,
-      created_by: "Jane Smith",
-    },
-    {
-      id: 3,
-      campaign_id: 103,
-      campaign_name: "Winter Holiday Special",
-      status: "scheduled",
-      sent_at: "2026-04-15T09:15:00Z",
-      channels: ["email"],
-      total_recipients: 8000,
-      delivered: 0,
-      opened: 0,
-      clicked: 0,
-      conversions: 0,
-      failed: 0,
-      unsubscribed: 0,
-      created_by: "Mike Johnson",
-    },
-    {
-      id: 4,
-      campaign_id: 104,
-      campaign_name: "New Product Launch",
-      status: "completed",
-      sent_at: "2026-04-08T08:00:00Z",
-      channels: ["email", "sms", "push"],
-      total_recipients: 12000,
-      delivered: 11500,
-      opened: 5750,
-      clicked: 1725,
-      conversions: 345,
-      failed: 500,
-      unsubscribed: 20,
-      created_by: "Sarah Williams",
-    },
-    {
-      id: 5,
-      campaign_id: 105,
-      campaign_name: "Customer Loyalty Rewards",
-      status: "completed",
-      sent_at: "2026-04-07T16:45:00Z",
-      channels: ["sms", "push"],
-      total_recipients: 6500,
-      delivered: 6200,
-      opened: 3100,
-      clicked: 930,
-      conversions: 186,
-      failed: 300,
-      unsubscribed: 8,
-      created_by: "Emily Davis",
-    },
-    {
-      id: 6,
-      campaign_id: 106,
-      campaign_name: "Easter Campaign",
-      status: "paused",
-      sent_at: "2026-04-09T12:00:00Z",
-      channels: ["email"],
-      total_recipients: 4000,
-      delivered: 3800,
-      opened: 1900,
-      clicked: 570,
-      conversions: 114,
-      failed: 200,
-      unsubscribed: 5,
-      created_by: "Alex Brown",
-    },
-  ]);
-  const [statistics, setStatistics] = useState<any>(null);
+  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
+  const [statistics, setStatistics] = useState<Record<string, unknown> | null>(null);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
   const [showColumnPicker, setShowColumnPicker] = useState(false);
 
-  // Table columns definition
-  const defaultColumns: TableColumn<BroadcastTableRow>[] = [
-    { id: "campaignName", label: "Campaign", width: "200px", visible: true, sortable: true, filterConfig: { type: "text" }, render: (_, row) => (
-      <div className="truncate">{row.campaignName}</div>
-    ) },
-    { id: "status", label: "Status", width: "140px", visible: true, filterConfig: { type: "multiselect", options: ["sent", "in_progress", "scheduled", "failed", "paused", "completed"] } },
-    { id: "sentDate", label: "Sent Date", width: "180px", visible: true, filterConfig: { type: "date" }, render: (_, row) => (
-      <DateFormatter date={row.sentDate} useUserTimezone />
-    ) },
-    { id: "channels", label: "Channels", width: "150px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-      <div className="flex gap-2 flex-wrap">
-        {row.channels.split(",").map((channel) => (
-          <span key={channel} className="text-sm">{channel}</span>
-        ))}
-      </div>
-    ) },
-    { id: "recipients", label: "Recipients", width: "140px", visible: true, filterConfig: { type: "number" } },
-    { id: "opened", label: "Opened", width: "100px", visible: true, filterConfig: { type: "number" } },
-    { id: "conversions", label: "Conversions", width: "130px", visible: true, filterConfig: { type: "number" } },
-    {
-      id: "actions",
-      label: "Actions",
-      width: "150px",
-      visible: true,
-      sortable: false,
-      isActionColumn: true,
-      render: (_, row) => {
-        const broadcast = filteredBroadcasts.find((b) => b.id === row.id);
-        return (
+  const defaultColumns: TableColumn<BroadcastTableRow>[] = useMemo(
+    () => [
+      {
+        id: "campaignName",
+        label: "Campaign",
+        width: "180px",
+        visible: true,
+        sortable: true,
+        filterConfig: { type: "text" },
+        render: (_, row) => <div className="truncate">{row.campaignName}</div>,
+      },
+      {
+        id: "broadcastName",
+        label: "Broadcast",
+        width: "200px",
+        visible: true,
+        sortable: true,
+        filterConfig: { type: "text" },
+        render: (_, row) => <div className="truncate">{row.broadcastName}</div>,
+      },
+      {
+        id: "status",
+        label: "Status",
+        width: "140px",
+        visible: true,
+        filterConfig: {
+          type: "multiselect",
+          options: statusOptions.filter((o) => o.value !== "all").map((o) => o.value),
+        },
+        render: (_, row) => {
+          const { className, style } = getStatusBadgeConfig(row.statusRaw, "broadcast");
+          return (
+            <span
+              className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${className}`}
+              style={style}
+            >
+              {row.status}
+            </span>
+          );
+        },
+      },
+      {
+        id: "sentDate",
+        label: "Start Time",
+        width: "180px",
+        visible: true,
+        filterConfig: { type: "date" },
+        render: (_, row) =>
+          row.sentDate ? (
+            <DateFormatter date={row.sentDate} useUserTimezone />
+          ) : (
+            <span>—</span>
+          ),
+      },
+      {
+        id: "channels",
+        label: "Channel",
+        width: "120px",
+        visible: true,
+        filterConfig: { type: "text" },
+        render: (_, row) => (
+          <span className="text-sm uppercase">{row.channels || "—"}</span>
+        ),
+      },
+      {
+        id: "sent",
+        label: "Sent",
+        width: "100px",
+        visible: true,
+        filterConfig: { type: "number" },
+      },
+      {
+        id: "failed",
+        label: "Failed",
+        width: "100px",
+        visible: true,
+        filterConfig: { type: "number" },
+      },
+      {
+        id: "deliveryRate",
+        label: "Delivery %",
+        width: "110px",
+        visible: true,
+        filterConfig: { type: "text" },
+      },
+      {
+        id: "actions",
+        label: "Actions",
+        width: "150px",
+        visible: true,
+        sortable: false,
+        isActionColumn: true,
+        render: (_, row) => (
           <div className="flex items-center justify-center gap-2">
             <button
-              onClick={() => navigate(`/dashboard/campaign-broadcasts/${broadcast?.id}`)}
+              type="button"
+              onClick={() => navigate(`/dashboard/campaign-broadcasts/${row.id}`)}
               className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
             </button>
-            {broadcast?.status === "failed" && (
-              <button className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`} title="Retry" style={{ color: "#EF4444" }}>
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            )}
             <button
+              type="button"
               className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
               title="Archive"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Archive API not available yet — keep UI parity with prior design
+              }}
             >
               <Archive className="w-4 h-4" />
             </button>
           </div>
-        );
+        ),
       },
-    },
-  ];
+    ],
+    [navigate],
+  );
 
   const {
     columns,
@@ -225,91 +197,117 @@ export default function CampaignBroadcastsPage() {
   } = useTable({
     tableId: "campaign-broadcasts-table",
     defaultColumns,
-    defaultPageSize: DEFAULT_PAGE_SIZE,
+    defaultPageSize: pageSize,
     persistToLocalStorage: true,
   });
 
-  useEffect(() => {
-    loadBroadcastStatistics();
-  }, []);
-
-  const loadBroadcastStatistics = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await broadcastService.getBroadcastStatistics();
-      setStatistics(response.data || response);
+
+      const [listResult, statsResult] = await Promise.allSettled([
+        campaignIdFilter
+          ? broadcastService.getCampaignOperationalBroadcasts(Number(campaignIdFilter))
+          : broadcastService.listBroadcasts(),
+        broadcastService.getBroadcastStatistics(),
+      ]);
+
+      if (listResult.status === "fulfilled") {
+        setBroadcasts(listResult.value.data ?? []);
+      } else {
+        console.error("Failed to load broadcasts:", listResult.reason);
+        setBroadcasts([]);
+        setError(
+          listResult.reason instanceof Error
+            ? listResult.reason.message
+            : "Failed to load broadcasts",
+        );
+        showError("Error", "Failed to load broadcasts");
+      }
+
+      if (statsResult.status === "fulfilled") {
+        const stats = statsResult.value?.data ?? statsResult.value;
+        setStatistics(stats ?? null);
+      }
     } catch (err) {
-      console.error("Failed to load broadcast statistics:", err);
-      setError("Failed to load broadcast statistics");
-      showError("Error", "Failed to load broadcast statistics");
+      console.error("Failed to load broadcast data:", err);
+      setError(err instanceof Error ? err.message : "Failed to load broadcasts");
+      showError("Error", "Failed to load broadcasts");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [campaignIdFilter, showError]);
 
-  const getStatusColor = (status: CampaignBroadcast["status"]) => {
-    const colors: Record<string, string> = {
-      sent: "#10B981",
-      in_progress: "#3B82F6",
-      scheduled: "#F59E0B",
-      completed: "#10B981",
-      failed: "#EF4444",
-      paused: "#6B7280",
-    };
-    return colors[status] || "#6B7280";
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-  const getEngagementRate = (opened: number, delivered: number) => {
-    if (delivered === 0) return "0%";
-    return `${((opened / delivered) * 100).toFixed(1)}%`;
-  };
+  const filteredBroadcasts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return broadcasts.filter((broadcast) => {
+      const matchesStatus =
+        selectedStatus === "all" || broadcast.status === selectedStatus;
+      const matchesSearch =
+        !q ||
+        broadcast.campaign_name?.toLowerCase().includes(q) ||
+        broadcast.broadcast_name?.toLowerCase().includes(q) ||
+        broadcast.broadcast_id.toLowerCase().includes(q) ||
+        broadcast.channel_code?.toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [broadcasts, selectedStatus, searchQuery]);
 
-  const filteredBroadcasts = broadcasts.filter((broadcast) => {
-    const matchesStatus = selectedStatus === "all" || broadcast.status === selectedStatus;
-    const matchesSearch =
-      broadcast.campaign_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      broadcast.created_by.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
-
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedStatus, searchQuery]);
+  }, [selectedStatus, searchQuery, campaignIdFilter]);
 
   const paginatedBroadcasts = filteredBroadcasts.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
-  // Stats Cards Data from API
+  const tableRows: BroadcastTableRow[] = paginatedBroadcasts.map((broadcast) => ({
+    id: broadcast.broadcast_id,
+    campaignName: broadcast.campaign_name || `Campaign #${broadcast.campaign_id ?? "—"}`,
+    broadcastName: broadcast.broadcast_name || "—",
+    status: formatBroadcastStatusLabel(broadcast.status),
+    statusRaw: broadcast.status,
+    sentDate: broadcast.actual_start_time || broadcast.planned_start_time || "",
+    channels: broadcast.channel_code || "",
+    sent: broadcast.messages_sent ?? 0,
+    failed: broadcast.messages_failed ?? 0,
+    deliveryRate: `${Number(broadcast.delivery_rate ?? 0).toFixed(1)}%`,
+  }));
+
   const broadcastStats = [
     {
       name: "Total Broadcasts",
-      value: statistics?.total_broadcasts || "0",
+      value: statistics?.total_broadcasts ?? broadcasts.length ?? 0,
       icon: Radio,
     },
     {
       name: "Running",
-      value: statistics?.running_broadcasts || "0",
+      value: statistics?.running_broadcasts ??
+        broadcasts.filter((b) => b.status === "running").length,
       icon: Send,
     },
     {
       name: "Completed",
-      value: statistics?.completed_broadcasts || "0",
+      value: statistics?.completed_broadcasts ??
+        broadcasts.filter((b) => b.status === "completed").length,
       icon: CheckCircle,
     },
     {
       name: "Scheduled",
-      value: statistics?.scheduled_broadcasts || "0",
+      value: statistics?.scheduled_broadcasts ??
+        broadcasts.filter((b) => b.status === "scheduled").length,
       icon: TrendingUp,
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
@@ -317,11 +315,11 @@ export default function CampaignBroadcastsPage() {
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             View and manage campaign broadcast execution history
+            {campaignIdFilter ? ` · Campaign #${campaignIdFilter}` : ""}
           </p>
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {broadcastStats.map((stat) => {
           const Icon = stat.icon;
@@ -331,24 +329,18 @@ export default function CampaignBroadcastsPage() {
               className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
-                <Icon
-                  className="h-5 w-5"
-                  style={{ color: color.primary.accent }}
-                />
-                <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
+                <Icon className="h-5 w-5" style={{ color: color.primary.accent }} />
+                <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium`}>{stat.name}</p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {stat.value}
-              </p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">{String(stat.value)}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-4">
         <SearchInput
-          placeholder="Search broadcasts..."
+          placeholder="Search by campaign, broadcast, channel..."
           value={searchQuery}
           onChange={setSearchQuery}
         />
@@ -365,10 +357,7 @@ export default function CampaignBroadcastsPage() {
         />
       </div>
 
-      {/* Table Container */}
-      <div
-        className={` ${tw.rounded} overflow-hidden`}
-      >
+      <div className={`${tw.rounded} overflow-hidden`}>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <LoadingSpinner
@@ -386,49 +375,39 @@ export default function CampaignBroadcastsPage() {
             <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
             <p className="text-red-600 font-medium">{error}</p>
             <button
-              onClick={loadBroadcastStatistics}
+              type="button"
+              onClick={loadData}
               className="mt-4 px-4 py-2 text-sm font-medium text-white rounded transition-all"
               style={{ backgroundColor: color.primary.action }}
             >
               Retry
             </button>
           </div>
-        ) : broadcasts.length > 0 && filteredBroadcasts.length > 0 ? (
+        ) : filteredBroadcasts.length > 0 ? (
           <>
             <div className="overflow-x-auto">
               <Table<BroadcastTableRow>
                 columns={columns}
-                data={paginatedBroadcasts.map((broadcast) => ({
-                  id: broadcast.id,
-                  campaignName: broadcast.campaign_name,
-                  status: broadcast.status.replace(/_/g, " "),
-                  sentDate: broadcast.sent_at,
-                  channels: broadcast.channels.join(","),
-                  recipients: `${broadcast.delivered}/${broadcast.total_recipients}`,
-                  opened: broadcast.opened,
-                  conversions: broadcast.conversions,
-                }))}
+                data={tableRows}
                 onHideColumn={toggleColumn}
                 onManageColumnsClick={() => setShowColumnPicker(true)}
                 rowSpacing="0 8px"
               />
             </div>
-            {filteredBroadcasts.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={filteredBroadcasts.length}
-                onPageChange={setCurrentPage}
-              />
-            )}
+            <Pagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={filteredBroadcasts.length}
+              onPageChange={setCurrentPage}
+            />
           </>
         ) : (
           <div className="flex flex-col items-center justify-center py-16">
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              No individual broadcast records available
+              No broadcast records available
             </p>
             <p className="text-gray-500 text-xs mt-2">
-              Check the statistics above for system-wide broadcast overview
+              Broadcasts appear when campaigns are scheduled or executed
             </p>
           </div>
         )}
@@ -436,13 +415,19 @@ export default function CampaignBroadcastsPage() {
 
       <ColumnPickerModal
         isOpen={showColumnPicker}
-        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        columns={columns.map((col) => ({
+          id: col.id,
+          label: col.label,
+          visible: col.visible,
+        }))}
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
         onReorderColumns={(reorderedCols) => {
           const updatedColumns = reorderedCols.map((reordered) => {
             const original = columns.find((c) => c.id === reordered.id);
-            return original ? { ...original, visible: reordered.visible } : reordered as any;
+            return original
+              ? { ...original, visible: reordered.visible }
+              : (reordered as any);
           });
           reorderColumns(updatedColumns);
         }}

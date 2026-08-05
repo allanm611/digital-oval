@@ -11,6 +11,7 @@ import { buildUpdateManualRewardPayload } from "../utils/buildUpdateManualReward
 import { parseRecipientMsisdns } from "../utils/parseRecipientMsisdns";
 import { canEditManualReward } from "../utils/canEditManualReward";
 import { mapManualRewardResourceToFormData } from "../utils/mapManualRewardResourceToFormData";
+import { enrichManualRewardFormDataWithProvider } from "../utils/enrichManualRewardFormDataWithProvider";
 import { resolveCreatedRewardId } from "../utils/resolveCreatedRewardId";
 import type { ManualRewardApiStatus } from "../types/manualRewardApi";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -151,7 +152,13 @@ export default function CreateManualRewardPage() {
         }
 
         setLoadedEditStatus(row.status);
-        setRewardData(mapManualRewardResourceToFormData(row));
+        const preview = (row.preview_data || {}) as Record<string, unknown>;
+        const mapped = mapManualRewardResourceToFormData(row);
+        const enriched = await enrichManualRewardFormDataWithProvider(
+          mapped,
+          preview,
+        );
+        setRewardData(enriched);
       } catch (err) {
         if (!cancelled) {
           setEditBlockedMessage(

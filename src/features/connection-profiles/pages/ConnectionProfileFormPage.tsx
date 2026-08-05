@@ -41,7 +41,6 @@ import {
   SMSInboxConfig,
   SFTPConfig,
   FTPConfig,
-  ConfigComponentProps,
 } from "../../../shared/components/ConnectorConfigs";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
@@ -132,6 +131,17 @@ export default function ConnectionProfileFormPage({
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   }, []);
 
+  const patchConfiguration = useCallback((updates: Record<string, unknown>) => {
+    setFormData((prev) => ({
+      ...prev,
+      configuration: { ...(prev.configuration || {}), ...updates },
+    }));
+  }, []);
+
+  const updateConfiguration = useCallback((key: string, value: unknown) => {
+    patchConfiguration({ [key]: value });
+  }, [patchConfiguration]);
+
   const handleProfileCodeChange = useCallback((val: string) => {
     const alphanumericOnly = val.replace(/[^a-zA-Z0-9]/g, "");
     setFormData({ ...formData, profile_code: alphanumericOnly });
@@ -217,7 +227,44 @@ export default function ConnectionProfileFormPage({
       }
     } else if (formData.connection_type === "api" || formData.connection_type === "webhook") {
       if (!config.base_url?.trim()) {
-        newErrors.base_url = "Base URL is required";
+        newErrors.base_url = "Request URL is required";
+      } else {
+        const rawUrl = String(config.base_url).trim();
+        const hasTemplateVars = /\{\{[^}]+\}\}/.test(rawUrl);
+        if (!hasTemplateVars) {
+          try {
+            const url = new URL(rawUrl);
+            if (url.protocol !== "http:" && url.protocol !== "https:") {
+              newErrors.base_url = "URL must start with http:// or https://";
+            }
+          } catch {
+            newErrors.base_url = "Enter a valid request URL";
+          }
+        } else if (!/^https?:\/\//i.test(rawUrl.replace(/\{\{[^}]+\}\}/g, "placeholder"))) {
+          // Allow Postman-style {{vars}} but still require an http(s) scheme shape
+          if (!/^https?:\/\//i.test(rawUrl) && !rawUrl.startsWith("{{")) {
+            newErrors.base_url = "URL must start with http://, https://, or a {{variable}}";
+          }
+        }
+      }
+      if (!config.method) {
+        newErrors.method = "HTTP method is required";
+      }
+      if (config.auth_type === "basic") {
+        const auth = (config.auth_config || {}) as Record<string, string>;
+        if (!(auth.username || config.username)?.toString().trim()) {
+          newErrors.auth = "Basic Auth username is required";
+        }
+      } else if (config.auth_type === "bearer") {
+        const auth = (config.auth_config || {}) as Record<string, string>;
+        if (!(auth.token || config.bearer_token || config.password)?.toString().trim()) {
+          newErrors.auth = "Bearer token is required";
+        }
+      } else if (config.auth_type === "api_key") {
+        const auth = (config.auth_config || {}) as Record<string, string>;
+        if (!(auth.api_key || config.api_key)?.toString().trim()) {
+          newErrors.auth = "API key value is required";
+        }
       }
     } else if (formData.connection_type === "kafka") {
       if (!config.brokers || (Array.isArray(config.brokers) && config.brokers.length === 0)) {
@@ -624,8 +671,11 @@ export default function ConnectionProfileFormPage({
                         newConfig.database_type = newConfig.database_type || "mysql";
                         newConfig.port = newConfig.port || 3306;
                       } else if (value === "api" || value === "webhook") {
+                        newConfig.method = newConfig.method || "GET";
                         newConfig.content_type = newConfig.content_type || "JSON";
-                        newConfig.method = newConfig.method || "POST";
+                        newConfig.auth_type = newConfig.auth_type || "none";
+                        newConfig.body_mode = newConfig.body_mode || "none";
+                        newConfig.raw_language = newConfig.raw_language || "json";
                       } else if (value === "websocket") {
                         newConfig.http_path = newConfig.http_path || "/ws";
                       } else if (value === "sftp") {
@@ -761,11 +811,13 @@ export default function ConnectionProfileFormPage({
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
             {/* Configuration Validation Errors */}
-            {(errors.database_type || errors.jdbc_connection || errors.base_url || errors.brokers || errors.topic_name || errors.sftp_host || errors.sftp_username || errors.sftp_auth || errors.ftp_host || errors.ftp_username || errors.ftp_password) && (
+            {(errors.database_type || errors.jdbc_connection || errors.base_url || errors.method || errors.auth || errors.brokers || errors.topic_name || errors.sftp_host || errors.sftp_username || errors.sftp_auth || errors.ftp_host || errors.ftp_username || errors.ftp_password) && (
               <div className="mb-4 space-y-1">
                 {errors.database_type && <p className="text-sm text-red-500">{errors.database_type}</p>}
                 {errors.jdbc_connection && <p className="text-sm text-red-500">{errors.jdbc_connection}</p>}
                 {errors.base_url && <p className="text-sm text-red-500">{errors.base_url}</p>}
+                {errors.method && <p className="text-sm text-red-500">{errors.method}</p>}
+                {errors.auth && <p className="text-sm text-red-500">{errors.auth}</p>}
                 {errors.brokers && <p className="text-sm text-red-500">{errors.brokers}</p>}
                 {errors.topic_name && <p className="text-sm text-red-500">{errors.topic_name}</p>}
                 {errors.sftp_host && <p className="text-sm text-red-500">{errors.sftp_host}</p>}
@@ -780,14 +832,17 @@ export default function ConnectionProfileFormPage({
               <APIConfig
                 config={{
                   content_type: "JSON",
-                  method: "POST",
+                  method: "GET",
+                  auth_type: "none",
+                  body_mode: "none",
                   ...(formData.configuration || {}),
                 }}
-                updateConfiguration={(key, value) =>
-                  setFormData({
-                    ...formData,
-                    configuration: { ...(formData.configuration || {}), [key]: value },
-                  })
+                updateConfiguration={updateConfiguration}
+                patchConfiguration={patchConfiguration}
+                hydrateKey={
+                  mode === "edit"
+                    ? `edit-${id}-${loading ? "loading" : "ready"}`
+                    : `create-${formData.connection_type}`
                 }
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}
@@ -874,13 +929,16 @@ export default function ConnectionProfileFormPage({
                 config={{
                   content_type: "JSON",
                   method: "POST",
+                  auth_type: "none",
+                  body_mode: "raw",
                   ...(formData.configuration || {}),
                 }}
-                updateConfiguration={(key, value) =>
-                  setFormData({
-                    ...formData,
-                    configuration: { ...(formData.configuration || {}), [key]: value },
-                  })
+                updateConfiguration={updateConfiguration}
+                patchConfiguration={patchConfiguration}
+                hydrateKey={
+                  mode === "edit"
+                    ? `edit-webhook-${id}-${loading ? "loading" : "ready"}`
+                    : `create-webhook`
                 }
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}

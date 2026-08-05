@@ -1,12 +1,14 @@
 import type { CreateOfferRequest, UpdateOfferRequest } from "../types/offer";
 import type { OfferReward } from "../types/offerReward";
+import type { OfferTrackingSource } from "../types/offerTrackingSource";
 import {
   getEffectiveRouteIdForChannel,
   resolveCommunicationChannelKind,
   type OfferChannelRouteKind,
 } from "./offerChannelRoute";
+import { normalizeOfferRewardsWithTracking } from "./normalizeOfferWizardBindings";
 
-export const OFFER_WIZARD_METADATA_VERSION = 1 as const;
+export const OFFER_WIZARD_METADATA_VERSION = 2 as const;
 
 export interface OfferWizardMetadata {
   wizard_version?: number;
@@ -87,10 +89,18 @@ export function mergeOfferWizardMetadata(
       ? { ...(existingMetadata as OfferWizardMetadata) }
       : {};
 
+  const sources = Array.isArray(trackingSources)
+    ? (trackingSources as OfferTrackingSource[])
+    : [];
+  const { rewards: normalizedRewards } = normalizeOfferRewardsWithTracking(
+    rewards,
+    sources,
+  );
+
   return {
     ...base,
     wizard_version: OFFER_WIZARD_METADATA_VERSION,
-    rewards,
+    rewards: normalizedRewards,
     tracking_sources: trackingSources,
     ...routeSnapshot,
   };

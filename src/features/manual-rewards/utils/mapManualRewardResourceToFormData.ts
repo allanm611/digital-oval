@@ -1,6 +1,17 @@
 import type { ManualRewardData } from "../pages/CreateManualRewardPage";
 import type { ManualRewardResource } from "../types/manualRewardApi";
 
+function readProviderId(
+  preview: Record<string, unknown>,
+): string | undefined {
+  const raw =
+    preview.reward_provider_id ??
+    preview.provider_id ??
+    preview.rewardProviderId;
+  if (raw == null || raw === "") return undefined;
+  return String(raw);
+}
+
 function readConfigId(
   preview: Record<string, unknown>,
 ): number | undefined {
@@ -48,6 +59,7 @@ export function mapManualRewardResourceToFormData(
     rewardValue: row.reward_value,
     bundleTrack: row.bundle_track,
     rewardConfigurationId: readConfigId(preview),
+    rewardProviderId: readProviderId(preview),
     rewardConfigurationName: row.bundle_track,
     rewardAuthConfig:
       (preview.auth_config as Record<string, unknown> | undefined) ??

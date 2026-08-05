@@ -1,7 +1,105 @@
-// Centralized tracking sources configuration
-// This is the single source of truth for all offer tracking types
+/**
+ * Single source of truth for offer tracking type defaults.
+ * Parameter / metric keys use stable snake_case for engine + KPI alignment.
+ */
 
-export const trackingSourcesData = [
+export type TrackingSourceType =
+  | "recharge"
+  | "usage_metric"
+  | "engagement"
+  | "redemption"
+  | "churn_prevention"
+  | "custom";
+
+export interface TrackingSelectOption {
+  value: string;
+  label: string;
+}
+
+export interface TrackingTypeDefinition {
+  id: string;
+  label: string;
+  description: string;
+  type: TrackingSourceType;
+  dataSource: string;
+  parameters: string[];
+  displayMetrics: string[];
+}
+
+/** Human-readable labels for known parameter keys */
+export const PARAMETER_LABELS: Record<string, string> = {
+  amount: "Amount",
+  datetime: "Datetime",
+  subscriber_id: "Subscriber ID",
+  channel: "Channel",
+  payment_method: "Payment Method",
+  data_volume_mb: "Data Volume (MB)",
+  voice_minutes: "Voice Minutes",
+  sms_count: "SMS Count",
+  service_type: "Service Type",
+  delivered: "Delivered",
+  opened: "Opened",
+  clicked: "Clicked",
+  redeemed: "Redeemed",
+  redemption_date: "Redemption Date",
+  discount_applied: "Discount Applied",
+  redemption_channel: "Redemption Channel",
+  last_activity_date: "Last Activity Date",
+  days_inactive: "Days Inactive",
+  subscriber_status: "Subscriber Status",
+  retention_period: "Retention Period",
+  customer_segment: "Customer Segment",
+  product_type: "Product Type",
+  transaction_type: "Transaction Type",
+  location: "Location",
+  frequency: "Frequency",
+};
+
+/** Human-readable labels for known display metric keys */
+export const METRIC_LABELS: Record<string, string> = {
+  conversions: "Conversions",
+  conversion_rate: "Conversion Rate",
+  avg_recharge_amount: "Avg Recharge Amount",
+  revenue_generated: "Revenue Generated",
+  active_users: "Active Users",
+  activation_rate: "Activation Rate",
+  avg_usage: "Avg Usage",
+  revenue_from_usage: "Revenue From Usage",
+  delivery_rate: "Delivery Rate",
+  open_rate: "Open Rate",
+  click_through_rate: "Click-Through Rate",
+  engagement_score: "Engagement Score",
+  redemption_count: "Redemption Count",
+  redemption_rate: "Redemption Rate",
+  avg_discount_used: "Avg Discount Used",
+  cost_per_redemption: "Cost Per Redemption",
+  customers_retained: "Customers Retained",
+  retention_rate: "Retention Rate",
+  churn_prevention_score: "Churn Prevention Score",
+  ltv_impact: "LTV Impact",
+};
+
+export function formatTrackingKeyLabel(
+  key: string,
+  labelMap: Record<string, string> = PARAMETER_LABELS,
+): string {
+  if (labelMap[key]) return labelMap[key];
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function toTrackingSelectOptions(
+  keys: string[],
+  labelMap: Record<string, string> = PARAMETER_LABELS,
+): TrackingSelectOption[] {
+  return keys.map((value) => ({
+    value,
+    label: formatTrackingKeyLabel(value, labelMap),
+  }));
+}
+
+export const trackingSourcesData: TrackingTypeDefinition[] = [
   {
     id: "recharge",
     label: "Recharge Tracking",
@@ -49,7 +147,14 @@ export const trackingSourcesData = [
     description: "Track customer engagement like delivery, opens, clicks",
     type: "engagement",
     dataSource: "delivery_logs",
-    parameters: ["delivered", "opened", "clicked", "datetime", "subscriber_id", "channel"],
+    parameters: [
+      "delivered",
+      "opened",
+      "clicked",
+      "datetime",
+      "subscriber_id",
+      "channel",
+    ],
     displayMetrics: [
       "delivery_rate",
       "open_rate",
@@ -107,39 +212,40 @@ export const trackingSourcesData = [
   },
 ];
 
-export const dataSources = [
-  { id: "cdr_file", label: "CDR File" },
-  { id: "usage_logs", label: "Usage Logs" },
-  { id: "delivery_logs", label: "Delivery Logs" },
-  { id: "redemption_db", label: "Redemption Database" },
-  { id: "subscriber_activity", label: "Subscriber Activity" },
-  { id: "custom_api", label: "Custom API" },
+export const dataSources: TrackingSelectOption[] = [
+  { value: "cdr_file", label: "CDR File" },
+  { value: "usage_logs", label: "Usage Logs" },
+  { value: "delivery_logs", label: "Delivery Logs" },
+  { value: "redemption_db", label: "Redemption Database" },
+  { value: "subscriber_activity", label: "Subscriber Activity" },
+  { value: "custom_api", label: "Custom API" },
 ];
 
-export const trackingParameters = [
-  "amount",
-  "datetime",
-  "subscriber_id",
-  "channel",
-  "payment_method",
-  "data_volume_mb",
-  "voice_minutes",
-  "sms_count",
-  "service_type",
-  "delivered",
-  "opened",
-  "clicked",
-  "redeemed",
-  "redemption_date",
-  "discount_applied",
-  "redemption_channel",
-  "last_activity_date",
-  "days_inactive",
-  "subscriber_status",
-  "retention_period",
-];
+/** Flat unique list of all known parameter keys */
+export const trackingParameters: string[] = Array.from(
+  new Set(trackingSourcesData.flatMap((s) => s.parameters)),
+);
 
-export const conditions = [
+export const ALL_TRACKING_PARAMETERS: TrackingSelectOption[] =
+  toTrackingSelectOptions(trackingParameters, PARAMETER_LABELS);
+
+export const ALL_TRACKING_METRICS: TrackingSelectOption[] = toTrackingSelectOptions(
+  Array.from(new Set(trackingSourcesData.flatMap((s) => s.displayMetrics))),
+  METRIC_LABELS,
+);
+
+export const TRACKING_TYPE_OPTIONS: TrackingSelectOption[] =
+  trackingSourcesData.map((s) => ({
+    value: s.type,
+    label:
+      s.type === "usage_metric"
+        ? "Usage"
+        : s.type === "churn_prevention"
+          ? "Churn Prevention"
+          : s.label.replace(/ Tracking$/, ""),
+  }));
+
+export const conditions: TrackingSelectOption[] = [
   { value: "equals", label: "Equals" },
   { value: "greater_than", label: "Greater than" },
   { value: "less_than", label: "Less than" },
@@ -147,29 +253,73 @@ export const conditions = [
   { value: "is_any_of", label: "Is any of" },
 ];
 
-export const lookbackPeriods = [
+export const lookbackPeriods: TrackingSelectOption[] = [
   { value: "24h", label: "24 Hours" },
   { value: "7d", label: "7 Days" },
   { value: "30d", label: "30 Days" },
   { value: "90d", label: "90 Days" },
+  { value: "custom", label: "Custom Date" },
 ];
 
-// Helper functions
 export const getTrackingSourceById = (id: string) => {
   return trackingSourcesData.find((source) => source.id === id);
 };
 
-export const getParametersByType = (type: string) => {
-  const source = trackingSourcesData.find((s) => s.type === type);
-  return source?.parameters || [];
+export const getTrackingSourceByType = (type: string) => {
+  return trackingSourcesData.find((s) => s.type === type);
 };
 
-export const getMetricsByType = (type: string) => {
-  const source = trackingSourcesData.find((s) => s.type === type);
-  return source?.displayMetrics || [];
+export const getParametersByType = (type: string): string[] => {
+  return getTrackingSourceByType(type)?.parameters || [];
+};
+
+export const getMetricsByType = (type: string): string[] => {
+  return getTrackingSourceByType(type)?.displayMetrics || [];
+};
+
+export const getParameterOptionsByType = (
+  type: string,
+): TrackingSelectOption[] => {
+  const params = getParametersByType(type);
+  if (params.length === 0) {
+    // Custom / unknown: expose full catalog so operators can pick
+    return ALL_TRACKING_PARAMETERS;
+  }
+  return toTrackingSelectOptions(params, PARAMETER_LABELS);
+};
+
+export const getMetricOptionsByType = (
+  type: string,
+): TrackingSelectOption[] => {
+  const metrics = getMetricsByType(type);
+  if (metrics.length === 0) {
+    return ALL_TRACKING_METRICS;
+  }
+  return toTrackingSelectOptions(metrics, METRIC_LABELS);
 };
 
 export const getDataSourceByType = (type: string) => {
-  const source = trackingSourcesData.find((s) => s.type === type);
-  return source?.dataSource || "";
+  return getTrackingSourceByType(type)?.dataSource || "";
 };
+
+/**
+ * Legacy wizard labels → stable snake_case keys.
+ * Used when loading older offer drafts.
+ */
+const LEGACY_PARAMETER_ALIASES: Record<string, string> = {
+  Amount: "amount",
+  Channel: "channel",
+  Customer_Segment: "customer_segment",
+  Product_Type: "product_type",
+  Transaction_Type: "transaction_type",
+  Location: "location",
+  Time_Period: "datetime",
+  Usage_Volume: "data_volume_mb",
+  Frequency: "frequency",
+};
+
+export function normalizeParameterKey(raw: string): string {
+  if (!raw) return "";
+  if (LEGACY_PARAMETER_ALIASES[raw]) return LEGACY_PARAMETER_ALIASES[raw];
+  return raw.trim().toLowerCase().replace(/\s+/g, "_");
+}

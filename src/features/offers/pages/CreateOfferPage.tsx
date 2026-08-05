@@ -89,6 +89,18 @@ import {
   parseOfferWizardMetadata,
   withChannelRouteSelected,
 } from "../utils/offerWizardPersistence";
+import { normalizeOfferRewardsWithTracking } from "../utils/normalizeOfferWizardBindings";
+import type { OfferTrackingSource } from "../types/offerTrackingSource";
+import {
+  offerRequiresTrackingAndRewardMapping,
+  offerUsesDefaultReward,
+} from "../utils/offerTypeTrackingPolicy";
+import {
+  demoteSeedingDefaultRewards,
+  ensureSeedingDefaultReward,
+  isDefaultSeedingRewardConfigured,
+} from "../utils/seedingRewardDefaults";
+import { validateOfferRewardTrackingMapping } from "../utils/validateOfferRewardTracking";
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative } from "../types/offerCreative";
@@ -152,24 +164,6 @@ const isRecordOfString = (value: unknown): value is Record<string, string> => {
 
 type LinkedProduct = Product & { link_id?: number; is_primary?: boolean };
 
-interface TrackingRule {
-  id: string;
-  name: string;
-  priority: number;
-  parameter: string;
-  condition: "equals" | "greater_than" | "less_than" | "contains" | "is_any_of";
-  value: string;
-  enabled: boolean;
-}
-
-interface TrackingSource {
-  id: string;
-  name: string;
-  type: "recharge" | "usage_metric" | "custom";
-  enabled: boolean;
-  rules: TrackingRule[];
-}
-
 interface StepProps {
   currentStep: number;
   totalSteps: number;
@@ -180,10 +174,13 @@ interface StepProps {
   setFormData: Dispatch<SetStateAction<CreateOfferRequest>>;
   creatives: LocalOfferCreative[];
   setCreatives: (creatives: LocalOfferCreative[]) => void;
-  trackingSources: TrackingSource[];
-  setTrackingSources: (sources: TrackingSource[]) => void;
+  trackingSources: OfferTrackingSource[];
+  setTrackingSources: (sources: OfferTrackingSource[]) => void;
   rewards: OfferReward[];
   setRewards: (rewards: OfferReward[]) => void;
+  requiresTrackingRewardMapping?: boolean;
+  /** Seeding: tracking optional; default reward always required */
+  usesDefaultReward?: boolean;
   isLoading?: boolean;
   validationErrors?: Record<string, string>;
   clearValidationErrors?: () => void;
@@ -881,6 +878,9 @@ function OfferCreativeStepWrapper({
 function OfferTrackingStepWrapper({
   trackingSources,
   setTrackingSources,
+  requiresTrackingRewardMapping = false,
+  usesDefaultReward = false,
+  validationErrors,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -895,13 +895,13 @@ function OfferTrackingStepWrapper({
   | "rewards"
   | "setRewards"
   | "isLoading"
-  | "validationErrors"
   | "clearValidationErrors"
   | "offerCategories"
   | "categoriesLoading"
   | "onSaveDraft"
   | "onCancel"
->) {
+> &
+  Pick<StepProps, "validationErrors">) {
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -911,6 +911,18 @@ function OfferTrackingStepWrapper({
         <p className="text-sm text-gray-600">
           Configure tracking and analytics for your offer
         </p>
+        {requiresTrackingRewardMapping ? (
+          <p className="text-sm text-amber-800 mt-2">
+            
+          </p>
+        ) : usesDefaultReward ? (
+          <p className="text-sm text-amber-800 mt-2">
+            
+          </p>
+        ) : null}
+        {validationErrors?.tracking ? (
+          <p className="text-sm text-red-600 mt-2">{validationErrors.tracking}</p>
+        ) : null}
       </div>
       <OfferTrackingStep
         trackingSources={trackingSources}
@@ -924,6 +936,10 @@ function OfferTrackingStepWrapper({
 function OfferRewardStepWrapper({
   rewards,
   setRewards,
+  trackingSources,
+  requiresTrackingRewardMapping = false,
+  usesDefaultReward = false,
+  validationErrors,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -938,13 +954,13 @@ function OfferRewardStepWrapper({
   | "trackingSources"
   | "setTrackingSources"
   | "isLoading"
-  | "validationErrors"
   | "clearValidationErrors"
   | "offerCategories"
   | "categoriesLoading"
   | "onSaveDraft"
   | "onCancel"
->) {
+> &
+  Pick<StepProps, "validationErrors">) {
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -954,8 +970,26 @@ function OfferRewardStepWrapper({
         <p className="text-sm text-gray-600">
           Configure rewards and incentives for your offer
         </p>
+        {usesDefaultReward ? (
+          <p className="text-sm text-amber-800 mt-2">
+            
+          </p>
+        ) : requiresTrackingRewardMapping ? (
+          <p className="text-sm text-amber-800 mt-2">
+            
+          </p>
+        ) : null}
+        {validationErrors?.rewards ? (
+          <p className="text-sm text-red-600 mt-2">{validationErrors.rewards}</p>
+        ) : null}
       </div>
-      <OfferRewardStep rewards={rewards} onRewardsChange={setRewards} />
+      <OfferRewardStep
+        rewards={rewards}
+        onRewardsChange={setRewards}
+        trackingSources={trackingSources}
+        requiresRewardTrackingMapping={requiresTrackingRewardMapping}
+        usesDefaultReward={usesDefaultReward}
+      />
     </div>
   );
 }
@@ -973,6 +1007,8 @@ function ReviewStep({
   validationErrors,
   selectedProducts = [],
   offerTypes,
+  requiresTrackingRewardMapping = false,
+  usesDefaultReward = false,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -1152,6 +1188,9 @@ function ReviewStep({
                 )}
                 {validationErrors.tracking && (
                   <li>{validationErrors.tracking}</li>
+                )}
+                {validationErrors.rewards && (
+                  <li>{validationErrors.rewards}</li>
                 )}
               </ul>
             </div>
@@ -1403,6 +1442,25 @@ function ReviewStep({
                         </div>
                         <div className={`text-sm ${tw.textSecondary}`}>
                           {source.type} • {source.rules.length} rules
+                          {source.rules.length > 0
+                            ? ` • params: ${Array.from(
+                                new Set(
+                                  source.rules
+                                    .map((r: { parameter?: string }) => r.parameter)
+                                    .filter(Boolean),
+                                ),
+                              )
+                                .slice(0, 4)
+                                .join(", ")}${
+                                new Set(
+                                  source.rules.map(
+                                    (r: { parameter?: string }) => r.parameter,
+                                  ),
+                                ).size > 4
+                                  ? "…"
+                                  : ""
+                              }`
+                            : ""}
                         </div>
                       </div>
                     </div>
@@ -1449,10 +1507,36 @@ function ReviewStep({
                         <div
                           className={`text-sm font-semibold ${tw.textPrimary}`}
                         >
-                          {reward.name}
+                          {reward.is_default
+                            ? reward.name || "Default Reward"
+                            : reward.tracking_source_id
+                              ? trackingSources.find(
+                                  (s) => s.id === reward.tracking_source_id,
+                                )?.name || reward.name
+                              : reward.name || "Unassigned reward"}
+                          {reward.is_default ? " (default)" : ""}
                         </div>
                         <div className={`text-sm ${tw.textSecondary}`}>
-                          {reward.type} • {reward.rules.length} rules
+                          {reward.is_default
+                            ? "No tracking required"
+                            : `Tracking source${
+                                reward.tracking_source_id
+                                  ? " linked"
+                                  : " not set"
+                              }`}{" "}
+                          • {reward.rules.length} configuration
+                          {reward.rules.length === 1 ? "" : "s"}
+                          {!reward.is_default &&
+                          reward.rules.filter(
+                            (r) => r.enabled !== false && r.tracking_rule_id,
+                          ).length > 0
+                            ? ` • ${
+                                reward.rules.filter(
+                                  (r) =>
+                                    r.enabled !== false && r.tracking_rule_id,
+                                ).length
+                              } rule-bound`
+                            : ""}
                         </div>
                       </div>
                     </div>
@@ -1522,9 +1606,32 @@ function ReviewStep({
                   complete: Boolean(formData.primary_product_id),
                 },
                 {
-                  label: "Tracking configured",
-                  complete: trackingSources.length > 0,
+                  label: usesDefaultReward
+                    ? "Tracking (optional for seeding)"
+                    : "Tracking configured",
+                  complete: usesDefaultReward
+                    ? true
+                    : trackingSources.length > 0,
                 },
+                ...(usesDefaultReward
+                  ? [
+                      {
+                        label: "Default reward configured",
+                        complete: isDefaultSeedingRewardConfigured(rewards),
+                      },
+                    ]
+                  : requiresTrackingRewardMapping
+                    ? [
+                        {
+                          label: "Rewards mapped to tracking sources",
+                          complete: !validateOfferRewardTrackingMapping(
+                            rewards,
+                            trackingSources,
+                            true,
+                          ).rewards,
+                        },
+                      ]
+                    : []),
               ].map((item) => (
                 <li key={item.label} className="flex items-center gap-2">
                   <span
@@ -1618,7 +1725,7 @@ export default function CreateOfferPage({
   });
 
   const [creatives, setCreatives] = useState<LocalOfferCreative[]>([]);
-  const [trackingSources, setTrackingSources] = useState<TrackingSource[]>([]);
+  const [trackingSources, setTrackingSources] = useState<OfferTrackingSource[]>([]);
   const [rewards, setRewards] = useState<OfferReward[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<LinkedProduct[]>([]);
   const [initialProducts, setInitialProducts] = useState<LinkedProduct[]>([]); // Track initial products for edit mode
@@ -1632,7 +1739,40 @@ export default function CreateOfferPage({
   const { user } = useAuth();
   const { t } = useLanguage();
   const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData();
+  const requiresTrackingRewardMapping = useMemo(
+    () =>
+      offerRequiresTrackingAndRewardMapping(
+        formData.offer_type_id,
+        offerTypes,
+        formData.offer_type,
+      ),
+    [formData.offer_type_id, formData.offer_type, offerTypes],
+  );
+  const usesDefaultReward = useMemo(
+    () =>
+      offerUsesDefaultReward(
+        formData.offer_type_id,
+        offerTypes,
+        formData.offer_type,
+      ),
+    [formData.offer_type_id, formData.offer_type, offerTypes],
+  );
   const hasRestoredDataRef = useRef(false);
+
+  // Seeding ↔ other offer types: keep default reward lifecycle consistent.
+  useEffect(() => {
+    if (usesDefaultReward) {
+      setRewards((prev) => {
+        const { rewards: next, changed } = ensureSeedingDefaultReward(prev);
+        return changed ? next : prev;
+      });
+      return;
+    }
+    setRewards((prev) => {
+      const { rewards: next, changed } = demoteSeedingDefaultRewards(prev);
+      return changed ? next : prev;
+    });
+  }, [usesDefaultReward]);
 
   // Persist form data to localStorage
   useFormDataPersistence("offer_form_data", formData, setFormData, isEditMode);
@@ -1655,6 +1795,18 @@ export default function CreateOfferPage({
     setSelectedProducts,
     isEditMode,
   );
+
+  // Keep create/edit reward bindings aligned when tracking rules change.
+  useEffect(() => {
+    setRewards((prev) => {
+      if (prev.length === 0) return prev;
+      const { rewards: normalized, changed } = normalizeOfferRewardsWithTracking(
+        prev,
+        trackingSources,
+      );
+      return changed ? normalized : prev;
+    });
+  }, [trackingSources]);
 
   // Clear persisted form data when user exits the creation flow
   useFormCleanupOnExit("offer_form_data");
@@ -1704,21 +1856,28 @@ export default function CreateOfferPage({
               JSON.stringify(offerData.creatives),
             );
           }
-          if (
-            offerData.trackingSources &&
-            Array.isArray(offerData.trackingSources)
-          ) {
-            setTrackingSources(offerData.trackingSources);
+          const restoredTrackingSources = Array.isArray(
+            offerData.trackingSources,
+          )
+            ? (offerData.trackingSources as OfferTrackingSource[])
+            : [];
+          if (restoredTrackingSources.length > 0) {
+            setTrackingSources(restoredTrackingSources);
             localStorage.setItem(
               "offer_tracking_sources",
-              JSON.stringify(offerData.trackingSources),
+              JSON.stringify(restoredTrackingSources),
             );
           }
           if (offerData.rewards && Array.isArray(offerData.rewards)) {
-            setRewards(offerData.rewards);
+            const { rewards: normalizedRewards } =
+              normalizeOfferRewardsWithTracking(
+                offerData.rewards,
+                restoredTrackingSources,
+              );
+            setRewards(normalizedRewards);
             localStorage.setItem(
               "offer_rewards",
-              JSON.stringify(offerData.rewards),
+              JSON.stringify(normalizedRewards),
             );
           }
 
@@ -1892,11 +2051,32 @@ export default function CreateOfferPage({
       }
       setFormData(formForUi);
 
-      if (wizardData.rewards.length > 0) {
-        setRewards(wizardData.rewards);
+      const loadedTrackingSources =
+        wizardData.trackingSources.length > 0
+          ? (wizardData.trackingSources as OfferTrackingSource[])
+          : [];
+      if (loadedTrackingSources.length > 0) {
+        setTrackingSources(loadedTrackingSources);
       }
-      if (wizardData.trackingSources.length > 0) {
-        setTrackingSources(wizardData.trackingSources as TrackingSource[]);
+      {
+        const loadedRewards =
+          wizardData.rewards.length > 0
+            ? normalizeOfferRewardsWithTracking(
+                wizardData.rewards,
+                loadedTrackingSources,
+              ).rewards
+            : [];
+        const offerIsSeeding = offerUsesDefaultReward(
+          offerTypeId || offer.offer_type_id,
+          offerTypes,
+          offer.offer_type || offer.offer_type_label,
+        );
+        const nextRewards = offerIsSeeding
+          ? ensureSeedingDefaultReward(loadedRewards).rewards
+          : loadedRewards;
+        if (nextRewards.length > 0) {
+          setRewards(nextRewards);
+        }
       }
       // Trigger category refresh to ensure categories are loaded and can be selected
       setCategoryRefreshTrigger((prev) => prev + 1);
@@ -2225,8 +2405,25 @@ export default function CreateOfferPage({
       collectOfferRouteValidationErrors(formData, selectedChannel?.name),
     );
 
+    Object.assign(
+      errors,
+      validateOfferRewardTrackingMapping(
+        rewards,
+        trackingSources,
+        requiresTrackingRewardMapping,
+        { usesDefaultReward },
+      ),
+    );
+
     return errors;
-  }, [formData, communicationChannels]);
+  }, [
+    formData,
+    communicationChannels,
+    rewards,
+    trackingSources,
+    requiresTrackingRewardMapping,
+    usesDefaultReward,
+  ]);
 
   const validateForm = useCallback(() => {
     const errors = buildOfferValidationErrors();
@@ -2283,9 +2480,39 @@ export default function CreateOfferPage({
           return hasLanguage && hasTextBody && isEmailWithHtml;
         });
       case 4: // Tracking step
-        return true; // Tracking is optional; allow proceeding
+        if (!requiresTrackingRewardMapping) return true; // seeding / bonus: optional
+        return trackingSources.some((s) => s.enabled !== false);
       case 5: // Rewards step
-        return true; // Rewards are optional; allow proceeding
+        if (usesDefaultReward) {
+          return isDefaultSeedingRewardConfigured(rewards);
+        }
+        if (!requiresTrackingRewardMapping) return true;
+        {
+          const activeSourceIds = new Set(
+            trackingSources
+              .filter((s) => s.enabled !== false)
+              .map((s) => s.id),
+          );
+          const enabledRules = rewards.flatMap((r) =>
+            r.rules.filter((rule) => rule.enabled),
+          );
+          if (enabledRules.length === 0) return false;
+          return enabledRules.every((rule) => {
+            const parent = rewards.find((r) =>
+              r.rules.some((rr) => rr.id === rule.id),
+            );
+            const sourceId =
+              parent?.tracking_source_id?.trim() ||
+              rule.tracking_source_id?.trim();
+            if (!sourceId || !activeSourceIds.has(sourceId)) return false;
+            const trackingRuleId = rule.tracking_rule_id?.trim();
+            if (!trackingRuleId) return false;
+            const source = trackingSources.find((s) => s.id === sourceId);
+            return (source?.rules || []).some(
+              (r) => r.id === trackingRuleId && r.enabled !== false,
+            );
+          });
+        }
       case 6: // Review step
         // Validate all required fields are filled
         const isReviewValid =
@@ -2318,6 +2545,8 @@ export default function CreateOfferPage({
     trackingSources,
     rewards,
     communicationChannels,
+    requiresTrackingRewardMapping,
+    usesDefaultReward,
     // Removed validationErrors and clearValidationErrors to break circular dependency
   ]);
 
@@ -2417,6 +2646,31 @@ export default function CreateOfferPage({
             errors.creatives = creativeErrors.join(" • ");
           }
         }
+      } else if (currentStep === 4 && requiresTrackingRewardMapping) {
+        Object.assign(
+          errors,
+          validateOfferRewardTrackingMapping(
+            rewards,
+            trackingSources,
+            true,
+          ),
+        );
+        if (errors.tracking && !errors.rewards) {
+          delete errors.rewards;
+        }
+      } else if (
+        currentStep === 5 &&
+        (requiresTrackingRewardMapping || usesDefaultReward)
+      ) {
+        Object.assign(
+          errors,
+          validateOfferRewardTrackingMapping(
+            rewards,
+            trackingSources,
+            requiresTrackingRewardMapping,
+            { usesDefaultReward },
+          ),
+        );
       } else if (currentStep === 6) {
         if (!formData.name?.trim()) errors.name = "Offer name is required";
         if (!formData.code?.trim()) errors.code = "Offer code is required";
@@ -2432,6 +2686,15 @@ export default function CreateOfferPage({
           errors,
           collectOfferRouteValidationErrors(formData, reviewChannel?.name),
         );
+        Object.assign(
+          errors,
+          validateOfferRewardTrackingMapping(
+            rewards,
+            trackingSources,
+            requiresTrackingRewardMapping,
+            { usesDefaultReward },
+          ),
+        );
       }
       setValidationErrors(errors);
     }
@@ -2442,7 +2705,10 @@ export default function CreateOfferPage({
     creatives,
     formData,
     trackingSources,
+    rewards,
     communicationChannels,
+    requiresTrackingRewardMapping,
+    usesDefaultReward,
   ]);
 
   const handlePrev = useCallback(() => {
@@ -2486,6 +2752,10 @@ export default function CreateOfferPage({
           submitErrors.push_route;
         if (needsBasicInfoStep) {
           setCurrentStep(1);
+        } else if (submitErrors.tracking) {
+          setCurrentStep(4);
+        } else if (submitErrors.rewards) {
+          setCurrentStep(5);
         }
         setIsLoading(false);
         return;
@@ -2987,6 +3257,8 @@ export default function CreateOfferPage({
       offerTypesLoading,
       categoryRefreshTrigger,
       refreshOfferTypes,
+      requiresTrackingRewardMapping,
+      usesDefaultReward,
     }),
     [
       currentStep,
@@ -3024,6 +3296,8 @@ export default function CreateOfferPage({
       offerTypesLoading,
       categoryRefreshTrigger,
       refreshOfferTypes,
+      requiresTrackingRewardMapping,
+      usesDefaultReward,
     ],
   );
 

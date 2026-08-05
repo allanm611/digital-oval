@@ -38,6 +38,9 @@ export function buildCreateManualRewardPayload(
     applyTime: data.applyTime,
     previewData: {
       reward_configuration_id: data.rewardConfigurationId,
+      ...(data.rewardProviderId
+        ? { reward_provider_id: Number(data.rewardProviderId) || data.rewardProviderId }
+        : {}),
       ...(data.rewardAuthConfig
         ? { auth_config: data.rewardAuthConfig }
         : {}),

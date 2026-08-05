@@ -106,6 +106,55 @@ const JOB_STATUS_COLORS: Record<string, StatusColorConfig> = {
   },
 };
 
+// Broadcast execution statuses (cvm.broadcasts)
+const BROADCAST_STATUS_COLORS: Record<string, StatusColorConfig> = {
+  draft: {
+    bgHex: "#92A6B0",
+    textHex: COLOR_PALETTE.WHITE,
+    borderHex: "#92A6B0",
+  },
+  pending: {
+    bgHex: COLOR_PALETTE.YELLOW,
+    textHex: "#000000",
+    borderHex: COLOR_PALETTE.YELLOW,
+  },
+  scheduled: {
+    bgHex: COLOR_PALETTE.YELLOW,
+    textHex: "#000000",
+    borderHex: COLOR_PALETTE.YELLOW,
+  },
+  running: {
+    bgHex: COLOR_PALETTE.BLUE,
+    textHex: COLOR_PALETTE.WHITE,
+    borderHex: COLOR_PALETTE.BLUE,
+  },
+  paused: {
+    bgHex: "#F59E0B",
+    textHex: "#000000",
+    borderHex: "#F59E0B",
+  },
+  completed: {
+    bgHex: COLOR_PALETTE.GREEN,
+    textHex: COLOR_PALETTE.WHITE,
+    borderHex: COLOR_PALETTE.GREEN,
+  },
+  failed: {
+    bgHex: COLOR_PALETTE.RED,
+    textHex: COLOR_PALETTE.WHITE,
+    borderHex: COLOR_PALETTE.RED,
+  },
+  aborted: {
+    bgHex: COLOR_PALETTE.GRAY_DARK,
+    textHex: COLOR_PALETTE.WHITE,
+    borderHex: COLOR_PALETTE.GRAY_DARK,
+  },
+  cancelled: {
+    bgHex: COLOR_PALETTE.GRAY_DARK,
+    textHex: COLOR_PALETTE.WHITE,
+    borderHex: COLOR_PALETTE.GRAY_DARK,
+  },
+};
+
 // User and account statuses
 const ACCOUNT_STATUS_COLORS: Record<string, StatusColorConfig> = {
   active: {
@@ -194,12 +243,15 @@ export const getAccountStatusColor = (status?: string): string => {
 /**
  * Get individual color components (for custom styling with inline styles)
  */
-export const getStatusColorConfig = (status?: string, type: "workflow" | "approval" | "job" | "account" = "workflow"): StatusColorConfig => {
-  const maps = {
+export type StatusColorType = "workflow" | "approval" | "job" | "account" | "broadcast";
+
+export const getStatusColorConfig = (status?: string, type: StatusColorType = "workflow"): StatusColorConfig => {
+  const maps: Record<StatusColorType, Record<string, StatusColorConfig>> = {
     workflow: WORKFLOW_STATUS_COLORS,
     approval: APPROVAL_STATUS_COLORS,
     job: JOB_STATUS_COLORS,
     account: ACCOUNT_STATUS_COLORS,
+    broadcast: BROADCAST_STATUS_COLORS,
   };
 
   if (!status) return DEFAULT_COLOR;
@@ -209,7 +261,7 @@ export const getStatusColorConfig = (status?: string, type: "workflow" | "approv
 /**
  * Get inline style object from status (useful for custom hex colors)
  */
-export const getStatusStyle = (status?: string, type: "workflow" | "approval" | "job" | "account" = "workflow"): React.CSSProperties => {
+export const getStatusStyle = (status?: string, type: StatusColorType = "workflow"): React.CSSProperties => {
   const config = getStatusColorConfig(status, type);
   const style: React.CSSProperties = {};
 
@@ -230,7 +282,7 @@ export const getStatusStyle = (status?: string, type: "workflow" | "approval" | 
  * Get both Tailwind classes and inline styles for a status
  * Returns object with className (for Tailwind) and style (for hex colors)
  */
-export const getStatusBadgeConfig = (status?: string, type: "workflow" | "approval" | "job" | "account" = "workflow"): { className: string; style: React.CSSProperties } => {
+export const getStatusBadgeConfig = (status?: string, type: StatusColorType = "workflow"): { className: string; style: React.CSSProperties } => {
   if (!status) return { className: "", style: {} };
 
   const config = getStatusColorConfig(status, type);

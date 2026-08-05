@@ -186,6 +186,21 @@ export default function DefineRewardStep({
     data.rewardConfigurationName,
   ]);
 
+  const providerSelectOptions = useMemo(() => {
+    const opts = [...providerOptions];
+    if (
+      rewardProviderId &&
+      !opts.some((o) => o.value === rewardProviderId)
+    ) {
+      const provider = getProvider(rewardProviderId);
+      opts.unshift({
+        value: rewardProviderId,
+        label: provider?.name ?? `Provider #${rewardProviderId}`,
+      });
+    }
+    return opts;
+  }, [providerOptions, rewardProviderId, getProvider]);
+
   const selectedConfiguration = providerConfigurations.find(
     (c) => c.id === rewardConfigurationId,
   );
@@ -201,6 +216,33 @@ export default function DefineRewardStep({
 
   const resolvedProviderFromConfigRef = useRef(false);
   const defaultedProviderRef = useRef(false);
+
+  useEffect(() => {
+    if (data.rewardProviderId && data.rewardProviderId !== rewardProviderId) {
+      setRewardProviderId(data.rewardProviderId);
+    }
+  }, [data.rewardProviderId, rewardProviderId]);
+
+  useEffect(() => {
+    if (
+      data.rewardConfigurationId != null &&
+      data.rewardConfigurationId !== rewardConfigurationId
+    ) {
+      setRewardConfigurationId(data.rewardConfigurationId);
+    }
+  }, [data.rewardConfigurationId, rewardConfigurationId]);
+
+  useEffect(() => {
+    if (data.rewardType && data.rewardType !== rewardType) {
+      setRewardType(data.rewardType as RewardType);
+    }
+  }, [data.rewardType, rewardType]);
+
+  useEffect(() => {
+    if (data.rewardValue != null && data.rewardValue !== rewardValue) {
+      setRewardValue(data.rewardValue);
+    }
+  }, [data.rewardValue, rewardValue]);
 
   useEffect(() => {
     if (rewardProviderId || !data.rewardConfigurationId) return;
@@ -241,6 +283,7 @@ export default function DefineRewardStep({
   ]);
 
   useEffect(() => {
+    if (isEditMode) return;
     if (rewardConfigurationId == null || !rewardProviderId) return;
     if (
       providerConfigurations.some((c) => c.id === rewardConfigurationId)
@@ -255,6 +298,7 @@ export default function DefineRewardStep({
       bundleTrack: "",
     });
   }, [
+    isEditMode,
     rewardConfigurationId,
     rewardProviderId,
     providerConfigurations,
@@ -714,7 +758,7 @@ export default function DefineRewardStep({
           <div>
             <HeadlessSelect
               label="Reward Provider *"
-              options={providerOptions}
+              options={providerSelectOptions}
               value={rewardProviderId}
               onChange={(value) => handleProviderChange(value as string)}
               placeholder={
@@ -797,7 +841,6 @@ export default function DefineRewardStep({
             auth_config: data.rewardAuthConfig,
             payload_config: data.rewardPayloadConfig,
           }}
-          disabled={isEditMode}
           onChange={({ auth_config, payload_config }) =>
             onUpdate({
               rewardAuthConfig: auth_config,

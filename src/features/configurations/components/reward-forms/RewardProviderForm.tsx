@@ -299,7 +299,7 @@ export default function RewardProviderForm({
       >
         <RewardProviderFieldSchemaEditor
           title="Payload Schema"
-          description="Business payload fields required by this provider (e.g. channel, unitAmount, durationType)."
+          description="Business payload fields required by this provider (e.g. channel, unitAmount, validityType)."
           schemaErrorKey="payload_schema"
           fields={payloadFields}
           errors={errors}

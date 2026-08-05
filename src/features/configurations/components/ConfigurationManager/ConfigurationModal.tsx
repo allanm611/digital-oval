@@ -46,7 +46,14 @@ export default function ConfigurationModal({
     // Initialize metadata fields
     if (config.metadataFields) {
       config.metadataFields.forEach((field) => {
-        initialData[field.key] = (item as Record<string, any>)?.[field.key] || "";
+        const raw = (item as Record<string, any>)?.[field.key];
+        if (field.type === "multiselect") {
+          initialData[field.key] = Array.isArray(raw) ? raw : [];
+        } else if (field.type === "toggle") {
+          initialData[field.key] = raw ?? false;
+        } else {
+          initialData[field.key] = raw ?? "";
+        }
       });
     }
 
@@ -100,12 +107,38 @@ export default function ConfigurationModal({
     if (config.metadataFields) {
       for (const field of config.metadataFields) {
         const shouldShow = field.condition ? field.condition(formData) : true;
-        if (shouldShow && field.required && !formData[field.key]) {
+        if (!shouldShow || !field.required) continue;
+
+        const value = formData[field.key];
+        const empty =
+          field.type === "multiselect"
+            ? !Array.isArray(value) || value.length === 0
+            : value === undefined ||
+              value === null ||
+              value === "";
+
+        // Parameters optional for custom tracking type
+        const effectivelyRequired =
+          field.key === "parameters" && formData.type === "custom"
+            ? false
+            : field.required;
+
+        if (effectivelyRequired && empty) {
           setError(
             t.genericConfig.isRequired.replace("{field}", field.label)
           );
           return;
         }
+      }
+
+      if (
+        formData.lookbackPeriod === "custom" &&
+        !String(formData.customLookbackDate || "").trim()
+      ) {
+        setError(
+          "Custom Lookback Date is required when Lookback Period is Custom.",
+        );
+        return;
       }
     }
 
@@ -264,7 +297,14 @@ export default function ConfigurationModal({
                 )}
                 formData={formData}
                 onFieldChange={(key, value) =>
-                  setFormData((prev) => ({ ...prev, [key]: value }))
+                  setFormData((prev) => {
+                    const patches = config.getFieldDefaultsOnChange?.(
+                      key,
+                      value,
+                      prev,
+                    );
+                    return { ...prev, [key]: value, ...(patches || {}) };
+                  })
                 }
               />
             )}

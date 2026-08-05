@@ -346,7 +346,7 @@ export default function ManualRewardsTestPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <HeadlessSelect
-                      label="Duration Type *"
+                      label="Validity Type *"
                       value={unitDurationType}
                       onChange={(value) =>
                         setUnitDurationType(value as MicaDurationType)
@@ -355,7 +355,7 @@ export default function ManualRewardsTestPage() {
                       labelBgColor="var(--c-primary-background)"
                     />
                     <Input
-                      label="Duration Period *"
+                      label="Validity Period *"
                       placeholder="e.g., 7"
                       value={unitDurationPeriod}
                       onChange={setUnitDurationPeriod}
@@ -381,7 +381,7 @@ export default function ManualRewardsTestPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                     <HeadlessSelect
-                      label="Duration Type *"
+                      label="Validity Type *"
                       value={airtimeDurationType}
                       onChange={(value) =>
                         setAirtimeDurationType(value as MicaDurationType)
@@ -390,7 +390,7 @@ export default function ManualRewardsTestPage() {
                       labelBgColor="var(--c-primary-background)"
                     />
                     <Input
-                      label="Duration Period *"
+                      label="Validity Period *"
                       placeholder="e.g., 7"
                       value={airtimeDurationPeriod}
                       onChange={setAirtimeDurationPeriod}

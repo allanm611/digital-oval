@@ -1,5 +1,46 @@
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
 
+/**
+ * Runtime display aliases for known schema field names/labels.
+ * Keeps API payload keys (e.g. durationType) stable while showing product wording.
+ * Prefer updating provider schema labels in Configurations when possible.
+ */
+const SCHEMA_FIELD_DISPLAY_LABELS: Record<string, string> = {
+  durationtype: "Validity Type",
+  duration_type: "Validity Type",
+  validitytype: "Validity Type",
+  validity_type: "Validity Type",
+  durationperiod: "Validity Period",
+  duration_period: "Validity Period",
+  validityperiod: "Validity Period",
+  validity_period: "Validity Period",
+};
+
+const SCHEMA_LABEL_TEXT_ALIASES: Record<string, string> = {
+  "duration type": "Validity Type",
+  "duration period": "Validity Period",
+};
+
+export function resolveSchemaFieldDisplayLabel(
+  field: Pick<RewardProviderSchemaField, "name" | "label">,
+): string {
+  const nameKey = String(field.name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  const byName =
+    SCHEMA_FIELD_DISPLAY_LABELS[nameKey] ||
+    SCHEMA_FIELD_DISPLAY_LABELS[nameKey.replace(/_/g, "")];
+  if (byName) return byName;
+
+  const labelKey = String(field.label || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s*\*$/, "")
+    .replace(/\s+/g, " ");
+  return SCHEMA_LABEL_TEXT_ALIASES[labelKey] || field.label;
+}
+
 export const BOOLEAN_SELECT_OPTIONS = [
   { value: "true", label: "True" },
   { value: "false", label: "False" },
@@ -99,21 +140,23 @@ export function validateRequiredSchemaValue(
 
   if (field.type === "boolean") return undefined;
 
+  const label = resolveSchemaFieldDisplayLabel(field);
+
   if (value === undefined || value === null) {
-    return `${field.label} is required`;
+    return `${label} is required`;
   }
 
   if (field.type === "number") {
-    if (value === "") return `${field.label} is required`;
+    if (value === "") return `${label} is required`;
     const n = Number(value);
     if (!Number.isFinite(n)) {
-      return `${field.label} must be a valid number`;
+      return `${label} must be a valid number`;
     }
     return undefined;
   }
 
   if (String(value).trim() === "") {
-    return `${field.label} is required`;
+    return `${label} is required`;
   }
 
   return undefined;

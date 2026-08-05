@@ -8,6 +8,7 @@ import {
   OPTIONAL_DEFAULT_OPTION,
   booleanToSelectValue,
   parseBooleanValue,
+  resolveSchemaFieldDisplayLabel,
 } from "./rewardSchemaFieldUtils";
 
 function inputTypeForField(
@@ -42,9 +43,11 @@ export default function RewardSchemaFieldControl({
   showFieldLabel = false,
   allowEmptyDefault = false,
 }: RewardSchemaFieldControlProps) {
+  const displayLabel = resolveSchemaFieldDisplayLabel(field);
+
   const fieldLabel = (
     <>
-      {field.label}
+      {displayLabel}
       {field.required ? " *" : ""}
     </>
   );
@@ -104,7 +107,7 @@ export default function RewardSchemaFieldControl({
         options={options}
         placeholder={
           field.placeholder ||
-          (allowEmptyDefault ? "No default" : `Select ${field.label}`)
+          (allowEmptyDefault ? "No default" : `Select ${displayLabel}`)
         }
         disabled={disabled}
         error={!!error}
@@ -123,7 +126,7 @@ export default function RewardSchemaFieldControl({
       placeholder={
         controlLabel === "Default value"
           ? "Optional default"
-          : field.placeholder || field.label
+          : field.placeholder || displayLabel
       }
       disabled={disabled}
       hasError={!!error}
