@@ -34,6 +34,7 @@ function emptyField(): RewardProviderSchemaField {
     label: "",
     type: "text",
     required: false,
+    is_editable: true,
     placeholder: "",
     options: [],
   };
@@ -286,19 +287,41 @@ export default function RewardProviderFieldSchemaEditor({
                   </div>
                 )}
 
-                <label className="flex items-center gap-2 cursor-pointer mt-3">
-                  <Checkbox
-                    id={`reward-field-required-${index}`}
-                    checked={!!field.required}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      updateField(index, { required: e.target.checked })
-                    }
-                    disabled={disabled}
-                  />
-                  <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                    Required when creating a reward configuration
-                  </span>
-                </label>
+                <div className="mt-3 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      id={`reward-field-required-${schemaErrorKey}-${index}`}
+                      checked={!!field.required}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        updateField(index, { required: e.target.checked })
+                      }
+                      disabled={disabled}
+                    />
+                    <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                      Required when creating a reward configuration
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <Checkbox
+                      id={`reward-field-editable-${schemaErrorKey}-${index}`}
+                      checked={field.is_editable !== false}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        updateField(index, { is_editable: e.target.checked })
+                      }
+                      disabled={disabled}
+                    />
+                    <span>
+                      <span
+                        className={`text-sm font-medium ${tw.textPrimary} block`}
+                      >
+                        Editable after configuration is created
+                      </span>
+                      <span className={`text-xs ${tw.textMuted} block mt-0.5`}>
+                        
+                      </span>
+                    </span>
+                  </label>
+                </div>
               </div>
             );
           })}

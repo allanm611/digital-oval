@@ -101,18 +101,26 @@ function MultiselectFieldControl({
         className="w-full"
       />
       {field.allowCustomValues ? (
-        <div className="flex gap-2">
-          <Input
-            label="Add custom key"
-            type="text"
-            value={customDraft}
-            onChange={setCustomDraft}
-            placeholder="e.g. custom_field_key"
-          />
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <Input
+              label="Add custom key"
+              type="text"
+              value={customDraft}
+              onChange={setCustomDraft}
+              placeholder="e.g. custom_field_key"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCustomValue();
+                }
+              }}
+            />
+          </div>
           <button
             type="button"
             onClick={addCustomValue}
-            className="mt-6 px-3 py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 shrink-0"
+            className="inline-flex items-center justify-center h-10 px-3 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 shrink-0 self-center"
           >
             Add
           </button>

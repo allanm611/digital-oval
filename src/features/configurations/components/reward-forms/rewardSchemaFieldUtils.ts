@@ -21,6 +21,16 @@ const SCHEMA_LABEL_TEXT_ALIASES: Record<string, string> = {
   "duration period": "Validity Period",
 };
 
+/**
+ * Whether a schema field may be changed after a reward configuration is created.
+ * Legacy providers without `is_editable` remain fully editable.
+ */
+export function isSchemaFieldEditable(
+  field: Pick<RewardProviderSchemaField, "is_editable">,
+): boolean {
+  return field.is_editable !== false;
+}
+
 export function resolveSchemaFieldDisplayLabel(
   field: Pick<RewardProviderSchemaField, "name" | "label">,
 ): string {

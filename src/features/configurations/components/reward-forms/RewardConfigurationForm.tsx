@@ -8,6 +8,7 @@ import { RewardProvider } from "../../services/rewardProviderService";
 import { RewardProviderSchemaField } from "../../types/rewardProvider";
 import {
   coerceConfigValue,
+  isSchemaFieldEditable,
   normalizeConfigValueForApi,
   validateRequiredSchemaValue,
 } from "./rewardSchemaFieldUtils";
@@ -124,7 +125,11 @@ export default function RewardConfigurationForm({
     section: "auth" | "payload",
     fieldName: string,
     value: unknown,
+    field: RewardProviderSchemaField,
   ) => {
+    // Defense: ignore mutations to locked fields when editing an existing config.
+    if (mode === "edit" && !isSchemaFieldEditable(field)) return;
+
     const setter = section === "auth" ? setAuthValues : setPayloadValues;
     const errorKey = `${section}.${fieldName}`;
 
@@ -172,16 +177,25 @@ export default function RewardConfigurationForm({
     return Object.keys(next).length === 0;
   };
 
+  /**
+   * Build API config maps. On edit, locked fields are forced back to the
+   * master configuration values so client-side tampering cannot change them.
+   */
   const normalizeConfig = (
     fields: RewardProviderSchemaField[],
     values: Record<string, unknown>,
+    existing?: Record<string, unknown>,
   ): Record<string, unknown> => {
     const config: Record<string, unknown> = {};
     fields.forEach((field) => {
-      config[field.name] = normalizeConfigValueForApi(
-        field,
-        values[field.name],
-      );
+      const sourceValue =
+        mode === "edit" &&
+        !isSchemaFieldEditable(field) &&
+        existing &&
+        existing[field.name] !== undefined
+          ? existing[field.name]
+          : values[field.name];
+      config[field.name] = normalizeConfigValueForApi(field, sourceValue);
     });
     return config;
   };
@@ -190,8 +204,16 @@ export default function RewardConfigurationForm({
     e.preventDefault();
     if (!validate()) return;
 
-    const auth_config = normalizeConfig(authFields, authValues);
-    const payload_config = normalizeConfig(payloadFields, payloadValues);
+    const auth_config = normalizeConfig(
+      authFields,
+      authValues,
+      initialData?.auth_config as Record<string, unknown> | undefined,
+    );
+    const payload_config = normalizeConfig(
+      payloadFields,
+      payloadValues,
+      initialData?.payload_config as Record<string, unknown> | undefined,
+    );
 
     if (mode === "create") {
       onSave({
@@ -228,17 +250,27 @@ export default function RewardConfigurationForm({
     field: RewardProviderSchemaField,
     section: "auth" | "payload",
     values: Record<string, unknown>,
-  ) => (
-    <div key={`${section}-${field.name}`}>
-      <RewardSchemaFieldControl
-        field={field}
-        value={values[field.name]}
-        onChange={(v) => setFieldValue(section, field.name, v)}
-        showFieldLabel
-        error={errors[`${section}.${field.name}`]}
-      />
-    </div>
-  );
+  ) => {
+    const locked = mode === "edit" && !isSchemaFieldEditable(field);
+
+    return (
+      <div key={`${section}-${field.name}`}>
+        <RewardSchemaFieldControl
+          field={field}
+          value={values[field.name]}
+          onChange={(v) => setFieldValue(section, field.name, v, field)}
+          showFieldLabel
+          disabled={locked}
+          error={errors[`${section}.${field.name}`]}
+        />
+        {locked && (
+          <p className={`text-xs ${tw.textMuted} mt-1`}>
+            
+          </p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -320,6 +352,9 @@ export default function RewardConfigurationForm({
         </h2>
         <p className={`text-xs ${tw.textMuted} mb-6`}>
           OAuth and API credentials defined by the provider&apos;s auth schema.
+          {mode === "edit"
+            ? " "
+            : ""}
         </p>
 
         {!providerId ? (
@@ -348,6 +383,9 @@ export default function RewardConfigurationForm({
         <p className={`text-xs ${tw.textMuted} mb-6`}>
           Reward delivery parameters mapped into the provider&apos;s request
           template.
+          {mode === "edit"
+            ? " "
+            : ""}
         </p>
 
         {!providerId ? (

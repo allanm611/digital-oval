@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { RefreshCw, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
@@ -18,69 +18,104 @@ interface ConfigureErrorGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaved: (group: ErrorGroup) => void;
+  /**
+   * When set, the new group is attached to this reward provider so
+   * RewardDeliveryService can resolve mappings at fulfilment time.
+   */
+  providerId?: number | null;
 }
 
 export default function ConfigureErrorGroupModal({
   isOpen,
   onClose,
   onSaved,
+  providerId = null,
 }: ConfigureErrorGroupModalProps) {
   const { error: showError, success } = useToast();
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [defaultFailureMessage, setDefaultFailureMessage] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const [customCode, setCustomCode] = useState("");
   const [availableCodes, setAvailableCodes] = useState<ErrorCodeOption[]>([]);
-  const [loadingCodes, setLoadingCodes] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const resetForm = () => {
     setName("");
-    setCode("");
     setDescription("");
     setDefaultFailureMessage("");
     setIsActive(true);
     setSelectedCodes([]);
+    setCustomCode("");
     setErrors({});
-  };
-
-  const loadErrorCodes = async () => {
-    setLoadingCodes(true);
-    try {
-      const codes = await errorGroupService.fetchErrorCodes();
-      setAvailableCodes(codes);
-    } catch (err) {
-      showError("Error", extractBackendError(err, "Could not fetch error codes."));
-      setAvailableCodes([]);
-    } finally {
-      setLoadingCodes(false);
-    }
   };
 
   useEffect(() => {
     if (!isOpen) return;
     resetForm();
-    void loadErrorCodes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setAvailableCodes(errorGroupService.getSuggestedErrorCodes());
   }, [isOpen]);
 
-  const toggleCode = (errorCode: string) => {
-    setSelectedCodes((prev) =>
-      prev.includes(errorCode)
-        ? prev.filter((c) => c !== errorCode)
-        : [...prev, errorCode],
+  const codeOptions = useMemo(() => {
+    const known = new Map(
+      availableCodes.map((c) => [c.code.toUpperCase(), c] as const),
     );
+    selectedCodes.forEach((code) => {
+      const upper = code.toUpperCase();
+      if (!known.has(upper)) {
+        known.set(upper, { code: upper, label: upper });
+      }
+    });
+    return Array.from(known.values());
+  }, [availableCodes, selectedCodes]);
+
+  const toggleCode = (errorCode: string) => {
+    const upper = errorCode.toUpperCase();
+    setSelectedCodes((prev) =>
+      prev.includes(upper)
+        ? prev.filter((c) => c !== upper)
+        : [...prev, upper],
+    );
+  };
+
+  const addCustomCode = () => {
+    const next = customCode.trim().toUpperCase();
+    if (!next) return;
+    if (!/^[A-Z0-9_]{1,64}$/.test(next)) {
+      setErrors((prev) => ({
+        ...prev,
+        customCode: "Use 1–64 letters, numbers, or underscores",
+      }));
+      return;
+    }
+    setSelectedCodes((prev) =>
+      prev.includes(next) ? prev : [...prev, next],
+    );
+    setCustomCode("");
+    setErrors((prev) => {
+      if (!prev.customCode) return prev;
+      const copy = { ...prev };
+      delete copy.customCode;
+      return copy;
+    });
   };
 
   const validate = () => {
     const next: Record<string, string> = {};
     if (!name.trim()) next.name = "Name is required";
-    if (!code.trim()) next.code = "Code is required";
-    else if (!/^[A-Za-z0-9_-]{1,16}$/.test(code.trim())) {
-      next.code = "Use 1–16 letters, numbers, _ or -";
+    else if (name.trim().length > 100) {
+      next.name = "Name must be 100 characters or less";
+    }
+    if (!defaultFailureMessage.trim()) {
+      next.defaultFailureMessage =
+        "Default failure message is required for mapped codes";
+    } else if (defaultFailureMessage.trim().length > 1000) {
+      next.defaultFailureMessage = "Message must be 1000 characters or less";
+    }
+    if (selectedCodes.length === 0) {
+      next.codes = "Select or add at least one error code";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -92,16 +127,42 @@ export default function ConfigureErrorGroupModal({
 
     setIsSaving(true);
     try {
+      const message = defaultFailureMessage.trim();
       const created = await errorGroupService.createErrorGroup({
         name: name.trim(),
-        code: code.trim(),
-        description: description.trim() || undefined,
-        default_failure_message: defaultFailureMessage.trim() || undefined,
-        error_codes: selectedCodes,
+        description: description.trim() || null,
         is_active: isActive,
+        mappings: selectedCodes.map((error_code) => ({
+          error_code,
+          user_message: message,
+        })),
+        provider_id:
+          providerId != null && Number.isFinite(Number(providerId))
+            ? Number(providerId)
+            : undefined,
       });
-      success("Success", `Error group "${created.name}" saved`);
-      onSaved(created);
+
+      // Enrich for offer-rule auto-fill of failure_text
+      const withHint: ErrorGroup = {
+        ...created,
+        mappings:
+          created.mappings && created.mappings.length > 0
+            ? created.mappings
+            : selectedCodes.map((error_code, index) => ({
+                id: -(index + 1),
+                error_group_id: created.id,
+                error_code,
+                user_message: message,
+              })),
+      };
+
+      success(
+        "Success",
+        providerId
+          ? `Error group "${created.name}" saved and attached to provider`
+          : `Error group "${created.name}" saved`,
+      );
+      onSaved(withHint);
       onClose();
     } catch (err) {
       showError("Error", extractBackendError(err, "Could not save error group."));
@@ -128,7 +189,11 @@ export default function ConfigureErrorGroupModal({
               Configure Error Group
             </h2>
             <p className={`text-xs ${tw.textMuted} mt-0.5`}>
-              Define a reusable failure group and attach provider error codes.
+              Define a reusable failure group and map provider error codes to a
+              user message.
+              {providerId
+                ? " The group will be attached to the selected reward provider."
+                : ""}
             </p>
           </div>
           <button
@@ -141,37 +206,20 @@ export default function ConfigureErrorGroupModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Input
-                label="Group Name *"
-                value={name}
-                onChange={(value) => {
-                  setName(value);
-                  if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
-                }}
-                placeholder="e.g., Low balance Failure"
-                hasError={!!errors.name}
-              />
-              {errors.name ? (
-                <p className="mt-1 text-xs text-red-600">{errors.name}</p>
-              ) : null}
-            </div>
-            <div>
-              <Input
-                label="Group Code *"
-                value={code}
-                onChange={(value) => {
-                  setCode(value);
-                  if (errors.code) setErrors((prev) => ({ ...prev, code: "" }));
-                }}
-                placeholder="e.g., 01"
-                hasError={!!errors.code}
-              />
-              {errors.code ? (
-                <p className="mt-1 text-xs text-red-600">{errors.code}</p>
-              ) : null}
-            </div>
+          <div>
+            <Input
+              label="Group Name *"
+              value={name}
+              onChange={(value) => {
+                setName(value);
+                if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+              }}
+              placeholder="e.g., Low balance Failure"
+              hasError={!!errors.name}
+            />
+            {errors.name ? (
+              <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+            ) : null}
           </div>
 
           <Textarea
@@ -182,61 +230,93 @@ export default function ConfigureErrorGroupModal({
             placeholder="Optional context for operators"
           />
 
-          <Input
-            label="Default failure message"
-            value={defaultFailureMessage}
-            onChange={setDefaultFailureMessage}
-            placeholder="Applied when this group is selected on a reward rule"
-          />
+          <div>
+            <Input
+              label="Default failure message *"
+              value={defaultFailureMessage}
+              onChange={(value) => {
+                setDefaultFailureMessage(value);
+                if (errors.defaultFailureMessage) {
+                  setErrors((prev) => ({ ...prev, defaultFailureMessage: "" }));
+                }
+              }}
+              placeholder="Applied to each selected error code mapping"
+              hasError={!!errors.defaultFailureMessage}
+            />
+            {errors.defaultFailureMessage ? (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.defaultFailureMessage}
+              </p>
+            ) : (
+              <p className={`mt-1 text-xs ${tw.textMuted}`}>
+                Saved as each mapping&apos;s user message. Also seeds the reward
+                rule failure text.
+              </p>
+            )}
+          </div>
 
           <div>
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div>
-                <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                  Error codes
-                </p>
-                <p className={`text-xs ${tw.textMuted}`}>
-                  Select codes that should map to this group during fulfilment.
-                </p>
+            <div className="mb-2">
+              <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                Error codes *
+              </p>
+              <p className={`text-xs ${tw.textMuted}`}>
+                Codes returned by the reward provider that should use this
+                group&apos;s message during fulfilment.
+              </p>
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <div className="flex-1 min-w-0">
+                <Input
+                  value={customCode}
+                  onChange={(value) => {
+                    setCustomCode(value.toUpperCase());
+                    if (errors.customCode) {
+                      setErrors((prev) => ({ ...prev, customCode: "" }));
+                    }
+                  }}
+                  placeholder="Add custom code e.g. E001"
+                  hasError={!!errors.customCode}
+                />
               </div>
               <button
                 type="button"
-                onClick={() => void loadErrorCodes()}
-                disabled={loadingCodes}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 ${tw.rounded} text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
+                onClick={addCustomCode}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium border border-gray-300 ${tw.rounded} text-gray-700 hover:bg-gray-50 shrink-0`}
               >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${loadingCodes ? "animate-spin" : ""}`}
-                />
-                {loadingCodes ? "Fetching..." : "Fetch error codes"}
+                <Plus className="w-4 h-4" />
+                Add
               </button>
             </div>
+            {errors.customCode ? (
+              <p className="mb-2 text-xs text-red-600">{errors.customCode}</p>
+            ) : null}
 
             <div className="max-h-48 overflow-y-auto border border-gray-200 rounded p-3 space-y-2 bg-gray-50">
-              {loadingCodes && availableCodes.length === 0 ? (
-                <p className={`text-sm ${tw.textMuted}`}>Loading error codes…</p>
-              ) : availableCodes.length === 0 ? (
+              {codeOptions.length === 0 ? (
                 <p className={`text-sm ${tw.textMuted}`}>
-                  No error codes available. Try fetching again.
+                  No suggested codes. Add a custom code above.
                 </p>
               ) : (
-                availableCodes.map((item) => {
-                  const checked = selectedCodes.includes(item.code);
+                codeOptions.map((item) => {
+                  const code = item.code.toUpperCase();
+                  const checked = selectedCodes.includes(code);
                   return (
                     <label
-                      key={item.code}
+                      key={code}
                       className="flex items-start gap-2 cursor-pointer"
                     >
                       <Checkbox
-                        id={`error-code-${item.code}`}
+                        id={`error-code-${code}`}
                         checked={checked}
-                        onChange={() => toggleCode(item.code)}
+                        onChange={() => toggleCode(code)}
                       />
                       <span className="min-w-0">
                         <span className={`block text-sm ${tw.textPrimary}`}>
                           {item.label}{" "}
                           <span className="font-mono text-xs text-gray-500">
-                            ({item.code})
+                            ({code})
                           </span>
                         </span>
                         {item.description ? (
@@ -250,7 +330,9 @@ export default function ConfigureErrorGroupModal({
                 })
               )}
             </div>
-            {selectedCodes.length > 0 ? (
+            {errors.codes ? (
+              <p className="mt-1.5 text-xs text-red-600">{errors.codes}</p>
+            ) : selectedCodes.length > 0 ? (
               <p className={`mt-1.5 text-xs ${tw.textMuted}`}>
                 {selectedCodes.length} code
                 {selectedCodes.length === 1 ? "" : "s"} selected

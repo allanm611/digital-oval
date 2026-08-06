@@ -2,7 +2,7 @@ import type { OfferReward } from "../types/offerReward";
 import type { OfferTrackingSource } from "../types/offerTrackingSource";
 import {
   findDefaultReward,
-  isDefaultSeedingRewardConfigured,
+  isDefaultImmediateRewardConfigured,
 } from "./seedingRewardDefaults";
 
 /**
@@ -79,14 +79,14 @@ export function validateOfferRewardTrackingMapping(
       "Each tracking source from the catalog can only be added once.";
   }
 
-  // Seeding: tracking optional, but a configured default reward is mandatory.
+  // Immediate reward (is_immediate_reward): tracking optional; default reward mandatory.
   if (usesDefaultReward) {
     if (!findDefaultReward(rewards)) {
       errors.rewards =
-        "Seeding offers require a default reward. It should be created automatically — refresh this step.";
-    } else if (!isDefaultSeedingRewardConfigured(rewards)) {
+        "Immediate-reward offers require a default reward. It should be created automatically — refresh this step.";
+    } else if (!isDefaultImmediateRewardConfigured(rewards)) {
       errors.rewards =
-        "Configure the default reward (provider and reward configuration). Tracking is not required for seeding.";
+        "Configure the default reward (provider and reward configuration). Tracking is not required for immediate-reward offer types.";
     }
 
     const dupRewards = findDuplicateRewardTrackingSourceIds(rewards);
@@ -133,7 +133,7 @@ export function validateOfferRewardTrackingMapping(
     return errors;
   }
 
-  // Optional tracking (other exempt offer types): if the user linked sources/configs,
+  // Optional tracking without default reward: if the user linked sources/configs,
   // enforce the same rule-binding shape as create/edit required flows.
   if (!requiresMapping) {
     const dupRewards = findDuplicateRewardTrackingSourceIds(rewards);

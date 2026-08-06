@@ -10,6 +10,13 @@ export interface RewardProviderSchemaField {
   label: string;
   type: RewardProviderFieldType;
   required?: boolean;
+  /**
+   * When true (default), the field can be changed after initial configuration
+   * create — on edit configuration and on grant/rule runtime overrides.
+   * When false, the value is locked to the master configuration after create.
+   * Undefined from older providers is treated as editable for backward compatibility.
+   */
+  is_editable?: boolean;
   placeholder?: string;
   default?: unknown;
   options?: string[];

@@ -26,6 +26,21 @@ export interface TrackingTypeDefinition {
   displayMetrics: string[];
 }
 
+/** Value types accepted by tracking rule Value inputs / engine comparisons */
+export type TrackingParameterValueType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "date"
+  | "datetime";
+
+export type TrackingRuleCondition =
+  | "equals"
+  | "greater_than"
+  | "less_than"
+  | "contains"
+  | "is_any_of";
+
 /** Human-readable labels for known parameter keys */
 export const PARAMETER_LABELS: Record<string, string> = {
   amount: "Amount",
@@ -53,6 +68,51 @@ export const PARAMETER_LABELS: Record<string, string> = {
   transaction_type: "Transaction Type",
   location: "Location",
   frequency: "Frequency",
+};
+
+/**
+ * Canonical value types for known parameter keys.
+ * Used by the rule modal to render typed Value controls (datetime picker, number, etc.).
+ */
+export const PARAMETER_VALUE_TYPES: Record<string, TrackingParameterValueType> =
+  {
+    amount: "number",
+    datetime: "datetime",
+    subscriber_id: "string",
+    channel: "string",
+    payment_method: "string",
+    data_volume_mb: "number",
+    voice_minutes: "number",
+    sms_count: "number",
+    service_type: "string",
+    delivered: "boolean",
+    opened: "boolean",
+    clicked: "boolean",
+    redeemed: "boolean",
+    redemption_date: "date",
+    discount_applied: "number",
+    redemption_channel: "string",
+    last_activity_date: "date",
+    days_inactive: "number",
+    subscriber_status: "string",
+    retention_period: "number",
+    customer_segment: "string",
+    product_type: "string",
+    transaction_type: "string",
+    location: "string",
+    frequency: "number",
+  };
+
+/** Conditions allowed per value type (invalid combos are hidden in the UI). */
+const CONDITIONS_BY_VALUE_TYPE: Record<
+  TrackingParameterValueType,
+  TrackingRuleCondition[]
+> = {
+  string: ["equals", "contains", "is_any_of"],
+  number: ["equals", "greater_than", "less_than", "is_any_of"],
+  boolean: ["equals"],
+  date: ["equals", "greater_than", "less_than"],
+  datetime: ["equals", "greater_than", "less_than"],
 };
 
 /** Human-readable labels for known display metric keys */
@@ -322,4 +382,206 @@ export function normalizeParameterKey(raw: string): string {
   if (!raw) return "";
   if (LEGACY_PARAMETER_ALIASES[raw]) return LEGACY_PARAMETER_ALIASES[raw];
   return raw.trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+/**
+ * Infer a value type for unknown / custom parameter keys from naming conventions.
+ * Known keys always win via PARAMETER_VALUE_TYPES.
+ */
+export function inferParameterValueType(
+  parameterKey: string,
+): TrackingParameterValueType {
+  const key = normalizeParameterKey(parameterKey);
+  if (!key) return "string";
+  if (PARAMETER_VALUE_TYPES[key]) return PARAMETER_VALUE_TYPES[key];
+
+  if (
+    key === "datetime" ||
+    key.endsWith("_datetime") ||
+    key.endsWith("_timestamp") ||
+    key.endsWith("_at") ||
+    key.includes("datetime")
+  ) {
+    return "datetime";
+  }
+  if (key === "date" || key.endsWith("_date") || key.includes("date")) {
+    return "date";
+  }
+  if (
+    key.startsWith("is_") ||
+    key.startsWith("has_") ||
+    /^(delivered|opened|clicked|redeemed|enabled|active)$/.test(key)
+  ) {
+    return "boolean";
+  }
+  if (
+    /(^|_)(amount|count|volume|minutes|mb|days|period|frequency|discount|rate|score|qty|quantity)(_|$)/.test(
+      key,
+    )
+  ) {
+    return "number";
+  }
+  return "string";
+}
+
+export function getParameterValueType(
+  parameterKey: string,
+): TrackingParameterValueType {
+  return inferParameterValueType(parameterKey);
+}
+
+export function getConditionsForParameter(
+  parameterKey: string,
+): TrackingSelectOption[] {
+  const valueType = getParameterValueType(parameterKey);
+  const allowed = new Set(CONDITIONS_BY_VALUE_TYPE[valueType]);
+  return conditions.filter((c) =>
+    allowed.has(c.value as TrackingRuleCondition),
+  );
+}
+
+export function getDefaultConditionForParameter(
+  parameterKey: string,
+): TrackingRuleCondition {
+  return getConditionsForParameter(parameterKey)[0]?.value as
+    | TrackingRuleCondition
+    | undefined || "equals";
+}
+
+/** Convert stored ISO / date strings into values accepted by HTML date/datetime-local inputs. */
+export function toTrackingValueInputDisplay(
+  raw: string,
+  valueType: TrackingParameterValueType,
+): string {
+  if (!raw) return "";
+  if (valueType === "datetime") {
+    const d = new Date(raw);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 16);
+    // Already datetime-local shaped
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(raw)) return raw.slice(0, 16);
+    return raw;
+  }
+  if (valueType === "date") {
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+    const d = new Date(raw);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    return raw;
+  }
+  if (valueType === "boolean") {
+    const normalized = String(raw).trim().toLowerCase();
+    if (["true", "1", "yes"].includes(normalized)) return "true";
+    if (["false", "0", "no"].includes(normalized)) return "false";
+    return "";
+  }
+  return raw;
+}
+
+/** Normalize UI values to a stable storage / engine representation. */
+export function serializeTrackingRuleValue(
+  raw: string | number,
+  valueType: TrackingParameterValueType,
+): string {
+  const str = String(raw ?? "").trim();
+  if (!str) return "";
+
+  if (valueType === "datetime") {
+    const d = new Date(str);
+    return Number.isNaN(d.getTime()) ? str : d.toISOString();
+  }
+  if (valueType === "date") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+    const d = new Date(str);
+    return Number.isNaN(d.getTime()) ? str : d.toISOString().slice(0, 10);
+  }
+  if (valueType === "boolean") {
+    const normalized = str.toLowerCase();
+    if (["true", "1", "yes"].includes(normalized)) return "true";
+    if (["false", "0", "no"].includes(normalized)) return "false";
+    return str;
+  }
+  if (valueType === "number") {
+    return str;
+  }
+  return str;
+}
+
+export function validateTrackingRuleValue(
+  value: string,
+  parameterKey: string,
+  condition: string,
+): string | null {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) {
+    return "Enter a value for this rule.";
+  }
+
+  const valueType = getParameterValueType(parameterKey);
+
+  if (condition === "is_any_of") {
+    const parts = trimmed
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (parts.length === 0) {
+      return "Enter one or more comma-separated values.";
+    }
+    if (valueType === "number") {
+      const invalid = parts.find((p) => Number.isNaN(Number(p)));
+      if (invalid) {
+        return `"${invalid}" is not a valid number.`;
+      }
+    }
+    return null;
+  }
+
+  if (valueType === "number") {
+    if (Number.isNaN(Number(trimmed))) {
+      return "Value must be a number.";
+    }
+    return null;
+  }
+  if (valueType === "boolean") {
+    if (!["true", "false"].includes(trimmed.toLowerCase())) {
+      return "Select true or false.";
+    }
+    return null;
+  }
+  if (valueType === "date") {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed) && Number.isNaN(Date.parse(trimmed))) {
+      return "Select a valid date.";
+    }
+    return null;
+  }
+  if (valueType === "datetime") {
+    if (Number.isNaN(Date.parse(trimmed))) {
+      return "Select a valid date and time.";
+    }
+    return null;
+  }
+  return null;
+}
+
+/** Human-friendly value for rule list cards. */
+export function formatTrackingRuleValueDisplay(
+  value: string,
+  parameterKey: string,
+): string {
+  if (!value) return "";
+  const valueType = getParameterValueType(parameterKey);
+  if (valueType === "datetime") {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) return d.toLocaleString();
+  }
+  if (valueType === "date") {
+    const d = new Date(
+      /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value,
+    );
+    if (!Number.isNaN(d.getTime())) return d.toLocaleDateString();
+  }
+  if (valueType === "boolean") {
+    const display = toTrackingValueInputDisplay(value, "boolean");
+    if (display === "true") return "True";
+    if (display === "false") return "False";
+  }
+  return value;
 }

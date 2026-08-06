@@ -1,107 +1,138 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { extractErrorMessage } from "../../../shared/utils/errorHandler";
 import type {
+  CreateErrorGroupMappingInput,
   CreateErrorGroupRequest,
   ErrorCodeOption,
   ErrorGroup,
+  ErrorGroupMapping,
   UpdateErrorGroupRequest,
 } from "../types/errorGroup";
-import { formatErrorGroupLabel } from "../types/errorGroup";
+import {
+  formatErrorGroupLabel,
+  resolveErrorGroupDefaultFailureMessage,
+} from "../types/errorGroup";
 
 const API_BASE = buildApiUrl("/error-groups");
-const LOCAL_STORAGE_KEY = "sentra_error_groups_catalog_v1";
+const PROVIDERS_BASE = buildApiUrl("/reward-providers");
 
-/** Seed catalog used when the backend endpoint is unavailable */
-const SEED_ERROR_GROUPS: ErrorGroup[] = [
+/**
+ * Suggested provider/platform codes for the configure modal.
+ * Backend stores codes only as mappings — there is no `/error-groups/error-codes` API.
+ */
+const SUGGESTED_ERROR_CODES: ErrorCodeOption[] = [
   {
-    id: "eg-low-balance-01",
-    name: "Low balance Failure",
-    code: "01",
-    description: "Insufficient balance / credit for reward fulfilment",
-    error_codes: ["INSUFFICIENT_BALANCE", "LOW_BALANCE", "ERR_BALANCE_01"],
-    default_failure_message: "failed due to low balance",
-    is_active: true,
+    code: "INSUFFICIENT_BALANCE",
+    label: "Insufficient Balance",
+    description: "Wallet/airtime balance too low",
   },
   {
-    id: "eg-provider-timeout-02",
-    name: "Provider Timeout",
-    code: "02",
-    description: "Upstream reward provider timed out",
-    error_codes: ["TIMEOUT", "PROVIDER_TIMEOUT", "GATEWAY_TIMEOUT"],
-    default_failure_message: "failed due to provider timeout",
-    is_active: true,
+    code: "LOW_BALANCE",
+    label: "Low Balance",
+    description: "Generic low-balance rejection",
   },
   {
-    id: "eg-invalid-msisdn-03",
-    name: "Invalid MSISDN",
-    code: "03",
-    description: "Subscriber identity could not be resolved",
-    error_codes: ["INVALID_MSISDN", "UNKNOWN_SUBSCRIBER"],
-    default_failure_message: "failed due to invalid subscriber",
-    is_active: true,
+    code: "ERR_BALANCE_01",
+    label: "Balance Error 01",
+    description: "Legacy MICA balance failure",
+  },
+  {
+    code: "TIMEOUT",
+    label: "Timeout",
+    description: "Request timed out",
+  },
+  {
+    code: "PROVIDER_TIMEOUT",
+    label: "Provider Timeout",
+    description: "Upstream provider timeout",
+  },
+  {
+    code: "GATEWAY_TIMEOUT",
+    label: "Gateway Timeout",
+    description: "Gateway layer timeout",
+  },
+  {
+    code: "INVALID_MSISDN",
+    label: "Invalid MSISDN",
+    description: "Malformed or missing MSISDN",
+  },
+  {
+    code: "UNKNOWN_SUBSCRIBER",
+    label: "Unknown Subscriber",
+    description: "Subscriber not found",
+  },
+  {
+    code: "DUPLICATE_TRANSACTION",
+    label: "Duplicate Transaction",
+    description: "Idempotency conflict",
+  },
+  {
+    code: "PROVIDER_REJECTED",
+    label: "Provider Rejected",
+    description: "Upstream business rejection",
+  },
+  {
+    code: "SYSTEM_ERROR",
+    label: "System Error",
+    description: "Unhandled platform failure",
   },
 ];
 
-/** Known platform/provider error codes that can be attached to a group */
-const SEED_ERROR_CODES: ErrorCodeOption[] = [
-  { code: "INSUFFICIENT_BALANCE", label: "Insufficient Balance", description: "Wallet/airtime balance too low" },
-  { code: "LOW_BALANCE", label: "Low Balance", description: "Generic low-balance rejection" },
-  { code: "ERR_BALANCE_01", label: "Balance Error 01", description: "Legacy MICA balance failure" },
-  { code: "TIMEOUT", label: "Timeout", description: "Request timed out" },
-  { code: "PROVIDER_TIMEOUT", label: "Provider Timeout", description: "Upstream provider timeout" },
-  { code: "GATEWAY_TIMEOUT", label: "Gateway Timeout", description: "Gateway layer timeout" },
-  { code: "INVALID_MSISDN", label: "Invalid MSISDN", description: "Malformed or missing MSISDN" },
-  { code: "UNKNOWN_SUBSCRIBER", label: "Unknown Subscriber", description: "Subscriber not found" },
-  { code: "DUPLICATE_TRANSACTION", label: "Duplicate Transaction", description: "Idempotency conflict" },
-  { code: "PROVIDER_REJECTED", label: "Provider Rejected", description: "Upstream business rejection" },
-  { code: "SYSTEM_ERROR", label: "System Error", description: "Unhandled platform failure" },
-];
-
-function generateLocalId(): string {
-  return `eg-local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function readLocalCatalog(): ErrorGroup[] {
+async function parseErrorResponse(response: Response): Promise<string> {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!raw) return [...SEED_ERROR_GROUPS];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [...SEED_ERROR_GROUPS];
-    return parsed as ErrorGroup[];
+    const body = await response.json();
+    return (
+      body.error ||
+      body.message ||
+      extractErrorMessage(JSON.stringify(body), response.status)
+    );
   } catch {
-    return [...SEED_ERROR_GROUPS];
+    return `HTTP ${response.status}`;
   }
 }
 
-function writeLocalCatalog(groups: ErrorGroup[]): void {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(groups));
-  } catch {
-    // Ignore quota / private-mode failures; in-memory still works for session
-  }
-}
-
-function unwrapList(payload: unknown): ErrorGroup[] {
-  if (Array.isArray(payload)) return payload as ErrorGroup[];
+function unwrapList<T>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[];
   if (payload && typeof payload === "object") {
     const data = (payload as { data?: unknown }).data;
-    if (Array.isArray(data)) return data as ErrorGroup[];
+    if (Array.isArray(data)) return data as T[];
   }
   return [];
 }
 
-function unwrapOne(payload: unknown): ErrorGroup | null {
+function unwrapOne<T extends { id?: unknown }>(payload: unknown): T | null {
   if (!payload || typeof payload !== "object") return null;
-  const obj = payload as { data?: ErrorGroup } & ErrorGroup;
+  const obj = payload as { data?: T } & T;
   if (obj.data && typeof obj.data === "object" && "id" in obj.data) {
     return obj.data;
   }
-  if ("id" in obj && "name" in obj) return obj as ErrorGroup;
+  if ("id" in obj) return obj as T;
   return null;
 }
 
+function normalizeGroup(raw: ErrorGroup): ErrorGroup {
+  return {
+    ...raw,
+    id: Number(raw.id),
+    is_active: raw.is_active !== false,
+    mappings: Array.isArray(raw.mappings)
+      ? raw.mappings.map((m) => ({
+          ...m,
+          id: Number(m.id),
+          error_group_id: Number(m.error_group_id),
+          error_code: String(m.error_code || "").toUpperCase(),
+          user_message: String(m.user_message || ""),
+        }))
+      : raw.mappings,
+  };
+}
+
 class ErrorGroupService {
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+  private async request<T>(
+    url: string,
+    options: RequestInit = {},
+  ): Promise<T> {
+    const response = await fetch(url, {
       ...options,
       headers: {
         ...getAuthHeaders(),
@@ -111,151 +142,249 @@ class ErrorGroupService {
     });
 
     if (!response.ok) {
-      let message = `HTTP ${response.status}`;
-      try {
-        const body = await response.json();
-        message = body.error || body.message || message;
-      } catch {
-        // keep status message
-      }
-      throw new Error(message);
+      throw new Error(await parseErrorResponse(response));
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return response.json();
   }
 
-  /**
-   * Loads active error groups from API when available; otherwise uses
-   * seed + locally created groups so the reward wizard remains usable.
-   */
+  /** GET /error-groups — filter active client-side (list has no query params). */
   async getErrorGroups(options?: { activeOnly?: boolean }): Promise<ErrorGroup[]> {
     const activeOnly = options?.activeOnly !== false;
-    try {
-      const payload = await this.request<unknown>(activeOnly ? "?is_active=true" : "");
-      const groups = unwrapList(payload);
-      if (groups.length > 0) {
-        return activeOnly ? groups.filter((g) => g.is_active !== false) : groups;
-      }
-    } catch {
-      // Backend endpoint may not exist yet — fall through to local catalog
-    }
-
-    const local = readLocalCatalog();
-    return activeOnly ? local.filter((g) => g.is_active !== false) : local;
+    const payload = await this.request<unknown>(API_BASE);
+    const groups = unwrapList<ErrorGroup>(payload).map(normalizeGroup);
+    return activeOnly ? groups.filter((g) => g.is_active !== false) : groups;
   }
 
-  async getErrorGroupById(id: string): Promise<ErrorGroup | null> {
-    try {
-      const payload = await this.request<unknown>(`/${encodeURIComponent(id)}`);
-      return unwrapOne(payload);
-    } catch {
-      return readLocalCatalog().find((g) => g.id === id) ?? null;
+  /** GET /error-groups/:id (includes mappings) */
+  async getErrorGroupById(id: number | string): Promise<ErrorGroup> {
+    const payload = await this.request<unknown>(
+      `${API_BASE}/${encodeURIComponent(String(id))}`,
+    );
+    const group = unwrapOne<ErrorGroup>(payload);
+    if (!group) {
+      throw new Error(`Error group '${id}' not found`);
     }
+    return normalizeGroup(group);
   }
 
   /**
-   * Fetches the catalog of attachable error codes.
-   * Tries API first; falls back to a curated platform list.
+   * GET /reward-providers/:id/error-groups
+   * Groups attached to a provider — these are what RewardDeliveryService uses.
    */
-  async fetchErrorCodes(): Promise<ErrorCodeOption[]> {
-    try {
-      const payload = await this.request<unknown>("/error-codes");
-      if (Array.isArray(payload)) return payload as ErrorCodeOption[];
-      if (payload && typeof payload === "object") {
-        const data = (payload as { data?: unknown }).data;
-        if (Array.isArray(data)) return data as ErrorCodeOption[];
-      }
-    } catch {
-      // Fall through
-    }
-    return [...SEED_ERROR_CODES];
+  async getErrorGroupsForProvider(
+    providerId: number | string,
+    options?: { activeOnly?: boolean },
+  ): Promise<ErrorGroup[]> {
+    const activeOnly = options?.activeOnly !== false;
+    const payload = await this.request<unknown>(
+      `${PROVIDERS_BASE}/${encodeURIComponent(String(providerId))}/error-groups`,
+    );
+    const groups = unwrapList<ErrorGroup>(payload).map(normalizeGroup);
+    return activeOnly ? groups.filter((g) => g.is_active !== false) : groups;
   }
 
-  async createErrorGroup(data: CreateErrorGroupRequest): Promise<ErrorGroup> {
-    const body: CreateErrorGroupRequest = {
-      name: data.name.trim(),
-      code: data.code.trim(),
-      description: data.description?.trim() || undefined,
-      error_codes: data.error_codes || [],
-      default_failure_message: data.default_failure_message?.trim() || undefined,
-      is_active: data.is_active !== false,
-    };
-
-    try {
-      const payload = await this.request<unknown>("", {
+  /** POST /reward-providers/:id/error-groups — treats already-attached as success */
+  async attachErrorGroupToProvider(
+    providerId: number | string,
+    errorGroupId: number | string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${PROVIDERS_BASE}/${encodeURIComponent(String(providerId))}/error-groups`,
+      {
         method: "POST",
-        body: JSON.stringify(body),
-      });
-      const created = unwrapOne(payload);
-      if (created) return created;
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ error_group_id: Number(errorGroupId) }),
+      },
+    );
+
+    if (response.ok) return;
+
+    let message = `HTTP ${response.status}`;
+    try {
+      const body = await response.json();
+      message = body.error || body.message || message;
     } catch {
-      // Persist locally until backend is ready
+      // keep status message
     }
 
-    const now = new Date().toISOString();
-    const created: ErrorGroup = {
-      id: generateLocalId(),
-      name: body.name,
-      code: body.code,
-      description: body.description,
-      error_codes: body.error_codes || [],
-      default_failure_message: body.default_failure_message,
-      is_active: body.is_active !== false,
-      created_at: now,
-      updated_at: now,
-    };
+    // Backend returns 400 when already attached — treat as idempotent success.
+    if (
+      response.status === 400 &&
+      /already attached/i.test(message)
+    ) {
+      return;
+    }
 
-    const next = [...readLocalCatalog(), created];
-    writeLocalCatalog(next);
+    throw new Error(message);
+  }
+
+  /** DELETE /reward-providers/:id/error-groups/:groupId */
+  async detachErrorGroupFromProvider(
+    providerId: number | string,
+    errorGroupId: number | string,
+  ): Promise<void> {
+    await this.request(
+      `${PROVIDERS_BASE}/${encodeURIComponent(String(providerId))}/error-groups/${encodeURIComponent(String(errorGroupId))}`,
+      { method: "DELETE" },
+    );
+  }
+
+  /** Suggested codes for the configure UI (not a backend catalog). */
+  getSuggestedErrorCodes(): ErrorCodeOption[] {
+    return [...SUGGESTED_ERROR_CODES];
+  }
+
+  /**
+   * @deprecated Prefer getSuggestedErrorCodes — backend has no error-codes endpoint.
+   */
+  async fetchErrorCodes(): Promise<ErrorCodeOption[]> {
+    return this.getSuggestedErrorCodes();
+  }
+
+  /** POST /error-groups/:id/mappings */
+  async addMapping(
+    groupId: number | string,
+    mapping: CreateErrorGroupMappingInput,
+  ): Promise<ErrorGroupMapping> {
+    const payload = await this.request<unknown>(
+      `${API_BASE}/${encodeURIComponent(String(groupId))}/mappings`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          error_code: mapping.error_code.trim().toUpperCase(),
+          user_message: mapping.user_message.trim(),
+        }),
+      },
+    );
+    const created = unwrapOne<ErrorGroupMapping>(payload);
+    if (!created) {
+      throw new Error("Failed to create error group mapping");
+    }
     return created;
   }
 
+  /** DELETE /error-groups/:id/mappings/:mappingId */
+  async deleteMapping(
+    groupId: number | string,
+    mappingId: number | string,
+  ): Promise<void> {
+    await this.request(
+      `${API_BASE}/${encodeURIComponent(String(groupId))}/mappings/${encodeURIComponent(String(mappingId))}`,
+      { method: "DELETE" },
+    );
+  }
+
+  /**
+   * Creates a group, then mappings, then optionally attaches to a provider.
+   * Throws on API failure — no silent localStorage fallback (avoids orphan local IDs on offers).
+   */
+  async createErrorGroup(data: CreateErrorGroupRequest): Promise<ErrorGroup> {
+    const body = {
+      name: data.name.trim(),
+      description: data.description?.trim() || null,
+      is_active: data.is_active !== false,
+    };
+
+    const createPayload = await this.request<unknown>(API_BASE, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    const created = unwrapOne<ErrorGroup>(createPayload);
+    if (!created?.id) {
+      throw new Error("Failed to create error group");
+    }
+
+    const groupId = Number(created.id);
+    const mappingsInput = (data.mappings || []).filter(
+      (m) => m.error_code?.trim() && m.user_message?.trim(),
+    );
+
+    const mappingErrors: string[] = [];
+    const mappings: ErrorGroupMapping[] = [];
+    for (const mapping of mappingsInput) {
+      try {
+        const saved = await this.addMapping(groupId, mapping);
+        mappings.push(saved);
+      } catch (err) {
+        mappingErrors.push(
+          err instanceof Error ? err.message : `Failed mapping ${mapping.error_code}`,
+        );
+      }
+    }
+
+    if (data.provider_id != null && Number.isFinite(Number(data.provider_id))) {
+      try {
+        await this.attachErrorGroupToProvider(data.provider_id, groupId);
+      } catch (err) {
+        mappingErrors.push(
+          err instanceof Error
+            ? `Group created but provider attach failed: ${err.message}`
+            : "Group created but provider attach failed",
+        );
+      }
+    }
+
+    const full = await this.getErrorGroupById(groupId).catch(() =>
+      normalizeGroup({ ...created, id: groupId, mappings }),
+    );
+
+    if (mappingErrors.length > 0 && mappings.length === 0 && mappingsInput.length > 0) {
+      throw new Error(
+        `Error group created, but mappings failed: ${mappingErrors.join("; ")}`,
+      );
+    }
+
+    return full;
+  }
+
   async updateErrorGroup(
-    id: string,
+    id: number | string,
     data: UpdateErrorGroupRequest,
   ): Promise<ErrorGroup> {
-    try {
-      const payload = await this.request<unknown>(`/${encodeURIComponent(id)}`, {
+    const payload = await this.request<unknown>(
+      `${API_BASE}/${encodeURIComponent(String(id))}`,
+      {
         method: "PUT",
-        body: JSON.stringify(data),
-      });
-      const updated = unwrapOne(payload);
-      if (updated) return updated;
-    } catch {
-      // Fall through to local update
+        body: JSON.stringify({
+          ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+          ...(data.description !== undefined
+            ? { description: data.description?.trim() || null }
+            : {}),
+          ...(data.is_active !== undefined ? { is_active: data.is_active } : {}),
+        }),
+      },
+    );
+    const updated = unwrapOne<ErrorGroup>(payload);
+    if (!updated) {
+      throw new Error("Failed to update error group");
     }
+    return normalizeGroup(updated);
+  }
 
-    const catalog = readLocalCatalog();
-    const index = catalog.findIndex((g) => g.id === id);
-    if (index < 0) {
-      throw new Error("Error group not found");
-    }
-
-    const updated: ErrorGroup = {
-      ...catalog[index],
-      ...data,
-      name: data.name?.trim() ?? catalog[index].name,
-      code: data.code?.trim() ?? catalog[index].code,
-      description:
-        data.description !== undefined
-          ? data.description.trim() || undefined
-          : catalog[index].description,
-      default_failure_message:
-        data.default_failure_message !== undefined
-          ? data.default_failure_message.trim() || undefined
-          : catalog[index].default_failure_message,
-      updated_at: new Date().toISOString(),
-    };
-    catalog[index] = updated;
-    writeLocalCatalog(catalog);
-    return updated;
+  async deleteErrorGroup(id: number | string): Promise<void> {
+    await this.request(`${API_BASE}/${encodeURIComponent(String(id))}`, {
+      method: "DELETE",
+    });
   }
 
   toSelectOptions(groups: ErrorGroup[]): Array<{ value: string; label: string }> {
     return groups.map((g) => ({
-      value: g.id,
+      value: String(g.id),
       label: formatErrorGroupLabel(g),
     }));
+  }
+
+  /** Convenience for offer-rule auto-fill */
+  getSuggestedFailureText(group: ErrorGroup): string {
+    return resolveErrorGroupDefaultFailureMessage(group);
   }
 }
 

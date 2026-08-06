@@ -50,6 +50,7 @@ function SchemaTable({
             <th className={`py-2 pr-4 font-medium ${tw.textMuted}`}>Label</th>
             <th className={`py-2 pr-4 font-medium ${tw.textMuted}`}>Type</th>
             <th className={`py-2 pr-4 font-medium ${tw.textMuted}`}>Required</th>
+            <th className={`py-2 pr-4 font-medium ${tw.textMuted}`}>Editable</th>
             <th className={`py-2 font-medium ${tw.textMuted}`}>Default</th>
           </tr>
         </thead>
@@ -63,6 +64,9 @@ function SchemaTable({
               <td className={`py-3 pr-4 ${tw.textPrimary}`}>{field.type}</td>
               <td className={`py-3 pr-4 ${tw.textPrimary}`}>
                 {field.required ? "Yes" : "No"}
+              </td>
+              <td className={`py-3 pr-4 ${tw.textPrimary}`}>
+                {field.is_editable === false ? "No" : "Yes"}
               </td>
               <td className={`py-3 ${tw.textSecondary}`}>
                 {formatSchemaDefaultDisplay(field)}

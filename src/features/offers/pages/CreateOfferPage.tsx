@@ -94,11 +94,12 @@ import type { OfferTrackingSource } from "../types/offerTrackingSource";
 import {
   offerRequiresTrackingAndRewardMapping,
   offerUsesDefaultReward,
+  resolveOfferTypeName,
 } from "../utils/offerTypeTrackingPolicy";
 import {
-  demoteSeedingDefaultRewards,
-  ensureSeedingDefaultReward,
-  isDefaultSeedingRewardConfigured,
+  demoteImmediateDefaultRewards,
+  ensureImmediateDefaultReward,
+  isDefaultImmediateRewardConfigured,
 } from "../utils/seedingRewardDefaults";
 import { validateOfferRewardTrackingMapping } from "../utils/validateOfferRewardTracking";
 
@@ -179,8 +180,10 @@ interface StepProps {
   rewards: OfferReward[];
   setRewards: (rewards: OfferReward[]) => void;
   requiresTrackingRewardMapping?: boolean;
-  /** Seeding: tracking optional; default reward always required */
+  /** Immediate reward (is_immediate_reward): tracking optional; default reward always required */
   usesDefaultReward?: boolean;
+  /** Selected offer type display name for immediate-reward CTAs */
+  offerTypeName?: string | null;
   isLoading?: boolean;
   validationErrors?: Record<string, string>;
   clearValidationErrors?: () => void;
@@ -710,12 +713,13 @@ function BasicInfoStep({
       <CreateOfferTypeModal
         isOpen={showCreateTypeModal}
         onClose={() => setShowCreateTypeModal(false)}
-        onTypeCreated={(typeId, typeData) => {
+        onTypeCreated={async (typeId, typeData) => {
           setFormData({
             ...formData,
             offer_type_id: typeId,
+            offer_type: typeData?.name || formData.offer_type,
           });
-          refreshOfferTypes();
+          await refreshOfferTypes?.();
           setShowCreateTypeModal(false);
         }}
       />
@@ -939,6 +943,7 @@ function OfferRewardStepWrapper({
   trackingSources,
   requiresTrackingRewardMapping = false,
   usesDefaultReward = false,
+  offerTypeName = null,
   validationErrors,
 }: Omit<
   StepProps,
@@ -961,6 +966,8 @@ function OfferRewardStepWrapper({
   | "onCancel"
 > &
   Pick<StepProps, "validationErrors">) {
+  const typeLabel = offerTypeName?.trim() || "Immediate-reward";
+
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -989,6 +996,7 @@ function OfferRewardStepWrapper({
         trackingSources={trackingSources}
         requiresRewardTrackingMapping={requiresTrackingRewardMapping}
         usesDefaultReward={usesDefaultReward}
+        offerTypeName={offerTypeName}
       />
     </div>
   );
@@ -1009,6 +1017,7 @@ function ReviewStep({
   offerTypes,
   requiresTrackingRewardMapping = false,
   usesDefaultReward = false,
+  offerTypeName = null,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -1607,7 +1616,7 @@ function ReviewStep({
                 },
                 {
                   label: usesDefaultReward
-                    ? "Tracking (optional for seeding)"
+                    ? `Tracking (optional for ${offerTypeName?.trim() || "immediate reward"})`
                     : "Tracking configured",
                   complete: usesDefaultReward
                     ? true
@@ -1617,7 +1626,7 @@ function ReviewStep({
                   ? [
                       {
                         label: "Default reward configured",
-                        complete: isDefaultSeedingRewardConfigured(rewards),
+                        complete: isDefaultImmediateRewardConfigured(rewards),
                       },
                     ]
                   : requiresTrackingRewardMapping
@@ -1757,19 +1766,28 @@ export default function CreateOfferPage({
       ),
     [formData.offer_type_id, formData.offer_type, offerTypes],
   );
+  const offerTypeName = useMemo(
+    () =>
+      resolveOfferTypeName(
+        formData.offer_type_id,
+        offerTypes,
+        formData.offer_type,
+      ) || null,
+    [formData.offer_type_id, formData.offer_type, offerTypes],
+  );
   const hasRestoredDataRef = useRef(false);
 
-  // Seeding ↔ other offer types: keep default reward lifecycle consistent.
+  // Immediate-reward ↔ other offer types: keep default reward lifecycle consistent.
   useEffect(() => {
     if (usesDefaultReward) {
       setRewards((prev) => {
-        const { rewards: next, changed } = ensureSeedingDefaultReward(prev);
+        const { rewards: next, changed } = ensureImmediateDefaultReward(prev);
         return changed ? next : prev;
       });
       return;
     }
     setRewards((prev) => {
-      const { rewards: next, changed } = demoteSeedingDefaultRewards(prev);
+      const { rewards: next, changed } = demoteImmediateDefaultRewards(prev);
       return changed ? next : prev;
     });
   }, [usesDefaultReward]);
@@ -2066,13 +2084,13 @@ export default function CreateOfferPage({
                 loadedTrackingSources,
               ).rewards
             : [];
-        const offerIsSeeding = offerUsesDefaultReward(
+        const offerIsImmediate = offerUsesDefaultReward(
           offerTypeId || offer.offer_type_id,
           offerTypes,
           offer.offer_type || offer.offer_type_label,
         );
-        const nextRewards = offerIsSeeding
-          ? ensureSeedingDefaultReward(loadedRewards).rewards
+        const nextRewards = offerIsImmediate
+          ? ensureImmediateDefaultReward(loadedRewards).rewards
           : loadedRewards;
         if (nextRewards.length > 0) {
           setRewards(nextRewards);
@@ -2480,11 +2498,11 @@ export default function CreateOfferPage({
           return hasLanguage && hasTextBody && isEmailWithHtml;
         });
       case 4: // Tracking step
-        if (!requiresTrackingRewardMapping) return true; // seeding / bonus: optional
+        if (!requiresTrackingRewardMapping) return true; // immediate reward: optional
         return trackingSources.some((s) => s.enabled !== false);
       case 5: // Rewards step
         if (usesDefaultReward) {
-          return isDefaultSeedingRewardConfigured(rewards);
+          return isDefaultImmediateRewardConfigured(rewards);
         }
         if (!requiresTrackingRewardMapping) return true;
         {
@@ -3259,6 +3277,7 @@ export default function CreateOfferPage({
       refreshOfferTypes,
       requiresTrackingRewardMapping,
       usesDefaultReward,
+      offerTypeName,
     }),
     [
       currentStep,
@@ -3298,6 +3317,7 @@ export default function CreateOfferPage({
       refreshOfferTypes,
       requiresTrackingRewardMapping,
       usesDefaultReward,
+      offerTypeName,
     ],
   );
 

@@ -3,10 +3,11 @@ import { X } from "lucide-react";
 import { offerTypeService } from "../services/offerTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useAuth } from "../../../contexts/AuthContext";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
 
 interface CreateOfferTypeModalProps {
@@ -24,7 +25,14 @@ export default function CreateOfferTypeModal({
   const { user } = useAuth();
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeDescription, setNewTypeDescription] = useState("");
+  const [isImmediateReward, setIsImmediateReward] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  const resetForm = () => {
+    setNewTypeName("");
+    setNewTypeDescription("");
+    setIsImmediateReward(false);
+  };
 
   const handleCreateType = async () => {
     if (!newTypeName.trim()) return;
@@ -40,19 +48,19 @@ export default function CreateOfferTypeModal({
         name: newTypeName.trim(),
         description: newTypeDescription.trim() || undefined,
         is_active: true,
+        is_immediate_reward: isImmediateReward,
       });
 
       success(
         "Offer Type Created",
-        `"${newTypeName}" has been created successfully.`
+        `"${newTypeName}" has been created successfully.`,
       );
 
       const createdTypeId = response.data?.id;
       const createdTypeData = response.data;
 
       onClose();
-      setNewTypeName("");
-      setNewTypeDescription("");
+      resetForm();
 
       if (createdTypeId) {
         onTypeCreated?.(createdTypeId, createdTypeData);
@@ -67,8 +75,7 @@ export default function CreateOfferTypeModal({
 
   const handleClose = () => {
     onClose();
-    setNewTypeName("");
-    setNewTypeDescription("");
+    resetForm();
   };
 
   if (!isOpen) return null;
@@ -108,6 +115,24 @@ export default function CreateOfferTypeModal({
             onChange={(value) => setNewTypeDescription(value)}
             rows={3}
           />
+
+          <label className="flex items-start gap-2 cursor-pointer">
+            <Checkbox
+              id="offer-type-immediate-reward"
+              checked={isImmediateReward}
+              onChange={(e) => setIsImmediateReward(e.target.checked)}
+            />
+            <span>
+              <span className={`block text-sm font-medium ${tw.textPrimary}`}>
+                Immediate reward
+              </span>
+              <span className={`block text-xs ${tw.textMuted} mt-0.5`}>
+                When enabled, offers of this type do not require tracking. A
+                default reward is managed without a tracking-source binding
+                (e.g. seeding-style grants).
+              </span>
+            </span>
+          </label>
 
           <ModalFooter
             onCancel={handleClose}

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { tw } from "../../../../shared/utils/utils";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
 import { rewardConfigurationService } from "../../services/rewardConfigurationService";
@@ -9,12 +10,35 @@ import RewardSchemaFieldControl from "./RewardSchemaFieldControl";
 import {
   buildInitialConfigValues,
   collectSchemaFieldErrors,
-  normalizeConfigFields,
+  isSchemaFieldEditable,
+  normalizeConfigValueForApi,
 } from "./rewardSchemaFieldUtils";
 
 export interface RewardConfigurationParameterValues {
   auth_config: Record<string, unknown>;
   payload_config: Record<string, unknown>;
+}
+
+/**
+ * Normalize values for API while forcing locked schema fields back to the
+ * master configuration (runtime overrides cannot change them).
+ */
+export function normalizeConfigFieldsWithEditability(
+  fields: RewardProviderSchemaField[],
+  values: Record<string, unknown>,
+  masterValues?: Record<string, unknown>,
+): Record<string, unknown> {
+  const config: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    const sourceValue =
+      !isSchemaFieldEditable(field) &&
+      masterValues &&
+      masterValues[field.name] !== undefined
+        ? masterValues[field.name]
+        : values[field.name];
+    config[field.name] = normalizeConfigValueForApi(field, sourceValue);
+  });
+  return config;
 }
 
 interface RewardConfigurationParametersEditorProps {
@@ -26,48 +50,92 @@ interface RewardConfigurationParametersEditorProps {
   className?: string;
 }
 
-function SchemaFieldsSection({
-  title,
-  description,
+function partitionSchemaFields(fields: RewardProviderSchemaField[]): {
+  editable: RewardProviderSchemaField[];
+  locked: RewardProviderSchemaField[];
+} {
+  const editable: RewardProviderSchemaField[] = [];
+  const locked: RewardProviderSchemaField[] = [];
+  fields.forEach((field) => {
+    if (isSchemaFieldEditable(field)) {
+      editable.push(field);
+    } else {
+      locked.push(field);
+    }
+  });
+  return { editable, locked };
+}
+
+function FieldGrid({
   sectionKey,
   fields,
   values,
   errors,
   disabled,
+  locked,
   onFieldChange,
 }: {
-  title: string;
-  description: string;
   sectionKey: "auth" | "payload";
   fields: RewardProviderSchemaField[];
   values: Record<string, unknown>;
   errors: Record<string, string>;
   disabled?: boolean;
+  locked?: boolean;
   onFieldChange: (fieldName: string, value: unknown) => void;
 }) {
+  if (fields.length === 0) return null;
+
   return (
-    <div>
-      <h4 className={`text-xs font-semibold ${tw.textMuted} uppercase tracking-wide mb-1`}>
-        {title}
-      </h4>
-      <p className={`text-xs ${tw.textMuted} mb-4`}>{description}</p>
-      {fields.length === 0 ? (
-        <p className={`text-sm ${tw.textMuted}`}>No fields defined for this section.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {fields.map((field) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {fields.map((field) => {
+        const fieldLocked = locked || !isSchemaFieldEditable(field);
+        const fieldDisabled = disabled || fieldLocked;
+
+        return (
+          <div key={`${sectionKey}-${field.name}`}>
             <RewardSchemaFieldControl
-              key={`${sectionKey}-${field.name}`}
               field={field}
               value={values[field.name]}
-              onChange={(v) => onFieldChange(field.name, v)}
-              disabled={disabled}
+              onChange={(v) => {
+                if (fieldLocked) return;
+                onFieldChange(field.name, v);
+              }}
+              disabled={fieldDisabled}
               error={errors[`${sectionKey}.${field.name}`]}
               showFieldLabel
             />
-          ))}
-        </div>
+            {fieldLocked && !disabled && (
+              <p className={`text-xs ${tw.textMuted} mt-1`}>
+                
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SchemaGroup({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <h4
+        className={`text-xs font-semibold ${tw.textMuted} uppercase tracking-wide mb-1`}
+      >
+        {title}
+      </h4>
+      {description && (
+        <p className={`text-xs ${tw.textMuted} mb-3`}>{description}</p>
       )}
+      {children}
     </div>
   );
 }
@@ -88,15 +156,29 @@ export default function RewardConfigurationParametersEditor({
   const [payloadFields, setPayloadFields] = useState<RewardProviderSchemaField[]>(
     [],
   );
+  const [masterAuthConfig, setMasterAuthConfig] = useState<
+    Record<string, unknown>
+  >({});
+  const [masterPayloadConfig, setMasterPayloadConfig] = useState<
+    Record<string, unknown>
+  >({});
   const [authValues, setAuthValues] = useState<Record<string, unknown>>({});
   const [payloadValues, setPayloadValues] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showLockedFields, setShowLockedFields] = useState(false);
+
+  useEffect(() => {
+    // Collapse locked accordion whenever the selected configuration changes.
+    setShowLockedFields(false);
+  }, [configurationId]);
 
   useEffect(() => {
     if (!configurationId) {
       setConfig(null);
       setAuthFields([]);
       setPayloadFields([]);
+      setMasterAuthConfig({});
+      setMasterPayloadConfig({});
       setAuthValues({});
       setPayloadValues({});
       setLoadError(null);
@@ -118,34 +200,73 @@ export default function RewardConfigurationParametersEditor({
 
         const authSchemaFields = provider.auth_schema?.fields || [];
         const payloadSchemaFields = provider.payload_schema?.fields || [];
+        const foundAuth = (found.auth_config as Record<string, unknown>) || {};
+        const foundPayload =
+          (found.payload_config as Record<string, unknown>) || {};
 
-        const nextAuth = buildInitialConfigValues(
-          authSchemaFields,
-          (value?.auth_config as Record<string, unknown> | undefined) ??
-            (found.auth_config as Record<string, unknown>),
-        );
+        // Seed from parent override when present, but locked fields always use master.
+        const overrideAuth = value?.auth_config as
+          | Record<string, unknown>
+          | undefined;
+        const overridePayload = value?.payload_config as
+          | Record<string, unknown>
+          | undefined;
+
+        const seedAuth: Record<string, unknown> = { ...foundAuth };
+        const seedPayload: Record<string, unknown> = { ...foundPayload };
+        authSchemaFields.forEach((field) => {
+          if (
+            isSchemaFieldEditable(field) &&
+            overrideAuth &&
+            overrideAuth[field.name] !== undefined
+          ) {
+            seedAuth[field.name] = overrideAuth[field.name];
+          }
+        });
+        payloadSchemaFields.forEach((field) => {
+          if (
+            isSchemaFieldEditable(field) &&
+            overridePayload &&
+            overridePayload[field.name] !== undefined
+          ) {
+            seedPayload[field.name] = overridePayload[field.name];
+          }
+        });
+
+        const nextAuth = buildInitialConfigValues(authSchemaFields, seedAuth);
         const nextPayload = buildInitialConfigValues(
           payloadSchemaFields,
-          (value?.payload_config as Record<string, unknown> | undefined) ??
-            (found.payload_config as Record<string, unknown>),
+          seedPayload,
         );
 
         setConfig(found);
         setAuthFields(authSchemaFields);
         setPayloadFields(payloadSchemaFields);
+        setMasterAuthConfig(foundAuth);
+        setMasterPayloadConfig(foundPayload);
         setAuthValues(nextAuth);
         setPayloadValues(nextPayload);
         setErrors({});
 
         onChange({
-          auth_config: normalizeConfigFields(authSchemaFields, nextAuth),
-          payload_config: normalizeConfigFields(payloadSchemaFields, nextPayload),
+          auth_config: normalizeConfigFieldsWithEditability(
+            authSchemaFields,
+            nextAuth,
+            foundAuth,
+          ),
+          payload_config: normalizeConfigFieldsWithEditability(
+            payloadSchemaFields,
+            nextPayload,
+            foundPayload,
+          ),
         });
       } catch {
         if (!cancelled) {
           setConfig(null);
           setAuthFields([]);
           setPayloadFields([]);
+          setMasterAuthConfig({});
+          setMasterPayloadConfig({});
           setLoadError("Could not load configuration parameters.");
         }
       } finally {
@@ -177,6 +298,31 @@ export default function RewardConfigurationParametersEditor({
     }
   }, [authFields, payloadFields, authValues, payloadValues]);
 
+  const { editable: editableAuth, locked: lockedAuth } = useMemo(
+    () => partitionSchemaFields(authFields),
+    [authFields],
+  );
+  const { editable: editablePayload, locked: lockedPayload } = useMemo(
+    () => partitionSchemaFields(payloadFields),
+    [payloadFields],
+  );
+
+  const editableCount = editableAuth.length + editablePayload.length;
+  const lockedCount = lockedAuth.length + lockedPayload.length;
+  const totalCount = authFields.length + payloadFields.length;
+
+  // Surface locked section if it holds validation errors or there is nothing editable.
+  const lockedHasErrors = useMemo(() => {
+    const lockedKeys = new Set([
+      ...lockedAuth.map((f) => `auth.${f.name}`),
+      ...lockedPayload.map((f) => `payload.${f.name}`),
+    ]);
+    return Object.keys(errors).some((key) => lockedKeys.has(key));
+  }, [errors, lockedAuth, lockedPayload]);
+
+  const lockedExpanded =
+    showLockedFields || lockedHasErrors || (editableCount === 0 && lockedCount > 0);
+
   const emitChange = (
     section: "auth" | "payload",
     fieldName: string,
@@ -184,6 +330,10 @@ export default function RewardConfigurationParametersEditor({
     authState: Record<string, unknown>,
     payloadState: Record<string, unknown>,
   ) => {
+    const fields = section === "auth" ? authFields : payloadFields;
+    const field = fields.find((f) => f.name === fieldName);
+    if (field && !isSchemaFieldEditable(field)) return;
+
     const nextAuth =
       section === "auth"
         ? { ...authState, [fieldName]: fieldValue }
@@ -200,8 +350,16 @@ export default function RewardConfigurationParametersEditor({
     }
 
     onChange({
-      auth_config: normalizeConfigFields(authFields, nextAuth),
-      payload_config: normalizeConfigFields(payloadFields, nextPayload),
+      auth_config: normalizeConfigFieldsWithEditability(
+        authFields,
+        nextAuth,
+        masterAuthConfig,
+      ),
+      payload_config: normalizeConfigFieldsWithEditability(
+        payloadFields,
+        nextPayload,
+        masterPayloadConfig,
+      ),
     });
   };
 
@@ -219,8 +377,7 @@ export default function RewardConfigurationParametersEditor({
             Configuration parameters
           </h4>
           <p className={`text-xs ${tw.textMuted} mt-0.5`}>
-            Adjust values for this grant or rule. Changes apply to this action
-            only and do not update the master configuration.
+           
           </p>
         </div>
         {config && (
@@ -236,32 +393,134 @@ export default function RewardConfigurationParametersEditor({
         </div>
       ) : loadError ? (
         <p className="text-sm text-red-600">{loadError}</p>
+      ) : totalCount === 0 ? (
+        <p className={`text-sm ${tw.textMuted}`}>
+          This provider has no auth or payload fields defined.
+        </p>
       ) : (
-        <div className="space-y-6">
-          <SchemaFieldsSection
-            title="Authentication"
-            description="OAuth and API credentials for this delivery."
-            sectionKey="auth"
-            fields={authFields}
-            values={authValues}
-            errors={errors}
-            disabled={disabled}
-            onFieldChange={(name, v) =>
-              emitChange("auth", name, v, authValues, payloadValues)
-            }
-          />
-          <SchemaFieldsSection
-            title="Payload"
-            description="Parameters sent to the provider for this reward."
-            sectionKey="payload"
-            fields={payloadFields}
-            values={payloadValues}
-            errors={errors}
-            disabled={disabled}
-            onFieldChange={(name, v) =>
-              emitChange("payload", name, v, authValues, payloadValues)
-            }
-          />
+        <div className="space-y-5">
+          {editableCount > 0 ? (
+            <div className="space-y-5">
+              {/* Payload first: business overrides are the primary offer-time task */}
+              {editablePayload.length > 0 && (
+                <SchemaGroup
+                  title="Payload"
+                  description="Editable parameters sent to the provider for this reward."
+                >
+                  <FieldGrid
+                    sectionKey="payload"
+                    fields={editablePayload}
+                    values={payloadValues}
+                    errors={errors}
+                    disabled={disabled}
+                    onFieldChange={(name, v) =>
+                      emitChange("payload", name, v, authValues, payloadValues)
+                    }
+                  />
+                </SchemaGroup>
+              )}
+              {editableAuth.length > 0 && (
+                <SchemaGroup
+                  title="Authentication"
+                  description="Editable credentials for this delivery."
+                >
+                  <FieldGrid
+                    sectionKey="auth"
+                    fields={editableAuth}
+                    values={authValues}
+                    errors={errors}
+                    disabled={disabled}
+                    onFieldChange={(name, v) =>
+                      emitChange("auth", name, v, authValues, payloadValues)
+                    }
+                  />
+                </SchemaGroup>
+              )}
+            </div>
+          ) : (
+            <p className={`text-sm ${tw.textMuted}`}>
+              No editable overrides for this configuration. Master values are
+              used for delivery.
+            </p>
+          )}
+
+          {lockedCount > 0 && (
+            <div className="border-t border-gray-200 pt-3">
+              <button
+                type="button"
+                onClick={() => setShowLockedFields((open) => !open)}
+                className={`w-full flex items-center justify-between gap-3 py-2 px-1 text-left ${tw.rounded} hover:bg-gray-100/80 transition-colors`}
+                aria-expanded={lockedExpanded}
+              >
+                <span>
+                  <span
+                    className={`text-sm font-medium ${tw.textPrimary} block`}
+                  >
+                    {lockedExpanded ? "Show less" : "Show more"}
+                  </span>
+                  
+                </span>
+                {lockedExpanded ? (
+                  <ChevronUp className={`w-4 h-4 shrink-0 ${tw.textMuted}`} />
+                ) : (
+                  <ChevronDown className={`w-4 h-4 shrink-0 ${tw.textMuted}`} />
+                )}
+              </button>
+
+              {lockedExpanded && (
+                <div className="space-y-5 mt-3 pt-1">
+                  {lockedAuth.length > 0 && (
+                    <SchemaGroup
+                      title="Authentication"
+                      description="Locked OAuth and API credentials from the master configuration."
+                    >
+                      <FieldGrid
+                        sectionKey="auth"
+                        fields={lockedAuth}
+                        values={authValues}
+                        errors={errors}
+                        disabled={disabled}
+                        locked
+                        onFieldChange={(name, v) =>
+                          emitChange(
+                            "auth",
+                            name,
+                            v,
+                            authValues,
+                            payloadValues,
+                          )
+                        }
+                      />
+                    </SchemaGroup>
+                  )}
+                  {lockedPayload.length > 0 && (
+                    <SchemaGroup
+                      title="Payload"
+                      description="Locked delivery parameters from the master configuration."
+                    >
+                      <FieldGrid
+                        sectionKey="payload"
+                        fields={lockedPayload}
+                        values={payloadValues}
+                        errors={errors}
+                        disabled={disabled}
+                        locked
+                        onFieldChange={(name, v) =>
+                          emitChange(
+                            "payload",
+                            name,
+                            v,
+                            authValues,
+                            payloadValues,
+                          )
+                        }
+                      />
+                    </SchemaGroup>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

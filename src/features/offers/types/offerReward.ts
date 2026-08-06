@@ -26,7 +26,7 @@ export interface OfferRewardRule {
   fulfillment_response: string;
   success_text: string;
   default_failure: string;
-  /** Stable catalog id when selected from Error Group dropdown */
+  /** Stable catalog id (numeric string) when selected from Error Group dropdown */
   error_group_id?: string;
   /** Display label / legacy free-text (kept for API compatibility) */
   error_group: string;
@@ -44,14 +44,14 @@ export interface OfferReward {
   /** Legacy catalog key; retained for API compatibility */
   type: "default" | "sms_night" | "custom" | string;
   /**
-   * Seeding (and similar) offers carry a tracking-independent default reward.
-   * Default rewards always exist for seeding and do not require tracking.
+   * Immediate-reward offers carry a tracking-independent default reward.
+   * Default rewards always exist when is_immediate_reward is true and do not require tracking.
    */
   is_default?: boolean;
   /**
    * Offer-wizard tracking source this reward is bound to.
    * One reward per tracking source; rules inherit this id.
-   * Omitted for default / seeding rewards.
+   * Omitted for default / immediate rewards.
    */
   tracking_source_id?: string;
   rules: OfferRewardRule[];

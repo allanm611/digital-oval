@@ -63,6 +63,8 @@ function normalizeFields(
     label: field.label.trim(),
     type: field.type,
     required: !!field.required,
+    // Explicit boolean so backend always receives the flag (default editable).
+    is_editable: field.is_editable !== false,
     ...(field.placeholder?.trim()
       ? { placeholder: field.placeholder.trim() }
       : {}),

@@ -1,24 +1,52 @@
 import type { OfferReward, OfferRewardRule } from "../types/offerReward";
-import { normalizeOfferTypeKey } from "./offerTypeTrackingPolicy";
+import { resolveIsImmediateReward } from "./offerTypeTrackingPolicy";
 
-export const SEEDING_DEFAULT_REWARD_NAME = "Default Reward";
-export const SEEDING_DEFAULT_CONFIG_NAME = "Seeding configuration";
-/** Primary CTA label under Reward Configurations for seeding offers */
-export const SEEDING_ADD_CONFIG_BUTTON_LABEL =
-  "Add reward configuration for seeding";
+export const IMMEDIATE_DEFAULT_REWARD_NAME = "Default Reward";
+export const IMMEDIATE_DEFAULT_CONFIG_NAME = "Immediate reward configuration";
+/** Fallback CTA when offer type name is unavailable */
+export const IMMEDIATE_ADD_CONFIG_BUTTON_LABEL =
+  "Add reward configuration for immediate reward";
+
+/**
+ * CTA under Reward Configurations for immediate-reward offer types.
+ * Uses the offer type display name, e.g. "Add reward configuration for Seeding".
+ */
+export function formatImmediateAddConfigButtonLabel(
+  offerTypeName?: string | null,
+): string {
+  const name = offerTypeName?.trim();
+  return name
+    ? `Add reward configuration for ${name}`
+    : IMMEDIATE_ADD_CONFIG_BUTTON_LABEL;
+}
+
+/** @deprecated Use IMMEDIATE_* constants */
+export const SEEDING_DEFAULT_REWARD_NAME = IMMEDIATE_DEFAULT_REWARD_NAME;
+/** @deprecated Use IMMEDIATE_* constants */
+export const SEEDING_DEFAULT_CONFIG_NAME = IMMEDIATE_DEFAULT_CONFIG_NAME;
+/** @deprecated Use formatImmediateAddConfigButtonLabel */
+export const SEEDING_ADD_CONFIG_BUTTON_LABEL = IMMEDIATE_ADD_CONFIG_BUTTON_LABEL;
 
 const newId = () => Math.random().toString(36).slice(2, 11);
 
+/**
+ * @deprecated Prefer resolveIsImmediateReward / offerUsesDefaultReward from
+ * offerTypeTrackingPolicy (flag-driven, not name-driven).
+ */
 export function isSeedingOfferTypeName(offerTypeName?: string | null): boolean {
-  return normalizeOfferTypeKey(offerTypeName) === "seeding";
+  return resolveIsImmediateReward(
+    undefined,
+    undefined,
+    offerTypeName ?? undefined,
+  );
 }
 
-export function createDefaultSeedingConfiguration(
+export function createDefaultImmediateConfiguration(
   id: string = newId(),
 ): OfferRewardRule {
   return {
     id,
-    name: SEEDING_DEFAULT_CONFIG_NAME,
+    name: IMMEDIATE_DEFAULT_CONFIG_NAME,
     bundle_subscription_track: "",
     reward_configuration_id: "",
     reward_configuration_name: "",
@@ -37,11 +65,16 @@ export function createDefaultSeedingConfiguration(
   };
 }
 
-function isPlaceholderSeedingConfiguration(rule: OfferRewardRule): boolean {
+/** @deprecated Use createDefaultImmediateConfiguration */
+export const createDefaultSeedingConfiguration =
+  createDefaultImmediateConfiguration;
+
+function isPlaceholderImmediateConfiguration(rule: OfferRewardRule): boolean {
   const name = rule.name?.trim().toLowerCase() || "";
   const isPlaceholderName =
     name === "default configuration" ||
-    name === SEEDING_DEFAULT_CONFIG_NAME.toLowerCase() ||
+    name === IMMEDIATE_DEFAULT_CONFIG_NAME.toLowerCase() ||
+    name === "seeding configuration" ||
     name === "new rule";
   return (
     isPlaceholderName &&
@@ -50,18 +83,21 @@ function isPlaceholderSeedingConfiguration(rule: OfferRewardRule): boolean {
   );
 }
 
-/** Tracking-independent reward that seeding offers always carry (no config until user adds one). */
-export function createDefaultSeedingReward(
+/** Tracking-independent reward that immediate-reward offers always carry. */
+export function createDefaultImmediateReward(
   id: string = newId(),
 ): OfferReward {
   return {
     id,
-    name: SEEDING_DEFAULT_REWARD_NAME,
+    name: IMMEDIATE_DEFAULT_REWARD_NAME,
     type: "default",
     is_default: true,
     rules: [],
   };
 }
+
+/** @deprecated Use createDefaultImmediateReward */
+export const createDefaultSeedingReward = createDefaultImmediateReward;
 
 export function findDefaultReward(
   rewards: OfferReward[],
@@ -81,7 +117,7 @@ export function isRewardConfigurationComplete(rule: OfferRewardRule): boolean {
   );
 }
 
-export function isDefaultSeedingRewardConfigured(
+export function isDefaultImmediateRewardConfigured(
   rewards: OfferReward[],
 ): boolean {
   const defaultReward = findDefaultReward(rewards);
@@ -89,11 +125,15 @@ export function isDefaultSeedingRewardConfigured(
   return defaultReward.rules.some(isRewardConfigurationComplete);
 }
 
+/** @deprecated Use isDefaultImmediateRewardConfigured */
+export const isDefaultSeedingRewardConfigured =
+  isDefaultImmediateRewardConfigured;
+
 /**
- * Ensures seeding offers always have exactly one default reward.
+ * Ensures immediate-reward offers always have exactly one default reward.
  * Configurations are user-added (not auto-created). Safe for create/edit.
  */
-export function ensureSeedingDefaultReward(
+export function ensureImmediateDefaultReward(
   rewards: OfferReward[],
 ): { rewards: OfferReward[]; changed: boolean } {
   const list = Array.isArray(rewards) ? [...rewards] : [];
@@ -105,7 +145,7 @@ export function ensureSeedingDefaultReward(
 
   if (existingIndex < 0) {
     return {
-      rewards: [createDefaultSeedingReward(), ...list],
+      rewards: [createDefaultImmediateReward(), ...list],
       changed: true,
     };
   }
@@ -119,7 +159,7 @@ export function ensureSeedingDefaultReward(
     changed = true;
   }
   if (!existing.name?.trim()) {
-    next = { ...next, name: SEEDING_DEFAULT_REWARD_NAME };
+    next = { ...next, name: IMMEDIATE_DEFAULT_REWARD_NAME };
     changed = true;
   }
   if (existing.tracking_source_id) {
@@ -128,8 +168,8 @@ export function ensureSeedingDefaultReward(
   }
 
   const rules = next.rules || [];
-  // Migrate older drafts that auto-inserted an empty "Default configuration".
-  if (rules.length === 1 && isPlaceholderSeedingConfiguration(rules[0])) {
+  // Migrate older drafts that auto-inserted an empty placeholder configuration.
+  if (rules.length === 1 && isPlaceholderImmediateConfiguration(rules[0])) {
     next = { ...next, rules: [] };
     changed = true;
   } else if (rules.length > 0) {
@@ -158,8 +198,11 @@ export function ensureSeedingDefaultReward(
   return { rewards: list, changed: true };
 }
 
-/** When leaving seeding, keep configured grants but drop the default flag. */
-export function demoteSeedingDefaultRewards(
+/** @deprecated Use ensureImmediateDefaultReward */
+export const ensureSeedingDefaultReward = ensureImmediateDefaultReward;
+
+/** When leaving an immediate-reward type, keep configured grants but drop the default flag. */
+export function demoteImmediateDefaultRewards(
   rewards: OfferReward[],
 ): { rewards: OfferReward[]; changed: boolean } {
   let changed = false;
@@ -170,3 +213,6 @@ export function demoteSeedingDefaultRewards(
   });
   return { rewards: changed ? next : rewards, changed };
 }
+
+/** @deprecated Use demoteImmediateDefaultRewards */
+export const demoteSeedingDefaultRewards = demoteImmediateDefaultRewards;

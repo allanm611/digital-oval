@@ -56,7 +56,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     backgroundColor: labelBgColor || 'var(--c-input-bg)',
     borderColor: hasError ? '#ef4444' : 'var(--c-border-default)',
     color: 'var(--c-text-primary)',
-    accentColor: type === 'date' || type === 'time' ? 'var(--c-input-accent)' : undefined,
+    accentColor: ['date', 'time', 'datetime-local'].includes(type) ? 'var(--c-input-accent)' : undefined,
     ...style
   };
 

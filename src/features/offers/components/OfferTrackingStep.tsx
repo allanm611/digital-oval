@@ -9,11 +9,19 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import {
   conditions as CONDITION_OPTIONS,
   formatTrackingKeyLabel,
+  formatTrackingRuleValueDisplay,
+  getConditionsForParameter,
+  getDefaultConditionForParameter,
   getParameterOptionsByType,
+  getParameterValueType,
   getParametersByType,
   normalizeParameterKey,
   PARAMETER_LABELS,
+  serializeTrackingRuleValue,
+  toTrackingValueInputDisplay,
   TRACKING_TYPE_OPTIONS,
+  validateTrackingRuleValue,
+  type TrackingParameterValueType,
 } from "../utils/trackingSourcesConfig";
 import { trackingSourceService } from "../../configurations/services/trackingSourceService";
 import type { TrackingSourceCatalogItem } from "../../configurations/types/trackingSource";
@@ -122,6 +130,37 @@ export default function OfferTrackingStep({
     return opts;
   }, [selectedSourceData, catalogSources, editingRule?.parameter]);
 
+  const editingParameterType: TrackingParameterValueType = useMemo(
+    () => getParameterValueType(editingRule?.parameter || ""),
+    [editingRule?.parameter],
+  );
+
+  const conditionOptionsForParameter = useMemo(
+    () => getConditionsForParameter(editingRule?.parameter || ""),
+    [editingRule?.parameter],
+  );
+
+  const applyParameterChange = (nextParameter: string) => {
+    if (!editingRule) return;
+    const prevType = getParameterValueType(editingRule.parameter);
+    const nextType = getParameterValueType(nextParameter);
+    const nextConditions = getConditionsForParameter(nextParameter);
+    const conditionStillValid = nextConditions.some(
+      (c) => c.value === editingRule.condition,
+    );
+
+    setEditingRule({
+      ...editingRule,
+      parameter: nextParameter,
+      condition: conditionStillValid
+        ? editingRule.condition
+        : getDefaultConditionForParameter(nextParameter),
+      // Clear value when the control type changes to avoid invalid leftover text
+      value: prevType === nextType ? editingRule.value : "",
+    });
+    setRuleModalError("");
+  };
+
   const addBlankSource = () => {
     const newSource: OfferTrackingSource = {
       id: generateId(),
@@ -218,7 +257,7 @@ export default function OfferTrackingStep({
       name: "New Rule",
       priority: 1,
       parameter: defaultParam,
-      condition: "equals",
+      condition: getDefaultConditionForParameter(defaultParam),
       value: "",
       enabled: true,
     });
@@ -236,9 +275,38 @@ export default function OfferTrackingStep({
       return;
     }
 
+    const parameter =
+      normalizeParameterKey(rule.parameter) || rule.parameter;
+    const valueType = getParameterValueType(parameter);
+    const allowedConditions = getConditionsForParameter(parameter);
+    const condition = allowedConditions.some((c) => c.value === rule.condition)
+      ? rule.condition
+      : getDefaultConditionForParameter(parameter);
+
+    const serializedValue =
+      condition === "is_any_of"
+        ? String(rule.value ?? "")
+            .split(",")
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .join(", ")
+        : serializeTrackingRuleValue(rule.value, valueType);
+
+    const valueError = validateTrackingRuleValue(
+      serializedValue,
+      parameter,
+      condition,
+    );
+    if (valueError) {
+      setRuleModalError(valueError);
+      return;
+    }
+
     const normalized: OfferTrackingRule = {
       ...rule,
-      parameter: normalizeParameterKey(rule.parameter) || rule.parameter,
+      parameter,
+      condition,
+      value: serializedValue,
     };
 
     const source = trackingSources.find((s) => s.id === sourceId);
@@ -615,7 +683,12 @@ export default function OfferTrackingStep({
                               {CONDITION_OPTIONS.find(
                                 (c) => c.value === rule.condition,
                               )?.label.toLowerCase()}{" "}
-                              &quot;{rule.value}&quot;
+                              &quot;
+                              {formatTrackingRuleValueDisplay(
+                                rule.value,
+                                rule.parameter,
+                              )}
+                              &quot;
                             </div>
                           </div>
                         ))}
@@ -702,12 +775,7 @@ export default function OfferTrackingStep({
                   label="Parameter"
                   options={parameterOptionsForSelected}
                   value={editingRule.parameter}
-                  onChange={(value) =>
-                    setEditingRule({
-                      ...editingRule,
-                      parameter: String(value),
-                    })
-                  }
+                  onChange={(value) => applyParameterChange(String(value))}
                   placeholder={
                     parameterOptionsForSelected.length === 0
                       ? "No parameters configured for this source"
@@ -720,15 +788,24 @@ export default function OfferTrackingStep({
 
                 <HeadlessSelect
                   label="Condition"
-                  options={CONDITION_OPTIONS.map((condition) => ({
-                    value: condition.value,
-                    label: condition.label,
-                  }))}
-                  value={editingRule.condition}
+                  options={conditionOptionsForParameter}
+                  value={
+                    conditionOptionsForParameter.some(
+                      (c) => c.value === editingRule.condition,
+                    )
+                      ? editingRule.condition
+                      : conditionOptionsForParameter[0]?.value || "equals"
+                  }
                   onChange={(value) =>
                     setEditingRule({
                       ...editingRule,
                       condition: value as OfferTrackingRule["condition"],
+                      // Multi-value vs single-value controls use different shapes
+                      value:
+                        value === "is_any_of" ||
+                        editingRule.condition === "is_any_of"
+                          ? ""
+                          : editingRule.value,
                     })
                   }
                   placeholder="Select condition"
@@ -736,18 +813,111 @@ export default function OfferTrackingStep({
                   zIndex={zIndex.popover}
                 />
 
-                <Input
-                  label="Value"
-                  type="text"
-                  placeholder="Enter value..."
-                  value={editingRule.value}
-                  onChange={(value) =>
-                    setEditingRule({
-                      ...editingRule,
-                      value: String(value),
-                    })
-                  }
-                />
+                {editingRule.condition === "is_any_of" ? (
+                  <Input
+                    label="Value"
+                    type="text"
+                    placeholder={
+                      editingParameterType === "number"
+                        ? "e.g. 10, 20, 50"
+                        : "e.g. value1, value2"
+                    }
+                    value={editingRule.value}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        value: String(value),
+                      })
+                    }
+                  />
+                ) : editingParameterType === "boolean" ? (
+                  <HeadlessSelect
+                    label="Value"
+                    options={[
+                      { value: "true", label: "True" },
+                      { value: "false", label: "False" },
+                    ]}
+                    value={toTrackingValueInputDisplay(
+                      editingRule.value,
+                      "boolean",
+                    )}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        value: String(value),
+                      })
+                    }
+                    placeholder="Select true or false"
+                    className="w-full text-sm"
+                    zIndex={zIndex.popover}
+                  />
+                ) : editingParameterType === "datetime" ? (
+                  <Input
+                    label="Value"
+                    type="datetime-local"
+                    placeholder="Select date and time"
+                    value={toTrackingValueInputDisplay(
+                      editingRule.value,
+                      "datetime",
+                    )}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        value: String(value),
+                      })
+                    }
+                  />
+                ) : editingParameterType === "date" ? (
+                  <Input
+                    label="Value"
+                    type="date"
+                    placeholder="Select date"
+                    value={toTrackingValueInputDisplay(
+                      editingRule.value,
+                      "date",
+                    )}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        value: String(value),
+                      })
+                    }
+                  />
+                ) : editingParameterType === "number" ? (
+                  <Input
+                    label="Value"
+                    type="number"
+                    placeholder="Enter number..."
+                    value={editingRule.value}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        value: String(value),
+                      })
+                    }
+                  />
+                ) : (
+                  <Input
+                    label="Value"
+                    type="text"
+                    placeholder="Enter value..."
+                    value={editingRule.value}
+                    onChange={(value) =>
+                      setEditingRule({
+                        ...editingRule,
+                        value: String(value),
+                      })
+                    }
+                  />
+                )}
+                {editingParameterType === "datetime" ||
+                editingParameterType === "date" ? (
+                  <p className="text-xs text-gray-500 -mt-2">
+                    {editingParameterType === "datetime"
+                      ? "Uses the system date/time picker for an exact timestamp."
+                      : "Uses the system date picker."}
+                  </p>
+                ) : null}
 
                 {ruleModalError ? (
                   <p className="text-sm text-red-600">{ruleModalError}</p>

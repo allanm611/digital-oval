@@ -16,15 +16,19 @@ import { useRewardProviderConfigurations } from "../../../shared/hooks/useReward
 import RewardConfigurationParametersEditor from "../../configurations/components/reward-forms/RewardConfigurationParametersEditor";
 import { errorGroupService } from "../../configurations/services/errorGroupService";
 import type { ErrorGroup } from "../../configurations/types/errorGroup";
-import { formatErrorGroupLabel } from "../../configurations/types/errorGroup";
+import {
+  errorGroupIdKey,
+  formatErrorGroupLabel,
+  resolveErrorGroupDefaultFailureMessage,
+} from "../../configurations/types/errorGroup";
 import type { OfferReward, OfferRewardRule } from "../types/offerReward";
 import type { OfferTrackingSource } from "../types/offerTrackingSource";
 import { rewardConfigShouldBindTrackingRule } from "../utils/normalizeOfferWizardBindings";
 import {
-  createDefaultSeedingConfiguration,
-  ensureSeedingDefaultReward,
-  SEEDING_ADD_CONFIG_BUTTON_LABEL,
-  SEEDING_DEFAULT_REWARD_NAME,
+  createDefaultImmediateConfiguration,
+  ensureImmediateDefaultReward,
+  formatImmediateAddConfigButtonLabel,
+  IMMEDIATE_DEFAULT_REWARD_NAME,
 } from "../utils/seedingRewardDefaults";
 import ConfigureErrorGroupModal from "./ConfigureErrorGroupModal";
 
@@ -33,8 +37,10 @@ interface OfferRewardStepProps {
   onRewardsChange: (rewards: OfferReward[]) => void;
   trackingSources?: OfferTrackingSource[];
   requiresRewardTrackingMapping?: boolean;
-  /** Seeding: always show/configure a tracking-independent default reward */
+  /** Immediate reward: always show/configure a tracking-independent default reward */
   usesDefaultReward?: boolean;
+  /** Selected offer type display name (e.g. "Seeding") for CTA / copy */
+  offerTypeName?: string | null;
 }
 
 export default function OfferRewardStep({
@@ -43,6 +49,7 @@ export default function OfferRewardStep({
   trackingSources = [],
   requiresRewardTrackingMapping = false,
   usesDefaultReward = false,
+  offerTypeName = null,
 }: OfferRewardStepProps) {
   const [selectedReward, setSelectedReward] = useState<string | null>(
     rewards.length > 0 ? rewards[0].id : null
@@ -69,31 +76,58 @@ export default function OfferRewardStep({
   const [rewardActionError, setRewardActionError] = useState("");
   const [sourceToAddReward, setSourceToAddReward] = useState("");
 
-  const loadErrorGroups = useCallback(async () => {
+  const loadErrorGroups = useCallback(async (providerId?: string) => {
     setLoadingErrorGroups(true);
     setErrorGroupsError("");
     try {
-      const groups = await errorGroupService.getErrorGroups({ activeOnly: true });
-      setErrorGroups(groups);
+      let groups: ErrorGroup[] = [];
+
+      // Prefer provider-attached groups — fulfilment resolves mappings via this link.
+      if (providerId && Number.isFinite(Number(providerId))) {
+        try {
+          groups = await errorGroupService.getErrorGroupsForProvider(providerId, {
+            activeOnly: true,
+          });
+        } catch (providerErr) {
+          console.warn(
+            "Could not load provider error groups; falling back to catalog:",
+            providerErr,
+          );
+        }
+      }
+
+      // Merge with full active catalog so operators can pick and attach.
+      const allActive = await errorGroupService.getErrorGroups({
+        activeOnly: true,
+      });
+      const byId = new Map<number, ErrorGroup>();
+      [...groups, ...allActive].forEach((g) => {
+        byId.set(Number(g.id), g);
+      });
+      setErrorGroups(Array.from(byId.values()));
     } catch (error) {
       console.error("Error fetching error groups:", error);
       setErrorGroups([]);
-      setErrorGroupsError("Could not load error groups.");
+      setErrorGroupsError(
+        "Could not load error groups. Check that /error-groups is available.",
+      );
     } finally {
       setLoadingErrorGroups(false);
     }
   }, []);
 
+  const selectedProviderId = editingRule?.bundle_subscription_track ?? "";
+
   useEffect(() => {
     if (showRuleModal) {
-      void loadErrorGroups();
+      void loadErrorGroups(selectedProviderId || undefined);
     }
-  }, [showRuleModal, loadErrorGroups]);
+  }, [showRuleModal, selectedProviderId, loadErrorGroups]);
 
   // Seeding offers must always expose a default reward (create + edit).
   useEffect(() => {
     if (!usesDefaultReward) return;
-    const { rewards: next, changed } = ensureSeedingDefaultReward(rewards);
+    const { rewards: next, changed } = ensureImmediateDefaultReward(rewards);
     if (changed) {
       onRewardsChange(next);
       const defaultReward = next.find((r) => r.is_default);
@@ -103,12 +137,9 @@ export default function OfferRewardStep({
 
   const errorGroupOptions = useMemo(() => {
     const opts = errorGroupService.toSelectOptions(errorGroups);
-    const currentId = editingRule?.error_group_id;
+    const currentId = errorGroupIdKey(editingRule?.error_group_id);
     const currentLabel = editingRule?.error_group?.trim();
-    if (
-      currentId &&
-      !opts.some((o) => o.value === currentId)
-    ) {
+    if (currentId && !opts.some((o) => o.value === currentId)) {
       opts.unshift({
         value: currentId,
         label: currentLabel || `Error group (${currentId})`,
@@ -124,14 +155,15 @@ export default function OfferRewardStep({
   }, [errorGroups, editingRule?.error_group_id, editingRule?.error_group]);
 
   const selectedErrorGroupValue = useMemo(() => {
-    if (editingRule?.error_group_id) return editingRule.error_group_id;
+    const id = errorGroupIdKey(editingRule?.error_group_id);
+    if (id) return id;
     if (editingRule?.error_group?.trim()) {
       return `__legacy__:${editingRule.error_group.trim()}`;
     }
     return "";
   }, [editingRule?.error_group_id, editingRule?.error_group]);
 
-  const applyErrorGroupSelection = (groupId: string) => {
+  const applyErrorGroupSelection = async (groupId: string) => {
     if (!editingRule) return;
     if (!groupId || groupId.startsWith("__legacy__:")) {
       setEditingRule({
@@ -144,7 +176,34 @@ export default function OfferRewardStep({
       return;
     }
 
-    const group = errorGroups.find((g) => g.id === groupId);
+    let group =
+      errorGroups.find((g) => errorGroupIdKey(g.id) === groupId) || null;
+
+    // Ensure mappings are available for failure-text seeding.
+    if (group && (!group.mappings || group.mappings.length === 0)) {
+      try {
+        group = await errorGroupService.getErrorGroupById(groupId);
+        setErrorGroups((prev) => {
+          const others = prev.filter(
+            (g) => errorGroupIdKey(g.id) !== groupId,
+          );
+          return [...others, group!];
+        });
+      } catch {
+        // Keep list item without mappings
+      }
+    }
+
+    // Attach to selected provider so delivery can resolve code → message.
+    const providerId = editingRule.bundle_subscription_track;
+    if (providerId && Number.isFinite(Number(providerId))) {
+      try {
+        await errorGroupService.attachErrorGroupToProvider(providerId, groupId);
+      } catch (err) {
+        console.warn("Failed to attach error group to provider:", err);
+      }
+    }
+
     if (!group) {
       setEditingRule({
         ...editingRule,
@@ -154,37 +213,42 @@ export default function OfferRewardStep({
     }
 
     const label = formatErrorGroupLabel(group);
+    const suggested = resolveErrorGroupDefaultFailureMessage(group);
     const previousGroup = errorGroups.find(
-      (g) => g.id === editingRule.error_group_id,
+      (g) => errorGroupIdKey(g.id) === errorGroupIdKey(editingRule.error_group_id),
     );
-    const previousDefault = previousGroup?.default_failure_message?.trim() || "";
+    const previousDefault = previousGroup
+      ? resolveErrorGroupDefaultFailureMessage(previousGroup)
+      : "";
     const shouldApplyDefault =
-      !!group.default_failure_message?.trim() &&
+      !!suggested &&
       (!editingRule.failure_text?.trim() ||
         editingRule.failure_text.trim() === previousDefault);
 
     setEditingRule({
       ...editingRule,
-      error_group_id: group.id,
+      error_group_id: errorGroupIdKey(group.id),
       error_group: label,
-      failure_text: shouldApplyDefault
-        ? group.default_failure_message!.trim()
-        : editingRule.failure_text,
+      failure_text: shouldApplyDefault ? suggested : editingRule.failure_text,
     });
   };
 
   const handleErrorGroupCreated = (group: ErrorGroup) => {
     setErrorGroups((prev) => {
-      if (prev.some((g) => g.id === group.id)) return prev;
+      if (prev.some((g) => errorGroupIdKey(g.id) === errorGroupIdKey(group.id))) {
+        return prev.map((g) =>
+          errorGroupIdKey(g.id) === errorGroupIdKey(group.id) ? group : g,
+        );
+      }
       return [...prev, group];
     });
     if (!editingRule) return;
+    const suggested = resolveErrorGroupDefaultFailureMessage(group);
     setEditingRule({
       ...editingRule,
-      error_group_id: group.id,
+      error_group_id: errorGroupIdKey(group.id),
       error_group: formatErrorGroupLabel(group),
-      failure_text:
-        group.default_failure_message?.trim() || editingRule.failure_text,
+      failure_text: suggested || editingRule.failure_text,
     });
   };
 
@@ -325,7 +389,7 @@ export default function OfferRewardStep({
       setRewardActionError(
         trackingSources.length === 0
           ? usesDefaultReward
-            ? "Tracking is optional for seeding. The default reward is already available."
+            ? "Tracking is optional for immediate-reward offers. The default reward is already available."
             : "Add at least one enabled tracking source in the previous step first."
           : "Every tracking source already has a reward. Add another tracking source on the Tracking step.",
       );
@@ -352,7 +416,7 @@ export default function OfferRewardStep({
     const target = rewards.find((r) => r.id === id);
     if (target?.is_default) {
       setRewardActionError(
-        "The default reward cannot be removed for seeding offers.",
+        "The default reward cannot be removed for immediate-reward offers.",
       );
       return;
     }
@@ -420,7 +484,7 @@ export default function OfferRewardStep({
     setRewardActionError("");
     const newRule: OfferRewardRule = parent?.is_default
       ? {
-          ...createDefaultSeedingConfiguration(generateId()),
+          ...createDefaultImmediateConfiguration(generateId()),
           priority: (parent.rules?.length || 0) + 1,
         }
       : {
@@ -453,8 +517,6 @@ export default function OfferRewardStep({
     setRuleParametersValid(true);
     setShowRuleModal(true);
   };
-
-  const selectedProviderId = editingRule?.bundle_subscription_track ?? "";
 
   const { configurations: providerConfigurations, loading: loadingConfigurations } =
     useRewardProviderConfigurations({
@@ -620,8 +682,9 @@ export default function OfferRewardStep({
 
   const selectedRewardData = rewards.find((r) => r.id === selectedReward);
   const selectedIsDefault = selectedRewardData?.is_default === true;
+  const offerTypeLabel = offerTypeName?.trim() || "immediate reward";
   const addConfigButtonLabel = selectedIsDefault
-    ? SEEDING_ADD_CONFIG_BUTTON_LABEL
+    ? formatImmediateAddConfigButtonLabel(offerTypeName)
     : "Add Reward Configuration";
   /** Create and edit share the same binding UI whenever a source is linked. */
   const showTrackingRuleBinding = rewardConfigShouldBindTrackingRule(
@@ -648,8 +711,8 @@ export default function OfferRewardStep({
                 Preparing default reward
               </h3>
               <p className="text-gray-500 text-sm mb-2 max-w-md mx-auto">
-                Seeding offers always include a default reward that does not
-                depend on tracking.
+                {offerTypeLabel} offers always include a default reward that does
+                not depend on tracking.
               </p>
             </>
           ) : (
@@ -658,9 +721,7 @@ export default function OfferRewardStep({
                 No Rewards Added
               </h3>
               <p className="text-gray-500 text-sm mb-2 max-w-md mx-auto">
-                Tracking rules (from the previous step) decide <em>when</em> an
-                offer matches. Reward configurations decide <em>what</em> is
-                granted — they are separate.
+                
               </p>
               <div className="max-w-sm mx-auto space-y-3 mt-6 text-left">
                 <HeadlessSelect
@@ -708,14 +769,14 @@ export default function OfferRewardStep({
                   <h3 className="font-semibold text-gray-900">Rewards</h3>
                   {usesDefaultReward ? (
                     <span className="px-2 py-0.5 text-[11px] font-medium rounded bg-gray-100 text-gray-700">
-                      Seeding
+                      {offerTypeLabel}
                     </span>
                   ) : null}
                 </div>
                 {usesDefaultReward ? (
                   <p className={`text-xs ${tw.textSecondary}`}>
-                    Seeding always includes a default reward. Tracking is
-                    optional — configure the grant below.
+                    {offerTypeLabel} always includes a default reward. Tracking
+                    is optional — configure the grant below.
                   </p>
                 ) : (
                   <>
@@ -827,7 +888,7 @@ export default function OfferRewardStep({
                             <div className="font-medium text-sm text-gray-900 truncate flex items-center gap-2">
                               <span className="truncate">
                                 {isDefault
-                                  ? reward.name || SEEDING_DEFAULT_REWARD_NAME
+                                  ? reward.name || IMMEDIATE_DEFAULT_REWARD_NAME
                                   : trackingSourceLabel(
                                         reward.tracking_source_id,
                                       ) !== "—"
@@ -891,7 +952,7 @@ export default function OfferRewardStep({
                             type="text"
                             value={
                               selectedRewardData.name ||
-                              SEEDING_DEFAULT_REWARD_NAME
+                              IMMEDIATE_DEFAULT_REWARD_NAME
                             }
                             onChange={() => {
                               /* system default — not renamed here */
@@ -902,10 +963,10 @@ export default function OfferRewardStep({
                             className={`px-3 py-2 border border-gray-200 ${tw.rounded} bg-gray-50 text-left`}
                           >
                             <p className={`text-xs ${tw.textSecondary}`}>
-                              Default seeding reward — granted without a
-                              tracking source. Use &quot;
-                              {SEEDING_ADD_CONFIG_BUTTON_LABEL}&quot; to define
-                              what is granted.
+                              Default {offerTypeLabel} reward — granted without
+                              a tracking source. Use &quot;
+                              {addConfigButtonLabel}&quot; to define what is
+                              granted.
                             </p>
                           </div>
                           {rewardActionError ? (
@@ -995,11 +1056,7 @@ export default function OfferRewardStep({
                         <p className="text-gray-500 text-sm mb-1">
                           No reward configuration added yet
                         </p>
-                        <p className={`text-xs ${tw.textSecondary} mb-4 px-4`}>
-                          {selectedIsDefault
-                            ? "Seeding does not pre-create a configuration. Add one to define the grant (provider + reward configuration)."
-                            : "Add a configuration for each tracking rule that should grant a reward (e.g. one for Quick Deliveries, one for Continuous clicks)."}
-                        </p>
+                        
                         <button
                           type="button"
                           onClick={() => addRule()}
@@ -1150,7 +1207,7 @@ export default function OfferRewardStep({
                 <h3 className="text-lg font-semibold text-gray-900">
                   {isNewRule
                     ? selectedIsDefault
-                      ? SEEDING_ADD_CONFIG_BUTTON_LABEL
+                      ? IMMEDIATE_ADD_CONFIG_BUTTON_LABEL
                       : "Add Reward Configuration"
                     : "Edit Reward Configuration"}
                 </h3>
@@ -1408,6 +1465,11 @@ export default function OfferRewardStep({
                   />
                   {errorGroupsError ? (
                     <p className="mt-1 text-xs text-red-600">{errorGroupsError}</p>
+                  ) : !selectedProviderId ? (
+                    <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                      Select a reward provider first so the group can be attached
+                      for fulfilment mapping.
+                    </p>
                   ) : (
                     <p className={`mt-1 text-xs ${tw.textSecondary}`}>
                       Maps fulfilment failures to a reusable group and error codes.
@@ -1499,6 +1561,11 @@ export default function OfferRewardStep({
         isOpen={showErrorGroupModal}
         onClose={() => setShowErrorGroupModal(false)}
         onSaved={handleErrorGroupCreated}
+        providerId={
+          selectedProviderId && Number.isFinite(Number(selectedProviderId))
+            ? Number(selectedProviderId)
+            : null
+        }
       />
     </div>
   );
