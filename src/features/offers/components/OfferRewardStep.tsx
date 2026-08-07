@@ -1141,7 +1141,6 @@ export default function OfferRewardStep({
                     const linked = getLinkedTrackingSource(
                       selectedRewardData.tracking_source_id,
                     );
-                    const trackingRuleCount = linked?.rules?.length ?? 0;
                     return (
                       <div className="space-y-3">
                         <Input
@@ -1155,34 +1154,11 @@ export default function OfferRewardStep({
                           }}
                           disabled
                         />
-                        {linked ? (
-                          <div
-                            className={`px-3 py-2 border border-gray-200 ${tw.rounded} bg-gray-50 text-left`}
-                          >
-                            <p className={`text-xs ${tw.textSecondary}`}>
-                              From Tracking step:{" "}
-                              <span className={`font-medium ${tw.textPrimary}`}>
-                                {trackingRuleCount} tracking rule
-                                {trackingRuleCount === 1 ? "" : "s"}
-                              </span>
-                              {trackingRuleCount > 0
-                                ? ` (${linked.rules
-                                    .slice(0, 2)
-                                    .map((r) => r.name)
-                                    .join(", ")}${
-                                    trackingRuleCount > 2 ? "…" : ""
-                                  })`
-                                : ""}
-                              . Each reward configuration must target one of
-                              those rules — that is when fulfilment runs.
-                            </p>
-                          </div>
-                        ) : (
+                        {!linked ? (
                           <p className={`text-xs text-amber-800`}>
                             This reward is not linked to a tracking source.
-                            
                           </p>
-                        )}
+                        ) : null}
                         {rewardActionError ? (
                           <p className="text-xs text-red-600">
                             {rewardActionError}
