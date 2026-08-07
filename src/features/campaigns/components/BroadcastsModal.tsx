@@ -211,7 +211,7 @@ export default function BroadcastsModal({
                           )}
                         </td>
                         <td className="py-3 px-3">
-                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${className}`} style={style}>
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${className}`} style={style}>
                             {formatBroadcastStatusLabel(broadcast.status)}
                           </span>
                         </td>

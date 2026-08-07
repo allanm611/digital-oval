@@ -121,8 +121,7 @@ export default function ConfigureErrorGroupModal({
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveErrorGroup = async (addAnother: boolean) => {
     if (!validate()) return;
 
     setIsSaving(true);
@@ -163,12 +162,24 @@ export default function ConfigureErrorGroupModal({
           : `Error group "${created.name}" saved`,
       );
       onSaved(withHint);
-      onClose();
+
+      if (addAnother) {
+        // Keep modal open so operators can add multiple groups in one session.
+        resetForm();
+        setAvailableCodes(errorGroupService.getSuggestedErrorCodes());
+      } else {
+        onClose();
+      }
     } catch (err) {
       showError("Error", extractBackendError(err, "Could not save error group."));
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveErrorGroup(false);
   };
 
   if (!isOpen) return null;
@@ -354,7 +365,7 @@ export default function ConfigureErrorGroupModal({
             </span>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-wrap justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
@@ -362,6 +373,14 @@ export default function ConfigureErrorGroupModal({
               className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} disabled:opacity-50`}
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void saveErrorGroup(true)}
+              disabled={isSaving}
+              className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} disabled:opacity-50`}
+            >
+              {isSaving ? "Saving..." : "Save & add another"}
             </button>
             <button
               type="submit"

@@ -1344,7 +1344,6 @@ export default function OfferCreativeStep({
                       }
                     }}
                     options={[
-                      { label: "Choose a creative to use", value: "" },
                       ...existingCreatives
                         .filter(c => c.channel === selectedChannelForFiltering && c.is_active)
                         .filter(c => !creatives.some(ac => ac.id === String(c.id))) // Exclude already added
@@ -1353,7 +1352,7 @@ export default function OfferCreativeStep({
                           label: `${creative.title || creative.name} (${creative.locale})`,
                         }))
                     ]}
-                    placeholder={existingCreativesLoading ? "Loading creatives..." : `Select a ${selectedChannelForFiltering} creative or create new below`}
+                    placeholder={existingCreativesLoading ? "Loading creatives..." : "Choose a creative to use"}
                     disabled={existingCreativesLoading}
                     className="w-full"
                   />
@@ -1376,7 +1375,6 @@ export default function OfferCreativeStep({
                       }
                     }}
                     options={[
-                      { label: "Select a language", value: "" },
                       ...languageOptions.filter((opt) => !opt.isUsed),
                     ]}
                     placeholder={
@@ -1410,7 +1408,6 @@ export default function OfferCreativeStep({
                         selectedCreativeData && handleTemplateSelect(value ? Number(value) : null)
                       }
                       options={[
-                        { value: "", label: "Select template" },
                         ...availableTemplates.map((template) => {
                           let languageLabel = "";
                           if (
@@ -1435,7 +1432,7 @@ export default function OfferCreativeStep({
                           };
                         }),
                       ]}
-                      placeholder="Select a template to start with..."
+                      placeholder="Select template"
                     />
                     {selectedTemplates[selectedCreativeData?.id] && (
                       <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
@@ -1461,7 +1458,6 @@ export default function OfferCreativeStep({
                           })
                         }
                         options={[
-                          { label: t.offers.senderId.defaultPlaceholder, value: "" },
                           ...(senderIds || [])
                             .filter((senderId) => senderId.is_active)
                             .map((senderId) => ({

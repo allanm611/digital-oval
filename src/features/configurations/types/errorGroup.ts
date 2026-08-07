@@ -82,3 +82,47 @@ export function errorGroupIdKey(id: number | string | undefined | null): string 
   if (id === undefined || id === null || id === "") return "";
   return String(id);
 }
+
+/** Normalize selected error group ids from multi + legacy single fields. */
+export function getRuleErrorGroupIds(rule: {
+  error_group_ids?: string[] | null;
+  error_group_id?: string | null;
+}): string[] {
+  const fromArray = (rule.error_group_ids || [])
+    .map((id) => errorGroupIdKey(id))
+    .filter(Boolean);
+  if (fromArray.length > 0) {
+    return Array.from(new Set(fromArray));
+  }
+  const legacy = errorGroupIdKey(rule.error_group_id);
+  return legacy ? [legacy] : [];
+}
+
+/**
+ * Apply selected error group ids onto a rule, keeping legacy single fields
+ * in sync (primary = first selected) for backward-compatible offer metadata.
+ */
+export function withRuleErrorGroups<T extends {
+  error_group_ids?: string[];
+  error_group_id?: string;
+  error_group: string;
+}>(
+  rule: T,
+  selectedIds: Array<string | number>,
+  groups: Array<Pick<ErrorGroup, "id" | "name">>,
+): T {
+  const ids = Array.from(
+    new Set(selectedIds.map((id) => errorGroupIdKey(id)).filter(Boolean)),
+  );
+  const labels = ids.map((id) => {
+    const group = groups.find((g) => errorGroupIdKey(g.id) === id);
+    return group ? formatErrorGroupLabel(group) : `Error group (${id})`;
+  });
+
+  return {
+    ...rule,
+    error_group_ids: ids,
+    error_group_id: ids[0] || "",
+    error_group: labels.join(", "),
+  };
+}

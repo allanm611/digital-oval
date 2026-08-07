@@ -85,7 +85,7 @@ class RewardProviderService {
     return result.data;
   }
 
-  /** DELETE /reward-providers/:id — soft-deactivates provider */
+  /** DELETE /reward-providers/:id */
   async delete(id: number): Promise<{ success: boolean; message?: string }> {
     return this.request<{ success: boolean; message?: string }>(`/${id}`, {
       method: "DELETE",

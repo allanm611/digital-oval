@@ -106,52 +106,52 @@ const JOB_STATUS_COLORS: Record<string, StatusColorConfig> = {
   },
 };
 
-// Broadcast execution statuses (cvm.broadcasts)
+// Broadcast execution statuses — light tint backgrounds with darker text
 const BROADCAST_STATUS_COLORS: Record<string, StatusColorConfig> = {
   draft: {
-    bgHex: "#92A6B0",
-    textHex: COLOR_PALETTE.WHITE,
-    borderHex: "#92A6B0",
+    bgHex: "#F3F4F6",
+    textHex: "#4B5563",
+    borderHex: "#E5E7EB",
   },
   pending: {
-    bgHex: COLOR_PALETTE.YELLOW,
-    textHex: "#000000",
-    borderHex: COLOR_PALETTE.YELLOW,
+    bgHex: "#FEF9C3",
+    textHex: "#854D0E",
+    borderHex: "#FDE68A",
   },
   scheduled: {
-    bgHex: COLOR_PALETTE.YELLOW,
-    textHex: "#000000",
-    borderHex: COLOR_PALETTE.YELLOW,
+    bgHex: "#FEF9C3",
+    textHex: "#854D0E",
+    borderHex: "#FDE68A",
   },
   running: {
-    bgHex: COLOR_PALETTE.BLUE,
-    textHex: COLOR_PALETTE.WHITE,
-    borderHex: COLOR_PALETTE.BLUE,
+    bgHex: "#DBEAFE",
+    textHex: "#1E40AF",
+    borderHex: "#BFDBFE",
   },
   paused: {
-    bgHex: "#F59E0B",
-    textHex: "#000000",
-    borderHex: "#F59E0B",
+    bgHex: "#FFEDD5",
+    textHex: "#9A3412",
+    borderHex: "#FED7AA",
   },
   completed: {
-    bgHex: COLOR_PALETTE.GREEN,
-    textHex: COLOR_PALETTE.WHITE,
-    borderHex: COLOR_PALETTE.GREEN,
+    bgHex: "#DCFCE7",
+    textHex: "#166534",
+    borderHex: "#BBF7D0",
   },
   failed: {
-    bgHex: COLOR_PALETTE.RED,
-    textHex: COLOR_PALETTE.WHITE,
-    borderHex: COLOR_PALETTE.RED,
+    bgHex: "#FEE2E2",
+    textHex: "#991B1B",
+    borderHex: "#FECACA",
   },
   aborted: {
-    bgHex: COLOR_PALETTE.GRAY_DARK,
-    textHex: COLOR_PALETTE.WHITE,
-    borderHex: COLOR_PALETTE.GRAY_DARK,
+    bgHex: "#F3F4F6",
+    textHex: "#374151",
+    borderHex: "#E5E7EB",
   },
   cancelled: {
-    bgHex: COLOR_PALETTE.GRAY_DARK,
-    textHex: COLOR_PALETTE.WHITE,
-    borderHex: COLOR_PALETTE.GRAY_DARK,
+    bgHex: "#F3F4F6",
+    textHex: "#374151",
+    borderHex: "#E5E7EB",
   },
 };
 

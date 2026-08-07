@@ -1242,13 +1242,12 @@ export default function SeedListManagementPage() {
                             }
                           }}
                           options={[
-                            { value: "", label: "Select a user" },
                             ...systemUsers.map((user) => ({
                               value: user.id.toString(),
                               label: `${user.first_name} ${user.last_name}${user.department ? ` (${user.department})` : ""}`,
                             })),
                           ]}
-                          placeholder="Select user..."
+                          placeholder="Select a user"
                           disabled={loadingUsers}
                         />
                       </div>
@@ -1362,13 +1361,12 @@ export default function SeedListManagementPage() {
                         }
                       }}
                       options={[
-                        { value: "", label: "Select a seed list" },
                         ...seedLists.map((list) => ({
                           value: list.id.toString(),
                           label: list.name,
                         })),
                       ]}
-                      placeholder="Select seed list..."
+                      placeholder="Select a seed list"
                       zIndex={zIndex.popover}
                     />
                   </div>
@@ -1389,7 +1387,6 @@ export default function SeedListManagementPage() {
                     // }
                   }}
                   options={[
-                    { value: "", label: "Select Line of Business" },
                     ...linesOfBusiness.map((lob) => ({
                       value: lob.id.toString(),
                       label: lob.name,

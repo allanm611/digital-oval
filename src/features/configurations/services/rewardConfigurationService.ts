@@ -96,7 +96,7 @@ class RewardConfigurationService {
     return result.data;
   }
 
-  /** DELETE /reward-configurations/:id — soft-deactivates configuration */
+  /** DELETE /reward-configurations/:id */
   async delete(id: number): Promise<{ success: boolean; message?: string }> {
     return this.request<{ success: boolean; message?: string }>(`/${id}`, {
       method: "DELETE",

@@ -26,9 +26,21 @@ export interface OfferRewardRule {
   fulfillment_response: string;
   success_text: string;
   default_failure: string;
-  /** Stable catalog id (numeric string) when selected from Error Group dropdown */
+  /**
+   * Selected error group catalog ids (numeric strings).
+   * Prefer this for multi-group mapping; fulfilment also relies on
+   * provider attachments created when groups are selected.
+   */
+  error_group_ids?: string[];
+  /**
+   * Primary / legacy single catalog id.
+   * Kept in sync with `error_group_ids[0]` for older readers.
+   */
   error_group_id?: string;
-  /** Display label / legacy free-text (kept for API compatibility) */
+  /**
+   * Display label(s) — comma-separated when multiple groups are selected.
+   * Also holds legacy free-text when no catalog id was used.
+   */
   error_group: string;
   failure_text: string;
   enabled: boolean;

@@ -12,8 +12,13 @@ import type {
 } from "../types/trackingSource";
 import { isTrackingSourceActive } from "../types/trackingSource";
 
-const API_BASE = buildApiUrl("/tracking-sources");
-const LOCAL_STORAGE_KEY = "sentra_tracking_sources_catalog_v1";
+/**
+ * Catalog CRUD for Configuration → Offer Tracking Sources.
+ * Backend mount: app.use("/offer-tracking-sources", OfferTrackingSourcesRouter)
+ * (distinct from engine `/tracking-sources` attribution catalog)
+ */
+const API_BASE = buildApiUrl("/offer-tracking-sources");
+const LOCAL_STORAGE_KEY = "sentra_offer_tracking_sources_catalog_v1";
 
 const DEFAULT_CONDITIONS = [
   "equals",
@@ -23,7 +28,7 @@ const DEFAULT_CONDITIONS = [
   "is_any_of",
 ];
 
-/** Seed catalog mirrored from type SSOT */
+/** Seed catalog mirrored from type SSOT (offline / empty-API fallback) */
 export const SEED_TRACKING_SOURCES: TrackingSourceCatalogItem[] =
   trackingSourcesData.map((def, index) => ({
     id: index + 1,
@@ -72,44 +77,147 @@ function writeLocalCatalog(items: TrackingSourceCatalogItem[]): void {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
   } catch {
-    // ignore
+    // ignore quota / private mode
   }
 }
 
-function unwrapList(payload: unknown): TrackingSourceCatalogItem[] {
-  if (Array.isArray(payload)) return payload as TrackingSourceCatalogItem[];
-  if (payload && typeof payload === "object") {
-    const data = (payload as { data?: unknown }).data;
-    if (Array.isArray(data)) return data as TrackingSourceCatalogItem[];
+function parseStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+    } catch {
+      return value
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean);
+    }
   }
   return [];
 }
 
-function unwrapOne(payload: unknown): TrackingSourceCatalogItem | null {
-  if (!payload || typeof payload !== "object") return null;
-  const obj = payload as { data?: TrackingSourceCatalogItem } & TrackingSourceCatalogItem;
-  if (obj.data && typeof obj.data === "object" && "id" in obj.data) {
-    return normalizeItem(obj.data);
+function unwrapList(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const data = (payload as { data?: unknown }).data;
+    if (Array.isArray(data)) return data;
   }
-  if ("id" in obj && "name" in obj) return normalizeItem(obj);
+  return [];
+}
+
+function unwrapOne(payload: unknown): unknown | null {
+  if (!payload || typeof payload !== "object") return null;
+  const obj = payload as { data?: unknown; success?: boolean };
+  if (obj.data != null && typeof obj.data === "object" && !Array.isArray(obj.data)) {
+    return obj.data;
+  }
+  if ("id" in obj && "name" in obj) return obj;
   return null;
 }
 
-function normalizeItem(
-  item: TrackingSourceCatalogItem,
-): TrackingSourceCatalogItem {
+/**
+ * Normalize API (snake_case or camelCase) / local rows into the UI catalog shape.
+ * Tolerates the current minimal backend (name, description, is_active) and
+ * richer columns when the schema is expanded.
+ */
+export function normalizeItem(raw: unknown): TrackingSourceCatalogItem {
+  const item = (raw && typeof raw === "object" ? raw : {}) as Record<
+    string,
+    unknown
+  >;
+  const type = String(
+    item.type ?? item.source_type ?? item.sourceType ?? "custom",
+  );
+  const dataSource = String(
+    item.dataSource ??
+      item.data_source ??
+      getDataSourceByType(type) ??
+      "custom_api",
+  );
+  const parameters = parseStringArray(item.parameters);
+  const displayMetrics = parseStringArray(
+    item.displayMetrics ?? item.display_metrics,
+  );
+  const conditions = parseStringArray(item.conditions);
+  const isActive = isTrackingSourceActive({
+    isActive: item.isActive as boolean | undefined,
+    is_active: item.is_active as boolean | undefined,
+  });
+
   return {
-    ...item,
-    parameters: Array.isArray(item.parameters) ? item.parameters : [],
-    displayMetrics: Array.isArray(item.displayMetrics)
-      ? item.displayMetrics
-      : [],
-    conditions: Array.isArray(item.conditions)
-      ? item.conditions
-      : [...DEFAULT_CONDITIONS],
-    dataSource: item.dataSource || getDataSourceByType(String(item.type)),
-    isActive: isTrackingSourceActive(item),
+    id: (item.id as number | string) ?? "",
+    name: String(item.name ?? ""),
+    description:
+      item.description == null || item.description === ""
+        ? undefined
+        : String(item.description),
+    type,
+    dataSource,
+    parameters:
+      parameters.length > 0 ? parameters : getParametersByType(type),
+    displayMetrics:
+      displayMetrics.length > 0 ? displayMetrics : getMetricsByType(type),
+    conditions: conditions.length > 0 ? conditions : [...DEFAULT_CONDITIONS],
+    lookbackPeriod: String(
+      item.lookbackPeriod ?? item.lookback_period ?? "24h",
+    ),
+    customLookbackDate:
+      (item.customLookbackDate as string | undefined) ??
+      (item.custom_lookback_date as string | undefined) ??
+      undefined,
+    isActive,
+    is_active: isActive,
+    created_at: item.created_at as string | undefined,
+    updated_at: item.updated_at as string | undefined,
   };
+}
+
+/** Body the offer-tracking-sources API accepts (camel + snake for compatibility) */
+function toApiPayload(
+  data: CreateTrackingSourceRequest | UpdateTrackingSourceRequest,
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+
+  if (data.name !== undefined) payload.name = String(data.name).trim();
+  if (data.description !== undefined) {
+    payload.description =
+      data.description == null || !String(data.description).trim()
+        ? null
+        : String(data.description).trim();
+  }
+  if (data.type !== undefined) {
+    payload.type = data.type;
+    payload.source_type = data.type;
+  }
+  if (data.dataSource !== undefined) {
+    payload.dataSource = data.dataSource;
+    payload.data_source = data.dataSource;
+  }
+  if (data.parameters !== undefined) {
+    payload.parameters = data.parameters;
+  }
+  if (data.displayMetrics !== undefined) {
+    payload.displayMetrics = data.displayMetrics;
+    payload.display_metrics = data.displayMetrics;
+  }
+  if (data.conditions !== undefined) {
+    payload.conditions = data.conditions;
+  }
+  if (data.lookbackPeriod !== undefined) {
+    payload.lookbackPeriod = data.lookbackPeriod;
+    payload.lookback_period = data.lookbackPeriod;
+  }
+  if (data.customLookbackDate !== undefined) {
+    payload.customLookbackDate = data.customLookbackDate;
+    payload.custom_lookback_date = data.customLookbackDate;
+  }
+  if (data.isActive !== undefined) {
+    payload.isActive = data.isActive;
+    payload.is_active = data.isActive;
+  }
+
+  return payload;
 }
 
 class TrackingSourceService {
@@ -132,9 +240,15 @@ class TrackingSourceService {
         const body = await response.json();
         message = body.error || body.message || message;
       } catch {
-        // keep
+        // keep status message
       }
-      throw new Error(message);
+      const err = new Error(message) as Error & { status?: number };
+      err.status = response.status;
+      throw err;
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return response.json();
@@ -144,16 +258,22 @@ class TrackingSourceService {
     activeOnly?: boolean;
   }): Promise<TrackingSourceCatalogItem[]> {
     const activeOnly = options?.activeOnly === true;
+    // Backend handler checks req.query.isActive; also send is_active for forwards-compat
+    const query = activeOnly ? "?isActive=true&is_active=true" : "";
+
     try {
-      const payload = await this.request<unknown>(
-        activeOnly ? "?is_active=true" : "",
-      );
+      const payload = await this.request<unknown>(query);
       const list = unwrapList(payload).map(normalizeItem);
       if (list.length > 0) {
         return activeOnly ? list.filter(isTrackingSourceActive) : list;
       }
-    } catch {
-      // fall through
+      // Empty successful API response is authoritative — do not silently seed
+      return [];
+    } catch (error) {
+      console.warn(
+        "[trackingSourceService] GET /offer-tracking-sources failed; using local catalog fallback.",
+        error,
+      );
     }
 
     const local = readLocalCatalog().map(normalizeItem);
@@ -164,8 +284,11 @@ class TrackingSourceService {
     id: number | string,
   ): Promise<TrackingSourceCatalogItem | null> {
     try {
-      const payload = await this.request<unknown>(`/${encodeURIComponent(String(id))}`);
-      return unwrapOne(payload);
+      const payload = await this.request<unknown>(
+        `/${encodeURIComponent(String(id))}`,
+      );
+      const one = unwrapOne(payload);
+      return one ? normalizeItem(one) : null;
     } catch {
       return (
         readLocalCatalog()
@@ -178,20 +301,18 @@ class TrackingSourceService {
   async create(
     data: CreateTrackingSourceRequest,
   ): Promise<TrackingSourceCatalogItem> {
-    const body: CreateTrackingSourceRequest = {
+    const body = toApiPayload({
       name: data.name.trim(),
       description: data.description?.trim() || undefined,
       type: data.type,
       dataSource: data.dataSource || getDataSourceByType(data.type),
-      parameters:
-        data.parameters ?? getParametersByType(data.type),
-      displayMetrics:
-        data.displayMetrics ?? getMetricsByType(data.type),
+      parameters: data.parameters ?? getParametersByType(data.type),
+      displayMetrics: data.displayMetrics ?? getMetricsByType(data.type),
       conditions: data.conditions ?? [...DEFAULT_CONDITIONS],
       lookbackPeriod: data.lookbackPeriod || "24h",
       customLookbackDate: data.customLookbackDate,
       isActive: data.isActive !== false,
-    };
+    });
 
     try {
       const payload = await this.request<unknown>("", {
@@ -199,48 +320,63 @@ class TrackingSourceService {
         body: JSON.stringify(body),
       });
       const created = unwrapOne(payload);
-      if (created) return created;
-    } catch {
-      // local fallback
+      if (created) return normalizeItem(created);
+      throw new Error("Create succeeded but response had no tracking source");
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+      // Only fall back locally on network / unreachable API — not on 4xx validation
+      if (status && status >= 400 && status < 600) throw error;
+      console.warn(
+        "[trackingSourceService] POST /offer-tracking-sources failed; local fallback.",
+        error,
+      );
     }
 
     const catalog = readLocalCatalog();
     const now = new Date().toISOString();
     const created: TrackingSourceCatalogItem = {
       id: generateLocalId(catalog),
-      name: body.name,
-      description: body.description,
-      type: body.type,
-      dataSource: body.dataSource,
-      parameters: body.parameters || [],
-      displayMetrics: body.displayMetrics || [],
-      conditions: body.conditions,
-      lookbackPeriod: body.lookbackPeriod,
-      customLookbackDate: body.customLookbackDate,
+      name: String(body.name),
+      description: (body.description as string | undefined) || undefined,
+      type: String(body.type || "custom"),
+      dataSource: String(body.dataSource || "custom_api"),
+      parameters: parseStringArray(body.parameters),
+      displayMetrics: parseStringArray(body.displayMetrics),
+      conditions: parseStringArray(body.conditions),
+      lookbackPeriod: String(body.lookbackPeriod || "24h"),
+      customLookbackDate: body.customLookbackDate as string | undefined,
       isActive: body.isActive !== false,
       created_at: now,
       updated_at: now,
     };
     writeLocalCatalog([...catalog, created]);
-    return created;
+    return normalizeItem(created);
   }
 
   async update(
     id: number | string,
     data: UpdateTrackingSourceRequest,
   ): Promise<TrackingSourceCatalogItem> {
+    const body = toApiPayload(data);
+
     try {
       const payload = await this.request<unknown>(
         `/${encodeURIComponent(String(id))}`,
         {
           method: "PUT",
-          body: JSON.stringify(data),
+          body: JSON.stringify(body),
         },
       );
       const updated = unwrapOne(payload);
-      if (updated) return updated;
-    } catch {
-      // local fallback
+      if (updated) return normalizeItem(updated);
+      throw new Error("Update succeeded but response had no tracking source");
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+      if (status && status >= 400 && status < 600) throw error;
+      console.warn(
+        "[trackingSourceService] PUT /offer-tracking-sources failed; local fallback.",
+        error,
+      );
     }
 
     const catalog = readLocalCatalog();
@@ -270,8 +406,13 @@ class TrackingSourceService {
         method: "DELETE",
       });
       return;
-    } catch {
-      // local fallback
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+      if (status && status >= 400 && status < 600) throw error;
+      console.warn(
+        "[trackingSourceService] DELETE /offer-tracking-sources failed; local fallback.",
+        error,
+      );
     }
 
     writeLocalCatalog(

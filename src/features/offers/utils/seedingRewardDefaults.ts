@@ -58,6 +58,7 @@ export function createDefaultImmediateConfiguration(
     fulfillment_response: "success",
     success_text: "",
     default_failure: "failed",
+    error_group_ids: [],
     error_group_id: "",
     error_group: "",
     failure_text: "",

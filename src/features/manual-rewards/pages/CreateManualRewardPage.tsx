@@ -13,6 +13,10 @@ import { canEditManualReward } from "../utils/canEditManualReward";
 import { mapManualRewardResourceToFormData } from "../utils/mapManualRewardResourceToFormData";
 import { enrichManualRewardFormDataWithProvider } from "../utils/enrichManualRewardFormDataWithProvider";
 import { resolveCreatedRewardId } from "../utils/resolveCreatedRewardId";
+import {
+  isVirtualDefaultTemplateId,
+  materializeRewardTemplateId,
+} from "../../configurations/utils/rewardTemplateDefaults";
 import type { ManualRewardApiStatus } from "../types/manualRewardApi";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -269,6 +273,24 @@ export default function CreateManualRewardPage() {
   const handleSubmit = async () => {
     setIsSaving(true);
     try {
+      let dataForSave = rewardData;
+      if (
+        dataForSave.rewardConfigurationId != null &&
+        isVirtualDefaultTemplateId(dataForSave.rewardConfigurationId) &&
+        dataForSave.rewardProviderId
+      ) {
+        const persisted = await materializeRewardTemplateId(
+          dataForSave.rewardConfigurationId,
+          Number(dataForSave.rewardProviderId),
+        );
+        dataForSave = {
+          ...dataForSave,
+          rewardConfigurationId: persisted.id,
+          rewardConfigurationName: persisted.name,
+        };
+        setRewardData(dataForSave);
+      }
+
       if (isEditMode && rewardId) {
         if (loadedEditStatus && !canEditManualReward(loadedEditStatus)) {
           showError(
@@ -277,11 +299,11 @@ export default function CreateManualRewardPage() {
           return;
         }
         const parsedId = Number(rewardId);
-        const updatePayload = buildUpdateManualRewardPayload(rewardData);
+        const updatePayload = buildUpdateManualRewardPayload(dataForSave);
         await manualRewardService.update(parsedId, updatePayload);
 
         if (
-          rewardData.applyType === "now" &&
+          dataForSave.applyType === "now" &&
           loadedEditStatus &&
           loadedEditStatus !== "applied"
         ) {
@@ -301,7 +323,7 @@ export default function CreateManualRewardPage() {
         return;
       }
 
-      const payload = buildCreateManualRewardPayload(rewardData);
+      const payload = buildCreateManualRewardPayload(dataForSave);
       const result = await manualRewardService.create(payload);
 
       if (!result.success) {

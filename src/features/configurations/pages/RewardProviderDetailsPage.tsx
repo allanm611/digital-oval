@@ -161,7 +161,7 @@ export default function RewardProviderDetailsPage() {
     try {
       setDeleting(true);
       await rewardProviderService.delete(provider.id);
-      showSuccess(`"${provider.name}" has been deactivated.`);
+      showSuccess(`"${provider.name}" has been deleted successfully.`);
       navigate("/dashboard/reward-providers");
     } catch (err) {
       showError(
@@ -343,7 +343,7 @@ export default function RewardProviderDetailsPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Reward Provider"
-        description="This soft-deactivates the provider. Existing configurations may stop fulfilling until reactivated."
+        description="This action cannot be undone. Configurations and fulfilment flows that reference this provider will be affected."
         itemName={provider.name}
         isLoading={deleting}
       />

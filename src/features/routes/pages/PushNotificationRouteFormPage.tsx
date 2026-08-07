@@ -394,15 +394,15 @@ export default function PushNotificationRouteFormPage({ mode }: PushNotification
                   <div>
                     <HeadlessSelect
                       label="Backup Route"
-                      options={[
-                        { value: "", label: "Select a backup route" },
-                        ...(allRoutes
+                      options={
+                        allRoutes
                           .filter((r) => r.id !== (route?.id || formData.backup_route_id))
                           .map((route) => ({
                             value: String(route.id),
                             label: route.name,
-                          })) || []),
-                      ]}
+                          })) || []
+                      }
+                      placeholder="Select a backup route"
                       value={String(formData.backup_route_id || "")}
                       onChange={(value) =>
                         setFormData((prev) => ({

@@ -146,12 +146,12 @@ export default function EditCampaignFlowModal({
                     })
                   }
                   options={[
-                    { value: "", label: "Select Segment" },
                     ...activeSegments.map((seg) => ({
                       value: String(seg.id),
                       label: seg.name,
                     })),
                   ]}
+                  placeholder="Select Segment"
                   disabled={isLoadingActiveData}
                 />
 
@@ -165,12 +165,12 @@ export default function EditCampaignFlowModal({
                     })
                   }
                   options={[
-                    { value: "", label: "Select Offer" },
                     ...activeOffers.map((offer) => ({
                       value: String(offer.id),
                       label: offer.name,
                     })),
                   ]}
+                  placeholder="Select Offer"
                   disabled={isLoadingActiveData}
                 />
               </div>
@@ -287,9 +287,9 @@ export default function EditCampaignFlowModal({
                   })
                 }
                 options={[
-                  { value: "", label: "Select Creative" },
                   // Add creative options here when available from API
                 ]}
+                placeholder="Select Creative"
               />
             </div>
 

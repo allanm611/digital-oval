@@ -1,5 +1,12 @@
 import type { TrackingSourceType } from "../../offers/utils/trackingSourcesConfig";
 
+/**
+ * Catalog item for Configuration → Offer Tracking Sources.
+ * Sourced from GET/POST/PUT/DELETE `/offer-tracking-sources`
+ * (app.use("/offer-tracking-sources", OfferTrackingSourcesRouter)).
+ *
+ * Not the engine attribution catalog at `/tracking-sources`.
+ */
 export interface TrackingSourceCatalogItem {
   id: number | string;
   name: string;

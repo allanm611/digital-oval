@@ -837,7 +837,6 @@ export default function ProductForm({
                 <HeadlessSelect
                   label="Combo Type"
                   options={[
-                    { value: "", label: "Select a combo type" },
                     ...comboTypes
                       .filter((ct) => ct.is_active !== false)
                       .map((ct) => ({

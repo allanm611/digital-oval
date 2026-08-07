@@ -827,13 +827,10 @@ export default function DefineCommunicationStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="SMS Route *"
-                options={[
-                  { value: "", label: "Select SMS Route" },
-                  ...(smsRoutes || []).map((route) => ({
-                      value: route.id.toString(),
-                      label: route.name,
-                    })),
-                ]}
+                options={(smsRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={smsRoute}
                 onChange={(value) => {
                   setSmsRoute(value);
@@ -853,13 +850,10 @@ export default function DefineCommunicationStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="Email Route *"
-                options={[
-                  { value: "", label: "Select Email Route" },
-                  ...(emailRoutes || []).map((route) => ({
-                    value: route.id.toString(),
-                    label: route.name,
-                  })),
-                ]}
+                options={(emailRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={emailRoute}
                 onChange={(value) => {
                   setEmailRoute(value);

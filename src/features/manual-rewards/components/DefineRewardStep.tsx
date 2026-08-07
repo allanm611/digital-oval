@@ -40,6 +40,10 @@ import { type RuleRewardType } from "../../../shared/data/rewardProviders";
 import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
 import { useRewardProviderConfigurations } from "../../../shared/hooks/useRewardProviderConfigurations";
 import { rewardConfigurationService } from "../../configurations/services/rewardConfigurationService";
+import {
+  isVirtualDefaultTemplateId,
+  materializeRewardTemplateId,
+} from "../../configurations/utils/rewardTemplateDefaults";
 import RewardConfigurationParametersEditor from "../../configurations/components/reward-forms/RewardConfigurationParametersEditor";
 
 interface DefineRewardStepProps {
@@ -155,35 +159,46 @@ export default function DefineRewardStep({
 
   const {
     configurations: providerConfigurations,
+    templateOptions,
+    defaultTemplate,
     loading: loadingConfigurations,
     error: configurationLoadError,
+    seedWarning: templateSeedWarning,
   } = useRewardProviderConfigurations({
     providerId: rewardProviderId,
     rewardType,
     enabled: !!rewardProviderId,
   });
 
-  const configurationOptions = useMemo(() => {
-    const opts = providerConfigurations.map((c) => ({
-      value: String(c.id),
-      label: c.name,
-    }));
-    const currentId = rewardConfigurationId;
-    if (
-      currentId != null &&
-      !opts.some((o) => o.value === String(currentId))
-    ) {
-      opts.unshift({
-        value: String(currentId),
-        label:
-          data.rewardConfigurationName || `Configuration #${currentId}`,
-      });
-    }
-    return opts;
+  const configurationOptions = useMemo(
+    () =>
+      templateOptions.map((o) => ({
+        value: String(o.value),
+        label: o.label,
+      })),
+    [templateOptions],
+  );
+
+  const resolvedTemplateId = useMemo(() => {
+    if (!rewardProviderId || loadingConfigurations) return "";
+    if (configurationOptions.length === 0) return "";
+
+    const current =
+      rewardConfigurationId != null ? String(rewardConfigurationId) : "";
+    const optionValues = new Set(configurationOptions.map((o) => o.value));
+    const defaultId = defaultTemplate
+      ? String(defaultTemplate.id)
+      : configurationOptions[0]?.value;
+
+    if (current && optionValues.has(current)) return current;
+    if (defaultId && optionValues.has(defaultId)) return defaultId;
+    return configurationOptions[0]?.value ?? "";
   }, [
-    providerConfigurations,
+    rewardProviderId,
+    loadingConfigurations,
+    configurationOptions,
     rewardConfigurationId,
-    data.rewardConfigurationName,
+    defaultTemplate,
   ]);
 
   const providerSelectOptions = useMemo(() => {
@@ -202,17 +217,16 @@ export default function DefineRewardStep({
   }, [providerOptions, rewardProviderId, getProvider]);
 
   const selectedConfiguration = providerConfigurations.find(
-    (c) => c.id === rewardConfigurationId,
+    (c) => String(c.id) === String(resolvedTemplateId || rewardConfigurationId),
   );
 
   const selectedProvider = getProvider(rewardProviderId);
 
   const selectedConfigurationIdForPanel = useMemo(() => {
-    if (rewardConfigurationId == null) return null;
-    return Number.isFinite(rewardConfigurationId)
-      ? rewardConfigurationId
-      : null;
-  }, [rewardConfigurationId]);
+    if (!resolvedTemplateId) return null;
+    const n = Number(resolvedTemplateId);
+    return Number.isFinite(n) ? n : null;
+  }, [resolvedTemplateId]);
 
   const resolvedProviderFromConfigRef = useRef(false);
   const defaultedProviderRef = useRef(false);
@@ -282,27 +296,32 @@ export default function DefineRewardStep({
     defaultProviderId,
   ]);
 
+  // Keep selected template aligned with the current provider's options/default.
   useEffect(() => {
-    if (isEditMode) return;
-    if (rewardConfigurationId == null || !rewardProviderId) return;
-    if (
-      providerConfigurations.some((c) => c.id === rewardConfigurationId)
-    ) {
-      return;
-    }
-    if (loadingConfigurations) return;
-    setRewardConfigurationId(undefined);
+    if (isEditMode || loadingConfigurations) return;
+    if (!rewardProviderId || !resolvedTemplateId) return;
+
+    const resolvedNum = Number(resolvedTemplateId);
+    if (!Number.isFinite(resolvedNum)) return;
+    if (rewardConfigurationId === resolvedNum) return;
+
+    const matched = providerConfigurations.find(
+      (c) => String(c.id) === resolvedTemplateId,
+    );
+    setRewardConfigurationId(resolvedNum);
     onUpdate({
-      rewardConfigurationId: undefined,
-      rewardConfigurationName: undefined,
-      bundleTrack: "",
+      rewardConfigurationId: resolvedNum,
+      rewardConfigurationName: matched?.name || defaultTemplate?.name,
+      bundleTrack: matched?.name || String(resolvedNum),
     });
   }, [
     isEditMode,
-    rewardConfigurationId,
-    rewardProviderId,
-    providerConfigurations,
     loadingConfigurations,
+    rewardProviderId,
+    resolvedTemplateId,
+    rewardConfigurationId,
+    providerConfigurations,
+    defaultTemplate,
     onUpdate,
   ]);
 
@@ -502,7 +521,7 @@ export default function DefineRewardStep({
     resetRewardValidation();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!rewardProviderId.trim()) {
       setError(
         "Select a reward provider (Configurations → Reward Providers).",
@@ -512,13 +531,13 @@ export default function DefineRewardStep({
 
     if (!rewardConfigurationId) {
       setError(
-        "Select a reward configuration for this provider (Configurations → Reward Configurations).",
+        "Select a reward template for this provider (Configurations → Reward Configurations).",
       );
       return;
     }
 
     if (!configurationParametersValid) {
-      setError("Complete all required configuration parameters.");
+      setError("Complete all required template parameters.");
       return;
     }
 
@@ -540,15 +559,37 @@ export default function DefineRewardStep({
 
     setError("");
 
+    let resolvedConfigurationId = rewardConfigurationId;
+    let resolvedConfigurationName = selectedConfiguration?.name;
+
+    if (isVirtualDefaultTemplateId(rewardConfigurationId)) {
+      try {
+        const persisted = await materializeRewardTemplateId(
+          rewardConfigurationId,
+          Number(rewardProviderId),
+        );
+        resolvedConfigurationId = persisted.id;
+        resolvedConfigurationName = persisted.name;
+        setRewardConfigurationId(persisted.id);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not save the default reward template for this provider.",
+        );
+        return;
+      }
+    }
+
     onUpdate({
       rewardType: rewardType,
       rewardValue: rewardValue.trim(),
       rewardProviderId,
-      rewardConfigurationId,
-      rewardConfigurationName: selectedConfiguration?.name,
+      rewardConfigurationId: resolvedConfigurationId,
+      rewardConfigurationName: resolvedConfigurationName,
       rewardAuthConfig: data.rewardAuthConfig,
       rewardPayloadConfig: data.rewardPayloadConfig,
-      bundleTrack: selectedConfiguration?.name,
+      bundleTrack: resolvedConfigurationName,
       description: description.trim() || undefined,
       channel: selectedChannel,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
@@ -795,22 +836,18 @@ export default function DefineRewardStep({
 
           <div>
             <HeadlessSelect
-              label="Reward Configuration *"
+              label="Reward Template *"
               options={configurationOptions}
-              value={
-                rewardConfigurationId != null
-                  ? String(rewardConfigurationId)
-                  : ""
-              }
+              value={resolvedTemplateId}
               onChange={(value) => handleConfigurationChange(value as string)}
               placeholder={
                 !rewardProviderId
                   ? "Select a provider first"
                   : loadingConfigurations
-                    ? "Loading configurations..."
+                    ? "Loading templates..."
                     : configurationOptions.length === 0
-                      ? "No configurations for this provider"
-                      : "Select reward configuration"
+                      ? "No templates for this provider"
+                      : "Select reward template"
               }
               disabled={
                 isEditMode ||
@@ -826,11 +863,14 @@ export default function DefineRewardStep({
                 : rewardProviderId &&
                     !loadingConfigurations &&
                     configurationOptions.length === 0
-                  ? `No active configurations for this provider and "${rewardType}". Create one under Configurations → Reward Configurations.`
+                  ? `No active templates for this provider and "${rewardType}". Create one under Configurations → Reward Configurations.`
                   : selectedConfiguration
                     ? `${selectedConfiguration.api_path || "API path N/A"}`
-                    : "Credentials and payload template come from the selected configuration."}
+                    : "Credentials and payload values come from the selected reward template (includes the provider default)."}
             </p>
+            {templateSeedWarning ? (
+              <p className="mt-1 text-xs text-amber-800">{templateSeedWarning}</p>
+            ) : null}
           </div>
         </div>
 
@@ -910,13 +950,10 @@ export default function DefineRewardStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="SMS Route *"
-                options={[
-                  { value: "", label: "Select SMS Route" },
-                  ...(smsRoutes || []).map((route) => ({
-                    value: route.id.toString(),
-                    label: route.name,
-                  })),
-                ]}
+                options={(smsRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={smsRoute}
                 onChange={(value) => {
                   setSmsRoute(value);
@@ -932,13 +969,10 @@ export default function DefineRewardStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="Email Route *"
-                options={[
-                  { value: "", label: "Select Email Route" },
-                  ...(emailRoutes || []).map((route) => ({
-                    value: route.id.toString(),
-                    label: route.name,
-                  })),
-                ]}
+                options={(emailRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={emailRoute}
                 onChange={(value) => {
                   setEmailRoute(value);

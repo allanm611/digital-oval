@@ -12,6 +12,7 @@ import {
   CreateRewardProviderRequest,
   UpdateRewardProviderRequest,
 } from "../services/rewardProviderService";
+import { ensureProviderDefaultTemplateDetailed } from "../utils/rewardTemplateDefaults";
 import RewardProviderForm from "../components/reward-forms/RewardProviderForm";
 
 interface RewardProviderFormPageProps {
@@ -91,10 +92,28 @@ export default function RewardProviderFormPage({
         );
         success("Reward provider updated successfully");
       } else {
-        await rewardProviderService.create(
+        const created = await rewardProviderService.create(
           payload as CreateRewardProviderRequest,
         );
-        success("Reward provider created successfully");
+        try {
+          const seeded = await ensureProviderDefaultTemplateDetailed(
+            created.id,
+            created,
+          );
+          if (seeded.isVirtual) {
+            success(
+              "Reward provider created. Default template will use provider field defaults until it can be saved under Reward Configurations.",
+            );
+          } else {
+            success(
+              "Reward provider created successfully with a default reward template",
+            );
+          }
+        } catch {
+          success(
+            "Reward provider created successfully. Default template will be available from provider defaults on first use.",
+          );
+        }
       }
       navigate("/dashboard/reward-providers");
     } catch (err) {

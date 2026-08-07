@@ -9,6 +9,7 @@ import { rewardConfigurationService } from "../services/rewardConfigurationServi
 import { rewardProviderService } from "../services/rewardProviderService";
 import { RewardConfiguration } from "../types/rewardConfiguration";
 import { RewardProviderSchemaField } from "../types/rewardProvider";
+import { isDefaultRewardTemplate } from "../utils/rewardTemplateDefaults";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
@@ -144,6 +145,13 @@ export default function RewardConfigurationDetailsPage() {
   const handleToggleActive = async () => {
     if (!config) return;
     const newActive = !(config.is_active !== false);
+    if (!newActive && isDefaultRewardTemplate(config)) {
+      showError(
+        "Default template protected",
+        "The provider default template cannot be deactivated.",
+      );
+      return;
+    }
     setToggling(true);
     setConfig((prev) => (prev ? { ...prev, is_active: newActive } : prev));
     try {
@@ -173,10 +181,18 @@ export default function RewardConfigurationDetailsPage() {
 
   const handleConfirmDelete = async () => {
     if (!config) return;
+    if (isDefaultRewardTemplate(config)) {
+      showError(
+        "Default template protected",
+        "Each reward provider must keep its default template. Edit its values instead of deleting it.",
+      );
+      setShowDeleteModal(false);
+      return;
+    }
     try {
       setDeleting(true);
       await rewardConfigurationService.delete(config.id);
-      showSuccess(`"${config.name}" has been deactivated.`);
+      showSuccess(`"${config.name}" has been deleted successfully.`);
       navigate("/dashboard/reward-configurations");
     } catch (err) {
       showError(
@@ -204,12 +220,14 @@ export default function RewardConfigurationDetailsPage() {
 
   if (!config) return null;
 
+  const isDefaultTemplate = isDefaultRewardTemplate(config);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
           showBreadcrumb={true}
-          currentLabel="Reward Configuration Details"
+          currentLabel="Reward Template Details"
         />
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -217,6 +235,7 @@ export default function RewardConfigurationDetailsPage() {
             isActive={config.is_active !== false}
             isLoading={toggling}
             onToggle={handleToggleActive}
+            disabled={isDefaultTemplate && config.is_active !== false}
           >
             {config.is_active !== false ? "Deactivate" : "Activate"}
           </ActivateDeactivateButton>
@@ -230,21 +249,23 @@ export default function RewardConfigurationDetailsPage() {
             <Edit className="w-4 h-4" />
             Edit
           </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-xs w-fit`}
-            style={{
-              backgroundColor: button.delete.background,
-              color: button.delete.color,
-              border: button.delete.border,
-              padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
-              borderRadius: button.delete.borderRadius,
-              fontSize: button.delete.fontSize,
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+          {!isDefaultTemplate ? (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-xs w-fit`}
+              style={{
+                backgroundColor: button.delete.background,
+                color: button.delete.color,
+                border: button.delete.border,
+                padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
+                borderRadius: button.delete.borderRadius,
+                fontSize: button.delete.fontSize,
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -257,8 +278,13 @@ export default function RewardConfigurationDetailsPage() {
             <Gift className="w-7 h-7 text-white" />
           </div>
           <div className="flex-1">
-            <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
+            <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2 flex items-center gap-2`}>
               {config.name}
+              {isDefaultTemplate ? (
+                <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded bg-emerald-50 text-emerald-800 border border-emerald-100">
+                  Default
+                </span>
+              ) : null}
             </h2>
             <p className={`text-sm ${tw.textSecondary}`}>
               Linked to provider{" "}
@@ -411,7 +437,7 @@ export default function RewardConfigurationDetailsPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Reward Configuration"
-        description="This sets the configuration to inactive. Offers and manual rewards using it may fail until another configuration is assigned."
+        description="This action cannot be undone. Offers and manual rewards that reference this configuration will be affected."
         itemName={config.name}
         isLoading={deleting}
       />

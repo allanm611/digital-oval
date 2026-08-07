@@ -79,6 +79,20 @@ export function validateOfferRewardTrackingMapping(
       "Each tracking source from the catalog can only be added once.";
   }
 
+  const unlinkedCatalog = trackingSources.some(
+    (s) => s.catalog_source_id == null || s.catalog_source_id === "",
+  );
+  if (unlinkedCatalog) {
+    errors.tracking =
+      "Every tracking source must be linked to a catalog tracking source.";
+  }
+
+  const defaultCount = trackingSources.filter((s) => s.is_default).length;
+  if (defaultCount > 1) {
+    errors.tracking =
+      "Only one tracking source can be set as the default.";
+  }
+
   // Immediate reward (is_immediate_reward): tracking optional; default reward mandatory.
   if (usesDefaultReward) {
     if (!findDefaultReward(rewards)) {
@@ -86,7 +100,7 @@ export function validateOfferRewardTrackingMapping(
         "Immediate-reward offers require a default reward. It should be created automatically — refresh this step.";
     } else if (!isDefaultImmediateRewardConfigured(rewards)) {
       errors.rewards =
-        "Configure the default reward (provider and reward configuration). Tracking is not required for immediate-reward offer types.";
+        "Configure the default reward (provider and reward template). Tracking is not required for immediate-reward offer types.";
     }
 
     const dupRewards = findDuplicateRewardTrackingSourceIds(rewards);

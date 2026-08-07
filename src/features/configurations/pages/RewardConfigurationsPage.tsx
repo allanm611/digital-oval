@@ -17,6 +17,7 @@ import { rewardConfigurationService } from "../services/rewardConfigurationServi
 import { RewardConfiguration } from "../types/rewardConfiguration";
 import { rewardProviderService } from "../services/rewardProviderService";
 import { rewardTypeService } from "../../offers/services/rewardTypeService";
+import { isDefaultRewardTemplate } from "../utils/rewardTemplateDefaults";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import {
   Table,
@@ -60,12 +61,8 @@ export default function RewardConfigurationsPage() {
     onDelete: async (id) => {
       if (!configToDelete) return;
       await rewardConfigurationService.delete(Number(id));
-      setConfigs((prev) =>
-        prev.map((c) =>
-          c.id === Number(id) ? { ...c, is_active: false } : c,
-        ),
-      );
-      showSuccess(`"${configToDelete.name}" has been deactivated.`);
+      setConfigs((prev) => prev.filter((c) => c.id !== Number(id)));
+      showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
     },
     itemLabel: "Reward Configuration",
   });
@@ -140,12 +137,26 @@ export default function RewardConfigurationsPage() {
   };
 
   const handleDeleteClick = (config: RewardConfiguration) => {
+    if (isDefaultRewardTemplate(config)) {
+      showError(
+        "Default template protected",
+        "Each reward provider must keep its default template. Edit its values instead of deleting it.",
+      );
+      return;
+    }
     setConfigToDelete(config);
     openDeleteConfirm(config.id, config.name);
   };
 
   const handleToggleActive = async (config: RewardConfiguration) => {
     const newActive = !(config.is_active !== false);
+    if (!newActive && isDefaultRewardTemplate(config)) {
+      showError(
+        "Default template protected",
+        "The provider default template cannot be deactivated.",
+      );
+      return;
+    }
     setTogglingId(config.id);
     setConfigs((prev) =>
       prev.map((c) =>
@@ -218,6 +229,16 @@ export default function RewardConfigurationsPage() {
       id: "name",
       label: "Name",
       visible: true,
+      render: (value, config) => (
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="truncate">{(value as string) || "—"}</span>
+          {isDefaultRewardTemplate(config) ? (
+            <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded bg-emerald-50 text-emerald-800 border border-emerald-100">
+              Default
+            </span>
+          ) : null}
+        </div>
+      ),
     },
     {
       id: "provider_name",
@@ -263,6 +284,14 @@ export default function RewardConfigurationsPage() {
             isActive={config.is_active !== false}
             isLoading={togglingId === config.id}
             onToggle={() => handleToggleActive(config)}
+            disabled={
+              isDefaultRewardTemplate(config) && config.is_active !== false
+            }
+            title={
+              isDefaultRewardTemplate(config) && config.is_active !== false
+                ? "Default template cannot be deactivated"
+                : undefined
+            }
           />
           <button
             onClick={() =>
@@ -286,8 +315,17 @@ export default function RewardConfigurationsPage() {
           </button>
           <button
             onClick={() => handleDeleteClick(config)}
-            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
-            title="Delete (deactivate) configuration"
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200 ${
+              isDefaultRewardTemplate(config)
+                ? "opacity-40 cursor-not-allowed"
+                : ""
+            }`}
+            title={
+              isDefaultRewardTemplate(config)
+                ? "Default template cannot be deleted"
+                : "Delete configuration"
+            }
+            disabled={isDefaultRewardTemplate(config)}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -340,7 +378,9 @@ export default function RewardConfigurationsPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage reward delivery credentials and payload settings. 
+          Manage reward templates (credentials and payload settings). Every
+          provider includes a protected default template seeded from its schema
+          defaults.
         </p>
         {providerFilterFromUrl && (
           <p className={`text-xs ${tw.textMuted}`}>
@@ -469,7 +509,7 @@ export default function RewardConfigurationsPage() {
         onClose={closeDeleteConfirm}
         onConfirm={confirmDeleteConfig}
         title="Delete Reward Configuration"
-        description="This sets the configuration to inactive. Offers and manual rewards referencing it may fail until a new configuration is used."
+        description="This action cannot be undone. Offers and manual rewards that reference this configuration will be affected."
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
       />

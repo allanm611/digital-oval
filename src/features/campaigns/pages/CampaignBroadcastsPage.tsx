@@ -16,6 +16,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { getStatusBadgeConfig } from "../../../shared/utils/statusColors";
 import { broadcastService } from "../services/broadcastService";
+import { campaignService } from "../services/campaignService";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -56,13 +57,17 @@ const statusOptions = [
 export default function CampaignBroadcastsPage() {
   const { error: showError } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const campaignIdFilter = searchParams.get("campaignId");
+  const selectedCampaign = campaignIdFilter ?? "all";
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [statistics, setStatistics] = useState<Record<string, unknown> | null>(null);
+  const [campaignOptions, setCampaignOptions] = useState<
+    { value: string; label: string }[]
+  >([{ value: "all", label: "All Campaigns" }]);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,7 +107,7 @@ export default function CampaignBroadcastsPage() {
           const { className, style } = getStatusBadgeConfig(row.statusRaw, "broadcast");
           return (
             <span
-              className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${className}`}
+              className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${className}`}
               style={style}
             >
               {row.status}
@@ -201,20 +206,75 @@ export default function CampaignBroadcastsPage() {
     persistToLocalStorage: true,
   });
 
+  const loadCampaigns = useCallback(async () => {
+    try {
+      const response = await campaignService.getCampaigns({
+        limit: 200,
+        offset: 0,
+        skipCache: true,
+      });
+      const campaigns = response?.data ?? [];
+      const options = [
+        { value: "all", label: "All Campaigns" },
+        ...campaigns
+          .filter((campaign) => campaign?.id != null)
+          .map((campaign) => ({
+            value: String(campaign.id),
+            label: campaign.name || `Campaign #${campaign.id}`,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
+      ];
+      setCampaignOptions(options);
+    } catch (err) {
+      console.warn("Failed to load campaigns for filter:", err);
+    }
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
+      const campaignId = campaignIdFilter ? Number(campaignIdFilter) : NaN;
+      const hasValidCampaignFilter =
+        Boolean(campaignIdFilter) && Number.isFinite(campaignId) && campaignId > 0;
+
       const [listResult, statsResult] = await Promise.allSettled([
-        campaignIdFilter
-          ? broadcastService.getCampaignOperationalBroadcasts(Number(campaignIdFilter))
+        hasValidCampaignFilter
+          ? broadcastService.getCampaignOperationalBroadcasts(campaignId)
           : broadcastService.listBroadcasts(),
         broadcastService.getBroadcastStatistics(),
       ]);
 
       if (listResult.status === "fulfilled") {
-        setBroadcasts(listResult.value.data ?? []);
+        const rows = listResult.value.data ?? [];
+        setBroadcasts(rows);
+
+        // Keep filter options complete even if a campaign isn't in the first page of campaigns API
+        setCampaignOptions((prev) => {
+          const byId = new Map(prev.map((opt) => [opt.value, opt]));
+          for (const broadcast of rows) {
+            if (broadcast.campaign_id == null) continue;
+            const value = String(broadcast.campaign_id);
+            if (!byId.has(value)) {
+              byId.set(value, {
+                value,
+                label:
+                  broadcast.campaign_name ||
+                  `Campaign #${broadcast.campaign_id}`,
+              });
+            }
+          }
+          const merged = Array.from(byId.values());
+          const allOption = merged.find((opt) => opt.value === "all") ?? {
+            value: "all",
+            label: "All Campaigns",
+          };
+          const rest = merged
+            .filter((opt) => opt.value !== "all")
+            .sort((a, b) => a.label.localeCompare(b.label));
+          return [allOption, ...rest];
+        });
       } else {
         console.error("Failed to load broadcasts:", listResult.reason);
         setBroadcasts([]);
@@ -240,8 +300,28 @@ export default function CampaignBroadcastsPage() {
   }, [campaignIdFilter, showError]);
 
   useEffect(() => {
+    loadCampaigns();
+  }, [loadCampaigns]);
+
+  useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleCampaignFilterChange = useCallback(
+    (value: string | number) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (value === "all" || value === "" || value == null) {
+          next.delete("campaignId");
+        } else {
+          next.set("campaignId", String(value));
+        }
+        return next;
+      });
+      setCurrentPage(1);
+    },
+    [setSearchParams],
+  );
 
   const filteredBroadcasts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -257,6 +337,14 @@ export default function CampaignBroadcastsPage() {
       return matchesStatus && matchesSearch;
     });
   }, [broadcasts, selectedStatus, searchQuery]);
+
+  const selectedCampaignLabel = useMemo(() => {
+    if (selectedCampaign === "all") return null;
+    return (
+      campaignOptions.find((opt) => opt.value === selectedCampaign)?.label ??
+      `Campaign #${selectedCampaign}`
+    );
+  }, [campaignOptions, selectedCampaign]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -315,7 +403,7 @@ export default function CampaignBroadcastsPage() {
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             View and manage campaign broadcast execution history
-            {campaignIdFilter ? ` · Campaign #${campaignIdFilter}` : ""}
+            {selectedCampaignLabel ? ` · ${selectedCampaignLabel}` : ""}
           </p>
         </div>
       </div>
@@ -338,11 +426,20 @@ export default function CampaignBroadcastsPage() {
         })}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         <SearchInput
           placeholder="Search by campaign, broadcast, channel..."
           value={searchQuery}
           onChange={setSearchQuery}
+        />
+
+        <HeadlessSelect
+          options={campaignOptions}
+          value={selectedCampaign}
+          onChange={handleCampaignFilterChange}
+          placeholder="All Campaigns"
+          searchable
+          className="min-w-[220px]"
         />
 
         <HeadlessSelect
@@ -353,7 +450,7 @@ export default function CampaignBroadcastsPage() {
           value={selectedStatus}
           onChange={(value) => setSelectedStatus(value as string)}
           placeholder="All Status"
-          className=""
+          className="min-w-[180px]"
         />
       </div>
 

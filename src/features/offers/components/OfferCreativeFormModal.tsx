@@ -525,12 +525,11 @@ export default function OfferCreativeFormModal({
                 <TypeSelector
                   label="Creative Template (Optional)"
                   options={[
-                    { label: "Select a template", value: "" },
                     ...filteredTemplates.map((t) => ({ value: String(t.id), label: t.name }))
                   ]}
                   value={selectedTemplate?.id ? String(selectedTemplate.id) : ""}
                   onChange={(value) => handleTemplateSelect(value ? Number(value) : "")}
-                  placeholder="Select template..."
+                  placeholder="Select a template"
                   disabled={templatesLoading || !formData.channel}
                   allowCreate={true}
                   onCreate={() => setIsTemplateModalOpen(true)}
@@ -546,10 +545,9 @@ export default function OfferCreativeFormModal({
                   value={formData.title || ""}
                   onChange={(value) => setFormData((prev) => ({ ...prev, title: value || "" }))}
                   options={[
-                    { label: "Select Sender ID", value: "" },
                     ...senderIds.filter((s) => s.is_active).map((s) => ({ label: s.name, value: s.name })),
                   ]}
-                  placeholder="Select Sender ID..."
+                  placeholder="Select Sender ID"
                   zIndex={zIndex.popover}
                   disabled={senderIdsLoading}
                 />

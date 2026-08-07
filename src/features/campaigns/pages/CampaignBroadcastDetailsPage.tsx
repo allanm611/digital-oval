@@ -218,7 +218,7 @@ export default function CampaignBroadcastDetailsPage() {
           </div>
           <div className="mt-3">
             <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusClass}`}
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusClass}`}
               style={statusStyle}
             >
               {formatBroadcastStatusLabel(status)}

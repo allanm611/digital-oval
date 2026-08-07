@@ -4,7 +4,7 @@ import { Plus, Trash2, Gift, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import TypeSelector from "../../../shared/components/TypeSelector";
+import HeadlessMultiSelect from "../../../shared/components/ui/HeadlessMultiSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import Input from "../../../shared/components/ui/Input";
 import {
@@ -18,9 +18,15 @@ import { errorGroupService } from "../../configurations/services/errorGroupServi
 import type { ErrorGroup } from "../../configurations/types/errorGroup";
 import {
   errorGroupIdKey,
-  formatErrorGroupLabel,
+  getRuleErrorGroupIds,
   resolveErrorGroupDefaultFailureMessage,
+  withRuleErrorGroups,
 } from "../../configurations/types/errorGroup";
+import {
+  isDefaultRewardTemplate,
+  isVirtualDefaultTemplateId,
+  materializeRewardTemplateId,
+} from "../../configurations/utils/rewardTemplateDefaults";
 import type { OfferReward, OfferRewardRule } from "../types/offerReward";
 import type { OfferTrackingSource } from "../types/offerTrackingSource";
 import { rewardConfigShouldBindTrackingRule } from "../utils/normalizeOfferWizardBindings";
@@ -135,121 +141,156 @@ export default function OfferRewardStep({
     }
   }, [usesDefaultReward, rewards, onRewardsChange]);
 
+  const selectedErrorGroupIds = useMemo(
+    () => (editingRule ? getRuleErrorGroupIds(editingRule) : []),
+    [editingRule],
+  );
+
   const errorGroupOptions = useMemo(() => {
-    const opts = errorGroupService.toSelectOptions(errorGroups);
-    const currentId = errorGroupIdKey(editingRule?.error_group_id);
-    const currentLabel = editingRule?.error_group?.trim();
-    if (currentId && !opts.some((o) => o.value === currentId)) {
+    const opts = errorGroupService.toSelectOptions(errorGroups).map((o) => ({
+      value: String(o.value),
+      label: o.label,
+    }));
+    const known = new Set(opts.map((o) => o.value));
+
+    // Keep currently selected ids visible even if temporarily missing from catalog.
+    selectedErrorGroupIds.forEach((id) => {
+      if (!id || known.has(id)) return;
+      const labelPart = editingRule?.error_group
+        ?.split(",")
+        .map((s) => s.trim())
+        .find((s) => s.includes(id));
       opts.unshift({
-        value: currentId,
-        label: currentLabel || `Error group (${currentId})`,
+        value: id,
+        label: labelPart || `Error group (${id})`,
       });
-    } else if (!currentId && currentLabel) {
-      // Legacy free-text value: keep selectable until user picks a catalog group
-      opts.unshift({
-        value: `__legacy__:${currentLabel}`,
-        label: currentLabel,
-      });
-    }
+      known.add(id);
+    });
+
     return opts;
-  }, [errorGroups, editingRule?.error_group_id, editingRule?.error_group]);
+  }, [errorGroups, selectedErrorGroupIds, editingRule?.error_group]);
 
-  const selectedErrorGroupValue = useMemo(() => {
-    const id = errorGroupIdKey(editingRule?.error_group_id);
-    if (id) return id;
-    if (editingRule?.error_group?.trim()) {
-      return `__legacy__:${editingRule.error_group.trim()}`;
-    }
-    return "";
-  }, [editingRule?.error_group_id, editingRule?.error_group]);
-
-  const applyErrorGroupSelection = async (groupId: string) => {
-    if (!editingRule) return;
-    if (!groupId || groupId.startsWith("__legacy__:")) {
-      setEditingRule({
-        ...editingRule,
-        error_group_id: "",
-        error_group: groupId.startsWith("__legacy__:")
-          ? groupId.slice("__legacy__:".length)
-          : "",
-      });
-      return;
-    }
-
+  const ensureGroupDetails = async (groupId: string): Promise<ErrorGroup | null> => {
     let group =
       errorGroups.find((g) => errorGroupIdKey(g.id) === groupId) || null;
-
-    // Ensure mappings are available for failure-text seeding.
-    if (group && (!group.mappings || group.mappings.length === 0)) {
-      try {
-        group = await errorGroupService.getErrorGroupById(groupId);
-        setErrorGroups((prev) => {
-          const others = prev.filter(
-            (g) => errorGroupIdKey(g.id) !== groupId,
-          );
-          return [...others, group!];
-        });
-      } catch {
-        // Keep list item without mappings
-      }
-    }
-
-    // Attach to selected provider so delivery can resolve code → message.
-    const providerId = editingRule.bundle_subscription_track;
-    if (providerId && Number.isFinite(Number(providerId))) {
-      try {
-        await errorGroupService.attachErrorGroupToProvider(providerId, groupId);
-      } catch (err) {
-        console.warn("Failed to attach error group to provider:", err);
-      }
-    }
-
-    if (!group) {
-      setEditingRule({
-        ...editingRule,
-        error_group_id: groupId,
+    if (group && group.mappings && group.mappings.length > 0) return group;
+    try {
+      group = await errorGroupService.getErrorGroupById(groupId);
+      setErrorGroups((prev) => {
+        const others = prev.filter((g) => errorGroupIdKey(g.id) !== groupId);
+        return [...others, group!];
       });
-      return;
+      return group;
+    } catch {
+      return group;
+    }
+  };
+
+  const attachGroupsToProvider = async (groupIds: string[]) => {
+    const providerId = editingRule?.bundle_subscription_track;
+    if (!providerId || !Number.isFinite(Number(providerId))) return;
+    await Promise.allSettled(
+      groupIds.map((groupId) =>
+        errorGroupService.attachErrorGroupToProvider(providerId, groupId),
+      ),
+    );
+  };
+
+  const applyErrorGroupSelections = async (rawIds: Array<string | number>) => {
+    if (!editingRule) return;
+
+    const nextIds = Array.from(
+      new Set(rawIds.map((id) => errorGroupIdKey(id)).filter(Boolean)),
+    );
+    const previousIds = getRuleErrorGroupIds(editingRule);
+    const addedIds = nextIds.filter((id) => !previousIds.includes(id));
+
+    // Prefetch details for newly added groups (failure-text seeding).
+    const resolvedGroups = [...errorGroups];
+    for (const groupId of addedIds) {
+      const detailed = await ensureGroupDetails(groupId);
+      if (
+        detailed &&
+        !resolvedGroups.some((g) => errorGroupIdKey(g.id) === groupId)
+      ) {
+        resolvedGroups.push(detailed);
+      }
     }
 
-    const label = formatErrorGroupLabel(group);
-    const suggested = resolveErrorGroupDefaultFailureMessage(group);
-    const previousGroup = errorGroups.find(
-      (g) => errorGroupIdKey(g.id) === errorGroupIdKey(editingRule.error_group_id),
-    );
-    const previousDefault = previousGroup
-      ? resolveErrorGroupDefaultFailureMessage(previousGroup)
+    await attachGroupsToProvider(addedIds.length > 0 ? addedIds : nextIds);
+
+    const primaryId = nextIds[0] || "";
+    const primaryGroup = primaryId
+      ? resolvedGroups.find((g) => errorGroupIdKey(g.id) === primaryId) ||
+        errorGroups.find((g) => errorGroupIdKey(g.id) === primaryId)
+      : null;
+    const suggested = primaryGroup
+      ? resolveErrorGroupDefaultFailureMessage(primaryGroup)
+      : "";
+    const previousPrimary = previousIds[0]
+      ? errorGroups.find((g) => errorGroupIdKey(g.id) === previousIds[0])
+      : null;
+    const previousDefault = previousPrimary
+      ? resolveErrorGroupDefaultFailureMessage(previousPrimary)
       : "";
     const shouldApplyDefault =
       !!suggested &&
       (!editingRule.failure_text?.trim() ||
         editingRule.failure_text.trim() === previousDefault);
 
-    setEditingRule({
-      ...editingRule,
-      error_group_id: errorGroupIdKey(group.id),
-      error_group: label,
-      failure_text: shouldApplyDefault ? suggested : editingRule.failure_text,
-    });
+    setEditingRule(
+      withRuleErrorGroups(
+        {
+          ...editingRule,
+          failure_text: shouldApplyDefault
+            ? suggested
+            : editingRule.failure_text,
+        },
+        nextIds,
+        resolvedGroups,
+      ),
+    );
   };
 
   const handleErrorGroupCreated = (group: ErrorGroup) => {
+    const groupId = errorGroupIdKey(group.id);
     setErrorGroups((prev) => {
-      if (prev.some((g) => errorGroupIdKey(g.id) === errorGroupIdKey(group.id))) {
+      if (prev.some((g) => errorGroupIdKey(g.id) === groupId)) {
         return prev.map((g) =>
-          errorGroupIdKey(g.id) === errorGroupIdKey(group.id) ? group : g,
+          errorGroupIdKey(g.id) === groupId ? group : g,
         );
       }
       return [...prev, group];
     });
-    if (!editingRule) return;
-    const suggested = resolveErrorGroupDefaultFailureMessage(group);
-    setEditingRule({
-      ...editingRule,
-      error_group_id: errorGroupIdKey(group.id),
-      error_group: formatErrorGroupLabel(group),
-      failure_text: suggested || editingRule.failure_text,
+
+    // Append (do not replace) so "Save & add another" accumulates multiple groups.
+    setEditingRule((prev) => {
+      if (!prev) return prev;
+      const nextIds = Array.from(
+        new Set([...getRuleErrorGroupIds(prev), groupId]),
+      );
+      const suggested = resolveErrorGroupDefaultFailureMessage(group);
+      const shouldSeedFailure =
+        !!suggested &&
+        (!prev.failure_text?.trim() || getRuleErrorGroupIds(prev).length === 0);
+      return withRuleErrorGroups(
+        {
+          ...prev,
+          failure_text: shouldSeedFailure ? suggested : prev.failure_text,
+        },
+        nextIds,
+        [group, ...errorGroups],
+      );
     });
+
+    const providerId = editingRule?.bundle_subscription_track;
+    if (providerId && Number.isFinite(Number(providerId))) {
+      void errorGroupService
+        .attachErrorGroupToProvider(providerId, groupId)
+        .catch((err) =>
+          console.warn("Failed to attach error group to provider:", err),
+        );
+    }
   };
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -505,6 +546,7 @@ export default function OfferRewardStep({
           fulfillment_response: "success",
           success_text: "",
           default_failure: "failed",
+          error_group_ids: [],
           error_group_id: "",
           error_group: "",
           failure_text: "",
@@ -518,43 +560,69 @@ export default function OfferRewardStep({
     setShowRuleModal(true);
   };
 
-  const { configurations: providerConfigurations, loading: loadingConfigurations } =
-    useRewardProviderConfigurations({
-      providerId: selectedProviderId,
-      rewardType: editingRule?.reward_type ?? null,
-      enabled: showRuleModal && !!selectedProviderId,
-    });
+  const {
+    configurations: providerConfigurations,
+    templateOptions,
+    defaultTemplate,
+    loading: loadingConfigurations,
+    seedWarning: templateSeedWarning,
+  } = useRewardProviderConfigurations({
+    providerId: selectedProviderId,
+    rewardType: editingRule?.reward_type ?? null,
+    enabled: showRuleModal && !!selectedProviderId,
+  });
 
   const configurationOptions = useMemo(() => {
-    const opts = providerConfigurations.map((c) => ({
-      value: String(c.id),
-      label: c.name,
+    return templateOptions.map((o) => ({
+      value: String(o.value),
+      label: o.label,
     }));
-    const currentId = editingRule?.reward_configuration_id;
-    if (
-      currentId &&
-      !opts.some((o) => o.value === String(currentId))
-    ) {
-      opts.unshift({
-        value: String(currentId),
-        label:
-          editingRule?.reward_configuration_name ||
-          `Configuration #${currentId}`,
-      });
+  }, [templateOptions]);
+
+  /**
+   * Resolve the template id that should be selected for the current provider.
+   * Keeps the dropdown and parameters panel aligned when switching providers
+   * (empty / stale / virtual ids → provider default).
+   */
+  const resolvedTemplateId = useMemo(() => {
+    if (!selectedProviderId || loadingConfigurations) return "";
+    if (configurationOptions.length === 0) return "";
+
+    const current = String(editingRule?.reward_configuration_id ?? "").trim();
+    const optionValues = new Set(configurationOptions.map((o) => o.value));
+    const defaultId = defaultTemplate
+      ? String(defaultTemplate.id)
+      : configurationOptions.find((o) =>
+          providerConfigurations.some(
+            (c) =>
+              String(c.id) === o.value && isDefaultRewardTemplate(c),
+          ),
+        )?.value || configurationOptions[0]?.value;
+
+    if (current && optionValues.has(current)) {
+      return current;
     }
-    return opts;
+
+    // Virtual / stale id after provider switch or dedupe — use default.
+    if (defaultId && optionValues.has(defaultId)) {
+      return defaultId;
+    }
+
+    return configurationOptions[0]?.value ?? "";
   }, [
-    providerConfigurations,
+    selectedProviderId,
+    loadingConfigurations,
+    configurationOptions,
     editingRule?.reward_configuration_id,
-    editingRule?.reward_configuration_name,
+    defaultTemplate,
+    providerConfigurations,
   ]);
 
   const selectedConfigurationId = useMemo(() => {
-    const raw = editingRule?.reward_configuration_id;
-    if (!raw) return null;
-    const n = Number(raw);
+    if (!resolvedTemplateId) return null;
+    const n = Number(resolvedTemplateId);
     return Number.isFinite(n) ? n : null;
-  }, [editingRule?.reward_configuration_id]);
+  }, [resolvedTemplateId]);
 
   useEffect(() => {
     if (!showRuleModal || !editingRule || loadingRewardProviders) return;
@@ -565,6 +633,10 @@ export default function OfferRewardStep({
         ? {
             ...prev,
             bundle_subscription_track: defaultProviderId,
+            reward_configuration_id: "",
+            reward_configuration_name: "",
+            auth_config: undefined,
+            payload_config: undefined,
           }
         : prev,
     );
@@ -575,7 +647,60 @@ export default function OfferRewardStep({
     defaultProviderId,
   ]);
 
-  const saveRule = (rewardId: string, rule: OfferRewardRule) => {
+  // Keep form state in sync with the resolved template for the selected provider.
+  useEffect(() => {
+    if (!showRuleModal) return;
+    if (!selectedProviderId || loadingConfigurations) return;
+    if (!resolvedTemplateId) return;
+
+    const matched = providerConfigurations.find(
+      (c) => String(c.id) === resolvedTemplateId,
+    );
+
+    setEditingRule((prev) => {
+      if (!prev) return prev;
+      if (String(prev.bundle_subscription_track) !== String(selectedProviderId)) {
+        return prev;
+      }
+      if (String(prev.reward_configuration_id ?? "") === resolvedTemplateId) {
+        // Still refresh name if it was missing (avoids blank / Template #id labels).
+        if (!prev.reward_configuration_name?.trim() && matched?.name) {
+          return { ...prev, reward_configuration_name: matched.name };
+        }
+        return prev;
+      }
+
+      const previousId = String(prev.reward_configuration_id ?? "");
+      const switchingTemplate =
+        !previousId ||
+        previousId !== resolvedTemplateId ||
+        isVirtualDefaultTemplateId(previousId);
+
+      return {
+        ...prev,
+        reward_configuration_id: resolvedTemplateId,
+        reward_configuration_name:
+          matched?.name ||
+          defaultTemplate?.name ||
+          prev.reward_configuration_name ||
+          "",
+        // Reload provider defaults when template/provider mapping changes.
+        auth_config: switchingTemplate ? undefined : prev.auth_config,
+        payload_config: switchingTemplate ? undefined : prev.payload_config,
+      };
+    });
+  }, [
+    showRuleModal,
+    selectedProviderId,
+    loadingConfigurations,
+    resolvedTemplateId,
+    providerConfigurations,
+    defaultTemplate,
+  ]);
+
+  const [isSavingRule, setIsSavingRule] = useState(false);
+
+  const saveRule = async (rewardId: string, rule: OfferRewardRule) => {
     const parent = rewards.find((r) => r.id === rewardId);
     const isDefaultReward = parent?.is_default === true;
     const inheritedSourceId = isDefaultReward
@@ -604,11 +729,11 @@ export default function OfferRewardStep({
       return;
     }
     if (!ruleToSave.reward_configuration_id?.trim()) {
-      setRuleModalError("Select a reward configuration for this provider.");
+      setRuleModalError("Select a reward template for this provider.");
       return;
     }
     if (ruleToSave.reward_configuration_id && !ruleParametersValid) {
-      setRuleModalError("Complete all required configuration parameters.");
+      setRuleModalError("Complete all required template parameters.");
       return;
     }
     if (bindTrackingRule && ruleToSave.enabled && !inheritedSourceId) {
@@ -653,23 +778,70 @@ export default function OfferRewardStep({
     const reward = rewards.find((r) => r.id === rewardId);
     if (!reward) return;
 
-    const existingRuleIndex = reward.rules.findIndex(
-      (r) => r.id === ruleToSave.id,
-    );
-    let updatedRules;
-
-    if (existingRuleIndex >= 0) {
-      updatedRules = [...reward.rules];
-      updatedRules[existingRuleIndex] = ruleToSave;
-    } else {
-      updatedRules = [...reward.rules, ruleToSave];
-    }
-
-    updateReward(rewardId, { rules: updatedRules });
-    setShowRuleModal(false);
-    setEditingRule(null);
-    setIsNewRule(false);
+    setIsSavingRule(true);
     setRuleModalError("");
+    try {
+      // Persist virtual provider-default templates before storing the offer rule.
+      if (isVirtualDefaultTemplateId(ruleToSave.reward_configuration_id)) {
+        const providerId = Number(ruleToSave.bundle_subscription_track);
+        const persisted = await materializeRewardTemplateId(
+          ruleToSave.reward_configuration_id,
+          providerId,
+        );
+        ruleToSave = {
+          ...ruleToSave,
+          reward_configuration_id: String(persisted.id),
+          reward_configuration_name: persisted.name,
+        };
+      }
+
+      // Normalize multi error-group selection + ensure provider attachments.
+      const selectedGroupIds = getRuleErrorGroupIds(ruleToSave);
+      ruleToSave = withRuleErrorGroups(
+        ruleToSave,
+        selectedGroupIds,
+        errorGroups,
+      );
+      if (selectedGroupIds.length > 0) {
+        const providerId = ruleToSave.bundle_subscription_track;
+        if (providerId && Number.isFinite(Number(providerId))) {
+          await Promise.allSettled(
+            selectedGroupIds.map((groupId) =>
+              errorGroupService.attachErrorGroupToProvider(
+                providerId,
+                groupId,
+              ),
+            ),
+          );
+        }
+      }
+
+      const existingRuleIndex = reward.rules.findIndex(
+        (r) => r.id === ruleToSave.id,
+      );
+      let updatedRules;
+
+      if (existingRuleIndex >= 0) {
+        updatedRules = [...reward.rules];
+        updatedRules[existingRuleIndex] = ruleToSave;
+      } else {
+        updatedRules = [...reward.rules, ruleToSave];
+      }
+
+      updateReward(rewardId, { rules: updatedRules });
+      setShowRuleModal(false);
+      setEditingRule(null);
+      setIsNewRule(false);
+      setRuleModalError("");
+    } catch (err) {
+      setRuleModalError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save reward template for this provider.",
+      );
+    } finally {
+      setIsSavingRule(false);
+    }
   };
 
   const removeRule = (rewardId: string, ruleId: string) => {
@@ -726,22 +898,18 @@ export default function OfferRewardStep({
               <div className="max-w-sm mx-auto space-y-3 mt-6 text-left">
                 <HeadlessSelect
                   label="Add reward for tracking source"
-                  options={[
-                    {
-                      value: "",
-                      label:
-                        unassignedTrackingSourceOptions.length === 0
-                          ? "No unused tracking sources"
-                          : "Select tracking source...",
-                    },
-                    ...unassignedTrackingSourceOptions,
-                  ]}
+                  options={unassignedTrackingSourceOptions}
                   value={sourceToAddReward}
                   onChange={(value) => {
                     setSourceToAddReward(String(value));
                     setRewardActionError("");
                   }}
                   disabled={unassignedTrackingSourceOptions.length === 0}
+                  placeholder={
+                    unassignedTrackingSourceOptions.length === 0
+                      ? "No unused tracking sources"
+                      : "Select tracking source..."
+                  }
                 />
                 <button
                   type="button"
@@ -782,22 +950,18 @@ export default function OfferRewardStep({
                   <>
                     <HeadlessSelect
                       label="Add reward for"
-                      options={[
-                        {
-                          value: "",
-                          label:
-                            unassignedTrackingSourceOptions.length === 0
-                              ? "All sources have rewards"
-                              : "Select tracking source...",
-                        },
-                        ...unassignedTrackingSourceOptions,
-                      ]}
+                      options={unassignedTrackingSourceOptions}
                       value={sourceToAddReward}
                       onChange={(value) => {
                         setSourceToAddReward(String(value));
                         setRewardActionError("");
                       }}
                       disabled={unassignedTrackingSourceOptions.length === 0}
+                      placeholder={
+                        unassignedTrackingSourceOptions.length === 0
+                          ? "All sources have rewards"
+                          : "Select tracking source..."
+                      }
                     />
                     <button
                       type="button"
@@ -821,22 +985,18 @@ export default function OfferRewardStep({
                     <div className="mt-2 space-y-2">
                       <HeadlessSelect
                         label="Add reward for"
-                        options={[
-                          {
-                            value: "",
-                            label:
-                              unassignedTrackingSourceOptions.length === 0
-                                ? "All sources have rewards"
-                                : "Select tracking source...",
-                          },
-                          ...unassignedTrackingSourceOptions,
-                        ]}
+                        options={unassignedTrackingSourceOptions}
                         value={sourceToAddReward}
                         onChange={(value) => {
                           setSourceToAddReward(String(value));
                           setRewardActionError("");
                         }}
                         disabled={unassignedTrackingSourceOptions.length === 0}
+                        placeholder={
+                          unassignedTrackingSourceOptions.length === 0
+                            ? "All sources have rewards"
+                            : "Select tracking source..."
+                        }
                       />
                       <button
                         type="button"
@@ -1344,9 +1504,17 @@ export default function OfferRewardStep({
                       options={providerOptions}
                       value={editingRule.bundle_subscription_track}
                       onChange={(value) => {
+                        const nextProviderId = String(value);
+                        if (
+                          nextProviderId ===
+                          String(editingRule.bundle_subscription_track)
+                        ) {
+                          return;
+                        }
+                        // Clear template immediately so parameters reload for the new provider.
                         setEditingRule({
                           ...editingRule,
-                          bundle_subscription_track: value as string,
+                          bundle_subscription_track: nextProviderId,
                           reward_configuration_id: "",
                           reward_configuration_name: "",
                           auth_config: undefined,
@@ -1381,17 +1549,18 @@ export default function OfferRewardStep({
 
                   <div>
                     <HeadlessSelect
-                      label="Reward Configuration"
+                      label="Reward Template"
                       options={configurationOptions}
-                      value={editingRule.reward_configuration_id ?? ""}
+                      value={resolvedTemplateId}
                       onChange={(value) => {
+                        const nextId = String(value);
                         const config = providerConfigurations.find(
-                          (c) => String(c.id) === String(value),
+                          (c) => String(c.id) === nextId,
                         );
                         setEditingRule({
                           ...editingRule,
-                          reward_configuration_id: value as string,
-                          reward_configuration_name: config?.name,
+                          reward_configuration_id: nextId,
+                          reward_configuration_name: config?.name || "",
                           auth_config: undefined,
                           payload_config: undefined,
                         });
@@ -1401,10 +1570,10 @@ export default function OfferRewardStep({
                         !editingRule.bundle_subscription_track
                           ? "Select a provider first"
                           : loadingConfigurations
-                            ? "Loading configurations..."
+                            ? "Loading templates..."
                             : configurationOptions.length === 0
-                              ? "No configurations for this provider"
-                              : "Select reward configuration"
+                              ? "No templates for this provider"
+                              : "Select reward template"
                       }
                       disabled={
                         !editingRule.bundle_subscription_track ||
@@ -1416,9 +1585,27 @@ export default function OfferRewardStep({
                     {editingRule.bundle_subscription_track &&
                     !loadingConfigurations &&
                     configurationOptions.length === 0 ? (
+                      <p className="mt-1 text-xs text-red-600">
+                        Could not load or build a default template for this
+                        provider. Check that the provider exists and you can
+                        access Configurations → Reward Configurations.
+                      </p>
+                    ) : editingRule.bundle_subscription_track &&
+                      !loadingConfigurations &&
+                      configurationOptions.length > 0 ? (
                       <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                        No active configurations for this provider. Create one
-                        under Configurations → Reward Configurations.
+                        Default template uses all provider fields with their
+                        default values
+                        {selectedConfigurationId != null &&
+                        isVirtualDefaultTemplateId(selectedConfigurationId)
+                          ? " (shown from the provider until saved)."
+                          : "."}{" "}
+                        Custom templates also appear here when configured.
+                      </p>
+                    ) : null}
+                    {templateSeedWarning ? (
+                      <p className="mt-1 text-xs text-amber-800">
+                        {templateSeedWarning}
                       </p>
                     ) : null}
                   </div>
@@ -1446,34 +1633,59 @@ export default function OfferRewardStep({
                 ) : null}
 
                 <div>
-                  <TypeSelector
-                    label="Error Group"
-                    options={errorGroupOptions}
-                    value={selectedErrorGroupValue}
-                    onChange={(value) => applyErrorGroupSelection(String(value))}
-                    placeholder={
-                      loadingErrorGroups
-                        ? "Loading error groups..."
-                        : errorGroupOptions.length === 0
-                          ? "No error groups configured"
-                          : "Select error group"
-                    }
-                    disabled={loadingErrorGroups && errorGroupOptions.length === 0}
-                    allowCreate
-                    onCreate={() => setShowErrorGroupModal(true)}
-                    createTitle="Configure error group"
-                  />
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-1.5`}>
+                    Error Groups
+                  </label>
+                  <div className="flex">
+                    <div className="flex-1 min-w-0">
+                      <HeadlessMultiSelect
+                        options={errorGroupOptions}
+                        value={selectedErrorGroupIds}
+                        onChange={(values) =>
+                          void applyErrorGroupSelections(values)
+                        }
+                        placeholder={
+                          loadingErrorGroups
+                            ? "Loading error groups..."
+                            : errorGroupOptions.length === 0
+                              ? "No error groups configured"
+                              : "Select one or more error groups"
+                        }
+                        disabled={
+                          loadingErrorGroups && errorGroupOptions.length === 0
+                        }
+                        searchable
+                        maxDisplayed={2}
+                        className="[&>div>button]:rounded-r-none"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowErrorGroupModal(true)}
+                      className="px-3 py-2 text-white rounded-r-md flex items-center justify-center text-sm border-l-0 self-start"
+                      style={{
+                        backgroundColor: color.primary.action,
+                        borderColor: color.primary.action,
+                        border: "1px solid",
+                        minHeight: "42px",
+                      }}
+                      title="Configure new error group"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                   {errorGroupsError ? (
                     <p className="mt-1 text-xs text-red-600">{errorGroupsError}</p>
                   ) : !selectedProviderId ? (
                     <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                      Select a reward provider first so the group can be attached
-                      for fulfilment mapping.
+                      Select a reward provider first so selected groups can be
+                      attached for fulfilment mapping.
                     </p>
                   ) : (
                     <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                      Maps fulfilment failures to a reusable group and error codes.
-                      Use + to configure a new group.
+                      Select multiple groups to map different provider error
+                      codes. Each selected group is attached to the reward
+                      provider. Use + to create another group.
                     </p>
                   )}
                 </div>
@@ -1544,12 +1756,15 @@ export default function OfferRewardStep({
                 <button
                   onClick={() =>
                     selectedRewardData &&
-                    saveRule(selectedRewardData.id, editingRule)
+                    void saveRule(selectedRewardData.id, editingRule)
                   }
-                  className={`px-4 py-2 text-white ${tw.rounded}`}
+                  disabled={isSavingRule}
+                  className={`px-4 py-2 text-white ${tw.rounded} disabled:opacity-60`}
                   style={{ backgroundColor: color.primary.action }}
                 >
-                  Save Reward Configuration
+                  {isSavingRule
+                    ? "Saving..."
+                    : "Save Reward Configuration"}
                 </button>
               </div>
             </div>

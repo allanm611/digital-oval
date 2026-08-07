@@ -433,7 +433,8 @@ export type AllConfigurations =
  * - /campaign-categories
  * - /offer-types
  * - /offer-categories
- * - /tracking-sources
+ * - /offer-tracking-sources
+ * - /tracking-sources (engine attribution catalog)
  * - /reward-types
  * - /sender-ids
  * - /sms-routes
@@ -463,7 +464,7 @@ export const CONFIGURATION_ENDPOINTS = {
   // Offer
   OFFER_TYPES: "/api/configuration/offer-types",
   OFFER_CATEGORIES: "/api/configuration/offer-categories",
-  TRACKING_SOURCES: "/api/configuration/tracking-sources",
+  TRACKING_SOURCES: "/api/database-service/offer-tracking-sources",
   REWARD_TYPES: "/api/configuration/reward-types",
   SENDER_IDS: "/api/configuration/sender-ids",
   SMS_ROUTES: "/api/configuration/sms-routes",

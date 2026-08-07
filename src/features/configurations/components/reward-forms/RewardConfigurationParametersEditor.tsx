@@ -6,6 +6,11 @@ import { rewardConfigurationService } from "../../services/rewardConfigurationSe
 import { rewardProviderService } from "../../services/rewardProviderService";
 import type { RewardConfiguration } from "../../types/rewardConfiguration";
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
+import {
+  buildVirtualDefaultRewardTemplate,
+  isVirtualDefaultTemplateId,
+  providerIdFromVirtualTemplateId,
+} from "../../utils/rewardTemplateDefaults";
 import RewardSchemaFieldControl from "./RewardSchemaFieldControl";
 import {
   buildInitialConfigValues,
@@ -192,14 +197,27 @@ export default function RewardConfigurationParametersEditor({
       setLoading(true);
       setLoadError(null);
       try {
-        const found = await rewardConfigurationService.getById(configurationId);
-        if (cancelled) return;
+        let found: RewardConfiguration;
+        let provider;
 
-        const provider = await rewardProviderService.getById(found.provider_id);
-        if (cancelled) return;
+        if (isVirtualDefaultTemplateId(configurationId)) {
+          const providerId = providerIdFromVirtualTemplateId(configurationId);
+          if (providerId == null) {
+            throw new Error("Invalid default reward template");
+          }
+          provider = await rewardProviderService.getById(providerId);
+          if (cancelled) return;
+          found = buildVirtualDefaultRewardTemplate(provider);
+        } else {
+          found = await rewardConfigurationService.getById(configurationId);
+          if (cancelled) return;
+          provider = await rewardProviderService.getById(found.provider_id);
+          if (cancelled) return;
+        }
 
         const authSchemaFields = provider.auth_schema?.fields || [];
         const payloadSchemaFields = provider.payload_schema?.fields || [];
+        // Virtual / default templates use provider schema defaults as master values.
         const foundAuth = (found.auth_config as Record<string, unknown>) || {};
         const foundPayload =
           (found.payload_config as Record<string, unknown>) || {};
@@ -374,10 +392,12 @@ export default function RewardConfigurationParametersEditor({
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <h4 className={`text-sm font-semibold ${tw.textPrimary}`}>
-            Configuration parameters
+            Template parameters
           </h4>
           <p className={`text-xs ${tw.textMuted} mt-0.5`}>
-           
+            {config?.is_virtual
+              ? "Provider default values — saved as a reward template when you save this rule."
+              : "Override editable fields for this reward grant."}
           </p>
         </div>
         {config && (

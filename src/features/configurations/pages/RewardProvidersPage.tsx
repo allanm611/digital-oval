@@ -52,12 +52,8 @@ export default function RewardProvidersPage() {
     onDelete: async (id) => {
       if (!providerToDelete) return;
       await rewardProviderService.delete(Number(id));
-      setProviders((prev) =>
-        prev.map((p) =>
-          p.id === Number(id) ? { ...p, is_active: false } : p,
-        ),
-      );
-      showSuccess(`"${providerToDelete.name}" has been deactivated.`);
+      setProviders((prev) => prev.filter((p) => p.id !== Number(id)));
+      showSuccess(`"${providerToDelete.name}" has been deleted successfully.`);
     },
     itemLabel: "Reward Provider",
   });
@@ -238,7 +234,7 @@ export default function RewardProvidersPage() {
           <button
             onClick={() => handleDeleteClick(provider)}
             className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
-            title="Delete (deactivate) provider"
+            title="Delete provider"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -385,7 +381,7 @@ export default function RewardProvidersPage() {
         onClose={closeDeleteConfirm}
         onConfirm={confirmDeleteProvider}
         title="Delete Reward Provider"
-        description="This soft-deactivates the provider. Existing configurations may stop fulfilling until reactivated."
+        description="This action cannot be undone. Configurations and fulfilment flows that reference this provider will be affected."
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
       />
