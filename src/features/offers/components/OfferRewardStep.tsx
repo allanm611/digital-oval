@@ -39,6 +39,9 @@ import {
   IMMEDIATE_DEFAULT_REWARD_NAME,
 } from "../utils/seedingRewardDefaults";
 import ConfigureErrorGroupModal from "./ConfigureErrorGroupModal";
+import SelectErrorGroupsModal, {
+  type SelectedErrorGroupChoice,
+} from "./SelectErrorGroupsModal";
 import SelectOfferRewardTrackingSourcesModal from "./SelectOfferRewardTrackingSourcesModal";
 
 interface OfferRewardStepProps {
@@ -72,8 +75,9 @@ export default function OfferRewardStep({
   const [loadingErrorGroups, setLoadingErrorGroups] = useState(false);
   const [errorGroupsError, setErrorGroupsError] = useState("");
   const [showErrorGroupModal, setShowErrorGroupModal] = useState(false);
-  /** Incomplete row waiting for an error-group selection (Add another). */
-  const [draftErrorGroupRow, setDraftErrorGroupRow] = useState(false);
+  /** Mirrors Offer Tracking "Select Tracking Sources" for error groups. */
+  const [showSelectErrorGroupsModal, setShowSelectErrorGroupsModal] =
+    useState(false);
   const {
     providerOptions,
     defaultProviderId,
@@ -191,14 +195,6 @@ export default function OfferRewardStep({
     return opts;
   }, [errorGroups, selectedErrorGroupIds]);
 
-  const availableErrorGroupOptions = useMemo(
-    () =>
-      allErrorGroupOptions.filter(
-        (o) => !selectedErrorGroupIds.includes(String(o.value)),
-      ),
-    [allErrorGroupOptions, selectedErrorGroupIds],
-  );
-
   const failureMessageOptions = useMemo(
     () =>
       buildFailureMessageOptions(
@@ -211,9 +207,17 @@ export default function OfferRewardStep({
 
   useEffect(() => {
     if (!showRuleModal) {
-      setDraftErrorGroupRow(false);
+      setShowSelectErrorGroupsModal(false);
     }
   }, [showRuleModal]);
+
+  const availableErrorGroups = useMemo(
+    () =>
+      errorGroups.filter(
+        (g) => !selectedErrorGroupIds.includes(errorGroupIdKey(g.id)),
+      ),
+    [errorGroups, selectedErrorGroupIds],
+  );
 
   // Seed missing per-group messages once catalog details are available.
   useEffect(() => {
@@ -364,22 +368,38 @@ export default function OfferRewardStep({
       (_, i) => i !== index,
     );
     await applyErrorGroupSelections(nextIds);
-    if (nextIds.length === 0) setDraftErrorGroupRow(false);
   };
 
-  const addDraftErrorGroupRow = () => {
-    if (availableErrorGroupOptions.length === 0) return;
-    setDraftErrorGroupRow(true);
+  /** Same entry point as Offer Tracking "+ Add tracking source". */
+  const openSelectErrorGroupsModal = () => {
+    setRuleModalError("");
+    setShowSelectErrorGroupsModal(true);
   };
 
-  const commitDraftErrorGroup = async (groupId: string) => {
-    const normalized = errorGroupIdKey(groupId);
-    if (!normalized) return;
-    await applyErrorGroupSelections([
-      ...selectedErrorGroupIds,
-      normalized,
-    ]);
-    setDraftErrorGroupRow(false);
+  const confirmSelectedErrorGroups = async (
+    selections: SelectedErrorGroupChoice[],
+  ) => {
+    if (!editingRule || selections.length === 0) {
+      setShowSelectErrorGroupsModal(false);
+      return;
+    }
+
+    const messageOverrides: Record<string, string> = {};
+    const nextIds = [...selectedErrorGroupIds];
+
+    for (const choice of selections) {
+      const id = errorGroupIdKey(choice.id);
+      if (!id || nextIds.includes(id)) continue;
+      nextIds.push(id);
+      messageOverrides[id] = choice.message?.trim() || "";
+      await ensureGroupDetails(id);
+    }
+
+    await applyErrorGroupSelections(nextIds, {
+      ...getRuleErrorGroupMessages(editingRule),
+      ...messageOverrides,
+    });
+    setShowSelectErrorGroupsModal(false);
   };
 
   const handleErrorGroupCreated = (group: ErrorGroup) => {
@@ -393,31 +413,9 @@ export default function OfferRewardStep({
       return [...prev, group];
     });
 
-    // Append (do not replace) so "Save & add another" accumulates multiple groups.
-    setEditingRule((prev) => {
-      if (!prev) return prev;
-      const nextIds = Array.from(
-        new Set([...getRuleErrorGroupIds(prev), groupId]),
-      );
-      const suggested = resolveErrorGroupDefaultFailureMessage(group);
-      const shouldSeedCatchAll =
-        !!suggested && !prev.failure_text?.trim();
-      return withRuleErrorGroups(
-        {
-          ...prev,
-          failure_text: shouldSeedCatchAll ? suggested : prev.failure_text,
-        },
-        nextIds,
-        [group, ...errorGroups],
-        {
-          messages: {
-            ...getRuleErrorGroupMessages(prev),
-            [groupId]: suggested,
-          },
-        },
-      );
-    });
-    setDraftErrorGroupRow(false);
+    // Like Create Tracking Source: refresh the catalog and return to the
+    // selection modal so the operator chooses which groups to confirm.
+    setShowSelectErrorGroupsModal(true);
 
     const providerId = editingRule?.bundle_subscription_track;
     if (providerId && Number.isFinite(Number(providerId))) {
@@ -1855,36 +1853,16 @@ export default function OfferRewardStep({
                     >
                       Error Groups
                     </label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={addDraftErrorGroupRow}
-                        disabled={
-                          availableErrorGroupOptions.length === 0 ||
-                          draftErrorGroupRow
-                        }
-                        className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} disabled:opacity-50`}
-                        style={{ backgroundColor: color.primary.action }}
-                        title={
-                          availableErrorGroupOptions.length === 0
-                            ? "All error groups are already selected"
-                            : "Add another error group"
-                        }
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add another error group
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowErrorGroupModal(true)}
-                        className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded}`}
-                        style={{ backgroundColor: color.primary.action }}
-                        title="Configure new error group"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Create
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={openSelectErrorGroupsModal}
+                      className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded}`}
+                      style={{ backgroundColor: color.primary.action }}
+                      title="Select error groups"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add another error group
+                    </button>
                   </div>
 
                   {errorGroupsError ? (
@@ -1898,44 +1876,30 @@ export default function OfferRewardStep({
                     </p>
                   ) : (
                     <p className={`mb-2 text-xs ${tw.textSecondary}`}>
-                      Map provider error codes to offer-specific messages. Each
-                      selected group is attached to the reward provider. Only
-                      unselected groups appear when adding another.
+                      Open the picker to choose error groups and their messages
+                      (same flow as Add tracking source). Already selected
+                      groups are excluded so each can only be added once.
                     </p>
                   )}
 
-                  {selectedErrorGroupIds.length === 0 && !draftErrorGroupRow ? (
+                  {selectedErrorGroupIds.length === 0 ? (
                     <div
                       className={`text-center py-6 border-2 border-dashed border-gray-200 ${tw.rounded}`}
                     >
                       <p className={`text-sm ${tw.textSecondary} mb-3`}>
                         {loadingErrorGroups
                           ? "Loading error groups..."
-                          : allErrorGroupOptions.length === 0
-                            ? "No error groups configured"
-                            : "No error groups selected"}
+                          : "No error groups selected"}
                       </p>
-                      {allErrorGroupOptions.length > 0 ? (
-                        <button
-                          type="button"
-                          onClick={addDraftErrorGroupRow}
-                          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
-                          style={{ backgroundColor: color.primary.action }}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add error group
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setShowErrorGroupModal(true)}
-                          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
-                          style={{ backgroundColor: color.primary.action }}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Create error group
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={openSelectErrorGroupsModal}
+                        className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
+                        style={{ backgroundColor: color.primary.action }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add error group
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -1948,10 +1912,10 @@ export default function OfferRewardStep({
                         return (
                           <div
                             key={`${groupId}-${index}`}
-                            className={`p-3 border border-gray-200 ${tw.rounded} space-y-3`}
+                            className={`p-4 border border-gray-200 ${tw.rounded}`}
                           >
                             <div className="flex items-start gap-2">
-                              <div className="flex-1 min-w-0">
+                              <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <HeadlessSelect
                                   label="Error group"
                                   options={optionsForRow}
@@ -1965,6 +1929,18 @@ export default function OfferRewardStep({
                                   placeholder="Select error group"
                                   searchable
                                 />
+                                <Input
+                                  label="Message for this error group"
+                                  type="text"
+                                  value={errorGroupMessages[groupId] || ""}
+                                  onChange={(value) =>
+                                    updateErrorGroupMessage(
+                                      groupId,
+                                      String(value),
+                                    )
+                                  }
+                                  placeholder="User-facing message when this group matches..."
+                                />
                               </div>
                               <button
                                 type="button"
@@ -1977,60 +1953,9 @@ export default function OfferRewardStep({
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
-                            <Input
-                              label="Message for this error group"
-                              type="text"
-                              value={errorGroupMessages[groupId] || ""}
-                              onChange={(value) =>
-                                updateErrorGroupMessage(
-                                  groupId,
-                                  String(value),
-                                )
-                              }
-                              placeholder="User-facing message when this group matches..."
-                            />
                           </div>
                         );
                       })}
-
-                      {draftErrorGroupRow ? (
-                        <div
-                          className={`p-3 border border-dashed border-gray-300 ${tw.rounded} space-y-3`}
-                        >
-                          <div className="flex items-start gap-2">
-                            <div className="flex-1 min-w-0">
-                              <HeadlessSelect
-                                label="Error group"
-                                options={availableErrorGroupOptions}
-                                value=""
-                                onChange={(value) =>
-                                  void commitDraftErrorGroup(String(value))
-                                }
-                                placeholder={
-                                  availableErrorGroupOptions.length === 0
-                                    ? "No remaining error groups"
-                                    : "Select an error group..."
-                                }
-                                searchable
-                                disabled={
-                                  availableErrorGroupOptions.length === 0
-                                }
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setDraftErrorGroupRow(false)}
-                              className="mt-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
-                              title="Cancel"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <p className={`text-xs ${tw.textMuted}`}>
-                            Select a group to reveal and edit its message.
-                          </p>
-                        </div>
-                      ) : null}
                     </div>
                   )}
                 </div>
@@ -2088,6 +2013,16 @@ export default function OfferRewardStep({
           </div>,
           document.body
         )}
+
+      <SelectErrorGroupsModal
+        open={showSelectErrorGroupsModal}
+        groups={availableErrorGroups}
+        loading={loadingErrorGroups}
+        error={errorGroupsError}
+        onClose={() => setShowSelectErrorGroupsModal(false)}
+        onConfirm={(selections) => void confirmSelectedErrorGroups(selections)}
+        onCreate={() => setShowErrorGroupModal(true)}
+      />
 
       <ConfigureErrorGroupModal
         isOpen={showErrorGroupModal}
