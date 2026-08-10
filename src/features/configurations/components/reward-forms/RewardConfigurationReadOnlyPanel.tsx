@@ -156,7 +156,7 @@ export default function RewardConfigurationReadOnlyPanel({
             Configuration parameters
           </h4>
           <p className={`text-xs ${tw.textMuted} mt-0.5`}>
-            Values stored on the selected reward configuration (read-only).
+            Values stored on the selected reward template (read-only).
           </p>
         </div>
         {config && (

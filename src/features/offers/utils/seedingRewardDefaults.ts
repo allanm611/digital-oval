@@ -61,6 +61,7 @@ export function createDefaultImmediateConfiguration(
     error_group_ids: [],
     error_group_id: "",
     error_group: "",
+    error_group_messages: {},
     failure_text: "",
     enabled: true,
   };

@@ -102,7 +102,7 @@ export default function RewardProviderFormPage({
           );
           if (seeded.isVirtual) {
             success(
-              "Reward provider created. Default template will use provider field defaults until it can be saved under Reward Configurations.",
+              "Reward provider created. Default template will use provider field defaults until it can be saved under Reward Templates.",
             );
           } else {
             success(

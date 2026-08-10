@@ -426,8 +426,8 @@ export default function RewardConfigurationForm({
               ? "Creating..."
               : "Updating..."
             : mode === "create"
-              ? "Create Configuration"
-              : "Update Configuration"}
+              ? "Create Template"
+              : "Update Template"}
         </button>
       </div>
     </form>

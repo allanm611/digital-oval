@@ -594,6 +594,10 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/RewardProvidersContainer"),
   ),
+  EngineTrackingSourcesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/EngineTrackingSourcesContainer"),
+  ),
   RewardConfigurationsPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/RewardConfigurationsContainer"),
@@ -1224,6 +1228,10 @@ export default function Dashboard() {
           <Route
             path="/offer-tracking-sources"
             element={<OfferPages.TrackingSourcesPage />}
+          />
+          <Route
+            path="/tracking-sources/*"
+            element={<SettingsPages.EngineTrackingSourcesPage />}
           />
           <Route
             path="/creative-templates"

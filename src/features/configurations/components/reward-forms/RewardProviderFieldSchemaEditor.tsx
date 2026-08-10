@@ -6,6 +6,7 @@ import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw } from "../../../../shared/utils/utils";
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
 import { patchFieldForTypeChange } from "./rewardSchemaFieldUtils";
+import CommaSeparatedOptionsInput from "../CommaSeparatedOptionsInput";
 
 const FIELD_TYPES: {
   value: RewardProviderSchemaField["type"];
@@ -264,26 +265,14 @@ export default function RewardProviderFieldSchemaEditor({
 
                 {field.type === "select" && (
                   <div className="mt-3">
-                    <Input
-                      label="Options (comma-separated) *"
-                      value={(field.options || []).join(", ")}
-                      onChange={(v) =>
-                        updateField(index, {
-                          options: v
-                            .split(",")
-                            .map((o) => o.trim())
-                            .filter(Boolean),
-                        })
-                      }
+                    <CommaSeparatedOptionsInput
+                      value={field.options || []}
+                      onChange={(options) => updateField(index, { options })}
                       placeholder="e.g. days, hours, months"
                       disabled={disabled}
                       hasError={!!errors[`${prefix}_options`]}
+                      error={errors[`${prefix}_options`]}
                     />
-                    {errors[`${prefix}_options`] && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors[`${prefix}_options`]}
-                      </p>
-                    )}
                   </div>
                 )}
 
@@ -298,7 +287,7 @@ export default function RewardProviderFieldSchemaEditor({
                       disabled={disabled}
                     />
                     <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                      Required when creating a reward configuration
+                      Required when creating a reward template
                     </span>
                   </label>
                   <label className="flex items-start gap-2 cursor-pointer">

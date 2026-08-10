@@ -531,7 +531,7 @@ export default function DefineRewardStep({
 
     if (!rewardConfigurationId) {
       setError(
-        "Select a reward template for this provider (Configurations → Reward Configurations).",
+        "Select a reward template for this provider (Configurations → Reward Templates).",
       );
       return;
     }
@@ -863,7 +863,7 @@ export default function DefineRewardStep({
                 : rewardProviderId &&
                     !loadingConfigurations &&
                     configurationOptions.length === 0
-                  ? `No active templates for this provider and "${rewardType}". Create one under Configurations → Reward Configurations.`
+                  ? `No active templates for this provider and "${rewardType}". Create one under Configurations → Reward Templates.`
                   : selectedConfiguration
                     ? `${selectedConfiguration.api_path || "API path N/A"}`
                     : "Credentials and payload values come from the selected reward template (includes the provider default)."}

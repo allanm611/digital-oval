@@ -124,13 +124,13 @@ export default function RewardConfigurationFormPage({
       }
       success(
         "Saved",
-        `Reward configuration ${mode === "edit" ? "updated" : "created"} successfully`,
+        `Reward template ${mode === "edit" ? "updated" : "created"} successfully`,
       );
       navigate("/dashboard/reward-configurations");
     } catch (err) {
       showError(
         "Error",
-        extractBackendError(err, "Failed to save reward configuration."),
+        extractBackendError(err, "Failed to save reward template."),
       );
     } finally {
       setIsSaving(false);
@@ -142,7 +142,7 @@ export default function RewardConfigurationFormPage({
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
         <p className={`${tw.textMuted} font-medium mt-4`}>
-          Loading configuration...
+          Loading template...
         </p>
       </div>
     );
@@ -161,8 +161,8 @@ export default function RewardConfigurationFormPage({
         showBreadcrumb={true}
         currentLabel={
           mode === "create"
-            ? "Create Reward Configuration"
-            : "Edit Reward Configuration"
+            ? "Create Reward Template"
+            : "Edit Reward Template"
         }
       />
 

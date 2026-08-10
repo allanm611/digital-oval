@@ -4,6 +4,7 @@ import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw } from "../../../../shared/utils/utils";
 import { GatewayProviderField } from "../../services/gatewayProviderService";
+import CommaSeparatedOptionsInput from "../CommaSeparatedOptionsInput";
 
 const FIELD_TYPES: { value: GatewayProviderField["type"]; label: string }[] = [
   { value: "text", label: "Text" },
@@ -227,26 +228,14 @@ export default function GatewayProviderFieldSchemaEditor({
 
                 {field.type === "select" && (
                   <div className="mt-3">
-                    <Input
-                      label="Options (comma-separated) *"
-                      value={(field.options || []).join(", ")}
-                      onChange={(v) =>
-                        updateField(index, {
-                          options: v
-                            .split(",")
-                            .map((o) => o.trim())
-                            .filter(Boolean),
-                        })
-                      }
+                    <CommaSeparatedOptionsInput
+                      value={field.options || []}
+                      onChange={(options) => updateField(index, { options })}
                       placeholder="e.g. production, staging, sandbox"
                       disabled={disabled}
                       hasError={!!errors[`${prefix}_options`]}
+                      error={errors[`${prefix}_options`]}
                     />
-                    {errors[`${prefix}_options`] && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {errors[`${prefix}_options`]}
-                      </p>
-                    )}
                   </div>
                 )}
 

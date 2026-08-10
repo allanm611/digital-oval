@@ -25,6 +25,21 @@ export function findDuplicateTrackingCatalogIds(
 }
 
 /**
+ * Offer tracking sources that lack an engine attribution FK
+ * (`/tracking-sources` → cvm.tracking_sources). Reward mappings need this id.
+ */
+export function findTrackingSourcesMissingEngineId(
+  trackingSources: OfferTrackingSource[],
+): OfferTrackingSource[] {
+  return trackingSources.filter(
+    (s) =>
+      s.enabled !== false &&
+      (s.engine_tracking_source_id == null ||
+        !Number.isFinite(Number(s.engine_tracking_source_id))),
+  );
+}
+
+/**
  * Ensures each offer reward is bound to a distinct tracking source.
  */
 export function findDuplicateRewardTrackingSourceIds(

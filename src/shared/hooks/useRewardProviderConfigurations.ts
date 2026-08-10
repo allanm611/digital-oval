@@ -157,7 +157,7 @@ export function useRewardProviderConfigurations(
             setSeedWarning(
               (prev) =>
                 prev ||
-                "Showing provider default template (not yet saved as a reward configuration).",
+                "Showing provider default template (not yet saved as a reward template).",
             );
           } catch (providerErr) {
             setError(

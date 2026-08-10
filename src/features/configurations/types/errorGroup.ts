@@ -98,18 +98,71 @@ export function getRuleErrorGroupIds(rule: {
   return legacy ? [legacy] : [];
 }
 
+/** Per-group offer override messages keyed by catalog id. */
+export function getRuleErrorGroupMessages(rule: {
+  error_group_messages?: Record<string, string> | null;
+}): Record<string, string> {
+  const raw = rule.error_group_messages || {};
+  const next: Record<string, string> = {};
+  Object.entries(raw).forEach(([id, message]) => {
+    const key = errorGroupIdKey(id);
+    if (!key) return;
+    next[key] = typeof message === "string" ? message : String(message ?? "");
+  });
+  return next;
+}
+
+/**
+ * Build dropdown options for the catch-all default failure message from
+ * unique mapping messages across the error-group catalog (plus extras).
+ */
+export function buildFailureMessageOptions(
+  groups: Array<Pick<ErrorGroup, "mappings">>,
+  currentValue?: string | null,
+  extraMessages?: Array<string | null | undefined>,
+): Array<{ value: string; label: string }> {
+  const seen = new Set<string>();
+  const options: Array<{ value: string; label: string }> = [];
+
+  const push = (message: string) => {
+    const trimmed = message.trim();
+    if (!trimmed || seen.has(trimmed)) return;
+    seen.add(trimmed);
+    options.push({
+      value: trimmed,
+      label: trimmed.length > 80 ? `${trimmed.slice(0, 77)}…` : trimmed,
+    });
+  };
+
+  groups.forEach((group) => {
+    (group.mappings || []).forEach((m) => push(m.user_message || ""));
+  });
+  (extraMessages || []).forEach((m) => push(m || ""));
+
+  const current = currentValue?.trim();
+  if (current) push(current);
+
+  return options;
+}
+
 /**
  * Apply selected error group ids onto a rule, keeping legacy single fields
  * in sync (primary = first selected) for backward-compatible offer metadata.
+ * Also prunes/seeds `error_group_messages` for the active selection.
  */
 export function withRuleErrorGroups<T extends {
   error_group_ids?: string[];
   error_group_id?: string;
   error_group: string;
+  error_group_messages?: Record<string, string>;
 }>(
   rule: T,
   selectedIds: Array<string | number>,
-  groups: Array<Pick<ErrorGroup, "id" | "name">>,
+  groups: Array<Pick<ErrorGroup, "id" | "name" | "mappings">>,
+  options?: {
+    messages?: Record<string, string>;
+    seedMissingMessages?: boolean;
+  },
 ): T {
   const ids = Array.from(
     new Set(selectedIds.map((id) => errorGroupIdKey(id)).filter(Boolean)),
@@ -119,10 +172,37 @@ export function withRuleErrorGroups<T extends {
     return group ? formatErrorGroupLabel(group) : `Error group (${id})`;
   });
 
+  const previousMessages = getRuleErrorGroupMessages(rule);
+  const incoming = options?.messages
+    ? getRuleErrorGroupMessages({ error_group_messages: options.messages })
+    : previousMessages;
+  const seedMissing = options?.seedMissingMessages !== false;
+  const nextMessages: Record<string, string> = {};
+
+  ids.forEach((id) => {
+    if (Object.prototype.hasOwnProperty.call(incoming, id)) {
+      nextMessages[id] = incoming[id];
+      return;
+    }
+    if (Object.prototype.hasOwnProperty.call(previousMessages, id)) {
+      nextMessages[id] = previousMessages[id];
+      return;
+    }
+    if (seedMissing) {
+      const group = groups.find((g) => errorGroupIdKey(g.id) === id);
+      nextMessages[id] = group
+        ? resolveErrorGroupDefaultFailureMessage(group)
+        : "";
+    } else {
+      nextMessages[id] = "";
+    }
+  });
+
   return {
     ...rule,
     error_group_ids: ids,
     error_group_id: ids[0] || "",
     error_group: labels.join(", "),
+    error_group_messages: nextMessages,
   };
 }

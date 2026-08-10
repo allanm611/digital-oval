@@ -464,7 +464,10 @@ export const CONFIGURATION_ENDPOINTS = {
   // Offer
   OFFER_TYPES: "/api/configuration/offer-types",
   OFFER_CATEGORIES: "/api/configuration/offer-categories",
+  /** @deprecated Prefer API_CONFIG.ENDPOINTS.OFFER_TRACKING_SOURCES — this path is the offer catalog, not engine /tracking-sources */
   TRACKING_SOURCES: "/api/database-service/offer-tracking-sources",
+  OFFER_TRACKING_SOURCES: "/api/database-service/offer-tracking-sources",
+  ENGINE_TRACKING_SOURCES: "/api/database-service/tracking-sources",
   REWARD_TYPES: "/api/configuration/reward-types",
   SENDER_IDS: "/api/configuration/sender-ids",
   SMS_ROUTES: "/api/configuration/sms-routes",

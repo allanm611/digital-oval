@@ -245,7 +245,7 @@ export default function RewardProviderDetailsPage() {
               {provider.http_method} {provider.api_path}
               {configCount > 0
                 ? ` · ${configCount} configuration${configCount === 1 ? "" : "s"}`
-                : " · No configurations yet"}
+                : " · No templates yet"}
             </p>
             {provider.description && (
               <p className={`text-sm ${tw.textMuted} mt-2`}>
@@ -266,8 +266,8 @@ export default function RewardProviderDetailsPage() {
             className={`text-sm font-medium underline ${tw.textPrimary}`}
           >
             {configCount > 0
-              ? `View ${configCount} configuration${configCount === 1 ? "" : "s"}`
-              : "View reward configurations"}
+              ? `View ${configCount} template${configCount === 1 ? "" : "s"}`
+              : "View reward templates"}
           </button>
           <button
             type="button"
@@ -279,7 +279,7 @@ export default function RewardProviderDetailsPage() {
             className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white rounded-md"
             style={{ backgroundColor: color.primary.action }}
           >
-            Add configuration
+            Add template
           </button>
         </div>
 
@@ -343,7 +343,7 @@ export default function RewardProviderDetailsPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Reward Provider"
-        description="This action cannot be undone. Configurations and fulfilment flows that reference this provider will be affected."
+        description="This action cannot be undone. Templates and fulfilment flows that reference this provider will be affected."
         itemName={provider.name}
         isLoading={deleting}
       />

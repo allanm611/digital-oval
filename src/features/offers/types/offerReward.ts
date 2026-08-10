@@ -42,6 +42,16 @@ export interface OfferRewardRule {
    * Also holds legacy free-text when no catalog id was used.
    */
   error_group: string;
+  /**
+   * Offer-level override message per selected error group id.
+   * Key = catalog id (string). Used when fulfilment matches that group's codes;
+   * falls back to the group's mapping user_message, then `failure_text`.
+   */
+  error_group_messages?: Record<string, string>;
+  /**
+   * Catch-all failure message when no error-group mapping matches.
+   * Selected from known catalog messages in the reward configuration UI.
+   */
   failure_text: string;
   enabled: boolean;
 }

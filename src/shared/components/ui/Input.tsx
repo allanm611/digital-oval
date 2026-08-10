@@ -33,6 +33,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   labelBgColor,
   style = {},
   showPasswordToggle,
+  onFocus,
+  onBlur,
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -92,6 +94,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     </button>
   ) : null;
 
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+    onFocus?.(e);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(false);
+    onBlur?.(e);
+  };
+
   // Without floating label (backward compatible)
   if (!label) {
     const inputEl = (
@@ -105,6 +117,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           ${passwordToggleInputClass}
@@ -161,13 +175,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         {...rest}
         type={inputType}
         onFocus={(e) => {
-          setIsFocused(true);
+          handleFocus(e);
           // Auto-select all text for number inputs so user can immediately type to replace
           if (isNumberInput && value !== '') {
             e.target.select();
           }
         }}
-        onBlur={() => setIsFocused(false)}
+        onBlur={handleBlur}
       />
 
       {/* Floating Label */}

@@ -414,7 +414,7 @@ export async function materializeRewardTemplateId(
   if (result.isVirtual || isVirtualDefaultTemplateId(result.template.id)) {
     throw new Error(
       result.persistenceError ||
-        "Could not save the default reward template. Check permissions under Configurations → Reward Configurations, then try again.",
+        "Could not save the default reward template. Check permissions under Configurations → Reward Templates, then try again.",
     );
   }
   return result.template;

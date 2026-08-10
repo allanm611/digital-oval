@@ -287,7 +287,7 @@ export default function RewardProviderForm({
       >
         <RewardProviderFieldSchemaEditor
           title="Auth Schema"
-          description="Authentication fields collected when creating a reward configuration (e.g. base_url, username, password)."
+          description="Authentication fields collected when creating a reward template (e.g. base_url, username, password)."
           schemaErrorKey="auth_schema"
           fields={authFields}
           errors={errors}

@@ -64,7 +64,7 @@ export default function RewardConfigurationsPage() {
       setConfigs((prev) => prev.filter((c) => c.id !== Number(id)));
       showSuccess(`"${configToDelete.name}" has been deleted successfully.`);
     },
-    itemLabel: "Reward Configuration",
+    itemLabel: "Reward Template",
   });
 
   useEffect(() => {
@@ -127,7 +127,7 @@ export default function RewardConfigurationsPage() {
       showError(
         extractBackendError(
           err,
-          "Failed to load reward configurations. Please try again.",
+          "Failed to load reward templates. Please try again.",
         ),
       );
       setConfigs([]);
@@ -183,7 +183,7 @@ export default function RewardConfigurationsPage() {
       showError(
         extractBackendError(
           err,
-          "Failed to update configuration status. Please try again.",
+          "Failed to update template status. Please try again.",
         ),
       );
     } finally {
@@ -309,7 +309,7 @@ export default function RewardConfigurationsPage() {
               navigate(`/dashboard/reward-configurations/${config.id}/edit`)
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
-            title="Edit configuration"
+            title="Edit template"
           >
             <Edit className="w-4 h-4" />
           </button>
@@ -323,7 +323,7 @@ export default function RewardConfigurationsPage() {
             title={
               isDefaultRewardTemplate(config)
                 ? "Default template cannot be deleted"
-                : "Delete configuration"
+                : "Delete template"
             }
             disabled={isDefaultRewardTemplate(config)}
           >
@@ -369,11 +369,12 @@ export default function RewardConfigurationsPage() {
         <div className="flex items-center justify-between gap-4">
           <BackButton
             showBreadcrumb={true}
-            currentLabel="Reward Configurations"
+            currentLabel="Reward Templates"
           />
           <FeatureActionButton
             featureId="reward-configurations"
             action="create"
+            label="Create Reward Template"
             onClick={() => navigate(createUrl)}
           />
         </div>
@@ -446,13 +447,13 @@ export default function RewardConfigurationsPage() {
             <div className="w-12 h-12 text-gray-400 mx-auto mb-4">🎁</div>
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
               {searchTerm || providerFilter || rewardTypeFilter || statusFilter
-                ? "No configurations found"
-                : "No reward configurations yet"}
+                ? "No templates found"
+                : "No reward templates yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm || providerFilter || rewardTypeFilter || statusFilter
                 ? "Try adjusting your search or filters"
-                : "Create a reward provider first, then add a configuration with auth and payload values."}
+                : "Create a reward provider first, then add a template with auth and payload values."}
             </p>
             {!searchTerm &&
               !providerFilter &&
@@ -461,6 +462,7 @@ export default function RewardConfigurationsPage() {
               <FeatureActionButton
                 featureId="reward-configurations"
                 action="create"
+                label="Create Reward Template"
                 onClick={() => navigate(createUrl)}
                 className="mx-auto"
               />
@@ -508,8 +510,8 @@ export default function RewardConfigurationsPage() {
         isOpen={deleteConfirm.id !== null}
         onClose={closeDeleteConfirm}
         onConfirm={confirmDeleteConfig}
-        title="Delete Reward Configuration"
-        description="This action cannot be undone. Offers and manual rewards that reference this configuration will be affected."
+        title="Delete Reward Template"
+        description="This action cannot be undone. Offers and manual rewards that reference this template will be affected."
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
       />

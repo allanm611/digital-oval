@@ -198,7 +198,7 @@ export default function RewardConfigurationDetailsPage() {
       showError(
         extractBackendError(
           err,
-          "Failed to delete reward configuration. Please try again.",
+          "Failed to delete reward template. Please try again.",
         ),
       );
     } finally {
@@ -212,7 +212,7 @@ export default function RewardConfigurationDetailsPage() {
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
         <p className={`${tw.textMuted} font-medium mt-4`}>
-          Loading configuration...
+          Loading template...
         </p>
       </div>
     );
@@ -436,8 +436,8 @@ export default function RewardConfigurationDetailsPage() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Reward Configuration"
-        description="This action cannot be undone. Offers and manual rewards that reference this configuration will be affected."
+        title="Delete Reward Template"
+        description="This action cannot be undone. Offers and manual rewards that reference this template will be affected."
         itemName={config.name}
         isLoading={deleting}
       />

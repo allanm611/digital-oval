@@ -26,7 +26,12 @@ import {
   type TrackingParameterValueType,
 } from "../utils/trackingSourcesConfig";
 import { trackingSourceService } from "../../configurations/services/trackingSourceService";
+import { engineTrackingSourceService } from "../../configurations/services/engineTrackingSourceService";
 import type { TrackingSourceCatalogItem } from "../../configurations/types/trackingSource";
+import type {
+  EngineTrackingSource,
+  TrackingSelectorSource,
+} from "../../configurations/types/engineTrackingSource";
 import type {
   OfferTrackingRule,
   OfferTrackingSource,
@@ -61,6 +66,12 @@ export default function OfferTrackingStep({
   const [catalogSources, setCatalogSources] = useState<
     TrackingSourceCatalogItem[]
   >([]);
+  const [engineSources, setEngineSources] = useState<EngineTrackingSource[]>(
+    [],
+  );
+  const [selectorTree, setSelectorTree] = useState<TrackingSelectorSource[]>(
+    [],
+  );
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogError, setCatalogError] = useState("");
   const [sourceActionError, setSourceActionError] = useState("");
@@ -70,14 +81,40 @@ export default function OfferTrackingStep({
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
+  const resolveEngineId = (
+    catalog: TrackingSourceCatalogItem,
+    engines: EngineTrackingSource[] = engineSources,
+  ): number | undefined => {
+    const needle = String(catalog.type || catalog.dataSource || "")
+      .trim()
+      .toLowerCase();
+    if (!needle) return undefined;
+    const match =
+      engines.find((s) => s.code.toLowerCase() === needle) ||
+      engines.find((s) => s.sourceType.toLowerCase() === needle);
+    return match?.id;
+  };
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoadingCatalog(true);
       setCatalogError("");
       try {
-        const sources = await trackingSourceService.getAll({ activeOnly: true });
-        if (!cancelled) setCatalogSources(sources);
+        const [sources, engines, selector] = await Promise.all([
+          trackingSourceService.getAll({ activeOnly: true }),
+          engineTrackingSourceService
+            .getAll({ is_active: true, limit: 500 })
+            .catch(() => [] as EngineTrackingSource[]),
+          engineTrackingSourceService
+            .getSelectorConfig()
+            .catch(() => [] as TrackingSelectorSource[]),
+        ]);
+        if (!cancelled) {
+          setCatalogSources(sources);
+          setEngineSources(engines);
+          setSelectorTree(selector);
+        }
       } catch {
         if (!cancelled) {
           setCatalogSources([]);
@@ -171,6 +208,34 @@ export default function OfferTrackingStep({
 
   const parameterOptionsForSelected = useMemo(() => {
     if (!selectedSourceData) return [];
+
+    // Prefer engine selector-config fields when attribution source is linked
+    const engineId = selectedSourceData.engine_tracking_source_id;
+    if (engineId != null) {
+      const engineFields =
+        engineTrackingSourceService.getFieldsForSource(selectorTree, engineId);
+      if (engineFields.length > 0) {
+        const opts = engineFields.map((f) => ({
+          value: f.fieldKey,
+          label: f.fieldName || formatTrackingKeyLabel(f.fieldKey, PARAMETER_LABELS),
+        }));
+        if (
+          editingRule?.parameter &&
+          !opts.some((o) => o.value === editingRule.parameter)
+        ) {
+          const normalized = normalizeParameterKey(editingRule.parameter);
+          opts.unshift({
+            value: normalized || editingRule.parameter,
+            label: formatTrackingKeyLabel(
+              normalized || editingRule.parameter,
+              PARAMETER_LABELS,
+            ),
+          });
+        }
+        return opts;
+      }
+    }
+
     const catalog = catalogSources.find(
       (c) => String(c.id) === String(selectedSourceData.catalog_source_id),
     );
@@ -199,15 +264,36 @@ export default function OfferTrackingStep({
       return getParameterOptionsByType(selectedSourceData.type || "custom");
     }
     return opts;
-  }, [selectedSourceData, catalogSources, editingRule?.parameter]);
+  }, [
+    selectedSourceData,
+    catalogSources,
+    editingRule?.parameter,
+    selectorTree,
+  ]);
+
+  const conditionOptionsForParameter = useMemo(() => {
+    const engineId = selectedSourceData?.engine_tracking_source_id;
+    const param = editingRule?.parameter || "";
+    if (engineId != null && param) {
+      const field = engineTrackingSourceService
+        .getFieldsForSource(selectorTree, engineId)
+        .find((f) => f.fieldKey === param);
+      if (field?.operators?.length) {
+        return field.operators.map((op) => ({
+          value: op.symbol || op.code,
+          label: op.name || op.symbol || op.code,
+        }));
+      }
+    }
+    return getConditionsForParameter(param);
+  }, [
+    selectedSourceData?.engine_tracking_source_id,
+    editingRule?.parameter,
+    selectorTree,
+  ]);
 
   const editingParameterType: TrackingParameterValueType = useMemo(
     () => getParameterValueType(editingRule?.parameter || ""),
-    [editingRule?.parameter],
-  );
-
-  const conditionOptionsForParameter = useMemo(
-    () => getConditionsForParameter(editingRule?.parameter || ""),
     [editingRule?.parameter],
   );
 
@@ -215,7 +301,19 @@ export default function OfferTrackingStep({
     if (!editingRule) return;
     const prevType = getParameterValueType(editingRule.parameter);
     const nextType = getParameterValueType(nextParameter);
-    const nextConditions = getConditionsForParameter(nextParameter);
+    const engineId = selectedSourceData?.engine_tracking_source_id;
+    let nextConditions = getConditionsForParameter(nextParameter);
+    if (engineId != null) {
+      const field = engineTrackingSourceService
+        .getFieldsForSource(selectorTree, engineId)
+        .find((f) => f.fieldKey === nextParameter);
+      if (field?.operators?.length) {
+        nextConditions = field.operators.map((op) => ({
+          value: op.symbol || op.code,
+          label: op.name || op.symbol || op.code,
+        }));
+      }
+    }
     const conditionStillValid = nextConditions.some(
       (c) => c.value === editingRule.condition,
     );
@@ -225,7 +323,8 @@ export default function OfferTrackingStep({
       parameter: nextParameter,
       condition: conditionStillValid
         ? editingRule.condition
-        : getDefaultConditionForParameter(nextParameter),
+        : ((nextConditions[0]?.value as OfferTrackingRule["condition"]) ||
+          getDefaultConditionForParameter(nextParameter)),
       value: prevType === nextType ? editingRule.value : "",
     });
     setRuleModalError("");
@@ -249,6 +348,7 @@ export default function OfferTrackingStep({
       targetInstanceId?: string;
       existingRules?: OfferTrackingRule[];
       isDefault?: boolean;
+      engineTrackingSourceId?: number;
     },
   ): OfferTrackingSource => ({
     id: options?.targetInstanceId || generateId(),
@@ -257,6 +357,8 @@ export default function OfferTrackingStep({
     enabled: true,
     rules: options?.existingRules ?? [],
     catalog_source_id: catalog.id,
+    engine_tracking_source_id:
+      options?.engineTrackingSourceId ?? resolveEngineId(catalog),
     is_default: options?.isDefault === true,
   });
 
@@ -283,13 +385,21 @@ export default function OfferTrackingStep({
       targetInstanceId,
       existingRules: existing?.rules || [],
       isDefault: existing?.is_default === true,
+      engineTrackingSourceId:
+        existing?.engine_tracking_source_id ?? resolveEngineId(catalog),
     });
 
     if (targetInstanceId) {
       onTrackingSourcesChange(
         trackingSources.map((s) =>
           s.id === targetInstanceId
-            ? { ...s, ...mapped, id: targetInstanceId, enabled: s.enabled !== false, is_default: s.is_default }
+            ? {
+                ...s,
+                ...mapped,
+                id: targetInstanceId,
+                enabled: s.enabled !== false,
+                is_default: s.is_default,
+              }
             : s,
         ),
       );
@@ -298,9 +408,10 @@ export default function OfferTrackingStep({
       const shouldBeDefault =
         trackingSources.length === 0 ||
         !trackingSources.some((s) => s.is_default);
-      const next = mapCatalogToOfferSource(catalog, {
-        isDefault: shouldBeDefault,
-      });
+      const next: OfferTrackingSource = {
+        ...mapped,
+        is_default: shouldBeDefault,
+      };
       const updated = shouldBeDefault
         ? [
             ...trackingSources.map((s) => ({ ...s, is_default: false })),
@@ -531,7 +642,8 @@ export default function OfferTrackingStep({
           </h3>
           <p className="text-gray-500 text-sm mb-4">
             Select a source from Configuration → Offer Tracking Sources, then
-            define rules using its parameters.
+            define rules using its parameters. Rules prefer the engine
+            attribution field selector when a matching Tracking Source exists.
           </p>
           {catalogError ? (
             <p className="text-sm text-red-600 mb-4">{catalogError}</p>
@@ -658,7 +770,9 @@ export default function OfferTrackingStep({
                       </p>
                     ) : selectedSourceData.catalog_source_id != null ? (
                       <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                        
+                        {selectedSourceData.engine_tracking_source_id != null
+                          ? `Linked to engine attribution source #${selectedSourceData.engine_tracking_source_id} (reward mapping FK).`
+                          : ""}
                       </p>
                     ) : (
                       <p className={`mt-1 text-xs ${tw.textSecondary}`}>

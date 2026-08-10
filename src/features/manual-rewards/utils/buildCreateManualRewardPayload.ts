@@ -7,7 +7,7 @@ export function buildCreateManualRewardPayload(
 ): CreateManualRewardRequest {
   if (!data.rewardConfigurationId) {
     throw new Error(
-      "Select a reward configuration that defines how the reward is delivered.",
+      "Select a reward template that defines how the reward is delivered.",
     );
   }
 
