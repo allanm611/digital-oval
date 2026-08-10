@@ -15,7 +15,8 @@ export interface OfferRewardRule {
   tracking_source_id?: string;
   /**
    * Specific tracking rule id within the linked tracking source.
-   * Fulfilment for this configuration runs when that rule matches.
+   * Optional when the source has no enabled rules (source-level fulfilment).
+   * Required when the source has enabled rules — fulfilment runs when that rule matches.
    */
   tracking_rule_id?: string;
   priority: number;

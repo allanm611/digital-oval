@@ -100,7 +100,10 @@ export function normalizeOfferRewardsWithTracking(
   return { rewards: changed ? nextRewards : rewards, changed };
 }
 
-/** True when a reward configuration should expose / require a tracking-rule binding. */
+/**
+ * True when a reward configuration should show tracking-source context
+ * (source is linked, or offer type requires tracking mapping).
+ */
 export function rewardConfigShouldBindTrackingRule(
   trackingSourceId: string | undefined,
   requiresOfferTypeMapping: boolean,
@@ -108,4 +111,27 @@ export function rewardConfigShouldBindTrackingRule(
 ): boolean {
   if (isDefaultReward) return false;
   return requiresOfferTypeMapping || Boolean(trackingSourceId?.trim());
+}
+
+/**
+ * Tracking rules on a source are optional.
+ * When the source has enabled rules, fulfilment must target a specific rule.
+ * When it has none, fulfilment is source-level (no tracking_rule_id).
+ */
+export function rewardConfigRequiresTrackingRuleId(
+  trackingSourceId: string | undefined,
+  enabledTrackingRuleCount: number,
+  requiresOfferTypeMapping: boolean,
+  isDefaultReward = false,
+): boolean {
+  if (
+    !rewardConfigShouldBindTrackingRule(
+      trackingSourceId,
+      requiresOfferTypeMapping,
+      isDefaultReward,
+    )
+  ) {
+    return false;
+  }
+  return enabledTrackingRuleCount > 0;
 }

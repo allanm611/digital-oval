@@ -31,7 +31,7 @@ import {
 } from "../../configurations/utils/rewardTemplateDefaults";
 import type { OfferReward, OfferRewardRule } from "../types/offerReward";
 import type { OfferTrackingSource } from "../types/offerTrackingSource";
-import { rewardConfigShouldBindTrackingRule } from "../utils/normalizeOfferWizardBindings";
+import { rewardConfigShouldBindTrackingRule, rewardConfigRequiresTrackingRuleId } from "../utils/normalizeOfferWizardBindings";
 import {
   createDefaultImmediateConfiguration,
   ensureImmediateDefaultReward,
@@ -461,7 +461,8 @@ export default function OfferRewardStep({
     sourceId: string | undefined,
     ruleId: string | undefined,
   ) => {
-    if (!sourceId || !ruleId) return "—";
+    if (!sourceId) return "—";
+    if (!ruleId) return "Source-level (no rule)";
     const source = getLinkedTrackingSource(sourceId);
     const rule = source?.rules?.find((r) => r.id === ruleId);
     if (!rule) return ruleId;
@@ -628,26 +629,25 @@ export default function OfferRewardStep({
   const addRule = () => {
     const parent = rewards.find((r) => r.id === selectedReward);
     const inheritedSourceId = parent?.tracking_source_id || "";
-    const bindTrackingRule = rewardConfigShouldBindTrackingRule(
-      inheritedSourceId,
-      requiresRewardTrackingMapping,
-      parent?.is_default === true,
-    );
-
-    if (bindTrackingRule && !inheritedSourceId) {
-      setRewardActionError(
-        "Select a tracking source for this reward before adding configurations.",
-      );
-      return;
-    }
-
     const linked = getLinkedTrackingSource(inheritedSourceId);
     const enabledTrackingRules = (linked?.rules || []).filter(
       (r) => r.enabled !== false,
     );
-    if (bindTrackingRule && enabledTrackingRules.length === 0) {
+    const showTrackingContext = rewardConfigShouldBindTrackingRule(
+      inheritedSourceId,
+      requiresRewardTrackingMapping,
+      parent?.is_default === true,
+    );
+    const requiresRuleId = rewardConfigRequiresTrackingRuleId(
+      inheritedSourceId,
+      enabledTrackingRules.length,
+      requiresRewardTrackingMapping,
+      parent?.is_default === true,
+    );
+
+    if (showTrackingContext && !inheritedSourceId) {
       setRewardActionError(
-        "This tracking source has no enabled tracking rules. Add rules on the Tracking step first.",
+        "Select a tracking source for this reward before adding configurations.",
       );
       return;
     }
@@ -661,11 +661,24 @@ export default function OfferRewardStep({
       (r) => !usedRuleIds.has(r.id),
     );
 
-    if (bindTrackingRule && !defaultTrackingRule) {
+    if (requiresRuleId && !defaultTrackingRule) {
       setRewardActionError(
         "Every enabled tracking rule already has a reward configuration. Disable one, or add another tracking rule first.",
       );
       return;
+    }
+
+    // Source-level fulfilment: only one enabled config when the source has no rules.
+    if (showTrackingContext && !requiresRuleId) {
+      const existingSourceLevel = (parent?.rules || []).some(
+        (r) => r.enabled !== false && !r.tracking_rule_id?.trim(),
+      );
+      if (existingSourceLevel) {
+        setRewardActionError(
+          "This tracking source has no rules, so only one source-level reward configuration is allowed. Add tracking rules to define multiple configurations.",
+        );
+        return;
+      }
     }
 
     setRewardActionError("");
@@ -678,12 +691,14 @@ export default function OfferRewardStep({
           id: generateId(),
           name: defaultTrackingRule?.name?.trim()
             ? `${defaultTrackingRule.name} reward`
-            : "New Rule",
+            : linked?.name?.trim()
+              ? `${linked.name} reward`
+              : "New Rule",
           bundle_subscription_track: "",
           reward_configuration_id: "",
           reward_configuration_name: "",
           tracking_source_id: inheritedSourceId,
-          tracking_rule_id: defaultTrackingRule?.id || "",
+          tracking_rule_id: defaultTrackingRule?.id || undefined,
           priority: 1,
           condition: "",
           value: "",
@@ -857,8 +872,18 @@ export default function OfferRewardStep({
       : parent?.tracking_source_id?.trim() ||
         rule.tracking_source_id?.trim() ||
         "";
-    const bindTrackingRule = rewardConfigShouldBindTrackingRule(
+    const linked = getLinkedTrackingSource(inheritedSourceId);
+    const enabledTrackingRules = (linked?.rules || []).filter(
+      (r) => r.enabled !== false,
+    );
+    const showTrackingContext = rewardConfigShouldBindTrackingRule(
       inheritedSourceId,
+      requiresRewardTrackingMapping,
+      isDefaultReward,
+    );
+    const requiresRuleId = rewardConfigRequiresTrackingRuleId(
+      inheritedSourceId,
+      enabledTrackingRules.length,
       requiresRewardTrackingMapping,
       isDefaultReward,
     );
@@ -870,7 +895,9 @@ export default function OfferRewardStep({
         : inheritedSourceId || undefined,
       tracking_rule_id: isDefaultReward
         ? undefined
-        : rule.tracking_rule_id?.trim() || undefined,
+        : requiresRuleId
+          ? rule.tracking_rule_id?.trim() || undefined
+          : undefined,
     };
 
     if (!ruleToSave.bundle_subscription_track?.trim()) {
@@ -885,17 +912,37 @@ export default function OfferRewardStep({
       setRuleModalError("Complete all required template parameters.");
       return;
     }
-    if (bindTrackingRule && ruleToSave.enabled && !inheritedSourceId) {
+    if (showTrackingContext && ruleToSave.enabled && !inheritedSourceId) {
       setRuleModalError(
         "Select a tracking source for this reward before saving configurations.",
       );
       return;
     }
-    if (bindTrackingRule && ruleToSave.enabled && !ruleToSave.tracking_rule_id) {
+    if (requiresRuleId && ruleToSave.enabled && !ruleToSave.tracking_rule_id) {
       setRuleModalError(
         "Select the tracking rule this reward configuration should fulfil.",
       );
       return;
+    }
+
+    if (
+      showTrackingContext &&
+      !requiresRuleId &&
+      ruleToSave.enabled &&
+      !ruleToSave.tracking_rule_id
+    ) {
+      const duplicateSourceLevel = (parent?.rules || []).some(
+        (r) =>
+          r.id !== ruleToSave.id &&
+          r.enabled !== false &&
+          !r.tracking_rule_id?.trim(),
+      );
+      if (duplicateSourceLevel) {
+        setRuleModalError(
+          "This tracking source has no rules — only one source-level reward configuration is allowed.",
+        );
+        return;
+      }
     }
 
     const selectedGroupIdsForSave = getRuleErrorGroupIds(ruleToSave);
@@ -912,8 +959,7 @@ export default function OfferRewardStep({
       }
     }
 
-    if (bindTrackingRule && ruleToSave.enabled && ruleToSave.tracking_rule_id) {
-      const linked = getLinkedTrackingSource(inheritedSourceId);
+    if (requiresRuleId && ruleToSave.enabled && ruleToSave.tracking_rule_id) {
       const exists = linked?.rules?.some(
         (r) => r.id === ruleToSave.tracking_rule_id && r.enabled !== false,
       );
@@ -1029,6 +1075,18 @@ export default function OfferRewardStep({
     requiresRewardTrackingMapping,
     selectedIsDefault,
   );
+  const linkedSourceForEditing = getLinkedTrackingSource(
+    selectedRewardData?.tracking_source_id || editingRule?.tracking_source_id,
+  );
+  const enabledRulesOnLinkedSource = (
+    linkedSourceForEditing?.rules || []
+  ).filter((r) => r.enabled !== false);
+  const requiresTrackingRuleSelect = rewardConfigRequiresTrackingRuleId(
+    selectedRewardData?.tracking_source_id || editingRule?.tracking_source_id,
+    enabledRulesOnLinkedSource.length,
+    requiresRewardTrackingMapping,
+    selectedIsDefault,
+  );
 
   // Keep selection valid when the rewards list changes (never setState during render).
   useEffect(() => {
@@ -1126,22 +1184,12 @@ export default function OfferRewardStep({
               </div>
               {rewardActionError ? (
                 <p className="mb-3 text-xs text-red-600">{rewardActionError}</p>
-              ) : (
+              ) : !usesDefaultReward ? (
                 <p className={`mb-3 text-xs ${tw.textSecondary}`}>
-                  {usesDefaultReward ? (
-                    <>
-                      {offerTypeLabel} includes a default reward (no tracking
-                      required). Optionally add one reward per tracking source
-                      from this offer&apos;s Tracking step.
-                    </>
-                  ) : (
-                    <>
-                      One reward per tracking source. Select sources from this
-                      offer&apos;s Tracking step.
-                    </>
-                  )}
+                  One reward per tracking source. Select sources from this
+                  offer&apos;s Tracking step.
                 </p>
-              )}
+              ) : null}
 
               <div className="space-y-2">
                 {[...rewards]
@@ -1561,50 +1609,68 @@ export default function OfferRewardStep({
 
                 {showTrackingRuleBinding ? (
                   <div>
-                    <HeadlessSelect
-                      label="Tracking rule"
-                      options={trackingRuleOptionsForEditing}
-                      value={editingRule.tracking_rule_id ?? ""}
-                      onChange={(value) => {
-                        const sourceId =
-                          selectedRewardData?.tracking_source_id ||
-                          editingRule.tracking_source_id;
-                        const source = getLinkedTrackingSource(sourceId);
-                        const selected = source?.rules?.find(
-                          (r) => r.id === value,
-                        );
-                        const nextName =
-                          editingRule.name === "New Rule" ||
-                          !editingRule.name?.trim()
-                            ? selected?.name?.trim()
-                              ? `${selected.name} reward`
-                              : editingRule.name
-                            : editingRule.name;
-                        setEditingRule({
-                          ...editingRule,
-                          tracking_rule_id: value as string,
-                          name: nextName,
-                        });
-                      }}
-                      placeholder={
-                        trackingRuleOptionsForEditing.length === 0
-                          ? "No available tracking rules"
-                          : "Select tracking rule to fulfil"
-                      }
-                      disabled={trackingRuleOptionsForEditing.length === 0}
-                      zIndex={zIndex.popover}
-                    />
-                    {trackingRuleOptionsForEditing.length === 0 ? (
-                      <p className="mt-1 text-xs text-amber-800">
-                        No unused enabled tracking rules on this source. Add
-                        rules on the Tracking step, or disable an existing
-                        configuration that already uses one.
-                      </p>
+                    {requiresTrackingRuleSelect ? (
+                      <>
+                        <HeadlessSelect
+                          label="Tracking rule"
+                          options={trackingRuleOptionsForEditing}
+                          value={editingRule.tracking_rule_id ?? ""}
+                          onChange={(value) => {
+                            const sourceId =
+                              selectedRewardData?.tracking_source_id ||
+                              editingRule.tracking_source_id;
+                            const source = getLinkedTrackingSource(sourceId);
+                            const selected = source?.rules?.find(
+                              (r) => r.id === value,
+                            );
+                            const nextName =
+                              editingRule.name === "New Rule" ||
+                              !editingRule.name?.trim()
+                                ? selected?.name?.trim()
+                                  ? `${selected.name} reward`
+                                  : editingRule.name
+                                : editingRule.name;
+                            setEditingRule({
+                              ...editingRule,
+                              tracking_rule_id: value as string,
+                              name: nextName,
+                            });
+                          }}
+                          placeholder={
+                            trackingRuleOptionsForEditing.length === 0
+                              ? "No available tracking rules"
+                              : "Select tracking rule to fulfil"
+                          }
+                          disabled={trackingRuleOptionsForEditing.length === 0}
+                          zIndex={zIndex.popover}
+                        />
+                        {trackingRuleOptionsForEditing.length === 0 ? (
+                          <p className="mt-1 text-xs text-amber-800">
+                            No unused enabled tracking rules on this source. Add
+                            rules on the Tracking step, or disable an existing
+                            configuration that already uses one.
+                          </p>
+                        ) : (
+                          <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                            Fulfilment runs when this specific tracking rule
+                            matches. One enabled configuration per rule.
+                          </p>
+                        )}
+                      </>
                     ) : (
-                      <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                        Fulfilment runs when this specific tracking rule matches.
-                        One enabled configuration per rule.
-                      </p>
+                      <div
+                        className={`p-3 border border-dashed border-gray-200 ${tw.rounded}`}
+                      >
+                        <p className="text-sm text-gray-700">
+                          Source-level fulfilment
+                        </p>
+                        <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                          This tracking source has no enabled rules (rules are
+                          optional). Fulfilment runs on events from the source
+                          itself. Add rules on the Tracking step if you need
+                          condition-based matching.
+                        </p>
+                      </div>
                     )}
                   </div>
                 ) : null}

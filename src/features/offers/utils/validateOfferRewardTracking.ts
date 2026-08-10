@@ -4,6 +4,7 @@ import {
   findDefaultReward,
   isDefaultImmediateRewardConfigured,
 } from "./seedingRewardDefaults";
+import { findTrackingSourcesWithInvalidPriorities } from "./trackingRulePriority";
 
 /**
  * Ensures offer tracking instances do not reuse the same catalog source.
@@ -79,6 +80,121 @@ export function findDuplicateTrackingRuleBindings(
   return duplicates;
 }
 
+/**
+ * When a tracking source has no enabled rules, at most one enabled
+ * reward configuration may use source-level fulfilment (no rule id).
+ */
+export function findDuplicateSourceLevelBindings(
+  rewards: OfferReward[],
+  trackingSources: OfferTrackingSource[],
+): string[] {
+  const sourcesWithoutRules = new Set(
+    trackingSources
+      .filter(
+        (s) =>
+          s.enabled !== false &&
+          !(s.rules || []).some((r) => r.enabled !== false),
+      )
+      .map((s) => s.id),
+  );
+
+  const duplicates: string[] = [];
+  for (const reward of rewards) {
+    if (reward.is_default) continue;
+    const sourceId = reward.tracking_source_id?.trim();
+    if (!sourceId || !sourcesWithoutRules.has(sourceId)) continue;
+
+    const sourceLevelCount = reward.rules.filter(
+      (rule) => rule.enabled && !rule.tracking_rule_id?.trim(),
+    ).length;
+    if (sourceLevelCount > 1) {
+      duplicates.push(reward.id);
+    }
+  }
+  return duplicates;
+}
+
+function enabledRuleIdsBySource(
+  trackingSources: OfferTrackingSource[],
+): Map<string, Set<string>> {
+  return new Map(
+    trackingSources.map((s) => [
+      s.id,
+      new Set(
+        (s.rules || [])
+          .filter((r) => r.enabled !== false)
+          .map((r) => r.id),
+      ),
+    ]),
+  );
+}
+
+/**
+ * A linked reward config is invalid when:
+ * - its tracking source is missing, or
+ * - the source has enabled rules but the config does not target one of them.
+ * Source-level configs (no tracking_rule_id) are allowed when the source has no rules.
+ */
+function hasInvalidOptionalTrackingBinding(
+  rewards: OfferReward[],
+  trackingSources: OfferTrackingSource[],
+): boolean {
+  const sourceIds = new Set(
+    trackingSources.filter((s) => s.enabled !== false).map((s) => s.id),
+  );
+  const rulesBySource = enabledRuleIdsBySource(trackingSources);
+
+  return rewards.some((reward) => {
+    if (reward.is_default) return false;
+    const sourceId = reward.tracking_source_id?.trim();
+    if (!sourceId) return false;
+
+    return reward.rules
+      .filter((rule) => rule.enabled)
+      .some((rule) => {
+        if (!sourceIds.has(sourceId)) return true;
+        const allowed = rulesBySource.get(sourceId);
+        const hasRules = (allowed?.size || 0) > 0;
+        const ruleId = rule.tracking_rule_id?.trim();
+        if (!hasRules) return Boolean(ruleId); // source-level only when no rules
+        if (!ruleId) return true;
+        return !allowed?.has(ruleId);
+      });
+  });
+}
+
+function applySharedLinkedBindingChecks(
+  errors: Record<string, string>,
+  rewards: OfferReward[],
+  trackingSources: OfferTrackingSource[],
+): void {
+  const dupRewards = findDuplicateRewardTrackingSourceIds(rewards);
+  if (dupRewards.length > 0) {
+    errors.rewards =
+      "Each tracking source can only be assigned to one reward.";
+  }
+
+  if (hasInvalidOptionalTrackingBinding(rewards, trackingSources)) {
+    errors.rewards =
+      "When a tracking source has rules, each enabled reward configuration must target one of those rules. When it has no rules, use a single source-level configuration.";
+  }
+
+  const dupRuleBindings = findDuplicateTrackingRuleBindings(rewards);
+  if (dupRuleBindings.length > 0) {
+    errors.rewards =
+      "Each tracking rule can only be mapped to one enabled reward configuration.";
+  }
+
+  const dupSourceLevel = findDuplicateSourceLevelBindings(
+    rewards,
+    trackingSources,
+  );
+  if (dupSourceLevel.length > 0) {
+    errors.rewards =
+      "A tracking source without rules can have only one enabled source-level reward configuration.";
+  }
+}
+
 export function validateOfferRewardTrackingMapping(
   rewards: OfferReward[],
   trackingSources: OfferTrackingSource[],
@@ -108,6 +224,13 @@ export function validateOfferRewardTrackingMapping(
       "Only one tracking source can be set as the default.";
   }
 
+  const priorityIssues =
+    findTrackingSourcesWithInvalidPriorities(trackingSources);
+  if (priorityIssues.length > 0) {
+    const first = priorityIssues[0];
+    errors.tracking = `${first.sourceName}: ${first.reason} Priorities must be unique within each source (1–20).`;
+  }
+
   // Immediate reward (is_immediate_reward): tracking optional; default reward mandatory.
   if (usesDefaultReward) {
     if (!findDefaultReward(rewards)) {
@@ -118,115 +241,19 @@ export function validateOfferRewardTrackingMapping(
         "Configure the default reward (provider and reward template). Tracking is not required for immediate-reward offer types.";
     }
 
-    const dupRewards = findDuplicateRewardTrackingSourceIds(rewards);
-    if (dupRewards.length > 0) {
-      errors.rewards =
-        "Each tracking source can only be assigned to one reward.";
-    }
-
-    const sourceIds = new Set(
-      trackingSources.filter((s) => s.enabled !== false).map((s) => s.id),
-    );
-    const rulesBySource = new Map(
-      trackingSources.map((s) => [
-        s.id,
-        new Set(
-          (s.rules || [])
-            .filter((r) => r.enabled !== false)
-            .map((r) => r.id),
-        ),
-      ]),
-    );
-
-    const linkedEnabled = rewards.flatMap((reward) => {
-      if (reward.is_default) return [];
-      const sourceId = reward.tracking_source_id?.trim();
-      if (!sourceId) return [];
-      return reward.rules
-        .filter((rule) => rule.enabled)
-        .map((rule) => ({ rule, sourceId }));
-    });
-
-    const badOptionalBinding = linkedEnabled.some(({ rule, sourceId }) => {
-      if (!sourceIds.has(sourceId)) return true;
-      const ruleId = rule.tracking_rule_id?.trim();
-      if (!ruleId) return true;
-      return !rulesBySource.get(sourceId)?.has(ruleId);
-    });
-
-    if (badOptionalBinding) {
-      errors.rewards =
-        "Optional tracking-bound reward configurations must target a specific tracking rule.";
-    }
-
+    applySharedLinkedBindingChecks(errors, rewards, trackingSources);
     return errors;
   }
 
   // Optional tracking without default reward: if the user linked sources/configs,
-  // enforce the same rule-binding shape as create/edit required flows.
+  // enforce consistent binding shape (rule-level when rules exist).
   if (!requiresMapping) {
-    const dupRewards = findDuplicateRewardTrackingSourceIds(rewards);
-    if (dupRewards.length > 0) {
-      errors.rewards =
-        "Each tracking source can only be assigned to one reward.";
-    }
-
-    const sourceIds = new Set(
-      trackingSources.filter((s) => s.enabled !== false).map((s) => s.id),
-    );
-    const rulesBySource = new Map(
-      trackingSources.map((s) => [
-        s.id,
-        new Set(
-          (s.rules || [])
-            .filter((r) => r.enabled !== false)
-            .map((r) => r.id),
-        ),
-      ]),
-    );
-
-    const linkedEnabled = rewards.flatMap((reward) => {
-      if (reward.is_default) return [];
-      const sourceId = reward.tracking_source_id?.trim();
-      if (!sourceId) return [];
-      return reward.rules
-        .filter((rule) => rule.enabled)
-        .map((rule) => ({ reward, rule, sourceId }));
-    });
-
-    const badOptionalBinding = linkedEnabled.some(({ rule, sourceId }) => {
-      if (!sourceIds.has(sourceId)) return true;
-      const ruleId = rule.tracking_rule_id?.trim();
-      if (!ruleId) return true;
-      return !rulesBySource.get(sourceId)?.has(ruleId);
-    });
-
-    if (badOptionalBinding) {
-      errors.rewards =
-        "Each enabled reward configuration linked to a tracking source must target a specific tracking rule.";
-    }
-
-    const dupRuleBindings = findDuplicateTrackingRuleBindings(rewards);
-    if (dupRuleBindings.length > 0) {
-      errors.rewards =
-        "Each tracking rule can only be mapped to one enabled reward configuration.";
-    }
-
+    applySharedLinkedBindingChecks(errors, rewards, trackingSources);
     return errors;
   }
 
   const activeSources = trackingSources.filter((s) => s.enabled !== false);
   const activeSourceIds = new Set(activeSources.map((s) => s.id));
-  const rulesBySource = new Map(
-    activeSources.map((s) => [
-      s.id,
-      new Set(
-        (s.rules || [])
-          .filter((r) => r.enabled !== false)
-          .map((r) => r.id),
-      ),
-    ]),
-  );
 
   if (activeSourceIds.size === 0) {
     errors.tracking =
@@ -249,37 +276,18 @@ export function validateOfferRewardTrackingMapping(
       return !sourceId || !activeSourceIds.has(sourceId);
     });
 
-    const badBinding = enabledRules.some((rule) => {
-      const parent = rewards.find((r) =>
-        r.rules.some((rr) => rr.id === rule.id),
-      );
-      if (parent?.is_default) return false;
-      const sourceId =
-        parent?.tracking_source_id?.trim() || rule.tracking_source_id?.trim();
-      if (!sourceId || !activeSourceIds.has(sourceId)) return true;
-      const ruleId = rule.tracking_rule_id?.trim();
-      if (!ruleId) return true;
-      const allowed = rulesBySource.get(sourceId);
-      return !allowed?.has(ruleId);
-    });
+    const badBinding = hasInvalidOptionalTrackingBinding(
+      rewards,
+      trackingSources,
+    );
 
     if (unmappedReward || badBinding) {
       errors.rewards =
-        "Each enabled reward configuration must be linked to a specific tracking rule on its tracking source.";
+        "Each enabled reward configuration must be linked to its tracking source. Bind a tracking rule when the source has rules; otherwise use a single source-level configuration.";
     }
   }
 
-  const dupRewards = findDuplicateRewardTrackingSourceIds(rewards);
-  if (dupRewards.length > 0) {
-    errors.rewards =
-      "Each tracking source can only be assigned to one reward.";
-  }
-
-  const dupRuleBindings = findDuplicateTrackingRuleBindings(rewards);
-  if (dupRuleBindings.length > 0) {
-    errors.rewards =
-      "Each tracking rule can only be mapped to one enabled reward configuration.";
-  }
+  applySharedLinkedBindingChecks(errors, rewards, trackingSources);
 
   return errors;
 }

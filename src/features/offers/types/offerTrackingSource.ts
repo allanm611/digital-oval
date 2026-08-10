@@ -1,6 +1,11 @@
 export interface OfferTrackingRule {
   id: string;
   name: string;
+  /**
+   * Evaluation order within the tracking source.
+   * Must be unique per source; allowed range is 1–20 (lower runs first).
+   * Rules themselves are optional on a source.
+   */
   priority: number;
   parameter: string;
   /** Offer-catalog conditions or engine operator symbols (e.g. equals, >=, IN). */

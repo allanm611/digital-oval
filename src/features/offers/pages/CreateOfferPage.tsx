@@ -102,6 +102,7 @@ import {
   isDefaultImmediateRewardConfigured,
 } from "../utils/seedingRewardDefaults";
 import { validateOfferRewardTrackingMapping } from "../utils/validateOfferRewardTracking";
+import { findTrackingSourcesWithInvalidPriorities } from "../utils/trackingRulePriority";
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative } from "../types/offerCreative";
@@ -2498,6 +2499,11 @@ export default function CreateOfferPage({
           return hasLanguage && hasTextBody && isEmailWithHtml;
         });
       case 4: // Tracking step
+        if (
+          findTrackingSourcesWithInvalidPriorities(trackingSources).length > 0
+        ) {
+          return false;
+        }
         if (!requiresTrackingRewardMapping) return true; // immediate reward: optional
         return trackingSources.some((s) => s.enabled !== false);
       case 5: // Rewards step
@@ -2519,16 +2525,22 @@ export default function CreateOfferPage({
             const parent = rewards.find((r) =>
               r.rules.some((rr) => rr.id === rule.id),
             );
+            if (parent?.is_default) return true;
             const sourceId =
               parent?.tracking_source_id?.trim() ||
               rule.tracking_source_id?.trim();
             if (!sourceId || !activeSourceIds.has(sourceId)) return false;
+            const source = trackingSources.find((s) => s.id === sourceId);
+            const enabledTrackingRules = (source?.rules || []).filter(
+              (r) => r.enabled !== false,
+            );
+            // Rules are optional: source-level OK when the source has none.
+            if (enabledTrackingRules.length === 0) {
+              return !rule.tracking_rule_id?.trim();
+            }
             const trackingRuleId = rule.tracking_rule_id?.trim();
             if (!trackingRuleId) return false;
-            const source = trackingSources.find((s) => s.id === sourceId);
-            return (source?.rules || []).some(
-              (r) => r.id === trackingRuleId && r.enabled !== false,
-            );
+            return enabledTrackingRules.some((r) => r.id === trackingRuleId);
           });
         }
       case 6: // Review step
@@ -2664,18 +2676,18 @@ export default function CreateOfferPage({
             errors.creatives = creativeErrors.join(" • ");
           }
         }
-      } else if (currentStep === 4 && requiresTrackingRewardMapping) {
+      } else if (currentStep === 4) {
         Object.assign(
           errors,
           validateOfferRewardTrackingMapping(
             rewards,
             trackingSources,
-            true,
+            requiresTrackingRewardMapping,
+            { usesDefaultReward },
           ),
         );
-        if (errors.tracking && !errors.rewards) {
-          delete errors.rewards;
-        }
+        // Rewards may still be incomplete on the Tracking step.
+        delete errors.rewards;
       } else if (
         currentStep === 5 &&
         (requiresTrackingRewardMapping || usesDefaultReward)

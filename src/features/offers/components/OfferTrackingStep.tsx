@@ -36,6 +36,12 @@ import type {
   OfferTrackingRule,
   OfferTrackingSource,
 } from "../types/offerTrackingSource";
+import {
+  getNextAvailableTrackingRulePriority,
+  TRACKING_RULE_PRIORITY_MAX,
+  TRACKING_RULE_PRIORITY_MIN,
+  validateTrackingRulePriority,
+} from "../utils/trackingRulePriority";
 
 interface OfferTrackingStepProps {
   trackingSources: OfferTrackingSource[];
@@ -524,10 +530,20 @@ export default function OfferTrackingStep({
       parameterOptionsForSelected[0]?.value ||
       getParametersByType(selectedSourceData?.type || "recharge")[0] ||
       "amount";
+    const nextPriority = getNextAvailableTrackingRulePriority(
+      selectedSourceData?.rules || [],
+    );
+    if (nextPriority == null) {
+      setSourceActionError(
+        `This source already has rules for every priority (${TRACKING_RULE_PRIORITY_MIN}–${TRACKING_RULE_PRIORITY_MAX}). Remove or change an existing rule first.`,
+      );
+      return;
+    }
+    setSourceActionError("");
     setEditingRule({
       id: generateId(),
       name: "New Rule",
-      priority: 1,
+      priority: nextPriority,
       parameter: defaultParam,
       condition: getDefaultConditionForParameter(defaultParam),
       value: "",
@@ -544,6 +560,19 @@ export default function OfferTrackingStep({
     }
     if (!rule.name?.trim()) {
       setRuleModalError("Rule name is required.");
+      return;
+    }
+
+    const source = trackingSources.find((s) => s.id === sourceId);
+    if (!source) return;
+
+    const priorityError = validateTrackingRulePriority(
+      rule.priority,
+      source.rules || [],
+      rule.id,
+    );
+    if (priorityError) {
+      setRuleModalError(priorityError);
       return;
     }
 
@@ -580,9 +609,6 @@ export default function OfferTrackingStep({
       condition,
       value: serializedValue,
     };
-
-    const source = trackingSources.find((s) => s.id === sourceId);
-    if (!source) return;
 
     const existingRuleIndex = source.rules.findIndex(
       (r) => r.id === normalized.id,
@@ -640,11 +666,7 @@ export default function OfferTrackingStep({
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             No Tracking Sources Added
           </h3>
-          <p className="text-gray-500 text-sm mb-4">
-            Select a source from Configuration → Offer Tracking Sources, then
-            define rules using its parameters. Rules prefer the engine
-            attribution field selector when a matching Tracking Source exists.
-          </p>
+          
           {catalogError ? (
             <p className="text-sm text-red-600 mb-4">{catalogError}</p>
           ) : null}
@@ -809,9 +831,13 @@ export default function OfferTrackingStep({
 
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-medium text-sm text-gray-900">
-                        Tracking Rules
-                      </h4>
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-900">
+                          Tracking Rules
+                          
+                        </h4>
+                        
+                      </div>
                       <button
                         type="button"
                         onClick={addRule}
@@ -829,21 +855,28 @@ export default function OfferTrackingStep({
                         className={`text-center py-8 border-2 border-dashed border-gray-200 ${tw.rounded}`}
                       >
                         <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 text-sm mb-4">
+                        <p className="text-gray-500 text-sm mb-1">
                           {!selectedSourceData.catalog_source_id
                             ? "Select a tracking source before adding rules"
-                            : "No rules configured"}
+                            : "No rules configured — optional"}
                         </p>
                         {selectedSourceData.catalog_source_id ? (
-                          <button
-                            type="button"
-                            onClick={addRule}
-                            className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
-                            style={{ backgroundColor: color.primary.action }}
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Rule
-                          </button>
+                          <>
+                            <p className={`text-xs mb-4 ${tw.textSecondary}`}>
+                              You can continue without rules. Fulfilment will
+                              use this source as-is; add rules only when you need
+                              parameter conditions.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={addRule}
+                              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
+                              style={{ backgroundColor: color.primary.action }}
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Rule
+                            </button>
+                          </>
                         ) : null}
                       </div>
                     ) : (
@@ -1204,19 +1237,38 @@ export default function OfferTrackingStep({
                   }
                 />
 
-                <Input
-                  label="Priority"
-                  type="number"
-                  placeholder="Priority"
-                  min="1"
-                  value={editingRule.priority}
-                  onChange={(value) =>
-                    setEditingRule({
-                      ...editingRule,
-                      priority: parseInt(String(value), 10) || 1,
-                    })
-                  }
-                />
+                <div>
+                  <Input
+                    label="Priority"
+                    type="number"
+                    placeholder={`${TRACKING_RULE_PRIORITY_MIN}–${TRACKING_RULE_PRIORITY_MAX}`}
+                    min={TRACKING_RULE_PRIORITY_MIN}
+                    max={TRACKING_RULE_PRIORITY_MAX}
+                    step={1}
+                    value={editingRule.priority}
+                    onChange={(value) => {
+                      const parsed = parseInt(String(value), 10);
+                      setEditingRule({
+                        ...editingRule,
+                        priority: Number.isFinite(parsed)
+                          ? parsed
+                          : TRACKING_RULE_PRIORITY_MIN,
+                      });
+                    }}
+                    hasError={Boolean(
+                      validateTrackingRulePriority(
+                        editingRule.priority,
+                        selectedSourceData.rules || [],
+                        editingRule.id,
+                      ),
+                    )}
+                  />
+                  <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                    Must be unique on this source (
+                    {TRACKING_RULE_PRIORITY_MIN}–{TRACKING_RULE_PRIORITY_MAX}).
+                    Lower priority is evaluated first.
+                  </p>
+                </div>
 
                 <HeadlessSelect
                   label="Parameter"

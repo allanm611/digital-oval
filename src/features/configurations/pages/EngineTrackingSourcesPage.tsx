@@ -258,9 +258,7 @@ export default function EngineTrackingSourcesPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Engine attribution catalog used by offer reward mappings (
-          <code className="text-xs">/tracking-sources</code>). Separate from
-          Offer Tracking Sources.
+          Engine attribution catalog used by offer reward mappings
         </p>
       </div>
 
