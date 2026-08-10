@@ -7,17 +7,20 @@ import {
 import { findTrackingSourcesWithInvalidPriorities } from "./trackingRulePriority";
 
 /**
- * Ensures offer tracking instances do not reuse the same catalog source.
+ * Ensures offer tracking instances do not reuse the same engine tracking source.
  */
 export function findDuplicateTrackingCatalogIds(
   trackingSources: OfferTrackingSource[],
 ): string[] {
   const counts = new Map<string, number>();
   for (const source of trackingSources) {
-    if (source.catalog_source_id == null || source.catalog_source_id === "") {
-      continue;
-    }
-    const key = String(source.catalog_source_id);
+    const key =
+      source.engine_tracking_source_id != null
+        ? String(source.engine_tracking_source_id)
+        : source.catalog_source_id != null && source.catalog_source_id !== ""
+          ? String(source.catalog_source_id)
+          : null;
+    if (!key) continue;
     counts.set(key, (counts.get(key) || 0) + 1);
   }
   return Array.from(counts.entries())
@@ -210,12 +213,10 @@ export function validateOfferRewardTrackingMapping(
       "Each tracking source from the catalog can only be added once.";
   }
 
-  const unlinkedCatalog = trackingSources.some(
-    (s) => s.catalog_source_id == null || s.catalog_source_id === "",
-  );
-  if (unlinkedCatalog) {
+  const missingEngine = findTrackingSourcesMissingEngineId(trackingSources);
+  if (missingEngine.length > 0) {
     errors.tracking =
-      "Every tracking source must be linked to a catalog tracking source.";
+      "Every tracking source must be linked to an engine Tracking Source (Configuration → Tracking Sources).";
   }
 
   const defaultCount = trackingSources.filter((s) => s.is_default).length;

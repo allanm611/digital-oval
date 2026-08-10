@@ -1344,10 +1344,10 @@ export default function OfferRewardStep({
                         <button
                           type="button"
                           onClick={() => addRule()}
-                          className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} shrink-0`}
+                          className={`inline-flex items-center shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
                           style={{ backgroundColor: color.primary.action }}
                         >
-                          <Plus className="w-4 h-4 mr-1" />
+                          <Plus className="w-4 h-4 mr-2" />
                           {addConfigButtonLabel}
                         </button>
                       ) : null}
@@ -1362,7 +1362,7 @@ export default function OfferRewardStep({
                         <button
                           type="button"
                           onClick={() => addRule()}
-                          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
+                          className={`inline-flex items-center shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
                           style={{ backgroundColor: color.primary.action }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
@@ -1876,9 +1876,7 @@ export default function OfferRewardStep({
                     </p>
                   ) : (
                     <p className={`mb-2 text-xs ${tw.textSecondary}`}>
-                      Open the picker to choose error groups and their messages
-                      (same flow as Add tracking source). Already selected
-                      groups are excluded so each can only be added once.
+                      
                     </p>
                   )}
 

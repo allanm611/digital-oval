@@ -14,23 +14,23 @@ import {
   formatTrackingRuleValueDisplay,
   getConditionsForParameter,
   getDefaultConditionForParameter,
-  getParameterOptionsByType,
   getParameterValueType,
-  getParametersByType,
   normalizeParameterKey,
   PARAMETER_LABELS,
   serializeTrackingRuleValue,
   toTrackingValueInputDisplay,
-  TRACKING_TYPE_OPTIONS,
   validateTrackingRuleValue,
   type TrackingParameterValueType,
 } from "../utils/trackingSourcesConfig";
-import { trackingSourceService } from "../../configurations/services/trackingSourceService";
 import { engineTrackingSourceService } from "../../configurations/services/engineTrackingSourceService";
-import type { TrackingSourceCatalogItem } from "../../configurations/types/trackingSource";
 import type {
   EngineTrackingSource,
+  TrackingSelectorField,
   TrackingSelectorSource,
+} from "../../configurations/types/engineTrackingSource";
+import {
+  ENGINE_TRACKING_SOURCE_TYPE_OPTIONS,
+  engineSourceTypeLabel,
 } from "../../configurations/types/engineTrackingSource";
 import type {
   OfferTrackingRule,
@@ -49,10 +49,25 @@ interface OfferTrackingStepProps {
 }
 
 function trackingTypeLabel(type: string | undefined): string {
-  if (!type) return "—";
-  return (
-    TRACKING_TYPE_OPTIONS.find((t) => t.value === type)?.label || type
-  );
+  return engineSourceTypeLabel(type);
+}
+
+function dataTypeToValueType(
+  dataType: string | undefined,
+): TrackingParameterValueType {
+  switch (String(dataType || "").toLowerCase()) {
+    case "number":
+    case "integer":
+      return "number";
+    case "boolean":
+      return "boolean";
+    case "date":
+      return "date";
+    case "timestamp":
+      return "datetime";
+    default:
+      return "text";
+  }
 }
 
 export default function OfferTrackingStep({
@@ -69,12 +84,11 @@ export default function OfferTrackingStep({
     null,
   );
   const [ruleModalError, setRuleModalError] = useState("");
-  const [catalogSources, setCatalogSources] = useState<
-    TrackingSourceCatalogItem[]
-  >([]);
+  /** Active engine attribution catalog from GET /tracking-sources */
   const [engineSources, setEngineSources] = useState<EngineTrackingSource[]>(
     [],
   );
+  /** Sources → Fields → Operators from GET /tracking-sources/selector-config */
   const [selectorTree, setSelectorTree] = useState<TrackingSelectorSource[]>(
     [],
   );
@@ -83,23 +97,20 @@ export default function OfferTrackingStep({
   const [sourceActionError, setSourceActionError] = useState("");
   const [sourceSearch, setSourceSearch] = useState("");
   const [sourceTypeFilter, setSourceTypeFilter] = useState("all");
-  const [pendingCatalogIds, setPendingCatalogIds] = useState<string[]>([]);
+  const [pendingEngineIds, setPendingEngineIds] = useState<string[]>([]);
+  const [enrichedEngineIds, setEnrichedEngineIds] = useState<Set<number>>(
+    () => new Set(),
+  );
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const resolveEngineId = (
-    catalog: TrackingSourceCatalogItem,
-    engines: EngineTrackingSource[] = engineSources,
-  ): number | undefined => {
-    const needle = String(catalog.type || catalog.dataSource || "")
-      .trim()
-      .toLowerCase();
-    if (!needle) return undefined;
-    const match =
-      engines.find((s) => s.code.toLowerCase() === needle) ||
-      engines.find((s) => s.sourceType.toLowerCase() === needle);
-    return match?.id;
+  const getEngineFields = (engineId: number | undefined): TrackingSelectorField[] => {
+    if (engineId == null) return [];
+    return engineTrackingSourceService.getFieldsForSource(selectorTree, engineId);
   };
+
+  const fieldCountForEngine = (engineId: number): number =>
+    getEngineFields(engineId).length;
 
   useEffect(() => {
     let cancelled = false;
@@ -107,24 +118,21 @@ export default function OfferTrackingStep({
       setLoadingCatalog(true);
       setCatalogError("");
       try {
-        const [sources, engines, selector] = await Promise.all([
-          trackingSourceService.getAll({ activeOnly: true }),
-          engineTrackingSourceService
-            .getAll({ is_active: true, limit: 500 })
-            .catch(() => [] as EngineTrackingSource[]),
-          engineTrackingSourceService
-            .getSelectorConfig()
-            .catch(() => [] as TrackingSelectorSource[]),
+        const [engines, selector] = await Promise.all([
+          engineTrackingSourceService.getAll({ is_active: true, limit: 500 }),
+          engineTrackingSourceService.getSelectorConfig(),
         ]);
         if (!cancelled) {
-          setCatalogSources(sources);
           setEngineSources(engines);
           setSelectorTree(selector);
         }
       } catch {
         if (!cancelled) {
-          setCatalogSources([]);
-          setCatalogError("Could not load tracking source catalog.");
+          setEngineSources([]);
+          setSelectorTree([]);
+          setCatalogError(
+            "Could not load tracking sources from /tracking-sources. Check that the API is available.",
+          );
         }
       } finally {
         if (!cancelled) setLoadingCatalog(false);
@@ -141,117 +149,142 @@ export default function OfferTrackingStep({
     }
   }, [trackingSources, selectedSource]);
 
-  const usedCatalogIds = useMemo(() => {
+  const usedEngineIds = useMemo(() => {
     return new Set(
       trackingSources
-        .map((s) => s.catalog_source_id)
+        .map((s) => s.engine_tracking_source_id)
         .filter((id) => id != null)
         .map(String),
     );
   }, [trackingSources]);
 
-  const availableCatalogSources = useMemo(() => {
-    return catalogSources.filter((c) => !usedCatalogIds.has(String(c.id)));
-  }, [catalogSources, usedCatalogIds]);
+  const availableEngineSources = useMemo(() => {
+    return engineSources.filter((s) => !usedEngineIds.has(String(s.id)));
+  }, [engineSources, usedEngineIds]);
 
   const filteredModalSources = useMemo(() => {
     const q = sourceSearch.trim().toLowerCase();
-    return availableCatalogSources.filter((c) => {
-      if (sourceTypeFilter !== "all" && String(c.type) !== sourceTypeFilter) {
+    return availableEngineSources.filter((s) => {
+      if (
+        sourceTypeFilter !== "all" &&
+        String(s.sourceType) !== sourceTypeFilter
+      ) {
         return false;
       }
       if (!q) return true;
       return (
-        c.name.toLowerCase().includes(q) ||
-        String(c.type).toLowerCase().includes(q) ||
-        (c.description || "").toLowerCase().includes(q)
+        s.name.toLowerCase().includes(q) ||
+        s.code.toLowerCase().includes(q) ||
+        String(s.sourceType).toLowerCase().includes(q) ||
+        (s.description || "").toLowerCase().includes(q)
       );
     });
-  }, [availableCatalogSources, sourceSearch, sourceTypeFilter]);
+  }, [availableEngineSources, sourceSearch, sourceTypeFilter]);
 
   const typeFilterOptions = useMemo(() => {
     const types = new Set(
-      availableCatalogSources.map((c) => String(c.type)).filter(Boolean),
+      availableEngineSources.map((s) => String(s.sourceType)).filter(Boolean),
     );
     return [
       { value: "all", label: "All Types" },
-      ...TRACKING_TYPE_OPTIONS.filter((t) => types.has(t.value)),
+      ...ENGINE_TRACKING_SOURCE_TYPE_OPTIONS.filter((t) => types.has(t.value)),
       ...[...types]
-        .filter((t) => !TRACKING_TYPE_OPTIONS.some((o) => o.value === t))
+        .filter(
+          (t) => !ENGINE_TRACKING_SOURCE_TYPE_OPTIONS.some((o) => o.value === t),
+        )
         .map((t) => ({ value: t, label: t })),
     ];
-  }, [availableCatalogSources]);
+  }, [availableEngineSources]);
 
-  /** Dropdown options for the selected instance: current link + unused catalog rows */
+  /** Dropdown: current engine link + unused engine sources */
   const trackingSourceSelectOptions = useMemo(() => {
     if (!selectedSource) return [];
     const current = trackingSources.find((s) => s.id === selectedSource);
-    const options = availableCatalogSources.map((c) => ({
-      value: String(c.id),
-      label: c.name,
+    const options = availableEngineSources.map((s) => ({
+      value: String(s.id),
+      label: `${s.name} (${s.code})`,
     }));
-    if (current?.catalog_source_id != null) {
-      const id = String(current.catalog_source_id);
+    if (current?.engine_tracking_source_id != null) {
+      const id = String(current.engine_tracking_source_id);
       if (!options.some((o) => o.value === id)) {
-        const linked = catalogSources.find((c) => String(c.id) === id);
+        const linked = engineSources.find((s) => String(s.id) === id);
         options.unshift({
           value: id,
-          label: linked?.name || current.name || `Catalog #${id}`,
+          label: linked
+            ? `${linked.name} (${linked.code})`
+            : current.name || `Source #${id}`,
         });
       }
     }
     return options;
-  }, [
-    selectedSource,
-    trackingSources,
-    availableCatalogSources,
-    catalogSources,
-  ]);
+  }, [selectedSource, trackingSources, availableEngineSources, engineSources]);
 
   const selectedSourceData = trackingSources.find(
     (s) => s.id === selectedSource,
   );
 
+  const selectedEngineFields = useMemo(
+    () => getEngineFields(selectedSourceData?.engine_tracking_source_id),
+    [selectedSourceData?.engine_tracking_source_id, selectorTree],
+  );
+
+  // Enrich fields via GET /tracking-sources/:id when selector-config has none
+  useEffect(() => {
+    const engineId = selectedSourceData?.engine_tracking_source_id;
+    if (engineId == null) return;
+    if (getEngineFields(engineId).length > 0) return;
+    if (enrichedEngineIds.has(engineId)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const detail = await engineTrackingSourceService.getById(engineId);
+        if (cancelled) return;
+        setEnrichedEngineIds((prev) => new Set(prev).add(engineId));
+        if (!detail.fields?.length) return;
+        setSelectorTree((prev) => {
+          if (prev.some((s) => s.id === engineId && s.fields.length > 0)) {
+            return prev;
+          }
+          const nextSource: TrackingSelectorSource = {
+            id: detail.id,
+            name: detail.name,
+            code: detail.code,
+            sourceType: String(detail.sourceType),
+            fields: detail.fields
+              .filter((f) => f.isActive !== false)
+              .map((f) => ({
+                id: f.id,
+                fieldName: f.fieldName,
+                fieldKey: f.fieldKey,
+                dataType: String(f.dataType),
+                displayOrder: f.displayOrder,
+                operators: [],
+              })),
+          };
+          const without = prev.filter((s) => s.id !== engineId);
+          return [...without, nextSource];
+        });
+      } catch {
+        if (!cancelled) {
+          setEnrichedEngineIds((prev) => new Set(prev).add(engineId));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    selectedSourceData?.engine_tracking_source_id,
+    selectorTree,
+    enrichedEngineIds,
+  ]);
+
   const parameterOptionsForSelected = useMemo(() => {
     if (!selectedSourceData) return [];
-
-    // Prefer engine selector-config fields when attribution source is linked
-    const engineId = selectedSourceData.engine_tracking_source_id;
-    if (engineId != null) {
-      const engineFields =
-        engineTrackingSourceService.getFieldsForSource(selectorTree, engineId);
-      if (engineFields.length > 0) {
-        const opts = engineFields.map((f) => ({
-          value: f.fieldKey,
-          label: f.fieldName || formatTrackingKeyLabel(f.fieldKey, PARAMETER_LABELS),
-        }));
-        if (
-          editingRule?.parameter &&
-          !opts.some((o) => o.value === editingRule.parameter)
-        ) {
-          const normalized = normalizeParameterKey(editingRule.parameter);
-          opts.unshift({
-            value: normalized || editingRule.parameter,
-            label: formatTrackingKeyLabel(
-              normalized || editingRule.parameter,
-              PARAMETER_LABELS,
-            ),
-          });
-        }
-        return opts;
-      }
-    }
-
-    const catalog = catalogSources.find(
-      (c) => String(c.id) === String(selectedSourceData.catalog_source_id),
-    );
-    const keys =
-      catalog?.parameters?.length
-        ? catalog.parameters
-        : getParametersByType(selectedSourceData.type);
-    const opts = keys.map((value) => ({
-      value,
-      label: formatTrackingKeyLabel(value, PARAMETER_LABELS),
+    const opts = selectedEngineFields.map((f) => ({
+      value: f.fieldKey,
+      label:
+        f.fieldName || formatTrackingKeyLabel(f.fieldKey, PARAMETER_LABELS),
     }));
     if (
       editingRule?.parameter &&
@@ -266,59 +299,49 @@ export default function OfferTrackingStep({
         ),
       });
     }
-    if (opts.length === 0) {
-      return getParameterOptionsByType(selectedSourceData.type || "custom");
-    }
     return opts;
-  }, [
-    selectedSourceData,
-    catalogSources,
-    editingRule?.parameter,
-    selectorTree,
-  ]);
+  }, [selectedSourceData, selectedEngineFields, editingRule?.parameter]);
 
   const conditionOptionsForParameter = useMemo(() => {
-    const engineId = selectedSourceData?.engine_tracking_source_id;
     const param = editingRule?.parameter || "";
-    if (engineId != null && param) {
-      const field = engineTrackingSourceService
-        .getFieldsForSource(selectorTree, engineId)
-        .find((f) => f.fieldKey === param);
-      if (field?.operators?.length) {
-        return field.operators.map((op) => ({
-          value: op.symbol || op.code,
-          label: op.name || op.symbol || op.code,
-        }));
-      }
+    const field = selectedEngineFields.find((f) => f.fieldKey === param);
+    if (field?.operators?.length) {
+      return field.operators.map((op) => ({
+        value: op.symbol || op.code,
+        label: op.name || op.symbol || op.code,
+      }));
     }
     return getConditionsForParameter(param);
-  }, [
-    selectedSourceData?.engine_tracking_source_id,
-    editingRule?.parameter,
-    selectorTree,
-  ]);
+  }, [selectedEngineFields, editingRule?.parameter]);
 
-  const editingParameterType: TrackingParameterValueType = useMemo(
-    () => getParameterValueType(editingRule?.parameter || ""),
-    [editingRule?.parameter],
-  );
+  const editingParameterType: TrackingParameterValueType = useMemo(() => {
+    const param = editingRule?.parameter || "";
+    const field = selectedEngineFields.find((f) => f.fieldKey === param);
+    if (field?.dataType) return dataTypeToValueType(field.dataType);
+    return getParameterValueType(param);
+  }, [editingRule?.parameter, selectedEngineFields]);
 
   const applyParameterChange = (nextParameter: string) => {
     if (!editingRule) return;
-    const prevType = getParameterValueType(editingRule.parameter);
-    const nextType = getParameterValueType(nextParameter);
-    const engineId = selectedSourceData?.engine_tracking_source_id;
+    const prevField = selectedEngineFields.find(
+      (f) => f.fieldKey === editingRule.parameter,
+    );
+    const nextField = selectedEngineFields.find(
+      (f) => f.fieldKey === nextParameter,
+    );
+    const prevType = prevField
+      ? dataTypeToValueType(prevField.dataType)
+      : getParameterValueType(editingRule.parameter);
+    const nextType = nextField
+      ? dataTypeToValueType(nextField.dataType)
+      : getParameterValueType(nextParameter);
+
     let nextConditions = getConditionsForParameter(nextParameter);
-    if (engineId != null) {
-      const field = engineTrackingSourceService
-        .getFieldsForSource(selectorTree, engineId)
-        .find((f) => f.fieldKey === nextParameter);
-      if (field?.operators?.length) {
-        nextConditions = field.operators.map((op) => ({
-          value: op.symbol || op.code,
-          label: op.name || op.symbol || op.code,
-        }));
-      }
+    if (nextField?.operators?.length) {
+      nextConditions = nextField.operators.map((op) => ({
+        value: op.symbol || op.code,
+        label: op.name || op.symbol || op.code,
+      }));
     }
     const conditionStillValid = nextConditions.some(
       (c) => c.value === editingRule.condition,
@@ -336,48 +359,46 @@ export default function OfferTrackingStep({
     setRuleModalError("");
   };
 
-  const isCatalogIdInUse = (
-    catalogId: string,
+  const isEngineIdInUse = (
+    engineId: string,
     exceptInstanceId?: string,
   ): boolean => {
     return trackingSources.some(
       (s) =>
-        s.catalog_source_id != null &&
-        String(s.catalog_source_id) === String(catalogId) &&
+        s.engine_tracking_source_id != null &&
+        String(s.engine_tracking_source_id) === String(engineId) &&
         s.id !== exceptInstanceId,
     );
   };
 
-  const mapCatalogToOfferSource = (
-    catalog: TrackingSourceCatalogItem,
+  const mapEngineToOfferSource = (
+    engine: EngineTrackingSource,
     options?: {
       targetInstanceId?: string;
       existingRules?: OfferTrackingRule[];
       isDefault?: boolean;
-      engineTrackingSourceId?: number;
     },
   ): OfferTrackingSource => ({
     id: options?.targetInstanceId || generateId(),
-    name: catalog.name,
-    type: String(catalog.type),
+    name: engine.name,
+    type: String(engine.sourceType),
+    code: engine.code,
     enabled: true,
     rules: options?.existingRules ?? [],
-    catalog_source_id: catalog.id,
-    engine_tracking_source_id:
-      options?.engineTrackingSourceId ?? resolveEngineId(catalog),
+    engine_tracking_source_id: engine.id,
     is_default: options?.isDefault === true,
   });
 
-  const applyCatalogSource = (
-    catalogId: string,
+  const applyEngineSource = (
+    engineId: string,
     targetInstanceId?: string,
   ) => {
-    const catalog = catalogSources.find((c) => String(c.id) === catalogId);
-    if (!catalog) return;
+    const engine = engineSources.find((s) => String(s.id) === engineId);
+    if (!engine) return;
 
-    if (isCatalogIdInUse(catalogId, targetInstanceId)) {
+    if (isEngineIdInUse(engineId, targetInstanceId)) {
       setSourceActionError(
-        `"${catalog.name}" is already added. Each tracking source can only be used once.`,
+        `"${engine.name}" is already added. Each tracking source can only be used once.`,
       );
       return;
     }
@@ -387,12 +408,10 @@ export default function OfferTrackingStep({
       ? trackingSources.find((s) => s.id === targetInstanceId)
       : undefined;
 
-    const mapped = mapCatalogToOfferSource(catalog, {
+    const mapped = mapEngineToOfferSource(engine, {
       targetInstanceId,
       existingRules: existing?.rules || [],
       isDefault: existing?.is_default === true,
-      engineTrackingSourceId:
-        existing?.engine_tracking_source_id ?? resolveEngineId(catalog),
     });
 
     if (targetInstanceId) {
@@ -433,25 +452,25 @@ export default function OfferTrackingStep({
     setSourceActionError("");
     setSourceSearch("");
     setSourceTypeFilter("all");
-    setPendingCatalogIds([]);
+    setPendingEngineIds([]);
     setShowSourceModal(true);
   };
 
-  const togglePendingCatalog = (catalogId: string) => {
-    setPendingCatalogIds((prev) =>
-      prev.includes(catalogId)
-        ? prev.filter((id) => id !== catalogId)
-        : [...prev, catalogId],
+  const togglePendingEngine = (engineId: string) => {
+    setPendingEngineIds((prev) =>
+      prev.includes(engineId)
+        ? prev.filter((id) => id !== engineId)
+        : [...prev, engineId],
     );
   };
 
-  const confirmPendingCatalogSources = () => {
-    if (pendingCatalogIds.length === 0) return;
+  const confirmPendingEngineSources = () => {
+    if (pendingEngineIds.length === 0) return;
 
-    const toAdd = pendingCatalogIds
-      .map((id) => catalogSources.find((c) => String(c.id) === id))
-      .filter((c): c is TrackingSourceCatalogItem => Boolean(c))
-      .filter((c) => !isCatalogIdInUse(String(c.id)));
+    const toAdd = pendingEngineIds
+      .map((id) => engineSources.find((s) => String(s.id) === id))
+      .filter((s): s is EngineTrackingSource => Boolean(s))
+      .filter((s) => !isEngineIdInUse(String(s.id)));
 
     if (toAdd.length === 0) {
       setSourceActionError(
@@ -464,9 +483,9 @@ export default function OfferTrackingStep({
     let nextSources = [...trackingSources];
     let firstNewId: string | null = null;
 
-    toAdd.forEach((catalog, index) => {
+    toAdd.forEach((engine, index) => {
       const makeDefault = !hasDefault && index === 0;
-      const mapped = mapCatalogToOfferSource(catalog, {
+      const mapped = mapEngineToOfferSource(engine, {
         isDefault: makeDefault,
       });
       if (!firstNewId) firstNewId = mapped.id;
@@ -479,7 +498,7 @@ export default function OfferTrackingStep({
     onTrackingSourcesChange(nextSources);
     if (firstNewId) setSelectedSource(firstNewId);
     setShowSourceModal(false);
-    setPendingCatalogIds([]);
+    setPendingEngineIds([]);
     setSourceActionError("");
   };
 
@@ -526,10 +545,19 @@ export default function OfferTrackingStep({
   };
 
   const addRule = () => {
-    const defaultParam =
-      parameterOptionsForSelected[0]?.value ||
-      getParametersByType(selectedSourceData?.type || "recharge")[0] ||
-      "amount";
+    if (selectedSourceData?.engine_tracking_source_id == null) {
+      setSourceActionError(
+        "Select an engine tracking source before adding rules.",
+      );
+      return;
+    }
+    const defaultParam = parameterOptionsForSelected[0]?.value || "";
+    if (!defaultParam) {
+      setSourceActionError(
+        "This tracking source has no fields/parameters yet. Add fields under Configuration → Tracking Sources.",
+      );
+      return;
+    }
     const nextPriority = getNextAvailableTrackingRulePriority(
       selectedSourceData?.rules || [],
     );
@@ -539,13 +567,19 @@ export default function OfferTrackingStep({
       );
       return;
     }
+    const defaultField = selectedEngineFields.find(
+      (f) => f.fieldKey === defaultParam,
+    );
+    const defaultCondition = defaultField?.operators?.[0]
+      ? defaultField.operators[0].symbol || defaultField.operators[0].code
+      : getDefaultConditionForParameter(defaultParam);
     setSourceActionError("");
     setEditingRule({
       id: generateId(),
       name: "New Rule",
       priority: nextPriority,
       parameter: defaultParam,
-      condition: getDefaultConditionForParameter(defaultParam),
+      condition: defaultCondition as OfferTrackingRule["condition"],
       value: "",
       enabled: true,
     });
@@ -673,10 +707,10 @@ export default function OfferTrackingStep({
           <div className="flex justify-center">
             {renderAddTrackingSourceButton({ size: "lg" })}
           </div>
-          {!loadingCatalog && availableCatalogSources.length === 0 ? (
+          {!loadingCatalog && availableEngineSources.length === 0 ? (
             <p className={`mt-3 text-xs ${tw.textSecondary}`}>
-              No active catalog sources available. Create one under
-              Configuration → Offer Tracking Sources.
+              No active tracking sources available. Create one under
+              Configuration → Tracking Sources.
             </p>
           ) : null}
         </div>
@@ -690,7 +724,7 @@ export default function OfferTrackingStep({
                   <p className="text-xs text-red-600">{sourceActionError}</p>
                 ) : (
                   <p className={`text-xs ${tw.textSecondary}`}>
-                    Each catalog tracking source can only be added once per
+                    Each engine tracking source can only be added once per
                     offer.
                   </p>
                 )}
@@ -766,13 +800,13 @@ export default function OfferTrackingStep({
                       label="Tracking Source"
                       options={trackingSourceSelectOptions}
                       value={
-                        selectedSourceData.catalog_source_id != null
-                          ? String(selectedSourceData.catalog_source_id)
+                        selectedSourceData.engine_tracking_source_id != null
+                          ? String(selectedSourceData.engine_tracking_source_id)
                           : ""
                       }
                       onChange={(value) => {
                         if (value) {
-                          applyCatalogSource(
+                          applyEngineSource(
                             String(value),
                             selectedSourceData.id,
                           );
@@ -780,7 +814,7 @@ export default function OfferTrackingStep({
                       }}
                       placeholder={
                         trackingSourceSelectOptions.length === 0
-                          ? "No catalog sources available"
+                          ? "No tracking sources available"
                           : "Select tracking source..."
                       }
                       disabled={trackingSourceSelectOptions.length === 0}
@@ -790,16 +824,19 @@ export default function OfferTrackingStep({
                       <p className="mt-1 text-xs text-red-600">
                         {sourceActionError}
                       </p>
-                    ) : selectedSourceData.catalog_source_id != null ? (
+                    ) : selectedSourceData.engine_tracking_source_id != null ? (
                       <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                        {selectedSourceData.engine_tracking_source_id != null
-                          ? `Linked to engine attribution source #${selectedSourceData.engine_tracking_source_id} (reward mapping FK).`
+                        {selectedSourceData.code
+                          ? `${selectedSourceData.code} · `
                           : ""}
+                        {selectedEngineFields.length} parameter
+                        {selectedEngineFields.length !== 1 ? "s" : ""} from
+                        engine catalog
                       </p>
                     ) : (
                       <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                        Link this instance to a catalog tracking source to
-                        configure rules from its parameters.
+                        Link this instance to an engine tracking source to
+                        configure rules from its fields.
                       </p>
                     )}
                   </div>
@@ -841,11 +878,13 @@ export default function OfferTrackingStep({
                       <button
                         type="button"
                         onClick={addRule}
-                        disabled={!selectedSourceData.catalog_source_id}
-                        className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} disabled:opacity-50`}
+                        disabled={
+                          selectedSourceData.engine_tracking_source_id == null
+                        }
+                        className={`inline-flex items-center shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all disabled:opacity-50`}
                         style={{ backgroundColor: color.primary.action }}
                       >
-                        <Plus className="w-4 h-4 mr-1" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Add Rule
                       </button>
                     </div>
@@ -856,11 +895,11 @@ export default function OfferTrackingStep({
                       >
                         <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                         <p className="text-gray-500 text-sm mb-1">
-                          {!selectedSourceData.catalog_source_id
+                          {selectedSourceData.engine_tracking_source_id == null
                             ? "Select a tracking source before adding rules"
                             : "No rules configured — optional"}
                         </p>
-                        {selectedSourceData.catalog_source_id ? (
+                        {selectedSourceData.engine_tracking_source_id != null ? (
                           <>
                             <p className={`text-xs mb-4 ${tw.textSecondary}`}>
                               You can continue without rules. Fulfilment will
@@ -983,35 +1022,34 @@ export default function OfferTrackingStep({
             <div
               className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
             >
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-                <div>
+              <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200 flex-shrink-0">
+                <div className="min-w-0">
                   <h2 className="text-xl font-semibold text-gray-900">
                     Select Tracking Sources
                   </h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    Choose catalog sources to measure this offer. Each source
-                    can only be added once.
+                    Choose engine attribution sources for this offer. Parameters
+                    come from each source&apos;s fields. Each source can only be
+                    added once.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 shrink-0">
                   <button
                     type="button"
-                    onClick={() =>
-                      navigate("/dashboard/offer-tracking-sources")
-                    }
-                    className={`inline-flex items-center px-3 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
+                    onClick={() => navigate("/dashboard/tracking-sources/create")}
+                    className={`inline-flex items-center shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
                     style={{ backgroundColor: color.primary.action }}
                   >
-                    <Plus className="w-4 h-4 mr-1.5" />
+                    <Plus className="w-4 h-4 mr-2" />
                     Create Tracking Source
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setShowSourceModal(false);
-                      setPendingCatalogIds([]);
+                      setPendingEngineIds([]);
                     }}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1042,7 +1080,7 @@ export default function OfferTrackingStep({
                 </div>
               </div>
 
-              {pendingCatalogIds.length > 0 ? (
+              {pendingEngineIds.length > 0 ? (
                 <div className="px-6 flex-shrink-0 my-3">
                   <div
                     className={`${tw.rounded} p-4 border text-sm`}
@@ -1054,12 +1092,12 @@ export default function OfferTrackingStep({
                   >
                     <div className="flex items-center justify-between">
                       <span>
-                        {pendingCatalogIds.length} source
-                        {pendingCatalogIds.length !== 1 ? "s" : ""} selected
+                        {pendingEngineIds.length} source
+                        {pendingEngineIds.length !== 1 ? "s" : ""} selected
                       </span>
                       <button
                         type="button"
-                        onClick={() => setPendingCatalogIds([])}
+                        onClick={() => setPendingEngineIds([])}
                         className="font-medium hover:opacity-80 transition-opacity"
                         style={{ color: color.primary.accent }}
                       >
@@ -1083,8 +1121,8 @@ export default function OfferTrackingStep({
                   <div className="text-center py-12">
                     <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500 text-sm">
-                      {availableCatalogSources.length === 0
-                        ? "No unused catalog sources available. Create one or remove an existing source from this offer."
+                      {availableEngineSources.length === 0
+                        ? "No unused tracking sources available. Create one under Configuration → Tracking Sources, or remove a source from this offer."
                         : "No tracking sources match your search."}
                     </p>
                   </div>
@@ -1113,14 +1151,14 @@ export default function OfferTrackingStep({
                       <tbody className="bg-white divide-y divide-gray-200">
                         {filteredModalSources.map((source) => {
                           const id = String(source.id);
-                          const checked = pendingCatalogIds.includes(id);
+                          const checked = pendingEngineIds.includes(id);
                           return (
                             <tr
                               key={id}
                               className={`cursor-pointer hover:bg-gray-50 ${
                                 checked ? "bg-gray-50" : ""
                               }`}
-                              onClick={() => togglePendingCatalog(id)}
+                              onClick={() => togglePendingEngine(id)}
                             >
                               <td className="px-4 py-3">
                                 <div
@@ -1128,9 +1166,9 @@ export default function OfferTrackingStep({
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <Checkbox
-                                    id={`catalog-${id}`}
+                                    id={`engine-source-${id}`}
                                     checked={checked}
-                                    onChange={() => togglePendingCatalog(id)}
+                                    onChange={() => togglePendingEngine(id)}
                                   />
                                 </div>
                               </td>
@@ -1142,14 +1180,19 @@ export default function OfferTrackingStep({
                                       style={{ color: color.primary.accent }}
                                     />
                                   ) : null}
-                                  {source.name}
+                                  <div>
+                                    <div>{source.name}</div>
+                                    <div className="text-xs text-gray-400 font-mono">
+                                      {source.code}
+                                    </div>
+                                  </div>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-gray-600">
-                                {trackingTypeLabel(String(source.type))}
+                                {trackingTypeLabel(String(source.sourceType))}
                               </td>
                               <td className="px-4 py-3 text-gray-600">
-                                {source.parameters?.length ?? 0}
+                                {fieldCountForEngine(source.id)}
                               </td>
                               <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
                                 {source.description || "—"}
@@ -1165,7 +1208,7 @@ export default function OfferTrackingStep({
 
               <div className="flex items-center justify-between p-6 border-t border-gray-200 flex-shrink-0">
                 <span className="text-sm text-gray-600">
-                  {pendingCatalogIds.length} of {filteredModalSources.length}{" "}
+                  {pendingEngineIds.length} of {filteredModalSources.length}{" "}
                   shown source
                   {filteredModalSources.length !== 1 ? "s" : ""} selected
                 </span>
@@ -1174,7 +1217,7 @@ export default function OfferTrackingStep({
                     type="button"
                     onClick={() => {
                       setShowSourceModal(false);
-                      setPendingCatalogIds([]);
+                      setPendingEngineIds([]);
                     }}
                     className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded}`}
                   >
@@ -1182,8 +1225,8 @@ export default function OfferTrackingStep({
                   </button>
                   <button
                     type="button"
-                    onClick={confirmPendingCatalogSources}
-                    disabled={pendingCatalogIds.length === 0}
+                    onClick={confirmPendingEngineSources}
+                    disabled={pendingEngineIds.length === 0}
                     className={`px-4 py-2 text-white ${tw.rounded} disabled:opacity-50`}
                     style={{ backgroundColor: color.primary.action }}
                   >

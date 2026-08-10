@@ -7,6 +7,7 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import type { OfferTrackingSource } from "../types/offerTrackingSource";
+import { engineSourceTypeLabel } from "../../configurations/types/engineTrackingSource";
 import { TRACKING_TYPE_OPTIONS } from "../utils/trackingSourcesConfig";
 
 export interface SelectOfferRewardTrackingSourcesModalProps {
@@ -18,7 +19,10 @@ export interface SelectOfferRewardTrackingSourcesModalProps {
 
 function trackingTypeLabel(type: string | undefined): string {
   if (!type) return "—";
-  return TRACKING_TYPE_OPTIONS.find((t) => t.value === type)?.label || type;
+  return (
+    TRACKING_TYPE_OPTIONS.find((t) => t.value === type)?.label ||
+    engineSourceTypeLabel(type)
+  );
 }
 
 /**

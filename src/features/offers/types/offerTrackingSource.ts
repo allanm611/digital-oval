@@ -24,14 +24,20 @@ export interface OfferTrackingRule {
 export interface OfferTrackingSource {
   id: string;
   name: string;
-  type: "recharge" | "usage_metric" | "engagement" | "redemption" | "churn_prevention" | "custom" | string;
+  /** Engine source_type (e.g. recharge, usage_data) or legacy offer-catalog type */
+  type: string;
+  /** Engine source code when linked via `/tracking-sources` */
+  code?: string;
   enabled: boolean;
   rules: OfferTrackingRule[];
-  /** Optional link to Configuration → Offer Tracking Sources catalog id */
+  /**
+   * @deprecated Prefer `engine_tracking_source_id`. Kept for older drafts that
+   * linked Configuration → Offer Tracking Sources (`/offer-tracking-sources`).
+   */
   catalog_source_id?: number | string;
   /**
    * FK into engine attribution catalog (`cvm.tracking_sources` via `/tracking-sources`).
-   * Required for offer reward mappings; resolved from catalog type/code when possible.
+   * Primary link for offer tracking + reward mappings.
    */
   engine_tracking_source_id?: number;
   is_default?: boolean;

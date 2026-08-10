@@ -142,8 +142,8 @@ export default function SelectErrorGroupsModal({
         className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-          <div>
+        <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="min-w-0">
             <h2 className="text-xl font-semibold text-gray-900">
               Select Error Groups
             </h2>
@@ -152,20 +152,20 @@ export default function SelectErrorGroupsModal({
               selected groups are hidden so each can only be added once.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={onCreate}
-              className={`inline-flex items-center px-3 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
+              className={`inline-flex items-center shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
               style={{ backgroundColor: color.primary.action }}
             >
-              <Plus className="w-4 h-4 mr-1.5" />
+              <Plus className="w-4 h-4 mr-2" />
               Create Error Group
             </button>
             <button
               type="button"
               onClick={resetAndClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
