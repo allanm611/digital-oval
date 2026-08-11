@@ -232,14 +232,14 @@ export function validateOfferRewardTrackingMapping(
     errors.tracking = `${first.sourceName}: ${first.reason} Priorities must be unique within each source (1–20).`;
   }
 
-  // Immediate reward (is_immediate_reward): tracking optional; default reward mandatory.
+  // Seeding reward (is_seeding_reward): tracking optional; default reward mandatory.
   if (usesDefaultReward) {
     if (!findDefaultReward(rewards)) {
       errors.rewards =
-        "Immediate-reward offers require a default reward. It should be created automatically — refresh this step.";
+        "Seeding-reward offers require a default reward. It should be created automatically — refresh this step.";
     } else if (!isDefaultImmediateRewardConfigured(rewards)) {
       errors.rewards =
-        "Configure the default reward (provider and reward template). Tracking is not required for immediate-reward offer types.";
+        "Configure the default reward (provider and reward template). Tracking is not required for seeding-reward offer types.";
     }
 
     applySharedLinkedBindingChecks(errors, rewards, trackingSources);

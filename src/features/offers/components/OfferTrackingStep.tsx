@@ -13,6 +13,7 @@ import {
   formatTrackingKeyLabel,
   formatTrackingRuleValueDisplay,
   getConditionsForParameter,
+  getConditionsForValueType,
   getDefaultConditionForParameter,
   getParameterValueType,
   normalizeParameterKey,
@@ -22,7 +23,10 @@ import {
   validateTrackingRuleValue,
   type TrackingParameterValueType,
 } from "../utils/trackingSourcesConfig";
-import { engineTrackingSourceService } from "../../configurations/services/engineTrackingSourceService";
+import {
+  engineTrackingSourceService,
+  mergeSourcesIntoSelectorTree,
+} from "../../configurations/services/engineTrackingSourceService";
 import type {
   EngineTrackingSource,
   TrackingSelectorField,
@@ -64,10 +68,72 @@ function dataTypeToValueType(
     case "date":
       return "date";
     case "timestamp":
+    case "datetime":
       return "datetime";
+    case "text":
+    case "string":
+    case "json":
     default:
-      return "text";
+      return "string";
   }
+}
+
+function conditionsForEngineField(
+  field: TrackingSelectorField | undefined,
+  parameterKey: string,
+) {
+  if (field?.operators?.length) {
+    return field.operators.map((op) => ({
+      value: op.symbol || op.code,
+      label: op.name || op.symbol || op.code,
+    }));
+  }
+  if (field?.dataType) {
+    return getConditionsForValueType(dataTypeToValueType(field.dataType));
+  }
+  return getConditionsForParameter(parameterKey);
+}
+
+function upsertSelectorSource(
+  tree: TrackingSelectorSource[],
+  next: TrackingSelectorSource,
+): TrackingSelectorSource[] {
+  const without = tree.filter((s) => s.id !== next.id);
+  const existing = tree.find((s) => s.id === next.id);
+  if (!existing) return [...without, next];
+
+  const fieldMap = new Map(
+    existing.fields.map((f) => [f.id, { ...f, operators: [...f.operators] }]),
+  );
+  for (const field of next.fields) {
+    const prev = fieldMap.get(field.id);
+    if (prev) {
+      fieldMap.set(field.id, {
+        ...prev,
+        fieldName: field.fieldName || prev.fieldName,
+        fieldKey: field.fieldKey || prev.fieldKey,
+        dataType: field.dataType || prev.dataType,
+        displayOrder: field.displayOrder ?? prev.displayOrder,
+        operators:
+          field.operators?.length > 0 ? field.operators : prev.operators,
+      });
+    } else {
+      fieldMap.set(field.id, { ...field });
+    }
+  }
+
+  return [
+    ...without,
+    {
+      ...existing,
+      name: next.name || existing.name,
+      code: next.code || existing.code,
+      sourceType: next.sourceType || existing.sourceType,
+      fields: Array.from(fieldMap.values()).sort(
+        (a, b) => a.displayOrder - b.displayOrder,
+      ),
+    },
+  ];
 }
 
 export default function OfferTrackingStep({
@@ -101,6 +167,10 @@ export default function OfferTrackingStep({
   const [enrichedEngineIds, setEnrichedEngineIds] = useState<Set<number>>(
     () => new Set(),
   );
+  const [enrichingEngineIds, setEnrichingEngineIds] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const [loadingRuleParams, setLoadingRuleParams] = useState(false);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -109,8 +179,82 @@ export default function OfferTrackingStep({
     return engineTrackingSourceService.getFieldsForSource(selectorTree, engineId);
   };
 
-  const fieldCountForEngine = (engineId: number): number =>
-    getEngineFields(engineId).length;
+  const fieldCountForEngine = (engineId: number): number => {
+    const fromTree = getEngineFields(engineId).length;
+    if (fromTree > 0) return fromTree;
+    const fromList = engineSources.find((s) => s.id === engineId);
+    return (fromList?.fields || []).filter((f) => f.isActive !== false).length;
+  };
+
+  const markEngineEnriched = (engineId: number) => {
+    setEnrichedEngineIds((prev) => {
+      if (prev.has(engineId)) return prev;
+      const next = new Set(prev);
+      next.add(engineId);
+      return next;
+    });
+  };
+
+  const enrichEngineSource = async (
+    engineId: number,
+    options?: { force?: boolean },
+  ): Promise<TrackingSelectorField[]> => {
+    const existing = getEngineFields(engineId);
+    if (existing.length > 0 && !options?.force) {
+      markEngineEnriched(engineId);
+      return existing;
+    }
+    if (enrichedEngineIds.has(engineId) && !options?.force) {
+      return getEngineFields(engineId);
+    }
+    if (enrichingEngineIds.has(engineId) && !options?.force) {
+      return existing;
+    }
+
+    setEnrichingEngineIds((prev) => new Set(prev).add(engineId));
+    try {
+      const detail = await engineTrackingSourceService.getSelectorSourceById(
+        engineId,
+      );
+      setSelectorTree((prev) => upsertSelectorSource(prev, detail));
+      setEngineSources((prev) => {
+        const idx = prev.findIndex((s) => s.id === engineId);
+        if (idx < 0) return prev;
+        const current = prev[idx];
+        if (current.fields?.length) return prev;
+        const next = [...prev];
+        next[idx] = {
+          ...current,
+          fields: detail.fields.map((f) => ({
+            id: f.id,
+            trackingSourceId: engineId,
+            fieldName: f.fieldName,
+            fieldKey: f.fieldKey,
+            dataType: f.dataType,
+            isRequired: false,
+            isPrimaryKey: false,
+            isAmountField: false,
+            isRevenueField: false,
+            isProductField: false,
+            displayOrder: f.displayOrder,
+            isActive: true,
+          })),
+        };
+        return next;
+      });
+      markEngineEnriched(engineId);
+      return detail.fields;
+    } catch {
+      markEngineEnriched(engineId);
+      return getEngineFields(engineId);
+    } finally {
+      setEnrichingEngineIds((prev) => {
+        const next = new Set(prev);
+        next.delete(engineId);
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -122,10 +266,11 @@ export default function OfferTrackingStep({
           engineTrackingSourceService.getAll({ is_active: true, limit: 500 }),
           engineTrackingSourceService.getSelectorConfig(),
         ]);
-        if (!cancelled) {
-          setEngineSources(engines);
-          setSelectorTree(selector);
-        }
+        if (cancelled) return;
+
+        const mergedTree = mergeSourcesIntoSelectorTree(selector, engines);
+        setEngineSources(engines);
+        setSelectorTree(mergedTree);
       } catch {
         if (!cancelled) {
           setEngineSources([]);
@@ -161,6 +306,87 @@ export default function OfferTrackingStep({
   const availableEngineSources = useMemo(() => {
     return engineSources.filter((s) => !usedEngineIds.has(String(s.id)));
   }, [engineSources, usedEngineIds]);
+
+  /** When the picker opens, backfill real field counts for sources still missing params */
+  useEffect(() => {
+    if (!showSourceModal || loadingCatalog) return;
+    let cancelled = false;
+
+    const missingIds = availableEngineSources
+      .filter((engine) => fieldCountForEngine(engine.id) === 0)
+      .filter((engine) => !enrichedEngineIds.has(engine.id))
+      .filter((engine) => !enrichingEngineIds.has(engine.id))
+      .map((engine) => engine.id);
+
+    if (missingIds.length === 0) return;
+
+    (async () => {
+      setEnrichingEngineIds((prev) => {
+        const next = new Set(prev);
+        for (const id of missingIds) next.add(id);
+        return next;
+      });
+
+      const details = await Promise.all(
+        missingIds.map(async (id) => {
+          try {
+            return await engineTrackingSourceService.getSelectorSourceById(id);
+          } catch {
+            return null;
+          }
+        }),
+      );
+      if (cancelled) return;
+
+      setSelectorTree((prev) => {
+        let next = prev;
+        for (const detail of details) {
+          if (detail?.fields?.length) {
+            next = upsertSelectorSource(next, detail);
+          }
+        }
+        return next;
+      });
+      setEngineSources((prev) =>
+        prev.map((engine) => {
+          const detail = details.find((d) => d?.id === engine.id);
+          if (!detail?.fields?.length || engine.fields?.length) return engine;
+          return {
+            ...engine,
+            fields: detail.fields.map((f) => ({
+              id: f.id,
+              trackingSourceId: engine.id,
+              fieldName: f.fieldName,
+              fieldKey: f.fieldKey,
+              dataType: f.dataType,
+              isRequired: false,
+              isPrimaryKey: false,
+              isAmountField: false,
+              isRevenueField: false,
+              isProductField: false,
+              displayOrder: f.displayOrder,
+              isActive: true,
+            })),
+          };
+        }),
+      );
+      setEnrichedEngineIds((prev) => {
+        const next = new Set(prev);
+        for (const id of missingIds) next.add(id);
+        return next;
+      });
+      setEnrichingEngineIds((prev) => {
+        const next = new Set(prev);
+        for (const id of missingIds) next.delete(id);
+        return next;
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSourceModal, loadingCatalog, availableEngineSources]);
 
   const filteredModalSources = useMemo(() => {
     const q = sourceSearch.trim().toLowerCase();
@@ -228,55 +454,25 @@ export default function OfferTrackingStep({
     [selectedSourceData?.engine_tracking_source_id, selectorTree],
   );
 
-  // Enrich fields via GET /tracking-sources/:id when selector-config has none
+  // Enrich selected source fields/operators when selector-config is sparse
   useEffect(() => {
     const engineId = selectedSourceData?.engine_tracking_source_id;
     if (engineId == null) return;
-    if (getEngineFields(engineId).length > 0) return;
-    if (enrichedEngineIds.has(engineId)) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const detail = await engineTrackingSourceService.getById(engineId);
-        if (cancelled) return;
-        setEnrichedEngineIds((prev) => new Set(prev).add(engineId));
-        if (!detail.fields?.length) return;
-        setSelectorTree((prev) => {
-          if (prev.some((s) => s.id === engineId && s.fields.length > 0)) {
-            return prev;
-          }
-          const nextSource: TrackingSelectorSource = {
-            id: detail.id,
-            name: detail.name,
-            code: detail.code,
-            sourceType: String(detail.sourceType),
-            fields: detail.fields
-              .filter((f) => f.isActive !== false)
-              .map((f) => ({
-                id: f.id,
-                fieldName: f.fieldName,
-                fieldKey: f.fieldKey,
-                dataType: String(f.dataType),
-                displayOrder: f.displayOrder,
-                operators: [],
-              })),
-          };
-          const without = prev.filter((s) => s.id !== engineId);
-          return [...without, nextSource];
-        });
-      } catch {
-        if (!cancelled) {
-          setEnrichedEngineIds((prev) => new Set(prev).add(engineId));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    if (getEngineFields(engineId).length > 0) {
+      markEngineEnriched(engineId);
+      return;
+    }
+    if (enrichedEngineIds.has(engineId) || enrichingEngineIds.has(engineId)) {
+      return;
+    }
+    void enrichEngineSource(engineId);
+    // Intentionally keyed off selection + tree completeness only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     selectedSourceData?.engine_tracking_source_id,
     selectorTree,
     enrichedEngineIds,
+    enrichingEngineIds,
   ]);
 
   const parameterOptionsForSelected = useMemo(() => {
@@ -305,13 +501,7 @@ export default function OfferTrackingStep({
   const conditionOptionsForParameter = useMemo(() => {
     const param = editingRule?.parameter || "";
     const field = selectedEngineFields.find((f) => f.fieldKey === param);
-    if (field?.operators?.length) {
-      return field.operators.map((op) => ({
-        value: op.symbol || op.code,
-        label: op.name || op.symbol || op.code,
-      }));
-    }
-    return getConditionsForParameter(param);
+    return conditionsForEngineField(field, param);
   }, [selectedEngineFields, editingRule?.parameter]);
 
   const editingParameterType: TrackingParameterValueType = useMemo(() => {
@@ -336,13 +526,7 @@ export default function OfferTrackingStep({
       ? dataTypeToValueType(nextField.dataType)
       : getParameterValueType(nextParameter);
 
-    let nextConditions = getConditionsForParameter(nextParameter);
-    if (nextField?.operators?.length) {
-      nextConditions = nextField.operators.map((op) => ({
-        value: op.symbol || op.code,
-        label: op.name || op.symbol || op.code,
-      }));
-    }
+    const nextConditions = conditionsForEngineField(nextField, nextParameter);
     const conditionStillValid = nextConditions.some(
       (c) => c.value === editingRule.condition,
     );
@@ -544,47 +728,70 @@ export default function OfferTrackingStep({
     );
   };
 
-  const addRule = () => {
+  const addRule = async () => {
     if (selectedSourceData?.engine_tracking_source_id == null) {
       setSourceActionError(
         "Select an engine tracking source before adding rules.",
       );
       return;
     }
-    const defaultParam = parameterOptionsForSelected[0]?.value || "";
-    if (!defaultParam) {
-      setSourceActionError(
-        "This tracking source has no fields/parameters yet. Add fields under Configuration → Tracking Sources.",
-      );
-      return;
-    }
-    const nextPriority = getNextAvailableTrackingRulePriority(
-      selectedSourceData?.rules || [],
-    );
-    if (nextPriority == null) {
-      setSourceActionError(
-        `This source already has rules for every priority (${TRACKING_RULE_PRIORITY_MIN}–${TRACKING_RULE_PRIORITY_MAX}). Remove or change an existing rule first.`,
-      );
-      return;
-    }
-    const defaultField = selectedEngineFields.find(
-      (f) => f.fieldKey === defaultParam,
-    );
-    const defaultCondition = defaultField?.operators?.[0]
-      ? defaultField.operators[0].symbol || defaultField.operators[0].code
-      : getDefaultConditionForParameter(defaultParam);
+
+    const engineId = selectedSourceData.engine_tracking_source_id;
+    setLoadingRuleParams(true);
     setSourceActionError("");
-    setEditingRule({
-      id: generateId(),
-      name: "New Rule",
-      priority: nextPriority,
-      parameter: defaultParam,
-      condition: defaultCondition as OfferTrackingRule["condition"],
-      value: "",
-      enabled: true,
-    });
-    setRuleModalError("");
-    setShowRuleModal(true);
+    try {
+      let fields = getEngineFields(engineId);
+      if (fields.length === 0) {
+        fields = await enrichEngineSource(engineId, { force: true });
+      } else {
+        // Refresh once so nested operators from detail/selector are available
+        const hasOperators = fields.some((f) => f.operators?.length);
+        if (!hasOperators && !enrichedEngineIds.has(engineId)) {
+          fields = await enrichEngineSource(engineId, { force: true });
+        }
+      }
+
+      const defaultParam = fields[0]?.fieldKey || "";
+      if (!defaultParam) {
+        setSourceActionError(
+          "This tracking source has no fields/parameters yet. Add fields under Configuration → Tracking Sources.",
+        );
+        return;
+      }
+
+      const nextPriority = getNextAvailableTrackingRulePriority(
+        selectedSourceData?.rules || [],
+      );
+      if (nextPriority == null) {
+        setSourceActionError(
+          `This source already has rules for every priority (${TRACKING_RULE_PRIORITY_MIN}–${TRACKING_RULE_PRIORITY_MAX}). Remove or change an existing rule first.`,
+        );
+        return;
+      }
+
+      const defaultField = fields.find((f) => f.fieldKey === defaultParam);
+      const defaultConditions = conditionsForEngineField(
+        defaultField,
+        defaultParam,
+      );
+      const defaultCondition =
+        defaultConditions[0]?.value ||
+        getDefaultConditionForParameter(defaultParam);
+
+      setEditingRule({
+        id: generateId(),
+        name: "New Rule",
+        priority: nextPriority,
+        parameter: defaultParam,
+        condition: defaultCondition as OfferTrackingRule["condition"],
+        value: "",
+        enabled: true,
+      });
+      setRuleModalError("");
+      setShowRuleModal(true);
+    } finally {
+      setLoadingRuleParams(false);
+    }
   };
 
   const saveRule = (sourceId: string, rule: OfferTrackingRule) => {
@@ -612,11 +819,20 @@ export default function OfferTrackingStep({
 
     const parameter =
       normalizeParameterKey(rule.parameter) || rule.parameter;
-    const valueType = getParameterValueType(parameter);
-    const allowedConditions = getConditionsForParameter(parameter);
+    const engineFields = getEngineFields(source.engine_tracking_source_id);
+    const engineField =
+      engineFields.find((f) => f.fieldKey === parameter) ||
+      engineFields.find(
+        (f) => normalizeParameterKey(f.fieldKey) === parameter,
+      );
+    const valueType = engineField?.dataType
+      ? dataTypeToValueType(engineField.dataType)
+      : getParameterValueType(parameter);
+    const allowedConditions = conditionsForEngineField(engineField, parameter);
     const condition = allowedConditions.some((c) => c.value === rule.condition)
       ? rule.condition
-      : getDefaultConditionForParameter(parameter);
+      : ((allowedConditions[0]?.value as OfferTrackingRule["condition"]) ||
+        getDefaultConditionForParameter(parameter));
 
     const serializedValue =
       condition === "is_any_of"
@@ -631,6 +847,7 @@ export default function OfferTrackingStep({
       serializedValue,
       parameter,
       condition,
+      valueType,
     );
     if (valueError) {
       setRuleModalError(valueError);
@@ -658,6 +875,24 @@ export default function OfferTrackingStep({
     setShowRuleModal(false);
     setEditingRule(null);
     setRuleModalError("");
+  };
+
+  const openEditRule = async (rule: OfferTrackingRule) => {
+    const engineId = selectedSourceData?.engine_tracking_source_id;
+    if (engineId != null && getEngineFields(engineId).length === 0) {
+      setLoadingRuleParams(true);
+      try {
+        await enrichEngineSource(engineId, { force: true });
+      } finally {
+        setLoadingRuleParams(false);
+      }
+    }
+    setEditingRule({
+      ...rule,
+      parameter: normalizeParameterKey(rule.parameter) || rule.parameter,
+    });
+    setRuleModalError("");
+    setShowRuleModal(true);
   };
 
   const removeRule = (sourceId: string, ruleId: string) => {
@@ -877,15 +1112,16 @@ export default function OfferTrackingStep({
                       </div>
                       <button
                         type="button"
-                        onClick={addRule}
+                        onClick={() => void addRule()}
                         disabled={
-                          selectedSourceData.engine_tracking_source_id == null
+                          selectedSourceData.engine_tracking_source_id == null ||
+                          loadingRuleParams
                         }
                         className={`inline-flex items-center shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all disabled:opacity-50`}
                         style={{ backgroundColor: color.primary.action }}
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Rule
+                        {loadingRuleParams ? "Loading…" : "Add Rule"}
                       </button>
                     </div>
 
@@ -908,12 +1144,13 @@ export default function OfferTrackingStep({
                             </p>
                             <button
                               type="button"
-                              onClick={addRule}
-                              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
+                              onClick={() => void addRule()}
+                              disabled={loadingRuleParams}
+                              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} disabled:opacity-50`}
                               style={{ backgroundColor: color.primary.action }}
                             >
                               <Plus className="w-4 h-4 mr-2" />
-                              Add Rule
+                              {loadingRuleParams ? "Loading…" : "Add Rule"}
                             </button>
                           </>
                         ) : null}
@@ -946,17 +1183,9 @@ export default function OfferTrackingStep({
                               <div className="flex items-center space-x-2">
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    setEditingRule({
-                                      ...rule,
-                                      parameter:
-                                        normalizeParameterKey(rule.parameter) ||
-                                        rule.parameter,
-                                    });
-                                    setRuleModalError("");
-                                    setShowRuleModal(true);
-                                  }}
-                                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                                  onClick={() => void openEditRule(rule)}
+                                  disabled={loadingRuleParams}
+                                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
@@ -1192,7 +1421,10 @@ export default function OfferTrackingStep({
                                 {trackingTypeLabel(String(source.sourceType))}
                               </td>
                               <td className="px-4 py-3 text-gray-600">
-                                {fieldCountForEngine(source.id)}
+                                {enrichingEngineIds.has(source.id) &&
+                                fieldCountForEngine(source.id) === 0
+                                  ? "…"
+                                  : fieldCountForEngine(source.id)}
                               </td>
                               <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
                                 {source.description || "—"}

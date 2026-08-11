@@ -12,7 +12,13 @@ export const OFFER_WIZARD_METADATA_VERSION = 2 as const;
 
 export interface OfferWizardMetadata {
   wizard_version?: number;
+  /** Wizard reward configurations (authoritative for the create/edit UI) */
   rewards?: OfferReward[];
+  /**
+   * Alias for backend readers / JSONB column `reward_configuration`.
+   * Kept in sync with `rewards` so create + update stay aligned.
+   */
+  reward_configuration?: OfferReward[];
   tracking_sources?: unknown[];
   /** UI-only: persisted when API accepts only `route` */
   channel_route_id?: number;
@@ -101,31 +107,64 @@ export function mergeOfferWizardMetadata(
     ...base,
     wizard_version: OFFER_WIZARD_METADATA_VERSION,
     rewards: normalizedRewards,
+    // Dual-write so backend column / virtual field readers stay in sync
+    reward_configuration: normalizedRewards,
     tracking_sources: trackingSources,
     ...routeSnapshot,
   };
 }
 
-export function parseOfferWizardMetadata(metadata: unknown): {
+function coerceRewardList(value: unknown): OfferReward[] {
+  return Array.isArray(value) ? (value as OfferReward[]) : [];
+}
+
+export function parseOfferWizardMetadata(
+  metadata: unknown,
+  fallbacks?: {
+    trackingSources?: unknown;
+    rewardConfiguration?: unknown;
+  },
+): {
   rewards: OfferReward[];
   trackingSources: unknown[];
   channelRouteId?: number;
   channelRouteKind?: OfferChannelRouteKind;
 } {
-  if (!metadata || typeof metadata !== "object") {
-    return { rewards: [], trackingSources: [] };
+  const empty = { rewards: [] as OfferReward[], trackingSources: [] as unknown[] };
+  const m =
+    metadata && typeof metadata === "object"
+      ? (metadata as OfferWizardMetadata)
+      : null;
+
+  const rewardsFromWizard = coerceRewardList(m?.rewards);
+  const rewardsFromAlias = coerceRewardList(m?.reward_configuration);
+  const rewardsFromFallback = coerceRewardList(fallbacks?.rewardConfiguration);
+  const rewards =
+    rewardsFromWizard.length > 0
+      ? rewardsFromWizard
+      : rewardsFromAlias.length > 0
+        ? rewardsFromAlias
+        : rewardsFromFallback;
+
+  const trackingFromMeta = Array.isArray(m?.tracking_sources)
+    ? m!.tracking_sources
+    : [];
+  const trackingFromFallback = Array.isArray(fallbacks?.trackingSources)
+    ? (fallbacks!.trackingSources as unknown[])
+    : [];
+  const trackingSources =
+    trackingFromMeta.length > 0 ? trackingFromMeta : trackingFromFallback;
+
+  if (!m && rewards.length === 0 && trackingSources.length === 0) {
+    return empty;
   }
-  const m = metadata as OfferWizardMetadata;
+
   return {
-    rewards: Array.isArray(m.rewards) ? m.rewards : [],
-    trackingSources: Array.isArray(m.tracking_sources)
-      ? m.tracking_sources
-      : [],
+    rewards,
+    trackingSources,
     channelRouteId:
-      typeof m.channel_route_id === "number"
-        ? m.channel_route_id
-        : undefined,
-    channelRouteKind: m.channel_route_kind,
+      typeof m?.channel_route_id === "number" ? m.channel_route_id : undefined,
+    channelRouteKind: m?.channel_route_kind,
   };
 }
 
@@ -171,6 +210,8 @@ export function buildOfferCreatePayload(
     route: _legacyRoute,
     communication_channel_id: _channelId,
     metadata: _metadata,
+    tracking_sources: _trackingSources,
+    reward_configuration: _rewardConfiguration,
     ...core
   } = formData;
 
@@ -179,17 +220,23 @@ export function buildOfferCreatePayload(
     formData,
     options.channelName,
   );
+  const metadata = mergeOfferWizardMetadata(
+    formData.metadata,
+    options.rewards,
+    options.trackingSources,
+    routeSnapshot,
+  );
 
+  // Dual-write top-level JSONB columns expected by database-service create/update.
+  // Keeps create aligned with update even if metadata merge is incomplete.
   return {
     ...core,
     ...(description?.trim() ? { description: description.trim() } : {}),
     ...routePayload,
-    metadata: mergeOfferWizardMetadata(
-      formData.metadata,
-      options.rewards,
-      options.trackingSources,
-      routeSnapshot,
-    ),
+    tracking_sources: metadata.tracking_sources ?? options.trackingSources,
+    reward_configuration:
+      metadata.reward_configuration ?? metadata.rewards ?? options.rewards,
+    metadata,
   };
 }
 

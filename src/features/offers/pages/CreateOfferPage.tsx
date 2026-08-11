@@ -181,9 +181,9 @@ interface StepProps {
   rewards: OfferReward[];
   setRewards: (rewards: OfferReward[]) => void;
   requiresTrackingRewardMapping?: boolean;
-  /** Immediate reward (is_immediate_reward): tracking optional; default reward always required */
+  /** Seeding reward (is_seeding_reward): tracking optional; default reward always required */
   usesDefaultReward?: boolean;
-  /** Selected offer type display name for immediate-reward CTAs */
+  /** Selected offer type display name for seeding-reward CTAs */
   offerTypeName?: string | null;
   isLoading?: boolean;
   validationErrors?: Record<string, string>;
@@ -967,7 +967,7 @@ function OfferRewardStepWrapper({
   | "onCancel"
 > &
   Pick<StepProps, "validationErrors">) {
-  const typeLabel = offerTypeName?.trim() || "Immediate-reward";
+  const typeLabel = offerTypeName?.trim() || "Seeding-reward";
 
   return (
     <div className="space-y-6">
@@ -1617,7 +1617,7 @@ function ReviewStep({
                 },
                 {
                   label: usesDefaultReward
-                    ? `Tracking (optional for ${offerTypeName?.trim() || "immediate reward"})`
+                    ? `Tracking (optional for ${offerTypeName?.trim() || "seeding reward"})`
                     : "Tracking configured",
                   complete: usesDefaultReward
                     ? true
@@ -1778,7 +1778,7 @@ export default function CreateOfferPage({
   );
   const hasRestoredDataRef = useRef(false);
 
-  // Immediate-reward ↔ other offer types: keep default reward lifecycle consistent.
+  // Seeding-reward ↔ other offer types: keep default reward lifecycle consistent.
   useEffect(() => {
     if (usesDefaultReward) {
       setRewards((prev) => {
@@ -2056,7 +2056,10 @@ export default function CreateOfferPage({
         metadata: offer.metadata || {},
       };
 
-      const wizardData = parseOfferWizardMetadata(offer.metadata);
+      const wizardData = parseOfferWizardMetadata(offer.metadata, {
+        trackingSources: offer.tracking_sources,
+        rewardConfiguration: offer.reward_configuration,
+      });
       let formForUi = newFormData;
       if (
         wizardData.channelRouteId != null &&
@@ -2070,33 +2073,27 @@ export default function CreateOfferPage({
       }
       setFormData(formForUi);
 
-      const loadedTrackingSources =
-        wizardData.trackingSources.length > 0
-          ? (wizardData.trackingSources as OfferTrackingSource[])
+      const loadedTrackingSources = Array.isArray(wizardData.trackingSources)
+        ? (wizardData.trackingSources as OfferTrackingSource[])
+        : [];
+      setTrackingSources(loadedTrackingSources);
+
+      const loadedRewards =
+        wizardData.rewards.length > 0
+          ? normalizeOfferRewardsWithTracking(
+              wizardData.rewards,
+              loadedTrackingSources,
+            ).rewards
           : [];
-      if (loadedTrackingSources.length > 0) {
-        setTrackingSources(loadedTrackingSources);
-      }
-      {
-        const loadedRewards =
-          wizardData.rewards.length > 0
-            ? normalizeOfferRewardsWithTracking(
-                wizardData.rewards,
-                loadedTrackingSources,
-              ).rewards
-            : [];
-        const offerIsImmediate = offerUsesDefaultReward(
-          offerTypeId || offer.offer_type_id,
-          offerTypes,
-          offer.offer_type || offer.offer_type_label,
-        );
-        const nextRewards = offerIsImmediate
-          ? ensureImmediateDefaultReward(loadedRewards).rewards
-          : loadedRewards;
-        if (nextRewards.length > 0) {
-          setRewards(nextRewards);
-        }
-      }
+      const offerIsImmediate = offerUsesDefaultReward(
+        offerTypeId || offer.offer_type_id,
+        offerTypes,
+        offer.offer_type || offer.offer_type_label,
+      );
+      const nextRewards = offerIsImmediate
+        ? ensureImmediateDefaultReward(loadedRewards).rewards
+        : loadedRewards;
+      setRewards(nextRewards);
       // Trigger category refresh to ensure categories are loaded and can be selected
       setCategoryRefreshTrigger((prev) => prev + 1);
 
@@ -2504,7 +2501,7 @@ export default function CreateOfferPage({
         ) {
           return false;
         }
-        if (!requiresTrackingRewardMapping) return true; // immediate reward: optional
+        if (!requiresTrackingRewardMapping) return true; // seeding reward: optional
         return trackingSources.some((s) => s.enabled !== false);
       case 5: // Rewards step
         if (usesDefaultReward) {
@@ -2822,7 +2819,10 @@ export default function CreateOfferPage({
           rewards,
           trackingSources,
         });
-        const createdOfferResponse = await offerService.createOffer(apiData);
+        const createdOfferResponse = await offerService.createOffer({
+          ...apiData,
+          ...(user?.user_id != null ? { created_by: user.user_id } : {}),
+        });
 
         // Extract offer ID from response - BaseResponse wraps the Offer in .data
         // Try data.id first, then insertId as fallback
@@ -3225,7 +3225,7 @@ export default function CreateOfferPage({
       } else if (hasMessageString(error)) {
         errorMessage = error.message;
       }
-      showError("Error", extractBackendError(err, "Error. Please try again."));
+      showError("Error", extractBackendError(error, "Error. Please try again."));
     } finally {
       setIsSavingDraft(false);
     }

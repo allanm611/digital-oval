@@ -25,13 +25,13 @@ export default function CreateOfferTypeModal({
   const { user } = useAuth();
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeDescription, setNewTypeDescription] = useState("");
-  const [isImmediateReward, setIsImmediateReward] = useState(false);
+  const [isSeedingReward, setIsSeedingReward] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const resetForm = () => {
     setNewTypeName("");
     setNewTypeDescription("");
-    setIsImmediateReward(false);
+    setIsSeedingReward(false);
   };
 
   const handleCreateType = async () => {
@@ -48,7 +48,7 @@ export default function CreateOfferTypeModal({
         name: newTypeName.trim(),
         description: newTypeDescription.trim() || undefined,
         is_active: true,
-        is_immediate_reward: isImmediateReward,
+        is_seeding_reward: isSeedingReward,
       });
 
       success(
@@ -118,18 +118,17 @@ export default function CreateOfferTypeModal({
 
           <label className="flex items-start gap-2 cursor-pointer">
             <Checkbox
-              id="offer-type-immediate-reward"
-              checked={isImmediateReward}
-              onChange={(e) => setIsImmediateReward(e.target.checked)}
+              id="offer-type-seeding-reward"
+              checked={isSeedingReward}
+              onChange={(e) => setIsSeedingReward(e.target.checked)}
             />
             <span>
               <span className={`block text-sm font-medium ${tw.textPrimary}`}>
-                Immediate reward
+                Seeding reward
               </span>
               <span className={`block text-xs ${tw.textMuted} mt-0.5`}>
                 When enabled, offers of this type do not require tracking. A
-                default reward is managed without a tracking-source binding
-                (e.g. seeding-style grants).
+                default reward is managed without a tracking-source binding.
               </span>
             </span>
           </label>

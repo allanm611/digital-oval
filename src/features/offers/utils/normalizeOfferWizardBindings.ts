@@ -21,7 +21,7 @@ export function normalizeOfferRewardsWithTracking(
   let changed = false;
 
   const nextRewards = rewards.map((reward) => {
-    // Default / immediate rewards are tracking-independent.
+    // Default / seeding rewards are tracking-independent.
     if (reward.is_default) {
       let defaultChanged = Boolean(reward.tracking_source_id);
       const cleanedRules = (reward.rules || []).map((rule) => {

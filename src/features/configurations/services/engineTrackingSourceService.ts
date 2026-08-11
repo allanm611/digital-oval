@@ -40,8 +40,19 @@ async function parseErrorResponse(response: Response): Promise<string> {
 function unwrapList<T>(payload: unknown): T[] {
   if (Array.isArray(payload)) return payload as T[];
   if (payload && typeof payload === "object") {
-    const data = (payload as { data?: unknown }).data;
-    if (Array.isArray(data)) return data as T[];
+    const obj = payload as Record<string, unknown>;
+    for (const key of ["data", "items", "results", "sources", "rows"]) {
+      const candidate = obj[key];
+      if (Array.isArray(candidate)) return candidate as T[];
+      if (candidate && typeof candidate === "object") {
+        const nested = candidate as Record<string, unknown>;
+        for (const nestedKey of ["data", "items", "results", "sources", "rows"]) {
+          if (Array.isArray(nested[nestedKey])) {
+            return nested[nestedKey] as T[];
+          }
+        }
+      }
+    }
   }
   return [];
 }
@@ -54,6 +65,49 @@ function unwrapOne<T extends { id?: unknown }>(payload: unknown): T | null {
   }
   if ("id" in obj) return obj as T;
   return null;
+}
+
+function normalizeOperator(
+  raw: Record<string, unknown>,
+): TrackingSelectorOperator | null {
+  const id = Number(raw.id ?? raw.operator_id ?? raw.operatorId ?? 0);
+  if (!id) return null;
+  return {
+    id,
+    code: String(raw.code ?? raw.operator_code ?? raw.operatorCode ?? ""),
+    symbol: String(
+      raw.symbol ?? raw.operator_symbol ?? raw.operatorSymbol ?? "",
+    ),
+    name: String(
+      raw.name ??
+        raw.operator_name ??
+        raw.operatorName ??
+        raw.symbol ??
+        raw.operator_symbol ??
+        raw.operatorSymbol ??
+        "",
+    ),
+    displayOrder: Number(
+      raw.displayOrder ?? raw.display_order ?? raw.operator_display_order ?? 0,
+    ),
+  };
+}
+
+function normalizeFieldOperators(
+  raw: Record<string, unknown>,
+): TrackingSelectorOperator[] {
+  const operatorsRaw =
+    raw.operators ?? raw.field_operators ?? raw.fieldOperators ?? [];
+  if (!Array.isArray(operatorsRaw)) return [];
+  const out: TrackingSelectorOperator[] = [];
+  for (const item of operatorsRaw) {
+    if (!item || typeof item !== "object") continue;
+    const op = normalizeOperator(item as Record<string, unknown>);
+    if (op && !out.some((existing) => existing.id === op.id)) {
+      out.push(op);
+    }
+  }
+  return out.sort((a, b) => a.displayOrder - b.displayOrder);
 }
 
 function normalizeField(raw: Record<string, unknown>): EngineTrackingSourceField {
@@ -78,6 +132,177 @@ function normalizeField(raw: Record<string, unknown>): EngineTrackingSourceField
     createdAt: (raw.createdAt ?? raw.created_at) as string | undefined,
     updatedAt: (raw.updatedAt ?? raw.updated_at) as string | undefined,
   };
+}
+
+/** Convert catalog fields (from list/detail) into selector-tree fields. */
+export function fieldsToSelectorFields(
+  fields: EngineTrackingSourceField[] | undefined | null,
+  operatorsByFieldId?: Map<number, TrackingSelectorOperator[]>,
+): TrackingSelectorField[] {
+  if (!fields?.length) return [];
+  return fields
+    .filter((f) => f.isActive !== false)
+    .map((f) => ({
+      id: f.id,
+      fieldName: f.fieldName,
+      fieldKey: f.fieldKey,
+      dataType: String(f.dataType),
+      displayOrder: f.displayOrder,
+      operators: operatorsByFieldId?.get(f.id) ?? [],
+    }))
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
+export function sourceToSelectorSource(
+  source: EngineTrackingSource,
+  operatorsByFieldId?: Map<number, TrackingSelectorOperator[]>,
+): TrackingSelectorSource {
+  return {
+    id: source.id,
+    name: source.name,
+    code: source.code,
+    sourceType: String(source.sourceType),
+    fields: fieldsToSelectorFields(source.fields, operatorsByFieldId),
+  };
+}
+
+/**
+ * Merge catalog fields into the selector tree without wiping richer operator data.
+ * Prefer existing tree field operators when present; fill missing fields from catalog.
+ */
+export function mergeSourcesIntoSelectorTree(
+  tree: TrackingSelectorSource[],
+  sources: EngineTrackingSource[],
+): TrackingSelectorSource[] {
+  if (!sources.length) return tree;
+  const byId = new Map(tree.map((s) => [s.id, { ...s, fields: [...s.fields] }]));
+
+  for (const source of sources) {
+    const activeFields = (source.fields || []).filter(
+      (f) => f.isActive !== false,
+    );
+    if (!activeFields.length && !byId.has(source.id)) continue;
+
+    const existing = byId.get(source.id);
+    if (!existing) {
+      byId.set(source.id, sourceToSelectorSource(source));
+      continue;
+    }
+
+    const fieldMap = new Map(existing.fields.map((f) => [f.id, { ...f }]));
+    for (const field of activeFields) {
+      const prev = fieldMap.get(field.id);
+      if (prev) {
+        fieldMap.set(field.id, {
+          ...prev,
+          fieldName: field.fieldName || prev.fieldName,
+          fieldKey: field.fieldKey || prev.fieldKey,
+          dataType: String(field.dataType || prev.dataType),
+          displayOrder: field.displayOrder ?? prev.displayOrder,
+          operators: prev.operators?.length ? prev.operators : [],
+        });
+      } else {
+        fieldMap.set(field.id, {
+          id: field.id,
+          fieldName: field.fieldName,
+          fieldKey: field.fieldKey,
+          dataType: String(field.dataType),
+          displayOrder: field.displayOrder,
+          operators: [],
+        });
+      }
+    }
+
+    byId.set(source.id, {
+      id: source.id,
+      name: source.name || existing.name,
+      code: source.code || existing.code,
+      sourceType: String(source.sourceType || existing.sourceType),
+      fields: Array.from(fieldMap.values()).sort(
+        (a, b) => a.displayOrder - b.displayOrder,
+      ),
+    });
+  }
+
+  return Array.from(byId.values());
+}
+
+function looksLikeNestedSelectorSource(item: unknown): boolean {
+  if (!item || typeof item !== "object") return false;
+  const obj = item as Record<string, unknown>;
+  return (
+    (obj.id != null || obj.tracking_source_id != null || obj.trackingSourceId != null) &&
+    (Array.isArray(obj.fields) || Array.isArray(obj.parameters))
+  );
+}
+
+/**
+ * Parse nested selector-config payloads shaped as Sources → Fields → Operators.
+ */
+export function parseNestedSelectorTree(
+  items: unknown[],
+): TrackingSelectorSource[] {
+  const sources: TrackingSelectorSource[] = [];
+
+  for (const item of items) {
+    if (!looksLikeNestedSelectorSource(item)) continue;
+    const raw = item as Record<string, unknown>;
+    const sourceId = Number(
+      raw.id ?? raw.tracking_source_id ?? raw.trackingSourceId ?? 0,
+    );
+    if (!sourceId) continue;
+
+    const fieldsRaw = (raw.fields ?? raw.parameters ?? []) as unknown[];
+    const fields: TrackingSelectorField[] = [];
+
+    for (const fieldItem of fieldsRaw) {
+      if (!fieldItem || typeof fieldItem !== "object") continue;
+      const fieldRaw = fieldItem as Record<string, unknown>;
+      const fieldId = Number(fieldRaw.id ?? fieldRaw.field_id ?? fieldRaw.fieldId ?? 0);
+      if (!fieldId) continue;
+      if (fieldRaw.isActive === false || fieldRaw.is_active === false) continue;
+
+      fields.push({
+        id: fieldId,
+        fieldName: String(fieldRaw.fieldName ?? fieldRaw.field_name ?? ""),
+        fieldKey: String(fieldRaw.fieldKey ?? fieldRaw.field_key ?? ""),
+        dataType: String(fieldRaw.dataType ?? fieldRaw.data_type ?? "text"),
+        displayOrder: Number(
+          fieldRaw.displayOrder ?? fieldRaw.display_order ?? 0,
+        ),
+        operators: normalizeFieldOperators(fieldRaw),
+      });
+    }
+
+    sources.push({
+      id: sourceId,
+      name: String(raw.name ?? raw.source_name ?? raw.sourceName ?? ""),
+      code: String(raw.code ?? raw.source_code ?? raw.sourceCode ?? ""),
+      sourceType: String(
+        raw.sourceType ?? raw.source_type ?? raw.sourceType ?? "",
+      ),
+      fields: fields.sort((a, b) => a.displayOrder - b.displayOrder),
+    });
+  }
+
+  return sources;
+}
+
+/**
+ * Normalize any selector-config API payload into Sources → Fields → Operators.
+ */
+export function parseSelectorConfigPayload(
+  payload: unknown,
+): TrackingSelectorSource[] {
+  const items = unwrapList<unknown>(payload);
+  if (!items.length) return [];
+
+  if (items.some(looksLikeNestedSelectorSource)) {
+    const nested = parseNestedSelectorTree(items);
+    if (nested.length) return nested;
+  }
+
+  return buildSelectorTree(items as TrackingSelectorConfigRow[]);
 }
 
 function normalizeSource(raw: Record<string, unknown>): EngineTrackingSource {
@@ -310,17 +535,33 @@ class EngineTrackingSourceService {
     });
   }
 
-  /** GET /tracking-sources/selector-config → tree */
+  /** GET /tracking-sources/selector-config → tree (flat rows or nested sources) */
   async getSelectorConfig(): Promise<TrackingSelectorSource[]> {
     const result = await this.request<unknown>("/selector-config");
-    const rows = unwrapList<TrackingSelectorConfigRow>(result);
-    return buildSelectorTree(rows);
+    return parseSelectorConfigPayload(result);
   }
 
   /** Raw flat rows (for debugging / custom grouping) */
   async getSelectorConfigRows(): Promise<TrackingSelectorConfigRow[]> {
     const result = await this.request<unknown>("/selector-config");
     return unwrapList<TrackingSelectorConfigRow>(result);
+  }
+
+  /**
+   * GET /tracking-sources/:id as a selector source (fields + nested operators when present).
+   * Used to enrich parameter counts / rule builders when selector-config is sparse.
+   */
+  async getSelectorSourceById(id: number): Promise<TrackingSelectorSource> {
+    const result = await this.request<unknown>(`/${id}`);
+    const one = unwrapOne<Record<string, unknown>>(result);
+    if (!one) throw new Error(`Tracking source ${id} not found`);
+
+    const nested = parseNestedSelectorTree([one]);
+    if (nested[0]?.fields?.length) {
+      return nested[0];
+    }
+
+    return sourceToSelectorSource(normalizeSource(one));
   }
 
   /** POST /tracking-sources/:id/fields */

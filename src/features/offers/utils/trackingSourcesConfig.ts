@@ -430,14 +430,21 @@ export function getParameterValueType(
   return inferParameterValueType(parameterKey);
 }
 
-export function getConditionsForParameter(
-  parameterKey: string,
+export function getConditionsForValueType(
+  valueType: TrackingParameterValueType,
 ): TrackingSelectOption[] {
-  const valueType = getParameterValueType(parameterKey);
-  const allowed = new Set(CONDITIONS_BY_VALUE_TYPE[valueType]);
+  const allowed = new Set(
+    CONDITIONS_BY_VALUE_TYPE[valueType] || CONDITIONS_BY_VALUE_TYPE.string,
+  );
   return conditions.filter((c) =>
     allowed.has(c.value as TrackingRuleCondition),
   );
+}
+
+export function getConditionsForParameter(
+  parameterKey: string,
+): TrackingSelectOption[] {
+  return getConditionsForValueType(getParameterValueType(parameterKey));
 }
 
 export function getDefaultConditionForParameter(
@@ -509,13 +516,15 @@ export function validateTrackingRuleValue(
   value: string,
   parameterKey: string,
   condition: string,
+  valueTypeOverride?: TrackingParameterValueType,
 ): string | null {
   const trimmed = value?.trim() ?? "";
   if (!trimmed) {
     return "Enter a value for this rule.";
   }
 
-  const valueType = getParameterValueType(parameterKey);
+  const valueType =
+    valueTypeOverride ?? getParameterValueType(parameterKey);
 
   if (condition === "is_any_of") {
     const parts = trimmed

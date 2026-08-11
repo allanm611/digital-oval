@@ -1,14 +1,14 @@
 import type { OfferReward, OfferRewardRule } from "../types/offerReward";
-import { resolveIsImmediateReward } from "./offerTypeTrackingPolicy";
+import { resolveIsSeedingReward } from "./offerTypeTrackingPolicy";
 
 export const IMMEDIATE_DEFAULT_REWARD_NAME = "Default Reward";
 export const IMMEDIATE_DEFAULT_CONFIG_NAME = "Immediate reward configuration";
 /** Fallback CTA when offer type name is unavailable */
 export const IMMEDIATE_ADD_CONFIG_BUTTON_LABEL =
-  "Add reward configuration for immediate reward";
+  "Add reward configuration for seeding reward";
 
 /**
- * CTA under Reward Configurations for immediate-reward offer types.
+ * CTA under Reward Configurations for seeding-reward offer types.
  * Uses the offer type display name, e.g. "Add reward configuration for Seeding".
  */
 export function formatImmediateAddConfigButtonLabel(
@@ -30,11 +30,11 @@ export const SEEDING_ADD_CONFIG_BUTTON_LABEL = IMMEDIATE_ADD_CONFIG_BUTTON_LABEL
 const newId = () => Math.random().toString(36).slice(2, 11);
 
 /**
- * @deprecated Prefer resolveIsImmediateReward / offerUsesDefaultReward from
+ * @deprecated Prefer resolveIsSeedingReward / offerUsesDefaultReward from
  * offerTypeTrackingPolicy (flag-driven, not name-driven).
  */
 export function isSeedingOfferTypeName(offerTypeName?: string | null): boolean {
-  return resolveIsImmediateReward(
+  return resolveIsSeedingReward(
     undefined,
     undefined,
     offerTypeName ?? undefined,
@@ -85,7 +85,7 @@ function isPlaceholderImmediateConfiguration(rule: OfferRewardRule): boolean {
   );
 }
 
-/** Tracking-independent reward that immediate-reward offers always carry. */
+/** Tracking-independent reward that seeding-reward offers always carry. */
 export function createDefaultImmediateReward(
   id: string = newId(),
 ): OfferReward {
@@ -132,7 +132,7 @@ export const isDefaultSeedingRewardConfigured =
   isDefaultImmediateRewardConfigured;
 
 /**
- * Ensures immediate-reward offers always have exactly one default reward.
+ * Ensures seeding-reward offers always have exactly one default reward.
  * Configurations are user-added (not auto-created). Safe for create/edit.
  */
 export function ensureImmediateDefaultReward(
@@ -203,7 +203,7 @@ export function ensureImmediateDefaultReward(
 /** @deprecated Use ensureImmediateDefaultReward */
 export const ensureSeedingDefaultReward = ensureImmediateDefaultReward;
 
-/** When leaving an immediate-reward type, keep configured grants but drop the default flag. */
+/** When leaving a seeding-reward type, keep configured grants but drop the default flag. */
 export function demoteImmediateDefaultRewards(
   rewards: OfferReward[],
 ): { rewards: OfferReward[]; changed: boolean } {

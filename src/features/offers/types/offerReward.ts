@@ -67,14 +67,14 @@ export interface OfferReward {
   /** Legacy catalog key; retained for API compatibility */
   type: "default" | "sms_night" | "custom" | string;
   /**
-   * Immediate-reward offers carry a tracking-independent default reward.
-   * Default rewards always exist when is_immediate_reward is true and do not require tracking.
+   * Seeding-reward offers carry a tracking-independent default reward.
+   * Default rewards always exist when is_seeding_reward is true and do not require tracking.
    */
   is_default?: boolean;
   /**
    * Offer-wizard tracking source this reward is bound to.
    * One reward per tracking source; rules inherit this id.
-   * Omitted for default / immediate rewards.
+   * Omitted for default / seeding rewards.
    */
   tracking_source_id?: string;
   rules: OfferRewardRule[];

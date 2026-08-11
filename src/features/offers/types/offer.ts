@@ -62,6 +62,10 @@ export interface Offer {
   updated_at: string;
   created_by?: number;
   updated_by?: number;
+  /** Hydrated from metadata / JSONB column by database-service */
+  tracking_sources?: unknown[];
+  /** Hydrated from metadata / JSONB column by database-service */
+  reward_configuration?: unknown;
 }
 
 // creating a new offer
@@ -92,6 +96,10 @@ export interface CreateOfferRequest {
   supports_multi_language?: boolean;
   metadata?: object;
   tags?: string[];
+  /** Top-level JSONB column — dual-written with metadata.tracking_sources */
+  tracking_sources?: unknown[];
+  /** Top-level JSONB column — dual-written with metadata.rewards */
+  reward_configuration?: unknown;
   created_by?: number;
 }
 
@@ -123,6 +131,10 @@ export interface UpdateOfferRequest {
   supports_multi_language?: boolean;
   metadata?: object;
   tags?: string[];
+  /** Top-level JSONB column — dual-written with metadata.tracking_sources */
+  tracking_sources?: unknown[];
+  /** Top-level JSONB column — dual-written with metadata.rewards */
+  reward_configuration?: unknown;
   updated_by?: number;
 }
 

@@ -49,7 +49,7 @@ interface OfferRewardStepProps {
   onRewardsChange: (rewards: OfferReward[]) => void;
   trackingSources?: OfferTrackingSource[];
   requiresRewardTrackingMapping?: boolean;
-  /** Immediate reward: always show/configure a tracking-independent default reward */
+  /** Seeding reward: always show/configure a tracking-independent default reward */
   usesDefaultReward?: boolean;
   /** Selected offer type display name (e.g. "Seeding") for CTA / copy */
   offerTypeName?: string | null;
@@ -537,7 +537,7 @@ export default function OfferRewardStep({
       setRewardActionError(
         trackingSources.length === 0
           ? usesDefaultReward
-            ? "Tracking is optional for immediate-reward offers. The default reward is already available."
+            ? "Tracking is optional for seeding-reward offers. The default reward is already available."
             : "Add at least one enabled tracking source in the previous step first."
           : "Every tracking source already has a reward. Add another tracking source on the Tracking step.",
       );
@@ -602,7 +602,7 @@ export default function OfferRewardStep({
     const target = rewards.find((r) => r.id === id);
     if (target?.is_default) {
       setRewardActionError(
-        "The default reward cannot be removed for immediate-reward offers.",
+        "The default reward cannot be removed for seeding-reward offers.",
       );
       return;
     }
@@ -1063,7 +1063,7 @@ export default function OfferRewardStep({
     (r) => String(r.id) === String(selectedReward),
   );
   const selectedIsDefault = selectedRewardData?.is_default === true;
-  const offerTypeLabel = offerTypeName?.trim() || "immediate reward";
+  const offerTypeLabel = offerTypeName?.trim() || "seeding reward";
   const addConfigButtonLabel = selectedIsDefault
     ? formatImmediateAddConfigButtonLabel(offerTypeName)
     : "Add Reward Configuration";
@@ -1158,7 +1158,7 @@ export default function OfferRewardStep({
                   ) : null}
                 </div>
                 {/*
-                  Same Add Reward entry point for immediate-reward (Seeding) and
+                  Same Add Reward entry point for seeding-reward and
                   tracking-bound offer types. Seeding still always carries a
                   non-removable default reward; tracking rewards are optional.
                 */}
