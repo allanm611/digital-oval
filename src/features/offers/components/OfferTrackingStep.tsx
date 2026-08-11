@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Plus, Trash2, BarChart3, Settings, Edit, X, Check } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
@@ -50,6 +50,9 @@ import {
 interface OfferTrackingStepProps {
   trackingSources: OfferTrackingSource[];
   onTrackingSourcesChange: (sources: OfferTrackingSource[]) => void;
+  /** Re-open Select Tracking Sources after returning from Create Tracking Source. */
+  initialOpenSourceModal?: boolean;
+  onInitialOpenSourceModalConsumed?: () => void;
 }
 
 function trackingTypeLabel(type: string | undefined): string {
@@ -139,13 +142,22 @@ function upsertSelectorSource(
 export default function OfferTrackingStep({
   trackingSources = [],
   onTrackingSourcesChange,
+  initialOpenSourceModal = false,
+  onInitialOpenSourceModalConsumed,
 }: OfferTrackingStepProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedSource, setSelectedSource] = useState<string | null>(
     trackingSources.length > 0 ? trackingSources[0].id : null,
   );
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [showSourceModal, setShowSourceModal] = useState(false);
+
+  useEffect(() => {
+    if (!initialOpenSourceModal) return;
+    setShowSourceModal(true);
+    onInitialOpenSourceModalConsumed?.();
+  }, [initialOpenSourceModal, onInitialOpenSourceModalConsumed]);
   const [editingRule, setEditingRule] = useState<OfferTrackingRule | null>(
     null,
   );
@@ -1265,7 +1277,25 @@ export default function OfferTrackingStep({
                 <div className="flex items-center gap-3 shrink-0">
                   <button
                     type="button"
-                    onClick={() => navigate("/dashboard/tracking-sources/create")}
+                    onClick={() => {
+                      // Same create form as Tracking Sources admin; return here
+                      // with Offer Tracking breadcrumb (not bare "Edit").
+                      navigate("/dashboard/tracking-sources/create", {
+                        state: {
+                          parentLabel: "Offer Tracking",
+                          returnTo: {
+                            pathname: location.pathname,
+                            search: location.search,
+                            state: {
+                              resumeOfferWizard: {
+                                step: 4,
+                                openSelectTrackingSources: true,
+                              },
+                            },
+                          },
+                        },
+                      });
+                    }}
                     className={`inline-flex items-center shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
                     style={{ backgroundColor: color.primary.action }}
                   >

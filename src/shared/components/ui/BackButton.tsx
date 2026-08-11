@@ -42,6 +42,25 @@ function toSingular(value: string): string {
   return value;
 }
 
+function findEntitySegment(segments: string[]): string | null {
+  for (let i = segments.length - 1; i >= 0; i -= 1) {
+    const segment = segments[i];
+    if (
+      !segment ||
+      segment === "dashboard" ||
+      isLikelyIdSegment(segment) ||
+      segment === "create" ||
+      segment === "edit" ||
+      segment === "new" ||
+      segment === "details"
+    ) {
+      continue;
+    }
+    return segment;
+  }
+  return null;
+}
+
 function getPathLabel(path: string): string {
   const segments = path.split("/").filter(Boolean);
   if (segments.length === 0) {
@@ -60,6 +79,21 @@ function getPathLabel(path: string): string {
 
   if (lastSegment === "catalogs" && previousSegment) {
     return `${toTitleCaseLabel(toSingular(previousSegment))} Catalogs`;
+  }
+
+  // Avoid bare "Edit" / "Create" crumbs when previous path ends in an action
+  // segment (e.g. /offers/138/edit → "Edit Offer").
+  if (
+    lastSegment === "create" ||
+    lastSegment === "edit" ||
+    lastSegment === "new"
+  ) {
+    const entity = findEntitySegment(segments.slice(0, -1));
+    if (entity) {
+      return `${toTitleCaseLabel(lastSegment)} ${toTitleCaseLabel(
+        toSingular(entity),
+      )}`;
+    }
   }
 
   return toTitleCaseLabel(lastSegment);

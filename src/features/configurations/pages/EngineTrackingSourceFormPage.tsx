@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { tw } from "../../../shared/utils/utils";
 import {
   engineTrackingSourceService,
@@ -17,12 +18,45 @@ interface EngineTrackingSourceFormPageProps {
   mode: "create" | "edit";
 }
 
+/** Location state when opening create/edit from Offer Tracking (or elsewhere). */
+export type EngineTrackingSourceFormLocationState = {
+  returnTo?: {
+    pathname: string;
+    search?: string;
+    state?: unknown;
+  };
+  /** Overrides breadcrumb parent; defaults to "Tracking Sources". */
+  parentLabel?: string;
+};
+
 export default function EngineTrackingSourceFormPage({
   mode,
 }: EngineTrackingSourceFormPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error: showError } = useToast();
+
+  const navState = (location.state ||
+    null) as EngineTrackingSourceFormLocationState | null;
+
+  const parentLabel = navState?.parentLabel?.trim() || "Tracking Sources";
+  const currentLabel =
+    mode === "create" ? "Create Tracking Source" : "Edit Tracking Source";
+
+  const returnPath = useMemo(() => {
+    const target = navState?.returnTo;
+    if (!target?.pathname) return null;
+    return `${target.pathname}${target.search || ""}`;
+  }, [navState?.returnTo]);
+
+  const leaveForm = () => {
+    if (returnPath) {
+      navigate(returnPath, { state: navState?.returnTo?.state });
+      return;
+    }
+    navigateBackOrFallback(navigate, "/dashboard/tracking-sources");
+  };
 
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(mode === "edit");
@@ -42,7 +76,7 @@ export default function EngineTrackingSourceFormPage({
           showError(
             extractBackendError(err, "Failed to load tracking source"),
           );
-          navigate("/dashboard/tracking-sources");
+          leaveForm();
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -51,6 +85,8 @@ export default function EngineTrackingSourceFormPage({
     return () => {
       cancelled = true;
     };
+    // Intentionally omit leaveForm — only re-fetch when mode/id change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, id, navigate, showError]);
 
   const handleSave = async (
@@ -72,7 +108,7 @@ export default function EngineTrackingSourceFormPage({
         );
         success("Tracking source created successfully");
       }
-      navigate("/dashboard/tracking-sources");
+      leaveForm();
     } catch (err) {
       showError(extractBackendError(err, "Failed to save tracking source"));
     } finally {
@@ -95,16 +131,16 @@ export default function EngineTrackingSourceFormPage({
     <div className="space-y-6">
       <BackButton
         showBreadcrumb={true}
-        currentLabel={
-          mode === "create" ? "Create Tracking Source" : "Edit Tracking Source"
-        }
+        parentLabel={parentLabel}
+        currentLabel={currentLabel}
+        onClick={leaveForm}
       />
 
       <EngineTrackingSourceForm
         mode={mode}
         isLoading={isSaving}
         initialData={editingSource}
-        onCancel={() => navigate("/dashboard/tracking-sources")}
+        onCancel={leaveForm}
         onSave={handleSave}
       />
     </div>
