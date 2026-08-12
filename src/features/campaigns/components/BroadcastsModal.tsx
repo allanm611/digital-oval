@@ -219,8 +219,15 @@ export default function BroadcastsModal({
                           {broadcast.channel_code || "—"}
                         </td>
                         <td className="py-3 px-3 text-gray-700 whitespace-nowrap">
-                          {broadcast.actual_start_time ? (
-                            <DateFormatter date={broadcast.actual_start_time} />
+                          {broadcast.actual_start_time || broadcast.planned_start_time ? (
+                            <DateFormatter
+                              date={
+                                broadcast.actual_start_time ||
+                                broadcast.planned_start_time
+                              }
+                              useUserTimezone
+                              includeTime
+                            />
                           ) : (
                             "—"
                           )}

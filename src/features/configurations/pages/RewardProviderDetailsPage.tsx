@@ -15,6 +15,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { RewardProviderSchemaField } from "../types/rewardProvider";
+import { isSchemaFieldEditable } from "../components/reward-forms/rewardSchemaFieldUtils";
 
 function formatSchemaDefaultDisplay(field: RewardProviderSchemaField): string {
   if (field.default === undefined || field.default === "") {
@@ -66,7 +67,7 @@ function SchemaTable({
                 {field.required ? "Yes" : "No"}
               </td>
               <td className={`py-3 pr-4 ${tw.textPrimary}`}>
-                {field.is_editable === false ? "No" : "Yes"}
+                {isSchemaFieldEditable(field) ? "Yes" : "No"}
               </td>
               <td className={`py-3 ${tw.textSecondary}`}>
                 {formatSchemaDefaultDisplay(field)}

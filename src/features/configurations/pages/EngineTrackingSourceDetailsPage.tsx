@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Crosshair, Edit, Plus, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { useToast } from "../../../contexts/ToastContext";
@@ -21,7 +22,207 @@ import {
   ENGINE_FIELD_DATA_TYPE_OPTIONS,
   engineSourceTypeLabel,
   type EngineFieldDataType,
+  type UpdateEngineTrackingSourceFieldPayload,
 } from "../types/engineTrackingSource";
+import { deriveFieldKey } from "../components/engine-tracking/engineTrackingFieldUtils";
+
+interface FieldFormState {
+  fieldName: string;
+  fieldKey: string;
+  dataType: EngineFieldDataType;
+  isRequired: boolean;
+  isPrimaryKey: boolean;
+  isAmountField: boolean;
+  isRevenueField: boolean;
+  isProductField: boolean;
+  description: string;
+}
+
+const EMPTY_FIELD_FORM: FieldFormState = {
+  fieldName: "",
+  fieldKey: "",
+  dataType: "text",
+  isRequired: false,
+  isPrimaryKey: false,
+  isAmountField: false,
+  isRevenueField: false,
+  isProductField: false,
+  description: "",
+};
+
+function formatCodes(codes?: string[] | null): string {
+  if (!codes?.length) return "—";
+  return codes.join(", ");
+}
+
+function fieldFlags(field: EngineTrackingSourceField): string {
+  return (
+    [
+      field.isRequired && "required",
+      field.isPrimaryKey && "pk",
+      field.isAmountField && "amount",
+      field.isRevenueField && "revenue",
+      field.isProductField && "product",
+    ]
+      .filter(Boolean)
+      .join(", ") || "—"
+  );
+}
+
+function toFieldForm(field: EngineTrackingSourceField): FieldFormState {
+  return {
+    fieldName: field.fieldName,
+    fieldKey: field.fieldKey,
+    dataType: (field.dataType as EngineFieldDataType) || "text",
+    isRequired: !!field.isRequired,
+    isPrimaryKey: !!field.isPrimaryKey,
+    isAmountField: !!field.isAmountField,
+    isRevenueField: !!field.isRevenueField,
+    isProductField: !!field.isProductField,
+    description: field.description || "",
+  };
+}
+
+function validateFieldForm(
+  form: FieldFormState,
+  existing: EngineTrackingSourceField[],
+  editingId?: number,
+): string | null {
+  const name = form.fieldName.trim();
+  const key = (form.fieldKey.trim() || deriveFieldKey(name)).toLowerCase();
+
+  if (!name) return "Field name is required.";
+  if (!key) return "Field key is required.";
+  if (!/^[a-z][a-z0-9_]*$/.test(key)) {
+    return "Field key must be lowercase snake_case starting with a letter.";
+  }
+
+  const activeOthers = existing.filter(
+    (f) => f.isActive !== false && f.id !== editingId,
+  );
+  if (activeOthers.some((f) => f.fieldKey.toLowerCase() === key)) {
+    return "Field key must be unique among active fields.";
+  }
+  if (
+    form.isAmountField &&
+    activeOthers.some((f) => f.isAmountField)
+  ) {
+    return "Only one amount field is allowed per tracking source.";
+  }
+  if (
+    form.isPrimaryKey &&
+    activeOthers.some((f) => f.isPrimaryKey)
+  ) {
+    return "Only one primary key field is allowed per tracking source.";
+  }
+  return null;
+}
+
+function FieldFormEditor({
+  form,
+  onChange,
+  onCancel,
+  onSave,
+  saving,
+  submitLabel,
+}: {
+  form: FieldFormState;
+  onChange: (next: FieldFormState) => void;
+  onCancel: () => void;
+  onSave: () => void;
+  saving: boolean;
+  submitLabel: string;
+}) {
+  const patch = (partial: Partial<FieldFormState>) =>
+    onChange({ ...form, ...partial });
+
+  const handleNameChange = (value: string) => {
+    const next: FieldFormState = { ...form, fieldName: value };
+    if (!form.fieldKey || form.fieldKey === deriveFieldKey(form.fieldName)) {
+      next.fieldKey = deriveFieldKey(value);
+    }
+    onChange(next);
+  };
+
+  return (
+    <div className="border border-gray-200 rounded p-4 space-y-3 bg-gray-50/50">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Input
+          label="Field name *"
+          value={form.fieldName}
+          onChange={(v) => handleNameChange(String(v))}
+          placeholder="Recharge Amount"
+          disabled={saving}
+        />
+        <Input
+          label="Field key *"
+          value={form.fieldKey}
+          onChange={(v) => patch({ fieldKey: String(v).toLowerCase() })}
+          placeholder="amount"
+          disabled={saving}
+        />
+        <HeadlessSelect
+          label="Data type"
+          value={form.dataType}
+          onChange={(v) => patch({ dataType: v as EngineFieldDataType })}
+          options={ENGINE_FIELD_DATA_TYPE_OPTIONS.map((o) => ({
+            value: o.value,
+            label: o.label,
+          }))}
+          disabled={saving}
+        />
+      </div>
+      <Textarea
+        label="Description"
+        value={form.description}
+        onChange={(v) => patch({ description: String(v) })}
+        rows={2}
+        placeholder="Optional helper text"
+        disabled={saving}
+      />
+      <div className="flex flex-wrap gap-4">
+        {(
+          [
+            ["isRequired", "Required"],
+            ["isPrimaryKey", "Primary key"],
+            ["isAmountField", "Amount field"],
+            ["isRevenueField", "Revenue field"],
+            ["isProductField", "Product field"],
+          ] as const
+        ).map(([prop, label]) => (
+          <label key={prop} className="flex items-center gap-2 cursor-pointer">
+            <Checkbox
+              id={`field-form-${prop}`}
+              checked={form[prop]}
+              onChange={(e) => patch({ [prop]: e.target.checked })}
+              disabled={saving}
+            />
+            <span className="text-sm">{label}</span>
+          </label>
+        ))}
+      </div>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={saving}
+          className={`px-3 py-1.5 border ${tw.rounded} disabled:opacity-50`}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={onSave}
+          className={`text-white px-3 py-1.5 ${tw.rounded} disabled:opacity-50`}
+          style={{ backgroundColor: color.primary.action }}
+        >
+          {saving ? "Saving..." : submitLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function EngineTrackingSourceDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,13 +234,14 @@ export default function EngineTrackingSourceDetailsPage() {
   const [toggling, setToggling] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const [showAddField, setShowAddField] = useState(false);
   const [addingField, setAddingField] = useState(false);
-  const [fieldName, setFieldName] = useState("");
-  const [fieldKey, setFieldKey] = useState("");
-  const [dataType, setDataType] = useState<EngineFieldDataType>("text");
-  const [isRequired, setIsRequired] = useState(false);
-  const [isAmountField, setIsAmountField] = useState(false);
+  const [addForm, setAddForm] = useState<FieldFormState>(EMPTY_FIELD_FORM);
+
+  const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<FieldFormState>(EMPTY_FIELD_FORM);
+  const [savingField, setSavingField] = useState(false);
 
   useEffect(() => {
     loadSource();
@@ -106,41 +308,96 @@ export default function EngineTrackingSourceDetailsPage() {
     }
   };
 
+  const buildFieldPayload = (
+    form: FieldFormState,
+  ): UpdateEngineTrackingSourceFieldPayload => {
+    const fieldName = form.fieldName.trim();
+    const fieldKey =
+      form.fieldKey.trim().toLowerCase() || deriveFieldKey(fieldName);
+    return {
+      fieldName,
+      fieldKey,
+      dataType: form.dataType,
+      isRequired: form.isRequired,
+      isPrimaryKey: form.isPrimaryKey,
+      isAmountField: form.isAmountField,
+      isRevenueField: form.isRevenueField,
+      isProductField: form.isProductField,
+      description: form.description.trim() || null,
+    };
+  };
+
   const handleAddField = async () => {
-    if (!source || !fieldName.trim()) {
-      showError("Field name is required.");
+    if (!source) return;
+    const validationError = validateFieldForm(
+      addForm,
+      source.fields || [],
+    );
+    if (validationError) {
+      showError(validationError);
       return;
     }
     try {
       setAddingField(true);
-      const created = await engineTrackingSourceService.addField(source.id, {
-        fieldName: fieldName.trim(),
-        ...(fieldKey.trim()
-          ? { fieldKey: fieldKey.trim().toLowerCase() }
-          : {}),
-        dataType,
-        isRequired,
-        isAmountField,
-      });
+      const created = await engineTrackingSourceService.addField(
+        source.id,
+        buildFieldPayload(addForm),
+      );
       setSource((prev) =>
         prev
-          ? {
-              ...prev,
-              fields: [...(prev.fields || []), created],
-            }
+          ? { ...prev, fields: [...(prev.fields || []), created] }
           : prev,
       );
-      setFieldName("");
-      setFieldKey("");
-      setDataType("text");
-      setIsRequired(false);
-      setIsAmountField(false);
+      setAddForm(EMPTY_FIELD_FORM);
       setShowAddField(false);
       showSuccess("Field added");
     } catch (err) {
       showError(extractBackendError(err, "Failed to add field."));
     } finally {
       setAddingField(false);
+    }
+  };
+
+  const startEditField = (field: EngineTrackingSourceField) => {
+    setShowAddField(false);
+    setEditingFieldId(field.id);
+    setEditForm(toFieldForm(field));
+  };
+
+  const handleUpdateField = async () => {
+    if (!source || editingFieldId == null) return;
+    const validationError = validateFieldForm(
+      editForm,
+      source.fields || [],
+      editingFieldId,
+    );
+    if (validationError) {
+      showError(validationError);
+      return;
+    }
+    try {
+      setSavingField(true);
+      const updated = await engineTrackingSourceService.updateField(
+        source.id,
+        editingFieldId,
+        buildFieldPayload(editForm),
+      );
+      setSource((prev) =>
+        prev
+          ? {
+              ...prev,
+              fields: (prev.fields || []).map((f) =>
+                f.id === editingFieldId ? { ...f, ...updated } : f,
+              ),
+            }
+          : prev,
+      );
+      setEditingFieldId(null);
+      showSuccess("Field updated");
+    } catch (err) {
+      showError(extractBackendError(err, "Failed to update field."));
+    } finally {
+      setSavingField(false);
     }
   };
 
@@ -158,6 +415,7 @@ export default function EngineTrackingSourceDetailsPage() {
             }
           : prev,
       );
+      if (editingFieldId === field.id) setEditingFieldId(null);
       showSuccess(`Field "${field.fieldName}" deactivated`);
     } catch (err) {
       showError(extractBackendError(err, "Failed to remove field."));
@@ -178,6 +436,9 @@ export default function EngineTrackingSourceDetailsPage() {
   if (!source) return null;
 
   const activeFields = (source.fields || []).filter((f) => f.isActive !== false);
+  const inactiveFields = (source.fields || []).filter(
+    (f) => f.isActive === false,
+  );
 
   return (
     <div className="space-y-6">
@@ -221,89 +482,130 @@ export default function EngineTrackingSourceDetailsPage() {
         </div>
       </div>
 
-      <div
-        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div>
-            <p className={tw.textMuted}>Code</p>
-            <p className={`font-mono ${tw.textPrimary}`}>{source.code}</p>
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6`}>
+        <div className="flex items-start gap-4 mb-6">
+          <div
+            className="w-14 h-14 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Crosshair className="w-7 h-7 text-white" />
           </div>
-          <div>
-            <p className={tw.textMuted}>Type</p>
-            <p className={tw.textPrimary}>
+          <div className="min-w-0">
+            <h1 className={`text-xl font-semibold ${tw.textPrimary}`}>
+              {source.name}
+            </h1>
+            <p className={`text-sm ${tw.textSecondary} mt-1 font-mono`}>
+              {source.code}
+              {" · "}
               {engineSourceTypeLabel(source.sourceType)}
+              {" · "}
+              {activeFields.length} field
+              {activeFields.length === 1 ? "" : "s"}
             </p>
+            {source.description ? (
+              <p className={`text-sm ${tw.textMuted} mt-2`}>
+                {source.description}
+              </p>
+            ) : null}
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className={tw.textMuted}>Attribution window</p>
-            <p className={tw.textPrimary}>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>
+              Attribution window
+            </p>
+            <p className={`text-sm ${tw.textPrimary} mt-1`}>
               {source.attributionWindowHours} hours
             </p>
           </div>
           <div>
-            <p className={tw.textMuted}>Cooldown</p>
-            <p className={tw.textPrimary}>{source.cooldownHours} hours</p>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>Cooldown</p>
+            <p className={`text-sm ${tw.textPrimary} mt-1`}>
+              {source.cooldownHours} hours
+            </p>
           </div>
           <div>
-            <p className={tw.textMuted}>Min / Max amount</p>
-            <p className={tw.textPrimary}>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>
+              Min / Max amount
+            </p>
+            <p className={`text-sm ${tw.textPrimary} mt-1`}>
               {source.minAmount ?? "—"} / {source.maxAmount ?? "—"}
             </p>
           </div>
           <div>
-            <p className={tw.textMuted}>Status</p>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>Status</p>
             <p
-              className={
+              className={`text-sm mt-1 ${
                 source.isActive !== false ? tw.success : tw.textMuted
-              }
+              }`}
             >
               {source.isActive !== false ? "Active" : "Inactive"}
             </p>
           </div>
-          <div className="md:col-span-2">
-            <p className={tw.textMuted}>Description</p>
-            <p className={tw.textPrimary}>
-              {source.description?.trim() || "—"}
+          <div>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>
+              Included products
+            </p>
+            <p className={`text-sm ${tw.textPrimary} mt-1 break-words`}>
+              {formatCodes(source.includedProductCodes)}
             </p>
           </div>
-          {(source.createdAt || source.updatedAt) && (
-            <div className="md:col-span-2 flex flex-wrap gap-6 text-xs">
+          <div>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>
+              Excluded products
+            </p>
+            <p className={`text-sm ${tw.textPrimary} mt-1 break-words`}>
+              {formatCodes(source.excludedProductCodes)}
+            </p>
+          </div>
+          <div>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>Source ID</p>
+            <p className={`text-sm ${tw.textPrimary} mt-1`}>{source.id}</p>
+          </div>
+          <div>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>Created</p>
+            <p className={`text-sm ${tw.textPrimary} mt-1`}>
               {source.createdAt ? (
-                <span className={tw.textMuted}>
-                  Created: <DateFormatter date={source.createdAt} />
-                </span>
-              ) : null}
-              {source.updatedAt ? (
-                <span className={tw.textMuted}>
-                  Updated: <DateFormatter date={source.updatedAt} />
-                </span>
-              ) : null}
+                <DateFormatter date={source.createdAt} />
+              ) : (
+                "—"
+              )}
+            </p>
+          </div>
+          {source.updatedAt ? (
+            <div>
+              <p className={`text-xs uppercase ${tw.textMuted}`}>Updated</p>
+              <p className={`text-sm ${tw.textPrimary} mt-1`}>
+                <DateFormatter date={source.updatedAt} />
+              </p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
       <div
         className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className={`text-base font-semibold ${tw.textPrimary}`}>
+            <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
               Fields
             </h2>
             <p className={`text-sm ${tw.textMuted}`}>
-              Fields power the tracking rule selector for this source.
+              Fields power the tracking rule selector for this source. Edit
+              individually without changing source metadata.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => setShowAddField((v) => !v)}
-            className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm border ${tw.rounded}`}
-            style={{
-              borderColor: color.primary.accent,
-              color: color.primary.accent,
+            onClick={() => {
+              setEditingFieldId(null);
+              setShowAddField((v) => !v);
+              setAddForm(EMPTY_FIELD_FORM);
             }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white rounded-md"
+            style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
             Add field
@@ -311,71 +613,24 @@ export default function EngineTrackingSourceDetailsPage() {
         </div>
 
         {showAddField ? (
-          <div className="border border-gray-200 rounded p-4 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Input
-                label="Field name"
-                value={fieldName}
-                onChange={(v) => setFieldName(String(v))}
-                placeholder="Recharge Amount"
-              />
-              <Input
-                label="Field key"
-                value={fieldKey}
-                onChange={(v) => setFieldKey(String(v))}
-                placeholder="amount (optional)"
-              />
-              <HeadlessSelect
-                label="Data type"
-                value={dataType}
-                onChange={(v) => setDataType(v as EngineFieldDataType)}
-                options={ENGINE_FIELD_DATA_TYPE_OPTIONS.map((o) => ({
-                  value: o.value,
-                  label: o.label,
-                }))}
-              />
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  id="new-field-required"
-                  checked={isRequired}
-                  onChange={(e) => setIsRequired(e.target.checked)}
-                />
-                <span className="text-sm">Required</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  id="new-field-amount"
-                  checked={isAmountField}
-                  onChange={(e) => setIsAmountField(e.target.checked)}
-                />
-                <span className="text-sm">Amount field</span>
-              </label>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowAddField(false)}
-                className={`px-3 py-1.5 border ${tw.rounded}`}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={addingField}
-                onClick={handleAddField}
-                className={`text-white px-3 py-1.5 ${tw.rounded} disabled:opacity-50`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {addingField ? "Adding..." : "Save field"}
-              </button>
-            </div>
-          </div>
+          <FieldFormEditor
+            form={addForm}
+            onChange={setAddForm}
+            onCancel={() => {
+              setShowAddField(false);
+              setAddForm(EMPTY_FIELD_FORM);
+            }}
+            onSave={handleAddField}
+            saving={addingField}
+            submitLabel="Save field"
+          />
         ) : null}
 
         {activeFields.length === 0 ? (
-          <p className={`text-sm ${tw.textMuted}`}>No active fields yet.</p>
+          <p className={`text-sm ${tw.textMuted}`}>
+            No active fields yet. Add fields so offers can build rules against
+            this source.
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -400,44 +655,78 @@ export default function EngineTrackingSourceDetailsPage() {
                 {activeFields.map((field) => (
                   <tr
                     key={field.id}
-                    className="border-b border-gray-100 last:border-0"
+                    className="border-b border-gray-100 last:border-0 align-top"
                   >
-                    <td className={`py-3 pr-4 ${tw.textPrimary}`}>
-                      {field.fieldName}
-                    </td>
-                    <td className={`py-3 pr-4 font-mono ${tw.textPrimary}`}>
-                      {field.fieldKey}
-                    </td>
-                    <td className={`py-3 pr-4 ${tw.textPrimary}`}>
-                      {field.dataType}
-                    </td>
-                    <td className={`py-3 pr-4 ${tw.textSecondary}`}>
-                      {[
-                        field.isRequired && "required",
-                        field.isPrimaryKey && "pk",
-                        field.isAmountField && "amount",
-                        field.isRevenueField && "revenue",
-                        field.isProductField && "product",
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "—"}
-                    </td>
-                    <td className="py-3">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteField(field)}
-                        className="p-1 text-red-500 hover:bg-red-50 rounded"
-                        title="Deactivate field"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
+                    {editingFieldId === field.id ? (
+                      <td colSpan={5} className="py-3">
+                        <FieldFormEditor
+                          form={editForm}
+                          onChange={setEditForm}
+                          onCancel={() => setEditingFieldId(null)}
+                          onSave={handleUpdateField}
+                          saving={savingField}
+                          submitLabel="Update field"
+                        />
+                      </td>
+                    ) : (
+                      <>
+                        <td className={`py-3 pr-4 ${tw.textPrimary}`}>
+                          <div>{field.fieldName}</div>
+                          {field.description ? (
+                            <div className={`text-xs mt-0.5 ${tw.textMuted}`}>
+                              {field.description}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td
+                          className={`py-3 pr-4 font-mono ${tw.textPrimary}`}
+                        >
+                          {field.fieldKey}
+                        </td>
+                        <td className={`py-3 pr-4 ${tw.textPrimary}`}>
+                          {field.dataType}
+                        </td>
+                        <td className={`py-3 pr-4 ${tw.textSecondary}`}>
+                          {fieldFlags(field)}
+                        </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => startEditField(field)}
+                              className="p-1 text-gray-600 hover:bg-gray-100 rounded"
+                              title="Edit field"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteField(field)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                              title="Deactivate field"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
+
+        {inactiveFields.length > 0 ? (
+          <div className="pt-2 border-t border-gray-100">
+            <p className={`text-xs ${tw.textMuted}`}>
+              {inactiveFields.length} deactivated field
+              {inactiveFields.length === 1 ? "" : "s"} (hidden from selectors):{" "}
+              {inactiveFields.map((f) => f.fieldKey).join(", ")}
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <DeleteConfirmModal

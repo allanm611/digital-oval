@@ -1,22 +1,30 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
 import Input from "../../../../shared/components/ui/Input";
 import Textarea from "../../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
-import { color, tw } from "../../../../shared/utils/utils";
+import {
+  button,
+  color,
+  getButtonStyles,
+  tw,
+} from "../../../../shared/utils/utils";
 import type {
-  CreateEngineTrackingSourceFieldPayload,
   CreateEngineTrackingSourcePayload,
-  EngineFieldDataType,
   EngineTrackingSource,
   EngineTrackingSourceType,
   UpdateEngineTrackingSourcePayload,
 } from "../../types/engineTrackingSource";
+import { ENGINE_TRACKING_SOURCE_TYPE_OPTIONS } from "../../types/engineTrackingSource";
+import EngineTrackingSourceFieldEditor from "./EngineTrackingSourceFieldEditor";
 import {
-  ENGINE_FIELD_DATA_TYPE_OPTIONS,
-  ENGINE_TRACKING_SOURCE_TYPE_OPTIONS,
-} from "../../types/engineTrackingSource";
+  deriveTrackingSourceCode,
+  emptyDraftField,
+  parseCsvCodes,
+  validateDraftFields,
+  validateTrackingSourceBasics,
+  type EngineTrackingDraftField,
+} from "./engineTrackingFieldUtils";
 
 interface EngineTrackingSourceFormProps {
   mode: "create" | "edit";
@@ -30,51 +38,22 @@ interface EngineTrackingSourceFormProps {
   ) => void;
 }
 
-interface DraftField {
-  key: string;
-  fieldName: string;
-  fieldKey: string;
-  dataType: EngineFieldDataType;
-  isRequired: boolean;
-  isPrimaryKey: boolean;
-  isAmountField: boolean;
-  isRevenueField: boolean;
-  isProductField: boolean;
-  displayOrder: number;
-  description: string;
-}
-
-function emptyField(order: number): DraftField {
-  return {
-    key: `f-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    fieldName: "",
-    fieldKey: "",
-    dataType: "text",
-    isRequired: false,
-    isPrimaryKey: false,
-    isAmountField: false,
-    isRevenueField: false,
-    isProductField: false,
-    displayOrder: order,
-    description: "",
-  };
-}
-
-function deriveCode(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 50);
-}
-
-function parseCsv(value: string): string[] | null {
-  const parts = value
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean);
-  return parts.length ? parts : null;
+function draftFromSource(
+  source: EngineTrackingSource,
+): EngineTrackingDraftField[] {
+  return (source.fields || []).map((f, i) => ({
+    key: `existing-${f.id}`,
+    fieldName: f.fieldName,
+    fieldKey: f.fieldKey,
+    dataType: (f.dataType as EngineTrackingDraftField["dataType"]) || "text",
+    isRequired: f.isRequired,
+    isPrimaryKey: f.isPrimaryKey,
+    isAmountField: f.isAmountField,
+    isRevenueField: f.isRevenueField,
+    isProductField: f.isProductField,
+    displayOrder: f.displayOrder ?? i,
+    description: f.description || "",
+  }));
 }
 
 export default function EngineTrackingSourceForm({
@@ -112,25 +91,11 @@ export default function EngineTrackingSourceForm({
     (initialData?.excludedProductCodes || []).join(", "),
   );
   const [isActive, setIsActive] = useState(initialData?.isActive !== false);
-  const [fields, setFields] = useState<DraftField[]>(() => {
-    if (initialData?.fields?.length) {
-      return initialData.fields.map((f, i) => ({
-        key: `existing-${f.id}`,
-        fieldName: f.fieldName,
-        fieldKey: f.fieldKey,
-        dataType: (f.dataType as EngineFieldDataType) || "text",
-        isRequired: f.isRequired,
-        isPrimaryKey: f.isPrimaryKey,
-        isAmountField: f.isAmountField,
-        isRevenueField: f.isRevenueField,
-        isProductField: f.isProductField,
-        displayOrder: f.displayOrder ?? i,
-        description: f.description || "",
-      }));
-    }
-    return mode === "create" ? [emptyField(0)] : [];
+  const [fields, setFields] = useState<EngineTrackingDraftField[]>(() => {
+    if (initialData?.fields?.length) return draftFromSource(initialData);
+    return mode === "create" ? [emptyDraftField(0)] : [];
   });
-  const [formError, setFormError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!initialData) return;
@@ -155,21 +120,7 @@ export default function EngineTrackingSourceForm({
     );
     setIsActive(initialData.isActive !== false);
     if (initialData.fields?.length) {
-      setFields(
-        initialData.fields.map((f, i) => ({
-          key: `existing-${f.id}`,
-          fieldName: f.fieldName,
-          fieldKey: f.fieldKey,
-          dataType: (f.dataType as EngineFieldDataType) || "text",
-          isRequired: f.isRequired,
-          isPrimaryKey: f.isPrimaryKey,
-          isAmountField: f.isAmountField,
-          isRevenueField: f.isRevenueField,
-          isProductField: f.isProductField,
-          displayOrder: f.displayOrder ?? i,
-          description: f.description || "",
-        })),
-      );
+      setFields(draftFromSource(initialData));
     }
   }, [initialData]);
 
@@ -177,68 +128,36 @@ export default function EngineTrackingSourceForm({
     const next = String(value);
     setName(next);
     if (!codeTouched && mode === "create") {
-      setCode(deriveCode(next));
+      setCode(deriveTrackingSourceCode(next));
     }
-  };
-
-  const updateField = (key: string, patch: Partial<DraftField>) => {
-    setFields((prev) =>
-      prev.map((f) => (f.key === key ? { ...f, ...patch } : f)),
-    );
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError("");
+
+    const nextErrors = validateTrackingSourceBasics({
+      name,
+      code,
+      attributionWindowHours,
+      cooldownHours,
+      minAmount,
+      maxAmount,
+    });
+
+    let fieldPayloads: ReturnType<typeof validateDraftFields>["payloads"] = [];
+    if (mode === "create") {
+      const fieldResult = validateDraftFields(fields);
+      Object.assign(nextErrors, fieldResult.errors);
+      fieldPayloads = fieldResult.payloads;
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
 
     const trimmedName = name.trim();
     const trimmedCode = code.trim().toLowerCase();
-    if (!trimmedName) {
-      setFormError("Name is required.");
-      return;
-    }
-    if (!/^[a-z0-9_]+$/.test(trimmedCode)) {
-      setFormError(
-        "Code must be lowercase snake_case (letters, numbers, underscores).",
-      );
-      return;
-    }
-
     const attr = Number(attributionWindowHours);
     const cool = Number(cooldownHours);
-    if (!Number.isFinite(attr) || attr < 1) {
-      setFormError("Attribution window must be at least 1 hour.");
-      return;
-    }
-    if (!Number.isFinite(cool) || cool < 0) {
-      setFormError("Cooldown hours must be 0 or greater.");
-      return;
-    }
-
-    const fieldPayloads: CreateEngineTrackingSourceFieldPayload[] = [];
-    for (let i = 0; i < fields.length; i++) {
-      const f = fields[i];
-      const fieldName = f.fieldName.trim();
-      if (!fieldName && !f.fieldKey.trim()) continue;
-      if (!fieldName) {
-        setFormError(`Field ${i + 1}: name is required.`);
-        return;
-      }
-      fieldPayloads.push({
-        fieldName,
-        ...(f.fieldKey.trim()
-          ? { fieldKey: f.fieldKey.trim().toLowerCase() }
-          : {}),
-        dataType: f.dataType,
-        isRequired: f.isRequired,
-        isPrimaryKey: f.isPrimaryKey,
-        isAmountField: f.isAmountField,
-        isRevenueField: f.isRevenueField,
-        isProductField: f.isProductField,
-        displayOrder: f.displayOrder,
-        description: f.description.trim() || null,
-      });
-    }
 
     const base = {
       name: trimmedName,
@@ -249,18 +168,10 @@ export default function EngineTrackingSourceForm({
       cooldownHours: cool,
       minAmount: minAmount.trim() === "" ? null : Number(minAmount),
       maxAmount: maxAmount.trim() === "" ? null : Number(maxAmount),
-      includedProductCodes: parseCsv(includedProductCodes),
-      excludedProductCodes: parseCsv(excludedProductCodes),
+      includedProductCodes: parseCsvCodes(includedProductCodes),
+      excludedProductCodes: parseCsvCodes(excludedProductCodes),
       isActive,
     };
-
-    if (
-      (base.minAmount != null && !Number.isFinite(base.minAmount)) ||
-      (base.maxAmount != null && !Number.isFinite(base.maxAmount))
-    ) {
-      setFormError("Min/max amount must be valid numbers.");
-      return;
-    }
 
     if (mode === "create") {
       onSave({ ...base, fields: fieldPayloads });
@@ -269,264 +180,246 @@ export default function EngineTrackingSourceForm({
     }
   };
 
+  const fieldError = (key: string) =>
+    errors[key] ? (
+      <p className="text-red-500 text-xs mt-1">{errors[key]}</p>
+    ) : null;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {formError ? (
-        <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {formError}
-        </div>
-      ) : null}
-
       <div
-        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Name"
-            value={name}
-            onChange={handleNameChange}
-            placeholder="Recharge Tracking"
-            required
-          />
-          <div>
-            <Input
-              label="Code"
-              value={code}
-              onChange={(v) => {
-                setCodeTouched(true);
-                setCode(String(v));
-              }}
-              placeholder="recharge"
-              required
-              disabled={mode === "edit"}
-            />
-            <p className={`text-xs mt-1 ${tw.textMuted}`}>
-              {mode === "edit"
-                ? "Code cannot be changed after creation"
-                : "Lowercase snake_case unique key"}
-            </p>
-          </div>
-          <HeadlessSelect
-            label="Source type"
-            value={sourceType}
-            onChange={setSourceType}
-            options={ENGINE_TRACKING_SOURCE_TYPE_OPTIONS.map((o) => ({
-              value: o.value,
-              label: o.label,
-            }))}
-            placeholder="Select type"
-          />
-          <label className="flex items-center gap-2 cursor-pointer self-end pb-2">
-            <Checkbox
-              id="engine-ts-active"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
+        <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
+          Basic Information
+        </h2>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Input
+                label="Name *"
+                value={name}
+                onChange={handleNameChange}
+                placeholder="Recharge Tracking"
+                required
+                disabled={isLoading}
+                hasError={!!errors.name}
+              />
+              {fieldError("name")}
+            </div>
+            <div>
+              <Input
+                label="Code *"
+                value={code}
+                onChange={(v) => {
+                  setCodeTouched(true);
+                  setCode(String(v));
+                }}
+                placeholder="recharge"
+                required
+                disabled={isLoading || mode === "edit"}
+                hasError={!!errors.code}
+              />
+              {fieldError("code") || (
+                <p className={`text-xs mt-1 ${tw.textMuted}`}>
+                  {mode === "edit"
+                    ? "Code cannot be changed after creation"
+                    : "Lowercase snake_case unique key (auto from name)"}
+                </p>
+              )}
+            </div>
+            <HeadlessSelect
+              label="Source type *"
+              value={sourceType}
+              onChange={setSourceType}
+              options={ENGINE_TRACKING_SOURCE_TYPE_OPTIONS.map((o) => ({
+                value: o.value,
+                label: o.label,
+              }))}
+              placeholder="Select type"
               disabled={isLoading}
             />
-            <span className={`text-sm font-medium ${tw.textPrimary}`}>
-              Active
-            </span>
-          </label>
+            <label className="flex items-center gap-2 cursor-pointer self-end pb-2">
+              <Checkbox
+                id="engine-ts-active"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                disabled={isLoading}
+              />
+              <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                Active
+              </span>
+            </label>
+          </div>
+
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={setDescription}
+            rows={3}
+            placeholder="What events this source attributes"
+            disabled={isLoading}
+          />
         </div>
+      </div>
 
-        <Textarea
-          label="Description"
-          value={description}
-          onChange={setDescription}
-          rows={3}
-          placeholder="What events this source attributes"
-        />
-
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
+        <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
+          Attribution Rules
+        </h2>
+        <p className={`text-xs ${tw.textSecondary} mb-4`}>
+          Window and amount bounds used when matching conversions to this
+          source.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Attribution window (hours)"
-            type="number"
-            min={1}
-            value={attributionWindowHours}
-            onChange={(v) => setAttributionWindowHours(String(v))}
-            required
-          />
-          <Input
-            label="Cooldown (hours)"
-            type="number"
-            min={0}
-            value={cooldownHours}
-            onChange={(v) => setCooldownHours(String(v))}
-            required
-          />
-          <Input
-            label="Min amount"
-            type="number"
-            min={0}
-            step="0.01"
-            value={minAmount}
-            onChange={(v) => setMinAmount(String(v))}
-            placeholder="Optional"
-          />
-          <Input
-            label="Max amount"
-            type="number"
-            min={0}
-            step="0.01"
-            value={maxAmount}
-            onChange={(v) => setMaxAmount(String(v))}
-            placeholder="Optional"
-          />
+          <div>
+            <Input
+              label="Attribution window (hours) *"
+              type="number"
+              min={1}
+              value={attributionWindowHours}
+              onChange={(v) => setAttributionWindowHours(String(v))}
+              required
+              disabled={isLoading}
+              hasError={!!errors.attributionWindowHours}
+            />
+            {fieldError("attributionWindowHours")}
+          </div>
+          <div>
+            <Input
+              label="Cooldown (hours) *"
+              type="number"
+              min={0}
+              value={cooldownHours}
+              onChange={(v) => setCooldownHours(String(v))}
+              required
+              disabled={isLoading}
+              hasError={!!errors.cooldownHours}
+            />
+            {fieldError("cooldownHours")}
+          </div>
+          <div>
+            <Input
+              label="Min amount"
+              type="number"
+              min={0}
+              step="0.01"
+              value={minAmount}
+              onChange={(v) => setMinAmount(String(v))}
+              placeholder="Optional"
+              disabled={isLoading}
+              hasError={!!errors.minAmount}
+            />
+            {fieldError("minAmount")}
+          </div>
+          <div>
+            <Input
+              label="Max amount"
+              type="number"
+              min={0}
+              step="0.01"
+              value={maxAmount}
+              onChange={(v) => setMaxAmount(String(v))}
+              placeholder="Optional"
+              disabled={isLoading}
+              hasError={!!errors.maxAmount}
+            />
+            {fieldError("maxAmount")}
+          </div>
         </div>
+      </div>
 
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
+        <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
+          Product Filters
+        </h2>
+        <p className={`text-xs ${tw.textSecondary} mb-4`}>
+          Optional include/exclude lists. Leave blank to match all products.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="Included product codes"
             value={includedProductCodes}
             onChange={(v) => setIncludedProductCodes(String(v))}
             placeholder="Comma-separated, optional"
+            disabled={isLoading}
           />
           <Input
             label="Excluded product codes"
             value={excludedProductCodes}
             onChange={(v) => setExcludedProductCodes(String(v))}
             placeholder="Comma-separated, optional"
+            disabled={isLoading}
           />
         </div>
       </div>
 
       {mode === "create" ? (
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-3`}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
-                Fields
-              </h3>
-              <p className={`text-xs ${tw.textMuted}`}>
-                Optional fields created with the source for the rule selector.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setFields((prev) => [...prev, emptyField(prev.length)])
-              }
-              className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm border ${tw.rounded}`}
-              style={{
-                borderColor: color.primary.accent,
-                color: color.primary.accent,
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              Add field
-            </button>
-          </div>
-
-          {fields.map((field, index) => (
-            <div
-              key={field.key}
-              className={`border border-gray-200 ${tw.rounded} p-4 space-y-3`}
-            >
-              <div className="flex items-center justify-between">
-                <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                  Field {index + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFields((prev) =>
-                      prev.filter((f) => f.key !== field.key),
-                    )
-                  }
-                  className="p-1 text-red-500 hover:bg-red-50 rounded"
-                  title="Remove field"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Input
-                  label="Field name"
-                  value={field.fieldName}
-                  onChange={(v) =>
-                    updateField(field.key, { fieldName: String(v) })
-                  }
-                  placeholder="Recharge Amount"
-                />
-                <Input
-                  label="Field key"
-                  value={field.fieldKey}
-                  onChange={(v) =>
-                    updateField(field.key, { fieldKey: String(v) })
-                  }
-                  placeholder="amount (auto if empty)"
-                />
-                <HeadlessSelect
-                  label="Data type"
-                  value={field.dataType}
-                  onChange={(v) =>
-                    updateField(field.key, {
-                      dataType: v as EngineFieldDataType,
-                    })
-                  }
-                  options={ENGINE_FIELD_DATA_TYPE_OPTIONS.map((o) => ({
-                    value: o.value,
-                    label: o.label,
-                  }))}
-                />
-              </div>
-              <div className="flex flex-wrap gap-4">
-                {(
-                  [
-                    ["isRequired", "Required"],
-                    ["isPrimaryKey", "Primary key"],
-                    ["isAmountField", "Amount field"],
-                    ["isRevenueField", "Revenue field"],
-                    ["isProductField", "Product field"],
-                  ] as const
-                ).map(([prop, label]) => (
-                  <label
-                    key={prop}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <Checkbox
-                      id={`${field.key}-${prop}`}
-                      checked={field[prop]}
-                      onChange={(e) =>
-                        updateField(field.key, { [prop]: e.target.checked })
-                      }
-                    />
-                    <span className={`text-sm ${tw.textPrimary}`}>{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ))}
+          <EngineTrackingSourceFieldEditor
+            fields={fields}
+            errors={errors}
+            disabled={isLoading}
+            onChange={setFields}
+          />
         </div>
       ) : (
-        <p className={`text-sm ${tw.textMuted}`}>
-          Manage individual fields from the source details page after saving
-          metadata.
-        </p>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
+            Fields
+          </h2>
+          <p className={`text-sm ${tw.textMuted}`}>
+            Field definitions are managed on the source details page so each
+            field can be added, edited, or deactivated independently without
+            rewriting source metadata.
+          </p>
+          {initialData?.fields && initialData.fields.length > 0 ? (
+            <p className={`text-xs ${tw.textSecondary} mt-2`}>
+              {
+                initialData.fields.filter((f) => f.isActive !== false).length
+              }{" "}
+              active field
+              {initialData.fields.filter((f) => f.isActive !== false)
+                .length === 1
+                ? ""
+                : "s"}{" "}
+              currently configured.
+            </p>
+          ) : null}
+        </div>
       )}
 
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex items-center justify-end gap-3">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className={`px-4 py-2 border border-gray-300 ${tw.rounded} ${tw.textPrimary}`}
+          className="transition-colors disabled:opacity-60"
+          style={getButtonStyles(button.bordered)}
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className={`text-white px-4 py-2 ${tw.rounded} disabled:opacity-50`}
+          className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
         >
           {isLoading
-            ? "Saving..."
+            ? mode === "create"
+              ? "Creating..."
+              : "Updating..."
             : mode === "create"
-              ? "Create tracking source"
-              : "Save changes"}
+              ? "Create Tracking Source"
+              : "Update Tracking Source"}
         </button>
       </div>
     </form>

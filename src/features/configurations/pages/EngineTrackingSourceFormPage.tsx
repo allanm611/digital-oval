@@ -89,6 +89,12 @@ export default function EngineTrackingSourceFormPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, id, navigate, showError]);
 
+  const goToDetails = (sourceId: number) => {
+    navigate(`/dashboard/tracking-sources/${sourceId}/details`, {
+      replace: true,
+    });
+  };
+
   const handleSave = async (
     payload:
       | CreateEngineTrackingSourcePayload
@@ -102,13 +108,25 @@ export default function EngineTrackingSourceFormPage({
           payload as UpdateEngineTrackingSourcePayload,
         );
         success("Tracking source updated successfully");
+        // Prefer details after edit so field management stays one click away.
+        if (returnPath) {
+          leaveForm();
+        } else {
+          goToDetails(Number(id));
+        }
       } else {
-        await engineTrackingSourceService.create(
+        const created = await engineTrackingSourceService.create(
           payload as CreateEngineTrackingSourcePayload,
         );
         success("Tracking source created successfully");
+        if (returnPath) {
+          leaveForm();
+        } else if (created?.id) {
+          goToDetails(created.id);
+        } else {
+          leaveForm();
+        }
       }
-      leaveForm();
     } catch (err) {
       showError(extractBackendError(err, "Failed to save tracking source"));
     } finally {

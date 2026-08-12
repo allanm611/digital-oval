@@ -5,7 +5,7 @@ import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw } from "../../../../shared/utils/utils";
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
-import { patchFieldForTypeChange } from "./rewardSchemaFieldUtils";
+import { isSchemaFieldEditable, patchFieldForTypeChange } from "./rewardSchemaFieldUtils";
 import CommaSeparatedOptionsInput from "../CommaSeparatedOptionsInput";
 
 const FIELD_TYPES: {
@@ -293,7 +293,7 @@ export default function RewardProviderFieldSchemaEditor({
                   <label className="flex items-start gap-2 cursor-pointer">
                     <Checkbox
                       id={`reward-field-editable-${schemaErrorKey}-${index}`}
-                      checked={field.is_editable !== false}
+                      checked={isSchemaFieldEditable(field)}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateField(index, { is_editable: e.target.checked })
                       }
@@ -305,9 +305,7 @@ export default function RewardProviderFieldSchemaEditor({
                       >
                         Editable after configuration is created
                       </span>
-                      <span className={`text-xs ${tw.textMuted} block mt-0.5`}>
-                        
-                      </span>
+                      
                     </span>
                   </label>
                 </div>
