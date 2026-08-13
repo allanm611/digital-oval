@@ -13,6 +13,7 @@ import type {
   CreateEngineTrackingSourcePayload,
   EngineTrackingSource,
   EngineTrackingSourceType,
+  TrackingSelectorOperator,
   UpdateEngineTrackingSourcePayload,
 } from "../../types/engineTrackingSource";
 import { ENGINE_TRACKING_SOURCE_TYPE_OPTIONS } from "../../types/engineTrackingSource";
@@ -30,36 +31,43 @@ interface EngineTrackingSourceFormProps {
   mode: "create" | "edit";
   isLoading: boolean;
   initialData?: EngineTrackingSource | null;
+  operatorCatalog?: TrackingSelectorOperator[];
   onCancel: () => void;
   onSave: (
     payload:
       | CreateEngineTrackingSourcePayload
       | UpdateEngineTrackingSourcePayload,
+    fieldDrafts?: EngineTrackingDraftField[],
   ) => void;
 }
 
 function draftFromSource(
   source: EngineTrackingSource,
 ): EngineTrackingDraftField[] {
-  return (source.fields || []).map((f, i) => ({
-    key: `existing-${f.id}`,
-    fieldName: f.fieldName,
-    fieldKey: f.fieldKey,
-    dataType: (f.dataType as EngineTrackingDraftField["dataType"]) || "text",
-    isRequired: f.isRequired,
-    isPrimaryKey: f.isPrimaryKey,
-    isAmountField: f.isAmountField,
-    isRevenueField: f.isRevenueField,
-    isProductField: f.isProductField,
-    displayOrder: f.displayOrder ?? i,
-    description: f.description || "",
-  }));
+  return (source.fields || [])
+    .filter((f) => f.isActive !== false)
+    .map((f, i) => ({
+      key: `existing-${f.id}`,
+      existingId: f.id,
+      fieldName: f.fieldName,
+      fieldKey: f.fieldKey,
+      dataType: (f.dataType as EngineTrackingDraftField["dataType"]) || "text",
+      isRequired: f.isRequired,
+      isPrimaryKey: f.isPrimaryKey,
+      isAmountField: f.isAmountField,
+      isRevenueField: f.isRevenueField,
+      isProductField: f.isProductField,
+      displayOrder: f.displayOrder ?? i,
+      description: f.description || "",
+      operators: f.operators || [],
+    }));
 }
 
 export default function EngineTrackingSourceForm({
   mode,
   isLoading,
   initialData,
+  operatorCatalog,
   onCancel,
   onSave,
 }: EngineTrackingSourceFormProps) {
@@ -119,9 +127,11 @@ export default function EngineTrackingSourceForm({
       (initialData.excludedProductCodes || []).join(", "),
     );
     setIsActive(initialData.isActive !== false);
-    if (initialData.fields?.length) {
-      setFields(draftFromSource(initialData));
-    }
+    setFields(
+      initialData.fields?.some((f) => f.isActive !== false)
+        ? draftFromSource(initialData)
+        : [],
+    );
   }, [initialData]);
 
   const handleNameChange = (value: string | number) => {
@@ -144,12 +154,8 @@ export default function EngineTrackingSourceForm({
       maxAmount,
     });
 
-    let fieldPayloads: ReturnType<typeof validateDraftFields>["payloads"] = [];
-    if (mode === "create") {
-      const fieldResult = validateDraftFields(fields);
-      Object.assign(nextErrors, fieldResult.errors);
-      fieldPayloads = fieldResult.payloads;
-    }
+    const fieldResult = validateDraftFields(fields);
+    Object.assign(nextErrors, fieldResult.errors);
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -174,9 +180,15 @@ export default function EngineTrackingSourceForm({
     };
 
     if (mode === "create") {
-      onSave({ ...base, fields: fieldPayloads });
+      onSave(
+        {
+          ...base,
+          fields: fieldResult.payloads.map(({ existingId: _id, ...rest }) => rest),
+        },
+        fields,
+      );
     } else {
-      onSave(base);
+      onSave(base, fields);
     }
   };
 
@@ -358,44 +370,37 @@ export default function EngineTrackingSourceForm({
         </div>
       </div>
 
-      {mode === "create" ? (
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <EngineTrackingSourceFieldEditor
-            fields={fields}
-            errors={errors}
-            disabled={isLoading}
-            onChange={setFields}
-          />
-        </div>
-      ) : (
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
-            Fields
-          </h2>
-          <p className={`text-sm ${tw.textMuted}`}>
-            Field definitions are managed on the source details page so each
-            field can be added, edited, or deactivated independently without
-            rewriting source metadata.
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
+        <EngineTrackingSourceFieldEditor
+          fields={fields}
+          errors={errors}
+          disabled={isLoading}
+          operatorCatalog={operatorCatalog}
+          onChange={setFields}
+          description={
+            mode === "create"
+              ? "Fields and nested operators power the tracking rule selector when this source is used on an offer."
+              : "Add, update, or remove fields and their operators. Removed fields are deactivated on save. Operator changes bind via /tracking-sources/fields/:id/operators."
+          }
+        />
+        {mode === "edit" &&
+        (initialData?.fields || []).some((f) => f.isActive === false) ? (
+          <p className={`text-xs ${tw.textMuted} mt-3`}>
+            {
+              (initialData?.fields || []).filter((f) => f.isActive === false)
+                .length
+            }{" "}
+            deactivated field
+            {(initialData?.fields || []).filter((f) => f.isActive === false)
+              .length === 1
+              ? ""
+              : "s"}{" "}
+            remain on this source and stay hidden from selectors.
           </p>
-          {initialData?.fields && initialData.fields.length > 0 ? (
-            <p className={`text-xs ${tw.textSecondary} mt-2`}>
-              {
-                initialData.fields.filter((f) => f.isActive !== false).length
-              }{" "}
-              active field
-              {initialData.fields.filter((f) => f.isActive !== false)
-                .length === 1
-                ? ""
-                : "s"}{" "}
-              currently configured.
-            </p>
-          ) : null}
-        </div>
-      )}
+        ) : null}
+      </div>
 
       <div className="flex items-center justify-end gap-3">
         <button

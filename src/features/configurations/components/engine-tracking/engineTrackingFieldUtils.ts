@@ -1,10 +1,15 @@
 import type {
   CreateEngineTrackingSourceFieldPayload,
   EngineFieldDataType,
+  EngineTrackingSourceField,
+  TrackingSelectorOperator,
+  UpdateEngineTrackingSourceFieldPayload,
 } from "../../types/engineTrackingSource";
 
 export interface EngineTrackingDraftField {
   key: string;
+  /** Set when this draft maps to a persisted catalog field. */
+  existingId?: number;
   fieldName: string;
   fieldKey: string;
   dataType: EngineFieldDataType;
@@ -15,6 +20,17 @@ export interface EngineTrackingDraftField {
   isProductField: boolean;
   displayOrder: number;
   description: string;
+  /** Operators bound to this field (selector-config `fields[].operators`). */
+  operators: TrackingSelectorOperator[];
+}
+
+export interface PlannedFieldSync {
+  toAdd: CreateEngineTrackingSourceFieldPayload[];
+  toUpdate: Array<{
+    id: number;
+    payload: UpdateEngineTrackingSourceFieldPayload;
+  }>;
+  toDeleteIds: number[];
 }
 
 export function emptyDraftField(order: number): EngineTrackingDraftField {
@@ -30,6 +46,7 @@ export function emptyDraftField(order: number): EngineTrackingDraftField {
     isProductField: false,
     displayOrder: order,
     description: "",
+    operators: [],
   };
 }
 
@@ -67,10 +84,14 @@ export function validateDraftFields(
   fields: EngineTrackingDraftField[],
 ): {
   errors: Record<string, string>;
-  payloads: CreateEngineTrackingSourceFieldPayload[];
+  payloads: Array<
+    CreateEngineTrackingSourceFieldPayload & { existingId?: number }
+  >;
 } {
   const errors: Record<string, string> = {};
-  const payloads: CreateEngineTrackingSourceFieldPayload[] = [];
+  const payloads: Array<
+    CreateEngineTrackingSourceFieldPayload & { existingId?: number }
+  > = [];
   const seenKeys = new Set<string>();
   let amountFieldCount = 0;
   let primaryKeyCount = 0;
@@ -104,6 +125,7 @@ export function validateDraftFields(
     if (f.isPrimaryKey) primaryKeyCount += 1;
 
     payloads.push({
+      existingId: f.existingId,
       fieldName,
       fieldKey,
       dataType: f.dataType,
@@ -194,4 +216,69 @@ export function validateTrackingSourceBasics(input: {
   }
 
   return errors;
+}
+
+function sameFlag(a: boolean | undefined, b: boolean): boolean {
+  return !!a === b;
+}
+
+function fieldUnchanged(
+  existing: EngineTrackingSourceField,
+  draft: CreateEngineTrackingSourceFieldPayload,
+): boolean {
+  return (
+    existing.fieldName === draft.fieldName &&
+    existing.fieldKey === (draft.fieldKey || existing.fieldKey) &&
+    String(existing.dataType) === String(draft.dataType) &&
+    sameFlag(existing.isRequired, !!draft.isRequired) &&
+    sameFlag(existing.isPrimaryKey, !!draft.isPrimaryKey) &&
+    sameFlag(existing.isAmountField, !!draft.isAmountField) &&
+    sameFlag(existing.isRevenueField, !!draft.isRevenueField) &&
+    sameFlag(existing.isProductField, !!draft.isProductField) &&
+    (existing.description || "") === (draft.description || "") &&
+    (existing.displayOrder ?? 0) === (draft.displayOrder ?? existing.displayOrder ?? 0)
+  );
+}
+
+/**
+ * Diff persisted active fields against the edit form so we can add, update,
+ * or deactivate via the dedicated field APIs (PUT source does not accept fields).
+ */
+export function planFieldSync(
+  existingActive: EngineTrackingSourceField[],
+  drafts: EngineTrackingDraftField[],
+): { errors: Record<string, string>; plan: PlannedFieldSync } {
+  const { errors, payloads } = validateDraftFields(drafts);
+
+  const keptIds = new Set(
+    payloads
+      .map((p) => p.existingId)
+      .filter((id): id is number => typeof id === "number"),
+  );
+
+  const existingById = new Map(existingActive.map((f) => [f.id, f]));
+
+  const toUpdate: PlannedFieldSync["toUpdate"] = [];
+  const toAdd: CreateEngineTrackingSourceFieldPayload[] = [];
+
+  for (const payload of payloads) {
+    const { existingId, ...rest } = payload;
+    if (existingId != null && existingById.has(existingId)) {
+      const current = existingById.get(existingId)!;
+      if (!fieldUnchanged(current, rest)) {
+        toUpdate.push({ id: existingId, payload: rest });
+      }
+    } else {
+      toAdd.push(rest);
+    }
+  }
+
+  const toDeleteIds = existingActive
+    .filter((f) => !keptIds.has(f.id))
+    .map((f) => f.id);
+
+  return {
+    errors,
+    plan: { toAdd, toUpdate, toDeleteIds },
+  };
 }

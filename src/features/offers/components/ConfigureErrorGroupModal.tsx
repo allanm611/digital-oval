@@ -141,7 +141,7 @@ export default function ConfigureErrorGroupModal({
             : undefined,
       });
 
-      // Enrich for offer-rule auto-fill of failure_text
+      // Enrich so the offer rule can seed this group's override message
       const withHint: ErrorGroup = {
         ...created,
         mappings:
@@ -242,7 +242,7 @@ export default function ConfigureErrorGroupModal({
           />
 
           <div>
-            <Input
+            <Textarea
               label="Default failure message *"
               value={defaultFailureMessage}
               onChange={(value) => {
@@ -252,6 +252,8 @@ export default function ConfigureErrorGroupModal({
                 }
               }}
               placeholder="Applied to each selected error code mapping"
+              rows={3}
+              maxLength={1000}
               hasError={!!errors.defaultFailureMessage}
             />
             {errors.defaultFailureMessage ? (
@@ -260,8 +262,9 @@ export default function ConfigureErrorGroupModal({
               </p>
             ) : (
               <p className={`mt-1 text-xs ${tw.textMuted}`}>
-                Saved as each mapping&apos;s user message. Also seeds the reward
-                rule failure text.
+                Saved as each mapping&apos;s user message. The offer still
+                needs its own default failure message when no group is
+                configured.
               </p>
             )}
           </div>

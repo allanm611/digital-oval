@@ -1,5 +1,6 @@
 import { buildApiUrl, getAuthHeaders, API_CONFIG } from "../../../shared/services/api";
 import { extractErrorMessage } from "../../../shared/utils/errorHandler";
+import { mergeOperatorCatalog } from "../types/engineTrackingSource";
 import type {
   CreateEngineTrackingSourceFieldPayload,
   CreateEngineTrackingSourcePayload,
@@ -67,28 +68,57 @@ function unwrapOne<T extends { id?: unknown }>(payload: unknown): T | null {
   return null;
 }
 
+function toBool(value: unknown, defaultValue = false): boolean {
+  if (value === true || value === 1 || value === "true" || value === "1") {
+    return true;
+  }
+  if (value === false || value === 0 || value === "false" || value === "0") {
+    return false;
+  }
+  return defaultValue;
+}
+
+function stringList(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const out = value.map((v) => String(v)).filter(Boolean);
+  return out.length ? out : undefined;
+}
+
 function normalizeOperator(
   raw: Record<string, unknown>,
+  index = 0,
 ): TrackingSelectorOperator | null {
   const id = Number(raw.id ?? raw.operator_id ?? raw.operatorId ?? 0);
   if (!id) return null;
+  const symbol = String(
+    raw.symbol ?? raw.operator_symbol ?? raw.operatorSymbol ?? "",
+  );
+  const label = String(
+    raw.label ??
+      raw.name ??
+      raw.operator_name ??
+      raw.operatorName ??
+      symbol,
+  );
   return {
     id,
-    code: String(raw.code ?? raw.operator_code ?? raw.operatorCode ?? ""),
-    symbol: String(
-      raw.symbol ?? raw.operator_symbol ?? raw.operatorSymbol ?? "",
-    ),
-    name: String(
-      raw.name ??
-        raw.operator_name ??
-        raw.operatorName ??
-        raw.symbol ??
-        raw.operator_symbol ??
-        raw.operatorSymbol ??
-        "",
-    ),
+    code: String(raw.code ?? raw.operator_code ?? raw.operatorCode ?? symbol),
+    symbol,
+    label,
+    name: label,
     displayOrder: Number(
-      raw.displayOrder ?? raw.display_order ?? raw.operator_display_order ?? 0,
+      raw.displayOrder ?? raw.display_order ?? raw.operator_display_order ?? index,
+    ),
+    requiresValue: toBool(
+      raw.requiresValue ?? raw.requires_value,
+      true,
+    ),
+    requiresTwoValues: toBool(
+      raw.requiresTwoValues ?? raw.requires_two_values,
+      false,
+    ),
+    applicableFieldTypes: stringList(
+      raw.applicableFieldTypes ?? raw.applicable_field_types,
     ),
   };
 }
@@ -100,9 +130,10 @@ function normalizeFieldOperators(
     raw.operators ?? raw.field_operators ?? raw.fieldOperators ?? [];
   if (!Array.isArray(operatorsRaw)) return [];
   const out: TrackingSelectorOperator[] = [];
-  for (const item of operatorsRaw) {
+  for (let i = 0; i < operatorsRaw.length; i += 1) {
+    const item = operatorsRaw[i];
     if (!item || typeof item !== "object") continue;
-    const op = normalizeOperator(item as Record<string, unknown>);
+    const op = normalizeOperator(item as Record<string, unknown>, i);
     if (op && !out.some((existing) => existing.id === op.id)) {
       out.push(op);
     }
@@ -111,6 +142,7 @@ function normalizeFieldOperators(
 }
 
 function normalizeField(raw: Record<string, unknown>): EngineTrackingSourceField {
+  const operators = normalizeFieldOperators(raw);
   return {
     id: Number(raw.id),
     trackingSourceId: Number(
@@ -131,6 +163,7 @@ function normalizeField(raw: Record<string, unknown>): EngineTrackingSourceField
     isActive: raw.isActive !== false && raw.is_active !== false,
     createdAt: (raw.createdAt ?? raw.created_at) as string | undefined,
     updatedAt: (raw.updatedAt ?? raw.updated_at) as string | undefined,
+    operators: operators.length ? operators : undefined,
   };
 }
 
@@ -148,7 +181,13 @@ export function fieldsToSelectorFields(
       fieldKey: f.fieldKey,
       dataType: String(f.dataType),
       displayOrder: f.displayOrder,
-      operators: operatorsByFieldId?.get(f.id) ?? [],
+      isRequired: f.isRequired,
+      isPrimaryKey: f.isPrimaryKey,
+      isAmountField: f.isAmountField,
+      isRevenueField: f.isRevenueField,
+      isProductField: f.isProductField,
+      description: f.description,
+      operators: operatorsByFieldId?.get(f.id) ?? f.operators ?? [],
     }))
     .sort((a, b) => a.displayOrder - b.displayOrder);
 }
@@ -199,7 +238,18 @@ export function mergeSourcesIntoSelectorTree(
           fieldKey: field.fieldKey || prev.fieldKey,
           dataType: String(field.dataType || prev.dataType),
           displayOrder: field.displayOrder ?? prev.displayOrder,
-          operators: prev.operators?.length ? prev.operators : [],
+          isRequired: field.isRequired ?? prev.isRequired,
+          isPrimaryKey: field.isPrimaryKey ?? prev.isPrimaryKey,
+          isAmountField: field.isAmountField ?? prev.isAmountField,
+          isRevenueField: field.isRevenueField ?? prev.isRevenueField,
+          isProductField: field.isProductField ?? prev.isProductField,
+          description: field.description ?? prev.description,
+          operators:
+            prev.operators?.length
+              ? prev.operators
+              : field.operators?.length
+                ? field.operators
+                : [],
         });
       } else {
         fieldMap.set(field.id, {
@@ -208,7 +258,13 @@ export function mergeSourcesIntoSelectorTree(
           fieldKey: field.fieldKey,
           dataType: String(field.dataType),
           displayOrder: field.displayOrder,
-          operators: [],
+          isRequired: field.isRequired,
+          isPrimaryKey: field.isPrimaryKey,
+          isAmountField: field.isAmountField,
+          isRevenueField: field.isRevenueField,
+          isProductField: field.isProductField,
+          description: field.description,
+          operators: field.operators ?? [],
         });
       }
     }
@@ -225,6 +281,91 @@ export function mergeSourcesIntoSelectorTree(
   }
 
   return Array.from(byId.values());
+}
+
+export function selectorFieldToCatalogField(
+  sourceId: number,
+  field: TrackingSelectorField,
+): EngineTrackingSourceField {
+  return {
+    id: field.id,
+    trackingSourceId: sourceId,
+    fieldName: field.fieldName,
+    fieldKey: field.fieldKey,
+    dataType: field.dataType,
+    isRequired: !!field.isRequired,
+    isPrimaryKey: !!field.isPrimaryKey,
+    isAmountField: !!field.isAmountField,
+    isRevenueField: !!field.isRevenueField,
+    isProductField: !!field.isProductField,
+    displayOrder: field.displayOrder,
+    description: field.description ?? null,
+    isActive: true,
+    operators: field.operators,
+  };
+}
+
+/**
+ * Overlay selector-config (Sources → Fields → Operators) onto catalog rows
+ * so list/details show the same operators offer rules will use.
+ */
+export function attachSelectorConfigToSources(
+  sources: EngineTrackingSource[],
+  tree: TrackingSelectorSource[],
+): EngineTrackingSource[] {
+  if (!tree.length) return sources;
+  const byId = new Map(tree.map((s) => [s.id, s]));
+
+  return sources.map((source) => {
+    const sel = byId.get(source.id);
+    if (!sel) return source;
+
+    const existingFields = source.fields || [];
+    if (!existingFields.length && sel.fields.length) {
+      return {
+        ...source,
+        fields: sel.fields.map((f) =>
+          selectorFieldToCatalogField(source.id, f),
+        ),
+      };
+    }
+
+    const selByFieldId = new Map(sel.fields.map((f) => [f.id, f]));
+    return {
+      ...source,
+      fields: existingFields.map((f) => {
+        const selField = selByFieldId.get(f.id);
+        if (!selField) return f;
+        return {
+          ...f,
+          fieldName: f.fieldName || selField.fieldName,
+          fieldKey: f.fieldKey || selField.fieldKey,
+          dataType: f.dataType || selField.dataType,
+          isRequired: f.isRequired || !!selField.isRequired,
+          isPrimaryKey: f.isPrimaryKey || !!selField.isPrimaryKey,
+          isAmountField: f.isAmountField || !!selField.isAmountField,
+          isRevenueField: f.isRevenueField || !!selField.isRevenueField,
+          isProductField: f.isProductField || !!selField.isProductField,
+          description: f.description ?? selField.description,
+          operators: f.operators?.length ? f.operators : selField.operators,
+        };
+      }),
+    };
+  });
+}
+
+export function collectOperatorCatalog(
+  tree: TrackingSelectorSource[],
+): TrackingSelectorOperator[] {
+  const fromApi: TrackingSelectorOperator[] = [];
+  for (const source of tree) {
+    for (const field of source.fields || []) {
+      for (const op of field.operators || []) {
+        fromApi.push(op);
+      }
+    }
+  }
+  return mergeOperatorCatalog(fromApi);
 }
 
 function looksLikeNestedSelectorSource(item: unknown): boolean {
@@ -270,6 +411,20 @@ export function parseNestedSelectorTree(
         displayOrder: Number(
           fieldRaw.displayOrder ?? fieldRaw.display_order ?? 0,
         ),
+        isRequired:
+          fieldRaw.isRequired === true || fieldRaw.is_required === true,
+        isPrimaryKey:
+          fieldRaw.isPrimaryKey === true || fieldRaw.is_primary_key === true,
+        isAmountField:
+          fieldRaw.isAmountField === true || fieldRaw.is_amount_field === true,
+        isRevenueField:
+          fieldRaw.isRevenueField === true ||
+          fieldRaw.is_revenue_field === true,
+        isProductField:
+          fieldRaw.isProductField === true ||
+          fieldRaw.is_product_field === true,
+        description:
+          (fieldRaw.description as string | null | undefined) ?? null,
         operators: normalizeFieldOperators(fieldRaw),
       });
     }
@@ -279,8 +434,26 @@ export function parseNestedSelectorTree(
       name: String(raw.name ?? raw.source_name ?? raw.sourceName ?? ""),
       code: String(raw.code ?? raw.source_code ?? raw.sourceCode ?? ""),
       sourceType: String(
-        raw.sourceType ?? raw.source_type ?? raw.sourceType ?? "",
+        raw.sourceType ?? raw.source_type ?? "",
       ),
+      description: (raw.description as string | null | undefined) ?? null,
+      attributionWindowHours: Number(
+        raw.attributionWindowHours ?? raw.attribution_window_hours ?? 0,
+      ),
+      cooldownHours: Number(raw.cooldownHours ?? raw.cooldown_hours ?? 0),
+      minAmount:
+        raw.minAmount != null
+          ? Number(raw.minAmount)
+          : raw.min_amount != null
+            ? Number(raw.min_amount)
+            : null,
+      maxAmount:
+        raw.maxAmount != null
+          ? Number(raw.maxAmount)
+          : raw.max_amount != null
+            ? Number(raw.max_amount)
+            : null,
+      isActive: raw.isActive !== false && raw.is_active !== false,
       fields: fields.sort((a, b) => a.displayOrder - b.displayOrder),
     });
   }
@@ -404,6 +577,13 @@ export function buildSelectorTree(
       id: operatorId,
       code: String(row.operator_code ?? row.operatorCode ?? ""),
       symbol: String(row.operator_symbol ?? row.operatorSymbol ?? ""),
+      label: String(
+        row.operator_name ??
+          row.operatorName ??
+          row.operator_symbol ??
+          row.operatorSymbol ??
+          "",
+      ),
       name: String(
         row.operator_name ??
           row.operatorName ??
@@ -412,6 +592,8 @@ export function buildSelectorTree(
           "",
       ),
       displayOrder: Number(row.display_order ?? row.displayOrder ?? 0),
+      requiresValue: true,
+      requiresTwoValues: false,
     };
     field.operators.push(operator);
   }
@@ -465,6 +647,17 @@ class EngineTrackingSourceService {
     return unwrapList<Record<string, unknown>>(result).map(normalizeSource);
   }
 
+  /** Catalog list with selector-config operators merged onto fields. */
+  async getAllWithSelectorConfig(
+    params?: EngineTrackingSourceListParams,
+  ): Promise<EngineTrackingSource[]> {
+    const [sources, tree] = await Promise.all([
+      this.getAll(params),
+      this.getSelectorConfig().catch(() => [] as TrackingSelectorSource[]),
+    ]);
+    return attachSelectorConfigToSources(sources, tree);
+  }
+
   /** GET /tracking-sources/search */
   async search(
     params?: EngineTrackingSourceSearchParams,
@@ -492,6 +685,15 @@ class EngineTrackingSourceService {
     const one = unwrapOne<Record<string, unknown>>(result);
     if (!one) throw new Error(`Tracking source ${id} not found`);
     return normalizeSource(one);
+  }
+
+  /** GET /tracking-sources/:id with selector-config operators merged. */
+  async getByIdWithSelectorConfig(id: number): Promise<EngineTrackingSource> {
+    const [source, tree] = await Promise.all([
+      this.getById(id),
+      this.getSelectorConfig().catch(() => [] as TrackingSelectorSource[]),
+    ]);
+    return attachSelectorConfigToSources([source], tree)[0];
   }
 
   /** POST /tracking-sources */
@@ -603,6 +805,67 @@ class EngineTrackingSourceService {
     });
   }
 
+  /**
+   * Apply add / update / deactivate field diffs after a source metadata save.
+   * Order: update → delete → add so renamed/removed keys are freed before inserts.
+   */
+  async syncFields(
+    sourceId: number,
+    plan: {
+      toAdd: CreateEngineTrackingSourceFieldPayload[];
+      toUpdate: Array<{
+        id: number;
+        payload: UpdateEngineTrackingSourceFieldPayload;
+      }>;
+      toDeleteIds: number[];
+    },
+  ): Promise<{ created: EngineTrackingSourceField[] }> {
+    const failures: string[] = [];
+    const created: EngineTrackingSourceField[] = [];
+
+    for (const { id, payload } of plan.toUpdate) {
+      try {
+        await this.updateField(sourceId, id, payload);
+      } catch (err) {
+        failures.push(
+          err instanceof Error
+            ? err.message
+            : `Failed to update field ${id}`,
+        );
+      }
+    }
+
+    for (const fieldId of plan.toDeleteIds) {
+      try {
+        await this.deleteField(sourceId, fieldId);
+      } catch (err) {
+        failures.push(
+          err instanceof Error
+            ? err.message
+            : `Failed to remove field ${fieldId}`,
+        );
+      }
+    }
+
+    for (const payload of plan.toAdd) {
+      try {
+        created.push(await this.addField(sourceId, payload));
+      } catch (err) {
+        failures.push(
+          err instanceof Error
+            ? err.message
+            : `Failed to add field ${payload.fieldName || payload.fieldKey}`,
+        );
+      }
+    }
+
+    if (failures.length) {
+      throw new Error(failures.join(" "));
+    }
+
+    return { created };
+  }
+
   /** POST /tracking-sources/fields/:fieldId/operators */
   async addOperatorToField(
     fieldId: number,
@@ -620,6 +883,71 @@ class EngineTrackingSourceService {
       },
     );
     return result;
+  }
+
+  /** DELETE /tracking-sources/fields/:fieldId/operators/:operatorId */
+  async removeOperatorFromField(
+    fieldId: number,
+    operatorId: number,
+  ): Promise<void> {
+    await this.request<unknown>(
+      `/fields/${fieldId}/operators/${operatorId}`,
+      { method: "DELETE" },
+    );
+  }
+
+  /** Unique operators from selector-config, merged with the known catalog seed. */
+  async getOperatorCatalog(): Promise<TrackingSelectorOperator[]> {
+    try {
+      const tree = await this.getSelectorConfig();
+      return collectOperatorCatalog(tree);
+    } catch {
+      return mergeOperatorCatalog([]);
+    }
+  }
+
+  /**
+   * Bind/unbind operators on a persisted field.
+   * Attach via POST /fields/:fieldId/operators; unbind via DELETE.
+   */
+  async syncFieldOperators(
+    fieldId: number,
+    desiredIds: number[],
+    existingIds: number[],
+  ): Promise<void> {
+    const desired = [...new Set(desiredIds.filter((id) => id > 0))];
+    const existing = [...new Set(existingIds.filter((id) => id > 0))];
+    const toAdd = desired.filter((id) => !existing.includes(id));
+    const toRemove = existing.filter((id) => !desired.includes(id));
+    const failures: string[] = [];
+
+    for (let i = 0; i < toAdd.length; i += 1) {
+      try {
+        await this.addOperatorToField(fieldId, toAdd[i], i);
+      } catch (err) {
+        failures.push(
+          err instanceof Error
+            ? err.message
+            : `Failed to attach operator ${toAdd[i]}`,
+        );
+      }
+    }
+
+    for (const operatorId of toRemove) {
+      try {
+        await this.removeOperatorFromField(fieldId, operatorId);
+      } catch (err) {
+        failures.push(
+          err instanceof Error
+            ? err.message
+            : `Failed to detach operator ${operatorId}`,
+        );
+      }
+    }
+
+    if (failures.length) {
+      throw new Error(failures.join(" "));
+    }
   }
 
   /**

@@ -844,6 +844,9 @@ export default function ConnectionProfileFormPage({
                     ? `edit-${id}-${loading ? "loading" : "ready"}`
                     : `create-${formData.connection_type}`
                 }
+                profileId={
+                  mode === "edit" && id ? Number(id) : undefined
+                }
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}
               />
@@ -939,6 +942,9 @@ export default function ConnectionProfileFormPage({
                   mode === "edit"
                     ? `edit-webhook-${id}-${loading ? "loading" : "ready"}`
                     : `create-webhook`
+                }
+                profileId={
+                  mode === "edit" && id ? Number(id) : undefined
                 }
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}

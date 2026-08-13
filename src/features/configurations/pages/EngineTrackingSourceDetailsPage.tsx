@@ -20,8 +20,11 @@ import {
 } from "../services/engineTrackingSourceService";
 import {
   ENGINE_FIELD_DATA_TYPE_OPTIONS,
+  catalogFieldOperatorCount,
   engineSourceTypeLabel,
+  trackingOperatorLabel,
   type EngineFieldDataType,
+  type TrackingSelectorOperator,
   type UpdateEngineTrackingSourceFieldPayload,
 } from "../types/engineTrackingSource";
 import { deriveFieldKey } from "../components/engine-tracking/engineTrackingFieldUtils";
@@ -53,6 +56,38 @@ const EMPTY_FIELD_FORM: FieldFormState = {
 function formatCodes(codes?: string[] | null): string {
   if (!codes?.length) return "—";
   return codes.join(", ");
+}
+
+function operatorChips(operators?: TrackingSelectorOperator[] | null) {
+  if (!operators?.length) {
+    return (
+      <span className={`text-xs ${tw.textMuted}`}>
+        None — offer rules will fall back to type defaults
+      </span>
+    );
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {operators.map((op) => (
+        <span
+          key={op.id}
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded bg-gray-100 text-gray-700"
+          title={[
+            trackingOperatorLabel(op),
+            op.requiresTwoValues ? "two values" : null,
+            op.applicableFieldTypes?.length
+              ? `types: ${op.applicableFieldTypes.join(", ")}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        >
+          <span className="font-mono">{op.symbol || op.code}</span>
+          <span>{trackingOperatorLabel(op)}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function fieldFlags(field: EngineTrackingSourceField): string {
@@ -251,7 +286,9 @@ export default function EngineTrackingSourceDetailsPage() {
     try {
       setLoading(true);
       if (!id) return;
-      const found = await engineTrackingSourceService.getById(Number(id));
+      const found = await engineTrackingSourceService.getByIdWithSelectorConfig(
+        Number(id),
+      );
       setSource(found);
     } catch (err) {
       showError(
@@ -387,7 +424,13 @@ export default function EngineTrackingSourceDetailsPage() {
           ? {
               ...prev,
               fields: (prev.fields || []).map((f) =>
-                f.id === editingFieldId ? { ...f, ...updated } : f,
+                f.id === editingFieldId
+                  ? {
+                      ...f,
+                      ...updated,
+                      operators: updated.operators ?? f.operators,
+                    }
+                  : f,
               ),
             }
           : prev,
@@ -439,11 +482,17 @@ export default function EngineTrackingSourceDetailsPage() {
   const inactiveFields = (source.fields || []).filter(
     (f) => f.isActive === false,
   );
+  const operatorCount = catalogFieldOperatorCount(activeFields);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <BackButton showBreadcrumb={true} currentLabel={source.name} />
+        <BackButton
+          showBreadcrumb={true}
+          parentLabel="Tracking Sources"
+          currentLabel={source.name}
+          onClick={() => navigate("/dashboard/tracking-sources")}
+        />
         <div className="flex items-center gap-2">
           <ActivateDeactivateButton
             isActive={source.isActive !== false}
@@ -455,7 +504,9 @@ export default function EngineTrackingSourceDetailsPage() {
           <button
             type="button"
             onClick={() =>
-              navigate(`/dashboard/tracking-sources/${source.id}/edit`)
+              navigate(`/dashboard/tracking-sources/${source.id}/edit`, {
+                state: { from: "details" },
+              })
             }
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md"
             style={{ backgroundColor: color.primary.action }}
@@ -501,6 +552,9 @@ export default function EngineTrackingSourceDetailsPage() {
               {" · "}
               {activeFields.length} field
               {activeFields.length === 1 ? "" : "s"}
+              {" · "}
+              {operatorCount} operator
+              {operatorCount === 1 ? "" : "s"}
             </p>
             {source.description ? (
               <p className={`text-sm ${tw.textMuted} mt-2`}>
@@ -593,8 +647,9 @@ export default function EngineTrackingSourceDetailsPage() {
               Fields
             </h2>
             <p className={`text-sm ${tw.textMuted}`}>
-              Fields power the tracking rule selector for this source. Edit
-              individually without changing source metadata.
+              Fields and operators come from GET /tracking-sources/selector-config.
+              Operators bound to a field are the conditions offered when this
+              source is used on an offer.
             </p>
           </div>
           <button
@@ -648,6 +703,9 @@ export default function EngineTrackingSourceDetailsPage() {
                   <th className={`py-2 pr-4 font-medium ${tw.textMuted}`}>
                     Flags
                   </th>
+                  <th className={`py-2 pr-4 font-medium ${tw.textMuted}`}>
+                    Operators
+                  </th>
                   <th className={`py-2 font-medium ${tw.textMuted}`}>Actions</th>
                 </tr>
               </thead>
@@ -658,7 +716,7 @@ export default function EngineTrackingSourceDetailsPage() {
                     className="border-b border-gray-100 last:border-0 align-top"
                   >
                     {editingFieldId === field.id ? (
-                      <td colSpan={5} className="py-3">
+                      <td colSpan={6} className="py-3">
                         <FieldFormEditor
                           form={editForm}
                           onChange={setEditForm}
@@ -688,6 +746,9 @@ export default function EngineTrackingSourceDetailsPage() {
                         </td>
                         <td className={`py-3 pr-4 ${tw.textSecondary}`}>
                           {fieldFlags(field)}
+                        </td>
+                        <td className="py-3 pr-4 max-w-xs">
+                          {operatorChips(field.operators)}
                         </td>
                         <td className="py-3">
                           <div className="flex items-center gap-1">

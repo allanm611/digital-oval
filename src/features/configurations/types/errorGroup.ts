@@ -65,7 +65,7 @@ export function formatErrorGroupLabel(
 
 /**
  * Prefer a shared mapping message when all mappings agree; otherwise first mapping.
- * Used to seed the offer-rule `failure_text` field (UI convenience only).
+ * Used to seed per-group offer override messages (not the catch-all `failure_text`).
  */
 export function resolveErrorGroupDefaultFailureMessage(
   group: Pick<ErrorGroup, "mappings">,
@@ -110,39 +110,6 @@ export function getRuleErrorGroupMessages(rule: {
     next[key] = typeof message === "string" ? message : String(message ?? "");
   });
   return next;
-}
-
-/**
- * Build dropdown options for the catch-all default failure message from
- * unique mapping messages across the error-group catalog (plus extras).
- */
-export function buildFailureMessageOptions(
-  groups: Array<Pick<ErrorGroup, "mappings">>,
-  currentValue?: string | null,
-  extraMessages?: Array<string | null | undefined>,
-): Array<{ value: string; label: string }> {
-  const seen = new Set<string>();
-  const options: Array<{ value: string; label: string }> = [];
-
-  const push = (message: string) => {
-    const trimmed = message.trim();
-    if (!trimmed || seen.has(trimmed)) return;
-    seen.add(trimmed);
-    options.push({
-      value: trimmed,
-      label: trimmed.length > 80 ? `${trimmed.slice(0, 77)}…` : trimmed,
-    });
-  };
-
-  groups.forEach((group) => {
-    (group.mappings || []).forEach((m) => push(m.user_message || ""));
-  });
-  (extraMessages || []).forEach((m) => push(m || ""));
-
-  const current = currentValue?.trim();
-  if (current) push(current);
-
-  return options;
 }
 
 /**

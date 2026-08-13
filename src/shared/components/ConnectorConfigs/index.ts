@@ -1,4 +1,5 @@
 export { APIConfig } from "./APIConfig";
+export { ApiResponsePanel } from "./ApiResponsePanel";
 export { JDBCConfig } from "./JDBCConfig";
 export { WebSocketConfig } from "./WebSocketConfig";
 export { KafkaConfig } from "./KafkaConfig";
@@ -14,3 +15,4 @@ export type {
   ApiHttpMethod,
   ApiKeyValueRow,
 } from "./apiConfigTypes";
+export type { ApiProbeResult, ApiProbeStatus } from "./apiProbeTypes";

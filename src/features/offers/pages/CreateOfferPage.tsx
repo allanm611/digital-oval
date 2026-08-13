@@ -102,7 +102,10 @@ import {
   isDefaultImmediateRewardConfigured,
 } from "../utils/seedingRewardDefaults";
 import { validateOfferRewardTrackingMapping } from "../utils/validateOfferRewardTracking";
-import { findTrackingSourcesWithInvalidPriorities } from "../utils/trackingRulePriority";
+import {
+  findRewardsWithInvalidPriorities,
+  findTrackingSourcesWithInvalidPriorities,
+} from "../utils/trackingRulePriority";
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative } from "../types/offerCreative";
@@ -2545,6 +2548,9 @@ export default function CreateOfferPage({
         if (!requiresTrackingRewardMapping) return true; // seeding reward: optional
         return trackingSources.some((s) => s.enabled !== false);
       case 5: // Rewards step
+        if (findRewardsWithInvalidPriorities(rewards).length > 0) {
+          return false;
+        }
         if (usesDefaultReward) {
           return isDefaultImmediateRewardConfigured(rewards);
         }

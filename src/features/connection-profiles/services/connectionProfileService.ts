@@ -478,18 +478,30 @@ class ConnectionProfileService {
 
   // ========= Test Connection =========
 
-  async testConnectionProfile(id: number): Promise<any> {
+  async testConnectionProfile(
+    id: number,
+    payload?: {
+      auth_config?: Record<string, unknown>;
+      connection_config?: Record<string, unknown>;
+      timeout_seconds?: number;
+    },
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    response_time_ms?: number;
+    error_details?: string;
+    status_code?: number;
+    body?: unknown;
+    headers?: Record<string, string> | Array<{ key: string; value: string }>;
+    [key: string]: unknown;
+  }> {
     try {
-      const token = localStorage.getItem("auth_token") || localStorage.getItem("authToken");
-      console.log("Test connection - Token present:", !!token);
-      console.log("Test connection - Token value:", token ? token.substring(0, 20) + "..." : "NOT FOUND");
-
       const response = await this.request<any>(`/${id}/test-connection`, {
         method: "POST",
         body: JSON.stringify({
-          auth_config: {},
-          connection_config: {},
-          timeout_seconds: 15,
+          auth_config: payload?.auth_config ?? {},
+          connection_config: payload?.connection_config ?? {},
+          timeout_seconds: payload?.timeout_seconds ?? 15,
         }),
       });
       return response;
