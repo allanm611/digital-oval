@@ -84,7 +84,13 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
-import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
+import {
+  creativeTemplateService,
+  creativeTemplateText,
+  creativeTemplateHtml,
+  matchesTemplateChannel,
+  type CreativeTemplate,
+} from "../../configurations/services/creativeTemplateService";
 import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
@@ -316,6 +322,7 @@ export default function OfferDetailsPage() {
     text_body: string;
     html_body: string;
     is_active: boolean;
+    save_as_template: boolean;
     sms_route?: string;
     variables?: Record<string, string | number | boolean>;
   }>({
@@ -325,6 +332,7 @@ export default function OfferDetailsPage() {
     text_body: "",
     html_body: "",
     is_active: true,
+    save_as_template: false,
     sms_route: "",
     variables: {},
   });
@@ -399,26 +407,27 @@ export default function OfferDetailsPage() {
     return option?.label || flowType;
   };
 
-  // Load creative templates from API
-  const [apiTemplates, setApiTemplates] = useState<any[]>([]);
+  // Load creative templates from GET /creative-template
+  const [apiTemplates, setApiTemplates] = useState<CreativeTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
 
-  useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        setTemplatesLoading(true);
-        const response = await creativeTemplateService.getCreativeTemplates();
-        const templatesData = response?.data || response || [];
-        setApiTemplates(Array.isArray(templatesData) ? templatesData : []);
-      } catch (err) {
-        console.error("Failed to load creative templates:", err);
-        setApiTemplates([]);
-      } finally {
-        setTemplatesLoading(false);
-      }
-    };
-    loadTemplates();
+  const loadCreativeTemplates = useCallback(async () => {
+    try {
+      setTemplatesLoading(true);
+      const response = await creativeTemplateService.getCreativeTemplates();
+      const templatesData = response?.data || [];
+      setApiTemplates(Array.isArray(templatesData) ? templatesData : []);
+    } catch (err) {
+      console.error("Failed to load creative templates:", err);
+      setApiTemplates([]);
+    } finally {
+      setTemplatesLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadCreativeTemplates();
+  }, [loadCreativeTemplates]);
 
   const templates = apiTemplates;
 
@@ -512,25 +521,19 @@ export default function OfferDetailsPage() {
     return result;
   };
 
-  // Filter templates by channel and locale
+  // Filter templates by channel and locale (cvm.offer_creatives_template)
   const getTemplatesForChannelAndLocale = (
     channel: CreativeChannel,
     locale: string,
   ) => {
-    return (templates as ConfigurationItem[]).filter((template) => {
-      if (!template.isActive) return false;
-
-      // Check if template matches channel
-      const matchesChannel =
-        template.metadataValue?.toLowerCase() === channel.toLowerCase();
-
-      // Check if template has locale field
-      // If template doesn't have locale specified, show it for all locales (backward compatibility)
-      // If template has locale, it must match the creative's locale
+    return templates.filter((template) => {
+      if (template.is_active === false) return false;
+      if (!matchesTemplateChannel(template.channel, channel)) return false;
       const templateLocale = template.locale;
-      const matchesLocale = !templateLocale || templateLocale === locale;
-
-      return matchesChannel && matchesLocale;
+      const matchesLocale =
+        !templateLocale ||
+        templateLocale.toLowerCase() === (locale || "en").toLowerCase();
+      return matchesLocale;
     });
   };
 
@@ -590,6 +593,7 @@ export default function OfferDetailsPage() {
       text_body: "",
       html_body: "",
       is_active: true,
+      save_as_template: false,
       sms_route: "",
       variables: {},
     });
@@ -668,34 +672,24 @@ export default function OfferDetailsPage() {
       return;
     }
 
-    const template = templates.find((t) => t.id === templateId) as
-      | ConfigurationItem
-      | undefined;
+    const template = templates.find((t) => t.id === templateId);
     if (!template) return;
 
     setSelectedTemplateId(templateId);
 
-    // Get template variables (default values)
-    const templateVariables = template.variables || {};
+    const bodyText = creativeTemplateText(template);
+    const bodyHtml = creativeTemplateHtml(template);
 
-    // Update form with template content (replace placeholders with actual values)
+    // Keep {{placeholders}} — they are resolved only in preview.
     setNewCreativeForm((prev) => ({
       ...prev,
-      // Set channel if template has a specific channel
-      channel: (template.metadataValue as CreativeChannel) || prev.channel,
-      // Populate title, text_body, html_body if template has them
-      title: template.title
-        ? replaceVariables(template.title, templateVariables)
-        : prev.title,
-      text_body: template.text_body
-        ? replaceVariables(template.text_body, templateVariables)
-        : prev.text_body,
-      html_body: template.html_body
-        ? replaceVariables(template.html_body, templateVariables)
-        : prev.html_body,
+      channel: (template.channel as CreativeChannel) || prev.channel,
+      title: template.title || prev.title,
+      text_body: bodyText || prev.text_body,
+      html_body: bodyHtml || prev.html_body,
+      variables: template.variables || prev.variables,
     }));
 
-    // Update variables JSON
     if (template.variables) {
       setNewCreativeVariables(JSON.stringify(template.variables, null, 2));
     }
@@ -1089,6 +1083,7 @@ export default function OfferDetailsPage() {
         locale: newCreativeForm.locale,
         name: creativeName,
         is_active: newCreativeForm.is_active,
+        save_as_template: Boolean(newCreativeForm.save_as_template),
         created_by: user.user_id,
       };
 
@@ -1106,10 +1101,18 @@ export default function OfferDetailsPage() {
       }
 
       await offerCreativeService.create(payload);
-      success("Creative Created", "Creative has been created successfully.");
+      success(
+        "Creative Created",
+        payload.save_as_template
+          ? "Creative saved and copied to Creative Templates."
+          : "Creative has been created successfully.",
+      );
       setIsAddCreativeModalOpen(false);
       resetNewCreativeForm();
       loadCreatives(true);
+      if (payload.save_as_template) {
+        loadCreativeTemplates();
+      }
     } catch (err) {
       console.error("Failed to create creative:", err);
       showError("Failed to create creative", extractBackendError(err, "Failed to create creative. Please try again."));
@@ -2743,14 +2746,21 @@ export default function OfferDetailsPage() {
           try {
             setIsCreatingCreative(true);
 
-            const createPayload = {
+            const creativeName =
+              creativeData.name?.trim() ||
+              creativeData.title?.trim() ||
+              `${creativeData.channel} - ${creativeData.locale}`;
+
+            const createPayload: CreateOfferCreativeRequest = {
               offer_id: Number(id),
               channel: creativeData.channel,
               locale: creativeData.locale,
-              title: creativeData.title,
+              name: creativeName,
+              title: creativeData.title || creativeName,
               text_body: creativeData.text_body,
               html_body: creativeData.html_body,
               is_active: creativeData.is_active,
+              save_as_template: Boolean(creativeData.save_as_template),
               created_by: user.user_id,
             };
 
@@ -2763,7 +2773,15 @@ export default function OfferDetailsPage() {
             setIsAddCreativeModalOpen(false);
             resetNewCreativeForm();
             loadCreatives(true);
-            success("Creative Created", "New creative has been added successfully.");
+            if (createPayload.save_as_template) {
+              loadCreativeTemplates();
+            }
+            success(
+              "Creative Created",
+              createPayload.save_as_template
+                ? "Creative saved and copied to Creative Templates."
+                : "New creative has been added successfully.",
+            );
           } catch (err) {
             console.error("Failed to create creative:", err);
             showError("Failed to create creative");

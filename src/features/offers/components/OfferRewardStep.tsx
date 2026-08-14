@@ -6,6 +6,7 @@ import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import Input from "../../../shared/components/ui/Input";
+import Textarea from "../../../shared/components/ui/Textarea";
 import {
   RULE_REWARD_TYPE_LABELS,
   type RuleRewardType,
@@ -16,12 +17,10 @@ import RewardConfigurationParametersEditor from "../../configurations/components
 import { errorGroupService } from "../../configurations/services/errorGroupService";
 import type { ErrorGroup } from "../../configurations/types/errorGroup";
 import {
-  buildFailureMessageOptions,
   errorGroupIdKey,
   formatErrorGroupLabel,
   getRuleErrorGroupIds,
   getRuleErrorGroupMessages,
-  resolveErrorGroupDefaultFailureMessage,
   withRuleErrorGroups,
 } from "../../configurations/types/errorGroup";
 import {
@@ -33,11 +32,25 @@ import type { OfferReward, OfferRewardRule } from "../types/offerReward";
 import type { OfferTrackingSource } from "../types/offerTrackingSource";
 import { rewardConfigShouldBindTrackingRule, rewardConfigRequiresTrackingRuleId } from "../utils/normalizeOfferWizardBindings";
 import {
+  getAvailablePrioritySelectOptions,
+  getNextAvailableTrackingRulePriority,
+  TRACKING_RULE_PRIORITY_MAX,
+  TRACKING_RULE_PRIORITY_MIN,
+  validateRewardConfigPriority,
+} from "../utils/trackingRulePriority";
+import {
   createDefaultImmediateConfiguration,
   ensureImmediateDefaultReward,
   formatImmediateAddConfigButtonLabel,
   IMMEDIATE_DEFAULT_REWARD_NAME,
 } from "../utils/seedingRewardDefaults";
+import {
+  DEFAULT_SUCCESS_MESSAGE_HINT,
+  OFFER_REWARD_MESSAGE_MAX_LENGTH,
+  getDefaultFailureMessageHint,
+  normalizeOfferRewardMessages,
+  validateOfferRewardMessages,
+} from "../utils/offerRewardMessages";
 import ConfigureErrorGroupModal from "./ConfigureErrorGroupModal";
 import SelectErrorGroupsModal, {
   type SelectedErrorGroupChoice,
@@ -70,6 +83,9 @@ export default function OfferRewardStep({
   const [isNewRule, setIsNewRule] = useState(false);
   const [editingRule, setEditingRule] = useState<OfferRewardRule | null>(null);
   const [ruleModalError, setRuleModalError] = useState("");
+  const [ruleModalErrorField, setRuleModalErrorField] = useState<
+    "success_text" | "failure_text" | "error_group_messages" | ""
+  >("");
   const [ruleParametersValid, setRuleParametersValid] = useState(true);
   const [errorGroups, setErrorGroups] = useState<ErrorGroup[]>([]);
   const [loadingErrorGroups, setLoadingErrorGroups] = useState(false);
@@ -120,7 +136,7 @@ export default function OfferRewardStep({
         byId.set(Number(g.id), g);
       });
 
-      // Enrich with mappings so failure-message dropdown + per-group seeds work.
+      // Enrich with mappings so per-group message seeds work.
       const enriched = await Promise.all(
         Array.from(byId.values()).map(async (group) => {
           if (group.mappings && group.mappings.length > 0) return group;
@@ -194,16 +210,6 @@ export default function OfferRewardStep({
 
     return opts;
   }, [errorGroups, selectedErrorGroupIds]);
-
-  const failureMessageOptions = useMemo(
-    () =>
-      buildFailureMessageOptions(
-        errorGroups,
-        editingRule?.failure_text,
-        Object.values(errorGroupMessages),
-      ),
-    [errorGroups, editingRule?.failure_text, errorGroupMessages],
-  );
 
   useEffect(() => {
     if (!showRuleModal) {
@@ -295,26 +301,11 @@ export default function OfferRewardStep({
 
     await attachGroupsToProvider(addedIds.length > 0 ? addedIds : nextIds);
 
-    // Seed catch-all failure only when empty and a primary group has a message.
-    const primaryId = nextIds[0] || "";
-    const primaryGroup = primaryId
-      ? resolvedGroups.find((g) => errorGroupIdKey(g.id) === primaryId) ||
-        errorGroups.find((g) => errorGroupIdKey(g.id) === primaryId)
-      : null;
-    const suggested = primaryGroup
-      ? resolveErrorGroupDefaultFailureMessage(primaryGroup)
-      : "";
-    const shouldSeedCatchAll =
-      !!suggested && !editingRule.failure_text?.trim();
-
+    // Catch-all `failure_text` stays operator-authored. Per-group messages
+    // are seeded from catalog mappings; they do not overwrite the default.
     setEditingRule(
       withRuleErrorGroups(
-        {
-          ...editingRule,
-          failure_text: shouldSeedCatchAll
-            ? suggested
-            : editingRule.failure_text,
-        },
+        editingRule,
         nextIds,
         resolvedGroups,
         {
@@ -342,6 +333,7 @@ export default function OfferRewardStep({
       return;
     }
     setRuleModalError("");
+    setRuleModalErrorField("");
     const nextIds = [...currentIds];
     nextIds[index] = normalized;
     await applyErrorGroupSelections(nextIds);
@@ -373,6 +365,7 @@ export default function OfferRewardStep({
   /** Same entry point as Offer Tracking "+ Add tracking source". */
   const openSelectErrorGroupsModal = () => {
     setRuleModalError("");
+    setRuleModalErrorField("");
     setShowSelectErrorGroupsModal(true);
   };
 
@@ -679,11 +672,21 @@ export default function OfferRewardStep({
       }
     }
 
+    const nextPriority = getNextAvailableTrackingRulePriority(
+      parent?.rules || [],
+    );
+    if (nextPriority == null) {
+      setRewardActionError(
+        `This reward already has configurations for every priority (${TRACKING_RULE_PRIORITY_MIN}–${TRACKING_RULE_PRIORITY_MAX}). Remove or change an existing configuration first.`,
+      );
+      return;
+    }
+
     setRewardActionError("");
     const newRule: OfferRewardRule = parent?.is_default
       ? {
           ...createDefaultImmediateConfiguration(generateId()),
-          priority: (parent.rules?.length || 0) + 1,
+          priority: nextPriority,
         }
       : {
           id: generateId(),
@@ -697,7 +700,7 @@ export default function OfferRewardStep({
           reward_configuration_name: "",
           tracking_source_id: inheritedSourceId,
           tracking_rule_id: defaultTrackingRule?.id || undefined,
-          priority: 1,
+          priority: nextPriority,
           condition: "",
           value: "",
           reward_type: "bundle",
@@ -716,6 +719,7 @@ export default function OfferRewardStep({
     setEditingRule(newRule);
     setIsNewRule(true);
     setRuleModalError("");
+    setRuleModalErrorField("");
     setRuleParametersValid(true);
     setShowRuleModal(true);
   };
@@ -923,6 +927,16 @@ export default function OfferRewardStep({
       return;
     }
 
+    const priorityError = validateRewardConfigPriority(
+      ruleToSave.priority,
+      parent?.rules || [],
+      ruleToSave.id,
+    );
+    if (priorityError) {
+      setRuleModalError(priorityError);
+      return;
+    }
+
     if (
       showTrackingContext &&
       !requiresRuleId &&
@@ -943,19 +957,13 @@ export default function OfferRewardStep({
       }
     }
 
-    const selectedGroupIdsForSave = getRuleErrorGroupIds(ruleToSave);
-    if (selectedGroupIdsForSave.length > 0) {
-      const messages = getRuleErrorGroupMessages(ruleToSave);
-      const missingMessage = selectedGroupIdsForSave.find(
-        (id) => !messages[id]?.trim(),
-      );
-      if (missingMessage) {
-        setRuleModalError(
-          "Each selected error group needs a user-facing message.",
-        );
-        return;
-      }
+    const messageError = validateOfferRewardMessages(ruleToSave);
+    if (messageError) {
+      setRuleModalError(messageError.message);
+      setRuleModalErrorField(messageError.field);
+      return;
     }
+    setRuleModalErrorField("");
 
     if (requiresRuleId && ruleToSave.enabled && ruleToSave.tracking_rule_id) {
       const exists = linked?.rules?.some(
@@ -987,6 +995,7 @@ export default function OfferRewardStep({
 
     setIsSavingRule(true);
     setRuleModalError("");
+    setRuleModalErrorField("");
     try {
       // Persist virtual provider-default templates before storing the offer rule.
       if (isVirtualDefaultTemplateId(ruleToSave.reward_configuration_id)) {
@@ -1004,10 +1013,8 @@ export default function OfferRewardStep({
 
       // Normalize multi error-group selection + ensure provider attachments.
       const selectedGroupIds = getRuleErrorGroupIds(ruleToSave);
-      ruleToSave = withRuleErrorGroups(
-        ruleToSave,
-        selectedGroupIds,
-        errorGroups,
+      ruleToSave = normalizeOfferRewardMessages(
+        withRuleErrorGroups(ruleToSave, selectedGroupIds, errorGroups),
       );
       if (selectedGroupIds.length > 0) {
         const providerId = ruleToSave.bundle_subscription_track;
@@ -1040,12 +1047,14 @@ export default function OfferRewardStep({
       setEditingRule(null);
       setIsNewRule(false);
       setRuleModalError("");
+      setRuleModalErrorField("");
     } catch (err) {
       setRuleModalError(
         err instanceof Error
           ? err.message
           : "Failed to save reward template for this provider.",
       );
+      setRuleModalErrorField("");
     } finally {
       setIsSavingRule(false);
     }
@@ -1061,6 +1070,18 @@ export default function OfferRewardStep({
 
   const selectedRewardData = rewards.find(
     (r) => String(r.id) === String(selectedReward),
+  );
+
+  const rewardPriorityOptions = useMemo(
+    () =>
+      editingRule
+        ? getAvailablePrioritySelectOptions(
+            selectedRewardData?.rules || [],
+            editingRule.id,
+            editingRule.priority,
+          )
+        : [],
+    [editingRule, selectedRewardData?.rules],
   );
   const selectedIsDefault = selectedRewardData?.is_default === true;
   const offerTypeLabel = offerTypeName?.trim() || "seeding reward";
@@ -1416,6 +1437,7 @@ export default function OfferRewardStep({
                                     setEditingRule(hydrated);
                                     setIsNewRule(false);
                                     setRuleModalError("");
+                                    setRuleModalErrorField("");
                                     setRuleParametersValid(true);
                                     setShowRuleModal(true);
                                   }}
@@ -1473,13 +1495,13 @@ export default function OfferRewardStep({
                                   </div>
                                 </>
                               ) : null}
-                              <div>
+                              <div className="whitespace-pre-wrap line-clamp-2">
                                 Success:{" "}
-                                {rule.success_text || "Default success message"}
+                                {rule.success_text?.trim() || "—"}
                               </div>
-                              <div>
+                              <div className="whitespace-pre-wrap line-clamp-2">
                                 Failure:{" "}
-                                {rule.failure_text || "Default failure message"}
+                                {rule.failure_text?.trim() || "—"}
                               </div>
                               <div>
                                 Error groups:{" "}
@@ -1535,6 +1557,7 @@ export default function OfferRewardStep({
                     setEditingRule(null);
                     setIsNewRule(false);
                     setRuleModalError("");
+                    setRuleModalErrorField("");
                   }}
                   className="p-1 text-gray-400 hover:text-gray-600"
                 >
@@ -1554,18 +1577,44 @@ export default function OfferRewardStep({
                     placeholder="Configuration name"
                   />
 
-                  <Input
-                    label="Priority"
-                    type="number"
-                    value={String(editingRule.priority)}
-                    onChange={(value) =>
-                      setEditingRule({
-                        ...editingRule,
-                        priority: parseInt(String(value)) || 1,
-                      })
-                    }
-                    placeholder="1"
-                  />
+                  <div>
+                    <HeadlessSelect
+                      label="Priority"
+                      options={rewardPriorityOptions}
+                      value={
+                        Number.isInteger(editingRule.priority)
+                          ? String(editingRule.priority)
+                          : ""
+                      }
+                      onChange={(value) => {
+                        const parsed = parseInt(String(value), 10);
+                        if (!Number.isFinite(parsed)) return;
+                        setEditingRule({
+                          ...editingRule,
+                          priority: parsed,
+                        });
+                      }}
+                      placeholder={
+                        rewardPriorityOptions.length === 0
+                          ? "No priorities available"
+                          : "Select priority"
+                      }
+                      error={Boolean(
+                        validateRewardConfigPriority(
+                          editingRule.priority,
+                          selectedRewardData?.rules || [],
+                          editingRule.id,
+                        ),
+                      )}
+                      disabled={rewardPriorityOptions.length === 0}
+                      zIndex={zIndex.popover}
+                    />
+                    <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                      Must be unique on this reward (
+                      {TRACKING_RULE_PRIORITY_MIN}–
+                      {TRACKING_RULE_PRIORITY_MAX}).Lower priority is evaluated first.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1797,54 +1846,57 @@ export default function OfferRewardStep({
                 ) : null}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Default success message"
-                    type="text"
-                    value={editingRule.success_text}
-                    onChange={(value) =>
-                      setEditingRule({
-                        ...editingRule,
-                        success_text: String(value),
-                      })
-                    }
-                    placeholder="Enter default success message..."
-                  />
+                  <div>
+                    <Textarea
+                      label="Default success message"
+                      value={editingRule.success_text}
+                      onChange={(value) => {
+                        setEditingRule({
+                          ...editingRule,
+                          success_text: value,
+                        });
+                        if (ruleModalErrorField === "success_text") {
+                          setRuleModalError("");
+                          setRuleModalErrorField("");
+                        }
+                      }}
+                      placeholder="Enter default success message..."
+                      rows={3}
+                      maxLength={OFFER_REWARD_MESSAGE_MAX_LENGTH}
+                      hasError={ruleModalErrorField === "success_text"}
+                    />
+                    <p className={`mt-1 text-xs ${tw.textMuted}`}>
+                      {DEFAULT_SUCCESS_MESSAGE_HINT}
+                    </p>
+                  </div>
 
-                  {failureMessageOptions.length > 0 ? (
-                    <HeadlessSelect
+                  <div>
+                    <Textarea
                       label="Default failure message"
-                      options={failureMessageOptions}
-                      value={editingRule.failure_text || ""}
-                      onChange={(value) =>
-                        setEditingRule({
-                          ...editingRule,
-                          failure_text: String(value),
-                        })
-                      }
-                      placeholder="Select default failure message"
-                      searchable
-                    />
-                  ) : (
-                    <Input
-                      label="Default failure message"
-                      type="text"
                       value={editingRule.failure_text}
-                      onChange={(value) =>
+                      onChange={(value) => {
                         setEditingRule({
                           ...editingRule,
-                          failure_text: String(value),
-                        })
-                      }
-                      placeholder={
-                        loadingErrorGroups
-                          ? "Loading failure messages..."
-                          : "Enter catch-all failure message..."
-                      }
-                      disabled={loadingErrorGroups}
+                          failure_text: value,
+                          default_failure: value,
+                        });
+                        if (ruleModalErrorField === "failure_text") {
+                          setRuleModalError("");
+                          setRuleModalErrorField("");
+                        }
+                      }}
+                      placeholder="Enter default failure message..."
+                      rows={3}
+                      maxLength={OFFER_REWARD_MESSAGE_MAX_LENGTH}
+                      hasError={ruleModalErrorField === "failure_text"}
                     />
-                  )}
+                    <p className={`mt-1 text-xs ${tw.textMuted}`}>
+                      {getDefaultFailureMessageHint(
+                        selectedErrorGroupIds.length > 0,
+                      )}
+                    </p>
+                  </div>
                 </div>
-                
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5 gap-2">
@@ -1861,7 +1913,7 @@ export default function OfferRewardStep({
                       title="Select error groups"
                     >
                       <Plus className="w-4 h-4 mr-1" />
-                      Add another error group
+                      Add error group
                     </button>
                   </div>
 
@@ -1876,7 +1928,9 @@ export default function OfferRewardStep({
                     </p>
                   ) : (
                     <p className={`mb-2 text-xs ${tw.textSecondary}`}>
-                      
+                      {selectedErrorGroupIds.length === 0
+                        ? "Optional. If none are selected, the default failure message is sent on fulfilment failure."
+                        : "Matched provider codes use the group message. Unmatched codes use the default failure message."}
                     </p>
                   )}
 
@@ -1884,11 +1938,19 @@ export default function OfferRewardStep({
                     <div
                       className={`text-center py-6 border-2 border-dashed border-gray-200 ${tw.rounded}`}
                     >
-                      <p className={`text-sm ${tw.textSecondary} mb-3`}>
+                      <p className={`text-sm ${tw.textSecondary} mb-1`}>
                         {loadingErrorGroups
                           ? "Loading error groups..."
                           : "No error groups selected"}
                       </p>
+                      {!loadingErrorGroups ? (
+                        <p className={`text-xs ${tw.textMuted} mb-3`}>
+                          The default failure message above will be sent if
+                          fulfilment fails.
+                        </p>
+                      ) : (
+                        <p className="mb-3" />
+                      )}
                       <button
                         type="button"
                         onClick={openSelectErrorGroupsModal}
@@ -1927,17 +1989,27 @@ export default function OfferRewardStep({
                                   placeholder="Select error group"
                                   searchable
                                 />
-                                <Input
+                                <Textarea
                                   label="Message for this error group"
-                                  type="text"
                                   value={errorGroupMessages[groupId] || ""}
-                                  onChange={(value) =>
-                                    updateErrorGroupMessage(
-                                      groupId,
-                                      String(value),
-                                    )
-                                  }
+                                  onChange={(value) => {
+                                    updateErrorGroupMessage(groupId, value);
+                                    if (
+                                      ruleModalErrorField ===
+                                      "error_group_messages"
+                                    ) {
+                                      setRuleModalError("");
+                                      setRuleModalErrorField("");
+                                    }
+                                  }}
                                   placeholder="User-facing message when this group matches..."
+                                  rows={3}
+                                  maxLength={OFFER_REWARD_MESSAGE_MAX_LENGTH}
+                                  hasError={
+                                    ruleModalErrorField ===
+                                      "error_group_messages" &&
+                                    !(errorGroupMessages[groupId] || "").trim()
+                                  }
                                 />
                               </div>
                               <button
@@ -1988,6 +2060,7 @@ export default function OfferRewardStep({
                     setEditingRule(null);
                     setIsNewRule(false);
                     setRuleModalError("");
+                    setRuleModalErrorField("");
                   }}
                   className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded}`}
                 >

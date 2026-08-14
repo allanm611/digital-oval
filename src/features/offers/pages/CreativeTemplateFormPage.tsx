@@ -102,8 +102,8 @@ export default function CreativeTemplateFormPage() {
         setChannel(template?.channel || template?.primaryChannel || "");
         setLocale(template?.locale || "");
         setTitle(template?.title || "");
-        setBodyText(template?.body_text || template?.text_body || "");
-        setBodyHtml(template?.body_html || template?.html_body || "");
+        setBodyText(template?.text_body || template?.body_text || "");
+        setBodyHtml(template?.html_body || template?.body_html || "");
         setVariablesText(
           template?.variables ? JSON.stringify(template.variables, null, 2) : "",
         );
@@ -118,12 +118,6 @@ export default function CreativeTemplateFormPage() {
     loadTemplate();
   }, [id, navigate, showError, t]);
 
-  // For now, remove loading state when component mounts
-  useEffect(() => {
-    setLoading(false);
-  }, []);
-
-  // Map channel name to enum value for submission
   const mapChannelNameToEnum = (channelName: string): ChannelEnum => {
     const nameUpper = channelName.toUpperCase();
     if (nameUpper.includes("WHATSAPP")) return "WhatsApp" as ChannelEnum;
@@ -137,8 +131,8 @@ export default function CreativeTemplateFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !code.trim() || !channel) {
-      showError(t.common.validation || "Validation", t.common.requiredFieldsMissing || "Name, code, and channel are required");
+    if (!name.trim() || !channel) {
+      showError(t.common.validation || "Validation", t.common.requiredFieldsMissing || "Name and channel are required");
       return;
     }
 
@@ -154,10 +148,20 @@ export default function CreativeTemplateFormPage() {
 
     setSaving(true);
     try {
+      const generatedCode =
+        code.trim() ||
+        name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_|_$/g, "")
+          .slice(0, 100) ||
+        `tpl_${Date.now()}`;
+
       const payload = {
         name: name.trim(),
         description: description.trim() || undefined,
-        code: code.trim(),
+        code: generatedCode,
         primaryChannel: mapChannelNameToEnum(channel),
         locale: locale || undefined,
         title: title.trim() || undefined,
@@ -227,7 +231,6 @@ export default function CreativeTemplateFormPage() {
             label="Code"
             value={code}
             onChange={(value) => setCode(String(value))}
-            required
             className="font-mono"
           />
 

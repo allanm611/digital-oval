@@ -51,13 +51,27 @@ export default function RewardConfigurationFormPage({
   }, [mode, id]);
 
   useEffect(() => {
-    if (mode !== "create" || !providerIdFromUrl || providers.length === 0) {
+    if (mode !== "create" || !providerIdFromUrl) {
       return;
     }
-    const provider = providers.find((p) => String(p.id) === providerIdFromUrl);
-    if (provider) {
-      setSelectedProvider(provider);
-    }
+    let cancelled = false;
+    const id = Number(providerIdFromUrl);
+    if (!Number.isFinite(id)) return;
+
+    (async () => {
+      try {
+        const provider = await rewardProviderService.getById(id);
+        if (!cancelled) setSelectedProvider(provider);
+      } catch {
+        if (cancelled || providers.length === 0) return;
+        const provider = providers.find((p) => String(p.id) === providerIdFromUrl);
+        if (provider) setSelectedProvider(provider);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [mode, providerIdFromUrl, providers]);
 
   const loadProviders = async () => {

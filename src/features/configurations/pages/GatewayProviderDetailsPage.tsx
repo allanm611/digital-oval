@@ -4,11 +4,15 @@ import { Edit, Trash2, Plug } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button } from "../../../shared/utils/utils";
 import {
   gatewayProviderService,
   GatewayProvider,
 } from "../services/gatewayProviderService";
+import {
+  gatewayProtocolLabel,
+  resolveGatewayProtocol,
+} from "../constants/gatewayProtocol";
 import { gatewayConfigurationService } from "../services/gatewayConfigurationService";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -121,6 +125,7 @@ export default function GatewayProviderDetailsPage() {
   if (!provider) return null;
 
   const fields = provider.field_schema?.fields || [];
+  const protocol = resolveGatewayProtocol(provider);
 
   return (
     <div className="space-y-6">
@@ -144,7 +149,15 @@ export default function GatewayProviderDetailsPage() {
           </button>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-md hover:bg-red-50"
+            className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-xs w-fit`}
+            style={{
+              backgroundColor: button.delete.background,
+              color: button.delete.color,
+              border: button.delete.border,
+              padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
+              borderRadius: button.delete.borderRadius,
+              fontSize: button.delete.fontSize,
+            }}
           >
             <Trash2 className="w-4 h-4" />
             Delete
@@ -166,6 +179,9 @@ export default function GatewayProviderDetailsPage() {
             </h1>
             <p className={`text-sm ${tw.textSecondary} mt-1`}>
               {provider.channel_label || provider.channel_value || "No channel"}
+              {protocol
+                ? ` · ${gatewayProtocolLabel(protocol)}`
+                : ""}
               {configCount > 0
                 ? ` · ${configCount} configuration${configCount === 1 ? "" : "s"}`
                 : " · No configurations yet"}
@@ -189,6 +205,12 @@ export default function GatewayProviderDetailsPage() {
             <p className={`text-sm ${tw.textPrimary} mt-1`}>
               {provider.channel_label || provider.channel_value || "—"}
               {provider.channel_id != null ? ` (#${provider.channel_id})` : ""}
+            </p>
+          </div>
+          <div>
+            <p className={`text-xs uppercase ${tw.textMuted}`}>Protocol</p>
+            <p className={`text-sm ${tw.textPrimary} mt-1`}>
+              {protocol ? gatewayProtocolLabel(protocol) : "—"}
             </p>
           </div>
           <div>
@@ -232,7 +254,8 @@ export default function GatewayProviderDetailsPage() {
 
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6`}>
         <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-          Field Schema
+          Connection fields
+          {protocol ? ` (${gatewayProtocolLabel(protocol)})` : ""}
         </h2>
         {fields.length === 0 ? (
           <p className={`text-sm ${tw.textMuted}`}>

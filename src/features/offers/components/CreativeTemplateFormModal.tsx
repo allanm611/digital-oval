@@ -94,8 +94,8 @@ export default function CreativeTemplateFormModal({
         primaryChannel: template.channel,
         locale: template.locale || "en",
         title: template.title || "",
-        text_body: template.body_text || "",
-        html_body: template.body_html || "",
+        text_body: template.text_body || template.body_text || "",
+        html_body: template.html_body || template.body_html || "",
         variables: template.variables || {},
       });
       setErrors({});
@@ -121,9 +121,6 @@ export default function CreativeTemplateFormModal({
 
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
-    }
-    if (!formData.code.trim()) {
-      newErrors.code = "Code is required";
     }
     if (!formData.text_body.trim() && !formData.html_body.trim()) {
       newErrors.body = "Either text body or HTML body is required";
@@ -192,8 +189,19 @@ export default function CreativeTemplateFormModal({
     e.preventDefault();
     if (!validateForm()) return;
 
+    const generatedCode =
+      formData.code.trim() ||
+      formData.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "")
+        .slice(0, 100) ||
+      `tpl_${Date.now()}`;
+
     const dataToSubmit = {
       ...formData,
+      code: generatedCode,
       primaryChannel: mapChannelNameToEnum(formData.primaryChannel),
     };
 

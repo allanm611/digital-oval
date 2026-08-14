@@ -512,12 +512,39 @@ export function serializeTrackingRuleValue(
   return str;
 }
 
+export function splitTrackingRangeValue(value: string): [string, string] {
+  const parts = String(value || "")
+    .split(",")
+    .map((p) => p.trim());
+  return [parts[0] || "", parts[1] || ""];
+}
+
+export function joinTrackingRangeValue(from: string, to: string): string {
+  return [from.trim(), to.trim()].filter(Boolean).join(", ");
+}
+
+export function isListCondition(condition: string): boolean {
+  const symbol = String(condition || "")
+    .toUpperCase()
+    .replace(/_/g, " ");
+  return (
+    condition === "is_any_of" || symbol === "IN" || symbol === "NOT IN"
+  );
+}
+
+export function isBetweenCondition(condition: string): boolean {
+  return String(condition || "").toUpperCase() === "BETWEEN";
+}
+
 export function validateTrackingRuleValue(
   value: string,
   parameterKey: string,
   condition: string,
   valueTypeOverride?: TrackingParameterValueType,
+  options?: { requiresValue?: boolean; requiresTwoValues?: boolean },
 ): string | null {
+  if (options?.requiresValue === false) return null;
+
   const trimmed = value?.trim() ?? "";
   if (!trimmed) {
     return "Enter a value for this rule.";
@@ -526,7 +553,7 @@ export function validateTrackingRuleValue(
   const valueType =
     valueTypeOverride ?? getParameterValueType(parameterKey);
 
-  if (condition === "is_any_of") {
+  if (isListCondition(condition)) {
     const parts = trimmed
       .split(",")
       .map((p) => p.trim())
@@ -538,6 +565,19 @@ export function validateTrackingRuleValue(
       const invalid = parts.find((p) => Number.isNaN(Number(p)));
       if (invalid) {
         return `"${invalid}" is not a valid number.`;
+      }
+    }
+    return null;
+  }
+
+  if (isBetweenCondition(condition) || options?.requiresTwoValues) {
+    const [from, to] = splitTrackingRangeValue(trimmed);
+    if (!from || !to) {
+      return "Enter both range values.";
+    }
+    if (valueType === "number") {
+      if (Number.isNaN(Number(from)) || Number.isNaN(Number(to))) {
+        return "Both range values must be numbers.";
       }
     }
     return null;

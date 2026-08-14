@@ -22,13 +22,18 @@ const SCHEMA_LABEL_TEXT_ALIASES: Record<string, string> = {
 };
 
 /**
- * Whether a schema field may be changed after a reward configuration is created.
+ * Whether a schema field may be changed on reward templates / runtime overrides.
+ * Accepts boolean or common API string/number encodings.
  * Legacy providers without `is_editable` remain fully editable.
  */
 export function isSchemaFieldEditable(
   field: Pick<RewardProviderSchemaField, "is_editable">,
 ): boolean {
-  return field.is_editable !== false;
+  const value = field.is_editable as unknown;
+  if (value === false || value === 0 || value === "0" || value === "false") {
+    return false;
+  }
+  return true;
 }
 
 export function resolveSchemaFieldDisplayLabel(
@@ -100,6 +105,23 @@ export function coerceConfigValue(
     default:
       return raw;
   }
+}
+
+/**
+ * Canonical value for a locked schema field:
+ * prefer saved master config, otherwise the provider schema default.
+ */
+export function lockedSchemaFieldValue(
+  field: RewardProviderSchemaField,
+  masterValues?: Record<string, unknown>,
+): unknown {
+  if (masterValues && masterValues[field.name] !== undefined) {
+    return coerceConfigValue(field, masterValues[field.name]);
+  }
+  if (field.default !== undefined && field.default !== "") {
+    return coerceConfigValue(field, field.default);
+  }
+  return coerceConfigValue(field, undefined);
 }
 
 export function normalizeConfigValueForApi(

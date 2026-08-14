@@ -1,11 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, Plus, Send, Trash2 } from "lucide-react";
 import Input from "../ui/Input";
 import Textarea from "../ui/Textarea";
 import HeadlessSelect from "../ui/HeadlessSelect";
 import Checkbox from "../ui/Checkbox";
-import { color, tw } from "../../utils/utils";
+import { button, color, getButtonStyles, tw } from "../../utils/utils";
 import { ConfigComponentProps } from "./types";
+import { ApiResponsePanel } from "./ApiResponsePanel";
+import { probeApiConfiguration } from "./apiProbe";
+import type { ApiProbeResult, ApiProbeStatus } from "./apiProbeTypes";
 import {
   API_AUTH_OPTIONS,
   API_BODY_MODE_OPTIONS,
@@ -166,11 +169,20 @@ function KeyValueEditor({
   );
 }
 
-export const APIConfig: React.FC<ConfigComponentProps> = ({
+type APIConfigProps = ConfigComponentProps & {
+  /** When editing a saved profile, probe via /connection-profiles/:id/test-connection */
+  profileId?: number;
+  /** Defaults to true — hide Send/Response for read-only embeds */
+  enableProbe?: boolean;
+};
+
+export const APIConfig: React.FC<APIConfigProps> = ({
   config,
   updateConfiguration,
   patchConfiguration,
   hydrateKey,
+  profileId,
+  enableProbe = true,
 }) => {
   const patch: PatchFn =
     patchConfiguration ||
@@ -181,6 +193,9 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
     });
 
   const [activeTab, setActiveTab] = useState<ApiConfigTab>("params");
+  const [probeStatus, setProbeStatus] = useState<ApiProbeStatus>("idle");
+  const [probeResult, setProbeResult] = useState<ApiProbeResult | null>(null);
+  const probeAbortRef = useRef<AbortController | null>(null);
   const lastHydrateKey = useRef<string | undefined>(undefined);
 
   const initialState = useMemo(
@@ -343,6 +358,46 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
     patch(bodyPatch);
   };
 
+  const handleSend = useCallback(async () => {
+    if (!enableProbe || probeStatus === "sending") return;
+
+    probeAbortRef.current?.abort();
+    const controller = new AbortController();
+    probeAbortRef.current = controller;
+
+    setProbeStatus("sending");
+    const result = await probeApiConfiguration(config || {}, {
+      profileId,
+      signal: controller.signal,
+      url: urlDraft,
+      queryParams,
+      headerRows,
+    });
+
+    if (controller.signal.aborted) return;
+    setProbeResult(result);
+    setProbeStatus(result.status === "cancelled" ? "idle" : result.status);
+  }, [
+    config,
+    enableProbe,
+    headerRows,
+    probeStatus,
+    profileId,
+    queryParams,
+    urlDraft,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      probeAbortRef.current?.abort();
+    };
+  }, []);
+
+  const sendDisabled =
+    !enableProbe ||
+    probeStatus === "sending" ||
+    !urlDraft.trim();
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -350,35 +405,60 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
           <h4 className={`${tw.cardHeading} text-gray-900`}>API Request</h4>
           <p className="mt-1 text-sm text-gray-500">
             Configure the request the way you would in Postman — method, URL,
-            params, auth, headers, and body.
+            params, auth, headers, body — then Send to inspect the response.
           </p>
         </div>
       </div>
 
-      {/* Postman-style method + URL bar */}
-      <div className="flex overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm focus-within:border-gray-400">
-        <select
-          value={method}
-          onChange={(e) => handleMethodChange(e.target.value)}
-          className="w-[118px] shrink-0 border-0 border-r border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold outline-none"
-          style={{ color: METHOD_COLORS[method] || color.text.primary }}
-          aria-label="HTTP method"
-        >
-          {API_HTTP_METHODS.map((m) => (
-            <option key={m} value={m} style={{ color: METHOD_COLORS[m] }}>
-              {m}
-            </option>
-          ))}
-        </select>
-        <div className="flex min-w-0 flex-1 items-center px-3">
-          <input
-            type="url"
-            value={urlDraft}
-            onChange={(e) => handleUrlChange(e.target.value)}
-            placeholder="https://api.example.com/v1/resource/:id"
-            className="w-full border-0 bg-transparent py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400"
-          />
+      {/* Postman-style method + URL + Send */}
+      <div className="flex items-stretch gap-2">
+        <div className="flex min-w-0 flex-1 overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm focus-within:border-gray-400">
+          <select
+            value={method}
+            onChange={(e) => handleMethodChange(e.target.value)}
+            className="w-[118px] shrink-0 border-0 border-r border-gray-200 bg-gray-50 px-3 py-3 text-sm font-bold outline-none"
+            style={{ color: METHOD_COLORS[method] || color.text.primary }}
+            aria-label="HTTP method"
+          >
+            {API_HTTP_METHODS.map((m) => (
+              <option key={m} value={m} style={{ color: METHOD_COLORS[m] }}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <div className="flex min-w-0 flex-1 items-center px-3">
+            <input
+              type="url"
+              value={urlDraft}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void handleSend();
+                }
+              }}
+              placeholder="https://api.example.com/v1/resource/:id"
+              className="w-full border-0 bg-transparent py-3 text-sm text-gray-900 outline-none placeholder:text-gray-400"
+            />
+          </div>
         </div>
+        {enableProbe && (
+          <button
+            type="button"
+            onClick={() => void handleSend()}
+            disabled={sendDisabled}
+            className="inline-flex shrink-0 items-center justify-center gap-2 px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            style={getButtonStyles(button.action)}
+            aria-label="Send request"
+          >
+            {probeStatus === "sending" ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Send size={16} />
+            )}
+            {probeStatus === "sending" ? "Sending" : "Send"}
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -808,9 +888,38 @@ export const APIConfig: React.FC<ConfigComponentProps> = ({
               value={config.xpath || ""}
               onChange={(value) => updateConfiguration("xpath", value)}
             />
+
+            <div className="rounded-md border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-600">
+              <p className="font-semibold text-gray-700">Send / Test tips</p>
+              <ul className="mt-1 list-disc space-y-1 pl-4">
+                <li>
+                  Requests are probed through the backend (not the browser), so
+                  corporate proxies and CORS-restricted APIs still work.
+                </li>
+                <li>
+                  Use <span className="font-medium">Success Response String(s)</span>{" "}
+                  to assert expected status/body/header text after Send.
+                </li>
+                <li>
+                  Save the profile after a successful probe so production syncs
+                  use the same verified configuration.
+                </li>
+              </ul>
+            </div>
           </div>
         )}
       </div>
+
+      {enableProbe && (
+        <ApiResponsePanel
+          status={probeStatus === "cancelled" ? "idle" : probeStatus}
+          result={probeResult}
+          onClear={() => {
+            setProbeResult(null);
+            setProbeStatus("idle");
+          }}
+        />
+      )}
     </div>
   );
 };

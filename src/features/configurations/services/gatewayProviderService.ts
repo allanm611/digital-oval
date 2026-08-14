@@ -8,13 +8,23 @@ export interface GatewayProviderField {
   required?: boolean;
   placeholder?: string;
   options?: string[];
+  /** Seeded into new gateway configurations when the field is empty. */
+  default?: string | number | boolean;
+}
+
+export interface GatewayProviderFieldSchema {
+  /** Connection protocol that produced the canonical fields. Stored on the schema so it survives without a dedicated backend column. */
+  protocol?: string;
+  fields: GatewayProviderField[];
 }
 
 export interface GatewayProvider {
   id: number;
   name: string;
   channel_id?: number;
-  field_schema?: { fields: GatewayProviderField[] };
+  /** Present if the backend later exposes protocol as a column. */
+  protocol?: string;
+  field_schema?: GatewayProviderFieldSchema;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -25,13 +35,13 @@ export interface GatewayProvider {
 export interface CreateGatewayProviderRequest {
   name: string;
   channel_id: number;
-  field_schema: { fields: GatewayProviderField[] };
+  field_schema: GatewayProviderFieldSchema;
   is_active?: boolean;
 }
 
 export interface UpdateGatewayProviderRequest {
   name?: string;
-  field_schema?: { fields: GatewayProviderField[] };
+  field_schema?: GatewayProviderFieldSchema;
   is_active?: boolean;
 }
 

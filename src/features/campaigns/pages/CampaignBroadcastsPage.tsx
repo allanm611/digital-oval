@@ -32,13 +32,12 @@ interface BroadcastTableRow {
   id: string;
   campaignName: string;
   broadcastName: string;
-  status: string;
-  statusRaw: BroadcastStatus;
+  status: BroadcastStatus;
   sentDate: string;
   channels: string;
   sent: number;
   failed: number;
-  deliveryRate: string;
+  deliveryRate: number;
 }
 
 const statusOptions = [
@@ -70,8 +69,6 @@ export default function CampaignBroadcastsPage() {
   >([{ value: "all", label: "All Campaigns" }]);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
   const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const defaultColumns: TableColumn<BroadcastTableRow>[] = useMemo(
@@ -99,18 +96,19 @@ export default function CampaignBroadcastsPage() {
         label: "Status",
         width: "140px",
         visible: true,
+        sortable: true,
         filterConfig: {
           type: "multiselect",
           options: statusOptions.filter((o) => o.value !== "all").map((o) => o.value),
         },
         render: (_, row) => {
-          const { className, style } = getStatusBadgeConfig(row.statusRaw, "broadcast");
+          const { className, style } = getStatusBadgeConfig(row.status, "broadcast");
           return (
             <span
               className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${className}`}
               style={style}
             >
-              {row.status}
+              {formatBroadcastStatusLabel(row.status)}
             </span>
           );
         },
@@ -118,14 +116,20 @@ export default function CampaignBroadcastsPage() {
       {
         id: "sentDate",
         label: "Start Time",
-        width: "180px",
+        width: "200px",
         visible: true,
+        sortable: true,
         filterConfig: { type: "date" },
         render: (_, row) =>
           row.sentDate ? (
-            <DateFormatter date={row.sentDate} useUserTimezone />
+            <DateFormatter
+              date={row.sentDate}
+              useUserTimezone
+              includeTime
+              className="whitespace-nowrap text-sm text-gray-700"
+            />
           ) : (
-            <span>—</span>
+            <span className="text-gray-400">—</span>
           ),
       },
       {
@@ -133,6 +137,7 @@ export default function CampaignBroadcastsPage() {
         label: "Channel",
         width: "120px",
         visible: true,
+        sortable: true,
         filterConfig: { type: "text" },
         render: (_, row) => (
           <span className="text-sm uppercase">{row.channels || "—"}</span>
@@ -143,6 +148,7 @@ export default function CampaignBroadcastsPage() {
         label: "Sent",
         width: "100px",
         visible: true,
+        sortable: true,
         filterConfig: { type: "number" },
       },
       {
@@ -150,6 +156,7 @@ export default function CampaignBroadcastsPage() {
         label: "Failed",
         width: "100px",
         visible: true,
+        sortable: true,
         filterConfig: { type: "number" },
       },
       {
@@ -157,7 +164,9 @@ export default function CampaignBroadcastsPage() {
         label: "Delivery %",
         width: "110px",
         visible: true,
-        filterConfig: { type: "text" },
+        sortable: true,
+        filterConfig: { type: "number" },
+        render: (value) => `${Number(value ?? 0).toFixed(1)}%`,
       },
       {
         id: "actions",
@@ -199,10 +208,16 @@ export default function CampaignBroadcastsPage() {
     toggleColumn,
     reorderColumns,
     resetToDefaults,
+    currentPage,
+    pageSize,
+    handlePageChange,
+    resetPage,
+    sortConfigs,
+    handleSort,
   } = useTable({
     tableId: "campaign-broadcasts-table",
     defaultColumns,
-    defaultPageSize: pageSize,
+    defaultPageSize: 20,
     persistToLocalStorage: true,
   });
 
@@ -318,9 +333,9 @@ export default function CampaignBroadcastsPage() {
         }
         return next;
       });
-      setCurrentPage(1);
+      resetPage();
     },
-    [setSearchParams],
+    [setSearchParams, resetPage],
   );
 
   const filteredBroadcasts = useMemo(() => {
@@ -347,26 +362,33 @@ export default function CampaignBroadcastsPage() {
   }, [campaignOptions, selectedCampaign]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedStatus, searchQuery, campaignIdFilter]);
+    resetPage();
+  }, [selectedStatus, searchQuery, campaignIdFilter, resetPage]);
 
-  const paginatedBroadcasts = filteredBroadcasts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
+  // Reset to first page when sort changes so results stay coherent across pages
+  useEffect(() => {
+    resetPage();
+  }, [sortConfigs, resetPage]);
+
+  // Pass the full filtered set so Table can sort across all rows, then paginate
+  const tableRows: BroadcastTableRow[] = useMemo(
+    () =>
+      filteredBroadcasts.map((broadcast) => ({
+        id: broadcast.broadcast_id,
+        campaignName:
+          broadcast.campaign_name ||
+          `Campaign #${broadcast.campaign_id ?? "—"}`,
+        broadcastName: broadcast.broadcast_name || "—",
+        status: broadcast.status,
+        sentDate:
+          broadcast.actual_start_time || broadcast.planned_start_time || "",
+        channels: broadcast.channel_code || "",
+        sent: broadcast.messages_sent ?? 0,
+        failed: broadcast.messages_failed ?? 0,
+        deliveryRate: Number(broadcast.delivery_rate ?? 0),
+      })),
+    [filteredBroadcasts],
   );
-
-  const tableRows: BroadcastTableRow[] = paginatedBroadcasts.map((broadcast) => ({
-    id: broadcast.broadcast_id,
-    campaignName: broadcast.campaign_name || `Campaign #${broadcast.campaign_id ?? "—"}`,
-    broadcastName: broadcast.broadcast_name || "—",
-    status: formatBroadcastStatusLabel(broadcast.status),
-    statusRaw: broadcast.status,
-    sentDate: broadcast.actual_start_time || broadcast.planned_start_time || "",
-    channels: broadcast.channel_code || "",
-    sent: broadcast.messages_sent ?? 0,
-    failed: broadcast.messages_failed ?? 0,
-    deliveryRate: `${Number(broadcast.delivery_rate ?? 0).toFixed(1)}%`,
-  }));
 
   const broadcastStats = [
     {
@@ -486,16 +508,27 @@ export default function CampaignBroadcastsPage() {
               <Table<BroadcastTableRow>
                 columns={columns}
                 data={tableRows}
+                totalItems={tableRows.length}
+                currentPage={currentPage}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onSort={handleSort}
+                sortConfigs={sortConfigs}
                 onHideColumn={toggleColumn}
                 onManageColumnsClick={() => setShowColumnPicker(true)}
-                rowSpacing="0 8px"
+                style={{
+                  headerBackground: color.surface.tableHeader,
+                  headerTextColor: color.surface.tableHeaderText,
+                  rowBackground: color.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
               />
             </div>
             <Pagination
               currentPage={currentPage}
               pageSize={pageSize}
-              totalItems={filteredBroadcasts.length}
-              onPageChange={setCurrentPage}
+              totalItems={tableRows.length}
+              onPageChange={handlePageChange}
             />
           </>
         ) : (

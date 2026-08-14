@@ -8,26 +8,11 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { creativeTemplateService, type CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
-
-interface CreativeTemplate {
-  id: number;
-  name: string;
-  description?: string;
-  code?: string;
-  channel?: string;
-  locale?: string;
-  title?: string;
-  body_text?: string;
-  body_html?: string;
-  is_active?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
 
 export default function CreativeTemplatesPage() {
   const navigate = useNavigate();
@@ -58,7 +43,7 @@ export default function CreativeTemplatesPage() {
       const response = await creativeTemplateService.getCreativeTemplates();
       setTemplates(response.data || []);
     } catch (error) {
-      showError(extractBackendError(err, "Failed to load creative templates. Please try again."));
+      showError(extractBackendError(error, "Failed to load creative templates. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -73,15 +58,20 @@ export default function CreativeTemplatesPage() {
   const handleDeleteClick = (template: CreativeTemplate) => {
     setTemplateToDelete(template);
     openDeleteConfirm(template.id, template.name);
-    setShowActionMenu(null);
   };
 
-  const filteredTemplates = templates.filter(
-    (template) =>
-      template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (template.code && template.code.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredTemplates = templates.filter((template) => {
+    const q = searchTerm.toLowerCase();
+    if (!q) return true;
+    return (
+      template.name?.toLowerCase().includes(q) ||
+      template.description?.toLowerCase().includes(q) ||
+      template.code?.toLowerCase().includes(q) ||
+      template.channel?.toLowerCase().includes(q) ||
+      template.locale?.toLowerCase().includes(q) ||
+      template.title?.toLowerCase().includes(q)
+    );
+  });
 
   // Table columns definition
   const defaultColumns: TableColumn<CreativeTemplate>[] = [
@@ -94,10 +84,17 @@ export default function CreativeTemplatesPage() {
       id: "code",
       label: "Code",
       visible: true,
+      render: (value) => value || "—",
     },
     {
       id: "channel",
       label: "Channel",
+      visible: true,
+      render: (value) => value || "—",
+    },
+    {
+      id: "locale",
+      label: "Locale",
       visible: true,
       render: (value) => value || "—",
     },
@@ -272,7 +269,7 @@ export default function CreativeTemplatesPage() {
             await confirmDeleteTemplate(deleteConfirm.id);
             showSuccess("Creative Template deleted successfully");
           } catch (error) {
-            showError("Failed to delete creative template", extractBackendError(err, "Failed to delete creative template. Please try again."));
+            showError("Failed to delete creative template", extractBackendError(error, "Failed to delete creative template. Please try again."));
           }
         }}
         title="Delete Creative Template"

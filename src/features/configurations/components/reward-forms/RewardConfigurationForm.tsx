@@ -4,11 +4,15 @@ import RewardSchemaFieldControl from "./RewardSchemaFieldControl";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw, button, getButtonStyles } from "../../../../shared/utils/utils";
-import { RewardProvider } from "../../services/rewardProviderService";
+import {
+  rewardProviderService,
+  RewardProvider,
+} from "../../services/rewardProviderService";
 import { RewardProviderSchemaField } from "../../types/rewardProvider";
 import {
   coerceConfigValue,
   isSchemaFieldEditable,
+  lockedSchemaFieldValue,
   normalizeConfigValueForApi,
   validateRequiredSchemaValue,
 } from "./rewardSchemaFieldUtils";
@@ -72,13 +76,23 @@ export default function RewardConfigurationForm({
     {},
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [resolvedProvider, setResolvedProvider] = useState<RewardProvider | null>(
+    null,
+  );
+  const [providerSchemaLoading, setProviderSchemaLoading] = useState(false);
 
-  const selectedProvider = useMemo(() => {
+  const listProvider = useMemo(() => {
     if (initialProvider && String(initialProvider.id) === providerId) {
       return initialProvider;
     }
     return providers.find((p) => String(p.id) === providerId) || null;
   }, [providers, providerId, initialProvider]);
+
+  // Prefer detail payload so auth/payload schema includes is_editable.
+  const selectedProvider =
+    resolvedProvider && String(resolvedProvider.id) === providerId
+      ? resolvedProvider
+      : listProvider;
 
   const authFields = useMemo(
     () => selectedProvider?.auth_schema?.fields || [],
@@ -98,6 +112,40 @@ export default function RewardConfigurationForm({
     );
     setIsActive(initialData.is_active !== false);
   }, [initialData]);
+
+  useEffect(() => {
+    if (!providerId) {
+      setResolvedProvider(null);
+      return;
+    }
+
+    let cancelled = false;
+    const id = Number(providerId);
+    if (!Number.isFinite(id)) return;
+
+    (async () => {
+      try {
+        setProviderSchemaLoading(true);
+        const provider = await rewardProviderService.getById(id);
+        if (!cancelled) setResolvedProvider(provider);
+      } catch {
+        // Fall back to list/initial provider data if detail fetch fails.
+        if (!cancelled) {
+          setResolvedProvider(
+            initialProvider && initialProvider.id === id
+              ? initialProvider
+              : providers.find((p) => p.id === id) || null,
+          );
+        }
+      } finally {
+        if (!cancelled) setProviderSchemaLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [providerId, initialProvider, providers]);
 
   useEffect(() => {
     setAuthValues(
@@ -127,8 +175,8 @@ export default function RewardConfigurationForm({
     value: unknown,
     field: RewardProviderSchemaField,
   ) => {
-    // Defense: ignore mutations to locked fields when editing an existing config.
-    if (mode === "edit" && !isSchemaFieldEditable(field)) return;
+    // Defense: ignore mutations to locked (non-editable) schema fields.
+    if (!isSchemaFieldEditable(field)) return;
 
     const setter = section === "auth" ? setAuthValues : setPayloadValues;
     const errorKey = `${section}.${fieldName}`;
@@ -178,8 +226,9 @@ export default function RewardConfigurationForm({
   };
 
   /**
-   * Build API config maps. On edit, locked fields are forced back to the
-   * master configuration values so client-side tampering cannot change them.
+   * Build API config maps. Locked fields are forced back to master values
+   * (saved template on edit, provider schema default on create) so
+   * client-side tampering cannot change them.
    */
   const normalizeConfig = (
     fields: RewardProviderSchemaField[],
@@ -188,13 +237,9 @@ export default function RewardConfigurationForm({
   ): Record<string, unknown> => {
     const config: Record<string, unknown> = {};
     fields.forEach((field) => {
-      const sourceValue =
-        mode === "edit" &&
-        !isSchemaFieldEditable(field) &&
-        existing &&
-        existing[field.name] !== undefined
-          ? existing[field.name]
-          : values[field.name];
+      const sourceValue = !isSchemaFieldEditable(field)
+        ? lockedSchemaFieldValue(field, existing)
+        : values[field.name];
       config[field.name] = normalizeConfigValueForApi(field, sourceValue);
     });
     return config;
@@ -251,7 +296,7 @@ export default function RewardConfigurationForm({
     section: "auth" | "payload",
     values: Record<string, unknown>,
   ) => {
-    const locked = mode === "edit" && !isSchemaFieldEditable(field);
+    const locked = !isSchemaFieldEditable(field);
 
     return (
       <div key={`${section}-${field.name}`}>
@@ -265,7 +310,8 @@ export default function RewardConfigurationForm({
         />
         {locked && (
           <p className={`text-xs ${tw.textMuted} mt-1`}>
-            
+            Locked by provider schema — uses the{" "}
+            {mode === "edit" ? "saved template" : "provider default"} value.
           </p>
         )}
       </div>
@@ -296,7 +342,10 @@ export default function RewardConfigurationForm({
                   : "Select reward provider"
               }
               disabled={
-                mode === "edit" || providersLoading || providerOptions.length === 0
+                mode === "edit" ||
+                providersLoading ||
+                providerSchemaLoading ||
+                providerOptions.length === 0
               }
             />
             {errors.provider_id && (
@@ -313,6 +362,7 @@ export default function RewardConfigurationForm({
             {selectedProvider && (
               <p className={`text-xs ${tw.textMuted} mt-2`}>
                 {selectedProvider.http_method} {selectedProvider.api_path}
+                {providerSchemaLoading ? " · Loading schema…" : ""}
               </p>
             )}
           </div>
@@ -352,9 +402,8 @@ export default function RewardConfigurationForm({
         </h2>
         <p className={`text-xs ${tw.textMuted} mb-6`}>
           OAuth and API credentials defined by the provider&apos;s auth schema.
-          {mode === "edit"
-            ? " "
-            : ""}
+          Fields marked not editable stay locked to the provider default
+          {mode === "edit" ? " (or saved template value)" : ""}.
         </p>
 
         {!providerId ? (
@@ -382,10 +431,9 @@ export default function RewardConfigurationForm({
         </h2>
         <p className={`text-xs ${tw.textMuted} mb-6`}>
           Reward delivery parameters mapped into the provider&apos;s request
-          template.
-          {mode === "edit"
-            ? " "
-            : ""}
+          template. Fields marked not editable stay locked to the provider
+          default
+          {mode === "edit" ? " (or saved template value)" : ""}.
         </p>
 
         {!providerId ? (
@@ -417,7 +465,7 @@ export default function RewardConfigurationForm({
         </button>
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || providerSchemaLoading || !providerId}
           className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
         >

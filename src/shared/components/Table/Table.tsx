@@ -354,33 +354,90 @@ export function Table<T extends { id?: number | string } = any>({
       });
     });
 
-    // Apply sorting
+    // Apply sorting (non-mutating copy; empty/invalid values always sort last)
     if (sortConfigs.length === 0) return filtered;
 
-    const sorted = filtered.sort((a, b) => {
-      for (const sort of sortConfigs) {
-        const aVal = a[sort.columnId as keyof T];
-        const bVal = b[sort.columnId as keyof T];
+    const isEmptySortValue = (value: unknown) =>
+      value === null ||
+      value === undefined ||
+      (typeof value === "string" && value.trim() === "");
 
-        let comparison = 0;
-        if (aVal === null || aVal === undefined) comparison = 1;
-        else if (bVal === null || bVal === undefined) comparison = -1;
-        else if (typeof aVal === 'string' && typeof bVal === 'string') {
-          comparison = aVal.localeCompare(bVal);
-        } else if (typeof aVal === 'number' && typeof bVal === 'number') {
-          comparison = aVal - bVal;
-        } else {
-          comparison = String(aVal).localeCompare(String(bVal));
+    const toSortableTimestamp = (value: unknown): number | null => {
+      if (value instanceof Date) {
+        const time = value.getTime();
+        return Number.isNaN(time) ? null : time;
+      }
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      if (typeof value === "string" && value.trim()) {
+        const time = new Date(value).getTime();
+        return Number.isNaN(time) ? null : time;
+      }
+      return null;
+    };
+
+    const compareValues = (
+      aVal: unknown,
+      bVal: unknown,
+      column?: TableColumn<T>,
+    ): number => {
+      const aEmpty = isEmptySortValue(aVal);
+      const bEmpty = isEmptySortValue(bVal);
+      if (aEmpty && bEmpty) return 0;
+      if (aEmpty) return 1;
+      if (bEmpty) return -1;
+
+      // Date columns: chronological by timestamp (supports full ISO datetimes)
+      if (column?.filterConfig?.type === "date") {
+        const aTime = toSortableTimestamp(aVal);
+        const bTime = toSortableTimestamp(bVal);
+        if (aTime === null && bTime === null) return 0;
+        if (aTime === null) return 1;
+        if (bTime === null) return -1;
+        return aTime - bTime;
+      }
+
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return aVal - bVal;
+      }
+
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        // Prefer numeric compare when both look like numbers (e.g. "12.5%")
+        const aNum = Number(String(aVal).replace(/[%,\s]/g, ""));
+        const bNum = Number(String(bVal).replace(/[%,\s]/g, ""));
+        if (
+          Number.isFinite(aNum) &&
+          Number.isFinite(bNum) &&
+          /^-?\d/.test(String(aVal).trim()) &&
+          /^-?\d/.test(String(bVal).trim())
+        ) {
+          return aNum - bNum;
         }
+        return aVal.localeCompare(bVal, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
 
+      return String(aVal).localeCompare(String(bVal), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    };
+
+    return [...filtered].sort((a, b) => {
+      for (const sort of sortConfigs) {
+        const column = columns.find((col) => col.id === sort.columnId);
+        const comparison = compareValues(
+          a[sort.columnId as keyof T],
+          b[sort.columnId as keyof T],
+          column,
+        );
         if (comparison !== 0) {
-          return sort.direction === 'asc' ? comparison : -comparison;
+          return sort.direction === "asc" ? comparison : -comparison;
         }
       }
       return 0;
     });
-
-    return sorted;
   }, [data, sortConfigs, columnFilters, columns]);
 
   // Notify parent of actual filtered count

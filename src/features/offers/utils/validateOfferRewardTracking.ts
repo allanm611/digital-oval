@@ -4,7 +4,11 @@ import {
   findDefaultReward,
   isDefaultImmediateRewardConfigured,
 } from "./seedingRewardDefaults";
-import { findTrackingSourcesWithInvalidPriorities } from "./trackingRulePriority";
+import {
+  findRewardsWithInvalidPriorities,
+  findTrackingSourcesWithInvalidPriorities,
+} from "./trackingRulePriority";
+import { findEnabledRulesWithInvalidMessages } from "./offerRewardMessages";
 
 /**
  * Ensures offer tracking instances do not reuse the same engine tracking source.
@@ -195,6 +199,17 @@ function applySharedLinkedBindingChecks(
   if (dupSourceLevel.length > 0) {
     errors.rewards =
       "A tracking source without rules can have only one enabled source-level reward configuration.";
+  }
+
+  const rewardPriorityIssues = findRewardsWithInvalidPriorities(rewards);
+  if (rewardPriorityIssues.length > 0) {
+    const first = rewardPriorityIssues[0];
+    errors.rewards = `${first.rewardName}: ${first.reason} Priorities must be unique among configurations on each reward (1–20).`;
+  }
+
+  const messageIssue = findEnabledRulesWithInvalidMessages(rewards);
+  if (messageIssue) {
+    errors.rewards = messageIssue.message;
   }
 }
 

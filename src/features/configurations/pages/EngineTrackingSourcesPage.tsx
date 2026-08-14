@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Edit, Eye, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
@@ -19,6 +19,8 @@ import {
 } from "../services/engineTrackingSourceService";
 import {
   ENGINE_TRACKING_SOURCE_TYPE_OPTIONS,
+  activeCatalogFields,
+  catalogFieldOperatorCount,
   engineSourceTypeLabel,
 } from "../types/engineTrackingSource";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
@@ -65,7 +67,7 @@ export default function EngineTrackingSourcesPage() {
   const loadSources = async () => {
     try {
       setLoading(true);
-      const data = await engineTrackingSourceService.getAll({
+      const data = await engineTrackingSourceService.getAllWithSelectorConfig({
         source_type: typeFilter || undefined,
         limit: 500,
       });
@@ -137,6 +139,18 @@ export default function EngineTrackingSourcesPage() {
     );
   });
 
+  const duplicateCodes = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const source of sources) {
+      const code = (source.code || "").trim().toLowerCase();
+      if (!code) continue;
+      counts.set(code, (counts.get(code) || 0) + 1);
+    }
+    return [...counts.entries()]
+      .filter(([, count]) => count > 1)
+      .map(([code]) => code);
+  }, [sources]);
+
   const defaultColumns: TableColumn<EngineTrackingSource>[] = [
     { id: "name", label: "Name", visible: true },
     {
@@ -162,6 +176,26 @@ export default function EngineTrackingSourcesPage() {
       id: "cooldownHours",
       label: "Cooldown (h)",
       visible: true,
+    },
+    {
+      id: "fields",
+      label: "Fields",
+      visible: true,
+      sortable: false,
+      render: (_value, source) => {
+        const fields = activeCatalogFields(source);
+        const ops = catalogFieldOperatorCount(fields);
+        return (
+          <span className="text-sm">
+            {fields.length}
+            {ops > 0 ? (
+              <span className={`${tw.textMuted}`}> · {ops} ops</span>
+            ) : fields.length > 0 ? (
+              <span className={`${tw.textMuted}`}> · no ops</span>
+            ) : null}
+          </span>
+        );
+      },
     },
     {
       id: "isActive",
@@ -199,7 +233,9 @@ export default function EngineTrackingSourcesPage() {
           </button>
           <button
             onClick={() =>
-              navigate(`/dashboard/tracking-sources/${source.id}/edit`)
+              navigate(`/dashboard/tracking-sources/${source.id}/edit`, {
+                state: { from: "list" },
+              })
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit source"
@@ -228,7 +264,7 @@ export default function EngineTrackingSourcesPage() {
     handleSort,
     toggleColumn,
   } = useTable({
-    tableId: "engine-tracking-sources-table",
+    tableId: "engine-tracking-sources-table-v2",
     defaultColumns,
     defaultPageSize: DEFAULT_PAGE_SIZE,
     persistToLocalStorage: true,
@@ -249,7 +285,9 @@ export default function EngineTrackingSourcesPage() {
         <div className="flex items-center justify-between gap-4">
           <BackButton
             showBreadcrumb={true}
+            parentLabel="Configuration"
             currentLabel="Tracking Sources"
+            onClick={() => navigate("/dashboard/configuration")}
           />
           <FeatureActionButton
             featureId="tracking-sources"
@@ -258,8 +296,20 @@ export default function EngineTrackingSourcesPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Engine attribution catalog used by offer reward mappings
+          Engine attribution catalog used by offer reward mappings.
         </p>
+        {duplicateCodes.length > 0 ? (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+            Duplicate source codes:{" "}
+            {duplicateCodes.map((c) => (
+              <code key={c} className="font-mono mr-2">
+                {c}
+              </code>
+            ))}
+            Offer matching keys off <span className="font-mono">code</span> can
+            attach the wrong source. Keep codes unique.
+          </p>
+        ) : null}
       </div>
 
       <div className="my-5 grid grid-cols-1 md:grid-cols-4 gap-4">

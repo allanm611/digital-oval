@@ -42,17 +42,50 @@ export function providerIdFromVirtualTemplateId(
 }
 
 export function isDefaultRewardTemplate(
-  config: Pick<RewardConfiguration, "name" | "is_default"> & {
+  config: Pick<RewardConfiguration, "name" | "is_default" | "is_default_template"> & {
     is_virtual?: boolean;
   },
 ): boolean {
-  if (config.is_virtual === true || config.is_default === true) return true;
+  if (
+    config.is_virtual === true ||
+    config.is_default === true ||
+    config.is_default_template === true
+  ) {
+    return true;
+  }
   const name = config.name?.trim().toLowerCase() || "";
   return (
     name === DEFAULT_REWARD_TEMPLATE_NAME.toLowerCase() ||
     name === "default configuration" ||
     name === "default reward configuration"
   );
+}
+
+/**
+ * Duplicate is allowed for persisted, active templates — including the
+ * protected default (the copy is never marked default).
+ */
+export function canDuplicateRewardTemplate(
+  config: Pick<RewardConfiguration, "id" | "is_active"> & {
+    is_virtual?: boolean;
+  },
+): { allowed: boolean; reason?: string } {
+  if (config.is_virtual === true || isVirtualDefaultTemplateId(config.id)) {
+    return {
+      allowed: false,
+      reason: "Save this template before duplicating it.",
+    };
+  }
+  if (!config.id || config.id <= 0) {
+    return { allowed: false, reason: "This template cannot be duplicated." };
+  }
+  if (config.is_active === false) {
+    return {
+      allowed: false,
+      reason: "Activate the template before duplicating it.",
+    };
+  }
+  return { allowed: true };
 }
 
 export function formatRewardTemplateOptionLabel(

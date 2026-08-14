@@ -19,7 +19,14 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { languageService, Language } from "../../configurations/services/languageService";
-import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
+import {
+  creativeTemplateService,
+  creativeTemplateText,
+  creativeTemplateHtml,
+  matchesTemplateChannel,
+  normalizeCreativeTemplate,
+  type CreativeTemplate,
+} from "../../configurations/services/creativeTemplateService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { offerService } from "../services/offerService";
 import {
@@ -113,6 +120,7 @@ export default function OfferCreativeFormModal({
     text_body: string;
     html_body: string;
     is_active: boolean;
+    save_as_template: boolean;
   }>({
     channel: "SMS",
     locale: "en",
@@ -120,6 +128,7 @@ export default function OfferCreativeFormModal({
     text_body: "",
     html_body: "",
     is_active: true,
+    save_as_template: false,
   });
   const [selectedLanguageId, setSelectedLanguageId] = useState<number | string>("");  // Track language ID for dropdown
 
@@ -140,7 +149,7 @@ export default function OfferCreativeFormModal({
   const [senderIds, setSenderIds] = useState<SenderId[]>([]);
   const [smsRoutes, setSmsRoutes] = useState<any[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<CreativeTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const [channelsLoading, setChannelsLoading] = useState(false);
   const [senderIdsLoading, setSenderIdsLoading] = useState(false);
@@ -249,6 +258,7 @@ export default function OfferCreativeFormModal({
         text_body: initialCreative.text_body || "",
         html_body: initialCreative.html_body || "",
         is_active: initialCreative.is_active ?? true,
+        save_as_template: Boolean(initialCreative.save_as_template),
       });
     } else {
       setFormData({
@@ -258,6 +268,7 @@ export default function OfferCreativeFormModal({
         text_body: "",
         html_body: "",
         is_active: true,
+        save_as_template: false,
       });
     }
 
@@ -368,8 +379,8 @@ export default function OfferCreativeFormModal({
       setFormData((prev) => ({
         ...prev,
         title: template.title || prev.title,
-        text_body: template.body_text || "",
-        html_body: template.body_html || "",
+        text_body: creativeTemplateText(template) || "",
+        html_body: creativeTemplateHtml(template) || "",
       }));
     }
   };
@@ -400,10 +411,11 @@ export default function OfferCreativeFormModal({
   };
 
   const handleTemplateCreated = async (template: any) => {
-    setTemplates((prev) => [...prev, template]);
+    const normalized = normalizeCreativeTemplate(template);
+    setTemplates((prev) => [...prev, normalized]);
     setIsTemplateModalOpen(false);
-    handleTemplateSelect(template.id);
-    success("Success", `Template "${template.name}" created successfully`);
+    handleTemplateSelect(normalized.id);
+    success("Success", `Template "${normalized.name}" created successfully`);
   };
 
   const handleSave = async () => {
@@ -431,15 +443,15 @@ export default function OfferCreativeFormModal({
       const creativeData: any = {
         channel: formData.channel,
         locale: formData.locale,
+        title: formData.title,
         text_body: formData.text_body,
         is_active: formData.is_active,
       };
 
       if (mode === "create") {
         creativeData.name = formData.title;
+        creativeData.save_as_template = Boolean(formData.save_as_template);
         if (user?.user_id) creativeData.created_by = user.user_id;
-      } else {
-        creativeData.title = formData.title;
       }
 
       // Only include html_body for non-SMS channels
@@ -449,7 +461,9 @@ export default function OfferCreativeFormModal({
       }
 
       await onSave(creativeData);
-      success("Success", `Creative ${mode === "create" ? "created" : "updated"} successfully`);
+      success("Success", mode === "create" && formData.save_as_template
+        ? "Creative created and saved as a reusable template"
+        : `Creative ${mode === "create" ? "created" : "updated"} successfully`);
       onClose();
     } catch (err) {
       showError("Error", extractBackendError(err, "Error. Please try again."));
@@ -520,7 +534,11 @@ export default function OfferCreativeFormModal({
             {/* Creative Template */}
             {(() => {
               const baseChannel = getBaseChannel(formData.channel);
-              const filteredTemplates = templates.filter((t) => t.is_active && t.channel?.toUpperCase() === baseChannel?.toUpperCase());
+              const filteredTemplates = templates.filter(
+                (t) =>
+                  t.is_active !== false &&
+                  matchesTemplateChannel(t.channel, baseChannel),
+              );
               return (
                 <TypeSelector
                   label="Creative Template (Optional)"
@@ -536,6 +554,34 @@ export default function OfferCreativeFormModal({
                 />
               );
             })()}
+
+            {mode === "create" && (
+              <label
+                htmlFor="modal-save-as-template"
+                className={`flex items-start gap-3 p-3 border ${tw.rounded} cursor-pointer`}
+                style={{ borderColor: color.border?.default || "#e5e7eb" }}
+              >
+                <Checkbox
+                  id="modal-save-as-template"
+                  checked={formData.save_as_template}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      save_as_template: e.target.checked,
+                    }))
+                  }
+                />
+                <span className="text-sm">
+                  <span className="font-medium text-gray-900 block">
+                    Save as reusable template
+                  </span>
+                  <span className="text-gray-500 block mt-0.5">
+                    Copy this creative into Creative Templates for other
+                    offers. Placeholders like {"{{name}}"} are kept.
+                  </span>
+                </span>
+              </label>
+            )}
 
             {/* Sender ID (SMS) or Subject (Email/Web) */}
             {formData.channel?.toUpperCase() === "SMS" ? (

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import Input from "../../../../shared/components/ui/Input";
 import RewardSchemaFieldControl from "./RewardSchemaFieldControl";
@@ -5,7 +6,7 @@ import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw } from "../../../../shared/utils/utils";
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
-import { patchFieldForTypeChange } from "./rewardSchemaFieldUtils";
+import { isSchemaFieldEditable, patchFieldForTypeChange } from "./rewardSchemaFieldUtils";
 import CommaSeparatedOptionsInput from "../CommaSeparatedOptionsInput";
 
 const FIELD_TYPES: {
@@ -39,6 +40,37 @@ function emptyField(): RewardProviderSchemaField {
     placeholder: "",
     options: [],
   };
+}
+
+function AddFieldButton({
+  disabled,
+  onClick,
+  variant = "header",
+  schemaTitle,
+}: {
+  disabled?: boolean;
+  onClick: () => void;
+  variant?: "header" | "footer";
+  schemaTitle?: string;
+}) {
+  const isFooter = variant === "footer";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={schemaTitle ? `Add field to ${schemaTitle}` : "Add field"}
+      className={
+        isFooter
+          ? `w-full inline-flex items-center justify-center gap-1.5 px-3 py-3 text-sm font-medium border border-dashed border-gray-300 ${tw.rounded} disabled:opacity-60 hover:bg-gray-50`
+          : "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white rounded-md disabled:opacity-60"
+      }
+      style={isFooter ? undefined : { backgroundColor: color.primary.action }}
+    >
+      <Plus className="w-4 h-4" />
+      Add field
+    </button>
+  );
 }
 
 export function slugifyRewardFieldName(value: string): string {
@@ -119,6 +151,9 @@ export default function RewardProviderFieldSchemaEditor({
   disabled = false,
   onChange,
 }: RewardProviderFieldSchemaEditorProps) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const shouldFocusNewField = useRef(false);
+
   const updateField = (
     index: number,
     patch: Partial<RewardProviderSchemaField>,
@@ -133,8 +168,23 @@ export default function RewardProviderFieldSchemaEditor({
   };
 
   const addField = () => {
+    shouldFocusNewField.current = true;
     onChange([...fields, emptyField()]);
   };
+
+  useEffect(() => {
+    if (!shouldFocusNewField.current) return;
+    shouldFocusNewField.current = false;
+    const cards = listRef.current?.querySelectorAll<HTMLElement>(
+      "[data-schema-field]",
+    );
+    const lastCard = cards?.[cards.length - 1];
+    lastCard?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const firstInput = lastCard?.querySelector<HTMLInputElement>(
+      "input:not([type='checkbox'])",
+    );
+    firstInput?.focus();
+  }, [fields.length]);
 
   return (
     <div className="space-y-4">
@@ -143,16 +193,11 @@ export default function RewardProviderFieldSchemaEditor({
           <h2 className={`text-sm font-semibold ${tw.textPrimary}`}>{title}</h2>
           <p className={`text-xs ${tw.textSecondary} mt-1`}>{description}</p>
         </div>
-        <button
-          type="button"
-          onClick={addField}
+        <AddFieldButton
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white rounded-md disabled:opacity-60"
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-4 h-4" />
-          Add field
-        </button>
+          onClick={addField}
+          schemaTitle={title}
+        />
       </div>
 
       {errors[schemaErrorKey] && (
@@ -161,17 +206,23 @@ export default function RewardProviderFieldSchemaEditor({
 
       {fields.length === 0 ? (
         <div
-          className={`border border-dashed border-gray-300 ${tw.rounded} p-8 text-center`}
+          className={`border border-dashed border-gray-300 ${tw.rounded} p-8 text-center space-y-3`}
         >
           <p className={`text-sm ${tw.textMuted}`}>No fields yet.</p>
+          <AddFieldButton
+            disabled={disabled}
+            onClick={addField}
+            schemaTitle={title}
+          />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div ref={listRef} className="space-y-4">
           {fields.map((field, index) => {
             const prefix = `${schemaErrorKey}_${index}`;
             return (
               <div
                 key={index}
+                data-schema-field=""
                 className={`border border-gray-200 ${tw.rounded} bg-gray-50/60 p-4`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -293,7 +344,7 @@ export default function RewardProviderFieldSchemaEditor({
                   <label className="flex items-start gap-2 cursor-pointer">
                     <Checkbox
                       id={`reward-field-editable-${schemaErrorKey}-${index}`}
-                      checked={field.is_editable !== false}
+                      checked={isSchemaFieldEditable(field)}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateField(index, { is_editable: e.target.checked })
                       }
@@ -305,15 +356,19 @@ export default function RewardProviderFieldSchemaEditor({
                       >
                         Editable after configuration is created
                       </span>
-                      <span className={`text-xs ${tw.textMuted} block mt-0.5`}>
-                        
-                      </span>
+                      
                     </span>
                   </label>
                 </div>
               </div>
             );
           })}
+          <AddFieldButton
+            variant="footer"
+            disabled={disabled}
+            onClick={addField}
+            schemaTitle={title}
+          />
         </div>
       )}
     </div>

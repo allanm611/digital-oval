@@ -4,12 +4,15 @@ export interface CreativeTemplate {
   code: string;
   description?: string;
   is_active: boolean;
-  channel: 'SMS' | 'Email' | 'Push' | 'InApp' | 'Web' | 'IVR' | 'USSD' | 'WhatsApp';
+  channel: 'SMS' | 'Email' | 'Push' | 'InApp' | 'Web' | 'IVR' | 'USSD' | 'WhatsApp' | string;
   locale: string;
   title?: string;
+  text_body?: string;
+  html_body?: string;
   body_text?: string;
   body_html?: string;
   variables?: Record<string, any>;
+  template_type_id?: number;
   created_at?: string;
   updated_at?: string;
   created_by?: number;

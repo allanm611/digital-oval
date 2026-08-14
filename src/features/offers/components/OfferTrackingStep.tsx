@@ -19,8 +19,12 @@ import {
   normalizeParameterKey,
   PARAMETER_LABELS,
   serializeTrackingRuleValue,
+  splitTrackingRangeValue,
+  joinTrackingRangeValue,
   toTrackingValueInputDisplay,
   validateTrackingRuleValue,
+  isListCondition,
+  isBetweenCondition,
   type TrackingParameterValueType,
 } from "../utils/trackingSourcesConfig";
 import {
@@ -35,12 +39,17 @@ import type {
 import {
   ENGINE_TRACKING_SOURCE_TYPE_OPTIONS,
   engineSourceTypeLabel,
+  trackingOperatorIsList,
+  trackingOperatorLabel,
+  trackingOperatorRequiresTwoValues,
+  trackingOperatorValue,
 } from "../../configurations/types/engineTrackingSource";
 import type {
   OfferTrackingRule,
   OfferTrackingSource,
 } from "../types/offerTrackingSource";
 import {
+  getAvailablePrioritySelectOptions,
   getNextAvailableTrackingRulePriority,
   TRACKING_RULE_PRIORITY_MAX,
   TRACKING_RULE_PRIORITY_MIN,
@@ -87,14 +96,35 @@ function conditionsForEngineField(
 ) {
   if (field?.operators?.length) {
     return field.operators.map((op) => ({
-      value: op.symbol || op.code,
-      label: op.name || op.symbol || op.code,
+      value: trackingOperatorValue(op),
+      label: trackingOperatorLabel(op),
     }));
   }
   if (field?.dataType) {
     return getConditionsForValueType(dataTypeToValueType(field.dataType));
   }
   return getConditionsForParameter(parameterKey);
+}
+
+function findFieldOperator(
+  field: TrackingSelectorField | undefined,
+  condition: string,
+) {
+  if (!field?.operators?.length) return undefined;
+  return field.operators.find(
+    (op) => trackingOperatorValue(op) === condition,
+  );
+}
+
+function conditionDisplayLabel(
+  condition: string,
+  field?: TrackingSelectorField,
+): string {
+  const op = findFieldOperator(field, condition);
+  if (op) return trackingOperatorLabel(op);
+  return (
+    CONDITION_OPTIONS.find((c) => c.value === condition)?.label || condition
+  );
 }
 
 function upsertSelectorSource(
@@ -461,6 +491,18 @@ export default function OfferTrackingStep({
     (s) => s.id === selectedSource,
   );
 
+  const trackingPriorityOptions = useMemo(
+    () =>
+      editingRule
+        ? getAvailablePrioritySelectOptions(
+            selectedSourceData?.rules || [],
+            editingRule.id,
+            editingRule.priority,
+          )
+        : [],
+    [editingRule, selectedSourceData?.rules],
+  );
+
   const selectedEngineFields = useMemo(
     () => getEngineFields(selectedSourceData?.engine_tracking_source_id),
     [selectedSourceData?.engine_tracking_source_id, selectorTree],
@@ -522,6 +564,28 @@ export default function OfferTrackingStep({
     if (field?.dataType) return dataTypeToValueType(field.dataType);
     return getParameterValueType(param);
   }, [editingRule?.parameter, selectedEngineFields]);
+
+  const editingOperator = useMemo(() => {
+    if (!editingRule) return undefined;
+    const field = selectedEngineFields.find(
+      (f) => f.fieldKey === editingRule.parameter,
+    );
+    return findFieldOperator(field, editingRule.condition);
+  }, [editingRule, selectedEngineFields]);
+
+  const editingNeedsListValue =
+    (editingOperator
+      ? trackingOperatorIsList(editingOperator)
+      : isListCondition(editingRule?.condition || "")) ||
+    editingRule?.condition === "is_any_of";
+
+  const editingNeedsRangeValue = editingOperator
+    ? trackingOperatorRequiresTwoValues(editingOperator)
+    : isBetweenCondition(editingRule?.condition || "");
+
+  const editingNeedsValue = editingOperator
+    ? editingOperator.requiresValue !== false
+    : true;
 
   const applyParameterChange = (nextParameter: string) => {
     if (!editingRule) return;
@@ -846,20 +910,35 @@ export default function OfferTrackingStep({
       : ((allowedConditions[0]?.value as OfferTrackingRule["condition"]) ||
         getDefaultConditionForParameter(parameter));
 
+    const op = findFieldOperator(engineField, condition);
+    const isList = op
+      ? trackingOperatorIsList(op)
+      : isListCondition(condition);
+    const isBetween = op
+      ? trackingOperatorRequiresTwoValues(op)
+      : isBetweenCondition(condition);
+
     const serializedValue =
-      condition === "is_any_of"
-        ? String(rule.value ?? "")
-            .split(",")
-            .map((part) => part.trim())
-            .filter(Boolean)
-            .join(", ")
-        : serializeTrackingRuleValue(rule.value, valueType);
+      op?.requiresValue === false
+        ? ""
+        : isList || isBetween
+          ? String(rule.value ?? "")
+              .split(",")
+              .map((part) => part.trim())
+              .filter(Boolean)
+              .join(", ")
+          : serializeTrackingRuleValue(rule.value, valueType);
 
     const valueError = validateTrackingRuleValue(
       serializedValue,
       parameter,
       condition,
       valueType,
+      {
+        requiresValue: op?.requiresValue,
+        requiresTwoValues:
+          op != null ? trackingOperatorRequiresTwoValues(op) : undefined,
+      },
     );
     if (valueError) {
       setRuleModalError(valueError);
@@ -1218,9 +1297,12 @@ export default function OfferTrackingStep({
                                   rule.parameter,
                                 PARAMETER_LABELS,
                               )}{" "}
-                              {CONDITION_OPTIONS.find(
-                                (c) => c.value === rule.condition,
-                              )?.label.toLowerCase()}{" "}
+                              {conditionDisplayLabel(
+                                rule.condition,
+                                selectedEngineFields.find(
+                                  (f) => f.fieldKey === rule.parameter,
+                                ),
+                              ).toLowerCase()}{" "}
                               &quot;
                               {formatTrackingRuleValueDisplay(
                                 rule.value,
@@ -1543,35 +1625,43 @@ export default function OfferTrackingStep({
                 />
 
                 <div>
-                  <Input
+                  <HeadlessSelect
                     label="Priority"
-                    type="number"
-                    placeholder={`${TRACKING_RULE_PRIORITY_MIN}–${TRACKING_RULE_PRIORITY_MAX}`}
-                    min={TRACKING_RULE_PRIORITY_MIN}
-                    max={TRACKING_RULE_PRIORITY_MAX}
-                    step={1}
-                    value={editingRule.priority}
+                    options={trackingPriorityOptions}
+                    value={
+                      Number.isInteger(editingRule.priority)
+                        ? String(editingRule.priority)
+                        : ""
+                    }
                     onChange={(value) => {
                       const parsed = parseInt(String(value), 10);
+                      if (!Number.isFinite(parsed)) return;
                       setEditingRule({
                         ...editingRule,
-                        priority: Number.isFinite(parsed)
-                          ? parsed
-                          : TRACKING_RULE_PRIORITY_MIN,
+                        priority: parsed,
                       });
                     }}
-                    hasError={Boolean(
+                    placeholder={
+                      trackingPriorityOptions.length === 0
+                        ? "No priorities available"
+                        : "Select priority"
+                    }
+                    error={Boolean(
                       validateTrackingRulePriority(
                         editingRule.priority,
                         selectedSourceData.rules || [],
                         editingRule.id,
                       ),
                     )}
+                    disabled={trackingPriorityOptions.length === 0}
+                    className="w-full text-sm"
+                    zIndex={zIndex.popover}
                   />
                   <p className={`mt-1 text-xs ${tw.textSecondary}`}>
                     Must be unique on this source (
                     {TRACKING_RULE_PRIORITY_MIN}–{TRACKING_RULE_PRIORITY_MAX}).
-                    Lower priority is evaluated first.
+                    Taken priorities are omitted. Lower priority is evaluated
+                    first.
                   </p>
                 </div>
 
@@ -1616,7 +1706,11 @@ export default function OfferTrackingStep({
                   zIndex={zIndex.popover}
                 />
 
-                {editingRule.condition === "is_any_of" ? (
+                {!editingNeedsValue ? (
+                  <p className={`text-xs ${tw.textMuted}`}>
+                    This operator does not require a comparison value.
+                  </p>
+                ) : editingNeedsListValue ? (
                   <Input
                     label="Value"
                     type="text"
@@ -1633,6 +1727,43 @@ export default function OfferTrackingStep({
                       })
                     }
                   />
+                ) : editingNeedsRangeValue ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input
+                      label="From"
+                      type={
+                        editingParameterType === "number" ? "number" : "text"
+                      }
+                      placeholder="Min"
+                      value={splitTrackingRangeValue(editingRule.value)[0]}
+                      onChange={(value) => {
+                        const [, to] = splitTrackingRangeValue(
+                          editingRule.value,
+                        );
+                        setEditingRule({
+                          ...editingRule,
+                          value: joinTrackingRangeValue(String(value), to),
+                        });
+                      }}
+                    />
+                    <Input
+                      label="To"
+                      type={
+                        editingParameterType === "number" ? "number" : "text"
+                      }
+                      placeholder="Max"
+                      value={splitTrackingRangeValue(editingRule.value)[1]}
+                      onChange={(value) => {
+                        const [from] = splitTrackingRangeValue(
+                          editingRule.value,
+                        );
+                        setEditingRule({
+                          ...editingRule,
+                          value: joinTrackingRangeValue(from, String(value)),
+                        });
+                      }}
+                    />
+                  </div>
                 ) : editingParameterType === "boolean" ? (
                   <HeadlessSelect
                     label="Value"
@@ -1713,8 +1844,16 @@ export default function OfferTrackingStep({
                     }
                   />
                 )}
-                {editingParameterType === "datetime" ||
-                editingParameterType === "date" ? (
+                {editingNeedsListValue ? (
+                  <p className="text-xs text-gray-500 -mt-2">
+                    Comma-separated list (IN / NOT IN).
+                  </p>
+                ) : editingNeedsRangeValue ? (
+                  <p className="text-xs text-gray-500 -mt-2">
+                    BETWEEN requires both bounds.
+                  </p>
+                ) : editingParameterType === "datetime" ||
+                  editingParameterType === "date" ? (
                   <p className="text-xs text-gray-500 -mt-2">
                     {editingParameterType === "datetime"
                       ? "Uses the system date/time picker for an exact timestamp."

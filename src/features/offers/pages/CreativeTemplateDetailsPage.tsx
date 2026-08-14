@@ -4,7 +4,11 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
+import {
+  creativeTemplateService,
+  creativeTemplateText,
+  creativeTemplateHtml,
+} from "../../configurations/services/creativeTemplateService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { tw, color, button } from "../../../shared/utils/utils";
@@ -171,14 +175,16 @@ export default function CreativeTemplateDetailsPage() {
               Template Content
             </h3>
             <div className="space-y-6">
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Code
-                </label>
-                <p className={`text-sm ${tw.textPrimary} font-mono`}>
-                  {template.code}
-                </p>
-              </div>
+              {template.code ? (
+                <div className="space-y-1">
+                  <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
+                    Code
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} font-mono`}>
+                    {template.code}
+                  </p>
+                </div>
+              ) : null}
 
               {template.title && (
                 <div className="space-y-1">
@@ -189,24 +195,24 @@ export default function CreativeTemplateDetailsPage() {
                 </div>
               )}
 
-              {template.body_text && (
+              {creativeTemplateText(template) && (
                 <div className="space-y-1">
                   <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                     Body Text
                   </label>
                   <p className={`text-sm ${tw.textPrimary} whitespace-pre-wrap`}>
-                    {template.body_text}
+                    {creativeTemplateText(template)}
                   </p>
                 </div>
               )}
 
-              {template.body_html && (
+              {creativeTemplateHtml(template) && (
                 <div className="space-y-1">
                   <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                     Body HTML
                   </label>
                   <pre className={`text-xs ${tw.textPrimary} overflow-x-auto`}>
-                    {template.body_html}
+                    {creativeTemplateHtml(template)}
                   </pre>
                 </div>
               )}

@@ -19,7 +19,7 @@ import type {
 import RewardProviderFieldSchemaEditor, {
   validateRewardFieldSchema,
 } from "./RewardProviderFieldSchemaEditor";
-import { coerceSchemaDefaultValue } from "./rewardSchemaFieldUtils";
+import { coerceSchemaDefaultValue, isSchemaFieldEditable } from "./rewardSchemaFieldUtils";
 
 interface RewardTypeOption {
   value: string;
@@ -64,7 +64,7 @@ function normalizeFields(
     type: field.type,
     required: !!field.required,
     // Explicit boolean so backend always receives the flag (default editable).
-    is_editable: field.is_editable !== false,
+    is_editable: isSchemaFieldEditable(field),
     ...(field.placeholder?.trim()
       ? { placeholder: field.placeholder.trim() }
       : {}),

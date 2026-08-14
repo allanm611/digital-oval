@@ -19,13 +19,21 @@ export interface OfferRewardRule {
    * Required when the source has enabled rules — fulfilment runs when that rule matches.
    */
   tracking_rule_id?: string;
+  /**
+   * Evaluation order within this reward.
+   * Must be unique per reward; allowed range is 1–20 (lower runs first).
+   */
   priority: number;
   condition: string;
   value: string;
   reward_type: RuleRewardType;
   reward_value: string;
   fulfillment_response: string;
+  /** Customer-facing copy sent when fulfilment succeeds. */
   success_text: string;
+  /**
+   * Legacy alias of `failure_text`. Kept in sync on save for older readers.
+   */
   default_failure: string;
   /**
    * Selected error group catalog ids (numeric strings).
@@ -45,13 +53,12 @@ export interface OfferRewardRule {
   error_group: string;
   /**
    * Offer-level override message per selected error group id.
-   * Key = catalog id (string). Used when fulfilment matches that group's codes;
-   * falls back to the group's mapping user_message, then `failure_text`.
+   * Key = catalog id (string). Used when fulfilment matches that group's codes.
    */
   error_group_messages?: Record<string, string>;
   /**
-   * Catch-all failure message when no error-group mapping matches.
-   * Selected from known catalog messages in the reward configuration UI.
+   * Catch-all failure message. Sent when no error group is configured, and
+   * when a provider error does not match a selected group.
    */
   failure_text: string;
   enabled: boolean;

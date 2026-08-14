@@ -23,6 +23,8 @@ export interface OfferWizardMetadata {
   /** UI-only: persisted when API accepts only `route` */
   channel_route_id?: number;
   channel_route_kind?: OfferChannelRouteKind;
+  /** Fulfillment success/failure route; persisted until API has a first-class column */
+  transactional_route_id?: number;
 }
 
 /** Fields the database-service offers API accepts for routing (see Joi/schema). */
@@ -71,14 +73,22 @@ export function getWizardChannelRouteSnapshot(
     | "whatsapp_route_id"
     | "ussd_route_id"
     | "push_notification_route_id"
+    | "transactional_route_id"
   >,
   channelName?: string,
-): Pick<OfferWizardMetadata, "channel_route_id" | "channel_route_kind"> {
+): Pick<
+  OfferWizardMetadata,
+  "channel_route_id" | "channel_route_kind" | "transactional_route_id"
+> {
   const kind = resolveCommunicationChannelKind(channelName);
-  if (!kind) return {};
+  const transactional =
+    formData.transactional_route_id != null
+      ? { transactional_route_id: formData.transactional_route_id }
+      : {};
+  if (!kind) return transactional;
   const id = getEffectiveRouteIdForChannel(formData, kind);
-  if (id == null) return { channel_route_kind: kind };
-  return { channel_route_id: id, channel_route_kind: kind };
+  if (id == null) return { channel_route_kind: kind, ...transactional };
+  return { channel_route_id: id, channel_route_kind: kind, ...transactional };
 }
 
 export function mergeOfferWizardMetadata(
@@ -87,7 +97,7 @@ export function mergeOfferWizardMetadata(
   trackingSources: unknown[],
   routeSnapshot?: Pick<
     OfferWizardMetadata,
-    "channel_route_id" | "channel_route_kind"
+    "channel_route_id" | "channel_route_kind" | "transactional_route_id"
   >,
 ): OfferWizardMetadata {
   const base =
@@ -129,6 +139,7 @@ export function parseOfferWizardMetadata(
   trackingSources: unknown[];
   channelRouteId?: number;
   channelRouteKind?: OfferChannelRouteKind;
+  transactionalRouteId?: number;
 } {
   const empty = { rewards: [] as OfferReward[], trackingSources: [] as unknown[] };
   const m =
@@ -165,6 +176,10 @@ export function parseOfferWizardMetadata(
     channelRouteId:
       typeof m?.channel_route_id === "number" ? m.channel_route_id : undefined,
     channelRouteKind: m?.channel_route_kind,
+    transactionalRouteId:
+      typeof m?.transactional_route_id === "number"
+        ? m.transactional_route_id
+        : undefined,
   };
 }
 
@@ -207,6 +222,7 @@ export function buildOfferCreatePayload(
     whatsapp_route_id: _wa,
     ussd_route_id: _ussd,
     push_notification_route_id: _push,
+    transactional_route_id: _transactional,
     route: _legacyRoute,
     communication_channel_id: _channelId,
     metadata: _metadata,

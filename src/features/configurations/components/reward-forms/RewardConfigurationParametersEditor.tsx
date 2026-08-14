@@ -16,6 +16,7 @@ import {
   buildInitialConfigValues,
   collectSchemaFieldErrors,
   isSchemaFieldEditable,
+  lockedSchemaFieldValue,
   normalizeConfigValueForApi,
 } from "./rewardSchemaFieldUtils";
 
@@ -35,12 +36,9 @@ export function normalizeConfigFieldsWithEditability(
 ): Record<string, unknown> {
   const config: Record<string, unknown> = {};
   fields.forEach((field) => {
-    const sourceValue =
-      !isSchemaFieldEditable(field) &&
-      masterValues &&
-      masterValues[field.name] !== undefined
-        ? masterValues[field.name]
-        : values[field.name];
+    const sourceValue = !isSchemaFieldEditable(field)
+      ? lockedSchemaFieldValue(field, masterValues)
+      : values[field.name];
     config[field.name] = normalizeConfigValueForApi(field, sourceValue);
   });
   return config;
@@ -111,7 +109,7 @@ function FieldGrid({
             />
             {fieldLocked && !disabled && (
               <p className={`text-xs ${tw.textMuted} mt-1`}>
-                
+                Locked by provider schema — master template value is used.
               </p>
             )}
           </div>
