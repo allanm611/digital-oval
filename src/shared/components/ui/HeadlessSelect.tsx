@@ -51,7 +51,12 @@ export default function HeadlessSelect({
   const buttonRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((option) => option.value === value);
+  const valueKey = String(value ?? "");
+  const isSameValue = (optionValue: string | number) =>
+    String(optionValue) === valueKey;
+
+  // Coerce to string so number/string option values still match (e.g. template ids).
+  const selectedOption = options.find((option) => isSameValue(option.value));
 
   const filteredOptions = searchable
     ? options.filter((option) =>
@@ -121,7 +126,20 @@ export default function HeadlessSelect({
     }
   }, [isOpen]);
 
+  // Empty string is "no selection" for floating labels. Call sites often also pass a
+  // `{ value: "", label: "Select..." }` sentinel; that must NOT render as button text
+  // while the floating label is still centered (otherwise label + placeholder overlap).
+  // Plain (non-floating) selects may still use empty value as a real choice ("All …").
   const hasValue = value !== "" && value !== null && value !== undefined;
+  const shouldFloatLabel = Boolean(label) && (isOpen || hasValue);
+  const hasDisplaySelection = hasValue || (!label && !!selectedOption);
+  const buttonDisplayText = hasDisplaySelection
+    ? (selectedOption?.label ?? String(value))
+    : label
+      ? shouldFloatLabel
+        ? placeholder
+        : ""
+      : placeholder;
 
   // Without floating label (backward compatible)
   if (!label) {
@@ -161,10 +179,10 @@ export default function HeadlessSelect({
                 <span
                   className="block text-sm"
                   style={{
-                    color: selectedOption ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+                    color: hasDisplaySelection ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
                   }}
                 >
-                  {selectedOption ? selectedOption.label : placeholder}
+                  {buttonDisplayText}
                 </span>
               </div>
               <ChevronUpDownIcon
@@ -240,7 +258,7 @@ export default function HeadlessSelect({
                         : "cursor-pointer"
                     }`}
                     style={
-                      value === option.value
+                      isSameValue(option.value)
                         ? {
                             backgroundColor: 'var(--c-interactive-active)',
                             color: 'var(--c-text-primary)',
@@ -248,13 +266,13 @@ export default function HeadlessSelect({
                         : {}
                     }
                     onMouseEnter={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
                         (e.currentTarget as HTMLElement).style.color = 'var(--c-text-primary)';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = '';
                         (e.currentTarget as HTMLElement).style.color = '';
                       }
@@ -262,7 +280,7 @@ export default function HeadlessSelect({
                   >
                     <span
                       className={`block text-sm ${
-                        value === option.value ? "font-medium" : "font-normal"
+                        isSameValue(option.value) ? "font-medium" : "font-normal"
                       }`}
                       style={{ color: 'inherit' }}
                     >
@@ -315,11 +333,12 @@ export default function HeadlessSelect({
             <div className="flex items-center justify-between w-full">
               <div className="flex-1 min-w-0">
                 <span
-                  className={`block text-sm ${
-                    hasValue ? "text-gray-900" : "text-gray-500"
-                  }`}
+                  className="block text-sm"
+                  style={{
+                    color: hasDisplaySelection ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+                  }}
                 >
-                  {selectedOption && value ? selectedOption.label : (label ? "" : placeholder)}
+                  {buttonDisplayText}
                 </span>
               </div>
               <ChevronUpDownIcon
@@ -395,7 +414,7 @@ export default function HeadlessSelect({
                         : "cursor-pointer"
                     }`}
                     style={
-                      value === option.value
+                      isSameValue(option.value)
                         ? {
                             backgroundColor: 'var(--c-interactive-active)',
                             color: 'var(--c-text-primary)',
@@ -403,13 +422,13 @@ export default function HeadlessSelect({
                         : {}
                     }
                     onMouseEnter={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
                         (e.currentTarget as HTMLElement).style.color = 'var(--c-text-primary)';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = '';
                         (e.currentTarget as HTMLElement).style.color = '';
                       }
@@ -417,7 +436,7 @@ export default function HeadlessSelect({
                   >
                     <span
                       className={`block text-sm ${
-                        value === option.value ? "font-medium" : "font-normal"
+                        isSameValue(option.value) ? "font-medium" : "font-normal"
                       }`}
                       style={{ color: 'inherit' }}
                     >
@@ -440,16 +459,16 @@ export default function HeadlessSelect({
         />
       )}
 
-      {/* Floating Label */}
+      {/* Floating Label — only floats when open or a real (non-empty) value is selected */}
       {label && (
         <label
           className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium z-10
-            ${isOpen || hasValue
+            ${shouldFloatLabel
               ? "top-0 -translate-y-1/2 px-1 text-xs"
               : "top-1/2 -translate-y-1/2 text-sm"
             }`}
           style={
-            isOpen || hasValue
+            shouldFloatLabel
               ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
               : { color: 'var(--c-text-secondary)' }
           }

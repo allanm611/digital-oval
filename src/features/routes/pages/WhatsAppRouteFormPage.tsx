@@ -9,7 +9,10 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { WhatsAppRoute, CreateWhatsAppRouteRequest } from "../types/whatsappRoute";
 import { whatsappRouteService } from "../services/whatsappRouteService";
-import { whatsappGatewayConfigService } from "../../configurations/services/whatsappGatewayConfigService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 import { MESSAGE_TEMPLATE_OPTIONS } from "../constants/whatsappRouteEnums";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -76,8 +79,12 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
   const loadGatewayConfigs = async () => {
     try {
       setIsLoadingConfigs(true);
-      const configs = await whatsappGatewayConfigService.getAllConfigs();
-      setGatewayConfigs(configs);
+      const configs = await gatewayConfigurationService.getAll();
+      setGatewayConfigs(
+        filterGatewayConfigsByChannelType(configs, "WHATSAPP").filter(
+          (c) => c.is_active !== false,
+        ),
+      );
     } catch (err) {
       showError(t.common.error, "Failed to load gateway configurations");
     } finally {
@@ -354,15 +361,15 @@ export default function WhatsAppRouteFormPage({ mode }: WhatsAppRouteFormPagePro
                   <div>
                     <HeadlessSelect
                       label="Backup Route"
-                      options={[
-                        { value: "", label: "Select a backup route" },
-                        ...(allRoutes
+                      options={
+                        allRoutes
                           .filter((r) => r.id !== (route?.id || formData.backup_route_id))
                           .map((route) => ({
                             value: String(route.id),
                             label: route.name,
-                          })) || []),
-                      ]}
+                          })) || []
+                      }
+                      placeholder="Select a backup route"
                       value={String(formData.backup_route_id || "")}
                       onChange={(value) =>
                         setFormData((prev) => ({

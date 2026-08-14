@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.20...v1.5.0) (2026-07-28)
+
+
+### Features
+
+* connected routes for route management, gateway providers ([74fe005](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/74fe0058da79245955bc814d99e7f090aec2ccc7))
+
 # 1.0.0 (2026-07-27)
 
 

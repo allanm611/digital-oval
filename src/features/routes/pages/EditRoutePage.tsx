@@ -15,14 +15,14 @@ import { emailRouteService } from "../services/emailRouteService";
 import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
 import { whatsappRouteService } from "../services/whatsappRouteService";
 import { ussdRouteService } from "../services/ussdRouteService";
-import { smsGatewayConfigService } from "../../configurations/services/smsGatewayConfigService";
-import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
-import { pushGatewayConfigService } from "../../configurations/services/pushGatewayConfigService";
-import { whatsappGatewayConfigService } from "../../configurations/services/whatsappGatewayConfigService";
-import { ussdGatewayConfigService } from "../../configurations/services/ussdGatewayConfigService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { GatewayConfiguration } from "../../configurations/types/gatewayConfiguration";
 
 type Channel = "SMS" | "EMAIL" | "PUSH" | "WHATSAPP" | "USSD" | "";
 
@@ -91,7 +91,7 @@ export default function EditRoutePage() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [channels, setChannels] = useState<any[]>([]);
-  const [gatewayConfigs, setGatewayConfigs] = useState<any[]>([]);
+  const [gatewayConfigs, setGatewayConfigs] = useState<GatewayConfiguration[]>([]);
   const [backupRoutes, setBackupRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -101,11 +101,11 @@ export default function EditRoutePage() {
   }, [id]);
 
   useEffect(() => {
-    if (channels.length > 0) {
+    if (formData.channel) {
       loadGatewayConfigs();
       loadBackupRoutes();
     }
-  }, [formData.channel]);
+  }, [formData.channel, channels]);
 
   const loadInitialData = async () => {
     try {
@@ -127,6 +127,16 @@ export default function EditRoutePage() {
       console.error("Failed to load channels:", error);
       setChannels([]);
     }
+  };
+
+  const getChannelType = (code: string): Channel => {
+    const codeUpper = code?.toUpperCase() || "";
+    if (codeUpper.includes("SMS")) return "SMS";
+    if (codeUpper.includes("EMAIL")) return "EMAIL";
+    if (codeUpper.includes("PUSH")) return "PUSH";
+    if (codeUpper.includes("MESSENGER") || codeUpper.includes("WHATSAPP")) return "WHATSAPP";
+    if (codeUpper.includes("USSD")) return "USSD";
+    return "";
   };
 
   const loadRouteData = async () => {
@@ -190,20 +200,23 @@ export default function EditRoutePage() {
   };
 
   const loadGatewayConfigs = async () => {
+    if (!formData.channel) {
+      setGatewayConfigs([]);
+      return;
+    }
     try {
-      let configs;
-      if (formData.channel === "SMS") {
-        configs = await smsGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "EMAIL") {
-        configs = await emailGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "PUSH") {
-        configs = await pushGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "WHATSAPP") {
-        configs = await whatsappGatewayConfigService.getAllConfigs();
-      } else if (formData.channel === "USSD") {
-        configs = await ussdGatewayConfigService.getAllConfigs();
-      }
-      setGatewayConfigs(configs || []);
+      const matchedChannel = channels.find(
+        (ch) => getChannelType(ch.code || ch.name) === formData.channel,
+      );
+      const data = await gatewayConfigurationService.getAll(
+        matchedChannel ? { channel_id: matchedChannel.id } : undefined,
+      );
+      const filtered = matchedChannel
+        ? data.filter((c) => c.is_active !== false)
+        : filterGatewayConfigsByChannelType(data, formData.channel).filter(
+            (c) => c.is_active !== false,
+          );
+      setGatewayConfigs(filtered);
     } catch (error) {
       console.error("Failed to load gateway configs:", error);
       setGatewayConfigs([]);

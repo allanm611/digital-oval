@@ -675,7 +675,6 @@ export default function CreateJobWorkflowStepPage() {
                     <HeadlessSelect
                       label={`${t.jobs.jobWorkflow.job} *`}
                       options={[
-                        { value: "", label: t.jobs.jobWorkflow.selectJob },
                         ...jobs.map((job) => ({
                           value: job.id,
                           label: `${job.name} (${job.code})`,

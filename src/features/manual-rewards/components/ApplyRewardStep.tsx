@@ -52,6 +52,8 @@ export default function ApplyRewardStep({
     switch (data.rewardType) {
       case "bundle":
         return t.manualRewards.rewardTypeBundle;
+      case "airtime":
+        return t.manualRewards.rewardTypeAirtime;
       case "points":
         return t.manualRewards.rewardTypePoints;
       case "discount":

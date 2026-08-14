@@ -186,7 +186,6 @@ export default function CreateWorkflowPage() {
               <HeadlessSelect
                 label={t.common.type}
                 options={[
-                  { value: "", label: "Select a type..." },
                   ...workflowTypes.map((type) => ({
                     value: type,
                     label: type,
@@ -199,7 +198,7 @@ export default function CreateWorkflowPage() {
                     workflow_type: val ? String(val) : null,
                   })
                 }
-                placeholder={t.workflows.enterWorkflowType}
+                placeholder="Select a type..."
                 disabled={isLoadingTypes}
                 className="w-full"
               />

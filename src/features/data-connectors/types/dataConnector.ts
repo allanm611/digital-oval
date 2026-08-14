@@ -68,10 +68,51 @@ export interface DataConnectorConfiguration {
   // recharge_event?: string;
 
 
-  // API fields
-  method?: 'GET' | 'POST';
-  content_type?: 'XML' | 'JSON' | 'QUERY_STRING';
+  // API fields (Postman-aligned request model)
+  base_url?: string;
+  url?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+  content_type?: 'XML' | 'JSON' | 'QUERY_STRING' | 'TEXT' | 'FORM_DATA' | 'NONE';
   request_headers?: Record<string, string>; // renamed from headers
+  header_rows?: Array<{
+    id: string;
+    key: string;
+    value: string;
+    enabled: boolean;
+    description?: string;
+  }>;
+  query_params?: Array<{
+    id: string;
+    key: string;
+    value: string;
+    enabled: boolean;
+    description?: string;
+  }>;
+  auth_type?: 'none' | 'basic' | 'bearer' | 'api_key';
+  auth_config?: {
+    username?: string;
+    password?: string;
+    token?: string;
+    api_key?: string;
+    api_key_name?: string;
+    api_key_add_to?: 'header' | 'query';
+  };
+  bearer_token?: string;
+  body_mode?: 'none' | 'raw' | 'urlencoded' | 'formdata';
+  raw_language?: 'json' | 'xml' | 'text';
+  urlencoded_params?: Array<{
+    id: string;
+    key: string;
+    value: string;
+    enabled: boolean;
+  }>;
+  form_data_params?: Array<{
+    id: string;
+    key: string;
+    value: string;
+    enabled: boolean;
+    type?: 'text' | 'file';
+  }>;
   payload_template?: string;
   enable_proxy?: boolean; // renamed from proxy_enabled
   proxy_url?: string;
@@ -87,6 +128,8 @@ export interface DataConnectorConfiguration {
   result_description?: string; // Central API Response Result/Description
   xpath?: string; // Central API Response XPATH (renamed from success_xpath)
   api_key?: string;
+  api_key_name?: string;
+  api_key_add_to?: 'header' | 'query';
 
   // Legacy/compatibility fields (deprecated but kept for backward compatibility)
   headers?: Record<string, string>; // deprecated, use request_headers

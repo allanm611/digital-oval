@@ -145,6 +145,16 @@ const allConfigurations = [
     navigationPath: "/dashboard/offer-tracking-sources",
   },
   {
+    id: "tracking-sources",
+    name: "Tracking Sources",
+    description:
+      "Engine attribution catalog (codes, windows, fields) used by offer reward mappings",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/tracking-sources",
+  },
+  {
     id: "creative-templates",
     name: "Creative Templates",
     description:
@@ -162,6 +172,26 @@ const allConfigurations = [
     category: "Offer Configuration",
     status: "active",
     navigationPath: "/dashboard/reward-types",
+  },
+  {
+    id: "reward-providers",
+    name: "Reward Providers",
+    description:
+      "Define reward provider integrations and allowed reward types",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/reward-providers",
+  },
+  {
+    id: "reward-configurations",
+    name: "Reward Templates",
+    description:
+      "Manage auth and payload settings for reward delivery integrations",
+    type: "offer",
+    category: "Offer Configuration",
+    status: "active",
+    navigationPath: "/dashboard/reward-configurations",
   },
   {
     id: "sender-ids",

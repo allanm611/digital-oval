@@ -20,6 +20,8 @@ export default function PreviewRewardStep({
     switch (data.rewardType) {
       case "bundle":
         return t.manualRewards.rewardTypeBundle;
+      case "airtime":
+        return t.manualRewards.rewardTypeAirtime;
       case "points":
         return t.manualRewards.rewardTypePoints;
       case "discount":
@@ -148,7 +150,12 @@ export default function PreviewRewardStep({
                 <p className={`text-sm font-medium ${tw.textPrimary} mt-0.5`}>
                   {getRewardTypeLabel()}: {getRewardValueDisplay()}
                 </p>
-                {data.bundleTrack && (
+        {data.rewardConfigurationName && (
+                  <p className={`text-xs ${tw.textMuted} mt-1`}>
+                    Configuration: {data.rewardConfigurationName}
+                  </p>
+                )}
+                {data.bundleTrack && data.bundleTrack !== data.rewardConfigurationName && (
                   <p className={`text-xs ${tw.textMuted} mt-1`}>
                     {t.manualRewards.bundleTrack}: {data.bundleTrack}
                   </p>

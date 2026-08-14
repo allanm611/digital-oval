@@ -283,13 +283,12 @@ export default function AddVIPMembersModal({
                         }
                       }}
                       options={[
-                        { value: "", label: "Select a customer" },
                         ...customers.map((customer) => ({
                           value: String(customer.customerId || customer.id),
                           label: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Unknown",
                         })),
                       ]}
-                      placeholder="Select customer..."
+                      placeholder="Select a customer"
                       disabled={loadingCustomers}
                     />
                   </div>
@@ -403,13 +402,12 @@ export default function AddVIPMembersModal({
                     }
                   }}
                   options={[
-                    { value: "", label: "Select a VIP list" },
                     ...vipLists.map((list) => ({
                       value: String(list.id),
                       label: list.name,
                     })),
                   ]}
-                  placeholder="Choose a VIP list..."
+                  placeholder="Select a VIP list"
                   disabled={loadingCustomers}
                 />
               </div>

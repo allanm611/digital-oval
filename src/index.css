@@ -3556,3 +3556,9 @@ input[type="radio"] {
   cursor: pointer;
   background-color: white;
 }
+
+/* Custom password visibility toggle — hide browser-native reveal (e.g. Edge) */
+input.c-input--password-toggle::-ms-reveal,
+input.c-input--password-toggle::-ms-clear {
+  display: none;
+}

@@ -1232,10 +1232,10 @@ export function useBackendConfigurationData(
             response = await offerCreativeService.update(id, payload);
             return response?.data || response;
           case "smsRoutes":
-            response = await smsRouteService.updateRoute(payload);
+            response = await smsRouteService.updateRoute(id, payload);
             return response;
           case "emailRoutes":
-            response = await emailRouteService.updateRoute(payload);
+            response = await emailRouteService.updateRoute(id, payload);
             return response;
           case "comboTypes":
             response = await comboTypeService.updateComboType(id, payload);

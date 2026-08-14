@@ -1,15 +1,24 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
-import { SMSRoute, CreateSMSRouteRequest, UpdateSMSRouteRequest } from "../types/smsRoute";
+import { extractErrorMessage } from "../../../shared/utils/errorHandler";
+import {
+  CreateSMSRouteRequest,
+  SMSRoute,
+  UpdateSMSRouteRequest,
+} from "../types/smsRoute";
+import { routeService } from "./routeService";
 
-const BASE_URL = buildApiUrl("/sms-routes");
+/**
+ * @deprecated Prefer importing from `./routeService`.
+ * Kept so existing imports (`smsRouteService`) continue to work against `/routes`.
+ */
+const BASE_URL = buildApiUrl("/routes");
 
 class SMSRouteService {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {
-    const url = `${BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
       headers: {
         ...getAuthHeaders(),
         ...options.headers,
@@ -18,63 +27,39 @@ class SMSRouteService {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch from ${url}: ${response.statusText}`);
+      const errorBody = await response.text();
+      throw new Error(extractErrorMessage(errorBody, response.status));
     }
 
-    return response.json();
-  }
-
-  async getAllRoutes() {
-    const data = await this.request<{ success: boolean; data: SMSRoute[] }>("");
-    return data.data;
-  }
-
-  async getRouteById(id: number) {
-    const data = await this.request<{ success: boolean; data: SMSRoute[] }>("");
-    const route = data.data.find(r => r.id === id);
-    if (!route) {
-      throw new Error(`SMS route with ID ${id} not found`);
+    const json = await response.json();
+    if (json && json.success === false) {
+      throw new Error(json.error || json.message || "Request failed");
     }
-    return route;
+    return json;
   }
 
-  async createRoute(data: CreateSMSRouteRequest) {
-    const response = await this.request<{ success: boolean; data: SMSRoute }>(
-      "",
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
+  async getAllRoutes(): Promise<SMSRoute[]> {
+    return routeService.getRoutesByChannel("SMS");
   }
 
-  async updateRoute(id: number, data: UpdateSMSRouteRequest) {
-    const response = await this.request<{ success: boolean; data: SMSRoute }>(
-      `/${id}`,
-      {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
+  async getRouteById(id: number): Promise<SMSRoute> {
+    return routeService.getRouteByIdEnriched(id);
+  }
+
+  async createRoute(data: CreateSMSRouteRequest): Promise<SMSRoute> {
+    return routeService.createRoute(data);
+  }
+
+  async updateRoute(id: number, data: UpdateSMSRouteRequest): Promise<SMSRoute> {
+    return routeService.updateRoute(id, data);
   }
 
   async deleteRoute(id: number) {
-    const response = await this.request<{ success: boolean; message: string }>(
-      `/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-    return response;
+    return routeService.deleteRoute(id);
   }
 }
 
 export const smsRouteService = new SMSRouteService();
+
+// Re-export canonical service for callers that need all channels
+export { routeService } from "./routeService";

@@ -583,7 +583,6 @@ export default function CampaignDefinitionStep({
             <HeadlessSelect
               label="Line of Business *"
               options={[
-                { value: "", label: "Select line of business", id: "empty" },
                 ...linesOfBusiness
                   .filter((lob) => lob.is_active !== false)
                   .map((lob) => ({
@@ -604,6 +603,7 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
+              placeholder="Select line of business"
               searchable={true}
               disabled={lobLoading}
               error={hasError('line_of_business')}
@@ -614,7 +614,6 @@ export default function CampaignDefinitionStep({
             <HeadlessSelect
               label="Department"
               options={[
-                { value: "", label: "Select department (optional)", id: "empty" },
                 ...departmentsData
                   .filter((dept) => dept.is_active !== false)
                   .map((dept) => ({
@@ -632,6 +631,7 @@ export default function CampaignDefinitionStep({
                   department: selected?.name,
                 } as any);
               }}
+              placeholder="Select department (optional)"
               searchable={true}
               disabled={departmentsLoading}
             />
@@ -709,7 +709,6 @@ export default function CampaignDefinitionStep({
             <HeadlessSelect
               label="Program"
               options={[
-                { value: "", label: "Select program (optional)", id: "empty" },
                 ...programs.map((program) => ({
                   value: String(program.id),
                   label: program.name,
@@ -723,6 +722,7 @@ export default function CampaignDefinitionStep({
                   program_id: value ? Number(value) : undefined,
                 } as CreateCampaignRequest);
               }}
+              placeholder="Select program (optional)"
               searchable={true}
               disabled={isLoadingPrograms}
             />
@@ -734,7 +734,6 @@ export default function CampaignDefinitionStep({
             <HeadlessSelect
               label="Primary Objective *"
               options={[
-                { value: "", label: "Select objective", id: "empty" },
                 ...objectives
                   .filter((objective) => objective.is_active !== false)
                   .map((objective) => ({
@@ -753,6 +752,7 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
+              placeholder="Select objective"
               searchable={true}
               disabled={objectivesLoading}
               error={hasError('objective')}

@@ -171,6 +171,16 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/offer-tracking-sources",
       },
       {
+        id: "tracking-sources",
+        name: "Tracking Sources",
+        description:
+          "Engine attribution catalog (codes, windows, fields) used by offer reward mappings",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/tracking-sources",
+      },
+      {
         id: "offer-types",
         name: "Offer Types",
         description: "Configure different types of offers and promotions",
@@ -232,6 +242,26 @@ export default function ConfigurationPage() {
         category: "Offer Configuration",
         status: "active",
         navigationPath: "/dashboard/reward-types",
+      },
+      {
+        id: "reward-providers",
+        name: "Reward Providers",
+        description:
+          "Define reward provider integrations and allowed reward types for offers and manual rewards",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/reward-providers",
+      },
+      {
+        id: "reward-configurations",
+        name: "Reward Templates",
+        description:
+          "Manage auth and payload templates for reward delivery via provider integrations",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/reward-configurations",
       },
       {
         id: "segment-catalogs",

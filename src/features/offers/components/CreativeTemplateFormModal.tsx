@@ -304,7 +304,6 @@ export default function CreativeTemplateFormModal({
                 }));
               }}
               options={[
-                { value: "", label: "Select a language" },
                 ...languages.map((lang) => ({ value: lang.id.toString(), label: lang.name }))
               ]}
               placeholder="Select a language"

@@ -829,6 +829,8 @@ export interface Translations {
     rewardTypeLabel: string;
     rewardTypeBundle: string;
     rewardTypeBundleDesc: string;
+    rewardTypeAirtime: string;
+    rewardTypeAirtimeDesc: string;
     rewardTypePoints: string;
     rewardTypePointsDesc: string;
     rewardTypeDiscount: string;
@@ -837,10 +839,12 @@ export interface Translations {
     rewardTypeCashbackDesc: string;
     rewardValueLabel: string;
     rewardValuePlaceholderBundle: string;
+    rewardValuePlaceholderAirtime: string;
     rewardValuePlaceholderPoints: string;
     rewardValuePlaceholderDiscount: string;
     rewardValuePlaceholderCashback: string;
     rewardValueHelperBundle: string;
+    rewardValueHelperAirtime: string;
     rewardValueHelperPoints: string;
     rewardValueHelperDiscount: string;
     rewardValueHelperCashback: string;
@@ -913,6 +917,8 @@ export interface Translations {
     rewardSummary: string;
     rewardTypeBundle: string;
     rewardTypeBundleDesc: string;
+    rewardTypeAirtime: string;
+    rewardTypeAirtimeDesc: string;
     rewardTypeCashback: string;
     rewardTypeCashbackDesc: string;
     rewardTypeDiscount: string;
@@ -921,11 +927,13 @@ export interface Translations {
     rewardTypePoints: string;
     rewardTypePointsDesc: string;
     rewardValueHelperBundle: string;
+    rewardValueHelperAirtime: string;
     rewardValueHelperCashback: string;
     rewardValueHelperDiscount: string;
     rewardValueHelperPoints: string;
     rewardValueLabel: string;
     rewardValuePlaceholderBundle: string;
+    rewardValuePlaceholderAirtime: string;
     rewardValuePlaceholderCashback: string;
     rewardValuePlaceholderDiscount: string;
     rewardValuePlaceholderPoints: string;

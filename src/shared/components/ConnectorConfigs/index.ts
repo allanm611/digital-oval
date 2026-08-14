@@ -8,3 +8,9 @@ export { SMSInboxConfig } from "./SMSInboxConfig";
 export { SFTPConfig } from "./SFTPConfig";
 export { FTPConfig } from "./FTPConfig";
 export type { ConfigComponentProps } from "./types";
+export type {
+  ApiAuthType,
+  ApiBodyMode,
+  ApiHttpMethod,
+  ApiKeyValueRow,
+} from "./apiConfigTypes";

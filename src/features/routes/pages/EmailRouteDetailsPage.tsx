@@ -5,7 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { EmailRoute } from "../types/emailRoute";
 import { emailRouteService } from "../services/emailRouteService";
-import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
+import { gatewayConfigurationService } from "../../configurations/services/gatewayConfigurationService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -50,11 +50,8 @@ export default function EmailRouteDetailsPage() {
 
   const loadGatewayConfig = async (configId: number) => {
     try {
-      const configs = await emailGatewayConfigService.getAllConfigs();
-      const config = configs.find(c => c.id === configId);
-      if (config) {
-        setGatewayConfig(config);
-      }
+      const config = await gatewayConfigurationService.getById(configId);
+      setGatewayConfig(config);
     } catch (err) {
       // Silent fail
     }
@@ -220,7 +217,7 @@ export default function EmailRouteDetailsPage() {
                     <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                       {t.routes.providerType}
                     </label>
-                    <p className={`text-base ${tw.textPrimary}`}>{gatewayConfig.provider_type}</p>
+                    <p className={`text-base ${tw.textPrimary}`}>{gatewayConfig.provider_name || gatewayConfig.provider_type || "—"}</p>
                   </div>
                 </>
               )}

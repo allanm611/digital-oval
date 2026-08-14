@@ -20,9 +20,9 @@ import { senderIdService } from "../../configurations/services/senderIdService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { timezoneService } from "../../configurations/services/timezoneService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
-import { WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
-import { PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA } from "../../routes/services/pushNotificationRouteService";
-import { USSD_ROUTES_DUMMY_DATA } from "../../routes/services/ussdRouteService";
+import { whatsappRouteService } from "../../routes/services/whatsappRouteService";
+import { pushNotificationRouteService } from "../../routes/services/pushNotificationRouteService";
+import { ussdRouteService } from "../../routes/services/ussdRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
@@ -250,12 +250,12 @@ export default function SettingsPage() {
   // Routes and communication channels
   const [communicationChannels, setCommunicationChannels] = useState<CommunicationChannel[]>([]);
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
+  const [ussdRoutes, setUssdRoutes] = useState<SMSRoute[]>([]);
+  const [whatsappRoutes, setWhatsappRoutes] = useState<SMSRoute[]>([]);
+  const [pushRoutes, setPushRoutes] = useState<SMSRoute[]>([]);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
+  const [channelRoutesLoading, setChannelRoutesLoading] = useState(false);
 
-  // Hardcoded routes from configuration
-  const ussdRoutes = USSD_ROUTES_DUMMY_DATA;
-  const whatsappRoutes = WHATSAPP_ROUTES_DUMMY_DATA;
-  const pushRoutes = PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA;
   const emailRoutes = hardcodedEmailRoutes.map(r => ({
     id: r.id,
     name: r.name,
@@ -301,17 +301,29 @@ export default function SettingsPage() {
     loadSubscriptions();
   }, []);
 
-  // Load SMS routes and communication channels
+  // Load routes and communication channels
   useEffect(() => {
+    const activeOnly = (routes: SMSRoute[] | unknown) =>
+      Array.isArray(routes) ? routes.filter((r) => r.is_active) : [];
+
     const loadRoutes = async () => {
       try {
         setSmsRoutesLoading(true);
-        const smsRoutesData = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r: any) => r.is_active) : []);
-      } catch {
-        setSmsRoutes([]);
+        setChannelRoutesLoading(true);
+        const [smsRoutesData, ussdRoutesData, whatsappRoutesData, pushRoutesData] =
+          await Promise.all([
+            smsRouteService.getAllRoutes().catch(() => []),
+            ussdRouteService.getAllRoutes().catch(() => []),
+            whatsappRouteService.getAllRoutes().catch(() => []),
+            pushNotificationRouteService.getAllRoutes().catch(() => []),
+          ]);
+        setSmsRoutes(activeOnly(smsRoutesData));
+        setUssdRoutes(activeOnly(ussdRoutesData));
+        setWhatsappRoutes(activeOnly(whatsappRoutesData));
+        setPushRoutes(activeOnly(pushRoutesData));
       } finally {
         setSmsRoutesLoading(false);
+        setChannelRoutesLoading(false);
       }
     };
 
@@ -1103,18 +1115,18 @@ export default function SettingsPage() {
               routeType = "Email";
               selectedRouteId = settings.default_email_route_id;
             } else if (selectedChannelUpper === "USSD") {
-              routesList = ussdRoutes.filter((r: any) => r.is_active);
-              routeLoading = false;
+              routesList = ussdRoutes;
+              routeLoading = channelRoutesLoading;
               routeType = "USSD";
               selectedRouteId = settings.default_ussd_route_id;
             } else if (selectedChannelUpper.includes("WHATSAPP")) {
-              routesList = whatsappRoutes.filter((r: any) => r.is_active);
-              routeLoading = false;
+              routesList = whatsappRoutes;
+              routeLoading = channelRoutesLoading;
               routeType = "WhatsApp";
               selectedRouteId = settings.default_whatsapp_route_id;
             } else if (selectedChannelUpper.includes("PUSH")) {
-              routesList = pushRoutes.filter((r: any) => r.is_active);
-              routeLoading = false;
+              routesList = pushRoutes;
+              routeLoading = channelRoutesLoading;
               routeType = "Push Notification";
               selectedRouteId = settings.default_push_route_id;
             }

@@ -4,39 +4,32 @@ import { Trash2, Edit, Plus, Eye } from "lucide-react";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import DateFormatter from "../../../shared/components/DateFormatter";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
-import { smsRouteService } from "../services/smsRouteService";
-import { emailRouteService } from "../services/emailRouteService";
-import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
-import { whatsappRouteService } from "../services/whatsappRouteService";
-import { ussdRouteService } from "../services/ussdRouteService";
-import { SMSRoute } from "../types/smsRoute";
-import { EmailRoute } from "../types/emailRoute";
-import { PushNotificationRoute } from "../types/pushNotificationRoute";
-import { WhatsAppRoute } from "../types/whatsappRoute";
+import { routeService } from "../services/routeService";
+import { SMSRoute, RouteChannelType } from "../types/smsRoute";
 
-type CommunicationChannel = "SMS" | "EMAIL" | "WHATSAPP" | "PUSH" | "USSD";
+type CommunicationChannel = Exclude<RouteChannelType, "">;
 
 interface UnifiedRoute {
   id: number;
   name: string;
   description?: string;
-  channel: CommunicationChannel;
+  channel: CommunicationChannel | "UNKNOWN";
   gateway_provider?: string;
+  configuration_name?: string;
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  originalRoute: SMSRoute | EmailRoute | PushNotificationRoute | WhatsAppRoute;
+  created_at?: string;
+  updated_at?: string;
+  originalRoute: SMSRoute;
 }
 
 const formatDisplayValue = (value: string): string => {
@@ -48,23 +41,15 @@ const formatDisplayValue = (value: string): string => {
     PUSH: "Push",
     WHATSAPP: "WhatsApp",
     USSD: "USSD",
-    SENDGRID: "SendGrid",
-    AWS_SES: "AWS SES",
-    MAILGUN: "Mailgun",
-    TWILIO: "Twilio",
-    MESSAGEBIRD: "MessageBird",
-    FIREBASE: "Firebase",
-    ONESIGNAL: "OneSignal",
-    APNS: "Apple APNS",
-    INFOBIP: "Infobip",
-    INTERNAL: "Internal",
-    EXTERNAL_PROVIDER_A: "External Provider A",
   };
 
-  return displayMap[value] || value
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+  return (
+    displayMap[value] ||
+    value
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ")
+  );
 };
 
 export default function RoutesManagementPage() {
@@ -75,34 +60,17 @@ export default function RoutesManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterChannel, setFilterChannel] = useState<string>("all");
-  const [showColumnPicker, setShowColumnPicker] = useState(false);
-  const [togglingStatus, setTogglingStatus] = useState<{
-    id: number;
-    channel: CommunicationChannel;
-  } | null>(null);
-  const [deleteRouteData, setDeleteRouteData] = useState<{ id: number; channel: CommunicationChannel } | null>(null);
+  const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
 
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({
-    onDelete: async (id) => {
-      if (!deleteRouteData) return;
-      const numId = typeof id === "string" ? parseInt(id) : id;
-
-      setRoutes(routes.filter((r) => !(r.id === numId && r.channel === deleteRouteData.channel)));
-
-      if (deleteRouteData.channel === "SMS") {
-        await smsRouteService.deleteRoute(numId);
-      } else if (deleteRouteData.channel === "EMAIL") {
-        await emailRouteService.deleteRoute(numId);
-      } else if (deleteRouteData.channel === "PUSH") {
-        await pushNotificationRouteService.deleteRoute(numId);
-      } else if (deleteRouteData.channel === "WHATSAPP") {
-        await whatsappRouteService.deleteRoute(numId);
-      } else if (deleteRouteData.channel === "USSD") {
-        await ussdRouteService.deleteRoute(numId);
-      }
-    },
-    itemLabel: "Route",
-  });
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } =
+    useDeleteConfirm({
+      onDelete: async (id) => {
+        const numId = typeof id === "string" ? parseInt(id) : id;
+        setRoutes((prev) => prev.filter((r) => r.id !== numId));
+        await routeService.deleteRoute(numId);
+      },
+      itemLabel: "Route",
+    });
 
   useEffect(() => {
     loadAllRoutes();
@@ -111,112 +79,20 @@ export default function RoutesManagementPage() {
   const loadAllRoutes = async () => {
     try {
       setLoading(true);
-      const [smsRoutes, emailRoutes, pushRoutes, whatsappRoutes, ussdRoutes] =
-        await Promise.all([
-          smsRouteService.getAllRoutes(),
-          emailRouteService.getAllRoutes(),
-          pushNotificationRouteService.getAllRoutes(),
-          whatsappRouteService.getAllRoutes(),
-          ussdRouteService.getAllRoutes(),
-        ]);
+      const allRoutes = await routeService.getAllRoutesEnriched();
 
-
-      const unifiedRoutes: UnifiedRoute[] = [];
-
-      if (
-        filterChannel === "all" ||
-        filterChannel === "SMS"
-      ) {
-        smsRoutes.forEach((route) => {
-          unifiedRoutes.push({
-            id: route.id,
-            name: route.name,
-            description: route.description,
-            channel: "SMS",
-            gateway_provider: route.gateway_provider,
-            is_active: route.is_active,
-            created_at: route.created_at,
-            updated_at: route.updated_at,
-            originalRoute: route,
-          });
-        });
-      }
-
-      if (
-        filterChannel === "all" ||
-        filterChannel === "EMAIL"
-      ) {
-        emailRoutes.forEach((route) => {
-          unifiedRoutes.push({
-            id: route.id,
-            name: route.name,
-            description: route.description,
-            channel: "EMAIL",
-            gateway_provider: route.gateway_provider,
-            is_active: route.is_active,
-            created_at: route.created_at,
-            updated_at: route.updated_at,
-            originalRoute: route,
-          });
-        });
-      }
-
-      if (
-        filterChannel === "all" ||
-        filterChannel === "PUSH"
-      ) {
-        pushRoutes.forEach((route) => {
-          unifiedRoutes.push({
-            id: route.id,
-            name: route.name,
-            description: route.description,
-            channel: "PUSH",
-            gateway_provider: route.gateway_provider,
-            is_active: route.is_active,
-            created_at: route.created_at,
-            updated_at: route.updated_at,
-            originalRoute: route,
-          });
-        });
-      }
-
-      if (
-        filterChannel === "all" ||
-        filterChannel === "WHATSAPP"
-      ) {
-        whatsappRoutes.forEach((route) => {
-          unifiedRoutes.push({
-            id: route.id,
-            name: route.name,
-            description: route.description,
-            channel: "WHATSAPP",
-            gateway_provider: route.gateway_provider,
-            is_active: route.is_active,
-            created_at: route.created_at,
-            updated_at: route.updated_at,
-            originalRoute: route,
-          });
-        });
-      }
-
-      if (
-        filterChannel === "all" ||
-        filterChannel === "USSD"
-      ) {
-        ussdRoutes.forEach((route) => {
-          unifiedRoutes.push({
-            id: route.id,
-            name: route.name,
-            description: route.description,
-            channel: "USSD",
-            gateway_provider: route.gateway_provider,
-            is_active: route.is_active,
-            created_at: route.created_at,
-            updated_at: route.updated_at,
-            originalRoute: route,
-          });
-        });
-      }
+      const unifiedRoutes: UnifiedRoute[] = allRoutes.map((route) => ({
+        id: route.id,
+        name: route.name,
+        description: route.description,
+        channel: (route.channel_type || "UNKNOWN") as CommunicationChannel | "UNKNOWN",
+        gateway_provider: route.provider_name || route.gateway_provider,
+        configuration_name: route.configuration_name,
+        is_active: route.is_active,
+        created_at: route.created_at,
+        updated_at: route.updated_at,
+        originalRoute: route,
+      }));
 
       setRoutes(unifiedRoutes);
     } catch (err) {
@@ -230,18 +106,21 @@ export default function RoutesManagementPage() {
     const matchesSearch = route.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesChannel = filterChannel === "all" || route.channel === filterChannel;
+    const matchesChannel =
+      filterChannel === "all" || route.channel === filterChannel;
     return matchesSearch && matchesChannel;
   });
 
-  // Table columns definition
   const defaultColumns: TableColumn<UnifiedRoute>[] = [
     {
       id: "name",
       label: t.common.name,
       visible: true,
       render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+        <div
+          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+          title={value as string}
+        >
           {value}
         </div>
       ),
@@ -251,7 +130,10 @@ export default function RoutesManagementPage() {
       label: t.common.description,
       visible: true,
       render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "—"}>
+        <div
+          className={`text-sm ${tw.textSecondary} max-w-md truncate`}
+          title={value ? String(value) : "—"}
+        >
           {value || "—"}
         </div>
       ),
@@ -261,7 +143,10 @@ export default function RoutesManagementPage() {
       label: t.routes.channel,
       visible: true,
       render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={formatDisplayValue(value as string)}>
+        <div
+          className={`text-sm ${tw.textSecondary} truncate`}
+          title={formatDisplayValue(value as string)}
+        >
           {formatDisplayValue(value as string)}
         </div>
       ),
@@ -270,9 +155,16 @@ export default function RoutesManagementPage() {
       id: "gateway_provider",
       label: t.routes.gatewayProvider,
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value ? formatDisplayValue(String(value)) : "—"}>
-          {value ? formatDisplayValue(String(value)) : "—"}
+      render: (value, route) => (
+        <div
+          className={`text-sm ${tw.textSecondary} truncate`}
+          title={
+            route.configuration_name ||
+            (value ? formatDisplayValue(String(value)) : "—")
+          }
+        >
+          {route.configuration_name ||
+            (value ? formatDisplayValue(String(value)) : "—")}
         </div>
       ),
     },
@@ -292,17 +184,13 @@ export default function RoutesManagementPage() {
       visible: true,
       sortable: false,
       isActionColumn: true,
-      render: (value, route) => (
+      render: (_value, route) => (
         <div className="flex items-center justify-center gap-2">
           <ActivateDeactivateButton
             isActive={route.is_active}
             onToggle={() => handleToggleStatus(route)}
-            disabled={
-              togglingStatus?.id === route.id && togglingStatus?.channel === route.channel
-            }
-            isLoading={
-              togglingStatus?.id === route.id && togglingStatus?.channel === route.channel
-            }
+            disabled={togglingStatus === route.id}
+            isLoading={togglingStatus === route.id}
             title={route.is_active ? t.common.deactivate : t.common.activate}
           />
           <button
@@ -347,54 +235,38 @@ export default function RoutesManagementPage() {
     persistToLocalStorage: true,
   });
 
-  // Handle pagination slicing
   const paginatedRoutes = filteredRoutes.slice(
     (tableCurrentPage - 1) * tablePageSize,
-    tableCurrentPage * tablePageSize
+    tableCurrentPage * tablePageSize,
   );
 
-  // Reset to page 1 when search or filter changes
-  // Removed: pagination reset was clearing routes during toggle
-  // useEffect(() => {
-  //   tableHandlePageChange(1);
-  // }, [searchTerm, filterChannel]);
-
   const handleDeleteRoute = (route: UnifiedRoute) => {
-    setDeleteRouteData({ id: route.id, channel: route.channel });
     openDeleteConfirm(route.id, route.name);
   };
 
   const handleToggleStatus = async (route: UnifiedRoute) => {
     try {
-      setTogglingStatus({ id: route.id, channel: route.channel });
+      setTogglingStatus(route.id);
       const newStatus = !route.is_active;
 
-      setRoutes((currentRoutes) => {
-        const updatedRoutes = currentRoutes.map((r) =>
-          r.id === route.id && r.channel === route.channel
-            ? { ...r, is_active: newStatus }
-            : r
-        );
-        return updatedRoutes;
-      });
+      setRoutes((currentRoutes) =>
+        currentRoutes.map((r) =>
+          r.id === route.id ? { ...r, is_active: newStatus } : r,
+        ),
+      );
 
-      if (route.channel === "SMS") {
-        await smsRouteService.updateRoute(route.id, { is_active: newStatus });
-      } else if (route.channel === "EMAIL") {
-        await emailRouteService.updateRoute(route.id, { is_active: newStatus });
-      } else if (route.channel === "PUSH") {
-        await pushNotificationRouteService.updateRoute(route.id, { is_active: newStatus });
-      } else if (route.channel === "WHATSAPP") {
-        await whatsappRouteService.updateRoute(route.id, { is_active: newStatus });
-      } else if (route.channel === "USSD") {
-        await ussdRouteService.updateRoute(route.id, { is_active: newStatus });
-      }
+      await routeService.updateRoute(route.id, { is_active: newStatus });
 
       showSuccess(
         newStatus ? "Activated" : "Deactivated",
-        `${t.routes.route} has been ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`
+        `${t.routes.route} has been ${newStatus ? t.routes.activated : t.routes.deactivated} successfully`,
       );
     } catch (err) {
+      setRoutes((currentRoutes) =>
+        currentRoutes.map((r) =>
+          r.id === route.id ? { ...r, is_active: route.is_active } : r,
+        ),
+      );
       showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setTogglingStatus(null);
@@ -402,7 +274,9 @@ export default function RoutesManagementPage() {
   };
 
   const navigateToEdit = (route: UnifiedRoute) => {
-    navigate(`/dashboard/routes/edit/${route.id}?channel=${route.channel}`);
+    const channelQuery =
+      route.channel !== "UNKNOWN" ? `?channel=${route.channel}` : "";
+    navigate(`/dashboard/routes/edit/${route.id}${channelQuery}`);
   };
 
   const channelOptions = [
@@ -416,7 +290,6 @@ export default function RoutesManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
           <BackButton
@@ -437,7 +310,6 @@ export default function RoutesManagementPage() {
         </p>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <SearchInput
@@ -456,7 +328,6 @@ export default function RoutesManagementPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className={`${tw.rounded} overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -472,7 +343,6 @@ export default function RoutesManagementPage() {
           </div>
         ) : (
           <>
-            {/* Table */}
             <Table<UnifiedRoute>
               columns={columns}
               data={paginatedRoutes}
@@ -481,12 +351,11 @@ export default function RoutesManagementPage() {
               pageSize={tablePageSize}
               isLoading={loading}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
-              getRowId={(row) => `${row.id}-${row.channel}`}
+              getRowId={(row) => String(row.id)}
               onHideColumn={toggleColumn}
-              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -495,21 +364,21 @@ export default function RoutesManagementPage() {
               }}
             />
 
-            {/* Pagination */}
-            {!loading && paginatedRoutes.length > 0 && filteredRoutes.length > 0 && (
-              <Pagination
-                currentPage={tableCurrentPage}
-                pageSize={tablePageSize}
-                totalItems={filteredRoutes.length}
-                onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
-              />
-            )}
+            {!loading &&
+              paginatedRoutes.length > 0 &&
+              filteredRoutes.length > 0 && (
+                <Pagination
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
+                  totalItems={filteredRoutes.length}
+                  onPageChange={tableHandlePageChange}
+                  onPageSizeChange={tableHandlePageSizeChange}
+                />
+              )}
           </>
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
         onClose={closeDeleteConfirm}

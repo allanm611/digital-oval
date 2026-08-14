@@ -81,6 +81,7 @@ export interface ConnectionProfileType {
   updated_by: number | null;
   last_used_at: string | null;
   metadata: Record<string, unknown> | null;
+  configuration?: Record<string, unknown> | null;
 }
 
 export interface CreateConnectionProfilePayload {

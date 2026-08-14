@@ -245,6 +245,7 @@ const LoginPage: React.FC = () => {
                     value={password}
                     onChange={(value) => setPassword(String(value))}
                     type={showPassword ? "text" : "password"}
+                    showPasswordToggle={false}
                     required
                     placeholder={t.auth.login.passwordPlaceholder}
                     className={validationErrors.password ? "error-input" : ""}

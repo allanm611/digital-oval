@@ -117,6 +117,13 @@ class OfferService {
       updated_at: data.updated_at || new Date().toISOString(),
       created_by: data.created_by || null,
       updated_by: data.updated_by || null,
+      tracking_sources: Array.isArray(data.tracking_sources)
+        ? data.tracking_sources
+        : data.tracking_sources ?? null,
+      reward_configuration:
+        data.reward_configuration !== undefined
+          ? data.reward_configuration
+          : null,
     };
   }
 

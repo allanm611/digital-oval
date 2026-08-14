@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
@@ -12,55 +11,32 @@ import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
-import { smsRouteService } from "../services/smsRouteService";
-import { emailRouteService } from "../services/emailRouteService";
-import { pushNotificationRouteService } from "../services/pushNotificationRouteService";
-import { whatsappRouteService } from "../services/whatsappRouteService";
-import { ussdRouteService } from "../services/ussdRouteService";
-import { smsGatewayConfigService } from "../../configurations/services/smsGatewayConfigService";
-import { emailGatewayConfigService } from "../../configurations/services/emailGatewayConfigService";
-import { pushGatewayConfigService } from "../../configurations/services/pushGatewayConfigService";
-import { whatsappGatewayConfigService } from "../../configurations/services/whatsappGatewayConfigService";
-import { ussdGatewayConfigService } from "../../configurations/services/ussdGatewayConfigService";
+import {
+  resolveChannelType,
+  routeService,
+} from "../services/routeService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
-import { PUSH_PLATFORM_OPTIONS, PRIORITY_LEVEL_OPTIONS } from "../constants/pushNotificationRouteEnums";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { GatewayConfiguration } from "../../configurations/types/gatewayConfiguration";
+import type { RouteChannelType, SMSRoute } from "../types/smsRoute";
 
-type Channel = "SMS" | "EMAIL" | "PUSH" | "WHATSAPP" | "USSD" | "";
+type Channel = RouteChannelType;
 
 interface FormData {
   channel: Channel;
   channel_id?: number;
   name: string;
   description: string;
-  gateway_config_id: number;
+  configuration_id: number;
   is_active: boolean;
   backup_route_id?: number;
   use_backup_on_failure: boolean;
   retry_attempts: number;
-  senderId?: string;
-  platforms?: string[];
-  defaultTTL?: string;
-  priorityLevel?: string;
-  webhookUrl?: string;
-  templateSupport?: string;
-  qualityThreshold?: string;
-  ussdCode?: string;
-  networkCode?: string;
-  sessionTimeout?: string;
-  encoding?: string;
 }
-
-const STATUS_OPTIONS = (t: any) => [
-  { label: t.common.active, value: "true" },
-  { label: t.common.inactive, value: "false" },
-];
-
-const ENCODING_OPTIONS = [
-  { value: "UTF-8", label: "UTF-8" },
-  { value: "GSM-7", label: "GSM-7" },
-  { value: "UCS2", label: "UCS2" },
-];
 
 export default function CreateRoutePage() {
   const { id } = useParams<{ id: string }>();
@@ -70,37 +46,28 @@ export default function CreateRoutePage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
-
-  // Form validation hook for auto-scroll and error management
   const { registerFieldRef } = useFormValidation();
 
   const [formData, setFormData] = useState<FormData>({
-    channel: "",
+    channel: channelFromUrl || "",
     channel_id: undefined,
     name: "",
     description: "",
-    gateway_config_id: 0,
+    configuration_id: 0,
     is_active: true,
     backup_route_id: undefined,
     use_backup_on_failure: false,
     retry_attempts: 3,
-    senderId: "",
-    platforms: [],
-    defaultTTL: "3600",
-    priorityLevel: "NORMAL",
-    webhookUrl: "",
-    templateSupport: "false",
-    qualityThreshold: "50",
-    ussdCode: "",
-    networkCode: "",
-    sessionTimeout: "60",
-    encoding: "UTF-8",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [channels, setChannels] = useState<any[]>([]);
-  const [gatewayConfigs, setGatewayConfigs] = useState<any[]>([]);
-  const [backupRoutes, setBackupRoutes] = useState<any[]>([]);
+  const [channels, setChannels] = useState<
+    Awaited<ReturnType<typeof communicationChannelService.getAll>>
+  >([]);
+  const [gatewayConfigs, setGatewayConfigs] = useState<GatewayConfiguration[]>(
+    [],
+  );
+  const [backupRoutes, setBackupRoutes] = useState<SMSRoute[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -109,11 +76,14 @@ export default function CreateRoutePage() {
   }, [id]);
 
   useEffect(() => {
-    if (channels.length > 0) {
+    if (formData.channel) {
       loadGatewayConfigs();
       loadBackupRoutes();
+    } else {
+      setGatewayConfigs([]);
+      setBackupRoutes([]);
     }
-  }, [formData.channel]);
+  }, [formData.channel, channels]);
 
   const loadInitialData = async () => {
     try {
@@ -130,89 +100,27 @@ export default function CreateRoutePage() {
   const loadRouteData = async () => {
     if (!id) return;
     try {
-      const numId = Number(id);
-      let route: any = null;
-      let channel: Channel = "";
+      const route = await routeService.getRouteByIdEnriched(Number(id));
+      const channel =
+        (channelFromUrl as Channel) ||
+        route.channel_type ||
+        resolveChannelType(route.channel_code) ||
+        "";
 
-      if (channelFromUrl) {
-        if (channelFromUrl === "SMS") {
-          const smsRoutes = await smsRouteService.getAllRoutes();
-          route = smsRoutes.find((r) => r.id === numId);
-          if (route) channel = "SMS";
-        } else if (channelFromUrl === "EMAIL") {
-          const emailRoutes = await emailRouteService.getAllRoutes();
-          route = emailRoutes.find((r) => r.id === numId);
-          if (route) channel = "EMAIL";
-        } else if (channelFromUrl === "PUSH") {
-          const pushRoutes = await pushNotificationRouteService.getAllRoutes();
-          route = pushRoutes.find((r) => r.id === numId);
-          if (route) channel = "PUSH";
-        } else if (channelFromUrl === "WHATSAPP") {
-          const whatsappRoutes = await whatsappRouteService.getAllRoutes();
-          route = whatsappRoutes.find((r) => r.id === numId);
-          if (route) channel = "WHATSAPP";
-        } else if (channelFromUrl === "USSD") {
-          const ussdRoutes = await ussdRouteService.getAllRoutes();
-          route = ussdRoutes.find((r) => r.id === numId);
-          if (route) channel = "USSD";
-        }
-      } else {
-        const smsRoutes = await smsRouteService.getAllRoutes();
-        route = smsRoutes.find((r) => r.id === numId);
-        if (route) channel = "SMS";
-
-        if (!route) {
-          const emailRoutes = await emailRouteService.getAllRoutes();
-          route = emailRoutes.find((r) => r.id === numId);
-          if (route) channel = "EMAIL";
-        }
-
-        if (!route) {
-          const pushRoutes = await pushNotificationRouteService.getAllRoutes();
-          route = pushRoutes.find((r) => r.id === numId);
-          if (route) channel = "PUSH";
-        }
-
-        if (!route) {
-          const whatsappRoutes = await whatsappRouteService.getAllRoutes();
-          route = whatsappRoutes.find((r) => r.id === numId);
-          if (route) channel = "WHATSAPP";
-        }
-
-        if (!route) {
-          const ussdRoutes = await ussdRouteService.getAllRoutes();
-          route = ussdRoutes.find((r) => r.id === numId);
-          if (route) channel = "USSD";
-        }
-      }
-
-      if (route) {
-        setFormData((prev) => ({
-          ...prev,
-          channel,
-          name: route.name,
-          description: route.description || "",
-          gateway_config_id: route.gateway_config_id || 0,
-          is_active: route.is_active !== undefined ? route.is_active : true,
-          backup_route_id: route.backup_route_id,
-          use_backup_on_failure: route.use_backup_on_failure || false,
-          retry_attempts: route.retry_attempts || 3,
-          senderId: route.sender_id || "",
-        }));
-      }
-    } catch (error) {
+      setFormData({
+        channel,
+        channel_id: route.communication_channel_id ?? undefined,
+        name: route.name,
+        description: route.description || "",
+        configuration_id: route.configuration_id || route.gateway_config_id || 0,
+        is_active: route.is_active !== false,
+        backup_route_id: route.backup_route_id || undefined,
+        use_backup_on_failure: route.use_backup_on_failure || false,
+        retry_attempts: route.retry_attempts ?? 3,
+      });
+    } catch {
       showError(t.common.error, "Failed to load route data");
     }
-  };
-
-  const getChannelType = (code: string): Channel => {
-    const codeUpper = code?.toUpperCase() || "";
-    if (codeUpper.includes("SMS")) return "SMS";
-    if (codeUpper.includes("EMAIL")) return "EMAIL";
-    if (codeUpper.includes("PUSH")) return "PUSH";
-    if (codeUpper.includes("MESSENGER") || codeUpper.includes("WHATSAPP")) return "WHATSAPP";
-    if (codeUpper.includes("USSD")) return "USSD";
-    return "";
   };
 
   const loadChannels = async () => {
@@ -225,37 +133,46 @@ export default function CreateRoutePage() {
     }
   };
 
-  const loadGatewayConfigs = () => {
-    let configs;
-    if (formData.channel === "SMS") {
-      configs = smsGatewayConfigService.getDummyConfigs();
-    } else if (formData.channel === "EMAIL") {
-      configs = emailGatewayConfigService.getDummyConfigs();
-    } else if (formData.channel === "PUSH") {
-      configs = pushGatewayConfigService.getDummyConfigs();
-    } else if (formData.channel === "WHATSAPP") {
-      configs = whatsappGatewayConfigService.getDummyConfigs();
-    } else if (formData.channel === "USSD") {
-      configs = ussdGatewayConfigService.getDummyConfigs();
+  const loadGatewayConfigs = async () => {
+    if (!formData.channel) {
+      setGatewayConfigs([]);
+      return;
     }
-    setGatewayConfigs(configs || []);
+    try {
+      const matchedChannel = channels.find(
+        (ch) => resolveChannelType(ch.code || ch.name) === formData.channel,
+      );
+      const data = await gatewayConfigurationService.getAll(
+        matchedChannel ? { channel_id: matchedChannel.id } : undefined,
+      );
+      const filtered = matchedChannel
+        ? data.filter((c) => c.is_active !== false)
+        : filterGatewayConfigsByChannelType(data, formData.channel).filter(
+            (c) => c.is_active !== false,
+          );
+      setGatewayConfigs(filtered);
+
+      if (matchedChannel && formData.channel_id !== matchedChannel.id) {
+        setFormData((prev) => ({ ...prev, channel_id: matchedChannel.id }));
+      }
+    } catch (error) {
+      console.error("Failed to load gateway configs:", error);
+      setGatewayConfigs([]);
+    }
   };
 
   const loadBackupRoutes = async () => {
+    if (!formData.channel) {
+      setBackupRoutes([]);
+      return;
+    }
     try {
-      let routes;
-      if (formData.channel === "SMS") {
-        routes = await smsRouteService.getAllRoutes();
-      } else if (formData.channel === "EMAIL") {
-        routes = await emailRouteService.getAllRoutes();
-      } else if (formData.channel === "PUSH") {
-        routes = await pushNotificationRouteService.getAllRoutes();
-      } else if (formData.channel === "WHATSAPP") {
-        routes = await whatsappRouteService.getAllRoutes();
-      } else if (formData.channel === "USSD") {
-        routes = await ussdRouteService.getAllRoutes();
-      }
-      setBackupRoutes(routes || []);
+      const routes = await routeService.getRoutesByChannel(formData.channel);
+      // Exclude the route being edited from backup options
+      const options = isEditMode && id
+        ? routes.filter((r) => r.id !== Number(id))
+        : routes;
+      setBackupRoutes(options);
     } catch (error) {
       console.error("Failed to load backup routes:", error);
       setBackupRoutes([]);
@@ -265,12 +182,21 @@ export default function CreateRoutePage() {
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
+    if (!formData.channel) {
+      newErrors.channel = "Channel is required";
+    }
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-
-    if (!formData.gateway_config_id) {
-      newErrors.gateway_config_id = "Gateway configuration is required";
+    if (!formData.configuration_id) {
+      newErrors.configuration_id = "Gateway configuration is required";
+    }
+    if (
+      formData.use_backup_on_failure &&
+      formData.retry_attempts != null &&
+      formData.retry_attempts < 0
+    ) {
+      newErrors.retry_attempts = "Retry attempts cannot be negative";
     }
 
     setErrors(newErrors);
@@ -279,87 +205,45 @@ export default function CreateRoutePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     try {
       setSaving(true);
 
-      const baseData = {
-        name: formData.name,
-        description: formData.description,
-        gateway_config_id: formData.gateway_config_id,
+      const matchedChannel =
+        channels.find(
+          (ch) => resolveChannelType(ch.code || ch.name) === formData.channel,
+        ) || channels.find((ch) => ch.id === formData.channel_id);
+
+      const payload = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        configuration_id: formData.configuration_id,
+        communication_channel_id:
+          matchedChannel?.id ?? formData.channel_id ?? null,
         is_active: formData.is_active,
-        backup_route_id: formData.backup_route_id,
         use_backup_on_failure: formData.use_backup_on_failure,
-        retry_attempts: formData.retry_attempts,
+        backup_route_id: formData.use_backup_on_failure
+          ? formData.backup_route_id || null
+          : null,
+        retry_attempts: formData.use_backup_on_failure
+          ? formData.retry_attempts
+          : formData.retry_attempts ?? 3,
       };
 
       if (isEditMode && id) {
-        const numId = Number(id);
-        if (formData.channel === "SMS") {
-          await smsRouteService.updateRoute(numId, baseData);
-        } else if (formData.channel === "EMAIL") {
-          await emailRouteService.updateRoute(numId, baseData);
-        } else if (formData.channel === "PUSH") {
-          await pushNotificationRouteService.updateRoute(numId, {
-            ...baseData,
-            platforms: formData.platforms || [],
-            default_ttl: formData.defaultTTL,
-            priority_level: formData.priorityLevel,
-            webhook_url: formData.webhookUrl || undefined,
-          });
-        } else if (formData.channel === "WHATSAPP") {
-          await whatsappRouteService.updateRoute(numId, {
-            ...baseData,
-            webhook_url: formData.webhookUrl || undefined,
-            template_support: formData.templateSupport === "true",
-            quality_threshold: Number(formData.qualityThreshold),
-          });
-        } else if (formData.channel === "USSD") {
-          await ussdRouteService.updateRoute(numId, {
-            ...baseData,
-            ussd_code: formData.ussdCode || undefined,
-            network_code: formData.networkCode || undefined,
-            session_timeout: Number(formData.sessionTimeout),
-            encoding: formData.encoding,
-          });
-        }
+        await routeService.updateRoute(Number(id), payload);
         success(t.common.success, "Route updated successfully");
       } else {
-        if (formData.channel === "SMS") {
-          await smsRouteService.createRoute(baseData);
-        } else if (formData.channel === "EMAIL") {
-          await emailRouteService.createRoute(baseData);
-        } else if (formData.channel === "PUSH") {
-          await pushNotificationRouteService.createRoute({
-            ...baseData,
-            platforms: formData.platforms || [],
-            default_ttl: formData.defaultTTL,
-            priority_level: formData.priorityLevel,
-            webhook_url: formData.webhookUrl || undefined,
-          });
-        } else if (formData.channel === "WHATSAPP") {
-          await whatsappRouteService.createRoute({
-            ...baseData,
-            webhook_url: formData.webhookUrl || undefined,
-            template_support: formData.templateSupport === "true",
-            quality_threshold: Number(formData.qualityThreshold),
-          });
-        } else if (formData.channel === "USSD") {
-          await ussdRouteService.createRoute({
-            ...baseData,
-            ussd_code: formData.ussdCode || undefined,
-            network_code: formData.networkCode || undefined,
-            session_timeout: Number(formData.sessionTimeout),
-            encoding: formData.encoding,
-          });
-        }
+        await routeService.createRoute(payload);
         success(t.common.success, "Route created successfully");
       }
       navigate("/dashboard/routes");
     } catch (error) {
-      showError(t.common.error, extractBackendError(err, "Failed to create route"));
+      showError(
+        t.common.error,
+        extractBackendError(error, "Failed to save route"),
+      );
     } finally {
       setSaving(false);
     }
@@ -375,33 +259,34 @@ export default function CreateRoutePage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <BackButton
         showBreadcrumb={true}
         currentLabel={isEditMode ? t.routes.editRoute : t.routes.createRoute}
       />
 
-      {/* Form Container */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        {/* Basic Information */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Basic Information
           </h2>
           <div className="space-y-4">
-            {/* Channel and Name Row */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Channel Selection */}
-              <div>
+              <FormField
+                error={errors?.channel}
+                ref={registerFieldRef("channel")}
+              >
                 <HeadlessSelect
                   label={t.routes.channel}
                   value={formData.channel}
                   onChange={(value) => {
-                    const channelType = value as Channel;
                     setFormData({
                       ...formData,
-                      channel: channelType,
-                      gateway_config_id: 0,
+                      channel: value as Channel,
+                      configuration_id: 0,
+                      channel_id: undefined,
                       backup_route_id: undefined,
                     });
                     setErrors({});
@@ -416,15 +301,18 @@ export default function CreateRoutePage() {
                   placeholder="Select channel..."
                   disabled={saving || isEditMode}
                 />
-              </div>
-              {/* Name */}
-              <FormField error={errors?.name} ref={registerFieldRef('name')}>
+              </FormField>
+
+              <FormField error={errors?.name} ref={registerFieldRef("name")}>
                 <Input
                   label={`${t.routes.routeName} *`}
                   value={formData.name}
                   onChange={(value) => {
-                    setFormData({ ...formData, name: value });
-                    if (errors.name) setErrors({ ...errors, name: undefined });
+                    setFormData({ ...formData, name: String(value) });
+                    if (errors.name) {
+                      const { name: _, ...rest } = errors;
+                      setErrors(rest);
+                    }
                   }}
                   placeholder="Enter route name"
                   hasError={!!errors.name}
@@ -433,230 +321,129 @@ export default function CreateRoutePage() {
               </FormField>
             </div>
 
-            {/* Description */}
             <Textarea
               label={t.common.description}
               value={formData.description}
-              onChange={(value) => setFormData({ ...formData, description: value })}
+              onChange={(value) =>
+                setFormData({ ...formData, description: value })
+              }
               placeholder="Add notes about this route..."
               rows={3}
               disabled={saving}
             />
 
-            {/* Gateway Configuration */}
-            <FormField error={errors?.gateway_config_id} ref={registerFieldRef('gateway_config_id')}>
+            <FormField
+              error={errors?.configuration_id}
+              ref={registerFieldRef("configuration_id")}
+            >
               <HeadlessSelect
                 label={t.routes.gatewayProvider}
-                value={String(formData.gateway_config_id)}
+                value={String(formData.configuration_id)}
                 onChange={(value) => {
-                  setFormData({ ...formData, gateway_config_id: Number(value) });
-                  if (errors.gateway_config_id) setErrors({ ...errors, gateway_config_id: undefined });
+                  setFormData({
+                    ...formData,
+                    configuration_id: Number(value),
+                  });
+                  if (errors.configuration_id) {
+                    const { configuration_id: _, ...rest } = errors;
+                    setErrors(rest);
+                  }
                 }}
                 options={[
                   { value: "0", label: "Select a gateway configuration" },
                   ...gatewayConfigs.map((config) => ({
                     value: String(config.id),
-                    label: config.name,
+                    label: config.provider_name
+                      ? `${config.name} (${config.provider_name})`
+                      : config.name,
                   })),
                 ]}
-                placeholder="Select gateway..."
-                disabled={saving}
+                placeholder="Select a gateway configuration"
+                disabled={saving || !formData.channel}
               />
             </FormField>
           </div>
         </div>
 
-        {/* Failover Settings Section */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Failover Settings
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="use_backup"
-                  checked={formData.use_backup_on_failure}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, use_backup_on_failure: e.target.checked })}
-                  disabled={saving}
-                />
-                <label htmlFor="use_backup" className={`text-sm font-medium text-gray-700 cursor-pointer`}>
-                  Use backup route on failure
-                </label>
-              </div>
+        {/* Failover Settings — matches original design */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+            Failover Settings
+          </h2>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="use_backup"
+                checked={formData.use_backup_on_failure}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({
+                    ...formData,
+                    use_backup_on_failure: e.target.checked,
+                    backup_route_id: e.target.checked
+                      ? formData.backup_route_id
+                      : undefined,
+                  })
+                }
+                disabled={saving}
+              />
+              <label
+                htmlFor="use_backup"
+                className="text-sm font-medium text-gray-700 cursor-pointer"
+              >
+                Use backup route on failure
+              </label>
+            </div>
 
-              {formData.use_backup_on_failure && (
-                <>
-                  <div>
-                    <HeadlessSelect
-                      label="Backup Route"
-                      value={String(formData.backup_route_id || 0)}
-                      onChange={(value) => setFormData({ ...formData, backup_route_id: value ? Number(value) : undefined })}
-                      options={[
-                        { value: "0", label: "None" },
-                        ...backupRoutes.map((route) => ({
-                          value: String(route.id),
-                          label: route.name,
-                        })),
-                      ]}
-                      disabled={saving}
-                    />
-                  </div>
+            {formData.use_backup_on_failure && (
+              <>
+                <div>
+                  <HeadlessSelect
+                    label="Backup Route"
+                    value={String(formData.backup_route_id || 0)}
+                    onChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        backup_route_id: value ? Number(value) : undefined,
+                      })
+                    }
+                    options={[
+                      { value: "0", label: "None" },
+                      ...backupRoutes.map((route) => ({
+                        value: String(route.id),
+                        label: route.name,
+                      })),
+                    ]}
+                    disabled={saving}
+                  />
+                </div>
 
+                <FormField
+                  error={errors?.retry_attempts}
+                  ref={registerFieldRef("retry_attempts")}
+                >
                   <Input
                     label="Retry Attempts"
                     type="number"
                     value={String(formData.retry_attempts)}
-                    onChange={(value) => setFormData({ ...formData, retry_attempts: Number(value) })}
+                    onChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        retry_attempts: Number(value),
+                      })
+                    }
                     placeholder="3"
                     min="0"
                     disabled={saving}
+                    hasError={!!errors.retry_attempts}
                   />
-                </>
-              )}
-            </div>
+                </FormField>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Channel-Specific Configuration */}
-        {formData.channel && formData.channel === "PUSH" && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Push Notification Configuration
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <HeadlessSelect
-                  label="Platforms"
-                  value={formData.platforms?.[0] || ""}
-                  onChange={(value) => {
-                    const platforms = formData.platforms || [];
-                    if (platforms.includes(value)) {
-                      setFormData({ ...formData, platforms: platforms.filter((p) => p !== value) });
-                    } else {
-                      setFormData({ ...formData, platforms: [...platforms, value] });
-                    }
-                  }}
-                  options={PUSH_PLATFORM_OPTIONS}
-                  disabled={saving}
-                />
-              </div>
-
-              <Input
-                label="Default TTL"
-                value={formData.defaultTTL || "3600"}
-                onChange={(value) => setFormData({ ...formData, defaultTTL: value })}
-                placeholder="3600"
-                disabled={saving}
-              />
-
-              <div>
-                <HeadlessSelect
-                  label="Priority Level"
-                  value={formData.priorityLevel || "NORMAL"}
-                  onChange={(value) => setFormData({ ...formData, priorityLevel: value })}
-                  options={PRIORITY_LEVEL_OPTIONS}
-                  disabled={saving}
-                />
-              </div>
-
-              <Input
-                label="Webhook URL"
-                value={formData.webhookUrl || ""}
-                onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
-                placeholder="https://example.com/webhook"
-                type="url"
-                disabled={saving}
-              />
-            </div>
-          </div>
-        )}
-
-        {formData.channel && formData.channel === "WHATSAPP" && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              WhatsApp Configuration
-            </h2>
-            <div className="space-y-4">
-              <Input
-                label="Webhook URL"
-                value={formData.webhookUrl || ""}
-                onChange={(value) => setFormData({ ...formData, webhookUrl: value })}
-                placeholder="https://example.com/webhook"
-                type="url"
-                disabled={saving}
-              />
-
-              <div>
-                <HeadlessSelect
-                  label="Template Support"
-                  value={formData.templateSupport || "false"}
-                  onChange={(value) => setFormData({ ...formData, templateSupport: value })}
-                  options={[
-                    { value: "true", label: "Enabled" },
-                    { value: "false", label: "Disabled" },
-                  ]}
-                  disabled={saving}
-                />
-              </div>
-
-              <Input
-                label="Quality Threshold"
-                value={formData.qualityThreshold || "50"}
-                onChange={(value) => setFormData({ ...formData, qualityThreshold: value })}
-                placeholder="50"
-                type="number"
-                min="0"
-                max="100"
-                disabled={saving}
-              />
-            </div>
-          </div>
-        )}
-
-        {formData.channel && formData.channel === "USSD" && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              USSD Configuration
-            </h2>
-            <div className="space-y-4">
-              <Input
-                label="USSD Code"
-                value={formData.ussdCode || ""}
-                onChange={(value) => setFormData({ ...formData, ussdCode: value })}
-                placeholder="*123#"
-                disabled={saving}
-              />
-
-              <Input
-                label="Network Code"
-                value={formData.networkCode || ""}
-                onChange={(value) => setFormData({ ...formData, networkCode: value })}
-                placeholder="Network code"
-                disabled={saving}
-              />
-
-              <Input
-                label="Session Timeout"
-                value={formData.sessionTimeout || "60"}
-                onChange={(value) => setFormData({ ...formData, sessionTimeout: value })}
-                placeholder="60"
-                type="number"
-                disabled={saving}
-              />
-
-              <div>
-                <HeadlessSelect
-                  label="Encoding"
-                  value={formData.encoding || "UTF-8"}
-                  onChange={(value) => setFormData({ ...formData, encoding: value })}
-                  options={ENCODING_OPTIONS}
-                  disabled={saving}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
         <div className="flex gap-3 justify-end">
           <button
             type="button"
@@ -664,9 +451,9 @@ export default function CreateRoutePage() {
             disabled={saving}
             className={`text-sm font-medium ${tw.rounded} transition-colors`}
             style={{
-              backgroundColor: 'transparent',
-              color: 'var(--c-text-primary)',
-              border: '1px solid var(--c-text-primary)',
+              backgroundColor: "transparent",
+              color: "var(--c-text-primary)",
+              border: "1px solid var(--c-text-primary)",
               padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
             }}
           >
@@ -680,8 +467,14 @@ export default function CreateRoutePage() {
             }`}
             style={{ backgroundColor: color.primary.action }}
           >
-            {saving && <LoadingSpinner size={16} />}
-            {saving ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? t.routes.editRoute : t.routes.createRoute)}
+            {saving && <LoadingSpinner size="sm" />}
+            {saving
+              ? isEditMode
+                ? "Updating..."
+                : "Creating..."
+              : isEditMode
+                ? t.routes.editRoute
+                : t.routes.createRoute}
           </button>
         </div>
       </form>
