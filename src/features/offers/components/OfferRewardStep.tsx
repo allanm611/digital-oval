@@ -1913,7 +1913,7 @@ export default function OfferRewardStep({
                       title="Select error groups"
                     >
                       <Plus className="w-4 h-4 mr-1" />
-                      Add another error group
+                      Add error group
                     </button>
                   </div>
 

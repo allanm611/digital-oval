@@ -8,6 +8,10 @@ import {
   GatewayProviderField,
 } from "../../services/gatewayProviderService";
 import {
+  gatewayProtocolLabel,
+  resolveGatewayProtocol,
+} from "../../constants/gatewayProtocol";
+import {
   CreateGatewayConfigurationRequest,
   GatewayConfiguration,
   UpdateGatewayConfigurationRequest,
@@ -43,6 +47,10 @@ function buildInitialConfigValues(
   fields.forEach((field) => {
     if (existing && existing[field.name] !== undefined) {
       values[field.name] = existing[field.name];
+      return;
+    }
+    if (field.default !== undefined) {
+      values[field.name] = field.default;
       return;
     }
     if (field.type === "boolean") {
@@ -364,7 +372,13 @@ export default function GatewayConfigurationForm({
           Provider Credentials
         </h2>
         <p className={`text-xs ${tw.textMuted} mb-6`}>
-          Fields are defined by the selected gateway provider&apos;s schema.
+          {selectedProvider
+            ? resolveGatewayProtocol(selectedProvider)
+              ? `Fields follow the ${gatewayProtocolLabel(
+                  resolveGatewayProtocol(selectedProvider),
+                )} protocol defined on ${selectedProvider.name}.`
+              : `Fields are defined by ${selectedProvider.name}.`
+            : "Fields are defined by the selected gateway provider's protocol schema."}
         </p>
 
         {!providerId ? (

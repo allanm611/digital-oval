@@ -8,8 +8,10 @@ export interface RewardConfiguration {
   /**
    * System default template for the provider (one per provider).
    * Seeded on provider create / lazy-ensured for legacy providers.
+   * Canonical API field is `is_default_template`; `is_default` is the UI alias.
    */
   is_default?: boolean;
+  is_default_template?: boolean;
   /**
    * Client-only fallback built from provider schema defaults when the API
    * cannot persist a default template yet. Not a real configuration id.

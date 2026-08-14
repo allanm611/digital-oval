@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Gift, Trash2 } from "lucide-react";
+import { Copy, Edit, Gift, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -9,7 +9,10 @@ import { rewardConfigurationService } from "../services/rewardConfigurationServi
 import { rewardProviderService } from "../services/rewardProviderService";
 import { RewardConfiguration } from "../types/rewardConfiguration";
 import { RewardProviderSchemaField } from "../types/rewardProvider";
-import { isDefaultRewardTemplate } from "../utils/rewardTemplateDefaults";
+import {
+  canDuplicateRewardTemplate,
+  isDefaultRewardTemplate,
+} from "../utils/rewardTemplateDefaults";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
@@ -105,6 +108,7 @@ export default function RewardConfigurationDetailsPage() {
     RewardProviderSchemaField[]
   >([]);
   const [toggling, setToggling] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -179,12 +183,45 @@ export default function RewardConfigurationDetailsPage() {
     }
   };
 
+  const handleDuplicate = async () => {
+    if (!config) return;
+    const eligibility = canDuplicateRewardTemplate(config);
+    if (!eligibility.allowed) {
+      showError(
+        "Cannot duplicate",
+        eligibility.reason || "This template cannot be duplicated.",
+      );
+      return;
+    }
+    try {
+      setDuplicating(true);
+      const duplicated = await rewardConfigurationService.duplicate(config.id);
+      if (!duplicated.id) {
+        throw new Error("Duplicate succeeded but the new template id was missing.");
+      }
+      showSuccess(
+        "Template duplicated",
+        `"${duplicated.name}" was created from "${config.name}".`,
+      );
+      navigate(`/dashboard/reward-configurations/${duplicated.id}/details`);
+    } catch (err) {
+      showError(
+        extractBackendError(
+          err,
+          "Failed to duplicate reward template. Please try again.",
+        ),
+      );
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (!config) return;
     if (isDefaultRewardTemplate(config)) {
       showError(
         "Default template protected",
-        "Each reward provider must keep its default template. Edit its values instead of deleting it.",
+        "Each reward provider must keep its default template. Duplicate it to create an editable copy.",
       );
       setShowDeleteModal(false);
       return;
@@ -221,6 +258,7 @@ export default function RewardConfigurationDetailsPage() {
   if (!config) return null;
 
   const isDefaultTemplate = isDefaultRewardTemplate(config);
+  const duplicateEligibility = canDuplicateRewardTemplate(config);
 
   return (
     <div className="space-y-6">
@@ -243,11 +281,31 @@ export default function RewardConfigurationDetailsPage() {
             onClick={() =>
               navigate(`/dashboard/reward-configurations/${config.id}/edit`)
             }
-            className={`px-4 py-2 text-white text-xs ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 w-fit`}
+            disabled={isDefaultTemplate}
+            title={
+              isDefaultTemplate
+                ? "Default template cannot be edited. Duplicate it to customise."
+                : undefined
+            }
+            className={`px-4 py-2 text-white text-xs ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 w-fit disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Edit className="w-4 h-4" />
             Edit
+          </button>
+          <button
+            onClick={handleDuplicate}
+            disabled={!duplicateEligibility.allowed || duplicating}
+            title={duplicateEligibility.reason}
+            className={`px-4 py-2 text-white text-xs ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 w-fit disabled:opacity-50 disabled:cursor-not-allowed`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            {duplicating ? (
+              <LoadingSpinner size="sm" color="white" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+            {duplicating ? "Duplicating…" : "Duplicate"}
           </button>
           {!isDefaultTemplate ? (
             <button
@@ -291,6 +349,12 @@ export default function RewardConfigurationDetailsPage() {
               {config.provider_name || `#${config.provider_id}`}
               {config.reward_type ? ` · ${config.reward_type}` : ""}
             </p>
+            {isDefaultTemplate ? (
+              <p className={`text-xs ${tw.textMuted} mt-2`}>
+                Default templates cannot be edited or deleted. Duplicate this
+                template to create an editable copy.
+              </p>
+            ) : null}
           </div>
         </div>
 

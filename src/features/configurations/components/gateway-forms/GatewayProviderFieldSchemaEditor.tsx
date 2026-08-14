@@ -4,6 +4,11 @@ import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw } from "../../../../shared/utils/utils";
 import { GatewayProviderField } from "../../services/gatewayProviderService";
+import {
+  getGatewayProtocol,
+  gatewayProtocolLabel,
+  isProtocolOwnedField,
+} from "../../constants/gatewayProtocol";
 import CommaSeparatedOptionsInput from "../CommaSeparatedOptionsInput";
 
 const FIELD_TYPES: { value: GatewayProviderField["type"]; label: string }[] = [
@@ -16,9 +21,11 @@ const FIELD_TYPES: { value: GatewayProviderField["type"]; label: string }[] = [
 
 interface GatewayProviderFieldSchemaEditorProps {
   fields: GatewayProviderField[];
+  protocol?: string;
   errors?: Record<string, string>;
   disabled?: boolean;
   onChange: (fields: GatewayProviderField[]) => void;
+  onResetToProtocolDefaults?: () => void;
 }
 
 function emptyField(): GatewayProviderField {
@@ -44,12 +51,31 @@ export function slugifyFieldName(value: string): string {
 
 export function validateFieldSchema(
   fields: GatewayProviderField[],
+  protocol?: string,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
   const seen = new Set<string>();
+  const definition = getGatewayProtocol(protocol);
 
-  if (fields.length === 0) {
-    errors.schema = "Add at least one configuration field for this provider";
+  if (!protocol) {
+    errors.schema = "Select a protocol to load the connection fields";
+  } else if (fields.length === 0) {
+    errors.schema =
+      protocol === "custom"
+        ? "Add at least one configuration field for this provider"
+        : `No fields defined. Reset to ${gatewayProtocolLabel(protocol)} defaults or add fields.`;
+  } else if (definition && protocol !== "custom") {
+    const names = new Set(
+      fields.map((f) => f.name?.trim()).filter((n): n is string => Boolean(n)),
+    );
+    const missing = definition.fields.filter(
+      (f) => f.required && !names.has(f.name),
+    );
+    if (missing.length > 0) {
+      errors.schema = `Missing required ${definition.label} fields: ${missing
+        .map((f) => f.label)
+        .join(", ")}. Reset to protocol defaults or add them.`;
+    }
   }
 
   fields.forEach((field, index) => {
@@ -86,10 +112,18 @@ export function validateFieldSchema(
 
 export default function GatewayProviderFieldSchemaEditor({
   fields,
+  protocol,
   errors = {},
   disabled = false,
   onChange,
+  onResetToProtocolDefaults,
 }: GatewayProviderFieldSchemaEditorProps) {
+  const protocolDef = getGatewayProtocol(protocol);
+  const canReset =
+    Boolean(protocol) &&
+    protocol !== "custom" &&
+    Boolean(onResetToProtocolDefaults);
+
   const updateField = (index: number, patch: Partial<GatewayProviderField>) => {
     onChange(
       fields.map((field, i) => (i === index ? { ...field, ...patch } : field)),
@@ -109,23 +143,36 @@ export default function GatewayProviderFieldSchemaEditor({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className={`text-sm font-semibold ${tw.textPrimary}`}>
-            Configuration Field Schema
+            Connection fields
           </h2>
           <p className={`text-xs ${tw.textSecondary} mt-1`}>
-            Define the credential / connection fields that appear when creating
-            a gateway configuration for this provider.
+            {protocolDef && protocol !== "custom"
+              ? `${protocolDef.label} fields are seeded from the protocol. Add extra keys only for vendor-specific parameters.`
+              : "These fields appear when creating a gateway configuration for this provider."}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={addField}
-          disabled={disabled}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white rounded-md disabled:opacity-60"
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-4 h-4" />
-          Add field
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {canReset && (
+            <button
+              type="button"
+              onClick={onResetToProtocolDefaults}
+              disabled={disabled}
+              className={`px-3 py-1.5 text-sm font-medium ${tw.rounded} border border-gray-200 disabled:opacity-60`}
+            >
+              Reset to {protocolDef?.label} defaults
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={addField}
+            disabled={disabled || !protocol}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white rounded-md disabled:opacity-60"
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="w-4 h-4" />
+            Add field
+          </button>
+        </div>
       </div>
 
       {errors.schema && (
@@ -137,16 +184,21 @@ export default function GatewayProviderFieldSchemaEditor({
           className={`border border-dashed border-gray-300 ${tw.rounded} p-8 text-center`}
         >
           <p className={`text-sm ${tw.textMuted}`}>
-            No fields yet. Add fields such as host, port, api_key, or username.
+            {!protocol
+              ? "Select a protocol to load the connection fields for this provider."
+              : protocol === "custom"
+                ? "No fields yet. Add fields such as host, port, api_key, or username."
+                : `No ${gatewayProtocolLabel(protocol)} fields yet. Reset to protocol defaults or add fields.`}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {fields.map((field, index) => {
             const prefix = `field_${index}`;
+            const protocolOwned = isProtocolOwnedField(protocol, field.name);
             return (
               <div
-                key={index}
+                key={protocolOwned ? field.name : `${field.name || "new"}-${index}`}
                 className={`border border-gray-200 ${tw.rounded} bg-gray-50/60 p-4`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -155,6 +207,13 @@ export default function GatewayProviderFieldSchemaEditor({
                     <span className={`text-xs font-semibold ${tw.textMuted}`}>
                       Field {index + 1}
                     </span>
+                    {protocolOwned && (
+                      <span
+                        className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 ${tw.rounded} bg-gray-200 ${tw.textSecondary}`}
+                      >
+                        {gatewayProtocolLabel(protocol)}
+                      </span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -176,7 +235,7 @@ export default function GatewayProviderFieldSchemaEditor({
                         updateField(index, { name: slugifyFieldName(v) })
                       }
                       placeholder="e.g. api_key"
-                      disabled={disabled}
+                      disabled={disabled || protocolOwned}
                       hasError={!!errors[`${prefix}_name`]}
                     />
                     {errors[`${prefix}_name`] && (
@@ -212,7 +271,7 @@ export default function GatewayProviderFieldSchemaEditor({
                         })
                       }
                       options={FIELD_TYPES}
-                      disabled={disabled}
+                      disabled={disabled || protocolOwned}
                     />
                   </div>
                   <div>
@@ -232,7 +291,7 @@ export default function GatewayProviderFieldSchemaEditor({
                       value={field.options || []}
                       onChange={(options) => updateField(index, { options })}
                       placeholder="e.g. production, staging, sandbox"
-                      disabled={disabled}
+                      disabled={disabled || protocolOwned}
                       hasError={!!errors[`${prefix}_options`]}
                       error={errors[`${prefix}_options`]}
                     />

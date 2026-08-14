@@ -1458,6 +1458,8 @@ export const offerCreativesConfig: TypeConfigurationPageConfig = {
   searchPlaceholder: "Search offer creatives...",
   initialData: [],
   createButtonText: "Create",
+  // Creatives require offer_id; they are created from an offer, not this list
+  disableCreate: true,
   enableActivateDeactivate: true,
   modalTitle: {
     create: "Create Offer Creative",

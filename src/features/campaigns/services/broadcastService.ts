@@ -215,6 +215,15 @@ class BroadcastService {
   async getBroadcastStatistics(): Promise<any> {
     return this.request<any>(MONITORING_BASE_URL, "/broadcasts/statistics");
   }
+
+  /**
+   * Scheduled broadcasts that can still be cancelled on campaign edit.
+   * Running / completed / failed rows are left untouched by the backend abort.
+   */
+  async getCancellableBroadcasts(campaignId: number): Promise<Broadcast[]> {
+    const response = await this.getCampaignOperationalBroadcasts(campaignId);
+    return (response.data ?? []).filter((row) => row.status === "scheduled");
+  }
 }
 
 export const broadcastService = new BroadcastService();

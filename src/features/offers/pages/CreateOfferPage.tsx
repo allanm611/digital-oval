@@ -78,10 +78,13 @@ import {
   ensureEmailHtmlBody,
 } from "../utils/channelUtils";
 import {
+  CHANNEL_ROUTE_FIELD_META,
   collectOfferRouteValidationErrors,
   getEffectiveRouteIdForChannel,
   hydrateOfferRouteFields,
   resolveCommunicationChannelKind,
+  TRANSACTIONAL_ROUTE_FIELD_META,
+  type OfferChannelRouteKind,
 } from "../utils/offerChannelRoute";
 import {
   buildOfferCreatePayload,
@@ -108,7 +111,7 @@ import {
 } from "../utils/trackingRulePriority";
 
 // Import the types from offerCreative instead of defining locally
-import { OfferCreative } from "../types/offerCreative";
+import { OfferCreative, collectPlaceholderVariables } from "../types/offerCreative";
 
 // Local creative for form (uses string ID until saved)
 type LocalOfferCreative = Omit<OfferCreative, "id" | "offer_id"> & {
@@ -335,6 +338,69 @@ function BasicInfoStep({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategoryIds]); // Only depend on selectedCategoryIds to avoid circular updates
 
+  const selectedChannel = communicationChannels?.find(
+    (ch) => String(ch.id) === String(formData.communication_channel_id),
+  );
+  const channelKind = resolveCommunicationChannelKind(selectedChannel?.name);
+  const channelRouteMeta = channelKind
+    ? CHANNEL_ROUTE_FIELD_META[channelKind]
+    : null;
+
+  const routeSelectByKind: Record<
+    OfferChannelRouteKind,
+    {
+      options: { value: string; label: string }[];
+      loading: boolean;
+    }
+  > = {
+    sms: {
+      options:
+        smsRoutes?.map((route) => ({
+          value: String(route.id),
+          label: route.name,
+        })) || [],
+      loading: !!smsRoutesLoading,
+    },
+    email: {
+      options:
+        emailRoutes?.map((route) => ({
+          value: String(route.id),
+          label: route.name,
+        })) || [],
+      loading: !!emailRoutesLoading,
+    },
+    whatsapp: {
+      options: Array.isArray(whatsappRoutes)
+        ? whatsappRoutes.map((route) => ({
+            value: String(route.id),
+            label: route.name,
+          }))
+        : [],
+      loading: !!whatsappRoutesLoading,
+    },
+    ussd: {
+      options: Array.isArray(ussdRoutes)
+        ? ussdRoutes.map((route) => ({
+            value: String(route.id),
+            label: route.name,
+          }))
+        : [],
+      loading: !!ussdRoutesLoading,
+    },
+    push: {
+      options: Array.isArray(pushRoutes)
+        ? pushRoutes.map((route) => ({
+            value: String(route.id),
+            label: route.name,
+          }))
+        : [],
+      loading: !!pushRoutesLoading,
+    },
+  };
+  const activeRouteSelect = channelKind ? routeSelectByKind[channelKind] : null;
+  const campaignRouteId = channelKind
+    ? getEffectiveRouteIdForChannel(formData, channelKind)
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -448,14 +514,19 @@ function BasicInfoStep({
           />
         </FormField>
 
-        <div className="flex gap-4">
-          <FormField error={validationErrors?.communication_channel} className="flex-1" ref={registerFieldRef('communication_channel')}>
+        <div className="space-y-4">
+          <FormField
+            error={validationErrors?.communication_channel}
+            ref={registerFieldRef("communication_channel")}
+          >
             <HeadlessSelect
               label="Communication Channel"
-              options={communicationChannels?.map((channel) => ({
-                value: String(channel.id),
-                label: channel.name,
-              })) || []}
+              options={
+                communicationChannels?.map((channel) => ({
+                  value: String(channel.id),
+                  label: channel.name,
+                })) || []
+              }
               disabled={channelsLoading}
               value={
                 formData.communication_channel_id
@@ -467,204 +538,93 @@ function BasicInfoStep({
                 setFormData({
                   ...formData,
                   communication_channel_id: Number(value),
-                  sms_route_id: undefined, // Reset SMS route when channel changes
-                  email_route_id: undefined, // Reset email route when channel changes
-                  whatsapp_route_id: undefined, // Reset WhatsApp route when channel changes
-                  ussd_route_id: undefined, // Reset USSD route when channel changes
-                  push_notification_route_id: undefined, // Reset Push route when channel changes
+                  sms_route_id: undefined,
+                  email_route_id: undefined,
+                  whatsapp_route_id: undefined,
+                  ussd_route_id: undefined,
+                  push_notification_route_id: undefined,
+                  transactional_route_id: undefined,
                 });
                 if (validationErrors?.communication_channel && clearValidationErrors) {
                   clearValidationErrors();
                 }
               }}
-              placeholder={channelsLoading ? "Loading..." : "Select communication channel"}
+              placeholder={
+                channelsLoading ? "Loading..." : "Select communication channel"
+              }
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Channel used to deliver this offer to customers.
+            </p>
           </FormField>
 
-          {/* SMS Route - only show when SMS variant channel is selected */}
-          {(() => {
-            const selectedChannel = communicationChannels?.find(
-              (ch) => String(ch.id) === String(formData.communication_channel_id)
-            );
-            return selectedChannel?.name?.toUpperCase().includes("SMS") ? (
-              <FormField error={validationErrors?.sms_route} className="flex-1" ref={registerFieldRef('sms_route')}>
+          {channelKind && channelRouteMeta && activeRouteSelect && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                error={validationErrors?.[channelRouteMeta.errorKey]}
+                ref={registerFieldRef(channelRouteMeta.errorKey)}
+              >
                 <HeadlessSelect
-                  label="SMS Route"
-                  options={
-                    smsRoutes?.map((route) => ({
-                      value: String(route.id),
-                      label: route.name,
-                    })) || []
-                  }
-                  disabled={smsRoutesLoading}
-                  value={
-                    formData.sms_route_id
-                      ? String(formData.sms_route_id)
-                      : ""
-                  }
-                    onChange={(value) => {
-                      if (!value) return;
-                      setFormData(
-                        withChannelRouteSelected(
-                          formData,
-                          Number(value),
-                          "sms",
-                        ),
-                      );
-                    }}
-                  placeholder={smsRoutesLoading ? "Loading..." : "Select SMS route"}
-                />
-              </FormField>
-            ) : null;
-          })()}
-
-          {/* Email Route - only show when EMAIL channel is selected */}
-          {(() => {
-            const selectedChannel = communicationChannels?.find(
-              (ch) => String(ch.id) === String(formData.communication_channel_id)
-            );
-            return selectedChannel?.name?.toUpperCase() === "EMAIL" ? (
-              <FormField error={validationErrors?.email_route} className="flex-1" ref={registerFieldRef('email_route')}>
-                <HeadlessSelect
-                  label="Email Route"
-                  options={
-                    emailRoutes?.map((route: any) => ({
-                      value: String(route.id),
-                      label: route.name,
-                    })) || []
-                  }
-                  disabled={emailRoutesLoading}
-                  value={
-                    formData.email_route_id
-                      ? String(formData.email_route_id)
-                      : ""
+                  label={channelRouteMeta.label}
+                  options={activeRouteSelect.options}
+                  disabled={activeRouteSelect.loading}
+                  value={campaignRouteId ? String(campaignRouteId) : ""}
+                  onChange={(value) => {
+                    if (!value) return;
+                    const routeId = Number(value);
+                    const next = withChannelRouteSelected(
+                      formData,
+                      routeId,
+                      channelKind,
+                    );
+                    if (next.transactional_route_id == null) {
+                      next.transactional_route_id = routeId;
                     }
-                    onChange={(value) => {
-                      if (!value) return;
-                      setFormData(
-                        withChannelRouteSelected(
-                          formData,
-                          Number(value),
-                          "email",
-                        ),
-                      );
-                    }}
-                    placeholder={emailRoutesLoading ? "Loading..." : "Select email route"}
-                  />
-                </FormField>
-              ) : null;
-            })()}
-
-          {/* WhatsApp Route - only show when WHATSAPP channel is selected */}
-          {(() => {
-            const selectedChannel = communicationChannels?.find(
-              (ch) => String(ch.id) === String(formData.communication_channel_id)
-            );
-            return selectedChannel?.name?.toUpperCase().includes("WHATSAPP") && whatsappRoutes ? (
-              <FormField error={validationErrors?.whatsapp_route} className="flex-1" ref={registerFieldRef('whatsapp_route')}>
-                <HeadlessSelect
-                  label="WhatsApp Route"
-                  options={
-                    Array.isArray(whatsappRoutes) ? whatsappRoutes.map((route) => ({
-                      value: String(route.id),
-                      label: route.name,
-                    })) : []
+                    setFormData(next);
+                  }}
+                  placeholder={
+                    activeRouteSelect.loading
+                      ? "Loading..."
+                      : `Select ${channelRouteMeta.label.toLowerCase()}`
                   }
-                  disabled={whatsappRoutesLoading}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {channelRouteMeta.description}
+                </p>
+              </FormField>
+
+              <FormField
+                error={validationErrors?.[TRANSACTIONAL_ROUTE_FIELD_META.errorKey]}
+                ref={registerFieldRef(TRANSACTIONAL_ROUTE_FIELD_META.errorKey)}
+              >
+                <HeadlessSelect
+                  label={TRANSACTIONAL_ROUTE_FIELD_META.label}
+                  options={activeRouteSelect.options}
+                  disabled={activeRouteSelect.loading}
                   value={
-                    formData.whatsapp_route_id
-                      ? String(formData.whatsapp_route_id)
+                    formData.transactional_route_id
+                      ? String(formData.transactional_route_id)
                       : ""
                   }
                   onChange={(value) => {
                     if (!value) return;
-                    setFormData(
-                      withChannelRouteSelected(
-                        formData,
-                        Number(value),
-                        "whatsapp",
-                      ),
-                    );
+                    setFormData({
+                      ...formData,
+                      transactional_route_id: Number(value),
+                    });
                   }}
-                  placeholder={whatsappRoutesLoading ? "Loading..." : "Select WhatsApp route"}
+                  placeholder={
+                    activeRouteSelect.loading
+                      ? "Loading..."
+                      : "Select transactional route"
+                  }
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  {TRANSACTIONAL_ROUTE_FIELD_META.description}
+                </p>
               </FormField>
-            ) : null;
-          })()}
-
-          {/* USSD Route - only show when USSD channel is selected */}
-          {(() => {
-            const selectedChannel = communicationChannels?.find(
-              (ch) => String(ch.id) === String(formData.communication_channel_id)
-            );
-            return selectedChannel?.name?.toUpperCase().includes("USSD") && ussdRoutes ? (
-              <FormField error={validationErrors?.ussd_route} className="flex-1" ref={registerFieldRef('ussd_route')}>
-                <HeadlessSelect
-                  label="USSD Route"
-                  options={
-                    Array.isArray(ussdRoutes) ? ussdRoutes.map((route) => ({
-                      value: String(route.id),
-                      label: route.name,
-                    })) : []
-                  }
-                  disabled={ussdRoutesLoading}
-                  value={
-                    formData.ussd_route_id
-                      ? String(formData.ussd_route_id)
-                      : ""
-                  }
-                  onChange={(value) => {
-                    if (!value) return;
-                    setFormData(
-                      withChannelRouteSelected(
-                        formData,
-                        Number(value),
-                        "ussd",
-                      ),
-                    );
-                  }}
-                  placeholder={ussdRoutesLoading ? "Loading..." : "Select USSD route"}
-                />
-              </FormField>
-            ) : null;
-          })()}
-
-          {/* Push Notification Route - only show when PUSH NOTIFICATION channel is selected */}
-          {(() => {
-            const selectedChannel = communicationChannels?.find(
-              (ch) => String(ch.id) === String(formData.communication_channel_id)
-            );
-            return selectedChannel?.name?.toUpperCase().includes("PUSH") && pushRoutes ? (
-              <FormField error={validationErrors?.push_notification_route} className="flex-1" ref={registerFieldRef('push_notification_route')}>
-                <HeadlessSelect
-                  label="Push Notification Route"
-                  options={
-                    Array.isArray(pushRoutes) ? pushRoutes.map((route) => ({
-                      value: String(route.id),
-                      label: route.name,
-                    })) : []
-                  }
-                  disabled={pushRoutesLoading}
-                  value={
-                    formData.push_notification_route_id
-                      ? String(formData.push_notification_route_id)
-                      : ""
-                  }
-                  onChange={(value) => {
-                    if (!value) return;
-                    setFormData(
-                      withChannelRouteSelected(
-                        formData,
-                        Number(value),
-                        "push",
-                      ),
-                    );
-                  }}
-                  placeholder={pushRoutesLoading ? "Loading..." : "Select push notification route"}
-                />
-              </FormField>
-            ) : null;
-          })()}
+            </div>
+          )}
         </div>
 
         <div>
@@ -1026,6 +986,12 @@ function ReviewStep({
   validationErrors,
   selectedProducts = [],
   offerTypes,
+  communicationChannels,
+  smsRoutes,
+  emailRoutes,
+  whatsappRoutes,
+  ussdRoutes,
+  pushRoutes,
   requiresTrackingRewardMapping = false,
   usesDefaultReward = false,
   offerTypeName = null,
@@ -1141,6 +1107,30 @@ function ReviewStep({
     setEditingCreativeId(null);
     setEditingCreative(null);
   };
+  const reviewChannel = communicationChannels?.find(
+    (ch) => String(ch.id) === String(formData.communication_channel_id),
+  );
+  const reviewChannelKind = resolveCommunicationChannelKind(reviewChannel?.name);
+  const reviewCampaignRouteId = reviewChannelKind
+    ? getEffectiveRouteIdForChannel(formData, reviewChannelKind)
+    : undefined;
+  const allReviewRoutes = [
+    ...(smsRoutes || []),
+    ...(emailRoutes || []),
+    ...(whatsappRoutes || []),
+    ...(ussdRoutes || []),
+    ...(pushRoutes || []),
+  ];
+  const resolveReviewRouteName = (routeId?: number) => {
+    if (routeId == null) return undefined;
+    return allReviewRoutes.find((route) => Number(route.id) === Number(routeId))
+      ?.name;
+  };
+  const reviewCampaignRouteName = resolveReviewRouteName(reviewCampaignRouteId);
+  const reviewTransactionalRouteName = resolveReviewRouteName(
+    formData.transactional_route_id,
+  );
+
   const hasValidationErrors =
     validationErrors && Object.keys(validationErrors).length > 0;
 
@@ -1202,6 +1192,9 @@ function ReviewStep({
                 )}
                 {validationErrors.push_route && (
                   <li>{validationErrors.push_route}</li>
+                )}
+                {validationErrors.transactional_route && (
+                  <li>{validationErrors.transactional_route}</li>
                 )}
                 {validationErrors.creatives && (
                   <li>{validationErrors.creatives}</li>
@@ -1310,6 +1303,33 @@ function ReviewStep({
                 </div>
                 <div className="text-sm font-medium text-gray-600">
                   {formData.max_usage_per_customer || "Unlimited"}
+                </div>
+              </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Communication Channel
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {communicationChannels?.find(
+                    (ch) =>
+                      String(ch.id) === String(formData.communication_channel_id),
+                  )?.name || "Not selected"}
+                </div>
+              </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Campaign Route
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {reviewCampaignRouteName || "Not selected"}
+                </div>
+              </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Transactional Route
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {reviewTransactionalRouteName || "Not selected"}
                 </div>
               </div>
               {formData.description && (
@@ -1743,6 +1763,7 @@ export default function CreateOfferPage({
     whatsapp_route_id: undefined,
     ussd_route_id: undefined,
     push_notification_route_id: undefined,
+    transactional_route_id: undefined,
     max_usage_per_customer: 1,
     eligibility_rules: {},
   });
@@ -2090,6 +2111,7 @@ export default function CreateOfferPage({
         whatsapp_route_id: offer.whatsapp_route_id,
         ussd_route_id: offer.ussd_route_id,
         push_notification_route_id: offer.push_notification_route_id,
+        transactional_route_id: offer.transactional_route_id,
         primary_product_id: offer.primary_product_id
           ? Number(offer.primary_product_id)
           : undefined,
@@ -2114,6 +2136,16 @@ export default function CreateOfferPage({
           wizardData.channelRouteId,
           wizardData.channelRouteKind,
         );
+      }
+      const restoredTransactionalId =
+        wizardData.transactionalRouteId ??
+        offer.transactional_route_id ??
+        formForUi.transactional_route_id;
+      if (restoredTransactionalId != null) {
+        formForUi = {
+          ...formForUi,
+          transactional_route_id: restoredTransactionalId,
+        };
       }
       setFormData(formForUi);
 
@@ -2423,7 +2455,24 @@ export default function CreateOfferPage({
         hydrated.ussd_route_id === prev.ussd_route_id &&
         hydrated.push_notification_route_id ===
           prev.push_notification_route_id;
-      return unchanged ? prev : { ...prev, ...hydrated };
+      const campaignRouteId = getEffectiveRouteIdForChannel(
+        { ...prev, ...hydrated },
+        channelKind,
+      );
+      const nextTransactional =
+        prev.transactional_route_id ?? campaignRouteId;
+      const next = {
+        ...prev,
+        ...hydrated,
+        transactional_route_id: nextTransactional,
+      };
+      if (
+        unchanged &&
+        next.transactional_route_id === prev.transactional_route_id
+      ) {
+        return prev;
+      }
+      return next;
     });
   }, [
     isEditMode,
@@ -2516,7 +2565,8 @@ export default function CreateOfferPage({
         if (!channelKind) return true;
 
         return (
-          getEffectiveRouteIdForChannel(formData, channelKind) !== undefined
+          getEffectiveRouteIdForChannel(formData, channelKind) !== undefined &&
+          formData.transactional_route_id !== undefined
         );
       case 2: // Products step
         return true; // Products are optional; allow proceeding
@@ -2607,7 +2657,8 @@ export default function CreateOfferPage({
         if (!reviewKind) return true;
 
         return (
-          getEffectiveRouteIdForChannel(formData, reviewKind) !== undefined
+          getEffectiveRouteIdForChannel(formData, reviewKind) !== undefined &&
+          formData.transactional_route_id !== undefined
         );
       default:
         return false;
@@ -2823,7 +2874,8 @@ export default function CreateOfferPage({
           submitErrors.email_route ||
           submitErrors.whatsapp_route ||
           submitErrors.ussd_route ||
-          submitErrors.push_route;
+          submitErrors.push_route ||
+          submitErrors.transactional_route;
         if (needsBasicInfoStep) {
           setCurrentStep(1);
         } else if (submitErrors.tracking) {
@@ -3007,37 +3059,33 @@ export default function CreateOfferPage({
               // Ensure Email creatives always send html_body (recover from text_body if needed)
               const creative = ensureEmailHtmlBody(creativeInput);
 
-              // Parse variables to get actual values (templates are frontend-only)
-              const variables = parseVariables(creative.variables);
-
-              // Replace placeholders with actual values in title, text_body, and html_body
-              // Templates are frontend-only, so we send only the resolved content
-              // replaceVariables handles empty variables gracefully (just returns original text)
-              const resolvedTitle = creative.title
-                ? replaceVariables(creative.title, variables)
-                : undefined;
-              const resolvedTextBody = creative.text_body
-                ? replaceVariables(creative.text_body, variables)
-                : undefined;
-              const resolvedHtmlBody = creative.html_body
-                ? replaceVariables(creative.html_body, variables)
-                : undefined;
-
-              // Generate a name for the creative (use resolved title if available, otherwise channel + locale)
               const creativeName =
-                resolvedTitle && resolvedTitle.trim()
-                  ? resolvedTitle.trim()
-                  : `${creative.channel} - ${creative.locale}`;
+                creative.title?.trim() ||
+                `${creative.channel} - ${creative.locale}`;
+
+              const existingVars = creative.variables || {};
+              const extracted = collectPlaceholderVariables(
+                creative.title,
+                creative.text_body,
+                creative.html_body,
+              );
+              const variables =
+                Object.keys(existingVars).length > 0
+                  ? existingVars
+                  : Object.keys(extracted).length > 0
+                    ? extracted
+                    : undefined;
 
               const creativePayload = {
                 offer_id: offerId,
                 channel: creative.channel,
                 locale: creative.locale,
                 name: creativeName,
-                title: resolvedTitle || undefined,
-                text_body: resolvedTextBody || undefined,
-                html_body: resolvedHtmlBody || undefined,
-                // Don't send template_type_id or variables - templates are frontend-only
+                title: creative.title || undefined,
+                text_body: creative.text_body || undefined,
+                html_body: creative.html_body || undefined,
+                variables,
+                save_as_template: Boolean(creative.save_as_template),
                 created_by: user.user_id,
               };
 

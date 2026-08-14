@@ -7,6 +7,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { gatewayConfigurationService } from "../services/gatewayConfigurationService";
 import { GatewayConfiguration } from "../types/gatewayConfiguration";
+import { gatewayProtocolLabel } from "../constants/gatewayProtocol";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
@@ -226,6 +227,18 @@ export default function GatewayConfigDetailsPage() {
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
               {config.provider_name || `#${config.provider_id}`}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <label
+              className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}
+            >
+              Protocol
+            </label>
+            <p className={`text-sm ${tw.textPrimary}`}>
+              {config.field_schema?.protocol
+                ? gatewayProtocolLabel(config.field_schema.protocol)
+                : "—"}
             </p>
           </div>
           <div className="space-y-1">

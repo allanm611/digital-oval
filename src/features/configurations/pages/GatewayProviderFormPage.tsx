@@ -28,7 +28,7 @@ export default function GatewayProviderFormPage({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [channels, setChannels] = useState<
-    { value: string; label: string }[]
+    { value: string; label: string; code?: string }[]
   >([]);
   const [editingProvider, setEditingProvider] =
     useState<GatewayProvider | null>(null);
@@ -41,17 +41,44 @@ export default function GatewayProviderFormPage({
     try {
       setIsLoading(true);
       const channelData = await communicationChannelService.getAll();
-      const channelOptions = (channelData || [])
-        .filter((ch) => ch.is_active !== false)
-        .map((ch) => ({
-          value: String(ch.id),
-          label: ch.name || ch.code,
-        }));
-      setChannels(channelOptions);
+      const allChannels = (channelData || []).map((ch) => ({
+        value: String(ch.id),
+        label: ch.name || ch.code,
+        code: ch.code,
+        is_active: ch.is_active !== false,
+      }));
+      const channelOptions = allChannels.filter((ch) => ch.is_active);
 
       if (mode === "edit" && id) {
         const provider = await gatewayProviderService.getById(Number(id));
         setEditingProvider(provider);
+        if (
+          provider.channel_id != null &&
+          !channelOptions.some((ch) => ch.value === String(provider.channel_id))
+        ) {
+          const fallback = allChannels.find(
+            (ch) => ch.value === String(provider.channel_id),
+          );
+          setChannels(
+            fallback
+              ? [...channelOptions, fallback]
+              : [
+                  ...channelOptions,
+                  {
+                    value: String(provider.channel_id),
+                    label:
+                      provider.channel_label ||
+                      provider.channel_value ||
+                      `Channel #${provider.channel_id}`,
+                    code: provider.channel_value,
+                  },
+                ],
+          );
+        } else {
+          setChannels(channelOptions);
+        }
+      } else {
+        setChannels(channelOptions);
       }
     } catch (err) {
       showError(

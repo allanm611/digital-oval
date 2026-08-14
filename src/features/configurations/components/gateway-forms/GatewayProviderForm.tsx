@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Input from "../../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
@@ -17,10 +17,18 @@ import {
 import GatewayProviderFieldSchemaEditor, {
   validateFieldSchema,
 } from "./GatewayProviderFieldSchemaEditor";
+import {
+  applyProtocolFields,
+  cloneProtocolFields,
+  getGatewayProtocol,
+  protocolSelectOptions,
+  resolveGatewayProtocol,
+} from "../../constants/gatewayProtocol";
 
 interface ChannelOption {
   value: string;
   label: string;
+  code?: string;
 }
 
 interface GatewayProviderFormProps {
@@ -34,6 +42,24 @@ interface GatewayProviderFormProps {
   ) => void;
 }
 
+function serializeFields(fields: GatewayProviderField[]): GatewayProviderField[] {
+  return fields.map((field) => ({
+    name: field.name.trim(),
+    label: field.label.trim(),
+    type: field.type,
+    required: !!field.required,
+    ...(field.placeholder?.trim()
+      ? { placeholder: field.placeholder.trim() }
+      : {}),
+    ...(field.default !== undefined ? { default: field.default } : {}),
+    ...(field.type === "select"
+      ? {
+          options: (field.options || []).map((o) => o.trim()).filter(Boolean),
+        }
+      : {}),
+  }));
+}
+
 export default function GatewayProviderForm({
   mode,
   isLoading,
@@ -45,6 +71,9 @@ export default function GatewayProviderForm({
   const [name, setName] = useState(initialData?.name || "");
   const [channelId, setChannelId] = useState(
     initialData?.channel_id ? String(initialData.channel_id) : "",
+  );
+  const [protocol, setProtocol] = useState(
+    resolveGatewayProtocol(initialData || {}),
   );
   const [isActive, setIsActive] = useState(initialData?.is_active !== false);
   const [fields, setFields] = useState<GatewayProviderField[]>(
@@ -60,9 +89,58 @@ export default function GatewayProviderForm({
     setChannelId(
       initialData.channel_id ? String(initialData.channel_id) : "",
     );
+    setProtocol(resolveGatewayProtocol(initialData));
     setIsActive(initialData.is_active !== false);
     setFields(initialData.field_schema?.fields || []);
   }, [initialData]);
+
+  const selectedChannel = useMemo(
+    () => channels.find((ch) => ch.value === channelId),
+    [channels, channelId],
+  );
+
+  const protocolOptions = useMemo(
+    () => protocolSelectOptions(selectedChannel?.code, selectedChannel?.label),
+    [selectedChannel],
+  );
+
+  const protocolDefinition = getGatewayProtocol(protocol);
+
+  const handleChannelChange = (nextChannelId: string) => {
+    setChannelId(nextChannelId);
+    const nextChannel = channels.find((ch) => ch.value === nextChannelId);
+    const allowed = protocolSelectOptions(nextChannel?.code, nextChannel?.label);
+    if (protocol && !allowed.some((p) => p.value === protocol)) {
+      setProtocol("");
+      setFields([]);
+    }
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.channel_id;
+      delete next.protocol;
+      return next;
+    });
+  };
+
+  const handleProtocolChange = (nextProtocol: string) => {
+    setFields(applyProtocolFields(nextProtocol, fields, protocol));
+    setProtocol(nextProtocol);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.protocol;
+      delete next.schema;
+      return next;
+    });
+  };
+
+  const handleResetToProtocolDefaults = () => {
+    const preset = cloneProtocolFields(protocolDefinition?.fields || []);
+    const protocolKeys = new Set(preset.map((f) => f.name));
+    const customFields = fields.filter(
+      (f) => f.name?.trim() && !protocolKeys.has(f.name),
+    );
+    setFields([...preset, ...customFields]);
+  };
 
   const validate = (): boolean => {
     const next: Record<string, string> = {};
@@ -73,8 +151,16 @@ export default function GatewayProviderForm({
     if (mode === "create" && !channelId) {
       next.channel_id = "Communication channel is required";
     }
+    if (!protocol) {
+      next.protocol = "Protocol is required";
+    } else if (
+      protocolOptions.length > 0 &&
+      !protocolOptions.some((p) => p.value === protocol)
+    ) {
+      next.protocol = "Select a protocol that matches this channel";
+    }
 
-    Object.assign(next, validateFieldSchema(fields));
+    Object.assign(next, validateFieldSchema(fields, protocol));
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -84,22 +170,8 @@ export default function GatewayProviderForm({
     if (!validate()) return;
 
     const field_schema = {
-      fields: fields.map((field) => ({
-        name: field.name.trim(),
-        label: field.label.trim(),
-        type: field.type,
-        required: !!field.required,
-        ...(field.placeholder?.trim()
-          ? { placeholder: field.placeholder.trim() }
-          : {}),
-        ...(field.type === "select"
-          ? {
-              options: (field.options || [])
-                .map((o) => o.trim())
-                .filter(Boolean),
-            }
-          : {}),
-      })),
+      protocol,
+      fields: serializeFields(fields),
     };
 
     if (mode === "create") {
@@ -148,7 +220,7 @@ export default function GatewayProviderForm({
               <HeadlessSelect
                 label="Communication Channel *"
                 value={channelId}
-                onChange={setChannelId}
+                onChange={handleChannelChange}
                 options={channels}
                 placeholder="Select channel"
                 disabled={isLoading || mode === "edit"}
@@ -160,6 +232,39 @@ export default function GatewayProviderForm({
               {mode === "edit" && (
                 <p className={`text-xs ${tw.textMuted} mt-1`}>
                   Channel cannot be changed after creation.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <HeadlessSelect
+                label="Protocol *"
+                value={protocol}
+                onChange={handleProtocolChange}
+                options={protocolOptions}
+                placeholder={
+                  channelId || mode === "edit"
+                    ? "Select protocol"
+                    : "Select a channel first"
+                }
+                disabled={isLoading || (!channelId && mode === "create")}
+                error={!!errors.protocol}
+              />
+              {errors.protocol && (
+                <p className="text-red-500 text-xs mt-1">{errors.protocol}</p>
+              )}
+              {protocolDefinition && (
+                <p className={`text-xs ${tw.textMuted} mt-1`}>
+                  {protocolDefinition.description}
+                </p>
+              )}
+              {mode === "edit" && (
+                <p className={`text-xs ${tw.textSecondary} mt-1`}>
+                  Changing protocol replaces the standard connection fields.
+                  Custom fields are kept. Existing configurations may need
+                  updating.
                 </p>
               )}
             </div>
@@ -186,9 +291,11 @@ export default function GatewayProviderForm({
       >
         <GatewayProviderFieldSchemaEditor
           fields={fields}
+          protocol={protocol}
           errors={errors}
           disabled={isLoading}
           onChange={setFields}
+          onResetToProtocolDefaults={handleResetToProtocolDefaults}
         />
         {mode === "edit" && (
           <p className={`text-xs ${tw.textSecondary} mt-4`}>

@@ -47,6 +47,10 @@ import CampaignFlowsStep from "../components/steps/CampaignFlowsStep";
 import SchedulingStep from "../components/steps/SchedulingStep";
 import CampaignPreviewStep from "../components/steps/CampaignPreviewStep";
 import RunCampaignModal from "../components/RunCampaignModal";
+import RescheduleBroadcastsModal from "../components/RescheduleBroadcastsModal";
+import { broadcastService } from "../services/broadcastService";
+import { Broadcast } from "../types/broadcast";
+import { mapSchedulingToBroadcastFields } from "../utils/mapSchedulingToBroadcastFields";
 
 const steps: Step[] = [
   {
@@ -99,6 +103,10 @@ export default function CreateCampaignPage() {
   const [isDuplicateMode, setIsDuplicateMode] = useState(false);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
   const [showRunModal, setShowRunModal] = useState(false);
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [scheduledBroadcasts, setScheduledBroadcasts] = useState<Broadcast[]>(
+    [],
+  );
   const [isResubmit, setIsResubmit] = useState(
     (location.state as any)?.isResubmit ?? false,
   );
@@ -796,7 +804,29 @@ export default function CreateCampaignPage() {
   };
 
   /** Submit campaign creation or update */
-  const handleSubmit = async () => {
+  const handleSubmit = async (
+    abortPendingBroadcasts = false,
+    confirmed = false,
+  ) => {
+    if (isEditMode && id && !confirmed) {
+      setIsLoading(true);
+      try {
+        const cancellable = await broadcastService.getCancellableBroadcasts(
+          parseInt(id, 10),
+        );
+        setScheduledBroadcasts(cancellable);
+      } catch (err) {
+        console.error("Failed to load scheduled broadcasts:", err);
+        setScheduledBroadcasts([]);
+      } finally {
+        setIsLoading(false);
+      }
+      setShowRescheduleModal(true);
+      return;
+    }
+
+    const shouldAbortPendingBroadcasts = abortPendingBroadcasts === true;
+
     setIsLoading(true);
     try {
       if (!formData?.name?.trim()) {
@@ -862,6 +892,10 @@ export default function CreateCampaignPage() {
               ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
             },
           }),
+          abort_pending_broadcasts: shouldAbortPendingBroadcasts,
+          ...(shouldAbortPendingBroadcasts
+            ? mapSchedulingToBroadcastFields(formData.scheduling)
+            : {}),
         };
         await campaignService.updateCampaign(parseInt(id), updateData);
 
@@ -977,7 +1011,9 @@ export default function CreateCampaignPage() {
 
         showToast(
           "success",
-          `"${formData.name}" ${t.campaigns.campaignDefinition.updateSuccess}`,
+          shouldAbortPendingBroadcasts
+            ? `"${formData.name}" updated. Previous scheduled broadcasts were cancelled and will be rescheduled.`
+            : `"${formData.name}" ${t.campaigns.campaignDefinition.updateSuccess}`,
         );
 
         // If this is a resubmit of a rejected campaign, submit for approval
@@ -1177,6 +1213,7 @@ export default function CreateCampaignPage() {
               ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
             },
           }),
+          ...mapSchedulingToBroadcastFields(formData.scheduling),
         };
 
         const createResponse =
@@ -1376,6 +1413,7 @@ export default function CreateCampaignPage() {
       navigate("/dashboard/campaigns");
     } catch (error) {
       console.error("Failed to create/update campaign:", error);
+      setShowRescheduleModal(false);
 
       // Extract error message from backend response
       let errorMessage = isEditMode
@@ -1611,7 +1649,9 @@ export default function CreateCampaignPage() {
     totalSteps: steps.length,
     onNext: handleNext,
     onPrev: handlePrev,
-    onSubmit: handleSubmit,
+    onSubmit: () => {
+      void handleSubmit();
+    },
     formData,
     setFormData,
     selectedSegments,
@@ -1691,7 +1731,9 @@ export default function CreateCampaignPage() {
         canNavigateToStep={canNavigateToStep}
         onNext={handleNext}
         onPrev={handlePrev}
-        onSubmit={handleSubmit}
+        onSubmit={() => {
+          void handleSubmit();
+        }}
         onCancel={handleCancelCampaign}
         onSaveDraft={handleSaveDraft}
         isLoading={isLoading}
@@ -1720,6 +1762,19 @@ export default function CreateCampaignPage() {
           }}
         />
       )}
+
+      <RescheduleBroadcastsModal
+        isOpen={showRescheduleModal}
+        onClose={() => {
+          if (!isLoading) setShowRescheduleModal(false);
+        }}
+        onConfirm={(abortPendingBroadcasts) => {
+          void handleSubmit(abortPendingBroadcasts, true);
+        }}
+        campaignName={formData.name || "this campaign"}
+        scheduledBroadcasts={scheduledBroadcasts}
+        isSubmitting={isLoading}
+      />
     </>
   );
 }

@@ -87,6 +87,16 @@ export interface CreateCampaignRequest {
   line_of_business_id?: number;
   line_of_business?: string;
   communication_policy?: string;
+
+  /** Backend broadcast scheduler fields (PUT/POST /campaigns) */
+  execution_mode?: "immediate" | "schedule";
+  cron_expression?: string | null;
+  schedule_timezone?: string;
+  /**
+   * When true on campaign update, scheduled broadcasts for this campaign are
+   * aborted and new ones are created from the current schedule.
+   */
+  abort_pending_broadcasts?: boolean;
 }
 
 export interface CreateCampaignResponse {

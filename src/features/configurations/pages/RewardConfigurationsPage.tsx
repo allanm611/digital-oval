@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Edit, Eye, Trash2 } from "lucide-react";
+import { Copy, Edit, Eye, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -8,6 +8,7 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import BackButton from "../../../shared/components/ui/BackButton";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination, {
   DEFAULT_PAGE_SIZE,
 } from "../../../shared/components/ui/Pagination";
@@ -17,7 +18,10 @@ import { rewardConfigurationService } from "../services/rewardConfigurationServi
 import { RewardConfiguration } from "../types/rewardConfiguration";
 import { rewardProviderService } from "../services/rewardProviderService";
 import { rewardTypeService } from "../../offers/services/rewardTypeService";
-import { isDefaultRewardTemplate } from "../utils/rewardTemplateDefaults";
+import {
+  canDuplicateRewardTemplate,
+  isDefaultRewardTemplate,
+} from "../utils/rewardTemplateDefaults";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import {
   Table,
@@ -48,6 +52,7 @@ export default function RewardConfigurationsPage() {
     { value: string; label: string }[]
   >([]);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<number | null>(null);
   const [configToDelete, setConfigToDelete] =
     useState<RewardConfiguration | null>(null);
 
@@ -136,11 +141,48 @@ export default function RewardConfigurationsPage() {
     }
   };
 
+  const handleDuplicate = async (config: RewardConfiguration) => {
+    const eligibility = canDuplicateRewardTemplate(config);
+    if (!eligibility.allowed) {
+      showError("Cannot duplicate", eligibility.reason || "This template cannot be duplicated.");
+      return;
+    }
+    if (duplicatingId != null) return;
+
+    setDuplicatingId(config.id);
+    try {
+      const duplicated = await rewardConfigurationService.duplicate(config.id);
+      if (!duplicated.id) {
+        throw new Error("Duplicate succeeded but the new template id was missing.");
+      }
+      const next: RewardConfiguration = {
+        ...duplicated,
+        provider_name: duplicated.provider_name || config.provider_name,
+        reward_type: duplicated.reward_type || config.reward_type,
+        api_path: duplicated.api_path || config.api_path,
+      };
+      setConfigs((prev) => [next, ...prev.filter((c) => c.id !== next.id)]);
+      showSuccess(
+        "Template duplicated",
+        `"${next.name}" was created from "${config.name}".`,
+      );
+    } catch (err) {
+      showError(
+        extractBackendError(
+          err,
+          "Failed to duplicate reward template. Please try again.",
+        ),
+      );
+    } finally {
+      setDuplicatingId(null);
+    }
+  };
+
   const handleDeleteClick = (config: RewardConfiguration) => {
     if (isDefaultRewardTemplate(config)) {
       showError(
         "Default template protected",
-        "Each reward provider must keep its default template. Edit its values instead of deleting it.",
+        "Each reward provider must keep its default template. Duplicate it to create an editable copy.",
       );
       return;
     }
@@ -308,10 +350,44 @@ export default function RewardConfigurationsPage() {
             onClick={() =>
               navigate(`/dashboard/reward-configurations/${config.id}/edit`)
             }
-            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
-            title="Edit template"
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200 ${
+              isDefaultRewardTemplate(config)
+                ? "opacity-40 cursor-not-allowed"
+                : ""
+            }`}
+            title={
+              isDefaultRewardTemplate(config)
+                ? "Default template cannot be edited. Duplicate it to customise."
+                : "Edit template"
+            }
+            disabled={isDefaultRewardTemplate(config)}
           >
             <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDuplicate(config)}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200 ${
+              !canDuplicateRewardTemplate(config).allowed ||
+              duplicatingId === config.id
+                ? "opacity-40 cursor-not-allowed"
+                : ""
+            }`}
+            title={
+              duplicatingId === config.id
+                ? "Duplicating…"
+                : canDuplicateRewardTemplate(config).reason ||
+                  "Duplicate template"
+            }
+            disabled={
+              !canDuplicateRewardTemplate(config).allowed ||
+              duplicatingId === config.id
+            }
+          >
+            {duplicatingId === config.id ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
           </button>
           <button
             onClick={() => handleDeleteClick(config)}

@@ -29,7 +29,57 @@ type RouteFieldSlice = Pick<
   | "whatsapp_route_id"
   | "ussd_route_id"
   | "push_notification_route_id"
+  | "transactional_route_id"
 >;
+
+export const CHANNEL_ROUTE_FIELD_META: Record<
+  OfferChannelRouteKind,
+  { label: string; description: string; errorKey: string; requiredMessage: string }
+> = {
+  sms: {
+    label: "SMS Route",
+    description:
+      "Route used to send the offer campaign message to the customer.",
+    errorKey: "sms_route",
+    requiredMessage: "SMS route is required",
+  },
+  email: {
+    label: "Email Route",
+    description:
+      "Route used to send the offer campaign message to the customer.",
+    errorKey: "email_route",
+    requiredMessage: "Email route is required",
+  },
+  whatsapp: {
+    label: "WhatsApp Route",
+    description:
+      "Route used to send the offer campaign message to the customer.",
+    errorKey: "whatsapp_route",
+    requiredMessage: "WhatsApp route is required",
+  },
+  ussd: {
+    label: "USSD Route",
+    description:
+      "Route used to send the offer campaign message to the customer.",
+    errorKey: "ussd_route",
+    requiredMessage: "USSD route is required",
+  },
+  push: {
+    label: "Push Notification Route",
+    description:
+      "Route used to send the offer campaign message to the customer.",
+    errorKey: "push_route",
+    requiredMessage: "Push notification route is required",
+  },
+};
+
+export const TRANSACTIONAL_ROUTE_FIELD_META = {
+  label: "Transactional Route",
+  description:
+    "Route over which the transactional success or failure message will be sent.",
+  errorKey: "transactional_route",
+  requiredMessage: "Transactional route is required",
+} as const;
 
 function legacyRouteId(route: string | number | undefined): number | undefined {
   if (route === undefined || route === null || route === "") return undefined;
@@ -101,26 +151,15 @@ export function collectOfferRouteValidationErrors(
   if (!kind) return errors;
 
   const routeId = getEffectiveRouteIdForChannel(formData, kind);
-  if (routeId != null) return errors;
-
-  switch (kind) {
-    case "sms":
-      errors.sms_route = "SMS route is required";
-      break;
-    case "email":
-      errors.email_route = "Email route is required";
-      break;
-    case "whatsapp":
-      errors.whatsapp_route = "WhatsApp route is required";
-      break;
-    case "ussd":
-      errors.ussd_route = "USSD route is required";
-      break;
-    case "push":
-      errors.push_route = "Push notification route is required";
-      break;
-    default:
-      break;
+  if (routeId == null) {
+    const meta = CHANNEL_ROUTE_FIELD_META[kind];
+    errors[meta.errorKey] = meta.requiredMessage;
   }
+
+  if (formData.transactional_route_id == null) {
+    errors[TRANSACTIONAL_ROUTE_FIELD_META.errorKey] =
+      TRANSACTIONAL_ROUTE_FIELD_META.requiredMessage;
+  }
+
   return errors;
 }

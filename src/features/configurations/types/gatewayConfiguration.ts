@@ -14,6 +14,7 @@ export interface GatewayConfiguration {
   channel_label?: string;
   /** Present on get-by-id from joined provider */
   field_schema?: {
+    protocol?: string;
     fields: Array<{
       name: string;
       label: string;
@@ -21,6 +22,7 @@ export interface GatewayConfiguration {
       required?: boolean;
       placeholder?: string;
       options?: string[];
+      default?: string | number | boolean;
     }>;
   };
 }

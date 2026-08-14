@@ -41,6 +41,7 @@ export interface Offer {
   whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
   ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
   push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
+  transactional_route_id?: number; // Route for fulfillment success/failure messages
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -83,6 +84,7 @@ export interface CreateOfferRequest {
   whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
   ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
   push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
+  transactional_route_id?: number; // Route for fulfillment success/failure messages
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -118,6 +120,7 @@ export interface UpdateOfferRequest {
   whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
   ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
   push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
+  transactional_route_id?: number; // Route for fulfillment success/failure messages
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
