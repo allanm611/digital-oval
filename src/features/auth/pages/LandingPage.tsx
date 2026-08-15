@@ -284,6 +284,7 @@ export default function LandingPage() {
             </div>
           </div>
         </nav>
+        
 
         {/* Hero Section */}
         <section className="pt-72 pb-64 overflow-hidden bg-gradient-to-b from-white via-emerald-50 to-emerald-50 relative">
