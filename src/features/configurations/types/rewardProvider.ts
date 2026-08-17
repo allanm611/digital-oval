@@ -13,8 +13,11 @@ export interface RewardProviderSchemaField {
   /**
    * When true (default), the field can be changed on reward templates
    * (create/edit) and on grant/rule runtime overrides.
-   * When false, the value is locked to the provider schema default on create,
-   * and to the saved template value on edit / overrides.
+   * When false, the field is provider-owned: templates and grants always
+   * inherit the current provider schema default (secrets fall back to the
+   * stored value when the schema default is empty or masked).
+   * The system default template also inherits every field this way, because
+   * it cannot be edited independently.
    * Undefined from older providers is treated as editable for backward compatibility.
    */
   is_editable?: boolean;

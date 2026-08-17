@@ -5,6 +5,10 @@ import { rewardConfigurationService } from "../../services/rewardConfigurationSe
 import { rewardProviderService } from "../../services/rewardProviderService";
 import type { RewardConfiguration } from "../../types/rewardConfiguration";
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
+import {
+  applyProviderDefaultsToTemplate,
+  isDefaultRewardTemplate,
+} from "../../utils/rewardTemplateDefaults";
 
 function isSensitiveKey(key: string): boolean {
   const lower = key.toLowerCase();
@@ -119,12 +123,12 @@ export default function RewardConfigurationReadOnlyPanel({
       try {
         const found = await rewardConfigurationService.getById(configurationId);
         if (cancelled) return;
-        setConfig(found);
 
         const provider = await rewardProviderService.getById(found.provider_id);
         if (cancelled) return;
         setAuthFields(provider.auth_schema?.fields || []);
         setPayloadFields(provider.payload_schema?.fields || []);
+        setConfig(applyProviderDefaultsToTemplate(found, provider));
       } catch {
         if (!cancelled) {
           setConfig(null);
@@ -156,7 +160,9 @@ export default function RewardConfigurationReadOnlyPanel({
             Configuration parameters
           </h4>
           <p className={`text-xs ${tw.textMuted} mt-0.5`}>
-            Values stored on the selected reward template (read-only).
+            {config && isDefaultRewardTemplate(config)
+              ? "Values inherited from the current provider schema (default template)."
+              : "Values stored on the selected reward template. Locked fields follow the provider."}
           </p>
         </div>
         {config && (

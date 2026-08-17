@@ -44,15 +44,8 @@ import { offerCategoryService } from "../services/offerCategoryService";
 import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
-import { smsRouteService } from "../../routes/services/smsRouteService";
-import { emailRouteService } from "../../routes/services/emailRouteService";
-import { whatsappRouteService } from "../../routes/services/whatsappRouteService";
-import { ussdRouteService } from "../../routes/services/ussdRouteService";
-import { pushNotificationRouteService } from "../../routes/services/pushNotificationRouteService";
+import { routeService } from "../../routes/services/routeService";
 import { SMSRoute } from "../../routes/types/smsRoute";
-import { EmailRoute } from "../../routes/types/emailRoute";
-import { WhatsAppRoute } from "../../routes/types/whatsappRoute";
-import { PushNotificationRoute } from "../../routes/types/pushNotificationRoute";
 // import { productCategoryService } from "../../products/services/productCategoryService";
 import { OfferCategoryType } from "../types/offerCategory";
 import ProductSelector from "../../products/components/ProductSelector";
@@ -65,7 +58,7 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsHelper";
@@ -79,6 +72,8 @@ import {
 } from "../utils/channelUtils";
 import {
   CHANNEL_ROUTE_FIELD_META,
+  channelKindToRouteType,
+  clearedOfferRouteFields,
   collectOfferRouteValidationErrors,
   getEffectiveRouteIdForChannel,
   hydrateOfferRouteFields,
@@ -109,6 +104,10 @@ import {
   findRewardsWithInvalidPriorities,
   findTrackingSourcesWithInvalidPriorities,
 } from "../utils/trackingRulePriority";
+import {
+  formatRouteSelectLabel,
+  routeSelectOptionsForOfferChannel,
+} from "../../routes/utils/routeSelect";
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative, collectPlaceholderVariables } from "../types/offerCreative";
@@ -198,16 +197,8 @@ interface StepProps {
   categoriesLoading?: boolean;
   communicationChannels?: CommunicationChannel[];
   channelsLoading?: boolean;
-  smsRoutes?: SMSRoute[];
-  smsRoutesLoading?: boolean;
-  emailRoutes?: EmailRoute[];
-  emailRoutesLoading?: boolean;
-  whatsappRoutes?: WhatsAppRoute[];
-  whatsappRoutesLoading?: boolean;
-  ussdRoutes?: SMSRoute[];
-  ussdRoutesLoading?: boolean;
-  pushRoutes?: PushNotificationRoute[];
-  pushRoutesLoading?: boolean;
+  deliveryRoutes?: SMSRoute[];
+  routesLoading?: boolean;
   onSaveDraft?: () => void;
   onCancel?: () => void;
   offerTypes?: OfferTypeEnum[];
@@ -265,16 +256,8 @@ function BasicInfoStep({
   categoriesLoading,
   communicationChannels,
   channelsLoading,
-  smsRoutes,
-  smsRoutesLoading,
-  emailRoutes,
-  emailRoutesLoading,
-  whatsappRoutes,
-  whatsappRoutesLoading,
-  ussdRoutes,
-  ussdRoutesLoading,
-  pushRoutes,
-  pushRoutesLoading,
+  deliveryRoutes,
+  routesLoading,
   offerTypes,
   offerTypesLoading,
   categoryRefreshTrigger,
@@ -346,6 +329,10 @@ function BasicInfoStep({
     ? CHANNEL_ROUTE_FIELD_META[channelKind]
     : null;
 
+  const campaignRouteId = channelKind
+    ? getEffectiveRouteIdForChannel(formData, channelKind)
+    : undefined;
+  const catalog = deliveryRoutes || [];
   const routeSelectByKind: Record<
     OfferChannelRouteKind,
     {
@@ -354,53 +341,55 @@ function BasicInfoStep({
     }
   > = {
     sms: {
-      options:
-        smsRoutes?.map((route) => ({
-          value: String(route.id),
-          label: route.name,
-        })) || [],
-      loading: !!smsRoutesLoading,
+      options: routeSelectOptionsForOfferChannel(catalog, {
+        channelType: "SMS",
+        channel: selectedChannel,
+        selectedRouteId: campaignRouteId,
+      }),
+      loading: !!routesLoading,
     },
     email: {
-      options:
-        emailRoutes?.map((route) => ({
-          value: String(route.id),
-          label: route.name,
-        })) || [],
-      loading: !!emailRoutesLoading,
+      options: routeSelectOptionsForOfferChannel(catalog, {
+        channelType: "EMAIL",
+        channel: selectedChannel,
+        selectedRouteId: campaignRouteId,
+      }),
+      loading: !!routesLoading,
     },
     whatsapp: {
-      options: Array.isArray(whatsappRoutes)
-        ? whatsappRoutes.map((route) => ({
-            value: String(route.id),
-            label: route.name,
-          }))
-        : [],
-      loading: !!whatsappRoutesLoading,
+      options: routeSelectOptionsForOfferChannel(catalog, {
+        channelType: "WHATSAPP",
+        channel: selectedChannel,
+        selectedRouteId: campaignRouteId,
+      }),
+      loading: !!routesLoading,
     },
     ussd: {
-      options: Array.isArray(ussdRoutes)
-        ? ussdRoutes.map((route) => ({
-            value: String(route.id),
-            label: route.name,
-          }))
-        : [],
-      loading: !!ussdRoutesLoading,
+      options: routeSelectOptionsForOfferChannel(catalog, {
+        channelType: "USSD",
+        channel: selectedChannel,
+        selectedRouteId: campaignRouteId,
+      }),
+      loading: !!routesLoading,
     },
     push: {
-      options: Array.isArray(pushRoutes)
-        ? pushRoutes.map((route) => ({
-            value: String(route.id),
-            label: route.name,
-          }))
-        : [],
-      loading: !!pushRoutesLoading,
+      options: routeSelectOptionsForOfferChannel(catalog, {
+        channelType: "PUSH",
+        channel: selectedChannel,
+        selectedRouteId: campaignRouteId,
+      }),
+      loading: !!routesLoading,
     },
   };
   const activeRouteSelect = channelKind ? routeSelectByKind[channelKind] : null;
-  const campaignRouteId = channelKind
-    ? getEffectiveRouteIdForChannel(formData, channelKind)
-    : undefined;
+  const transactionalRouteOptions = routeSelectOptionsForOfferChannel(
+    catalog,
+    {
+      channelType: channelKindToRouteType(channelKind),
+      channel: selectedChannel,
+      selectedRouteId: formData.transactional_route_id,
+    },
+  );
 
   return (
     <div className="space-y-6">
@@ -535,16 +524,17 @@ function BasicInfoStep({
               }
               onChange={(value) => {
                 if (!value) return;
-                setFormData({
-                  ...formData,
-                  communication_channel_id: Number(value),
-                  sms_route_id: undefined,
-                  email_route_id: undefined,
-                  whatsapp_route_id: undefined,
-                  ussd_route_id: undefined,
-                  push_notification_route_id: undefined,
-                  transactional_route_id: undefined,
-                });
+                const nextChannelId = Number(value);
+                if (
+                  Number(formData.communication_channel_id) === nextChannelId
+                ) {
+                  return;
+                }
+                setFormData((prev) => ({
+                  ...prev,
+                  communication_channel_id: nextChannelId,
+                  ...clearedOfferRouteFields(),
+                }));
                 if (validationErrors?.communication_channel && clearValidationErrors) {
                   clearValidationErrors();
                 }
@@ -568,6 +558,7 @@ function BasicInfoStep({
                   label={channelRouteMeta.label}
                   options={activeRouteSelect.options}
                   disabled={activeRouteSelect.loading}
+                  searchable
                   value={campaignRouteId ? String(campaignRouteId) : ""}
                   onChange={(value) => {
                     if (!value) return;
@@ -599,8 +590,9 @@ function BasicInfoStep({
               >
                 <HeadlessSelect
                   label={TRANSACTIONAL_ROUTE_FIELD_META.label}
-                  options={activeRouteSelect.options}
+                  options={transactionalRouteOptions}
                   disabled={activeRouteSelect.loading}
+                  searchable
                   value={
                     formData.transactional_route_id
                       ? String(formData.transactional_route_id)
@@ -987,11 +979,7 @@ function ReviewStep({
   selectedProducts = [],
   offerTypes,
   communicationChannels,
-  smsRoutes,
-  emailRoutes,
-  whatsappRoutes,
-  ussdRoutes,
-  pushRoutes,
+  deliveryRoutes,
   requiresTrackingRewardMapping = false,
   usesDefaultReward = false,
   offerTypeName = null,
@@ -1114,17 +1102,13 @@ function ReviewStep({
   const reviewCampaignRouteId = reviewChannelKind
     ? getEffectiveRouteIdForChannel(formData, reviewChannelKind)
     : undefined;
-  const allReviewRoutes = [
-    ...(smsRoutes || []),
-    ...(emailRoutes || []),
-    ...(whatsappRoutes || []),
-    ...(ussdRoutes || []),
-    ...(pushRoutes || []),
-  ];
+  const allReviewRoutes = deliveryRoutes || [];
   const resolveReviewRouteName = (routeId?: number) => {
     if (routeId == null) return undefined;
-    return allReviewRoutes.find((route) => Number(route.id) === Number(routeId))
-      ?.name;
+    const match = allReviewRoutes.find(
+      (route) => Number(route.id) === Number(routeId),
+    );
+    return match ? formatRouteSelectLabel(match) : undefined;
   };
   const reviewCampaignRouteName = resolveReviewRouteName(reviewCampaignRouteId);
   const reviewTransactionalRouteName = resolveReviewRouteName(
@@ -2301,73 +2285,27 @@ export default function CreateOfferPage({
     loadOfferCategories();
   }, []);
 
-  // Load SMS, Email, WhatsApp, USSD, and Push Notification routes from API
-  const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
-  const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
-  const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
-  const [emailRoutesLoading, setEmailRoutesLoading] = useState(false);
-  const [whatsappRoutes, setWhatsappRoutes] = useState<WhatsAppRoute[]>([]);
-  const [whatsappRoutesLoading, setWhatsappRoutesLoading] = useState(false);
-  const [ussdRoutes, setUssdRoutes] = useState<SMSRoute[]>([]);
-  const [ussdRoutesLoading, setUssdRoutesLoading] = useState(false);
-  const [pushRoutes, setPushRoutes] = useState<PushNotificationRoute[]>([]);
-  const [pushRoutesLoading, setPushRoutesLoading] = useState(false);
+  // Load delivery routes once. Channel switches filter this catalog locally —
+  // they must not refetch, and they must not keep the previous channel's route.
+  const [deliveryRoutes, setDeliveryRoutes] = useState<SMSRoute[]>([]);
+  const [routesLoading, setRoutesLoading] = useState(false);
+  const offerRouteHydrationDoneRef = useRef(false);
 
   // Load routes and communication channels on component mount
   useEffect(() => {
     const loadRoutes = async () => {
       try {
-        setSmsRoutesLoading(true);
-        const smsRoutesData = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r: any) => r.is_active) : []);
+        setRoutesLoading(true);
+        const allRoutes = await routeService.getAllRoutesEnriched();
+        setDeliveryRoutes(
+          Array.isArray(allRoutes)
+            ? allRoutes.filter((route) => route.is_active !== false)
+            : [],
+        );
       } catch {
-        setSmsRoutes([]);
+        setDeliveryRoutes([]);
       } finally {
-        setSmsRoutesLoading(false);
-      }
-
-      // Load Email routes
-      try {
-        setEmailRoutesLoading(true);
-        const emailRoutesData = await emailRouteService.getAllRoutes();
-        setEmailRoutes(Array.isArray(emailRoutesData) ? emailRoutesData.filter((r: any) => r.is_active) : []);
-      } catch {
-        setEmailRoutes([]);
-      } finally {
-        setEmailRoutesLoading(false);
-      }
-
-      // Load WhatsApp routes
-      try {
-        setWhatsappRoutesLoading(true);
-        const whatsappRoutesData = await whatsappRouteService.getAllRoutes();
-        setWhatsappRoutes(Array.isArray(whatsappRoutesData) ? whatsappRoutesData.filter((r: any) => r.is_active) : []);
-      } catch {
-        setWhatsappRoutes([]);
-      } finally {
-        setWhatsappRoutesLoading(false);
-      }
-
-      // Load USSD routes
-      try {
-        setUssdRoutesLoading(true);
-        const ussdRoutesData = await ussdRouteService.getAllRoutes();
-        setUssdRoutes(Array.isArray(ussdRoutesData) ? ussdRoutesData.filter((r: any) => r.is_active) : []);
-      } catch {
-        setUssdRoutes([]);
-      } finally {
-        setUssdRoutesLoading(false);
-      }
-
-      // Load Push Notification routes
-      try {
-        setPushRoutesLoading(true);
-        const pushRoutesData = await pushNotificationRouteService.getAllRoutes();
-        setPushRoutes(Array.isArray(pushRoutesData) ? pushRoutesData.filter((r: any) => r.is_active) : []);
-      } catch {
-        setPushRoutes([]);
-      } finally {
-        setPushRoutesLoading(false);
+        setRoutesLoading(false);
       }
     };
 
@@ -2433,9 +2371,17 @@ export default function CreateOfferPage({
     }
   }, [offerTypes, isEditMode, formData.offer_type, formData.offer_type_id, setFormData]);
 
-  // After channels load, map legacy `route` → typed *_route_id (edit/duplicate offers from API)
+  useEffect(() => {
+    offerRouteHydrationDoneRef.current = false;
+  }, [id, duplicateIdParam]);
+
+  // After channels load, map legacy `route` → typed *_route_id (edit/duplicate offers from API).
+  // Run once per offer load — not on every communication-channel change, or the old
+  // route is copied onto the newly selected channel.
   useEffect(() => {
     if (!isEditMode && !isDuplicateMode) return;
+    if (isLoadingOffer) return;
+    if (offerRouteHydrationDoneRef.current) return;
     if (!formData.communication_channel_id || communicationChannels.length === 0) {
       return;
     }
@@ -2444,8 +2390,12 @@ export default function CreateOfferPage({
       (ch) => String(ch.id) === String(formData.communication_channel_id),
     );
     const channelKind = resolveCommunicationChannelKind(channel?.name);
-    if (!channelKind) return;
+    if (!channelKind) {
+      offerRouteHydrationDoneRef.current = true;
+      return;
+    }
 
+    offerRouteHydrationDoneRef.current = true;
     setFormData((prev) => {
       const hydrated = hydrateOfferRouteFields(prev, channelKind);
       const unchanged =
@@ -2477,6 +2427,7 @@ export default function CreateOfferPage({
   }, [
     isEditMode,
     isDuplicateMode,
+    isLoadingOffer,
     communicationChannels,
     formData.communication_channel_id,
     setFormData,
@@ -3366,16 +3317,8 @@ export default function CreateOfferPage({
       categoriesLoading,
       communicationChannels,
       channelsLoading,
-      smsRoutes,
-      smsRoutesLoading,
-      emailRoutes,
-      emailRoutesLoading,
-      whatsappRoutes,
-      whatsappRoutesLoading,
-      ussdRoutes,
-      ussdRoutesLoading,
-      pushRoutes,
-      pushRoutesLoading,
+      deliveryRoutes,
+      routesLoading,
       onSaveDraft: handleSaveDraft,
       onCancel: handleCancel,
       offerTypes,
@@ -3406,16 +3349,8 @@ export default function CreateOfferPage({
       categoriesLoading,
       communicationChannels,
       channelsLoading,
-      smsRoutes,
-      smsRoutesLoading,
-      emailRoutes,
-      emailRoutesLoading,
-      whatsappRoutes,
-      whatsappRoutesLoading,
-      ussdRoutes,
-      ussdRoutesLoading,
-      pushRoutes,
-      pushRoutesLoading,
+      deliveryRoutes,
+      routesLoading,
       handleSaveDraft,
       handleCancel,
       offerTypes,

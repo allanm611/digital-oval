@@ -8,6 +8,8 @@ export interface RewardConfiguration {
   /**
    * System default template for the provider (one per provider).
    * Seeded on provider create / lazy-ensured for legacy providers.
+   * Kept in sync with the provider schema when the provider is edited
+   * (locked credentials such as username always inherit the current default).
    * Canonical API field is `is_default_template`; `is_default` is the UI alias.
    */
   is_default?: boolean;

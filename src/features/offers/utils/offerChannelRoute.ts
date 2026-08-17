@@ -32,6 +32,25 @@ type RouteFieldSlice = Pick<
   | "transactional_route_id"
 >;
 
+export function channelKindToRouteType(
+  kind: OfferChannelRouteKind | null | undefined,
+): "SMS" | "EMAIL" | "WHATSAPP" | "USSD" | "PUSH" | "" {
+  switch (kind) {
+    case "sms":
+      return "SMS";
+    case "email":
+      return "EMAIL";
+    case "whatsapp":
+      return "WHATSAPP";
+    case "ussd":
+      return "USSD";
+    case "push":
+      return "PUSH";
+    default:
+      return "";
+  }
+}
+
 export const CHANNEL_ROUTE_FIELD_META: Record<
   OfferChannelRouteKind,
   { label: string; description: string; errorKey: string; requiredMessage: string }
@@ -39,35 +58,35 @@ export const CHANNEL_ROUTE_FIELD_META: Record<
   sms: {
     label: "SMS Route",
     description:
-      "Route used to send the offer campaign message to the customer.",
+      "Route used to send the broadcast message to the customer.",
     errorKey: "sms_route",
     requiredMessage: "SMS route is required",
   },
   email: {
     label: "Email Route",
     description:
-      "Route used to send the offer campaign message to the customer.",
+      "Route used to send the broadcast message to the customer.",
     errorKey: "email_route",
     requiredMessage: "Email route is required",
   },
   whatsapp: {
     label: "WhatsApp Route",
     description:
-      "Route used to send the offer campaign message to the customer.",
+      "Route used to send the broadcast message to the customer.",
     errorKey: "whatsapp_route",
     requiredMessage: "WhatsApp route is required",
   },
   ussd: {
     label: "USSD Route",
     description:
-      "Route used to send the offer campaign message to the customer.",
+      "Route used to send the broadcast message to the customer.",
     errorKey: "ussd_route",
     requiredMessage: "USSD route is required",
   },
   push: {
     label: "Push Notification Route",
     description:
-      "Route used to send the offer campaign message to the customer.",
+      "Route used to send the broadcast message to the customer.",
     errorKey: "push_route",
     requiredMessage: "Push notification route is required",
   },
@@ -118,6 +137,28 @@ export function hydrateOfferRouteFields(
       break;
   }
   return next;
+}
+
+/** Reset campaign + transactional route fields when the communication channel changes. */
+export function clearedOfferRouteFields(): Pick<
+  CreateOfferRequest,
+  | "route"
+  | "sms_route_id"
+  | "email_route_id"
+  | "whatsapp_route_id"
+  | "ussd_route_id"
+  | "push_notification_route_id"
+  | "transactional_route_id"
+> {
+  return {
+    route: undefined,
+    sms_route_id: undefined,
+    email_route_id: undefined,
+    whatsapp_route_id: undefined,
+    ussd_route_id: undefined,
+    push_notification_route_id: undefined,
+    transactional_route_id: undefined,
+  };
 }
 
 export function getEffectiveRouteIdForChannel(

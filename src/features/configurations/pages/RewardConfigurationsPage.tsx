@@ -22,6 +22,14 @@ import {
   canDuplicateRewardTemplate,
   isDefaultRewardTemplate,
 } from "../utils/rewardTemplateDefaults";
+import {
+  CONFIGURATION_HUB_PATH,
+  REWARD_TEMPLATES_PATH,
+  rewardProviderDetailsPath,
+  rewardTemplateCreatePath,
+  rewardTemplateDetailsPath,
+  rewardTemplateEditPath,
+} from "../utils/rewardNavigation";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import {
   Table,
@@ -337,9 +345,14 @@ export default function RewardConfigurationsPage() {
           />
           <button
             onClick={() =>
-              navigate(
-                `/dashboard/reward-configurations/${config.id}/details`,
-              )
+              navigate(rewardTemplateDetailsPath(config.id), {
+                state: {
+                  from: providerFilterFromUrl ? "provider" : "list",
+                  providerId: providerFilterFromUrl
+                    ? Number(providerFilterFromUrl)
+                    : undefined,
+                },
+              })
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="View details"
@@ -348,7 +361,14 @@ export default function RewardConfigurationsPage() {
           </button>
           <button
             onClick={() =>
-              navigate(`/dashboard/reward-configurations/${config.id}/edit`)
+              navigate(rewardTemplateEditPath(config.id), {
+                state: {
+                  from: "list",
+                  providerId: providerFilterFromUrl
+                    ? Number(providerFilterFromUrl)
+                    : undefined,
+                },
+              })
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200 ${
               isDefaultRewardTemplate(config)
@@ -435,9 +455,16 @@ export default function RewardConfigurationsPage() {
     tableHandlePageChange(1);
   }, [searchTerm, providerFilter, rewardTypeFilter, statusFilter, tableHandlePageChange]);
 
-  const createUrl = providerFilterFromUrl
-    ? `/dashboard/reward-configurations/create?provider_id=${providerFilterFromUrl}`
-    : "/dashboard/reward-configurations/create";
+  const createUrl = rewardTemplateCreatePath(providerFilterFromUrl);
+  const filterProviderName = providerOptions.find(
+    (option) => option.value === String(providerFilterFromUrl || ""),
+  )?.label;
+  const listParentLabel = providerFilterFromUrl
+    ? filterProviderName?.replace(/ \(inactive\)$/, "") || "Reward Provider"
+    : "Configuration";
+  const listParentTo = providerFilterFromUrl
+    ? rewardProviderDetailsPath(providerFilterFromUrl)
+    : CONFIGURATION_HUB_PATH;
 
   return (
     <div className="space-y-6">
@@ -445,29 +472,43 @@ export default function RewardConfigurationsPage() {
         <div className="flex items-center justify-between gap-4">
           <BackButton
             showBreadcrumb={true}
+            parentLabel={listParentLabel}
+            parentTo={listParentTo}
             currentLabel="Reward Templates"
           />
           <FeatureActionButton
             featureId="reward-configurations"
             action="create"
             label="Create Reward Template"
-            onClick={() => navigate(createUrl)}
+            onClick={() =>
+              navigate(createUrl, {
+                state: {
+                  from: "list" as const,
+                  providerId: providerFilterFromUrl
+                    ? Number(providerFilterFromUrl)
+                    : undefined,
+                },
+              })
+            }
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage reward templates (credentials and payload settings). Every
-          provider includes a protected default template seeded from its schema
-          defaults.
+          provider includes a protected default template that stays in sync with
+          the provider schema when the provider is edited.
         </p>
         {providerFilterFromUrl && (
           <p className={`text-xs ${tw.textMuted}`}>
-            Filtered by provider ID {providerFilterFromUrl}.{" "}
+            Showing templates for{" "}
+            {filterProviderName?.replace(/ \(inactive\)$/, "") ||
+              `provider #${providerFilterFromUrl}`}
+            .{" "}
             <button
               type="button"
               className="underline"
-              onClick={() => navigate("/dashboard/reward-configurations")}
+              onClick={() => navigate(REWARD_TEMPLATES_PATH)}
             >
-              Clear filter
+              Show all templates
             </button>
           </p>
         )}

@@ -8,6 +8,7 @@ import type { RewardConfiguration } from "../../types/rewardConfiguration";
 import type { RewardProviderSchemaField } from "../../types/rewardProvider";
 import {
   buildVirtualDefaultRewardTemplate,
+  isDefaultRewardTemplate,
   isVirtualDefaultTemplateId,
   providerIdFromVirtualTemplateId,
 } from "../../utils/rewardTemplateDefaults";
@@ -18,6 +19,7 @@ import {
   isSchemaFieldEditable,
   lockedSchemaFieldValue,
   normalizeConfigValueForApi,
+  resolveSchemaConfigValues,
 } from "./rewardSchemaFieldUtils";
 
 export interface RewardConfigurationParameterValues {
@@ -109,7 +111,7 @@ function FieldGrid({
             />
             {fieldLocked && !disabled && (
               <p className={`text-xs ${tw.textMuted} mt-1`}>
-                Locked by provider schema — master template value is used.
+                Locked by provider schema — current provider default is used.
               </p>
             )}
           </div>
@@ -215,12 +217,21 @@ export default function RewardConfigurationParametersEditor({
 
         const authSchemaFields = provider.auth_schema?.fields || [];
         const payloadSchemaFields = provider.payload_schema?.fields || [];
-        // Virtual / default templates use provider schema defaults as master values.
-        const foundAuth = (found.auth_config as Record<string, unknown>) || {};
-        const foundPayload =
-          (found.payload_config as Record<string, unknown>) || {};
+        const resolveMode = isDefaultRewardTemplate(found)
+          ? "default_template"
+          : "custom_template";
+        const foundAuth = resolveSchemaConfigValues(
+          authSchemaFields,
+          (found.auth_config as Record<string, unknown>) || {},
+          resolveMode,
+        );
+        const foundPayload = resolveSchemaConfigValues(
+          payloadSchemaFields,
+          (found.payload_config as Record<string, unknown>) || {},
+          resolveMode,
+        );
 
-        // Seed from parent override when present, but locked fields always use master.
+        // Seed from parent override when present, but locked fields always use provider defaults.
         const overrideAuth = value?.auth_config as
           | Record<string, unknown>
           | undefined;
@@ -490,7 +501,7 @@ export default function RewardConfigurationParametersEditor({
                   {lockedAuth.length > 0 && (
                     <SchemaGroup
                       title="Authentication"
-                      description="Locked OAuth and API credentials from the master configuration."
+                      description="Locked OAuth and API credentials from the current provider defaults."
                     >
                       <FieldGrid
                         sectionKey="auth"
@@ -514,7 +525,7 @@ export default function RewardConfigurationParametersEditor({
                   {lockedPayload.length > 0 && (
                     <SchemaGroup
                       title="Payload"
-                      description="Locked delivery parameters from the master configuration."
+                      description="Locked delivery parameters from the current provider defaults."
                     >
                       <FieldGrid
                         sectionKey="payload"

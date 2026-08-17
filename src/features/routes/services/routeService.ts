@@ -25,6 +25,50 @@ export function resolveChannelType(codeOrName?: string | null): RouteChannelType
   return "";
 }
 
+function asRouteArray(payload: unknown, depth = 0): SMSRoute[] {
+  if (Array.isArray(payload)) return payload as SMSRoute[];
+  if (!payload || typeof payload !== "object" || depth > 3) return [];
+  const record = payload as Record<string, unknown>;
+  for (const key of ["data", "items", "routes", "results"]) {
+    if (!(key in record)) continue;
+    const nested = record[key];
+    if (Array.isArray(nested)) return nested as SMSRoute[];
+    const inner = asRouteArray(nested, depth + 1);
+    if (inner.length > 0) return inner;
+  }
+  return [];
+}
+
+function asTrimmedString(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function pickRouteName(raw: SMSRoute & Record<string, unknown>): string {
+  const nested =
+    raw.configuration && typeof raw.configuration === "object"
+      ? (raw.configuration as Record<string, unknown>)
+      : undefined;
+  const candidates = [
+    raw.name,
+    raw["route_name"],
+    raw["routeName"],
+    raw["title"],
+    raw.configuration_name,
+    nested?.name,
+    raw.provider_name,
+    raw.gateway_provider,
+  ];
+  for (const candidate of candidates) {
+    const label = asTrimmedString(candidate);
+    if (!label) continue;
+    if (raw.id != null && label === String(raw.id)) continue;
+    return label;
+  }
+  return raw.id != null ? `Route #${raw.id}` : "Unnamed route";
+}
+
 function readFailoverFromConfig(config?: Record<string, unknown>) {
   if (!config || typeof config !== "object") {
     return {
@@ -50,12 +94,14 @@ function readFailoverFromConfig(config?: Record<string, unknown>) {
 }
 
 function normalizeRoute(raw: SMSRoute): SMSRoute {
+  const record = raw as SMSRoute & Record<string, unknown>;
   const configurationId =
     raw.configuration_id ?? raw.gateway_config_id ?? null;
   const failover = readFailoverFromConfig(raw.config);
 
   return {
     ...raw,
+    name: pickRouteName(record),
     configuration_id: configurationId,
     gateway_config_id: configurationId ?? undefined,
     is_active: raw.is_active !== false,
@@ -135,6 +181,15 @@ function toApiPayload(
   return payload;
 }
 
+const ROUTE_CATALOG_TTL_MS = 30_000;
+let routeCatalogCache: { data: SMSRoute[]; at: number } | null = null;
+let routeCatalogInflight: Promise<SMSRoute[]> | null = null;
+
+function invalidateRouteCatalogCache() {
+  routeCatalogCache = null;
+  routeCatalogInflight = null;
+}
+
 class RouteService {
   private async request<T>(
     endpoint: string,
@@ -161,15 +216,45 @@ class RouteService {
   }
 
   async getAllRoutes(): Promise<SMSRoute[]> {
-    const result = await this.request<{ success: boolean; data: SMSRoute[] }>("");
-    return (result.data || []).map(normalizeRoute);
+    const result = await this.request<unknown>("");
+    return asRouteArray(result).map(normalizeRoute);
   }
 
   /**
    * Enrich routes with channel + gateway config display fields.
    * Channel type comes from communication_channel_id or linked configuration.
+   * Cached + in-flight deduped so offer channel switching never refetches.
    */
-  async getAllRoutesEnriched(): Promise<SMSRoute[]> {
+  async getAllRoutesEnriched(options?: {
+    skipCache?: boolean;
+  }): Promise<SMSRoute[]> {
+    const skipCache = options?.skipCache === true;
+    if (
+      !skipCache &&
+      routeCatalogCache &&
+      Date.now() - routeCatalogCache.at < ROUTE_CATALOG_TTL_MS
+    ) {
+      return routeCatalogCache.data;
+    }
+    if (!skipCache && routeCatalogInflight) {
+      return routeCatalogInflight;
+    }
+
+    const load = this.loadAllRoutesEnriched().then((data) => {
+      routeCatalogCache = { data, at: Date.now() };
+      return data;
+    });
+    routeCatalogInflight = load;
+    try {
+      return await load;
+    } finally {
+      if (routeCatalogInflight === load) {
+        routeCatalogInflight = null;
+      }
+    }
+  }
+
+  private async loadAllRoutesEnriched(): Promise<SMSRoute[]> {
     const [routes, configs, channels] = await Promise.all([
       this.getAllRoutes(),
       gatewayConfigurationService.getAll().catch(() => []),
@@ -253,7 +338,9 @@ class RouteService {
         body: JSON.stringify(toApiPayload(data, "create")),
       },
     );
-    return normalizeRoute(result.data);
+    const created = normalizeRoute(result.data);
+    invalidateRouteCatalogCache();
+    return created;
   }
 
   async updateRoute(
@@ -272,7 +359,9 @@ class RouteService {
           body: JSON.stringify(payload),
         },
       );
-      return normalizeRoute(result.data);
+      const updated = normalizeRoute(result.data);
+      invalidateRouteCatalogCache();
+      return updated;
     } catch (err) {
       if (
         payload.configuration_id != null &&
@@ -292,16 +381,23 @@ class RouteService {
             body: JSON.stringify(withoutConfigId),
           },
         );
-        return normalizeRoute(result.data);
+        const updated = normalizeRoute(result.data);
+        invalidateRouteCatalogCache();
+        return updated;
       }
       throw err;
     }
   }
 
   async deleteRoute(id: number): Promise<{ success: boolean; message?: string }> {
-    return this.request<{ success: boolean; message?: string }>(`/${id}`, {
-      method: "DELETE",
-    });
+    const result = await this.request<{ success: boolean; message?: string }>(
+      `/${id}`,
+      {
+        method: "DELETE",
+      },
+    );
+    invalidateRouteCatalogCache();
+    return result;
   }
 }
 

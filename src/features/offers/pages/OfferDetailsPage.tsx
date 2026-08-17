@@ -53,6 +53,7 @@ import { offerCreativeService } from "../services/offerCreativeService";
 import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
+import { toRouteSelectOptions } from "../../routes/utils/routeSelect";
 import {
   OfferCreative,
   CreativeChannel,
@@ -2997,14 +2998,9 @@ export default function OfferDetailsPage() {
                         sms_route: value,
                       }));
                     }}
-                    options={
-                      smsRoutes
-                        ?.filter((route) => route.is_active)
-                        .map((route) => ({
-                          value: route.id?.toString() || "",
-                          label: route.name,
-                        })) || []
-                    }
+                    options={toRouteSelectOptions(
+                      smsRoutes?.filter((route) => route.is_active !== false),
+                    )}
                     placeholder="Select SMS Route"
                     zIndex={zIndex.popover}
                     disabled={smsRoutesLoading}

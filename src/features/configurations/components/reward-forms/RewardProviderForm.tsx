@@ -287,7 +287,7 @@ export default function RewardProviderForm({
       >
         <RewardProviderFieldSchemaEditor
           title="Auth Schema"
-          description="Authentication fields collected when creating a reward template (e.g. base_url, username, password)."
+          description="Authentication fields collected when creating a reward template (e.g. base_url, username, password). Changing defaults here updates the provider's default template. Fields marked not editable stay locked to these defaults on every template."
           schemaErrorKey="auth_schema"
           fields={authFields}
           errors={errors}

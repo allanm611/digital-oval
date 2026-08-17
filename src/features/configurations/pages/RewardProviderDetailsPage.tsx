@@ -16,6 +16,12 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import type { RewardProviderSchemaField } from "../types/rewardProvider";
 import { isSchemaFieldEditable } from "../components/reward-forms/rewardSchemaFieldUtils";
+import {
+  REWARD_PROVIDERS_PATH,
+  rewardProviderEditPath,
+  rewardTemplateCreatePath,
+  rewardTemplatesListPath,
+} from "../utils/rewardNavigation";
 
 function formatSchemaDefaultDisplay(field: RewardProviderSchemaField): string {
   if (field.default === undefined || field.default === "") {
@@ -119,7 +125,7 @@ export default function RewardProviderDetailsPage() {
           "Failed to load provider. Please try again.",
         ),
       );
-      navigate("/dashboard/reward-providers");
+      navigate(REWARD_PROVIDERS_PATH);
     } finally {
       setLoading(false);
     }
@@ -163,7 +169,7 @@ export default function RewardProviderDetailsPage() {
       setDeleting(true);
       await rewardProviderService.delete(provider.id);
       showSuccess(`"${provider.name}" has been deleted successfully.`);
-      navigate("/dashboard/reward-providers");
+      navigate(REWARD_PROVIDERS_PATH);
     } catch (err) {
       showError(
         extractBackendError(
@@ -193,7 +199,12 @@ export default function RewardProviderDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <BackButton showBreadcrumb={true} currentLabel={provider.name} />
+        <BackButton
+          showBreadcrumb={true}
+          parentLabel="Reward Providers"
+          parentTo={REWARD_PROVIDERS_PATH}
+          currentLabel={provider.name}
+        />
         <div className="flex items-center gap-2">
           <ActivateDeactivateButton
             isActive={provider.is_active !== false}
@@ -204,7 +215,9 @@ export default function RewardProviderDetailsPage() {
           </ActivateDeactivateButton>
           <button
             onClick={() =>
-              navigate(`/dashboard/reward-providers/${provider.id}/edit`)
+              navigate(rewardProviderEditPath(provider.id), {
+                state: { from: "details", parentLabel: provider.name },
+              })
             }
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-md"
             style={{ backgroundColor: color.primary.action }}
@@ -260,9 +273,13 @@ export default function RewardProviderDetailsPage() {
           <button
             type="button"
             onClick={() =>
-              navigate(
-                `/dashboard/reward-configurations?provider_id=${provider.id}`,
-              )
+              navigate(rewardTemplatesListPath(provider.id), {
+                state: {
+                  from: "provider",
+                  parentLabel: provider.name,
+                  providerId: provider.id,
+                },
+              })
             }
             className={`text-sm font-medium underline ${tw.textPrimary}`}
           >
@@ -274,7 +291,14 @@ export default function RewardProviderDetailsPage() {
             type="button"
             onClick={() =>
               navigate(
-                `/dashboard/reward-configurations/create?provider_id=${provider.id}`,
+                rewardTemplateCreatePath(provider.id),
+                {
+                  state: {
+                    from: "provider",
+                    parentLabel: provider.name,
+                    providerId: provider.id,
+                  },
+                },
               )
             }
             className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white rounded-md"
@@ -315,9 +339,14 @@ export default function RewardProviderDetailsPage() {
       </div>
 
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6`}>
-        <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+        <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
           Auth Schema
         </h2>
+        <p className={`text-xs ${tw.textMuted} mb-4`}>
+          Schema defaults are the source of truth for the provider&apos;s
+          default template and for any field marked not editable. Editing this
+          provider refreshes those values (for example username).
+        </p>
         <SchemaTable fields={provider.auth_schema?.fields || []} />
       </div>
 
