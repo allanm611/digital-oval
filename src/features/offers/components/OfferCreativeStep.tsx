@@ -881,14 +881,12 @@ export default function OfferCreativeStep({
     const updatedCreatives = creatives.filter((c) => c.id !== id);
     onCreativesChange(updatedCreatives);
 
-    // Clean up template selection and variables text - Temporarily disabled
-    /*
+    // Clean up template selection and variables text
     setSelectedTemplates((prev) => {
       const updated = { ...prev };
       delete updated[id];
       return updated;
     });
-    */
 
     // Update selection if we removed the currently selected creative
     if (selectedCreative === id) {
@@ -995,8 +993,7 @@ export default function OfferCreativeStep({
     };
   };
 
-  // Filter templates by channel and locale - Temporarily disabled
-  /*
+  // Filter templates by channel and locale
   const getTemplatesForChannelAndLocale = (
     channel: CreativeChannel,
     locale: Locale,
@@ -1011,10 +1008,8 @@ export default function OfferCreativeStep({
       return matchesLocale;
     });
   };
-  */
 
-  // Get available templates for current creative's channel and locale - Temporarily disabled
-  /*
+  // Get available templates for current creative's channel and locale
   const availableTemplates = useMemo(() => {
     if (!selectedCreativeData) return [];
     return getTemplatesForChannelAndLocale(
@@ -1022,10 +1017,8 @@ export default function OfferCreativeStep({
       selectedCreativeData.locale,
     );
   }, [selectedCreativeData?.channel, selectedCreativeData?.locale, templates]);
-  */
 
-  // Handle template selection - Temporarily disabled
-  /*
+  // Handle template selection
   const handleTemplateSelect = (templateId: number | null) => {
     if (!selectedCreativeData || !templateId) return;
 
@@ -1062,10 +1055,8 @@ export default function OfferCreativeStep({
 
     updateCreative(selectedCreativeData.id, updates);
   };
-  */
 
-  // Clear template selection - Temporarily disabled
-  /*
+  // Clear template selection
   const handleClearTemplate = () => {
     if (!selectedCreativeData) return;
     setSelectedTemplates((prev) => ({
@@ -1077,7 +1068,6 @@ export default function OfferCreativeStep({
       template_type_id: undefined,
     });
   };
-  */
 
   // Variable selection handlers (matches Manual Communications step)
   const handleVariableSelect = (variable: TemplateVariable) => {
@@ -1408,16 +1398,14 @@ export default function OfferCreativeStep({
                     onChange={(value) => {
                       if (selectedCreativeData) {
                         updateCreative(selectedCreativeData.id, {
-                          locale: String(value) as Locale,
+                          locale: value as Locale,
                         });
-                        // Clear template selection when locale changes - Temporarily disabled
-                        /*
+                        // Clear template selection when locale changes
                         setSelectedTemplates((prev) => {
                           const updated = { ...prev };
                           delete updated[selectedCreativeData.id];
                           return updated;
                         });
-                        */
                       }
                     }}
                     options={[
@@ -1428,11 +1416,10 @@ export default function OfferCreativeStep({
                         ? "No languages configured"
                         : "Select a language"
                     }
-                    disabled={selectedCreativeData ? (editingCreative.locale ? languageOptions.filter((opt) => !opt.isUsed).length === 0 : false) : false}
+                    disabled={selectedCreativeData ? languageOptions.filter((opt) => !opt.isUsed).length === 0 : false}
                   />
 
-                  {/* Template Selector - Temporarily disabled */}
-                  {/*
+                  {/* Template Selector */}
                   <div className="relative">
                     {selectedCreativeData && selectedTemplates[selectedCreativeData.id] && (
                       <button
@@ -1497,7 +1484,6 @@ export default function OfferCreativeStep({
                       </div>
                     )}
                   </div>
-                  */}
 
                   {selectedCreativeData && (
                     <label
@@ -1535,7 +1521,7 @@ export default function OfferCreativeStep({
                         value={editingCreative.title || ""}
                         onChange={(value) =>
                           selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                            title: String(value || ""),
+                            title: value || "",
                           })
                         }
                         options={[
@@ -1620,7 +1606,7 @@ export default function OfferCreativeStep({
                           value={selectedCreativeData.sms_route || ""}
                           onChange={(value) => {
                             updateCreative(selectedCreativeData.id, {
-                              sms_route: String(value),
+                              sms_route: value,
                             });
                           }}
                           options={
