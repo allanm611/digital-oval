@@ -301,6 +301,7 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
   const [steps, setSteps] = useState<UiFlowStep[]>(initialCase?.steps ?? []);
   const [timeoutMs, setTimeoutMs] = useState(initialCase?.timeoutMs ?? 30000);
   const [active, setActive] = useState(initialCase?.active ?? true);
+  const [useStoredAuth, setUseStoredAuth] = useState(initialCase?.useStoredAuth ?? true);
   const [tryResult, setTryResult] = useState<UiFlowTestCaseResult | null>(null);
   const [formError, setFormError] = useState('');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -357,6 +358,7 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
       steps: normalizedSteps,
       timeoutMs,
       active,
+      useStoredAuth,
       tags: initialCase?.tags ?? [],
     };
   };
@@ -435,16 +437,35 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
             <p className="text-xs text-gray-500">Inactive flows are hidden from the dynamic UI runner.</p>
           </div>
         </div>
+
+        <div
+          className="inline-flex items-start gap-2 cursor-pointer"
+          onClick={() => setUseStoredAuth(!useStoredAuth)}
+        >
+          <Checkbox
+            id="ui-flow-stored-auth"
+            checked={useStoredAuth}
+            onChange={() => setUseStoredAuth(!useStoredAuth)}
+          />
+          <div>
+            <span className="text-sm font-medium text-gray-800">Use saved login session</span>
+            <p className="text-xs text-gray-500">
+              Reuses Playwright storageState from auth setup (TEST_EMAIL / TEST_PASSWORD).
+              Turn off only when this flow should start logged-out and include its own login steps.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
         <h2 className="text-lg font-semibold text-gray-900">Steps</h2>
         <p className="text-sm text-gray-500">
           Executed in order after navigating to the start URL. If a step fails, the rest are
-          skipped — mirrors how a real user flow depends on each prior action. After a Go to URL /
-          Click that changes the page, add <span className="font-medium">Assert visible</span> so
-          the SPA finishes rendering before you rely on screenshots (protected routes also need
-          login steps first — the headless browser starts with an empty session).
+          skipped — mirrors how a real user flow depends on each prior action. With
+          <span className="font-medium"> Use saved login session</span> enabled, protected
+          routes reuse the shared auth session (no login steps needed). After navigations,
+          add <span className="font-medium">Assert visible</span> so the SPA finishes painting
+          before you rely on screenshots.
         </p>
         <StepEditor steps={steps} onChange={setSteps} />
       </div>

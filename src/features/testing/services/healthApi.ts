@@ -27,8 +27,8 @@ import type {
   UiFlowTestCaseResult,
 } from '../types/health';
 
-// const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.HEALTH);
-const BASE_URL = "http://localhost:11008/playwright-health"; // For local development, override the base URL to point to the local playwright-health service
+const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.HEALTH);
+// const BASE_URL = "http://localhost:11008/playwright-health"; 
 
 /** Resolve a playwright-health path (e.g. /playwright-health/v1/runs/.../artifacts/...) to a full URL. */
 export function resolvePlaywrightHealthUrl(pathOrUrl: string): string {

@@ -455,6 +455,8 @@ export interface UiFlowTestCase {
   steps: UiFlowStep[];
   timeoutMs: number;
   active: boolean;
+  /** Reuse Playwright storageState (saved login) so protected routes work without login steps. */
+  useStoredAuth: boolean;
   tags?: string[];
   createdBy?: string | null;
   createdAt?: string;
