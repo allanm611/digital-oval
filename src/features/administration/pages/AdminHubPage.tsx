@@ -87,6 +87,13 @@ export default function AdminHubPage() {
           href: "/dashboard/etl",
           category: "Infrastructure",
         },
+        {
+          title: "Health Check Dashboard",
+          description: "Monitor Playwright automated health checks across modules",
+          icon: Activity,
+          href: "/health-check",
+          category: "Infrastructure",
+        },
       ],
     },
     {

@@ -272,7 +272,7 @@ export default function CascadingVariableSelector({
                     >
                       {source.name}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className={`text-xs ${tw.textMuted}`}>
                       {source.fieldCount}{" "}
                       {source.fieldCount === 1
                         ? t.manualBroadcast.fieldSingular
@@ -361,7 +361,7 @@ export default function CascadingVariableSelector({
                   <p className={`text-sm font-medium ${tw.textPrimary}`}>
                     {field.name}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+                  <p className={`text-xs ${tw.textMuted} mt-0.5 line-clamp-1`}>
                     {field.description || `{{${field.value}}}`}
                   </p>
                 </div>

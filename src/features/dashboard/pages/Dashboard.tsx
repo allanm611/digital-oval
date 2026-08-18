@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -780,6 +780,21 @@ const AdministrationPages = {
   ),
 };
 
+function LegacyHealthCheckRedirect() {
+  const location = useLocation();
+  const suffix = location.pathname
+    .replace(/^\/dashboard\/health-check\/?/, "")
+    .replace(/^\/health-check\/?/, "");
+  const target = suffix ? `/health-check/${suffix}` : "/health-check";
+
+  return (
+    <Navigate
+      to={{ pathname: target, search: location.search, hash: location.hash }}
+      replace
+    />
+  );
+}
+
 // Other Pages - All routes preloaded for instant access
 const OtherPages = {
   ManualBroadcastsHubPage: lazy(
@@ -917,6 +932,7 @@ export default function Dashboard() {
             path="/monitoring/:id"
             element={<AdministrationPages.ExecutionDetailsPage />}
           />
+          <Route path="/health-check/*" element={<LegacyHealthCheckRedirect />} />
           <Route path="/campaigns" element={<CampaignPages.CampaignsPage />} />
           <Route
             path="/campaigns/analytics"

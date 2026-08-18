@@ -41,6 +41,7 @@ export const API_CONFIG = {
     TRACKING_SOURCES: "/tracking-sources",
     NOTIFICATIONS: "/notifications",
     DOCUMENTATION: "/documentation",
+    HEALTH: "/playwright-health",
   },
   TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 3,

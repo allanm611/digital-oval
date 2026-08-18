@@ -12,6 +12,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   label?: string; // Floating label (optional)
   labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
   rows?: number;
+  style?: React.CSSProperties;
 }
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
@@ -25,6 +26,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   label,
   labelBgColor,
   rows = 3,
+  style = {},
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
