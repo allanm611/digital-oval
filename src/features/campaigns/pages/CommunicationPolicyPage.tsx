@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Eye, ShieldCheck, MoreHorizontal } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, ShieldCheck, MoreHorizontal, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -61,8 +61,10 @@ export default function CommunicationPolicyPage() {
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [channelsHoverModal, setChannelsHoverModal] = useState<{ policyId: number; channels: string[]; position: { top: number; left: number } } | null>(null);
   const actionMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const dropdownMenuRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const channelRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Load policies from service and subscribe to changes
   useEffect(() => {
@@ -215,25 +217,87 @@ export default function CommunicationPolicyPage() {
     }
   };
 
-  const getChannelsDisplay = (channelValues: string[]) => {
-    if (!channelValues || channelValues.length === 0) return null;
+  const getChannelsDisplay = (channelValues: string[] | null | undefined, policyId: number) => {
+    if (!channelValues || !Array.isArray(channelValues) || channelValues.length === 0) {
+      return null;
+    }
+
+    const visibleChannels = channelValues.slice(0, 2);
+    const moreCount = Math.max(0, channelValues.length - 2);
+
+    const handleMoreHover = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (moreCount <= 0) return;
+      if (!e.currentTarget) return;
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      if (!rect) return;
+
+      setChannelsHoverModal({
+        policyId,
+        channels: channelValues,
+        position: {
+          top: rect.bottom + 4,
+          left: rect.left,
+        },
+      });
+    };
+
+    const handleMoreLeave = () => {
+      setTimeout(() => {
+        if (channelsHoverModal && channelsHoverModal.policyId === policyId) {
+          setChannelsHoverModal(null);
+        }
+      }, 100);
+    };
 
     return (
-      <div className="flex flex-wrap items-center gap-2">
-        {channelValues.map((channelValue) => (
+      <div
+        ref={(el) => {
+          if (el && policyId) {
+            channelRefs.current[policyId] = el;
+          }
+        }}
+        className="flex items-center gap-2"
+      >
+        {visibleChannels && visibleChannels.map((channelValue) => {
+          if (!channelValue) return null;
+          return (
+            <div
+              key={channelValue}
+              className={`flex items-center px-2 py-1 rounded whitespace-nowrap ${tw.accent10}`}
+            >
+              <span className={`${tw.caption} font-medium ${tw.textPrimary}`}>
+                {channelValue}
+              </span>
+            </div>
+          );
+        })}
+        {moreCount > 0 && (
           <div
-            key={channelValue}
-            className={`flex items-center px-2 py-1 rounded ${tw.accent10}`}
+            onMouseEnter={handleMoreHover}
+            onMouseLeave={handleMoreLeave}
+            className={`flex items-center px-2 py-1 rounded cursor-pointer ${tw.accent10} hover:opacity-80 transition-opacity`}
           >
             <span className={`${tw.caption} font-medium ${tw.textPrimary}`}>
-              {channelValue}
+              +{moreCount} more
             </span>
           </div>
-        ))}
+        )}
       </div>
     );
   };
 
+  // Extract unique channels for filter options
+  const uniqueChannels = Array.isArray(policies) && policies.length > 0
+    ? Array.from(new Set(
+        policies.flatMap((policy) => {
+          if (policy && Array.isArray(policy.channels)) {
+            return policy.channels.filter((ch) => ch && typeof ch === "string");
+          }
+          return [];
+        })
+      )).sort()
+    : [];
 
   // Table columns definition
   const defaultColumns: TableColumn<CommunicationPolicyConfiguration>[] = [
@@ -243,7 +307,7 @@ export default function CommunicationPolicyPage() {
       visible: true,
       filterConfig: { type: "text" },
       render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+        <div className="truncate" title={value as string}>
           {value}
         </div>
       ),
@@ -255,7 +319,7 @@ export default function CommunicationPolicyPage() {
       filterConfig: { type: "text" },
       render: (value) => (
         <span
-          className={`text-sm ${tw.textMuted} truncate`}
+          className="truncate"
           title={value ? String(value) : t.communicationPolicy.noDescription}
         >
           {value || t.communicationPolicy.noDescription}
@@ -266,19 +330,19 @@ export default function CommunicationPolicyPage() {
       id: "channels",
       label: t.communicationPolicy.channels,
       visible: true,
-      sortable: false,
-      render: (value) => getChannelsDisplay((value as string[]) || []),
+      sortable: true,
+      filterConfig: { type: "select", options: uniqueChannels },
+      render: (value, policy) => {
+        if (!policy || !policy.id) return null;
+        return getChannelsDisplay((value as string[]) || [], policy.id);
+      },
     },
     {
       id: "type_code",
       label: t.communicationPolicy.type,
       visible: true,
       filterConfig: { type: "select", options: ["EMAIL", "SMS", "PUSH", "INAPP"] },
-      render: (value, policy) => (
-        <span className={`text-sm ${tw.textSecondary}`}>
-          {(policy as any).type_name || value}
-        </span>
-      ),
+      render: (value, policy) => (policy as any).type_name || value,
     },
     {
       id: "is_active",
@@ -304,6 +368,7 @@ export default function CommunicationPolicyPage() {
       label: t.communicationPolicy.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, policy) => (
         <div className="flex items-center justify-end gap-2">
           <ActivateDeactivateButton
@@ -315,14 +380,14 @@ export default function CommunicationPolicyPage() {
           />
           <button
             onClick={() => navigate(`/dashboard/campaign-communication-policy/${policy.id}`)}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+            className={`p-0 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
             title="View details"
           >
             <Eye className="w-4 h-4 text-gray-500" />
           </button>
           <button
             onClick={() => handleEditPolicy(policy)}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+            className={`p-0 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
             title={t.communicationPolicy.edit}
           >
             <Edit className="w-4 h-4" style={{ color: color.primary.action }} />
@@ -332,7 +397,7 @@ export default function CommunicationPolicyPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(policy.id, e)}
-              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+              className={`p-0 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
               title="More options"
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -365,22 +430,27 @@ export default function CommunicationPolicyPage() {
     // Updates when filters applied in the Table component
   };
 
-  const filteredPolicies = Array.isArray(policies) ? policies.filter(
-    (policy) => {
-      if (!policy || !policy.name) return false;
-      return (
-        policy.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (policy.description &&
-          policy.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-  ) : [];
+  const filteredPolicies = Array.isArray(policies) && policies.length > 0
+    ? policies.filter((policy) => {
+        if (!policy || typeof policy !== "object") return false;
+        if (!policy.name || typeof policy.name !== "string") return false;
+
+        const nameMatch = policy.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const descriptionMatch = policy.description && typeof policy.description === "string"
+          ? policy.description.toLowerCase().includes(searchTerm.toLowerCase())
+          : false;
+
+        return nameMatch || descriptionMatch;
+      })
+    : [];
 
   // Handle pagination slicing
-  const paginatedPolicies = filteredPolicies.slice(
-    (tableCurrentPage - 1) * tablePageSize,
-    tableCurrentPage * tablePageSize
-  );
+  const paginatedPolicies = Array.isArray(filteredPolicies) && filteredPolicies.length > 0
+    ? filteredPolicies.slice(
+        (tableCurrentPage - 1) * tablePageSize,
+        tableCurrentPage * tablePageSize
+      )
+    : [];
 
   // Reset to page 1 when search changes
   useEffect(() => {
@@ -389,22 +459,22 @@ export default function CommunicationPolicyPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <BackButton showBreadcrumb={true} currentLabel={t.communicationPolicy.title} />
-
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
+      {/* Breadcrumb with Create Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton showBreadcrumb={true} currentLabel={t.communicationPolicy.title} />
+          <button
+            onClick={handleCreatePolicy}
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="w-4 h-4" />
+            {t.communicationPolicy.createPolicy}
+          </button>
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Configure communication policies to control how and when messages are sent to customers. Define time windows, frequency limits, DND rules, and VIP list handling.
         </p>
-        <button
-          onClick={handleCreatePolicy}
-          className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-4 h-4" />
-          {t.communicationPolicy.createPolicy}
-        </button>
       </div>
 
       <div className={tw.surfaceBackground}>
@@ -492,40 +562,75 @@ export default function CommunicationPolicyPage() {
               />
             )}
 
+            {/* Channels Hover Modal via Portal */}
+            {channelsHoverModal && channelsHoverModal.channels && Array.isArray(channelsHoverModal.channels) && createPortal(
+              <div
+                className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl p-4 z-50`}
+                style={{
+                  top: `${channelsHoverModal.position?.top ?? 0}px`,
+                  left: `${channelsHoverModal.position?.left ?? 0}px`,
+                  minWidth: "200px",
+                }}
+                onMouseEnter={() => {
+                  // Keep modal open on hover
+                }}
+                onMouseLeave={() => setChannelsHoverModal(null)}
+              >
+                <div className="space-y-2">
+                  {channelsHoverModal.channels && channelsHoverModal.channels.map((channel) => {
+                    if (!channel) return null;
+                    return (
+                      <div
+                        key={channel}
+                        className={`flex items-center px-3 py-2 rounded ${tw.accent10}`}
+                      >
+                        <span className={`${tw.caption} font-medium ${tw.textPrimary}`}>
+                          {channel}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>,
+              document.body,
+            )}
+
             {/* Action Menus via Portal */}
-            {paginatedPolicies.map((policy) => {
-              if (showActionMenu === policy.id && dropdownPosition) {
-                return createPortal(
-                  <div
-                    ref={(el) => {
+            {Array.isArray(paginatedPolicies) && paginatedPolicies.map((policy) => {
+              if (!policy || !policy.id) return null;
+              if (showActionMenu !== policy.id || !dropdownPosition) return null;
+
+              return createPortal(
+                <div
+                  ref={(el) => {
+                    if (el && policy.id) {
                       dropdownMenuRefs.current[policy.id] = el;
+                    }
+                  }}
+                  className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
+                  style={{
+                    zIndex: zIndex.popover,
+                    top: `${dropdownPosition?.top ?? 0}px`,
+                    left: `${dropdownPosition?.left ?? 0}px`,
+                    maxHeight: `${dropdownPosition?.maxHeight ?? "auto"}px`,
+                    overflowY: "auto",
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeletePolicy(policy);
                     }}
-                    className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
-                    style={{
-                      zIndex: zIndex.popover,
-                      top: `${dropdownPosition.top}px`,
-                      left: `${dropdownPosition.left}px`,
-                      maxHeight: `${dropdownPosition.maxHeight}px`,
-                      overflowY: "auto",
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
+                    className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeletePolicy(policy);
-                      }}
-                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4 mr-4" />
-                      Delete
-                    </button>
-                  </div>,
-                  document.body,
-                );
-              }
-              return null;
+                    <Trash2 className="w-4 h-4 mr-4" />
+                    Delete
+                  </button>
+                </div>,
+                document.body,
+              );
             })}
           </>
         )}
@@ -562,9 +667,9 @@ export default function CommunicationPolicyPage() {
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
         onReorderColumns={(reorderedCols) => {
-          const updatedColumns = columns.map((col) => {
-            const reordered = reorderedCols.find((c) => c.id === col.id);
-            return reordered ? { ...col, visible: reordered.visible } : col;
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
           });
           reorderColumns(updatedColumns);
         }}

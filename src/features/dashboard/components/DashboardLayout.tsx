@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
         <div
           className={`fixed bottom-0 left-0 right-0 transition-all duration-300 ${sidebarMinimized ? "md:left-24 xl:left-24" : "md:left-32 xl:left-80"}`}
-          style={{ zIndex: zIndex.base }}
+          style={{ zIndex: zIndex.fixed }}
         >
           <Footer />
         </div>

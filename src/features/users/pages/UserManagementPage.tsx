@@ -33,11 +33,12 @@ import UserDetailsExpandedRow from "../components/UserDetailsExpandedRow";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ErrorState from "../../../shared/components/ui/ErrorState";
-import { color, tw, components, zIndex, button } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
+import { departmentService } from "../../campaigns/services/departmentService";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { formatDate, formatDateWithTimezone } from "../../../shared/services/dateService";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
@@ -240,11 +241,15 @@ export default function UserManagementPage() {
   >({});
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
   const [reportsLoading, setReportsLoading] = useState(false);
+  const [departmentLookup, setDepartmentLookup] = useState<Record<string | number, string>>({});
+  const departmentLookupRef = useRef<Record<string | number, string>>({});
+  const [totalUserCount, setTotalUserCount] = useState(0);
 
   // Batch selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [batchDepartmentValue, setBatchDepartmentValue] = useState<string>("");
   const allDepartmentsRef = useRef<string[]>([]);
   const allRolesRef = useRef<string[]>([]);
@@ -273,10 +278,10 @@ export default function UserManagementPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.size === filteredUsers.length) {
+    if (selectedUsers.size === users.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
+      setSelectedUsers(new Set(users.map((user) => user.id)));
     }
   };
 
@@ -350,9 +355,13 @@ export default function UserManagementPage() {
     ({
       skipCache = false,
       searchTermOverride,
+      limit,
+      offset,
     }: {
       skipCache?: boolean;
       searchTermOverride?: string;
+      limit?: number;
+      offset?: number;
     } = {}) => {
       const query: Record<string, unknown> = {};
 
@@ -377,6 +386,15 @@ export default function UserManagementPage() {
         }
       }
 
+      // Add pagination parameters
+      if (limit) {
+        query.limit = limit;
+      }
+
+      if (offset !== undefined) {
+        query.offset = offset;
+      }
+
       if (skipCache) {
         query.skipCache = true;
       }
@@ -390,9 +408,13 @@ export default function UserManagementPage() {
     async ({
       skipCache = false,
       searchTermOverride,
+      limit,
+      offset,
     }: {
       skipCache?: boolean;
       searchTermOverride?: string;
+      limit?: number;
+      offset?: number;
     } = {}): Promise<PaginatedResponse<UserType>> => {
       const term = (searchTermOverride ?? searchTerm)?.trim();
 
@@ -405,7 +427,7 @@ export default function UserManagementPage() {
       // If there's a search term OR active filters, use searchUsers with combined params
       if (term || hasActiveFilters) {
         return userService.searchUsers(
-          buildSearchQuery({ skipCache, searchTermOverride: term }),
+          buildSearchQuery({ skipCache, searchTermOverride: term, limit, offset }),
         );
       }
 
@@ -414,6 +436,8 @@ export default function UserManagementPage() {
       if (skipCache) {
         baseQuery.skipCache = true;
       }
+      if (limit) baseQuery.limit = limit;
+      if (offset) baseQuery.offset = offset;
 
       return userService.getUsers(baseQuery);
     },
@@ -432,11 +456,17 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
+        // Calculate pagination parameters
+        const apiOffset = (tableCurrentPage - 1) * tablePageSize;
+        const apiLimit = tablePageSize;
+
         // Fetch users and onboarding requests in parallel
-        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, countByStatusResponse] = await Promise.allSettled([
+        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, countByStatusResponse, departmentsResponse] = await Promise.allSettled([
           fetchUsers({
             skipCache,
             searchTermOverride,
+            limit: apiLimit,
+            offset: apiOffset,
           }),
           userOnboardingService.getRecentlySubmittedRequests(skipCache, 100, 0),
           userOnboardingService.getUnderReviewRequests(skipCache, 100, 0),
@@ -444,6 +474,7 @@ export default function UserManagementPage() {
           userOnboardingService.getPendingApprovalRequests(skipCache, 100, 0),
           userOnboardingService.getRejectedOnboardingRequests(skipCache, 100, 0),
           userOnboardingService.getCountByStatus(skipCache),
+          departmentService.getDepartments(),
         ]);
 
         // Process users (from users endpoint)
@@ -469,8 +500,16 @@ export default function UserManagementPage() {
 
           setUsers(usersWithResolvedRoles);
 
-          const totalFromResponse =
+          // Capture total count for pagination - handle different response formats
+          const totalCount =
             (usersResponse.value.meta?.total as number | undefined) ??
+            (usersResponse.value.pagination?.total as number | undefined) ??
+            usersWithResolvedRoles.length ??
+            0;
+          setTotalUserCount(totalCount);
+
+          const totalFromResponse =
+            totalCount ??
             usersResponse.value.data.length;
 
           setUserSummary({
@@ -526,10 +565,29 @@ export default function UserManagementPage() {
         if (countByStatusResponse.status === "fulfilled" && countByStatusResponse.value.success) {
           setRequestCountByStatus(countByStatusResponse.value.data);
         }
+
+        // Process departments
+        if (departmentsResponse.status === "fulfilled") {
+          try {
+            const departments = departmentsResponse.value;
+            const mappedDepartments: Record<string | number, string> = {};
+            if (Array.isArray(departments)) {
+              departments.forEach((dept: any) => {
+                if (dept.id && dept.name) {
+                  mappedDepartments[dept.id] = dept.name;
+                }
+              });
+            }
+            setDepartmentLookup(mappedDepartments);
+            departmentLookupRef.current = mappedDepartments;
+          } catch (err) {
+            console.error("Failed to process departments", err);
+          }
+        }
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
-        showError("Error loading users", extractBackendError(error, "Error loading users. Please try again."));
+        showError("Error loading users", extractBackendError(err, "Error loading users. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -546,9 +604,9 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
-        // Fetch users, onboarding requests, and roles in parallel
-        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, rolesResponse, countByStatusResponse] = await Promise.allSettled([
-          fetchUsers({ skipCache: false }),
+        // Fetch users, onboarding requests, roles, and departments in parallel
+        const [usersResponse, recentlySubmittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, rolesResponse, countByStatusResponse, departmentsResponse] = await Promise.allSettled([
+          fetchUsers({ skipCache: false, limit: 25, offset: 0 }),
           userOnboardingService.getRecentlySubmittedRequests(true, 100, 0),
           userOnboardingService.getUnderReviewRequests(true, 100, 0),
           // userOnboardingService.getApproverPendingRequests(user?.user_id, true, 100, 0), // TODO: Use approver-specific pending when needed
@@ -560,6 +618,7 @@ export default function UserManagementPage() {
             skipCache: true,
           }),
           userOnboardingService.getCountByStatus(true),
+          departmentService.getDepartments(),
         ]);
 
         if (cancelled) return;
@@ -581,6 +640,27 @@ export default function UserManagementPage() {
           console.error("Failed to load roles", rolesResponse.reason);
         }
         setRolesReady(true);
+
+        // Process departments
+        if (departmentsResponse.status === "fulfilled") {
+          try {
+            const departments = departmentsResponse.value;
+            const mappedDepartments: Record<string | number, string> = {};
+            if (Array.isArray(departments)) {
+              departments.forEach((dept: any) => {
+                if (dept.id && dept.name) {
+                  mappedDepartments[dept.id] = dept.name;
+                }
+              });
+            }
+            setDepartmentLookup(mappedDepartments);
+            departmentLookupRef.current = mappedDepartments;
+          } catch (err) {
+            console.error("Failed to process departments", err);
+          }
+        } else if (departmentsResponse.status === "rejected") {
+          console.error("Failed to load departments", departmentsResponse.reason);
+        }
 
         // Process users (active users only)
         if (
@@ -675,7 +755,7 @@ export default function UserManagementPage() {
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
-        showError("Error loading data", extractBackendError(error, "Error loading data. Please try again."));
+        showError("Error loading data", extractBackendError(err, "Error loading data. Please try again."));
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -778,6 +858,10 @@ export default function UserManagementPage() {
   }, [roleLookup]);
 
   useEffect(() => {
+    departmentLookupRef.current = departmentLookup;
+  }, [departmentLookup]);
+
+  useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm.trim());
     }, 400);
@@ -822,7 +906,7 @@ export default function UserManagementPage() {
         });
       }
     } catch (err) {
-      showError("Search Error", extractBackendError(error, "Search Error. Please try again."));
+      showError("Search Error", extractBackendError(err, "Search Error. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -919,7 +1003,7 @@ export default function UserManagementPage() {
         `${t.userManagement.requestApproved} - ${request.first_name} ${request.last_name}`,
       );
     } catch (err) {
-      showError("Error approving request", extractBackendError(error, "Error approving request. Please try again."));
+      showError("Error approving request", extractBackendError(err, "Error approving request. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
@@ -954,7 +1038,7 @@ export default function UserManagementPage() {
         `${request.first_name} ${request.last_name}'s request is now under review`,
       );
     } catch (err) {
-      showError("Error moving request", extractBackendError(error, "Error moving request. Please try again."));
+      showError("Error moving request", extractBackendError(err, "Error moving request. Please try again."));
     } finally {
       setLoadingActions((prev) => ({
         ...prev,
@@ -989,7 +1073,7 @@ export default function UserManagementPage() {
         `${request.first_name} ${request.last_name}'s request is now pending approval`,
       );
     } catch (err) {
-      showError("Error moving request", extractBackendError(error, "Error moving request. Please try again."));
+      showError("Error moving request", extractBackendError(err, "Error moving request. Please try again."));
     } finally {
       setLoadingActions((prev) => ({
         ...prev,
@@ -1057,7 +1141,7 @@ export default function UserManagementPage() {
         `${request.first_name} ${request.last_name} has been added to the system`,
       );
     } catch (err) {
-      showError("Error creating user", extractBackendError(error, "Error creating user. Please try again."));
+      showError("Error creating user", extractBackendError(err, "Error creating user. Please try again."));
     } finally {
       setLoadingActions((prev) => ({
         ...prev,
@@ -1129,7 +1213,7 @@ export default function UserManagementPage() {
         `${t.userManagement.requestRejected} - ${rejectingRequest.first_name} ${rejectingRequest.last_name}`,
       );
     } catch (err) {
-      showError("Error rejecting request", extractBackendError(error, "Error rejecting request. Please try again."));
+      showError("Error rejecting request", extractBackendError(err, "Error rejecting request. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
@@ -1178,7 +1262,7 @@ export default function UserManagementPage() {
         ),
       );
     } catch (err) {
-      showError("Error updating status", extractBackendError(error, "Error updating status. Please try again."));
+      showError("Error updating status", extractBackendError(err, "Error updating status. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
@@ -1194,7 +1278,7 @@ export default function UserManagementPage() {
 
   const handleDeleteUser = (user: UserType) => {
     if (!authUser?.user_id) {
-      showError("Unable to delete user", extractBackendError(error, "Unable to delete user. Please try again."));
+      showError("Unable to delete user", extractBackendError(err, "Unable to delete user. Please try again."));
       return;
     }
     setUserToDelete(user);
@@ -1222,7 +1306,7 @@ export default function UserManagementPage() {
       closeDeleteConfirm();
       setUserToDelete(null);
     } catch (err) {
-      showError("Error deleting user", extractBackendError(error, "Error deleting user. Please try again."));
+      showError("Error deleting user", extractBackendError(err, "Error deleting user. Please try again."));
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
@@ -1238,6 +1322,11 @@ export default function UserManagementPage() {
   const handleCancelDelete = () => {
     closeDeleteConfirm();
     setUserToDelete(null);
+  };
+
+  const handleCancelSelection = () => {
+    setIsSelectionMode(false);
+    setSelectedUsers(new Set());
   };
 
   // Derived analytics helpers
@@ -1395,7 +1484,7 @@ export default function UserManagementPage() {
       render: (value, user) => (
         <button
           onClick={() => handleViewUser(user)}
-          className={`font-semibold text-sm sm:text-base transition-colors truncate`}
+          className={`${tw.tableFirstColumn} font-semibold transition-colors truncate`}
           style={{ color: 'var(--c-text-primary)' }}
           title={`${user.first_name} ${user.last_name}`}
         >
@@ -1419,11 +1508,21 @@ export default function UserManagementPage() {
       label: "Department",
       visible: true,
       filterConfig: { type: 'text' },
-      render: (value) => (
-        <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
-          {value || "N/A"}
-        </span>
-      ),
+      render: (value, user) => {
+        const dept = user.department;
+        if (!dept) return <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>N/A</span>;
+
+        // Check if it's a numeric ID (string that looks like a number)
+        const isNumericId = !isNaN(Number(dept));
+        // If it's numeric, look it up; otherwise display as-is (it's already a name)
+        const displayName = isNumericId ? departmentLookupRef.current[dept] : dept;
+
+        return (
+          <span className={`text-sm whitespace-nowrap`} style={{ color: 'var(--c-text-primary)' }}>
+            {displayName || dept || "N/A"}
+          </span>
+        );
+      },
     },
     {
       id: "role",
@@ -1472,6 +1571,7 @@ export default function UserManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, user) => {
         const normalizedStatus = normalizeStatus(user);
         const userIsActive = normalizedStatus === "active";
@@ -1486,8 +1586,8 @@ export default function UserManagementPage() {
             />
             <button
               onClick={() => handleViewUser(user)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
-              style={{ color: color.primary.action, backgroundColor: "transparent" }}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+              style={{ backgroundColor: "transparent" }}
               title="View user details"
             >
               <Eye className="w-4 h-4" />
@@ -1495,8 +1595,8 @@ export default function UserManagementPage() {
             <PermissionGate permission="users.update">
               <button
                 onClick={() => handleEditUser(user)}
-                className={`p-2 icon-delete ${tw.rounded} transition-colors`}
-                style={{ color: color.primary.action, backgroundColor: "transparent" }}
+                className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+                style={{ backgroundColor: "transparent" }}
                 title="Edit user"
               >
                 <Edit className="w-4 h-4" />
@@ -1506,7 +1606,7 @@ export default function UserManagementPage() {
               <button
                 onClick={() => handleDeleteUser(user)}
                 disabled={loadingActions.deleting.has(user.id)}
-                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Delete user"
               >
                 {loadingActions.deleting.has(user.id) ? (
@@ -1530,6 +1630,7 @@ export default function UserManagementPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "user-management-table",
     defaultColumns: usersTableColumns,
@@ -1588,12 +1689,13 @@ export default function UserManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, request) => (
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => handleApproveRequest(request)}
             disabled={loadingActions.approving.has(request.requestId || request.id || 0)}
-            className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Approve"
           >
             {loadingActions.approving.has(request.requestId || request.id || 0) ? (
@@ -1605,7 +1707,7 @@ export default function UserManagementPage() {
           <button
             onClick={() => handleRejectRequest(request)}
             disabled={loadingActions.rejecting.has(request.requestId || request.id || 0)}
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Reject"
           >
             {loadingActions.rejecting.has(request.requestId || request.id || 0) ? (
@@ -1632,40 +1734,16 @@ export default function UserManagementPage() {
     persistToLocalStorage: true,
   });
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      (user.first_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.last_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.email_address || user.email || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    const normalizedStatus = normalizeStatus(user);
-
-    const matchesDepartment =
-      filterDepartment === "all" ||
-      (user.department || "").toLowerCase() === filterDepartment.toLowerCase();
-    const matchesRole =
-      filterRole === "all" ||
-      getUserRoleName(user).toLowerCase() === filterRole.toLowerCase();
-    const matchesStatus =
-      filterStatus === "all" ||
-      (filterStatus === "active" && normalizedStatus === "active") ||
-      (filterStatus === "inactive" && normalizedStatus !== "active");
-
-    return matchesSearch && matchesDepartment && matchesRole && matchesStatus;
-  });
-
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (tableCurrentPage - 1) * tablePageSize;
-    const endIndex = startIndex + tablePageSize;
-    return filteredUsers.slice(startIndex, endIndex);
-  }, [filteredUsers, tableCurrentPage, tablePageSize]);
 
   // Reset pagination when filters change
   useEffect(() => {
     tableHandlePageChange(1);
   }, [searchTerm, filterDepartment, filterRole, filterStatus, tableHandlePageChange]);
+
+  // Load users when page or pageSize changes
+  useEffect(() => {
+    loadData({ skipCache: true });
+  }, [tableCurrentPage, tablePageSize, loadData]);
 
   const filteredRequests = accountRequests.filter((request) => {
     const firstName = (request.first_name ?? "").toLowerCase();
@@ -1715,37 +1793,29 @@ export default function UserManagementPage() {
     <>
       <div className="overflow-x-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <BackButton
-                showBreadcrumb={true}
-                currentLabel="Users"
-              />
-            </div>
-            <p className={`${tw.textSecondary} text-sm mt-1`}>
-              {t.userManagement.description}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Users"
+            />
+            <div className="flex items-center gap-3 flex-shrink-0">
             {activeTab === "users" && (
               <button
                 onClick={() => {
                   if (!isSelectionMode) {
                     setIsSelectionMode(true);
-                    setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
+                    setSelectedUsers(new Set(users.map((user) => user.id)));
                   } else {
                     setIsSelectionMode(false);
                     setSelectedUsers(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
                 style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
                 }}
                 title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
               >
@@ -1754,7 +1824,7 @@ export default function UserManagementPage() {
                 ) : (
                   <Square className="h-4 w-4" />
                 )}
-                {isSelectionMode ? "Exit Selection" : "Select Users"}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             )}
             <button
@@ -1777,7 +1847,11 @@ export default function UserManagementPage() {
                 {t.userManagement.addUser}
               </button>
             </PermissionGate>
+            </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            {t.userManagement.description}
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -1936,7 +2010,7 @@ export default function UserManagementPage() {
                 "Status",
                 "Created",
               ]}
-              rows={filteredUsers.map((u) => [
+              rows={users.map((u) => [
                 `${u.first_name} ${u.last_name}`,
                 u.email_address || u.email || "N/A",
                 u.department || "N/A",
@@ -1950,7 +2024,7 @@ export default function UserManagementPage() {
               style={{ backgroundColor: color.primary.action }}
             />
 
-            <button
+            {/* <button
               onClick={() => setShowFiltersModal(true)}
               className={`flex items-center gap-2 rounded-md transition-colors font-medium`}
               style={{
@@ -1963,7 +2037,7 @@ export default function UserManagementPage() {
               title="Open filters"
             >
               Filters
-            </button>
+            </button> */}
           </div>
         </div>
       )}
@@ -1971,7 +2045,7 @@ export default function UserManagementPage() {
       {/* Batch Action Bar */}
       {isSelectionMode && selectedUsers.size > 0 && activeTab === "users" && (
         <div
-          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mb-6`}
+          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -2002,7 +2076,7 @@ export default function UserManagementPage() {
               <button
                 onClick={() => handleBatchAction("update_department")}
                 disabled={isBatchProcessing || !batchDepartmentValue}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors`}
+                className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
                   color: color.primary.action,
@@ -2015,7 +2089,7 @@ export default function UserManagementPage() {
             <button
               onClick={() => handleBatchAction("deactivate")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               Deactivate
@@ -2027,7 +2101,7 @@ export default function UserManagementPage() {
 
         {/* Content */}
         <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} overflow-hidden`}
       >
         {!rolesReady || isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -2054,14 +2128,14 @@ export default function UserManagementPage() {
             />
           </div>
         ) : activeTab === "users" ? (
-          filteredUsers.length === 0 ? (
+          users.length === 0 ? (
             <div className="text-center py-12">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {searchTerm
                   ? t.userManagement.noUsersFound
                   : t.userManagement.noUsers}
               </h3>
-              <p className={`p-2 icon-edit ${tw.rounded} text-sm  mb-6`}>
+              <p className={`p-0 icon-edit ${tw.rounded} text-sm  mb-6`}>
                 {searchTerm
                   ? t.userManagement.tryAdjustingSearch
                   : t.userManagement.createFirstUser}
@@ -2085,8 +2159,8 @@ export default function UserManagementPage() {
               {/* Table Component */}
               <Table<UserType>
                 columns={usersTableColumnsWithVisibility}
-                data={paginatedUsers}
-                totalItems={filteredUsers.length}
+                data={users}
+                totalItems={totalUserCount}
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
                 isLoading={!rolesReady || isLoading}
@@ -2098,6 +2172,13 @@ export default function UserManagementPage() {
                 onExpandChange={setExpandedRowId}
                 onFilteredCountChange={handleFilteredCountChange}
                 clearFiltersKey={clearFiltersKey}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
+                enableRowSelection={isSelectionMode}
+                selectedRows={Array.from(selectedUsers)}
+                onRowSelectChange={(selected) => {
+                  setSelectedUsers(new Set(selected as number[]));
+                }}
                 expandedContent={(user) => (
                   <UserDetailsExpandedRow user={user} colSpan={usersTableColumnsWithVisibility.filter((c) => c.visible).length} />
                 )}
@@ -2110,16 +2191,14 @@ export default function UserManagementPage() {
               />
 
               {/* Pagination */}
-              {!isLoading && paginatedUsers.length > 0 && filteredUsers.length > 0 && (
-                <div className="mt-4">
-                  <Pagination
-                    currentPage={tableCurrentPage}
-                    pageSize={tablePageSize}
-                    totalItems={filteredUsers.length}
-                    onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
-                  />
-                </div>
+              {!isLoading && users.length > 0 && totalUserCount > 0 && (
+                <Pagination
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
+                  totalItems={totalUserCount}
+                  onPageChange={tableHandlePageChange}
+                  onPageSizeChange={tableHandlePageSizeChange}
+                />
               )}
 
               {/* Old Selection Mode UI - Kept for batch operations */}
@@ -2148,7 +2227,7 @@ export default function UserManagementPage() {
 
               {/* Mobile Cards - Hidden, using table with horizontal scroll instead */}
               <div className="hidden">
-                {filteredUsers.map((user) => {
+                {users.map((user) => {
                   const normalizedStatus = normalizeStatus(user);
                   const userIsActive = normalizedStatus === "active";
                   const statusLabel = formatStatusLabel(normalizedStatus);
@@ -2211,7 +2290,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleToggleStatus(user)}
                             disabled={loadingActions.toggling.has(user.id)}
-                            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`p-0 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                             style={{
                               color: userIsActive
                                 ? deactivateColor
@@ -2239,9 +2318,8 @@ export default function UserManagementPage() {
                           </button>
                           <button
                             onClick={() => handleViewUser(user)}
-                            className={`p-2 ${tw.rounded} transition-colors`}
+                            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                             style={{
-                              color: color.primary.action,
                               backgroundColor: "transparent",
                             }}
                             title="View user details"
@@ -2253,9 +2331,8 @@ export default function UserManagementPage() {
                               setSelectedUser(user);
                               setIsModalOpen(true);
                             }}
-                            className={`p-2 ${tw.rounded} transition-colors`}
+                            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                             style={{
-                              color: color.primary.action,
                               backgroundColor: "transparent",
                             }}
                             title="Edit user"
@@ -2265,7 +2342,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleDeleteUser(user)}
                             disabled={loadingActions.deleting.has(user.id)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                             title={
                               loadingActions.deleting.has(user.id)
                                 ? t.profile.saving
@@ -2456,7 +2533,7 @@ export default function UserManagementPage() {
                                 <button
                                   onClick={() => handleMoveToReview(request)}
                                   disabled={actionDisabled || approvingLoading}
-                                  className={`p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title="Move to review"
                                 >
                                   {approvingLoading ? (
@@ -2470,7 +2547,7 @@ export default function UserManagementPage() {
                                 <button
                                   onClick={() => handleMoveToPendingApproval(request)}
                                   disabled={actionDisabled || approvingLoading}
-                                  className={`p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`p-0 text-orange-600 hover:text-orange-700 hover:bg-orange-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title="Send to approver"
                                 >
                                   {approvingLoading ? (
@@ -2485,7 +2562,7 @@ export default function UserManagementPage() {
                                   <button
                                     onClick={() => handleApproveRequest(request)}
                                     disabled={actionDisabled || approvingLoading}
-                                    className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`p-0 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                     title="Approve request"
                                   >
                                     {approvingLoading ? (
@@ -2497,7 +2574,7 @@ export default function UserManagementPage() {
                                   <button
                                     onClick={() => handleRejectRequest(request)}
                                     disabled={actionDisabled}
-                                    className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                     title="Reject request"
                                   >
                                     <Ban className="w-4 h-4" />
@@ -2508,7 +2585,7 @@ export default function UserManagementPage() {
                                 <button
                                   onClick={() => handleCreateUserFromRequest(request)}
                                   disabled={actionDisabled || approvingLoading}
-                                  className={`p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  className={`p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title="Create user"
                                 >
                                   {approvingLoading ? (
@@ -2657,15 +2734,10 @@ export default function UserManagementPage() {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onUserSaved={(savedUser: UserType) => {
+        onUserSaved={() => {
           setIsModalOpen(false);
-          // Optimistically update user in list
-          if (savedUser && savedUser.id) {
-            setUsers((prev) =>
-              prev.map((u) => (u.id === savedUser.id ? savedUser : u)),
-            );
-          }
           setSelectedUser(null);
+          loadData({ skipCache: true });
         }}
       />
 

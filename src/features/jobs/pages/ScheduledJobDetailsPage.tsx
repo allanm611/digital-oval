@@ -565,19 +565,13 @@ export default function ScheduledJobDetailsPage() {
   }
 
   return (
-    <div className="">
+    <div className="space-y-6">
       {/* Header */}
-      <BackButton
-       
-        showBreadcrumb={true}
-        currentLabel="Scheduled Job Details"
-      />
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            {job.name || "Loading..."}
-          </h1>
-        </div>
+        <BackButton
+          showBreadcrumb={true}
+          currentLabel="Scheduled Job Details"
+        />
         <div className="flex items-center gap-3 flex-wrap relative">
           <button
             onClick={() => navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)}
@@ -665,7 +659,7 @@ export default function ScheduledJobDetailsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="">
+      <div className="space-y-6">
         {/* Performance Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div

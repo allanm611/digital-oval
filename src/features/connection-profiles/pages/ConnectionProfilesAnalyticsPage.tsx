@@ -60,13 +60,14 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+      className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-3 shadow-lg`}
     >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -271,7 +272,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
           {dataGovernanceStats && (
             <div className="grid gap-4 md:grid-cols-4">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Database
@@ -287,7 +289,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Activity
@@ -301,7 +304,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Shield
@@ -315,7 +319,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
@@ -334,7 +339,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
           {/* Charts */}
           <div className="grid gap-6 md:grid-cols-2">
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Connection Type Distribution
@@ -374,7 +380,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                         verticalAlign="bottom"
                         height={36}
                         formatter={(value) => (
-                          <span style={{ fontSize: "12px", color: "#000000" }}>
+                          <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                             {value}
                           </span>
                         )}
@@ -390,7 +396,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Environment Distribution
@@ -430,7 +437,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                         verticalAlign="bottom"
                         height={36}
                         formatter={(value) => (
-                          <span style={{ fontSize: "12px", color: "#000000" }}>
+                          <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                             {value}
                           </span>
                         )}
@@ -446,7 +453,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Status Distribution
@@ -486,7 +494,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                         verticalAlign="bottom"
                         height={36}
                         formatter={(value) => (
-                          <span style={{ fontSize: "12px", color: "#000000" }}>
+                          <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                             {value}
                           </span>
                         )}
@@ -502,7 +510,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
             </div>
 
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Health Check Status
@@ -542,7 +551,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                         verticalAlign="bottom"
                         height={36}
                         formatter={(value) => (
-                          <span style={{ fontSize: "12px", color: "#000000" }}>
+                          <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                             {value}
                           </span>
                         )}
@@ -560,7 +569,8 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
 
           {/* Bar Charts */}
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-black mb-4">
               Classification Distribution

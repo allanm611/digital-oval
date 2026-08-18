@@ -366,29 +366,27 @@ class ServerService {
       query as Record<string, unknown> | undefined,
     );
     const endpoint = this.appendSkipCache(queryString || "");
-    const response = await this.request<
-      PaginatedServersResponse | ServerType[]
-    >(endpoint);
-    const payload = this.unwrapSuccessPayload<
-      | ServerType[]
-      | {
-          data?: ServerType[];
-          pagination?: {
-            limit?: number;
-            offset?: number;
-            total?: number;
-            hasMore?: boolean;
-          };
-        }
-    >(response);
+    const response = await this.request<unknown>(endpoint);
 
-    if (Array.isArray(payload)) {
-      return { data: payload };
-    }
+    if (
+      response &&
+      typeof response === "object" &&
+      "success" in response &&
+      (response as { success?: boolean }).success === true &&
+      "data" in response
+    ) {
+      const payload = response as {
+        data?: ServerType[];
+        pagination?: {
+          limit?: number;
+          offset?: number;
+          total?: number;
+          hasMore?: boolean;
+        };
+      };
 
-    if (payload && Array.isArray(payload.data)) {
       return {
-        data: payload.data,
+        data: Array.isArray(payload.data) ? payload.data : [],
         meta: {
           limit: payload.pagination?.limit,
           offset: payload.pagination?.offset,
@@ -398,7 +396,7 @@ class ServerService {
       };
     }
 
-    return payload as PaginatedServersResponse;
+    return { data: [] };
   }
 
   async createServer(payload: CreateServerPayload): Promise<ServerType> {

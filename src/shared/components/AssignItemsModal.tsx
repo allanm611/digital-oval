@@ -896,7 +896,8 @@ function AssignItemsModal({
       ></div>
       <div className="relative min-h-screen flex items-center justify-center p-4">
         <div
-          className={`relative bg-white ${tw.rounded} shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}
+          className={`relative ${tw.rounded} shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}
+          style={{ backgroundColor: "var(--c-surface-background)" }}
         >
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
@@ -1174,7 +1175,7 @@ function AssignItemsModal({
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200" style={{ backgroundColor: "var(--c-surface-background)" }}>
                     {filteredItems.map((item) => {
                       const isAssigned = assignedItemIds.includes(item.id);
                       const isSelected =
@@ -1183,7 +1184,13 @@ function AssignItemsModal({
                       return (
                         <tr
                           key={item.id}
-                          className="hover:bg-gray-50 transition-colors"
+                          className="transition-colors"
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--c-interactive-hover)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--c-surface-background)";
+                          }}
                         >
                           <td className="px-3 sm:px-6 py-4">
                             <label className="flex items-center cursor-pointer">

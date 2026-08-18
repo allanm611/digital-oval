@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import {
@@ -7,7 +7,6 @@ import {
   Coins,
   Percent,
   DollarSign,
-  ChevronDown,
   Send,
   CheckCircle,
   XCircle,
@@ -16,6 +15,7 @@ import {
   Phone,
   Bell,
   Loader,
+  Smartphone,
 } from "lucide-react";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
@@ -25,11 +25,9 @@ import { EmailRoute } from "../../routes/types/emailRoute";
 import { color, tw, zIndex, components, getButtonStyles, button } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
-import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import {
   isValidCountryCodePhone,
   isValidEmail,
@@ -38,16 +36,66 @@ import { getSettingsCommunicationChannel } from "../../../shared/utils/settingsH
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { SeedListRecipient } from "../../../shared/services/seedListService";
 import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
+import { type RuleRewardType } from "../../../shared/data/rewardProviders";
+import { useRewardProviders } from "../../../shared/hooks/useRewardProviders";
+import { useRewardProviderConfigurations } from "../../../shared/hooks/useRewardProviderConfigurations";
+import { rewardConfigurationService } from "../../configurations/services/rewardConfigurationService";
+import {
+  isVirtualDefaultTemplateId,
+  materializeRewardTemplateId,
+} from "../../configurations/utils/rewardTemplateDefaults";
+import RewardConfigurationParametersEditor from "../../configurations/components/reward-forms/RewardConfigurationParametersEditor";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
   onUpdate: (data: Partial<ManualRewardData>) => void;
   onNext: () => void;
   onPrevious: () => void;
+  isEditMode?: boolean;
 }
 
-type RewardType = "bundle" | "points" | "discount" | "cashback";
+type RewardType = RuleRewardType;
 type Channel = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
+
+function getRewardValuePlaceholder(
+  type: RewardType,
+  t: ReturnType<typeof useLanguage>["t"],
+): string {
+  switch (type) {
+    case "bundle":
+      return t.manualRewards.rewardValuePlaceholderBundle;
+    case "airtime":
+      return t.manualRewards.rewardValuePlaceholderAirtime;
+    case "points":
+      return t.manualRewards.rewardValuePlaceholderPoints;
+    case "discount":
+      return t.manualRewards.rewardValuePlaceholderDiscount;
+    case "cashback":
+      return t.manualRewards.rewardValuePlaceholderCashback;
+    default:
+      return "";
+  }
+}
+
+function getRewardValueHelper(
+  type: RewardType,
+  t: ReturnType<typeof useLanguage>["t"],
+): string {
+  switch (type) {
+    case "bundle":
+      return t.manualRewards.rewardValueHelperBundle;
+    case "airtime":
+      return t.manualRewards.rewardValueHelperAirtime;
+    case "points":
+      return t.manualRewards.rewardValueHelperPoints;
+    case "discount":
+      return t.manualRewards.rewardValueHelperDiscount;
+    case "cashback":
+      return t.manualRewards.rewardValueHelperCashback;
+    default:
+      return "";
+  }
+}
 
 interface RewardSeedTestResult {
   contact: string;
@@ -55,28 +103,28 @@ interface RewardSeedTestResult {
   message: string;
 }
 
-const BUNDLE_TRACKS = [
-  "R2TPersAdjustBalCount2",
-  "SelectDependantProduct",
-  "SYSDATE",
-];
-
 export default function DefineRewardStep({
   data,
   onUpdate,
   onNext,
   onPrevious,
+  isEditMode = false,
 }: DefineRewardStepProps) {
   const { t } = useLanguage();
+  const [rewardProviderId, setRewardProviderId] = useState<string>(
+    data.rewardProviderId ?? "",
+  );
+  const [rewardConfigurationId, setRewardConfigurationId] = useState<
+    number | undefined
+  >(data.rewardConfigurationId);
   const [rewardType, setRewardType] = useState<RewardType>(
     (data.rewardType as RewardType) || "bundle",
   );
   const [rewardValue, setRewardValue] = useState(data.rewardValue || "");
-  const [bundleTrack, setBundleTrack] = useState(
-    data.bundleTrack || BUNDLE_TRACKS[0],
-  );
   const [description, setDescription] = useState(data.description || "");
   const [error, setError] = useState("");
+  const [configurationParametersValid, setConfigurationParametersValid] =
+    useState(true);
   const [isTesting, setIsTesting] = useState(false);
   const [seedTestError, setSeedTestError] = useState("");
   const [selectedSeedContactIds, setSelectedSeedContactIds] = useState<Set<number>>(
@@ -97,12 +145,185 @@ export default function DefineRewardStep({
   );
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
   const [smsRoute, setSmsRoute] = useState("");
+  const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
   const [emailRoute, setEmailRoute] = useState("");
   const [rewardTitle, setRewardTitle] = useState("");
 
-  // Load email routes from configuration (dummy data)
-  const emailRoutesConfig = useConfigurationData("emailRoutes");
-  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
+  const {
+    providerOptions,
+    defaultProviderId,
+    loading: loadingRewardProviders,
+    error: providerLoadError,
+    getProvider,
+  } = useRewardProviders({ rewardType });
+
+  const {
+    configurations: providerConfigurations,
+    templateOptions,
+    defaultTemplate,
+    loading: loadingConfigurations,
+    error: configurationLoadError,
+    seedWarning: templateSeedWarning,
+  } = useRewardProviderConfigurations({
+    providerId: rewardProviderId,
+    rewardType,
+    enabled: !!rewardProviderId,
+  });
+
+  const configurationOptions = useMemo(
+    () =>
+      templateOptions.map((o) => ({
+        value: String(o.value),
+        label: o.label,
+      })),
+    [templateOptions],
+  );
+
+  const resolvedTemplateId = useMemo(() => {
+    if (!rewardProviderId || loadingConfigurations) return "";
+    if (configurationOptions.length === 0) return "";
+
+    const current =
+      rewardConfigurationId != null ? String(rewardConfigurationId) : "";
+    const optionValues = new Set(configurationOptions.map((o) => o.value));
+    const defaultId = defaultTemplate
+      ? String(defaultTemplate.id)
+      : configurationOptions[0]?.value;
+
+    if (current && optionValues.has(current)) return current;
+    if (defaultId && optionValues.has(defaultId)) return defaultId;
+    return configurationOptions[0]?.value ?? "";
+  }, [
+    rewardProviderId,
+    loadingConfigurations,
+    configurationOptions,
+    rewardConfigurationId,
+    defaultTemplate,
+  ]);
+
+  const providerSelectOptions = useMemo(() => {
+    const opts = [...providerOptions];
+    if (
+      rewardProviderId &&
+      !opts.some((o) => o.value === rewardProviderId)
+    ) {
+      const provider = getProvider(rewardProviderId);
+      opts.unshift({
+        value: rewardProviderId,
+        label: provider?.name ?? `Provider #${rewardProviderId}`,
+      });
+    }
+    return opts;
+  }, [providerOptions, rewardProviderId, getProvider]);
+
+  const selectedConfiguration = providerConfigurations.find(
+    (c) => String(c.id) === String(resolvedTemplateId || rewardConfigurationId),
+  );
+
+  const selectedProvider = getProvider(rewardProviderId);
+
+  const selectedConfigurationIdForPanel = useMemo(() => {
+    if (!resolvedTemplateId) return null;
+    const n = Number(resolvedTemplateId);
+    return Number.isFinite(n) ? n : null;
+  }, [resolvedTemplateId]);
+
+  const resolvedProviderFromConfigRef = useRef(false);
+  const defaultedProviderRef = useRef(false);
+
+  useEffect(() => {
+    if (data.rewardProviderId && data.rewardProviderId !== rewardProviderId) {
+      setRewardProviderId(data.rewardProviderId);
+    }
+  }, [data.rewardProviderId, rewardProviderId]);
+
+  useEffect(() => {
+    if (
+      data.rewardConfigurationId != null &&
+      data.rewardConfigurationId !== rewardConfigurationId
+    ) {
+      setRewardConfigurationId(data.rewardConfigurationId);
+    }
+  }, [data.rewardConfigurationId, rewardConfigurationId]);
+
+  useEffect(() => {
+    if (data.rewardType && data.rewardType !== rewardType) {
+      setRewardType(data.rewardType as RewardType);
+    }
+  }, [data.rewardType, rewardType]);
+
+  useEffect(() => {
+    if (data.rewardValue != null && data.rewardValue !== rewardValue) {
+      setRewardValue(data.rewardValue);
+    }
+  }, [data.rewardValue, rewardValue]);
+
+  useEffect(() => {
+    if (rewardProviderId || !data.rewardConfigurationId) return;
+    if (resolvedProviderFromConfigRef.current) return;
+    resolvedProviderFromConfigRef.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const cfg = await rewardConfigurationService.getById(
+          data.rewardConfigurationId!,
+        );
+        if (cancelled || !cfg.provider_id) return;
+        const pid = String(cfg.provider_id);
+        setRewardProviderId(pid);
+        onUpdate({ rewardProviderId: pid });
+      } catch {
+        resolvedProviderFromConfigRef.current = false;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [data.rewardConfigurationId, rewardProviderId]);
+
+  useEffect(() => {
+    if (isEditMode || loadingRewardProviders) return;
+    if (rewardProviderId) return;
+    if (!defaultProviderId) return;
+    if (defaultedProviderRef.current) return;
+    defaultedProviderRef.current = true;
+    setRewardProviderId(defaultProviderId);
+    onUpdate({ rewardProviderId: defaultProviderId });
+  }, [
+    isEditMode,
+    loadingRewardProviders,
+    rewardProviderId,
+    defaultProviderId,
+  ]);
+
+  // Keep selected template aligned with the current provider's options/default.
+  useEffect(() => {
+    if (isEditMode || loadingConfigurations) return;
+    if (!rewardProviderId || !resolvedTemplateId) return;
+
+    const resolvedNum = Number(resolvedTemplateId);
+    if (!Number.isFinite(resolvedNum)) return;
+    if (rewardConfigurationId === resolvedNum) return;
+
+    const matched = providerConfigurations.find(
+      (c) => String(c.id) === resolvedTemplateId,
+    );
+    setRewardConfigurationId(resolvedNum);
+    onUpdate({
+      rewardConfigurationId: resolvedNum,
+      rewardConfigurationName: matched?.name || defaultTemplate?.name,
+      bundleTrack: matched?.name || String(resolvedNum),
+    });
+  }, [
+    isEditMode,
+    loadingConfigurations,
+    rewardProviderId,
+    resolvedTemplateId,
+    rewardConfigurationId,
+    providerConfigurations,
+    defaultTemplate,
+    onUpdate,
+  ]);
 
   // Communication Policy states
   const [communicationPolicies, setCommunicationPolicies] = useState<
@@ -110,23 +331,31 @@ export default function DefineRewardStep({
   >([]);
   const [selectedPolicy, setSelectedPolicy] =
     useState<CommunicationPolicyConfiguration | null>(null);
-  const [isPolicyDropdownOpen, setIsPolicyDropdownOpen] = useState(false);
-  const policyDropdownRef = useRef<HTMLDivElement>(null);
 
-  useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
-
-  // Fetch SMS routes
+  // Fetch SMS and Email routes from API
   useEffect(() => {
-    const fetchSmsRoutes = async () => {
+    const fetchRoutes = async () => {
       try {
         const routes = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(routes) ? routes : []);
+        setSmsRoutes(
+          Array.isArray(routes) ? routes.filter((r) => r.is_active) : [],
+        );
       } catch (error) {
         console.error("Failed to fetch SMS routes:", error);
         setSmsRoutes([]);
       }
+
+      try {
+        const routes = await emailRouteService.getAllRoutes();
+        setEmailRoutes(
+          Array.isArray(routes) ? routes.filter((r) => r.is_active) : [],
+        );
+      } catch (error) {
+        console.error("Failed to fetch Email routes:", error);
+        setEmailRoutes([]);
+      }
     };
-    fetchSmsRoutes();
+    fetchRoutes();
   }, []);
 
 
@@ -168,11 +397,21 @@ export default function DefineRewardStep({
 
   // Load Communication Policies
   useEffect(() => {
-    setCommunicationPolicies(communicationPolicyService.getAllPolicies());
+    const loadPolicies = async () => {
+      try {
+        const policies = await communicationPolicyService.getAllPolicies();
+        setCommunicationPolicies(policies || []);
+      } catch (error) {
+        console.error("Failed to load communication policies:", error);
+        setCommunicationPolicies([]);
+      }
+    };
+
+    loadPolicies();
 
     const unsubscribe = communicationPolicyService.subscribe(
       (updatedPolicies) => {
-        setCommunicationPolicies(updatedPolicies);
+        setCommunicationPolicies(updatedPolicies || []);
       },
     );
 
@@ -206,6 +445,12 @@ export default function DefineRewardStep({
       description: t.manualRewards.rewardTypeBundleDesc,
     },
     {
+      id: "airtime" as RewardType,
+      name: t.manualRewards.rewardTypeAirtime,
+      icon: Smartphone,
+      description: t.manualRewards.rewardTypeAirtimeDesc,
+    },
+    {
       id: "points" as RewardType,
       name: t.manualRewards.rewardTypePoints,
       icon: Coins,
@@ -224,6 +469,136 @@ export default function DefineRewardStep({
       description: t.manualRewards.rewardTypeCashbackDesc,
     },
   ];
+
+  const handleRewardTypeSelect = (type: RewardType) => {
+    defaultedProviderRef.current = false;
+    resolvedProviderFromConfigRef.current = false;
+    setRewardType(type);
+    setRewardValue("");
+    setRewardProviderId("");
+    setRewardConfigurationId(undefined);
+    onUpdate({
+      rewardType: type,
+      rewardValue: "",
+      rewardProviderId: undefined,
+      rewardConfigurationId: undefined,
+      rewardConfigurationName: undefined,
+      rewardAuthConfig: undefined,
+      rewardPayloadConfig: undefined,
+      bundleTrack: "",
+    });
+    setConfigurationParametersValid(true);
+    resetRewardValidation();
+  };
+
+  const handleProviderChange = (providerId: string) => {
+    setRewardProviderId(providerId);
+    setRewardConfigurationId(undefined);
+    onUpdate({
+      rewardProviderId: providerId,
+      rewardConfigurationId: undefined,
+      rewardConfigurationName: undefined,
+      rewardAuthConfig: undefined,
+      rewardPayloadConfig: undefined,
+      bundleTrack: "",
+    });
+    setConfigurationParametersValid(true);
+    resetRewardValidation();
+  };
+
+  const handleConfigurationChange = (configId: string) => {
+    const parsed = Number(configId);
+    const config = providerConfigurations.find((c) => c.id === parsed);
+    setRewardConfigurationId(parsed);
+    onUpdate({
+      rewardConfigurationId: parsed,
+      rewardConfigurationName: config?.name,
+      rewardAuthConfig: undefined,
+      rewardPayloadConfig: undefined,
+      bundleTrack: config?.name,
+    });
+    setConfigurationParametersValid(true);
+    resetRewardValidation();
+  };
+
+  const handleNext = async () => {
+    if (!rewardProviderId.trim()) {
+      setError(
+        "Select a reward provider (Configurations → Reward Providers).",
+      );
+      return;
+    }
+
+    if (!rewardConfigurationId) {
+      setError(
+        "Select a reward template for this provider (Configurations → Reward Templates).",
+      );
+      return;
+    }
+
+    if (!configurationParametersValid) {
+      setError("Complete all required template parameters.");
+      return;
+    }
+
+    if (!rewardValue.trim()) {
+      setError(t.manualRewards.errorRewardValueRequired);
+      return;
+    }
+
+    const numValue = parseFloat(rewardValue);
+    if (isNaN(numValue) || numValue <= 0) {
+      setError(t.manualRewards.errorRewardValueInvalid);
+      return;
+    }
+
+    if (!data.rewardValidation?.completed && !isEditMode) {
+      setError("Run seed-list testing before continuing");
+      return;
+    }
+
+    setError("");
+
+    let resolvedConfigurationId = rewardConfigurationId;
+    let resolvedConfigurationName = selectedConfiguration?.name;
+
+    if (isVirtualDefaultTemplateId(rewardConfigurationId)) {
+      try {
+        const persisted = await materializeRewardTemplateId(
+          rewardConfigurationId,
+          Number(rewardProviderId),
+        );
+        resolvedConfigurationId = persisted.id;
+        resolvedConfigurationName = persisted.name;
+        setRewardConfigurationId(persisted.id);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not save the default reward template for this provider.",
+        );
+        return;
+      }
+    }
+
+    onUpdate({
+      rewardType: rewardType,
+      rewardValue: rewardValue.trim(),
+      rewardProviderId,
+      rewardConfigurationId: resolvedConfigurationId,
+      rewardConfigurationName: resolvedConfigurationName,
+      rewardAuthConfig: data.rewardAuthConfig,
+      rewardPayloadConfig: data.rewardPayloadConfig,
+      bundleTrack: resolvedConfigurationName,
+      description: description.trim() || undefined,
+      channel: selectedChannel,
+      smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      rewardTitle: selectedChannel === "EMAIL" ? rewardTitle : undefined,
+      selectedCommunicationPolicyId: selectedPolicy?.id,
+    });
+
+    onNext();
+  };
 
   const activeSeedRecipients: SeedListRecipient[] = selectedRecipients;
 
@@ -337,57 +712,6 @@ export default function DefineRewardStep({
     setIsTesting(false);
   };
 
-  const handleRewardTypeSelect = (type: RewardType) => {
-    setRewardType(type);
-    // Reset value when changing type
-    setRewardValue("");
-    onUpdate({ rewardType: type, rewardValue: "" });
-    resetRewardValidation();
-  };
-
-  const handleNext = () => {
-    // Validation
-    if (!rewardValue.trim()) {
-      setError(t.manualRewards.errorRewardValueRequired);
-      return;
-    }
-
-    // Validate numeric value
-    const numValue = parseFloat(rewardValue);
-    if (isNaN(numValue) || numValue <= 0) {
-      setError(t.manualRewards.errorRewardValueInvalid);
-      return;
-    }
-
-    // For bundle type, validate bundle track
-    if (rewardType === "bundle" && !bundleTrack) {
-      setError(t.manualRewards.errorBundleTrackRequired);
-      return;
-    }
-
-    if (!data.rewardValidation?.completed) {
-      setError("Run seed-list testing before continuing");
-      return;
-    }
-
-    setError("");
-
-    // Update data
-    onUpdate({
-      rewardType: rewardType,
-      rewardValue: rewardValue.trim(),
-      bundleTrack: rewardType === "bundle" ? bundleTrack : undefined,
-      description: description.trim() || undefined,
-      channel: selectedChannel,
-      smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
-      rewardTitle: selectedChannel === "EMAIL" ? rewardTitle : undefined,
-      selectedCommunicationPolicyId: selectedPolicy?.id,
-    });
-
-    // Move to next step
-    onNext();
-  };
-
   return (
     <div
       className={`bg-white ${tw.rounded} shadow-sm border`}
@@ -411,7 +735,7 @@ export default function DefineRewardStep({
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
             {t.manualRewards.rewardTypeLabel}
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2">
             {rewardTypes.map((type) => {
               const Icon = type.icon;
               const isSelected = rewardType === type.id;
@@ -470,6 +794,102 @@ export default function DefineRewardStep({
           </div>
         </div>
 
+        {/* Reward provider & configuration */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <HeadlessSelect
+              label="Reward Provider *"
+              options={providerSelectOptions}
+              value={rewardProviderId}
+              onChange={(value) => handleProviderChange(value as string)}
+              placeholder={
+                loadingRewardProviders
+                  ? "Loading providers..."
+                  : providerOptions.length === 0
+                    ? "No providers for this reward type"
+                    : "Select reward provider"
+              }
+              disabled={
+                isEditMode ||
+                loadingRewardProviders ||
+                providerOptions.length === 0
+              }
+              zIndex={zIndex.popover}
+            />
+            {providerLoadError ? (
+              <p className="mt-1 text-xs text-red-600">{providerLoadError}</p>
+            ) : selectedProvider ? (
+              <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                API: {selectedProvider.apiPath || "—"}
+              </p>
+            ) : !loadingRewardProviders && providerOptions.length === 0 ? (
+              <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                No active providers for &quot;{rewardType}&quot;. Add one under
+                Configurations → Reward Providers.
+              </p>
+            ) : (
+              <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                Providers are filtered by the selected reward type.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <HeadlessSelect
+              label="Reward Template *"
+              options={configurationOptions}
+              value={resolvedTemplateId}
+              onChange={(value) => handleConfigurationChange(value as string)}
+              placeholder={
+                !rewardProviderId
+                  ? "Select a provider first"
+                  : loadingConfigurations
+                    ? "Loading templates..."
+                    : configurationOptions.length === 0
+                      ? "No templates for this provider"
+                      : "Select reward template"
+              }
+              disabled={
+                isEditMode ||
+                !rewardProviderId ||
+                loadingConfigurations ||
+                configurationOptions.length === 0
+              }
+              zIndex={zIndex.popover}
+            />
+            <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+              {configurationLoadError
+                ? configurationLoadError
+                : rewardProviderId &&
+                    !loadingConfigurations &&
+                    configurationOptions.length === 0
+                  ? `No active templates for this provider and "${rewardType}". Create one under Configurations → Reward Templates.`
+                  : selectedConfiguration
+                    ? `${selectedConfiguration.api_path || "API path N/A"}`
+                    : "Credentials and payload values come from the selected reward template (includes the provider default)."}
+            </p>
+            {templateSeedWarning ? (
+              <p className="mt-1 text-xs text-amber-800">{templateSeedWarning}</p>
+            ) : null}
+          </div>
+        </div>
+
+        <RewardConfigurationParametersEditor
+          key={selectedConfigurationIdForPanel ?? "none"}
+          configurationId={selectedConfigurationIdForPanel}
+          value={{
+            auth_config: data.rewardAuthConfig,
+            payload_config: data.rewardPayloadConfig,
+          }}
+          onChange={({ auth_config, payload_config }) =>
+            onUpdate({
+              rewardAuthConfig: auth_config,
+              rewardPayloadConfig: payload_config,
+            })
+          }
+          onValidationChange={setConfigurationParametersValid}
+        />
+
         {/* Reward Value */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
@@ -489,15 +909,7 @@ export default function DefineRewardStep({
                 borderColor: color.border.default,
                 color: color.text.primary,
               }}
-              placeholder={
-                rewardType === "bundle"
-                  ? t.manualRewards.rewardValuePlaceholderBundle
-                  : rewardType === "points"
-                    ? t.manualRewards.rewardValuePlaceholderPoints
-                    : rewardType === "discount"
-                      ? t.manualRewards.rewardValuePlaceholderDiscount
-                      : t.manualRewards.rewardValuePlaceholderCashback
-              }
+              placeholder={getRewardValuePlaceholder(rewardType, t)}
               min="0"
               step="0.01"
             />
@@ -509,39 +921,9 @@ export default function DefineRewardStep({
             </span>
           </div>
           <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            {rewardType === "bundle"
-              ? t.manualRewards.rewardValueHelperBundle
-              : rewardType === "points"
-                ? t.manualRewards.rewardValueHelperPoints
-                : rewardType === "discount"
-                  ? t.manualRewards.rewardValueHelperDiscount
-                  : t.manualRewards.rewardValueHelperCashback}
+            {getRewardValueHelper(rewardType, t)}
           </p>
         </div>
-
-        {/* Bundle Track (only for bundle type) */}
-        {rewardType === "bundle" && (
-          <div>
-            <HeadlessSelect
-              label={t.manualRewards.bundleTrackLabel}
-              options={BUNDLE_TRACKS.map((track) => ({
-                value: track,
-                label: track,
-              }))}
-              value={bundleTrack}
-              onChange={(value) => {
-                setBundleTrack(value as string);
-                onUpdate({ bundleTrack: value as string });
-                resetRewardValidation();
-              }}
-              placeholder={t.manualRewards.bundleTrackPlaceholder}
-              zIndex={zIndex.popover}
-            />
-            <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-              {t.manualRewards.bundleTrackHelper}
-            </p>
-          </div>
-        )}
 
         {/* Communication Channel, SMS Route, and Email Route */}
         <div className="flex gap-4 mb-6">
@@ -568,15 +950,10 @@ export default function DefineRewardStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="SMS Route *"
-                options={[
-                  { value: "", label: "Select SMS Route" },
-                  ...(smsRoutes || [])
-                    .filter((route) => route.is_active)
-                    .map((route) => ({
-                      value: route.id.toString(),
-                      label: route.name,
-                    })),
-                ]}
+                options={(smsRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={smsRoute}
                 onChange={(value) => {
                   setSmsRoute(value);
@@ -592,13 +969,10 @@ export default function DefineRewardStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="Email Route *"
-                options={[
-                  { value: "", label: "Select Email Route" },
-                  ...(emailRoutes || []).map((route: any) => ({
-                    value: route.id.toString(),
-                    label: route.name,
-                  })),
-                ]}
+                options={(emailRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={emailRoute}
                 onChange={(value) => {
                   setEmailRoute(value);
@@ -625,107 +999,34 @@ export default function DefineRewardStep({
         )}
 
         {/* Communication Policy (Optional) */}
-        <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-            Communication Policy{" "}
-            <span className={tw.textMuted}>({t.manualRewards.optional})</span>
-          </label>
-          <div className="relative" ref={policyDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
-              className={`${
-                components.input.default
-              } w-full px-3 py-2 text-left flex items-center justify-between ${
-                selectedPolicy ? "" : "text-gray-500"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {selectedPolicy && (
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      selectedPolicy.isActive ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  ></div>
-                )}
-                <span className="text-sm">
-                  {selectedPolicy
-                    ? selectedPolicy.name
-                    : "Choose a communication policy (optional)"}
-                </span>
-              </div>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  isPolicyDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {isPolicyDropdownOpen && (
-              <div
-                className={`absolute z-50 w-full mt-1 bg-white border ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
-                style={{ borderColor: color.border.default }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPolicy(null);
-                    onUpdate({ selectedCommunicationPolicyId: undefined });
-                    setIsPolicyDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
-                  style={{ borderColor: color.border.default }}
-                >
-                  <div className={`text-sm font-medium ${tw.textPrimary}`}>
-                    No Policy
-                  </div>
-                  <div className={`text-xs ${tw.textSecondary}`}>
-                    Reward will use default communication settings
-                  </div>
-                </button>
-
-                <div className="max-h-48 overflow-y-auto">
-                  {communicationPolicies.map((policy) => (
-                    <button
-                      key={policy.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedPolicy(policy);
-                        onUpdate({ selectedCommunicationPolicyId: policy.id });
-                        resetRewardValidation();
-                        setIsPolicyDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b last:border-b-0"
-                      style={{ borderColor: color.border.default }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            policy.isActive ? "bg-green-500" : "bg-gray-400"
-                          }`}
-                        ></div>
-                        <div
-                          className={`text-sm font-medium ${tw.textPrimary}`}
-                        >
-                          {policy.name}
-                        </div>
-                      </div>
-                      {policy.description && (
-                        <div className={`text-xs ${tw.textSecondary} mt-1`}>
-                          {policy.description}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-            Select a communication policy to control how this reward is
-            delivered to recipients
-          </p>
-        </div>
+        <HeadlessSelect
+          label={`Communication Policy (${t.manualRewards.optional})`}
+          options={[
+            { value: "", label: "No Policy" },
+            ...communicationPolicies.map((policy) => ({
+              value: policy.id.toString(),
+              label: policy.name,
+            })),
+          ]}
+          value={selectedPolicy?.id.toString() || ""}
+          onChange={(value) => {
+            if (value === "") {
+              setSelectedPolicy(null);
+              onUpdate({ selectedCommunicationPolicyId: undefined });
+            } else {
+              const policy = communicationPolicies.find(
+                (p) => p.id.toString() === value,
+              );
+              if (policy) {
+                setSelectedPolicy(policy);
+                onUpdate({ selectedCommunicationPolicyId: policy.id });
+                resetRewardValidation();
+              }
+            }
+          }}
+          placeholder="Choose a communication policy (optional)"
+          zIndex={zIndex.popover}
+        />
 
         {/* Description (Optional) */}
         <div>

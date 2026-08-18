@@ -33,6 +33,7 @@ export default function DNDBulkManagementPage() {
   const [channels, setChannels] = useState<CommunicationChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterChannel, setFilterChannel] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -90,73 +91,44 @@ export default function DNDBulkManagementPage() {
       id: "customer_name",
       label: "Customer",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string || "Unknown"}>
-          {value || "Unknown"}
-        </div>
-      ),
     },
     {
       id: "customer_phone",
       label: "Phone",
       visible: true,
-      render: (value) => (
-        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
-          {value || "—"}
-        </div>
-      ),
     },
     {
       id: "customer_email",
       label: "Email",
       visible: true,
-      render: (value) => (
-        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
-          {value || "—"}
-        </div>
-      ),
     },
     {
       id: "channel",
       label: "Channel",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-black capitalize">
-          {value}
-        </span>
-      ),
     },
     {
       id: "dnd_type_name",
       label: "DND Type",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-black capitalize">
-          {value || "Unknown"}
-        </span>
-      ),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-black">
-          {value}
-        </span>
-      ),
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, subscription) => (
         <div className="flex items-center justify-center">
           {subscription.status === "active" && (
             <button
               onClick={() => handleRemoveCustomer(subscription)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+              className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
               title="Remove from DND"
             >
               <Trash2 className="w-4 h-4" />
@@ -175,6 +147,7 @@ export default function DNDBulkManagementPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "dnd-bulk-management-table",
     defaultColumns,
@@ -313,47 +286,49 @@ export default function DNDBulkManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <BackButton
-       
-        showBreadcrumb={true}
-        currentLabel="Bulk Management"
-      />
+      {/* Breadcrumb with Action Buttons and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
 
-      {/* Description and Action Buttons */}
-      <div className="flex items-center justify-between gap-4">
-        <p className={`text-sm ${tw.textSecondary} flex-1`}>
+            showBreadcrumb={true}
+            currentLabel="Bulk Management"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white whitespace-nowrap`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Customers
+            </button>
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                  setSelectedRows(new Set(filteredSubscriptions.map((sub) => sub.id)));
+                } else {
+                  setIsSelectionMode(false);
+                  setSelectedRows(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium whitespace-nowrap`}
+              style={{
+                backgroundColor: isSelectionMode ? color.primary.action : "transparent",
+                color: isSelectionMode ? "white" : "var(--c-bordered-button-color)",
+                borderColor: "var(--c-bordered-button-color)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+              }}
+            >
+              {isSelectionMode ? "Exit Selection" : "Select Customers"}
+            </button>
+          </div>
+        </div>
+        <p className={`text-sm ${tw.textSecondary}`}>
           Manage DND subscriptions across channels
         </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white whitespace-nowrap`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            Add Customers
-          </button>
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                setIsSelectionMode(true);
-                setSelectedRows(new Set(filteredSubscriptions.map((sub) => sub.id)));
-              } else {
-                setIsSelectionMode(false);
-                setSelectedRows(new Set());
-              }
-            }}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium whitespace-nowrap`}
-            style={{
-              backgroundColor: isSelectionMode ? color.primary.action : "transparent",
-              color: isSelectionMode ? "white" : color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            {isSelectionMode ? "Exit Selection" : "Select Customers"}
-          </button>
-        </div>
       </div>
 
       {/* Filters */}
@@ -425,7 +400,7 @@ export default function DNDBulkManagementPage() {
           <button
             onClick={handleBatchRemove}
             disabled={isBatchProcessing}
-            className={`inline-flex items-center gap-2 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`inline-flex items-center gap-0 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {isBatchProcessing ? (
               <>
@@ -468,6 +443,8 @@ export default function DNDBulkManagementPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

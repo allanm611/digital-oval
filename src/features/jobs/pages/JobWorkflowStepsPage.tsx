@@ -163,9 +163,20 @@ export default function JobWorkflowStepsPage() {
   }>({});
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalCount, setTotalCount] = useState(0);
+
+  // Table with pagination
+  const {
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
+  } = useTable({
+    tableId: "job-workflow-steps-table",
+    defaultColumns: [],
+    defaultPageSize: getInitialPageSize(),
+    persistToLocalStorage: true,
+  });
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -199,8 +210,8 @@ export default function JobWorkflowStepsPage() {
             response = await jobWorkflowStepService.searchJobWorkflowSteps({
               job_id: Number(jobIdFilter),
               step_code: stepCodeFilter.trim(),
-              limit: pageSize,
-              offset: (currentPage - 1) * pageSize,
+              limit: tablePageSize,
+              offset: (tableCurrentPage - 1) * tablePageSize,
               skipCache: true,
             });
           }
@@ -219,8 +230,8 @@ export default function JobWorkflowStepsPage() {
             response = await jobWorkflowStepService.searchJobWorkflowSteps({
               job_id: Number(jobIdFilter),
               step_order: Number(stepOrderFilter),
-              limit: pageSize,
-              offset: (currentPage - 1) * pageSize,
+              limit: tablePageSize,
+              offset: (tableCurrentPage - 1) * tablePageSize,
               skipCache: true,
             });
           }
@@ -228,24 +239,24 @@ export default function JobWorkflowStepsPage() {
           // Get steps for specific job - use search with pagination
           response = await jobWorkflowStepService.searchJobWorkflowSteps({
             job_id: Number(jobIdFilter),
-            limit: pageSize,
-            offset: (currentPage - 1) * pageSize,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             skipCache: true,
           });
         } else if (stepTypeFilter) {
           // Get steps by type - use search with pagination
           response = await jobWorkflowStepService.searchJobWorkflowSteps({
             step_type: stepTypeFilter,
-            limit: pageSize,
-            offset: (currentPage - 1) * pageSize,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             skipCache: true,
           });
         } else if (isCriticalFilter === true) {
           // Get critical steps - use search with pagination
           response = await jobWorkflowStepService.searchJobWorkflowSteps({
             is_critical: true,
-            limit: pageSize,
-            offset: (currentPage - 1) * pageSize,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             skipCache: true,
           });
         } else if (showValidationSteps) {
@@ -255,13 +266,13 @@ export default function JobWorkflowStepsPage() {
             skipCache: true,
           });
           const allSteps = allResponse.data || [];
-          const startIndex = (currentPage - 1) * pageSize;
-          const endIndex = startIndex + pageSize;
+          const startIndex = (tableCurrentPage - 1) * tablePageSize;
+          const endIndex = startIndex + tablePageSize;
           response = {
             data: allSteps.slice(startIndex, endIndex),
             pagination: {
               total: allSteps.length,
-              limit: pageSize,
+              limit: tablePageSize,
               offset: startIndex,
               hasMore: endIndex < allSteps.length,
             },
@@ -273,13 +284,13 @@ export default function JobWorkflowStepsPage() {
             skipCache: true,
           });
           const allSteps = allResponse.data || [];
-          const startIndex = (currentPage - 1) * pageSize;
-          const endIndex = startIndex + pageSize;
+          const startIndex = (tableCurrentPage - 1) * tablePageSize;
+          const endIndex = startIndex + tablePageSize;
           response = {
             data: allSteps.slice(startIndex, endIndex),
             pagination: {
               total: allSteps.length,
-              limit: pageSize,
+              limit: tablePageSize,
               offset: startIndex,
               hasMore: endIndex < allSteps.length,
             },
@@ -289,13 +300,13 @@ export default function JobWorkflowStepsPage() {
           const allResponse =
             await jobWorkflowStepService.getOrphanedSteps(true);
           const allSteps = allResponse.data || [];
-          const startIndex = (currentPage - 1) * pageSize;
-          const endIndex = startIndex + pageSize;
+          const startIndex = (tableCurrentPage - 1) * tablePageSize;
+          const endIndex = startIndex + tablePageSize;
           response = {
             data: allSteps.slice(startIndex, endIndex),
             pagination: {
               total: allSteps.length,
-              limit: pageSize,
+              limit: tablePageSize,
               offset: startIndex,
               hasMore: endIndex < allSteps.length,
             },
@@ -312,8 +323,8 @@ export default function JobWorkflowStepsPage() {
         ) {
           // Use search endpoint with filters
           const params: JobWorkflowStepSearchParams = {
-            limit: pageSize,
-            offset: (currentPage - 1) * pageSize,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -368,8 +379,8 @@ export default function JobWorkflowStepsPage() {
         } else {
           // Use list endpoint
           const params = {
-            limit: pageSize,
-            offset: (currentPage - 1) * pageSize,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -404,7 +415,7 @@ export default function JobWorkflowStepsPage() {
                 "Failed to load job workflow steps",
               );
         setErrorMessage(message);
-        showError(t("common.jobWorkflowSteps", "Job Workflow Steps"), message);
+        showError("Job Workflow Steps", message);
       } finally {
         setIsLoading(false);
       }
@@ -424,8 +435,8 @@ export default function JobWorkflowStepsPage() {
       showRetrySteps,
       showOrphanedSteps,
       showError,
-      currentPage,
-      pageSize,
+      tableCurrentPage,
+      tablePageSize,
       t,
     ],
   );
@@ -535,7 +546,7 @@ export default function JobWorkflowStepsPage() {
 
   // Reset pagination when filters/search change
   useEffect(() => {
-    setCurrentPage(1);
+    tableHandlePageChange(1);
   }, [
     searchTerm,
     jobIdFilter,
@@ -547,6 +558,7 @@ export default function JobWorkflowStepsPage() {
     parallelGroupIdFilter,
     stepCodeFilter,
     stepOrderFilter,
+    tableHandlePageChange,
     showValidationSteps,
     showRetrySteps,
     showOrphanedSteps,
@@ -882,7 +894,7 @@ export default function JobWorkflowStepsPage() {
         );
       }
     } catch (err) {
-      showError("Validation failed", extractBackendError(error, "Validation failed. Please try again."));
+      showError("Validation failed", extractBackendError(err, "Validation failed. Please try again."));
     }
   };
 
@@ -930,8 +942,10 @@ export default function JobWorkflowStepsPage() {
                   className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                   style={{
                     backgroundColor: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
+                    color: "var(--c-bordered-button-color)",
+                    borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                   }}
                 >
                   <Workflow className="h-4 w-4" />
@@ -954,8 +968,10 @@ export default function JobWorkflowStepsPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-bordered-button-color)",
+                borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
               }}
             >
               <BarChart3 className="h-4 w-4" />
@@ -974,13 +990,11 @@ export default function JobWorkflowStepsPage() {
                     setSelectedSteps(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
                 style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
                 }}
               >
                 {isSelectionMode ? (
@@ -988,7 +1002,7 @@ export default function JobWorkflowStepsPage() {
                 ) : (
                   <Square className="h-4 w-4" />
                 )}
-                {isSelectionMode ? "Exit Selection" : "Select Steps"}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             </PermissionGate>
             <PermissionGate permission="job-workflow-steps.create">
@@ -1013,8 +1027,10 @@ export default function JobWorkflowStepsPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 <Plus className="h-4 w-4" />
@@ -1035,7 +1051,7 @@ export default function JobWorkflowStepsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>Total Steps</p>
+            <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>Total Steps</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {isLoadingStats ? "..." : stats.totalSteps}
@@ -1160,7 +1176,7 @@ export default function JobWorkflowStepsPage() {
       {isSelectionMode && selectedSteps.size > 0 && (
         <PermissionGate permission="job-workflow-steps.update">
           <div
-            className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+            className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
           >
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">
@@ -1192,8 +1208,10 @@ export default function JobWorkflowStepsPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 <Pause className="h-4 w-4" />
@@ -1223,8 +1241,10 @@ export default function JobWorkflowStepsPage() {
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
                 }}
               >
                 <Edit className="h-4 w-4" />
@@ -1261,95 +1281,42 @@ export default function JobWorkflowStepsPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<JobWorkflowStep>
               columns={[
-                ...(isSelectionMode
-                  ? [
-                      {
-                        id: "select",
-                        label: (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={handleSelectAll}
-                          >
-                            <Checkbox
-                              id="select-all-steps"
-                              checked={
-                                filteredSteps.length > 0 &&
-                                selectedSteps.size === filteredSteps.length
-                              }
-                              onChange={handleSelectAll}
-                            />
-                          </div>
-                        ),
-                        visible: true,
-                        sortable: false,
-                        render: (_, step) => (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => handleSelectStep(step.id)}
-                          >
-                            <Checkbox
-                              id={`step-${step.id}`}
-                              checked={selectedSteps.has(step.id)}
-                              onChange={() => handleSelectStep(step.id)}
-                            />
-                          </div>
-                        ),
-                      } as TableColumn<JobWorkflowStep>,
-                    ]
-                  : []),
                 {
                   id: "step_name",
                   label: "Step Name",
                   visible: true,
-                  render: (value) => (
-                    <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                      {value}
-                    </div>
-                  ),
+                  render: (value) => value,
                 },
                 {
                   id: "job_id",
                   label: "Job",
                   visible: true,
-                  render: (value) => (
-                    <div className={`text-sm ${tw.textSecondary}`}>
-                      {jobMap[value as number]?.name || `Job #${value}`}
-                    </div>
-                  ),
+                  render: (value) => jobMap[value as number]?.name || `Job #${value}`,
                 },
                 {
                   id: "step_order",
                   label: "Step Order",
                   visible: true,
-                  render: (value) => (
-                    <div className={`text-sm ${tw.textSecondary}`}>{value}</div>
-                  ),
+                  render: (value) => value,
                 },
                 {
                   id: "step_type",
                   label: "Type",
                   visible: true,
-                  render: (value) => (
-                    <div className={`text-sm ${tw.textSecondary}`}>
-                      {getStepTypeLabel(value as StepType)}
-                    </div>
-                  ),
+                  render: (value) => getStepTypeLabel(value as StepType),
                 },
                 {
                   id: "is_active",
                   label: "Status",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-black">
-                      {value ? "Active" : "Inactive"}
-                    </span>
-                  ),
+                  render: (value) => value ? "Active" : "Inactive",
                 },
                 {
                   id: "actions",
                   label: "Actions",
                   visible: true,
                   sortable: false,
+      isActionColumn: true,
                   render: (_, step) => (
                     <div className="flex items-center justify-end space-x-2">
                       <button
@@ -1360,7 +1327,7 @@ export default function JobWorkflowStepsPage() {
                             }`,
                           )
                         }
-                        className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                        className={`p-0 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                         aria-label="View details"
                         title="View details"
                       >
@@ -1375,7 +1342,7 @@ export default function JobWorkflowStepsPage() {
                               }`,
                             )
                           }
-                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                           aria-label="Edit step"
                           title="Edit step"
                         >
@@ -1390,7 +1357,7 @@ export default function JobWorkflowStepsPage() {
                       >
                         <button
                           onClick={(e) => handleActionMenuToggle(step.id, e)}
-                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors hover:bg-gray-100`}
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors hover:bg-gray-100 dark:hover:bg-gray-700`}
                           aria-label="More actions"
                           title="More actions"
                         >
@@ -1409,7 +1376,7 @@ export default function JobWorkflowStepsPage() {
                             );
                           }}
                           disabled={validateLoadingId === Number(jobIdFilter)}
-                          className={`p-2 icon-delete ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
+                          className={`p-0 icon-delete ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50 hover:bg-gray-100`}
                           aria-label="Validate workflow integrity"
                           title="Validate workflow integrity"
                         >
@@ -1424,10 +1391,15 @@ export default function JobWorkflowStepsPage() {
                   ),
                 },
               ]}
-              data={filteredSteps}
-              totalItems={filteredSteps.length}
-              currentPage={currentPage}
-              pageSize={pageSize}
+              data={steps}
+              totalItems={totalCount}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedSteps)}
+              onRowSelectChange={(selected) => {
+                setSelectedSteps(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1441,11 +1413,11 @@ export default function JobWorkflowStepsPage() {
         {/* Pagination */}
         {!isLoading && steps.length > 0 && (
           <Pagination
-            currentPage={currentPage}
-            pageSize={pageSize}
+            currentPage={tableCurrentPage}
+            pageSize={tablePageSize}
             totalItems={totalCount}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
+            onPageChange={tableHandlePageChange}
+            onPageSizeChange={tableHandlePageSizeChange}
           />
         )}
         </div>
@@ -1529,7 +1501,7 @@ export default function JobWorkflowStepsPage() {
             } catch (err) {
               const message =
                 err instanceof Error ? err.message : "Failed to delete workflow step";
-              showError("Unable to delete workflow step", extractBackendError(error, "Unable to delete workflow step. Please try again."));
+              showError("Unable to delete workflow step", extractBackendError(err, "Unable to delete workflow step. Please try again."));
             } finally {
               setIsDeleting(false);
             }

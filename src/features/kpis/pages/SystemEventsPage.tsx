@@ -9,26 +9,31 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { systemEventService } from "../services/systemEventService";
 
 export default function SystemEventsPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { success, error: showError } = useToast();
   const [events, setEvents] = useState<SystemEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [toggling, setToggling] = useState<number | null>(null);
   const [activeEvents, setActiveEvents] = useState<Set<number>>(new Set());
 
   const tableColumns: TableColumn<SystemEvent>[] = [
     {
       id: "event_name",
-      label: "Event Name",
+      label: t.kpis.eventName,
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.event_name}>
           {row.event_name}
@@ -37,8 +42,9 @@ export default function SystemEventsPage() {
     },
     {
       id: "event_code",
-      label: "Event Code",
+      label: t.kpis.eventCode,
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <span className="font-mono text-sm text-gray-900">
           {row.event_code}
@@ -47,8 +53,9 @@ export default function SystemEventsPage() {
     },
     {
       id: "category",
-      label: "Category",
+      label: t.common.category,
       visible: true,
+      filterConfig: { type: "select", options: SYSTEM_EVENT_CATEGORIES.map(cat => cat.value) },
       render: (_, row) => (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
           {SYSTEM_EVENT_CATEGORIES.find(
@@ -59,8 +66,9 @@ export default function SystemEventsPage() {
     },
     {
       id: "event_description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <p className="text-sm text-gray-900 truncate max-w-xs" title={row.event_description}>
           {row.event_description}
@@ -69,8 +77,9 @@ export default function SystemEventsPage() {
     },
     {
       id: "source_table",
-      label: "Source",
+      label: t.kpis.source,
       visible: false,
+      filterConfig: { type: "text" },
       render: (_, row) => (
         <p className="text-sm text-gray-900">
           {row.source_table}
@@ -79,9 +88,10 @@ export default function SystemEventsPage() {
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center space-x-2">
           <ActivateDeactivateButton
@@ -96,8 +106,8 @@ export default function SystemEventsPage() {
                 `/dashboard/kpis/system-events/${row.id}`,
               )
             }
-            className={`group p-3 ${tw.rounded} icon-edit transition-all duration-300`}
-            title="View Details"
+            className={`group p-0 ${tw.rounded} icon-edit transition-all duration-300`}
+            title={t.common.view}
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -114,6 +124,9 @@ export default function SystemEventsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "system-events-table",
     defaultColumns: tableColumns,
@@ -211,7 +224,7 @@ export default function SystemEventsPage() {
   ];
 
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "all", label: t.kpis.filters.allCategories },
     ...SYSTEM_EVENT_CATEGORIES.map((cat) => ({
       value: cat.value,
       label: cat.label,
@@ -254,7 +267,7 @@ export default function SystemEventsPage() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
+            tableHandlePageChange(1);
           }}
           className="flex-1 min-w-[250px]"
         />
@@ -263,7 +276,7 @@ export default function SystemEventsPage() {
           options={categoryOptions}
           value={categoryFilter}
           onChange={(value) => handleCategoryChange(value || "all")}
-          placeholder="Filter by category"
+          placeholder={t.kpis.filters.filterByCategory}
           className="min-w-[180px]"
         />
       </div>
@@ -284,11 +297,11 @@ export default function SystemEventsPage() {
           <div className="text-center py-12">
             <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm || categoryFilter !== "all" ? "No events found" : "No events yet"}
+              {searchTerm || categoryFilter !== "all" ? t.kpis.messages.noEventsFound : "No events yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm || categoryFilter !== "all"
-                ? "Try adjusting your search or filters"
+                ? t.kpis.messages.adjustSearch
                 : "No events available"}
             </p>
           </div>
@@ -304,6 +317,8 @@ export default function SystemEventsPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
             onSort={handleSort}
             sortConfigs={sortConfigs}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,
@@ -324,6 +339,16 @@ export default function SystemEventsPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

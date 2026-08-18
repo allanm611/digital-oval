@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Routes, Route } from "react-router-dom";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, Eye } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -34,6 +34,7 @@ function EmailRoutesListView() {
   const [routes, setRoutes] = useState<EmailRoute[]>(hardcodedEmailRoutes as EmailRoute[]);
   const [searchTerm, setSearchTerm] = useState("");
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteRoute } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -55,40 +56,69 @@ function EmailRoutesListView() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
+      sortable: true,
+      filterConfig: { type: 'text' },
     },
     {
       id: "gateway_provider",
       label: "Provider",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "from_address",
       label: "From Address",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "isActive",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (value) => (
         <span className={`text-sm ${tw.textSecondary}`}>
           {value ? "Active" : "Inactive"}
         </span>
+      ),
+    },
+    {
+      id: "actions",
+      label: "Actions",
+      visible: true,
+      sortable: false,
+      isActionColumn: true,
+      render: (value, route) => (
+        <div className="flex items-center justify-center gap-2">
+          <ActivateDeactivateButton
+            isActive={route.isActive}
+            onToggle={() => handleToggleActive(route)}
+            disabled={togglingItemId === route.id}
+            isLoading={togglingItemId === route.id}
+            title={route.isActive ? "Deactivate" : "Activate"}
+          />
+          <button
+            onClick={() => handleViewDetails(route)}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleEditRoute(route)}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+            title="Edit"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(route)}
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       ),
     },
   ];
@@ -101,6 +131,7 @@ function EmailRoutesListView() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "email-routes-table",
     defaultColumns,
@@ -119,6 +150,10 @@ function EmailRoutesListView() {
 
   const handleCreateRoute = () => {
     navigate("create");
+  };
+
+  const handleViewDetails = (route: EmailRoute) => {
+    navigate(`/dashboard/routes/${route.id}`);
   };
 
   const handleEditRoute = (route: EmailRoute) => {
@@ -169,7 +204,6 @@ function EmailRoutesListView() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
           }}
         />
       </div>
@@ -202,9 +236,11 @@ function EmailRoutesListView() {
               pageSize={tablePageSize}
               isLoading={false}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -233,7 +269,6 @@ function EmailRoutesListView() {
         onConfirm={async () => {
           try {
             await confirmDeleteRoute(deleteConfirm.id);
-            showToast("Delete Email Route", `Route deleted successfully`);
           } catch (err) {
             showError(t.genericConfig.error, "Failed to delete email route");
           }

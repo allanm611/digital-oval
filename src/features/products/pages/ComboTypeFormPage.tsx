@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { Trash2, ChevronDown, Edit } from "lucide-react";
 import { ComboType, comboTypeService } from "../services/comboTypeService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -15,6 +16,7 @@ import { useConfigurationData } from "../../../shared/services/configurationData
 import CreateUtilityModal from "../../configurations/components/CreateUtilityModal";
 
 export default function ComboTypeFormPage() {
+  const { t } = useLanguage();
   // Get resource types and utilities from configuration
   const { data: resourceTypesData = [] } = useConfigurationData("resourceTypes");
   const { data: utilitiesData = [] } = useConfigurationData("utilities");
@@ -147,7 +149,7 @@ export default function ComboTypeFormPage() {
           }
         } catch (err) {
           console.error("Failed to load combo type:", err);
-          showError("Error", extractBackendError(error, "Error. Please try again."));
+          showError("Error", extractBackendError(err, "Error. Please try again."));
           setError("Failed to load combo type");
         } finally {
           setIsLoading(false);
@@ -216,6 +218,20 @@ export default function ComboTypeFormPage() {
     }));
   };
 
+  const mapResourceUnitToBackend = (unit: string | undefined): string => {
+    if (!unit) return "";
+    const mapping: Record<string, string> = {
+      "data_mb": "mb",
+      "roaming_data_mb": "mb",
+      "onnet_minutes": "minutes",
+      "offnet_minutes": "minutes",
+      "allnet_minutes": "minutes",
+      "roaming_minutes": "minutes",
+      "roaming_sms_count": "sms_count",
+    };
+    return mapping[unit] || unit;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -240,7 +256,7 @@ export default function ComboTypeFormPage() {
             resource.value !== "" && resource.value !== null
               ? parseFloat(String(resource.value))
               : undefined,
-          resource_unit: resource.unit,
+          resource_unit: mapResourceUnitToBackend(resource.unit),
           price: !comboSettings.sharedPrice && resource.price
             ? parseFloat(String(resource.price))
             : undefined,

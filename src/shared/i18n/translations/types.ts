@@ -12,6 +12,7 @@ export interface Translations {
     update: string;
     search: string;
     filter: string;
+    filters: string;
     loading: string;
     noData: string;
     confirm: string;
@@ -47,6 +48,41 @@ export interface Translations {
     count: string;
     yes: string;
     no: string;
+    activate: string;
+    activated: string;
+    allStatuses: string;
+    analytics: string;
+    applyFilters: string;
+    cancelled: string;
+    clearAll: string;
+    created: string;
+    creating: string;
+    deactivate: string;
+    deactivated: string;
+    duration: string;
+    error: string;
+    exitSelection: string;
+    failed: string;
+    failedToPerformAction: string;
+    failure: string;
+    fieldRequired: string;
+    lastUpdated: string;
+    metadata: string;
+    pending: string;
+    pleaseEnterValidGuidFormat: string;
+    queued: string;
+    quickFilters: string;
+    retry: string;
+    running: string;
+    skipped: string;
+    startedAt: string;
+    success: string;
+    successful: string;
+    timeout: string;
+    update: string;
+    updating: string;
+    view: string;
+    viewDetails: string;
   };
 
   // Navigation
@@ -84,9 +120,22 @@ export interface Translations {
     conversions: string;
     sent: string;
     delivered: string;
+    channels: string;
+    campaigns: string;
+    campaignTypes: string;
     audienceConfiguration: {
       [key: string]: unknown;
     };
+    campaignDefinition: {
+      createSuccess: string;
+      nameRequired: string;
+      saveFailed: string;
+      updateSuccess: string;
+    };
+    failedToLoad: string;
+    failedToLoadForm: string;
+    run: string;
+    scheduling: string;
   };
 
   // Settings
@@ -114,6 +163,7 @@ export interface Translations {
     success: string;
     confirmDelete: string;
     areYouSure: string;
+    warning: string;
   };
 
   // Notifications
@@ -143,6 +193,7 @@ export interface Translations {
     emptyFiltered: string;
     emptyNoData: string;
     viewDetails: string;
+    save: string;
     previous: string;
     next: string;
     pageOf: string; // {page} {total}
@@ -163,6 +214,24 @@ export interface Translations {
       medium: string;
       high: string;
       urgent: string;
+    };
+    settings: {
+      channelsSubtitle: string;
+      channelsTitle: string;
+      desktopNotifications: string;
+      emailNotifications: string;
+      loadingError: string;
+      loadingSubscriptions: string;
+      noSubscriptions: string;
+      saveError: string;
+      saveSuccess: string;
+      smsAlerts: string;
+      soundEnabled: string;
+      soundSubtitle: string;
+      soundTitle: string;
+      soundType: string;
+      subscriptionsSubtitle: string;
+      subscriptionsTitle: string;
     };
   };
 
@@ -249,6 +318,7 @@ export interface Translations {
     priorityHigh: string;
     priorityMedium: string;
     unknown: string;
+    allCaughtUp: string;
   };
 
   // Page Titles
@@ -628,6 +698,75 @@ export interface Translations {
     errorSelectTime: string;
     errorFutureDateTime: string;
     errorCreateBroadcast: string;
+    addContact: string;
+    broadcastLabel: string;
+    broadcastSummary: string;
+    channelLabel: string;
+    channels: string;
+    communicationPolicy: string;
+    contactAlreadyAdded: string;
+    createBroadcast: string;
+    defineCommunicationSubtitle: string;
+    defineCommunicationTitle: string;
+    deleteBroadcastConfirm: string;
+    deleteBroadcastTitle: string;
+    errorAddAtLeastOne: string;
+    errorEnterContact: string;
+    errorInvalidContact: string;
+    errorInvalidEmail: string;
+    errorInvalidPhone: string;
+    errorLoadingFields: string;
+    errorMessageBodyRequired: string;
+    errorSendTestFailed: string;
+    errorSubjectRequired: string;
+    executedBroadcasts: string;
+    fieldPlural: string;
+    fieldSingular: string;
+    noBroadcasts: string;
+    noFieldsAvailable: string;
+    noFieldsMatchSearch: string;
+    noSearchResults: string;
+    noSourcesAvailable: string;
+    pendingBroadcasts: string;
+    scheduleType: string;
+    searchFields: string;
+    searchPlaceholder: string;
+    selectField: string;
+    selectProfileSource: string;
+    sendTest: string;
+    sendingTest: string;
+    sourceType: string;
+    subscriptionIdHelper: string;
+    subscriptionIdLabel: string;
+    subscriptionIdPlaceholder: string;
+    summaryAudience: string;
+    summaryChannel: string;
+    summaryNotSet: string;
+    summarySchedule: string;
+    summaryScheduled: string;
+    summarySendNow: string;
+    testBroadcastSubtitle: string;
+    testBroadcastTitle: string;
+    testCompleted: string;
+    testHelperEmail: string;
+    testHelperGeneric: string;
+    testHelperPhone: string;
+    testInputLabelEmail: string;
+    testInputLabelGeneric: string;
+    testInputLabelPhone: string;
+    testMessageSuccess: string;
+    testPlaceholderEmail: string;
+    testPlaceholderGeneric: string;
+    testPlaceholderPhone: string;
+    testRecipientsLabel: string;
+    testResults: string;
+    testSummary: string;
+    totalBroadcasts: string;
+    uniqueChannels: string;
+    updatedSuccess: string;
+    warningBodyNow: string;
+    warningBodyScheduled: string;
+    warningTitle: string;
   };
 
   // Servers
@@ -690,6 +829,8 @@ export interface Translations {
     rewardTypeLabel: string;
     rewardTypeBundle: string;
     rewardTypeBundleDesc: string;
+    rewardTypeAirtime: string;
+    rewardTypeAirtimeDesc: string;
     rewardTypePoints: string;
     rewardTypePointsDesc: string;
     rewardTypeDiscount: string;
@@ -698,10 +839,12 @@ export interface Translations {
     rewardTypeCashbackDesc: string;
     rewardValueLabel: string;
     rewardValuePlaceholderBundle: string;
+    rewardValuePlaceholderAirtime: string;
     rewardValuePlaceholderPoints: string;
     rewardValuePlaceholderDiscount: string;
     rewardValuePlaceholderCashback: string;
     rewardValueHelperBundle: string;
+    rewardValueHelperAirtime: string;
     rewardValueHelperPoints: string;
     rewardValueHelperDiscount: string;
     rewardValueHelperCashback: string;
@@ -752,6 +895,60 @@ export interface Translations {
     warningBodyScheduled: string;
     applying: string;
     applyReward: string;
+    bundleTrack: string;
+    bundleTrackHelper: string;
+    bundleTrackLabel: string;
+    bundleTrackPlaceholder: string;
+    communicationPolicy: string;
+    defineRewardSubtitle: string;
+    defineRewardTitle: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    errorBundleTrackRequired: string;
+    errorRewardValueInvalid: string;
+    errorRewardValueRequired: string;
+    manualEntryHelp: string;
+    manualEntryLabel: string;
+    manualEntryPlaceholder: string;
+    optional: string;
+    previewSubtitle: string;
+    previewTitle: string;
+    recipients: string;
+    rewardSummary: string;
+    rewardTypeBundle: string;
+    rewardTypeBundleDesc: string;
+    rewardTypeAirtime: string;
+    rewardTypeAirtimeDesc: string;
+    rewardTypeCashback: string;
+    rewardTypeCashbackDesc: string;
+    rewardTypeDiscount: string;
+    rewardTypeDiscountDesc: string;
+    rewardTypeLabel: string;
+    rewardTypePoints: string;
+    rewardTypePointsDesc: string;
+    rewardValueHelperBundle: string;
+    rewardValueHelperAirtime: string;
+    rewardValueHelperCashback: string;
+    rewardValueHelperDiscount: string;
+    rewardValueHelperPoints: string;
+    rewardValueLabel: string;
+    rewardValuePlaceholderBundle: string;
+    rewardValuePlaceholderAirtime: string;
+    rewardValuePlaceholderCashback: string;
+    rewardValuePlaceholderDiscount: string;
+    rewardValuePlaceholderPoints: string;
+    summaryApplyNow: string;
+    summaryAudience: string;
+    summaryNotSet: string;
+    summaryRecipients: string;
+    summaryReward: string;
+    summarySchedule: string;
+    summaryScheduled: string;
+    updatedSuccess: string;
+    warningBody: string;
+    warningBodyNow: string;
+    warningBodyScheduled: string;
+    warningTitle: string;
   };
 
   // Customer 360 Profile
@@ -792,6 +989,12 @@ export interface Translations {
     noResultsFound: string;
     searchResults: string;
     selectCustomer: string;
+    tariff: string;
+  };
+
+  // Customers
+  customers: {
+    failedToLoadCustomers: string;
   };
 
   // Customer Profile Reports (Details Page)
@@ -921,6 +1124,89 @@ export interface Translations {
     allJobTypes: string;
     updateJobTypeDesc: string;
     createJobTypeDesc: string;
+    abortRunning: string;
+    allJobs: string;
+    created: string;
+    failedToLoadExecutions: string;
+    failedToLoadScheduledJobs: string;
+    getStartedJob: string;
+    jobExecId: string;
+    jobExecutionId: string;
+    jobExecutionUuidGuid: string;
+    jobName: string;
+    noJobsFound: string;
+    noJobsMatch: string;
+    noStepExecutionsFound: string;
+    retryFailed: string;
+    searchJobs: string;
+    searchStepExecutions: string;
+    selectStepExecutions: string;
+    stepExecId: string;
+    stepExecutions: string;
+    stepExecutionsSelected: string;
+    stepId: string;
+    stepIdNumeric: string;
+    tryUpdatingFilters: string;
+    type: string;
+    updated: string;
+    filter: string;
+    filterStepExecutions: string;
+    jobWorkflow: {
+      abort: string;
+      active: string;
+      add: string;
+      addAnother: string;
+      addStep: string;
+      apiCall: string;
+      basicInformation: string;
+      batchSteps: string;
+      continue: string;
+      critical: string;
+      dataValidation: string;
+      dependencies: string;
+      dependenciesParallel: string;
+      enableParallel: string;
+      enterParallelGroupId: string;
+      enterStepAction: string;
+      enterStepCode: string;
+      enterStepDescription: string;
+      enterStepName: string;
+      executionConfiguration: string;
+      fileTransfer: string;
+      job: string;
+      maxExpectedRows: string;
+      minExpectedRows: string;
+      nodeScript: string;
+      notification: string;
+      onFailureAction: string;
+      parallelGroupId: string;
+      postValidationQuery: string;
+      preValidationQuery: string;
+      pythonScript: string;
+      retry: string;
+      retryCount: string;
+      retryDelaySeconds: string;
+      selectAction: string;
+      selectJob: string;
+      selectStepType: string;
+      selectType: string;
+      shellScript: string;
+      skipRemaining: string;
+      sql: string;
+      sqlAfterExecution: string;
+      sqlBeforeExecution: string;
+      status: string;
+      stepAction: string;
+      stepCode: string;
+      stepDescription: string;
+      stepName: string;
+      stepOrder: string;
+      stepType: string;
+      storedProcedure: string;
+      timeoutSeconds: string;
+      validation: string;
+      wait: string;
+    };
   };
 
   // Quick Lists
@@ -962,6 +1248,13 @@ export interface Translations {
     exportFailed: string;
     validationErrors: string; // QuickList created but {count} row(s) failed validation
     firstFewErrors: string;
+  };
+
+  // Segments
+  segments: {
+    failedToLoadCategories: string;
+    failedToLoadDetails: string;
+    failedToLoadSegments: string;
   };
 
   // Segment Lists
@@ -1519,6 +1812,14 @@ export interface Translations {
     updateWithProductError: string;
     createWithCreativeError: string;
     updateWithCreativeError: string;
+    assignComingSoon: string;
+    detailsComingSoon: string;
+    draftSaveError: string;
+    draftSaveSuccess: string;
+    failedToLoad: string;
+    failedToLoadCategories: string;
+    nameRequired: string;
+    locales: string;
   };
 
   // History Pages
@@ -1869,6 +2170,228 @@ export interface Translations {
     remaining: string;
     utilization: string;
   };
+  // KPIs
+  kpis: {
+    title: string;
+    allKPIs: string;
+    revenueMetrics: string;
+    usageMetrics: string;
+    subscriberProfiles: string;
+    systemEvents: string;
+    totalKPIs: string;
+    subscriberProfilesCount: string;
+    systemEventsCount: string;
+    usageMetricsCount: string;
+    revenueMetricsCount: string;
+    metricName: string;
+    eventName: string;
+    eventCode: string;
+    fieldName: string;
+    kpiName: string;
+    category: string;
+    type: string;
+    defaultValue: string;
+    fieldType: string;
+    source: string;
+    order: string;
+    createdDate: string;
+    updatedDate: string;
+    actions: string;
+    edit: string;
+    delete: string;
+    view: string;
+    create: string;
+    createKPI: string;
+    updateKPI: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessage: string;
+    deleteSuccess: string;
+    createSuccess: string;
+    updateSuccess: string;
+    loadError: string;
+    noData: string;
+    search: string;
+    filter: string;
+    viewAllKPIsDescription: string;
+    categories: {
+      revenueMetric: string;
+      usageMetric: string;
+      subscriberProfile: string;
+      systemEvent: string;
+      title: string;
+    };
+    descriptions: {
+      allKPIs: string;
+      categories: string;
+      revenueMetrics: string;
+      usageMetrics: string;
+      systemEvents: string;
+      subscriberProfiles: string;
+    };
+    filters: {
+      allCategories: string;
+      filterByCategory: string;
+      searchKPIs: string;
+    };
+    messages: {
+      noKPIsFound: string;
+      noKPIsYet: string;
+      failedToLoadDetails: string;
+      notFound: string;
+      errorLoading: string;
+      noEventsFound: string;
+      adjustSearch: string;
+      createFirst: string;
+      failedLoadKPIs: string;
+    };
+    modals: {
+      deleteKPI: string;
+      deleteKPIDescription: string;
+    };
+  };
+  // Routes
+  routes: {
+    title: string;
+    routesManagement: string;
+    allRoutes: string;
+    createRoute: string;
+    editRoute: string;
+    deleteRoute: string;
+    routeName: string;
+    routeDescription: string;
+    channel: string;
+    status: string;
+    gateway: string;
+    configuration: string;
+    createdDate: string;
+    updatedDate: string;
+    actions: string;
+    edit: string;
+    delete: string;
+    view: string;
+    active: string;
+    inactive: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessage: string;
+    deleteSuccess: string;
+    createSuccess: string;
+    updateSuccess: string;
+    loadError: string;
+    noData: string;
+    search: string;
+    filter: string;
+    channels: {
+      sms: string;
+      email: string;
+      whatsapp: string;
+      push: string;
+      ussd: string;
+    };
+    customerBase: {
+      activeSubscribers: string;
+      allCustomers: string;
+      customConditions: string;
+    };
+    recurrence: {
+      oneTime: string;
+      daily: string;
+      weekly: string;
+      monthly: string;
+    };
+    activated: string;
+    allChannels: string;
+    areYouSureDeleteRoute: string;
+    basicInformation: string;
+    cannotBeUndone: string;
+    configurationId: string;
+    configurationName: string;
+    deactivated: string;
+    deleteEmailRoute: string;
+    deleteRouteDescription: string;
+    deleteSmsRoute: string;
+    deleting: string;
+    emailRouteDetails: string;
+    emailRouteNotFound: string;
+    failedDeleteEmailRoute: string;
+    failedDeleteSmsRoute: string;
+    failedLoadEmailRoute: string;
+    failedLoadSmsRoute: string;
+    gatewayConfiguration: string;
+    gatewayConfigurationId: string;
+    gatewayProvider: string;
+    hasBeenDeleted: string;
+    loadingRouteDetails: string;
+    manageAllRoutes: string;
+    noDescriptionAvailable: string;
+    noRoutesCreated: string;
+    noRoutesFound: string;
+    providerType: string;
+    route: string;
+    routeId: string;
+    routeNotFound: string;
+    searchByRouteName: string;
+    smsRouteDetails: string;
+    smsRouteNotFound: string;
+    successfully: string;
+    filterByChannel: string;
+  };
+  // Data Connectors
+  dataConnectors: {
+    title: string;
+    allConnectors: string;
+    createConnector: string;
+    editConnector: string;
+    deleteConnector: string;
+    connectorName: string;
+    connectorType: string;
+    description: string;
+    status: string;
+    createdDate: string;
+    updatedDate: string;
+    actions: string;
+    edit: string;
+    delete: string;
+    view: string;
+    active: string;
+    inactive: string;
+    allTypes: string;
+    allStatuses: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMessage: string;
+    deleteSuccess: string;
+    createSuccess: string;
+    updateSuccess: string;
+    loadError: string;
+    noData: string;
+    search: string;
+    filter: string;
+    addConnectionProfile: string;
+    backToConnectors: string;
+    connectedProfile: string;
+    connectionCount: string;
+    connectionProfiles: string;
+    connections: string;
+    connectorId: string;
+    connectorNotFound: string;
+    connectorNotFoundDescription: string;
+    connectorTypes: string;
+    createdBy: string;
+    dataConnectorDetails: string;
+    deleteConnectorDescription: string;
+    deleteConnectorTitle: string;
+    id: string;
+    lastUsed: string;
+    loading: string;
+    noConnectionProfiles: string;
+    subtitle: string;
+    test: string;
+    testConnection: string;
+    testConnectionFailed: string;
+    testing: string;
+    totalConnections: string;
+    totalConnectors: string;
+    updatedBy: string;
+  };
   // Control Groups
   controlGroups: {
     title: string;
@@ -1877,6 +2400,7 @@ export interface Translations {
     createControlGroup: string;
     totalGroups: string;
     activeGroups: string;
+    totalMembers: string;
     loading: string;
     noGroups: string;
     groupName: string;
@@ -1885,8 +2409,20 @@ export interface Translations {
     actions: string;
     edit: string;
     delete: string;
+    view: string;
     active: string;
     inactive: string;
+    allStatus: string;
+    allTypes: string;
+    universal: string;
+    standard: string;
+    percentage: string;
+    members: string;
+    customerBase: string;
+    recurrence: string;
+    type: string;
+    runScheduled: string;
+    running: string;
     createModalTitle: string;
     editModalTitle: string;
     nameLabel: string;
@@ -1902,6 +2438,84 @@ export interface Translations {
     deleteSuccess: string;
     createSuccess: string;
     updateSuccess: string;
+    noControlGroupsFound: string;
+    tryAdjustingSearch: string;
+    filterByStatus: string;
+    filterByType: string;
+    noData: string;
+    search: string;
+    activeSubscribers: string;
+    addAtLeastOneCondition: string;
+    addMembers: string;
+    addedDate: string;
+    allCustomers: string;
+    allCustomersInDatabase: string;
+    basicInfo: string;
+    basicInformation: string;
+    code: string;
+    codeAndName: string;
+    codeRequired: string;
+    configuration: string;
+    configureWhenGenerated: string;
+    controlGroupDetails: string;
+    controlGroupGenerationSchedule: string;
+    controlGroupPercentage: string;
+    controlPercentage: string;
+    created: string;
+    customConditions: string;
+    daily: string;
+    defineCustomConditions: string;
+    defineCustomSegmentConditions: string;
+    deleteControlGroup: string;
+    deleteControlGroupDescription: string;
+    endDate: string;
+    enterControlGroupCode: string;
+    enterControlGroupDescription: string;
+    enterControlGroupName: string;
+    failedToDeleteGroup: string;
+    failedToRemoveMember: string;
+    failedToSaveGroup: string;
+    generationMethod: string;
+    generationMethodRequired: string;
+    groupCreatedSuccessfully: string;
+    groupDeletedSuccessfully: string;
+    groupMembers: string;
+    groupUpdatedSuccessfully: string;
+    lastUpdated: string;
+    markAsUniversal: string;
+    memberRemovedSuccessfully: string;
+    membersAddedSuccessfully: string;
+    monthly: string;
+    nameRequired: string;
+    noMembersYet: string;
+    oneTime: string;
+    onlyActiveSubscribers: string;
+    percentageAndMethod: string;
+    percentageBetween1And100: string;
+    percentageOfCustomers: string;
+    preview: string;
+    randomSelection: string;
+    reason: string;
+    recurrencePattern: string;
+    remove: string;
+    removeMember: string;
+    removeMemberDescription: string;
+    reviewBeforeCreate: string;
+    reviewControlGroupSetup: string;
+    schedule: string;
+    scheduleDateRequired: string;
+    scheduling: string;
+    selectCustomerBase: string;
+    setRecurrencePattern: string;
+    startDate: string;
+    stratifiedSampling: string;
+    subscriberId: string;
+    timeZone: string;
+    timeline: string;
+    totalLabel: string;
+    universalControlGroup: string;
+    updateControlGroup: string;
+    weekly: string;
   };
   // Landing Page
   landing: {
@@ -1928,6 +2542,23 @@ export interface Translations {
     sentraConfig: string;
     sentraConfigSubtitle: string;
     sentraConfigDescription: string;
+    advancedCustomerSegmentation: string;
+    automatedOfferPersonalization: string;
+    comprehensiveAnalytics: string;
+    copyrightNotice: string;
+    enterpriseGradeSecurity: string;
+    everythingYouNeed: string;
+    multiChannelOrchestration: string;
+    nextGenPlatform: string;
+    ourComprehensive: string;
+    realtimePerformance: string;
+  };
+
+  // Definition/Layer Filters
+  definition: {
+    layer_filters: {
+      groups: string;
+    };
   };
 
   // Allow for additional translation sections
@@ -1942,7 +2573,7 @@ export interface Translations {
 
   // Authentication
   auth: {
-    login: {
+    login: string | {
       title: string;
       headline: string;
       subheading: string;
@@ -1967,7 +2598,7 @@ export interface Translations {
       makeRequest: string;
       tourButton: string;
     };
-    forgotPassword: {
+    forgotPassword: string | {
       title: string;
       description: string;
       emailLabel: string;
@@ -1976,7 +2607,19 @@ export interface Translations {
       sendButton: string;
       successMessage: string;
     };
-    requestAccount: {
+    resetPassword: string | {
+      title: string;
+      description: string;
+      newPasswordLabel: string;
+      newPasswordPlaceholder: string;
+      confirmPasswordLabel: string;
+      confirmPasswordPlaceholder: string;
+      passwordMismatch: string;
+      resetButton: string;
+      successMessage: string;
+      errorMessage: string;
+    };
+    requestAccount: string | {
       title: string;
       fullNameLabel: string;
       fullNamePlaceholder: string;
@@ -1993,18 +2636,9 @@ export interface Translations {
       successMessage: string;
       errorMessage: string;
     };
-    resetPassword: {
-      title: string;
-      description: string;
-      newPasswordLabel: string;
-      newPasswordPlaceholder: string;
-      confirmPasswordLabel: string;
-      confirmPasswordPlaceholder: string;
-      passwordMismatch: string;
-      resetButton: string;
-      successMessage: string;
-      errorMessage: string;
-    };
+    unauthorized: string;
+    goToLogin: string;
+    authenticationRequired: string;
   };
 
   // Workflows
@@ -2054,6 +2688,10 @@ export interface Translations {
     failedToLoadProduct: string;
     createProduct: string;
     editProductPage: string;
+    failedToLoad: string;
+    failedToLoadCategories: string;
+    failedToLoadDetails: string;
+    form: string;
   };
 
   // Analytics
@@ -2062,6 +2700,7 @@ export interface Translations {
     loadingAnalytics: string;
     failedToLoadAnalytics: string;
     errorLoadingData: string;
+    failedToLoad: string;
     noData: string;
     timeRange: string;
     timeRangeLastDay: string;
@@ -2081,6 +2720,241 @@ export interface Translations {
     performanceMetrics: string;
     chartTitle: string;
     refreshing: string;
+  };
+
+  // Categories
+  categories: {
+    deleteError: string;
+    deleteSuccess: string;
+    loadError: string;
+    notFound: string;
+    statusError: string;
+    updateError: string;
+    updateSuccess: string;
+  };
+
+  // Configurations
+  configurations: {
+    createGatewayConfiguration: string;
+    editGatewayConfiguration: string;
+  };
+
+  // Conversion
+  conversion: {
+    conversions: string;
+    cpa: string;
+    cpc: string;
+    cpl: string;
+    cvr: string;
+    revenue: string;
+    roas: string;
+    spend: string;
+  };
+
+  // Data Connectors (additional keys for page-specific strings)
+  dataConnectorPages: {
+    addConnectionProfile: string;
+    backToConnectors: string;
+    connectedProfile: string;
+    connectionCount: string;
+    connectionProfiles: string;
+    connections: string;
+    connectorId: string;
+    connectorNotFound: string;
+    connectorNotFoundDescription: string;
+    connectorTypes: string;
+    createdBy: string;
+    dataConnectorDetails: string;
+    deleteConnectorDescription: string;
+    deleteConnectorTitle: string;
+    id: string;
+    lastUsed: string;
+    loading: string;
+    noConnectionProfiles: string;
+    subtitle: string;
+    test: string;
+    testConnection: string;
+    testConnectionFailed: string;
+    testing: string;
+    totalConnections: string;
+    totalConnectors: string;
+    updatedBy: string;
+  };
+
+  // Documentation
+  docs: {
+    authenticationRequiredMessage: string;
+    loading: string;
+    notFound: string;
+  };
+
+  // Engagement
+  engagement: {
+    clicks: string;
+    ctr: string;
+    engagementRate: string;
+    openRate: string;
+  };
+
+  // Errors
+  errors: {
+    failedLoadServer: string;
+    serverIdMissing: string;
+    serverNotFound: string;
+    unableLoadServer: string;
+  };
+
+  // ETL
+  etl: {
+    adjustFiltersOrRefresh: string;
+    allCategories: string;
+    allStatuses: string;
+    analytics: string;
+    categoryLabel: string;
+    categoryPlaceholder: string;
+    cdr: string;
+    completed: string;
+    dayLabel: string;
+    endTime: string;
+    enterJobId: string;
+    executionIdColon: string;
+    failed: string;
+    failedToLoadFileRegistry: string;
+    failedToLoadStatistics: string;
+    failedToTriggerFetch: string;
+    failedToTriggerHistoricalFetch: string;
+    failedToTriggerRangeFetch: string;
+    fetchByDateRange: string;
+    fetchByRange: string;
+    fetchByTime: string;
+    fetchControls: string;
+    fetchControlsButton: string;
+    fetchControlsDescription: string;
+    fetchFailed: string;
+    fetchFilesForDateTimeRange: string;
+    fetchFilesForSpecificTime: string;
+    fetchFilesImmediately: string;
+    fetchNow: string;
+    fetchTriggered: string;
+    fileRegistryDescription: string;
+    fileUploaded: string;
+    forceReprocessing: string;
+    historicalFetchTriggered: string;
+    hourLabel: string;
+    jobIdLabel: string;
+    jobIdRequired: string;
+    loadingFileRegistry: string;
+    maxRangeNote: string;
+    monthLabel: string;
+    noFilesFound: string;
+    pending: string;
+    pleaseRetry: string;
+    pleaseRetryLater: string;
+    processingFilesStatus: string;
+    processingStatus: string;
+    rangeFetchTriggered: string;
+    searchByFileName: string;
+    selectCategory: string;
+    startTime: string;
+    statusPlaceholder: string;
+    tdr: string;
+    unableToFetchFiles: string;
+    validationError: string;
+  };
+
+  // History Pages (additional keys)
+  historyPagesExtended: {
+    featureNotImplemented: string;
+    loadingHistory: string;
+    noApprovalHistory: string;
+    noApprovalHistoryDesc: string;
+    noLifecycleHistory: string;
+    noLifecycleHistoryDesc: string;
+    notAvailable: string;
+  };
+
+  // Manual Actions
+  manualActions: {
+    chooseAction: string;
+    distributeRewards: string;
+    manualBroadcasts: string;
+    manualCommunications: string;
+    manualRewards: string;
+    sendTargetedMessages: string;
+  };
+
+  // Summary
+  summary: {
+    bounceRate: string;
+    conversionRate: string;
+    conversions: string;
+    ctr: string;
+    delivered: string;
+    deliveryRate: string;
+    failedRate: string;
+    openRate: string;
+    optOutRate: string;
+    sent: string;
+    unsubscribeRate: string;
+  };
+
+  // Validation
+  validation: {
+    codeRequired: string;
+    hostRequired: string;
+    nameRequired: string;
+    protocolRequired: string;
+  };
+
+  // Style
+  style: {
+    animation: string;
+    backgroundColor: string;
+    borderColor: string;
+    color: string;
+    opacity: string;
+  };
+
+  // Additional Data Type Formatters
+  conversions: {
+    toLocaleString: string;
+  };
+  customer_count: {
+    toLocaleString: string;
+  };
+  delivered: {
+    toLocaleString: string;
+  };
+  id: {
+    toString: string;
+  };
+  length: {
+    toLocaleString: string;
+    toString: string;
+  };
+  opened: {
+    toLocaleString: string;
+  };
+  reach: {
+    reach: string;
+  };
+  roleName: {
+    trim: string;
+  };
+  rows_failed: {
+    toLocaleString: string;
+  };
+  rows_imported: {
+    toLocaleString: string;
+  };
+  target: {
+    value: string;
+  };
+  total_recipients: {
+    toLocaleString: string;
+  };
+  sidebar: {
+    navigation: string;
   };
 
   // Reports

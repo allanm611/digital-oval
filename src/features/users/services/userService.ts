@@ -285,6 +285,19 @@ class UserService {
 
 
   /**
+   * GET /system-users/:id - Get user by ID
+   */
+  async getUserById(
+    id: number,
+    skipCache?: boolean
+  ): Promise<ApiSuccessResponse<UserType>> {
+    const queryString = this.buildQueryParams({ skipCache });
+    return this.request<ApiSuccessResponse<UserType>>(
+      `/${id}${queryString}`
+    );
+  }
+
+  /**
    * GET /users/uuid/:uuid - Get user by UUID
    */
   async getUserByUUID(

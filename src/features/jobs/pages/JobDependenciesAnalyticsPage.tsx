@@ -45,13 +45,14 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+      className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-3 shadow-lg`}
     >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -251,14 +252,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
           {statistics && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Total Dependencies
                   </p>
                 </div>
@@ -267,14 +269,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Active Dependencies
                   </p>
                 </div>
@@ -283,14 +286,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Jobs with Dependencies
                   </p>
                 </div>
@@ -299,14 +303,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <XCircle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Inactive Dependencies
                   </p>
                 </div>
@@ -315,14 +320,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Jobs Depended On
                   </p>
                 </div>
@@ -331,14 +337,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Blocking Count
                   </p>
                 </div>
@@ -347,14 +354,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Optional Count
                   </p>
                 </div>
@@ -363,14 +371,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Conditional Count
                   </p>
                 </div>
@@ -379,14 +388,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Cross Day Count
                   </p>
                 </div>
@@ -395,14 +405,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-sm">
                     Avg Max Wait (min)
                   </p>
                 </div>
@@ -416,14 +427,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
               {dependencyGraph.length > 0 && (
                 <>
                   <div
-                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                    className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
                   >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
                         style={{ color: color.primary.accent }}
                       />
-                      <p className="text-sm font-medium text-gray-600">
+                      <p className="text-sm font-medium text-sm">
                         Total Jobs in Graph
                       </p>
                     </div>
@@ -432,14 +444,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                     </p>
                   </div>
                   <div
-                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                    className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
                   >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
                         style={{ color: color.primary.accent }}
                       />
-                      <p className="text-sm font-medium text-gray-600">
+                      <p className="text-sm font-medium text-sm">
                         Jobs with Dependencies
                       </p>
                     </div>
@@ -452,14 +465,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                     </p>
                   </div>
                   <div
-                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                    className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
                   >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
                         style={{ color: color.primary.accent }}
                       />
-                      <p className="text-sm font-medium text-gray-600">
+                      <p className="text-sm font-medium text-sm">
                         Jobs with Dependents
                       </p>
                     </div>
@@ -472,14 +486,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                     </p>
                   </div>
                   <div
-                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                    className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
                   >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
                         style={{ color: color.primary.accent }}
                       />
-                      <p className="text-sm font-medium text-gray-600">
+                      <p className="text-sm font-medium text-sm">
                         Avg Dependencies per Job
                       </p>
                     </div>
@@ -504,7 +519,8 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Dependency Type Distribution */}
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Dependency Type Distribution
@@ -546,7 +562,8 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
 
             {/* Wait For Status Distribution */}
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Wait For Status Distribution
@@ -588,7 +605,8 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
 
             {/* Active/Inactive Distribution */}
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Active vs Inactive Dependencies
@@ -634,7 +652,8 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
 
           {/* Most Depended On Jobs - Own Row */}
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Most Depended-On Jobs (Top 10)
@@ -651,12 +670,13 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       const data = payload[0].payload as MostDependedJob;
                       return (
                         <div
-                          className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+                          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-3 shadow-lg`}
                         >
                           <p className="mb-2 text-sm font-semibold text-gray-900">
                             {data.name}
                           </p>
-                          <div className="space-y-1 text-sm text-gray-600">
+                          <div className="space-y-1 text-sm text-sm">
                             <p>Code: {data.code}</p>
                             <p>Job ID: {data.id}</p>
                             <p>Dependent Jobs: {data.dependent_job_count}</p>

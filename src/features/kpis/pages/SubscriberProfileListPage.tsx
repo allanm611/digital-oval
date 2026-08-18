@@ -7,10 +7,12 @@ import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeac
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { subscriberProfileService } from "../services/subscriberProfileService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
@@ -21,14 +23,17 @@ interface Profile {
   description?: string;
   dataSource: string;
   is_active?: boolean;
+  default_value?: string;
 }
 
 export default function SubscriberProfileListPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { showToast } = useToast();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -40,44 +45,40 @@ export default function SubscriberProfileListPage() {
 
     {
       id: "name",
-      label: "Field Name",
+      label: t.kpis.fieldName,
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-          {row.name}
-        </div>
-      ),
+      render: (_, row) => row.name,
     },
     {
       id: "dataSource",
-      label: "Category",
+      label: t.common.category,
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, row) => (
-        <span className={`text-sm ${tw.textSecondary}`}>
-          {row.dataSource}
-        </span>
-      ),
+      render: (_, row) => row.dataSource,
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
-      filterConfig: { type: "select", options: ["Active", "Inactive"] },
-      render: (_, row) => (
-        <span className={`text-sm font-medium ${tw.textSecondary} text-center block`}>
-          {row.is_active ? "Active" : "Inactive"}
-        </span>
-      ),
+      filterConfig: { type: "select", options: [t.common.active, t.common.inactive] },
+      render: (_, row) => row.is_active ? t.common.active : t.common.inactive,
+    },
+    {
+      id: "default_value",
+      label: t.kpis.defaultValue,
+      visible: true,
+      filterConfig: { type: "text" },
+      render: (_, row) => row.default_value,
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
-        <div className="flex gap-1 justify-center items-center">
+        <div className="flex gap-3 justify-center items-center">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleActive(row)}
@@ -86,7 +87,7 @@ export default function SubscriberProfileListPage() {
           />
           <button
             onClick={() => handleViewDetails(row)}
-            className={`p-2 icon-edit rounded transition-colors`}
+            className={`p-0 icon-edit rounded transition-colors`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -100,8 +101,8 @@ export default function SubscriberProfileListPage() {
           />
           <button
             onClick={() => handleDeleteClick(row)}
-            className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
-            title="Delete"
+            className={`p-0 icon-delete ${tw.rounded} disabled:opacity-60`}
+            title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -118,6 +119,9 @@ export default function SubscriberProfileListPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "subscriber-profiles-table",
     defaultColumns: tableColumns,
@@ -143,6 +147,7 @@ export default function SubscriberProfileListPage() {
         description: profile.description || "",
         dataSource: profile.data_source || "DB",
         is_active: profile.is_active ?? true,
+        default_value: profile.default_value || "-",
       }));
       setProfiles(mappedProfiles);
     } catch (err) {
@@ -213,7 +218,7 @@ export default function SubscriberProfileListPage() {
 
       showToast(
         "success",
-        `"${profile.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+        `"${profile.name}" has been ${newStatus ? t.common.activated : t.common.deactivated} successfully`
       );
     } catch (err) {
       console.error("Failed to toggle profile status:", err);
@@ -249,7 +254,7 @@ export default function SubscriberProfileListPage() {
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
-            setCurrentPage(1);
+            tableHandlePageChange(1);
           }}
           className="flex-1 min-w-[250px]"
         />
@@ -296,6 +301,8 @@ export default function SubscriberProfileListPage() {
             )}
             onFilteredCountChange={handleFilteredCountChange}
             clearFiltersKey={clearFiltersKey}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,
@@ -321,10 +328,21 @@ export default function SubscriberProfileListPage() {
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         title="Delete Profile Field"
-        message={`Are you sure you want to delete "${profileToDelete?.name}"? This action cannot be undone.`}
+        description="Are you sure you want to delete this profile field? This action cannot be undone."
+        itemName={profileToDelete?.name || ""}
         onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
+        onClose={handleCancelDelete}
         isLoading={isDeleting}
+      />
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

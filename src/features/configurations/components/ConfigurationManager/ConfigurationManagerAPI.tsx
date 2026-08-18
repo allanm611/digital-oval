@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit, Trash2, Eye, LucideIcon } from "lucide-react";
-import { Table } from "../../../../shared/components/Table/Table";
+import { Table, useTable, type TableColumn } from "../../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../../shared/components/ColumnPickerModal";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../../shared/utils/utils";
 import { useToast } from "../../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../../shared/utils/errorHandler";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../../shared/components/ui/BackButton";
@@ -58,6 +59,7 @@ interface ConfigurationTableRow {
   description: string;
   status: string;
   isActive: boolean;
+  _full?: ConfigurationItem;
 }
 
 interface ConfigurationManagerAPIProps {
@@ -86,6 +88,7 @@ export default function ConfigurationManagerAPI({
   const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [displayData, setDisplayData] = useState<ConfigurationItem[]>([]);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // If hook returns null (shouldn't happen), show error
   if (!backendConfig) {
@@ -156,7 +159,6 @@ export default function ConfigurationManagerAPI({
       setShowDeleteModal(false);
       setItemToDelete(null);
     } catch (err) {
-      console.error(`Error deleting ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.deleteErrorMessage;
       showError(t.genericConfig.error, errorMsg);
       // Revert optimistic update on error
@@ -167,14 +169,14 @@ export default function ConfigurationManagerAPI({
   };
 
   const handleToggleActive = async (item: ConfigurationItem) => {
-    const newActive = !(item.isActive ?? true);
+    const newActive = !((item.is_active ?? item.isActive) ?? true);
     setTogglingItemId(item.id as number);
     const previousData = displayData;
 
-    // Optimistic update: toggle active state immediately
+    // Optimistic update: toggle active state immediately (update both is_active and isActive)
     setDisplayData((prev) =>
       prev.map((i) =>
-        i.id === item.id ? { ...i, isActive: newActive } : i
+        i.id === item.id ? { ...i, isActive: newActive, is_active: newActive } : i
       )
     );
 
@@ -188,7 +190,6 @@ export default function ConfigurationManagerAPI({
           : `${item.name} has been deactivated`
       );
     } catch (err) {
-      console.error(`Error updating ${config.entityName}:`, err);
       const errorMsg = err instanceof Error ? err.message : config.saveErrorMessage;
       showError(t.genericConfig.error, errorMsg);
       // Revert optimistic update on error
@@ -223,7 +224,6 @@ export default function ConfigurationManagerAPI({
       setIsModalOpen(false);
       setEditingItem(undefined);
     } catch (err) {
-      console.error(`Failed to save ${config.entityName}:`, err);
       showError(
         t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
         config.saveErrorMessage
@@ -234,6 +234,95 @@ export default function ConfigurationManagerAPI({
       setIsSaving(false);
     }
   };
+
+  // Table columns definition (after handlers are defined)
+  const defaultColumns: TableColumn<ConfigurationTableRow>[] = useMemo(() => [
+    { id: "name", label: config.entityName, width: "200px", visible: true, sortable: true, filterConfig: { type: "text" }, render: (_, row) => (
+      <div className="cursor-pointer" onClick={() => onRowClick?.(row.name)}>
+        {row.name}
+      </div>
+    ) },
+    { id: "description", label: t.genericConfig.description, width: "300px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
+      <div className="max-w-md">
+        {row.description || t.genericConfig.noDescription}
+      </div>
+    ) },
+    { id: "status", label: config.statusLabel || t.genericConfig.status, width: "120px", visible: true, filterConfig: { type: "multiselect", options: ["Active", "Inactive"] }, render: (_, row) => row.status },
+    {
+      id: "actions",
+      label: t.genericConfig.actions,
+      width: "150px",
+      visible: true,
+      sortable: false,
+      isActionColumn: true,
+      render: (_, row: any) => {
+        const item = row._full;
+        if (!item) return null;
+        return (
+          <div className="flex items-center justify-center space-x-2">
+            {config.enableActivateDeactivate && item && (
+              <ActivateDeactivateButton
+                isActive={(item.is_active ?? item.isActive) ?? true}
+                onToggle={() => handleToggleActive(item)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                isLoading={togglingItemId === item.id}
+                title={
+                  (item.is_active ?? item.isActive)
+                    ? `Deactivate ${item.name}`
+                    : `Activate ${item.name}`
+                }
+              />
+            )}
+
+            {config.detailsPath && item && (
+              <button
+                onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                className={`p-0 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={`View details for ${item.name}`}
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+            )}
+
+            {item && (
+              <button
+                onClick={() => handleEditItem(item)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                className={`p-0 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={`Edit ${item.name}`}
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
+
+            {!config.disableDelete && item && (
+              <button
+                onClick={() => handleDeleteItem(item)}
+                disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
+                className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={`Delete ${item.name}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        );
+      },
+    },
+  ], [config, t, displayData, togglingItemId, itemToDelete, isDeleting, onRowClick, tw, handleToggleActive, handleEditItem, handleDeleteItem]);
+
+  const {
+    columns,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+  } = useTable({
+    tableId: `configuration-${config.configType}-table`,
+    defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
 
   const filteredItems = useMemo(
     () =>
@@ -276,23 +365,39 @@ export default function ConfigurationManagerAPI({
     <div className="space-y-6">
       {/* Breadcrumb */}
       {showBackButton && (
-        <div className="flex items-center justify-between">
-          <BackButton
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <BackButton
 
-            showBreadcrumb={true}
-            parentLabel={(config as any).parentLabel}
-            currentLabel={config.title}
-          />
-          {!config.disableCreate && <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} />}
+              showBreadcrumb={true}
+              parentLabel={(config as any).parentLabel}
+              currentLabel={config.title}
+            />
+            {!config.disableCreate && <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} />}
+          </div>
+
+          {/* Description Section */}
+          {(config as any).description && (
+            <p className={`text-sm ${tw.textSecondary}`}>
+              {(config as any).description}
+            </p>
+          )}
         </div>
       )}
       {!showBackButton && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+          <div className="space-y-1.5">
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}
             </h1>
-            <p className={`text-sm ${tw.textSecondary} mt-2`}>{config.subtitle}</p>
+            <div className="space-y-1">
+              <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
+              {(config as any).description && (
+                <p className={`text-sm ${tw.textSecondary}`}>
+                  {(config as any).description}
+                </p>
+              )}
+            </div>
           </div>
           {!config.disableCreate && (
             <div className="flex gap-3">
@@ -303,7 +408,7 @@ export default function ConfigurationManagerAPI({
       )}
 
       {/* Search */}
-      <div className="mt-12 mb-5">
+      <div className="pt-4 mb-5">
         <SearchInput
           placeholder={config.searchPlaceholder}
           value={searchTerm}
@@ -348,90 +453,17 @@ export default function ConfigurationManagerAPI({
           <>
             <div className="overflow-x-auto">
               <Table<ConfigurationTableRow>
-                columns={[
-                  { id: "name", label: config.entityName, width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} cursor-pointer`} onClick={() => onRowClick?.(row.name)}>
-                      {row.name}
-                    </div>
-                  ) },
-                  { id: "description", label: t.genericConfig.description, width: "300px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                      {row.description || t.genericConfig.noDescription}
-                    </div>
-                  ) },
-                  { id: "status", label: config.statusLabel || t.genericConfig.status, width: "120px", visible: true, filterConfig: { type: "multiselect", options: ["Active", "Inactive"] }, render: (_, row) => (
-                    <span className={`text-sm font-medium ${tw.textSecondary}`}>
-                      {row.status}
-                    </span>
-                  ) },
-                  {
-                    id: "actions",
-                    label: t.genericConfig.actions,
-                    width: "150px",
-                    visible: true,
-                    sortable: false,
-                    render: (_, row) => {
-                      const item = paginatedItems.find((i) => i.id === row.id);
-                      return (
-                        <div className="flex items-center justify-center space-x-2">
-                          {config.enableActivateDeactivate && item && (
-                            <ActivateDeactivateButton
-                              isActive={item.isActive ?? true}
-                              onToggle={() => handleToggleActive(item)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              isLoading={togglingItemId === item.id}
-                              title={
-                                item.isActive
-                                  ? `Deactivate ${item.name}`
-                                  : `Activate ${item.name}`
-                              }
-                            />
-                          )}
-
-                          {config.detailsPath && item && (
-                            <button
-                              onClick={() => navigate(`${config.detailsPath}/${item.id}`)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                              title={`View details for ${item.name}`}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
-
-                          {item && (
-                            <button
-                              onClick={() => handleEditItem(item)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                              title={`Edit ${item.name}`}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          )}
-
-                          {!config.disableDelete && item && (
-                            <button
-                              onClick={() => handleDeleteItem(item)}
-                              disabled={togglingItemId === item.id || (itemToDelete?.id === item.id && isDeleting)}
-                              className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                              title={`Delete ${item.name}`}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      );
-                    },
-                  },
-                ]}
+                columns={columns}
                 data={paginatedItems.map((item) => ({
                   id: item.id,
                   name: item.name,
                   description: item.description || "",
-                  status: item.isActive ?? true ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive',
-                  isActive: item.isActive ?? true,
+                  status: (item.is_active ?? item.isActive ?? true) ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive',
+                  isActive: item.is_active ?? item.isActive ?? true,
+                  _full: item,
                 }))}
+                onHideColumn={toggleColumn}
+                onManageColumnsClick={() => setShowColumnPicker(true)}
                 rowSpacing="0 8px"
               />
             </div>
@@ -475,6 +507,21 @@ export default function ConfigurationManagerAPI({
         isLoading={isDeleting}
         confirmText={t.genericConfig.delete}
         cancelText={t.genericConfig.cancel}
+      />
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

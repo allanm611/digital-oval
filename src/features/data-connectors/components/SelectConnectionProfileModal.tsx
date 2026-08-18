@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { X, Check, Loader2, Database } from "lucide-react";
+import { X, Loader2, Database } from "lucide-react";
 import { ConnectionProfileType } from "../../connection-profiles/types/connectionProfile";
 import { connectionProfileService } from "../../connection-profiles/services/connectionProfileService";
 import { DataConnectorType } from "../types/dataConnector";
 import { color, tw, button, getButtonStyles, zIndex } from "../../../shared/utils/utils";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -14,7 +15,7 @@ interface SelectConnectionProfileModalProps {
   onClose: () => void;
   onSelect: (profile: ConnectionProfileType) => void;
   dataConnectorType: DataConnectorType;
-  currentProfileId?: number;
+  attachedProfileIds?: number[];
 }
 
 export default function SelectConnectionProfileModal({
@@ -22,13 +23,14 @@ export default function SelectConnectionProfileModal({
   onClose,
   onSelect,
   dataConnectorType,
-  currentProfileId,
+  attachedProfileIds = [],
 }: SelectConnectionProfileModalProps) {
   const { error: showError } = useToast();
   const [profiles, setProfiles] = useState<ConnectionProfileType[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [hoveredProfileId, setHoveredProfileId] = useState<number | null>(null);
+  const [selectedProfiles, setSelectedProfiles] = useState<ConnectionProfileType[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,13 +38,20 @@ export default function SelectConnectionProfileModal({
     }
   }, [isOpen, dataConnectorType]);
 
+  useEffect(() => {
+    if (isOpen && profiles.length > 0) {
+      const attachedProfiles = profiles.filter(p => attachedProfileIds?.includes(p.id));
+      setSelectedProfiles(attachedProfiles);
+    }
+  }, [isOpen, profiles, attachedProfileIds]);
+
   const loadProfiles = async () => {
     try {
       setLoading(true);
       // Fetch profiles by exact type match
       const data = await connectionProfileService.getProfilesByConnectionType(
         dataConnectorType,
-        { limit: 100 }
+        { limit: 100, skipCache: true }
       );
       setProfiles(data || []);
     } catch (err) {
@@ -67,7 +76,8 @@ export default function SelectConnectionProfileModal({
       onClick={onClose}
     >
       <div
-        className={`${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col bg-white`}
+        className={`${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        style={{ backgroundColor: "var(--c-surface-background)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -185,43 +195,43 @@ export default function SelectConnectionProfileModal({
                   style={{ borderColor: color.border.muted }}
                 >
                   {filteredProfiles.map((profile) => {
-                    const isSelected = currentProfileId === profile.id;
-                    const isHovered = hoveredProfileId === profile.id;
+                    const isSelected = selectedProfiles.some(p => p && p.id === profile.id);
 
                     return (
                       <tr
                         key={profile.id}
                         onClick={() => {
-                          onSelect(profile);
-                          onClose();
+                          if (!profile) return;
+
+                          const isCurrentlySelected = selectedProfiles.some(p => p && p.id === profile.id);
+                          if (isCurrentlySelected) {
+                            setSelectedProfiles(selectedProfiles.filter(p => p && p.id !== profile.id));
+                          } else {
+                            setSelectedProfiles([...selectedProfiles, profile]);
+                          }
                         }}
-                        onMouseEnter={() => setHoveredProfileId(profile.id)}
-                        onMouseLeave={() => setHoveredProfileId(null)}
-                        className="cursor-pointer transition-colors"
+                        className="cursor-pointer"
                         style={{
                           backgroundColor: isSelected
                             ? `${color.primary.accent}15`
-                            : isHovered
-                              ? color.interactive.hover
-                              : "white",
+                            : "var(--c-surface-background)",
                         }}
                       >
                         <td className="px-4 py-4">
                           <div className="flex items-center justify-center">
-                            {isSelected ? (
-                              <div
-                                className="w-5 h-5 rounded flex items-center justify-center"
-                                style={{
-                                  backgroundColor: color.primary.action,
-                                }}
-                              >
-                                <Check className="w-3 h-3 text-white" />
-                              </div>
-                            ) : (
-                              <div
-                                className="w-5 h-5 rounded border-2"
-                                style={{
-                                  borderColor: color.border.default,
+                            {profile && (
+                              <Checkbox
+                                id={`profile-${profile.id}`}
+                                checked={isSelected}
+                                onChange={() => {
+                                  if (!profile) return;
+
+                                  const isCurrentlySelected = selectedProfiles.some(p => p && p.id === profile.id);
+                                  if (isCurrentlySelected) {
+                                    setSelectedProfiles(selectedProfiles.filter(p => p && p.id !== profile.id));
+                                  } else {
+                                    setSelectedProfiles([...selectedProfiles, profile]);
+                                  }
                                 }}
                               />
                             )}
@@ -281,6 +291,46 @@ export default function SelectConnectionProfileModal({
               style={getButtonStyles(button.bordered)}
             >
               Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!selectedProfiles || selectedProfiles.length === 0) {
+                  return;
+                }
+
+                const validProfiles = selectedProfiles.filter(p => p && p.id);
+                if (validProfiles.length === 0) {
+                  return;
+                }
+
+                setIsProcessing(true);
+
+                try {
+                  await Promise.all(
+                    validProfiles.map(profile => {
+                      if (profile) {
+                        return Promise.resolve(onSelect(profile));
+                      }
+                      return Promise.resolve();
+                    })
+                  );
+
+                  onClose();
+                } catch (err) {
+                  console.error("Error processing profiles:", err);
+                } finally {
+                  setIsProcessing(false);
+                }
+              }}
+              disabled={loading || isProcessing || !selectedProfiles || selectedProfiles.length === 0}
+              className="text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 px-4 py-2 rounded font-medium flex items-center gap-2"
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {isProcessing && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              )}
+              {isProcessing ? "Processing..." : `Confirm (${selectedProfiles?.length || 0})`}
             </button>
           </div>
         </div>

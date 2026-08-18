@@ -16,11 +16,14 @@ import { senderIdService } from "../../configurations/services/senderIdService";
 import ConfigurationModal from "../../configurations/components/ConfigurationManager/ConfigurationModal";
 import { getSenderIdsApiConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { smsGatewayConfigService } from "../../configurations/services/smsGatewayConfigService";
+import {
+  gatewayConfigurationService,
+  filterGatewayConfigsByChannelType,
+} from "../../configurations/services/gatewayConfigurationService";
 
-const STATUS_OPTIONS = [
-  { label: "Active", value: "true" },
-  { label: "Inactive", value: "false" },
+const STATUS_OPTIONS = (t: any) => [
+  { label: t.common.active, value: "true" },
+  { label: t.common.inactive, value: "false" },
 ];
 
 interface SMSRouteFormPageProps {
@@ -70,8 +73,12 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
 
     const loadGatewayConfigs = async () => {
       try {
-        const configs = await smsGatewayConfigService.getAllConfigs();
-        setGatewayConfigs(configs);
+        const configs = await gatewayConfigurationService.getAll();
+        setGatewayConfigs(
+          filterGatewayConfigsByChannelType(configs, "SMS").filter(
+            (c) => c.is_active !== false,
+          ),
+        );
       } catch (err) {
         // Silent fail
       }
@@ -114,7 +121,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
         });
       }
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       navigate("/dashboard/sms-routes");
     } finally {
       setLoading(false);
@@ -137,7 +144,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     e.preventDefault();
 
     if (!validateForm()) {
-      showError("Validation Error", "Please fill in all required fields");
+      showError(t.common.error, "Please fill in all required fields");
       return;
     }
 
@@ -157,16 +164,16 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
 
       if (mode === "edit" && id) {
         await smsRouteService.updateRoute(Number(id), payloadData);
-        success("Success", "SMS route updated successfully");
+        success(t.common.success, "SMS route updated successfully");
       } else {
         await smsRouteService.createRoute(payloadData);
-        success("Success", "SMS route created successfully");
+        success(t.common.success, "SMS route created successfully");
       }
 
       navigate("/dashboard/sms-routes");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save route";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error, extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
@@ -262,7 +269,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading SMS route...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>Loading {t.routes.channels.sms} {t.routes.route}...</p>
       </div>
     );
   }
@@ -270,23 +277,23 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? "Create SMS Route" : "Edit SMS Route"} />
+      <BackButton showBreadcrumb={true} currentLabel={mode === "create" ? t.routes.createRoute : `${t.common.edit} SMS ${t.routes.route}`} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Route Configuration Section */}
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Route Configuration</h2>
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>{t.routes.routeName} {t.common.metadata}</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Input
-                  label="Route Name"
+                  label={t.routes.routeName}
                   placeholder="e.g., Primary SMS Gateway"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   hasError={!!errors.name}
-                 
+
                   disabled={saving}
                   required
                 />
@@ -314,7 +321,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
 
             <div>
               <Textarea
-                label="Description"
+                label={t.common.description}
                 value={formData.description || ""}
                 onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
                 placeholder="Add notes about this route..."
@@ -328,15 +335,15 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                 <div className="flex-1" style={{ borderTopRightRadius: "0", borderBottomRightRadius: "0", overflow: "hidden" }}>
                   <HeadlessSelect
                     label="Sender ID"
-                    options={[
-                      { value: "", label: "Select Sender ID" },
-                      ...(senderIds.map((sender) => ({
+                    options={
+                      senderIds.map((sender) => ({
                         value: String(sender.id),
                         label: sender.name,
-                      })) || []),
-                    ]}
+                      })) || []
+                    }
                     value={extendedFormData.senderId}
                     onChange={(value) => handleExtendedFieldChange("senderId", value as string)}
+                    placeholder="Select Sender ID"
                     disabled={saving}
                   />
                 </div>
@@ -385,15 +392,15 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
                   <div>
                     <HeadlessSelect
                       label="Backup Route"
-                      options={[
-                        { value: "", label: "Select a backup route" },
-                        ...(allRoutes
+                      options={
+                        allRoutes
                           .filter((r) => r.id !== (route?.id || formData.backup_route_id))
                           .map((route) => ({
                             value: String(route.id),
                             label: route.name,
-                          })) || []),
-                      ]}
+                          })) || []
+                      }
+                      placeholder="Select a backup route"
                       value={String(formData.backup_route_id || "")}
                       onChange={(value) =>
                         setFormData((prev) => ({
@@ -448,7 +455,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
             disabled={saving}
             className="px-6 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
-            Cancel
+            {t.common.cancel}
           </button>
 
           <button
@@ -458,7 +465,7 @@ export default function SMSRouteFormPage({ mode }: SMSRouteFormPageProps) {
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="w-4 h-4" />
-            {saving ? "Saving..." : "Save Route"}
+            {saving ? t.routes.successfully : t.routes.route} {t.routes.channels.sms}
           </button>
         </div>
       </form>

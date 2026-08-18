@@ -1,11 +1,15 @@
 export type ConnectionTypeEnum =
+  | "database"
+  | "jdbc"
+  | "api"
+  | "webhook"
+  | "kafka"
   | "tcp"
   | "websocket"
-  | "kafka"
-  | "jdbc"
   | "sms_inbox"
-  | "api"
   | "files"
+  | "sftp"
+  | "ftp"
   | string;
 
 export type DatabaseTypeEnum =
@@ -77,6 +81,7 @@ export interface ConnectionProfileType {
   updated_by: number | null;
   last_used_at: string | null;
   metadata: Record<string, unknown> | null;
+  configuration?: Record<string, unknown> | null;
 }
 
 export interface CreateConnectionProfilePayload {

@@ -20,9 +20,9 @@ import { senderIdService } from "../../configurations/services/senderIdService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
 import { timezoneService } from "../../configurations/services/timezoneService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
-import { WHATSAPP_ROUTES_DUMMY_DATA } from "../../routes/services/whatsappRouteService";
-import { PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA } from "../../routes/services/pushNotificationRouteService";
-import { USSD_ROUTES_DUMMY_DATA } from "../../routes/services/ussdRouteService";
+import { whatsappRouteService } from "../../routes/services/whatsappRouteService";
+import { pushNotificationRouteService } from "../../routes/services/pushNotificationRouteService";
+import { ussdRouteService } from "../../routes/services/ussdRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { hardcodedEmailRoutes } from "../../configurations/configs/configurationPageConfigs";
@@ -250,12 +250,12 @@ export default function SettingsPage() {
   // Routes and communication channels
   const [communicationChannels, setCommunicationChannels] = useState<CommunicationChannel[]>([]);
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
+  const [ussdRoutes, setUssdRoutes] = useState<SMSRoute[]>([]);
+  const [whatsappRoutes, setWhatsappRoutes] = useState<SMSRoute[]>([]);
+  const [pushRoutes, setPushRoutes] = useState<SMSRoute[]>([]);
   const [smsRoutesLoading, setSmsRoutesLoading] = useState(false);
+  const [channelRoutesLoading, setChannelRoutesLoading] = useState(false);
 
-  // Hardcoded routes from configuration
-  const ussdRoutes = USSD_ROUTES_DUMMY_DATA;
-  const whatsappRoutes = WHATSAPP_ROUTES_DUMMY_DATA;
-  const pushRoutes = PUSH_ROUTES_PUSH_ROUTES_DUMMY_DATA;
   const emailRoutes = hardcodedEmailRoutes.map(r => ({
     id: r.id,
     name: r.name,
@@ -301,17 +301,29 @@ export default function SettingsPage() {
     loadSubscriptions();
   }, []);
 
-  // Load SMS routes and communication channels
+  // Load routes and communication channels
   useEffect(() => {
+    const activeOnly = (routes: SMSRoute[] | unknown) =>
+      Array.isArray(routes) ? routes.filter((r) => r.is_active) : [];
+
     const loadRoutes = async () => {
       try {
         setSmsRoutesLoading(true);
-        const smsRoutesData = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(smsRoutesData) ? smsRoutesData.filter((r: any) => r.is_active) : []);
-      } catch {
-        setSmsRoutes([]);
+        setChannelRoutesLoading(true);
+        const [smsRoutesData, ussdRoutesData, whatsappRoutesData, pushRoutesData] =
+          await Promise.all([
+            smsRouteService.getAllRoutes().catch(() => []),
+            ussdRouteService.getAllRoutes().catch(() => []),
+            whatsappRouteService.getAllRoutes().catch(() => []),
+            pushNotificationRouteService.getAllRoutes().catch(() => []),
+          ]);
+        setSmsRoutes(activeOnly(smsRoutesData));
+        setUssdRoutes(activeOnly(ussdRoutesData));
+        setWhatsappRoutes(activeOnly(whatsappRoutesData));
+        setPushRoutes(activeOnly(pushRoutesData));
       } finally {
         setSmsRoutesLoading(false);
+        setChannelRoutesLoading(false);
       }
     };
 
@@ -682,7 +694,7 @@ export default function SettingsPage() {
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             {t.settings.title}
           </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+          <p className={`${tw.textSecondary} mt-2 text-xs`}>
             Manage the system preferences and regional settings
           </p>
         </div>
@@ -733,7 +745,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 {t.settings.location}
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Set your country and regional information
               </p>
             </div>
@@ -798,7 +810,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Localization
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Configure language and timezone preferences
               </p>
             </div>
@@ -849,7 +861,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 {t.settings.dateFormat}
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Choose how dates are displayed throughout the system
               </p>
             </div>
@@ -898,7 +910,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 {t.settings.currency} & Formatting
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Set currency and number display preferences
               </p>
             </div>
@@ -987,7 +999,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Character Sets
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Select SMS text encoding for message delivery
               </p>
             </div>
@@ -1025,7 +1037,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Default Sender ID
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Set the default SMS sender ID for campaigns
               </p>
             </div>
@@ -1063,7 +1075,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Default Communication Channel & Route
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Set the default channel and its corresponding route
               </p>
             </div>
@@ -1103,18 +1115,18 @@ export default function SettingsPage() {
               routeType = "Email";
               selectedRouteId = settings.default_email_route_id;
             } else if (selectedChannelUpper === "USSD") {
-              routesList = ussdRoutes.filter((r: any) => r.is_active);
-              routeLoading = false;
+              routesList = ussdRoutes;
+              routeLoading = channelRoutesLoading;
               routeType = "USSD";
               selectedRouteId = settings.default_ussd_route_id;
             } else if (selectedChannelUpper.includes("WHATSAPP")) {
-              routesList = whatsappRoutes.filter((r: any) => r.is_active);
-              routeLoading = false;
+              routesList = whatsappRoutes;
+              routeLoading = channelRoutesLoading;
               routeType = "WhatsApp";
               selectedRouteId = settings.default_whatsapp_route_id;
             } else if (selectedChannelUpper.includes("PUSH")) {
-              routesList = pushRoutes.filter((r: any) => r.is_active);
-              routeLoading = false;
+              routesList = pushRoutes;
+              routeLoading = channelRoutesLoading;
               routeType = "Push Notification";
               selectedRouteId = settings.default_push_route_id;
             }
@@ -1314,7 +1326,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                 Display Theme
               </h2>
-              <p className="text-sm" style={{ color: 'var(--c-text-secondary)' }}>
+              <p className="text-xs" style={{ color: 'var(--c-text-secondary)' }}>
                 Choose your preferred color scheme
               </p>
             </div>

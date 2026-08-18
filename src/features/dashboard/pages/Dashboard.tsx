@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 
 import DashboardLayout from "../components/DashboardLayout";
@@ -585,6 +586,22 @@ const SettingsPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/GatewayConfigurationsContainer"),
   ),
+  GatewayProvidersPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/GatewayProvidersContainer"),
+  ),
+  RewardProvidersPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/RewardProvidersContainer"),
+  ),
+  EngineTrackingSourcesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/EngineTrackingSourcesContainer"),
+  ),
+  RewardConfigurationsPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../configurations/pages/RewardConfigurationsContainer"),
+  ),
   DNDTypesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../configurations/pages/DNDTypesPage"),
@@ -891,6 +908,7 @@ const OtherPages = {
 };
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   return (
     <DashboardLayout>
       <Suspense
@@ -1228,6 +1246,10 @@ export default function Dashboard() {
             element={<OfferPages.TrackingSourcesPage />}
           />
           <Route
+            path="/tracking-sources/*"
+            element={<SettingsPages.EngineTrackingSourcesPage />}
+          />
+          <Route
             path="/creative-templates"
             element={<OfferPages.CreativeTemplatesPage />}
           />
@@ -1324,6 +1346,18 @@ export default function Dashboard() {
           <Route
             path="/gateway-configurations/*"
             element={<SettingsPages.GatewayConfigurationsPage />}
+          />
+          <Route
+            path="/gateway-providers/*"
+            element={<SettingsPages.GatewayProvidersPage />}
+          />
+          <Route
+            path="/reward-providers/*"
+            element={<SettingsPages.RewardProvidersPage />}
+          />
+          <Route
+            path="/reward-configurations/*"
+            element={<SettingsPages.RewardConfigurationsPage />}
           />
           <Route path="/sms-test" element={<SettingsPages.SMSTestPage />} />
           <Route path="/manual-rewards-test" element={<OtherPages.ManualRewardsTestPage />} />

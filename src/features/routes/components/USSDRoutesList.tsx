@@ -78,7 +78,7 @@ export default function USSDRoutesList() {
           r.id === route.id ? { ...r, is_active: route.is_active } : r,
         ),
       );
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setTogglingStatus(null);
     }
@@ -128,6 +128,7 @@ export default function USSDRoutesList() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, route) => (
         <div className="flex items-center justify-center gap-2">
           <ActivateDeactivateButton
@@ -139,17 +140,7 @@ export default function USSDRoutesList() {
           />
           <button
             onClick={() => navigate(`/dashboard/ussd-routes/edit/${route.id}`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
-            style={{
-              color: color.primary.action,
-              backgroundColor: "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -157,7 +148,7 @@ export default function USSDRoutesList() {
           <button
             onClick={() => handleDeleteClick(route)}
             disabled={isDeleting && deleteConfirm.id === route.id}
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             <Trash2 className="w-4 h-4" />
@@ -277,7 +268,6 @@ export default function USSDRoutesList() {
         onConfirm={async () => {
           try {
             await confirmDeleteRoute(deleteConfirm.id);
-            success("Success", `Route deleted successfully`);
           } catch (err) {
             showError("Error", extractBackendError(err, "Error. Please try again."));
           }

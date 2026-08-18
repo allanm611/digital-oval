@@ -47,8 +47,9 @@ import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shar
 import ErrorState from "../../../shared/components/ui/ErrorState";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
-import { Table, type TableColumn } from "../../../shared/components/Table";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
@@ -91,11 +92,18 @@ export default function SegmentManagementPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalPages, setTotalPages] = useState(1);
-  const [sortBy] = useState<
-    "id" | "name" | "type" | "category" | "created_at" | "updated_at"
-  >("created_at");
-  const [sortDirection] = useState<SortDirection>("DESC");
   const [sortConfigs, setSortConfigs] = useState<Array<{ columnId: string; direction: "asc" | "desc"; priority: number }>>([]);
+
+  const getSortBy = (): "id" | "name" | "type" | "category" | "created_at" | "updated_at" => {
+    if (sortConfigs.length === 0) return "created_at";
+    const columnId = sortConfigs[0].columnId;
+    return (columnId as any) || "created_at";
+  };
+
+  const getSortDirection = (): SortDirection => {
+    if (sortConfigs.length === 0) return "DESC";
+    return sortConfigs[0].direction === "asc" ? "ASC" : "DESC";
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -175,6 +183,7 @@ export default function SegmentManagementPage() {
   const { success, error: showError, info: showInfo } = useToast();
   const [segmentToDelete, setSegmentToDelete] = useState<Segment | null>(null);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const [showSegmentColumnPicker, setShowSegmentColumnPicker] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteSegment } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -451,60 +460,29 @@ export default function SegmentManagementPage() {
       setError("");
 
       let segmentData: Segment[] = [];
+      let totalCount = 0;
 
-      // Handle filter tabs - call appropriate API endpoint
-      if (filterTab === "active") {
-        const response = await segmentService.getActiveSegments();
-        segmentData = response.data || [];
-      } else if (filterTab === "empty") {
-        const response = await segmentService.getEmptySegments();
-        segmentData = response.data || [];
-      } else if (filterTab === "needs-refresh") {
-        const response = await segmentService.getSegmentsNeedingRefresh();
-        segmentData = response.data || [];
-      } else if (filterTab === "parents") {
-        const response = await segmentService.getParentSegments();
-        segmentData = response.data || [];
-      } else if (filterTab === "most-used") {
-        const response = await segmentService.getMostUsedSegments(100);
-        segmentData = response.data || [];
-      } else if (debouncedSearchTerm) {
-        // Use searchSegments endpoint if there's a search term
-        const searchResponse = await segmentService.searchSegments({
-          q: debouncedSearchTerm,
-          skipCache: true,
-        });
-        segmentData = searchResponse.data || [];
-      } else {
-        // Default: fetch all segments (making multiple API calls if needed)
-        const pageLimit = 100;
-        let currentPage = 1;
-        let hasMoreData = true;
+      // Use getSegments with offset-based pagination (limit + offset)
+      const apiOffset = (page - 1) * pageSize;
+      const response = await segmentService.getSegments({
+        search: debouncedSearchTerm || undefined,
+        type: typeFilter !== "all" ? (typeFilter as "static" | "dynamic" | "trigger") : undefined,
+        limit: pageSize,
+        offset: apiOffset,
+        skipCache: true,
+      });
 
-        while (hasMoreData) {
-          const filters: SegmentFilters = {
-            skipCache: true,
-          };
-          const response = await segmentService.getSegments(filters);
-          const responseData = response.data || [];
-
-          segmentData = [...segmentData, ...responseData];
-
-          if (responseData.length < pageLimit) {
-            hasMoreData = false;
-          } else {
-            currentPage++;
-          }
-        }
-      }
-
+      segmentData = response.data || [];
+      totalCount = response.pagination?.total || segmentData.length;
 
       setSegments(segmentData);
-      // Update allSegments for tag calculation
-      setAllSegments(segmentData);
+      // Update allSegments for tag calculation - fetch all for this
+      const allSegmentsResponse = await segmentService.getSegments({ skipCache: true });
+      setAllSegments(allSegmentsResponse.data || []);
+
       // Update pagination info
-      setTotalCount(segmentData.length);
-      setTotalPages(Math.ceil(segmentData.length / pageSize));
+      setTotalCount(totalCount);
+      setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (err: unknown) {
       const message =
         (err as Error).message || "Failed to load segments. Please try again.";
@@ -516,7 +494,7 @@ export default function SegmentManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearchTerm, filterTab, page, pageSize, showError]);
+  }, [debouncedSearchTerm, typeFilter, visibilityFilter, selectedTags, page, pageSize, showError]);
 
   useEffect(() => {
     loadSegments();
@@ -605,12 +583,9 @@ export default function SegmentManagementPage() {
     setShowActionMenu(null);
   };
 
-  const handleEditSegment = (segmentId: number) => {
-    const segment = segments.find((s) => s.id === segmentId);
-    if (segment) {
-      setSelectedSegment(segment);
-      setIsModalOpen(true);
-    }
+  const handleEditSegment = (segment: Segment) => {
+    setSelectedSegment(segment);
+    setIsModalOpen(true);
     setShowActionMenu(null);
   };
 
@@ -630,17 +605,6 @@ export default function SegmentManagementPage() {
   };
 
   const handleSaveSegment = async (segment: Segment) => {
-    // Simplified: Update local state and show success message
-    if (selectedSegment) {
-      // Update existing segment
-      setSegments((prev) =>
-        prev.map((s) => (s.id === segment.id ? segment : s)),
-      );
-    } else {
-      // Add new segment to list - prepend to show at top
-      setSegments((prev) => [segment, ...prev]);
-    }
-
     // Show success message with segment name if available, otherwise generic message
     const isCreate = !selectedSegment;
     if (segment?.name) {
@@ -656,6 +620,17 @@ export default function SegmentManagementPage() {
         isCreate
           ? "Segment has been created successfully"
           : "Segment has been updated successfully",
+      );
+    }
+
+    // Optimistic update: add/update segment in local state (no reload)
+    if (isCreate) {
+      // Prepend new segment to list
+      setSegments((prev) => [segment, ...prev]);
+    } else {
+      // Update existing segment
+      setSegments((prev) =>
+        prev.map((s) => (s.id === segment.id ? segment : s)),
       );
     }
   };
@@ -740,7 +715,7 @@ export default function SegmentManagementPage() {
       );
     } catch (err: unknown) {
       const message = (err as Error).message || "Failed to compute segment";
-      showError("Compute failed", extractBackendError(error, "Compute failed. Please try again."));
+      showError("Compute failed", extractBackendError(err, "Compute failed. Please try again."));
     } finally {
       setComputingSegmentId(null);
       setComputeLocation(null);
@@ -764,7 +739,7 @@ export default function SegmentManagementPage() {
   };
 
   const toggleSelectAllVisible = () => {
-    const visibleIds = filteredSegments.map((s) => s.id);
+    const visibleIds = segments.map((s) => s.id);
     if (visibleIds.length === 0) return;
 
     setSelectedSegmentIds((prev) => {
@@ -943,31 +918,14 @@ export default function SegmentManagementPage() {
     new Set(allSegments?.flatMap((s) => s.tags || []) || []),
   );
 
-  const filteredSegments = (segments || []).filter((segment) => {
-    const matchesSearch =
-      !searchTerm ||
-      (segment.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (segment.description || "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    const matchesTags =
-      selectedTags.length === 0 ||
-      selectedTags.some((tag) => (segment.tags || []).includes(tag));
-
-    const matchesType = typeFilter === "all" || segment.type === typeFilter;
-
-    const matchesVisibility =
-      visibilityFilter === "all" ||
-      (visibilityFilter === "public" && segment.visibility === "public") ||
-      (visibilityFilter === "private" && segment.visibility === "private");
-
-    return matchesSearch && matchesTags && matchesType && matchesVisibility;
-  });
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, typeFilter, visibilityFilter, selectedTags]);
 
   const visibleIds = useMemo(
-    () => filteredSegments.map((segment) => segment.id),
-    [filteredSegments],
+    () => segments.map((segment) => segment.id),
+    [segments],
   );
 
   // Define table columns
@@ -1078,24 +1036,28 @@ export default function SegmentManagementPage() {
         label: "Actions",
         visible: true,
         sortable: false,
+      isActionColumn: true,
         render: (value, segment) => (
           <div className="flex items-center justify-center space-x-2">
             <button
               onClick={() => handleViewSegment(segment.id)}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
             </button>
-            <PermissionGate permission="segments.update">
-              <button
-                onClick={() => handleEditSegment(segment.id)}
-                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                title="Edit"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            </PermissionGate>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleEditSegment(segment);
+              }}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
             <div
               className="relative"
               ref={(el) => {
@@ -1104,7 +1066,7 @@ export default function SegmentManagementPage() {
             >
               <button
                 onClick={(e) => handleActionMenuToggle(segment.id, e)}
-                className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -1115,6 +1077,18 @@ export default function SegmentManagementPage() {
     ],
     [computingSegmentId, color, tw, segmentTypes, allTags],
   );
+
+  const {
+    columns: segmentTableColumns,
+    toggleColumn: toggleSegmentColumn,
+    reorderColumns: reorderSegmentColumns,
+    resetToDefaults: resetSegmentDefaults,
+  } = useTable({
+    tableId: "segment-management-table",
+    defaultColumns: segmentColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
 
   const allVisibleSelected =
     visibleIds.length > 0 &&
@@ -1235,27 +1209,11 @@ export default function SegmentManagementPage() {
                     setSelectedSegmentIds(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
                 style={{
-                  backgroundColor: isSelectionMode
-                    ? "var(--c-primary-action)"
-                    : "transparent",
-                  color: isSelectionMode ? "white" : "var(--c-text-primary)",
-                  border: `1px solid ${isSelectionMode ? "var(--c-primary-action)" : "var(--c-text-primary)"}`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelectionMode) {
-                    e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
-                  } else {
-                    e.currentTarget.style.opacity = "0.9";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelectionMode) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  } else {
-                    e.currentTarget.style.opacity = "1";
-                  }
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
                 }}
               >
                 {isSelectionMode ? (
@@ -1263,7 +1221,7 @@ export default function SegmentManagementPage() {
                 ) : (
                   <Square size={16} />
                 )}
-                {isSelectionMode ? "Exit Selection" : "Select Segments"}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             </PermissionGate>
             <PermissionGate permission="segments.create">
@@ -1293,7 +1251,7 @@ export default function SegmentManagementPage() {
                 className="h-5 w-5"
                 style={{ color: color.primary.accent }}
               />
-              <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>
+              <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>
                 Total Segments
               </p>
             </div>
@@ -1436,7 +1394,7 @@ export default function SegmentManagementPage() {
                 // Export filtered segments as CSV
                 const csvContent = [
                   ['Name', 'Type', 'Target', 'Visibility', 'Created At'].join(','),
-                  ...filteredSegments.map((segment) =>
+                  ...segments.map((segment) =>
                     [
                       segment.name,
                       segment.type,
@@ -1573,7 +1531,7 @@ export default function SegmentManagementPage() {
               onRetry={loadSegments}
             />
           </div>
-        ) : filteredSegments.length === 0 || totalCount === 0 ? (
+        ) : segments.length === 0 || totalCount === 0 ? (
           <div className="p-8 md:p-16 text-center">
             <div
               className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}
@@ -1582,14 +1540,14 @@ export default function SegmentManagementPage() {
                 No segments found
               </h3>
               <p className="text-sm text-gray-600 mb-8 max-w-md mx-auto">
-                {totalCount === 0 && filteredSegments.length > 0
+                {totalCount === 0 && segments.length > 0
                   ? "No results match your filters."
                   : searchTerm || selectedTags.length > 0
                     ? "No segments match your search criteria."
                     : "No segments have been created yet."}
               </p>
               <div className="flex gap-3 justify-center">
-                {totalCount === 0 && filteredSegments.length > 0 && (
+                {totalCount === 0 && segments.length > 0 && (
                   <button
                     onClick={() => {
                       setSearchTerm("");
@@ -1601,7 +1559,7 @@ export default function SegmentManagementPage() {
                     Clear Filters
                   </button>
                 )}
-                {!searchTerm && selectedTags.length === 0 && filteredSegments.length === 0 && (
+                {!searchTerm && selectedTags.length === 0 && segments.length === 0 && (
                   <button
                     onClick={handleCreateSegment}
                     className={`${tw.button} inline-flex items-center px-6 py-3`}
@@ -1617,9 +1575,26 @@ export default function SegmentManagementPage() {
           <>
             {/* Table Component */}
             <Table<Segment>
-              columns={segmentColumns}
-              data={filteredSegments}
-              totalItems={filteredSegments.length}
+              columns={segmentTableColumns}
+              data={(() => {
+                if (sortConfigs.length === 0) {
+                  return [...segments].sort((a, b) => {
+                    const dateA = new Date(a.created_at).getTime();
+                    const dateB = new Date(b.created_at).getTime();
+                    return dateB - dateA;
+                  });
+                }
+                const sortConfig = sortConfigs[0];
+                const sorted = [...segments].sort((a, b) => {
+                  const aValue = a[sortConfig.columnId as keyof Segment];
+                  const bValue = b[sortConfig.columnId as keyof Segment];
+                  if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+                  if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+                  return 0;
+                });
+                return sorted;
+              })()}
+              totalItems={segments.length}
               currentPage={page}
               pageSize={pageSize}
               isLoading={isLoading}
@@ -1636,11 +1611,13 @@ export default function SegmentManagementPage() {
               expandedRowId={expandedRowId}
               onExpandChange={setExpandedRowId}
               expandedContent={(row) => {
-                const segment = filteredSegments.find(s => s.id === row.id);
+                const segment = segments.find(s => s.id === row.id);
                 return segment ? (
-                  <SegmentDetailsExpandedRow segment={segment} colSpan={segmentColumns.filter((c) => c.visible).length} />
+                  <SegmentDetailsExpandedRow segment={segment} colSpan={segmentTableColumns.filter((c) => c.visible).length} />
                 ) : null;
               }}
+              onHideColumn={toggleSegmentColumn}
+              onManageColumnsClick={() => setShowSegmentColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1650,7 +1627,7 @@ export default function SegmentManagementPage() {
             />
 
             {/* Render dropdown menus via portal outside the table */}
-            {filteredSegments.map((segment) => {
+            {segments.map((segment) => {
               if (showActionMenu === segment.id && dropdownPosition) {
                 return createPortal(
                   <div
@@ -1761,7 +1738,7 @@ export default function SegmentManagementPage() {
 
             {/* Mobile Cards */}
             <div className="lg:hidden space-y-4 p-4">
-              {filteredSegments.map((segment) => (
+              {segments.map((segment) => (
                 <div
                   key={segment.id}
                   className={`bg-white border ${tw.borderDefault} ${tw.rounded} p-4 shadow-sm hover:shadow-md transition-shadow`}
@@ -1807,7 +1784,7 @@ export default function SegmentManagementPage() {
                       </button> */}
                       <button
                         onClick={() => handleViewSegment(segment.id)}
-                        className={`p-2 icon-edit ${tw.rounded} text-gray-500 hover:bg-gray-100`}
+                        className={`p-0 icon-edit ${tw.rounded} text-gray-500 hover:bg-gray-100`}
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
@@ -1896,7 +1873,7 @@ export default function SegmentManagementPage() {
       </div>
 
       {/* Pagination */}
-      {!isLoading && !error && displayedCount > 0 && (
+      {!isLoading && !error && segments.length > 0 && totalCount > 0 && (
         <Pagination
           currentPage={page}
           pageSize={pageSize}
@@ -2258,6 +2235,21 @@ export default function SegmentManagementPage() {
         isLoading={isDeleting}
         confirmText="Delete Segment"
         cancelText="Cancel"
+      />
+
+      <ColumnPickerModal
+        isOpen={showSegmentColumnPicker}
+        columns={segmentTableColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowSegmentColumnPicker(false)}
+        onToggleColumn={toggleSegmentColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = segmentTableColumns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderSegmentColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetSegmentDefaults}
       />
     </div>
   );

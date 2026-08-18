@@ -14,6 +14,7 @@ import {
   SEGMENT_FIELDS,
 } from "../types/segment";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { useToast } from "../../../contexts/ToastContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useMessageVariableFields } from "../../../features/manual-broadcast/hooks/useMessageVariableFields";
 import {  getOperatorsForField,  TIME_WINDOWS, OPERATORS } from "../../../shared/utils/operatorMapper";
@@ -171,6 +172,7 @@ export default function SegmentConditionsBuilder({
   const [fieldPickerModalData, setFieldPickerModalData] = useState<{
     fields: Array<{ value: string; label: string }>;
     categoryName: string;
+    isAllMode?: boolean;
   } | null>(null);
   const [currentEditingCondition, setCurrentEditingCondition] = useState<{
     groupId: string;
@@ -186,9 +188,11 @@ export default function SegmentConditionsBuilder({
   const [isLoadingQuickLists, setIsLoadingQuickLists] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isComputeLoading, setIsComputeLoading] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewQuery, setPreviewQuery] = useState<string | null>(null);
   const [previewLimit, setPreviewLimit] = useState<number>(100);
+  const { success, error: showError } = useToast();
 
   const PREVIEW_LIMIT_OPTIONS = [
     { value: "10", label: "10" },
@@ -613,11 +617,11 @@ export default function SegmentConditionsBuilder({
           {/* Preview Button and Limit (Rule type) OR Preview Button (SQL type) */}
           {ruleType === "rule" ? (
             <div className="flex items-center space-x-3">
-              {/* {previewCount !== null && (
+              {previewCount !== null && (
                 <span className={`text-sm ${tw.textSecondary}`}>
-                  {previewCount.toLocaleString()} customers
+                  Estimated Subscribers: {previewCount.toLocaleString()}
                 </span>
-              )} */}
+              )}
               <div className="flex items-center space-x-2">
                 <label className={`text-sm ${tw.textSecondary}`}>Limit:</label>
                 <HeadlessSelect
@@ -645,6 +649,39 @@ export default function SegmentConditionsBuilder({
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
                 {isPreviewLoading ? "Previewing..." : "Preview"}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    setIsComputeLoading(true);
+                    const payload = convertConditionsToPayload(conditions, true, previewLimit);
+                    const response = await segmentService.previewSegmentCount(payload);
+                    const count = response?.count || 0;
+                    setPreviewCount(count);
+                    success("Segment Count", `Segment matches ${count} subscribers`);
+                  } catch (error) {
+                    console.error("Preview count failed:", error);
+                    showError("Preview Failed", "Unable to get segment count");
+                  } finally {
+                    setIsComputeLoading(false);
+                  }
+                }}
+                disabled={
+                  isComputeLoading || conditions.length === 0 || !areAllConditionsValid()
+                }
+                className={`inline-flex items-center px-4 py-2 text-sm ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed border`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
+                title={!areAllConditionsValid() ? "Complete all conditions (operator and value required)" : ""}
+              >
+                {isComputeLoading && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                {isComputeLoading ? "Computing..." : "Compute"}
               </button>
             </div>
           ) : ruleType === "sql" && (
@@ -799,7 +836,11 @@ export default function SegmentConditionsBuilder({
           {conditions.map((group, groupIndex) => (
         <div key={group.id}>
           <div
-            className={`border border-gray-200 ${tw.rounded} p-4 bg-gray-50`}
+            className={`border ${tw.rounded} p-4`}
+            style={{
+              borderColor: "var(--c-border-default)",
+              backgroundColor: "var(--c-surface-background)",
+            }}
           >
             {/* Group Header */}
             <div className="flex items-center justify-between mb-4">
@@ -836,7 +877,7 @@ export default function SegmentConditionsBuilder({
               <button
                 type="button"
                 onClick={() => removeConditionGroup(group.id)}
-                className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors"
+                className="p-1 rounded transition-colors icon-delete"
                 title="Remove Group"
               >
                 <Trash2 className="w-4 h-4" />
@@ -851,7 +892,7 @@ export default function SegmentConditionsBuilder({
                     key={condition.id}
                     className={`p-3 ${tw.rounded} transition-colors`}
                     style={{
-                      backgroundColor: color.surface.background,
+                      backgroundColor: "var(--c-surface-background)",
                     }}
                   >
                     {/* Line 1: Type + Category + Field */}
@@ -1100,7 +1141,7 @@ export default function SegmentConditionsBuilder({
                           onClick={() =>
                             removeCondition(group.id, condition.id)
                           }
-                          className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors flex-shrink-0 ml-auto"
+                          className="p-1 rounded transition-colors flex-shrink-0 ml-auto icon-delete"
                           title="Remove Condition"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1174,7 +1215,7 @@ export default function SegmentConditionsBuilder({
           className={`${tw.rounded} p-4 border flex flex-col`}
           style={{
             borderColor: sqlPreviewError ? "#ef4444" : tw.borderDefault,
-            backgroundColor: "#ffffff",
+            backgroundColor: "var(--c-surface-background)",
             height: "calc(100vh - 350px)",
           }}
         >
@@ -1335,19 +1376,20 @@ export default function SegmentConditionsBuilder({
             setFieldPickerModalData(null);
             setCurrentEditingCondition(null);
           }}
-          onSelect={(value) => {
+          onSelect={(fieldData: any) => {
             if (currentEditingCondition) {
-              const fieldType = getFieldType(value as string);
-              const backendField = getFieldByValue(value as string);
+              const fieldType = getFieldType(fieldData.value as string);
+              const backendField = getFieldByValue(fieldData.value as string);
 
-              // Get first operator from backend field's operators array
-              const firstOp = getFirstBackendOperator(backendField);
+              // Get operators based on field type
+              const operators = getOperatorsForField(backendField);
+              const firstOp = operators[0];
 
               updateCondition(
                 currentEditingCondition.groupId,
                 currentEditingCondition.conditionId,
                 {
-                  field: value as string,
+                  field: fieldData.value as string,
                   field_name: backendField?.field_name,
                   field_id: backendField?.id,
                   operator: firstOp?.label as SegmentCondition["operator"],
@@ -1365,6 +1407,7 @@ export default function SegmentConditionsBuilder({
           }}
           fields={fieldPickerModalData.fields}
           categoryName={fieldPickerModalData.categoryName}
+          isAllMode={fieldPickerModalData.isAllMode}
           selectedValue={
             currentEditingCondition
               ? conditions

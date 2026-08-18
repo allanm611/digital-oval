@@ -23,6 +23,7 @@ export default function ComboTypesPage() {
   const [comboTypes, setComboTypes] = useState<ComboType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [comboToDelete, setComboToDelete] = useState<ComboType | null>(null);
@@ -51,7 +52,7 @@ export default function ComboTypesPage() {
       const response = await comboTypeService.getAllComboTypes();
       setComboTypes(response.data || []);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load combo types. Please try again."));
+      showError(extractBackendError(err, "Failed to load combo types. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -139,21 +140,11 @@ export default function ComboTypesPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "description",
       label: "Description",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "combo_resources",
@@ -181,11 +172,12 @@ export default function ComboTypesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, combo) => (
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/combo-types/${combo.id}`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -202,7 +194,7 @@ export default function ComboTypesPage() {
           </button>
           <button
             onClick={() => navigate(`/dashboard/combo-types/${combo.id}/edit`)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             style={{
               color: color.primary.action,
               backgroundColor: "transparent",
@@ -222,7 +214,7 @@ export default function ComboTypesPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(combo.id, e)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               style={{
                 color: color.primary.action,
                 backgroundColor: "transparent",
@@ -251,6 +243,7 @@ export default function ComboTypesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "combo-types-table",
     defaultColumns,
@@ -277,29 +270,26 @@ export default function ComboTypesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton
-       
-        showBreadcrumb={true}
-        currentLabel="Combo Types"
-      />
+      {/* Breadcrumb with Create Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
 
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Combo Types
-          </h1>
-          <p className={`text-sm ${tw.textSecondary} mt-1`}>
-            Define and manage different types of product combinations
-          </p>
+            showBreadcrumb={true}
+            currentLabel="Combo Types"
+          />
+          <button
+            onClick={() => navigate("/dashboard/combo-types/create")}
+            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create
+          </button>
         </div>
-        <button
-          onClick={() => navigate("/dashboard/combo-types/create")}
-          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create
-        </button>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          Define and manage different types of product combinations
+        </p>
       </div>
 
       <div className="my-5">
@@ -352,6 +342,8 @@ export default function ComboTypesPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -421,7 +413,7 @@ export default function ComboTypesPage() {
             await confirmDeleteCombo(deleteConfirm.id);
             showSuccess("Combo type deleted successfully");
           } catch (error) {
-            showError("Failed to delete combo type", extractBackendError(error, "Failed to delete combo type. Please try again."));
+            showError("Failed to delete combo type", extractBackendError(err, "Failed to delete combo type. Please try again."));
           }
         }}
         title="Delete Combo Type"

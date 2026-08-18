@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import { useNavigate, useParams } from "react-router-dom";
@@ -18,6 +19,7 @@ import { tw, button, color } from "../../../shared/utils/utils";
 type LanguageOption = { value: string; label: string };
 
 export default function CreativeTemplateFormPage() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
@@ -100,13 +102,13 @@ export default function CreativeTemplateFormPage() {
         setChannel(template?.channel || template?.primaryChannel || "");
         setLocale(template?.locale || "");
         setTitle(template?.title || "");
-        setBodyText(template?.body_text || template?.text_body || "");
-        setBodyHtml(template?.body_html || template?.html_body || "");
+        setBodyText(template?.text_body || template?.body_text || "");
+        setBodyHtml(template?.html_body || template?.body_html || "");
         setVariablesText(
           template?.variables ? JSON.stringify(template.variables, null, 2) : "",
         );
       } catch (err) {
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError(t.common.error || "Error", extractBackendError(err, "Error. Please try again."));
         navigate("/dashboard/creative-templates");
       } finally {
         setLoading(false);
@@ -114,14 +116,8 @@ export default function CreativeTemplateFormPage() {
     };
 
     loadTemplate();
-  }, [id, navigate, showError]);
+  }, [id, navigate, showError, t]);
 
-  // For now, remove loading state when component mounts
-  useEffect(() => {
-    setLoading(false);
-  }, []);
-
-  // Map channel name to enum value for submission
   const mapChannelNameToEnum = (channelName: string): ChannelEnum => {
     const nameUpper = channelName.toUpperCase();
     if (nameUpper.includes("WHATSAPP")) return "WhatsApp" as ChannelEnum;
@@ -135,8 +131,8 @@ export default function CreativeTemplateFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !code.trim() || !channel) {
-      showError("Validation", "Name, code, and channel are required");
+    if (!name.trim() || !channel) {
+      showError(t.common.validation || "Validation", t.common.requiredFieldsMissing || "Name and channel are required");
       return;
     }
 
@@ -145,17 +141,27 @@ export default function CreativeTemplateFormPage() {
       try {
         parsedVariables = JSON.parse(variablesText);
       } catch {
-        showError("Validation", "Variables must be valid JSON");
+        showError(t.common.validation || "Validation", t.offers.invalidVariablesJson || "Variables must be valid JSON");
         return;
       }
     }
 
     setSaving(true);
     try {
+      const generatedCode =
+        code.trim() ||
+        name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_|_$/g, "")
+          .slice(0, 100) ||
+        `tpl_${Date.now()}`;
+
       const payload = {
         name: name.trim(),
         description: description.trim() || undefined,
-        code: code.trim(),
+        code: generatedCode,
         primaryChannel: mapChannelNameToEnum(channel),
         locale: locale || undefined,
         title: title.trim() || undefined,
@@ -166,30 +172,30 @@ export default function CreativeTemplateFormPage() {
 
       if (id) {
         await creativeTemplateService.updateCreativeTemplate(parseInt(id, 10), payload);
-        showSuccess("Creative Template", "Updated successfully");
+        showSuccess(t.offers.creativeTemplate || "Creative Template", t.messages.updatedSuccessfully || "Updated successfully");
       } else {
         await creativeTemplateService.createCreativeTemplate(payload);
-        showSuccess("Creative Template", "Created successfully");
+        showSuccess(t.offers.creativeTemplate || "Creative Template", t.messages.createdSuccessfully || "Created successfully");
       }
 
       navigate("/dashboard/creative-templates");
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError(t.common.error || "Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6">Loading...</div>;
+    return <div className="p-6">{t.common.loading || "Loading..."}</div>;
   }
 
   return (
     <div className="space-y-4">
       <BackButton
-       
+
         showBreadcrumb={true}
-        currentLabel={id ? "Edit Creative Template" : "Create Creative Template"}
+        currentLabel={id ? (t.offers.editTemplate || "Edit Creative Template") : (t.offers.createTemplate || "Create Creative Template")}
       />
 
       <form
@@ -225,7 +231,6 @@ export default function CreativeTemplateFormPage() {
             label="Code"
             value={code}
             onChange={(value) => setCode(String(value))}
-            required
             className="font-mono"
           />
 

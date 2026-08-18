@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { AlertTriangle } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
@@ -38,18 +39,18 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   active,
   payload,
   label,
-}) => {
+}: ChartTooltipProps) => {
   if (!active || !payload?.length) {
     return null;
   }
 
   return (
-    <div className={`${tw.rounded} p-3 shadow-lg`} style={{ backgroundColor: "transparent", border: "none" }}>
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
+    <div className={`${tw.rounded} border p-3 shadow-lg`} style={{ backgroundColor: "var(--c-surface-cards)", borderColor: "var(--c-border-default)" }}>
+      <p className="mb-2 text-sm font-semibold" style={{ color: "var(--c-text-primary)" }}>{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -63,7 +64,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
             />
             {entry.name || "Count"}
           </span>
-          <span className="font-semibold text-gray-900">
+          <span className="font-semibold" style={{ color: "var(--c-text-primary)" }}>
             {typeof entry.value === "number"
               ? entry.value.toLocaleString()
               : entry.value}
@@ -216,7 +217,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
       }
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError("Analytics Error", extractBackendError(error, "Analytics Error. Please try again."));
+      showError("Analytics Error", extractBackendError(err, "Analytics Error. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -250,42 +251,46 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {healthSummary && (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>
                   Total Segments
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {parseInt(healthSummary.total_segments) || 0}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Active Segments
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {parseInt(healthSummary.active_count) || 0}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Recently Refreshed
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {parseInt(healthSummary.recently_refreshed) || 0}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Stale Segments
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {parseInt(healthSummary.stale_segments) || 0}
                 </p>
               </div>
@@ -297,7 +302,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
             {/* Type Distribution - Pie Chart */}
             {typeDistribution.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
               >
                 <div className="mb-4">
                   <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -339,7 +345,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
             {/* Category Distribution - Bar Chart */}
             {categoryDistribution.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
               >
                 <div className="mb-4">
                   <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -348,8 +355,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                 </div>
                 <div className="rounded-md overflow-hidden">
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={categoryDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <BarChart data={categoryDistribution} style={{ backgroundColor: 'var(--c-surface-cards)' }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip
@@ -381,7 +388,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {/* Creation Trend - Line Chart (Full Width) */}
           {creationTrend.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border p-6 shadow-sm`}
+              style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
             >
               <div className="mb-4">
                 <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -389,8 +397,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                 </h3>
               </div>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={creationTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                <LineChart data={creationTrend} style={{ backgroundColor: 'var(--c-surface-cards)' }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip content={<CustomTooltip />} cursor={{ stroke: "transparent", strokeWidth: 0 }} />
@@ -426,7 +434,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {/* Largest Segments - Bar Chart */}
           {largestSegments.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border p-6 shadow-sm`}
+              style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
             >
               <div className="mb-4">
                 <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -438,8 +447,9 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                   data={largestSegments}
                   layout="vertical"
                   margin={{ left: 100 }}
+                  style={{ backgroundColor: 'var(--c-surface-cards)' }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={90} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
@@ -456,7 +466,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
           {/* Most Used Segments - Bar Chart */}
           {mostUsedSegments.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border p-6 shadow-sm`}
+              style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)', borderWidth: '2px' }}
             >
               <div className="mb-4">
                 <h3 className={`font-semibold ${tw.textPrimary}`}>
@@ -469,8 +480,9 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                     data={mostUsedSegments}
                     layout="vertical"
                     margin={{ left: 100 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis type="number" />
                     <YAxis dataKey="name" type="category" width={90} />
                     <Tooltip
@@ -535,7 +547,8 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                     {staleSegments.slice(0, 10).map((segment) => (
                       <tr key={segment.id} className="transition-colors">
                         <td
-                          className="px-6 py-4 text-sm text-gray-900"
+                          className="px-6 py-4 text-sm"
+                          style={{ color: 'var(--c-text-primary)' }}
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
                           {segment.name}

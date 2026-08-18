@@ -1,3 +1,4 @@
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useState } from "react";
 import UnifiedPickerModal from "../../segments/components/UnifiedPickerModal";
 import { type KPI } from "../types/kpi";
@@ -25,6 +26,7 @@ export default function KPIPickerModal({
   hasSubcategories = false, // Default: no category filter
   subcategoryOptions, // Custom subcategory options
 }: KPIPickerModalProps) {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>(category);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
@@ -71,7 +73,7 @@ export default function KPIPickerModal({
         raw: kpi,
       }))}
       onSelect={(item) => handleSelectKPI(item.raw)}
-      emptyTitle="No KPIs found"
+      emptyTitle=t.kpis.messages.noKPIsFound
       emptyDescription="No KPIs found matching your criteria"
     />
   );

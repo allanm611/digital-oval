@@ -404,7 +404,7 @@ export default function JobTypesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJobType, setEditingJobType] = useState<JobType | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -420,6 +420,7 @@ export default function JobTypesPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingJobType, setViewingJobType] = useState<JobType | null>(null);
   const [isLoadingView, setIsLoadingView] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // Table columns definition
   const defaultColumns: TableColumn<JobType>[] = [
@@ -427,54 +428,38 @@ export default function JobTypesPage() {
       id: "name",
       label: "Job Type",
       visible: true,
-      render: (value) => (
-        <div className="flex items-center">
-          <div>
-            <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-              {value}
-            </div>
-          </div>
-        </div>
-      ),
+      sortable: true,
+      filterConfig: { type: 'text' },
     },
     {
       id: "description",
       label: "Description",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-lg`}>
-          {value || "No description"}
-        </div>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "code",
       label: "Code",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-900 font-medium">{value}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "created_at",
       label: "Created",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          <DateFormatter date={value as string} useUserTimezone />
-        </span>
-      ),
+      filterConfig: { type: 'date' },
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, jobType) => (
         <div className="flex items-center justify-end space-x-2">
           <button
             onClick={() => handleView(jobType)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             aria-label="View job type"
             title="View"
           >
@@ -482,7 +467,7 @@ export default function JobTypesPage() {
           </button>
           <button
             onClick={() => handleEdit(jobType)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             aria-label="Edit job type"
             title="Edit"
           >
@@ -491,7 +476,7 @@ export default function JobTypesPage() {
           <PermissionGate permission="job-types.delete">
             <button
               onClick={() => handleDeleteClick(jobType)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               aria-label="Delete job type"
               title="Delete"
             >
@@ -511,6 +496,7 @@ export default function JobTypesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "job-types-table",
     defaultColumns,
@@ -532,19 +518,23 @@ export default function JobTypesPage() {
     setLoadError(null);
     try {
       const response = await jobTypeService.listJobTypes({
-        limit: 100,
+        limit: tablePageSize,
+        offset: (tableCurrentPage - 1) * tablePageSize,
         skipCache: true,
       });
       setJobTypes(response.data || []);
+      if (response.pagination) {
+        setTotalCount(response.pagination.total);
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load job types";
       setLoadError(message);
-      showError("Unable to load job types", extractBackendError(error, "Unable to load job types. Please try again."));
+      showError("Unable to load job types", extractBackendError(err, "Unable to load job types. Please try again."));
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [tableCurrentPage, tablePageSize, showError]);
 
   const searchJobTypes = useCallback(
     async (term: string) => {
@@ -559,7 +549,8 @@ export default function JobTypesPage() {
       try {
         const response = await jobTypeService.searchJobTypes({
           name: term,
-          limit: 100,
+          limit: tablePageSize,
+          offset: (tableCurrentPage - 1) * tablePageSize,
           skipCache: true,
         });
         const results = response.data || [];
@@ -568,7 +559,7 @@ export default function JobTypesPage() {
         const message =
           err instanceof Error ? err.message : "Failed to search job types";
         setLoadError(message);
-        showError("Unable to search job types", extractBackendError(error, "Unable to search job types. Please try again."));
+        showError("Unable to search job types", extractBackendError(err, "Unable to search job types. Please try again."));
       } finally {
         setIsSearching(false);
       }
@@ -727,7 +718,7 @@ export default function JobTypesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save job type";
-      showError("Unable to save job type", extractBackendError(error, "Unable to save job type. Please try again."));
+      showError("Unable to save job type", extractBackendError(err, "Unable to save job type. Please try again."));
       throw err;
     } finally {
       setIsSaving(false);
@@ -740,21 +731,19 @@ export default function JobTypesPage() {
     <>
       <div className="overflow-x-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <BackButton
-                showBreadcrumb={true}
-                currentLabel="Job Types"
-              />
-            </div>
-            <p className={`${tw.textSecondary} text-sm mt-1`}>
-              Manage the classification codes used when creating scheduled jobs.
-            </p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Job Types"
+            />
+            <PermissionGate permission="job-types.create">
+              <FeatureActionButton featureId="job-types" action="create" onClick={handleCreate} />
+            </PermissionGate>
           </div>
-          <PermissionGate permission="job-types.create">
-            <FeatureActionButton featureId="job-types" action="create" onClick={handleCreate} />
-          </PermissionGate>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Manage the classification codes used when creating scheduled jobs.
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -856,14 +845,16 @@ export default function JobTypesPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<JobType>
               columns={columns}
-              data={paginatedJobTypes}
-              totalItems={filteredJobTypes.length}
+              data={jobTypes}
+              totalItems={totalCount}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={isLoading}
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -875,11 +866,11 @@ export default function JobTypesPage() {
         )}
 
         {/* Pagination */}
-        {!isLoading && filteredJobTypes.length > 0 && (
+        {!isLoading && totalCount > 0 && (
           <Pagination
             currentPage={tableCurrentPage}
             pageSize={tablePageSize}
-            totalItems={filteredJobTypes.length}
+            totalItems={totalCount}
             onPageChange={tableHandlePageChange}
             onPageSizeChange={tableHandlePageSizeChange}
           />

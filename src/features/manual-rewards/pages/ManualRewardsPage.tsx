@@ -3,16 +3,17 @@ import { useNavigate } from "react-router-dom";
 import {
   Gift,
   Eye,
-  Edit,
   Trash2,
   CheckCircle,
   Clock,
   Users,
+  Play,
+  Loader2,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -21,8 +22,12 @@ import FeatureActionButton from "../../../shared/components/FeatureActionButton"
 import BackButton from "../../../shared/components/ui/BackButton";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import { dummyManualRewards } from "../data/dummyManualRewards";
 import type { ManualReward } from "../types/manualReward";
+import type { ManualRewardApiStatus, ManualRewardApiType } from "../types/manualRewardApi";
+import { manualRewardService } from "../services/manualRewardService";
+import { mapManualRewardFromApi } from "../utils/mapManualRewardFromApi";
+import { canApplyManualReward } from "../utils/canApplyManualReward";
+import { canEditManualReward } from "../utils/canEditManualReward";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
@@ -32,6 +37,8 @@ export default function ManualRewardsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
+  const [rewards, setRewards] = useState<ManualReward[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [rewardToDelete, setRewardToDelete] = useState<ManualReward | null>(
     null,
@@ -42,21 +49,68 @@ export default function ManualRewardsPage() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
-  const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [applyingId, setApplyingId] = useState<number | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(getInitialPageSize());
 
-  // Dummy stats (matching actual dummy data: 5 rewards, 1 scheduled)
-  // Recipients: 125 + 250 + 350 + 80 + 200 = 1005
-  // Applied: 123 + 345 + 150 = 618
-  const stats = {
-    totalRewards: 5,
-    totalRecipients: 1005,
-    appliedCount: 618,
-    scheduledCount: 1,
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+
+  const loadRewards = async () => {
+    try {
+      setLoading(true);
+      const data = await manualRewardService.getAll({
+        limit: 500,
+        status: (selectedStatus || undefined) as ManualRewardApiStatus | undefined,
+        rewardType: (selectedType || undefined) as ManualRewardApiType | undefined,
+      });
+      setRewards(data.map(mapManualRewardFromApi));
+    } catch (err) {
+      showError(
+        "Failed to load manual rewards",
+        extractBackendError(err, "Failed to load manual rewards. Please try again."),
+      );
+      setRewards([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadRewards();
+  }, [selectedStatus, selectedType]);
+
+  const handleApply = async (reward: ManualReward) => {
+    if (!canApplyManualReward(reward.status)) {
+      return;
+    }
+    setApplyingId(reward.id);
+    try {
+      const result = await manualRewardService.apply(reward.id);
+      showToast(
+        result.message ||
+          `Applied ${result.data?.applied ?? 0} recipient(s), ${result.data?.failed ?? 0} failed.`,
+      );
+      await loadRewards();
+    } catch (err) {
+      showError(
+        "Apply failed",
+        extractBackendError(err, "Could not apply this manual reward."),
+      );
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  const stats = useMemo(() => {
+    return {
+      totalRewards: rewards.length,
+      totalRecipients: rewards.reduce((sum, r) => sum + r.recipientCount, 0),
+      appliedCount: rewards.reduce((sum, r) => sum + r.appliedCount, 0),
+      scheduledCount: rewards.filter((r) => r.status === "scheduled").length,
+    };
+  }, [rewards]);
 
   const handleDelete = (reward: ManualReward) => {
     setRewardToDelete(reward);
@@ -68,14 +122,14 @@ export default function ManualRewardsPage() {
 
     setIsDeleting(true);
     try {
-      // TODO: Implement actual delete API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await manualRewardService.delete(rewardToDelete.id);
       showToast(`Reward "${rewardToDelete.name}" deleted successfully!`);
       setShowDeleteModal(false);
       setRewardToDelete(null);
+      await loadRewards();
     } catch (err) {
       console.error("Failed to delete reward:", err);
-      showError("Failed to delete reward", extractBackendError(error, "Failed to delete reward. Please try again."));
+      showError("Failed to delete reward", extractBackendError(err, "Failed to delete reward. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -96,6 +150,8 @@ export default function ManualRewardsPage() {
     switch (type) {
       case "bundle":
         return t.manualRewards.rewardTypeBundle;
+      case "airtime":
+        return t.manualRewards.rewardTypeAirtime;
       case "points":
         return t.manualRewards.rewardTypePoints;
       case "discount":
@@ -126,7 +182,7 @@ export default function ManualRewardsPage() {
       render: (_, reward) => (
         <button
           onClick={() => handleViewDetails(reward.id)}
-          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+          className="truncate hover:underline cursor-pointer"
           title={reward.name}
         >
           {reward.name}
@@ -137,65 +193,85 @@ export default function ManualRewardsPage() {
       id: "rewardType",
       label: "Type",
       visible: true,
-      filterConfig: { type: "select", options: ["bundle", "points", "discount", "cashback"] },
-      render: (_, reward) => <span className="text-sm">{getRewardTypeLabel(reward.rewardType)}</span>,
+      filterConfig: {
+        type: "select",
+        options: ["bundle", "airtime", "points", "discount", "cashback"],
+      },
+      render: (_, reward) => getRewardTypeLabel(reward.rewardType),
     },
     {
       id: "rewardValue",
       label: "Value",
       visible: true,
       filterConfig: { type: "text" },
-      render: (_, reward) => <span className="text-sm">{reward.rewardValue}</span>,
+      render: (_, reward) => reward.rewardValue,
     },
     {
       id: "recipientCount",
       label: "Recipients",
       visible: true,
       filterConfig: { type: "number" },
-      render: (_, reward) => <span className="text-sm">{reward.recipientCount.toLocaleString()}</span>,
+      render: (_, reward) => reward.recipientCount.toLocaleString(),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
       filterConfig: { type: "select", options: ["applied", "scheduled", "pending", "failed"] },
-      render: (_, reward) => <span className="text-sm">{getStatusLabel(reward.status)}</span>,
+      render: (_, reward) => getStatusLabel(reward.status),
     },
     {
       id: "createdAt",
       label: "Created",
       visible: true,
       filterConfig: { type: "date" },
-      render: (_, reward) => <span className="text-sm"><DateFormatter date={reward.createdAt} /></span>,
+      render: (_, reward) => <DateFormatter date={reward.createdAt} />,
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, reward) => (
         <div className="flex items-center justify-center space-x-2">
+          {canApplyManualReward(reward.status) && (
+            <button
+              onClick={() => handleApply(reward)}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+              title="Apply reward now"
+              disabled={applyingId === reward.id}
+            >
+              {applyingId === reward.id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </button>
+          )}
           <button
             onClick={() => handleViewDetails(reward.id)}
-            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
           </button>
-          <FeatureActionButton
-            featureId="manual-rewards"
-            action="edit"
-            itemId={reward.id}
-            navigationState={{
-              returnTo: {
-                pathname: "/dashboard/manual-rewards",
-              },
-            }}
-          />
+          {canEditManualReward(reward.status) && (
+            <FeatureActionButton
+              featureId="manual-rewards"
+              action="edit"
+              itemId={reward.id}
+              navigationState={{
+                returnTo: {
+                  pathname: "/dashboard/manual-rewards",
+                },
+              }}
+            />
+          )}
           <PermissionGate permission="manual-rewards.delete">
             <button
               onClick={() => handleDelete(reward)}
-              className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />
@@ -218,12 +294,15 @@ export default function ManualRewardsPage() {
   };
 
   // Filter rewards based on search and filters
-  const filteredRewards = dummyManualRewards.filter((reward) => {
+  const filteredRewards = rewards.filter((reward) => {
     const matchesSearch =
       !searchTerm ||
       reward.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !selectedStatus || reward.status === selectedStatus;
-    const matchesType = !selectedType || reward.rewardType === selectedType;
+    const matchesType =
+      !selectedType ||
+      reward.rewardType === selectedType ||
+      (selectedType === "airtime" && reward.rewardType === "airtime");
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -302,7 +381,7 @@ export default function ManualRewardsPage() {
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
+                <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {stat.value}
@@ -340,6 +419,7 @@ export default function ManualRewardsPage() {
             options={[
               { value: "", label: "All Types" },
               { value: "bundle", label: t.manualRewards.rewardTypeBundle },
+              { value: "airtime", label: t.manualRewards.rewardTypeAirtime },
               { value: "points", label: t.manualRewards.rewardTypePoints },
               { value: "discount", label: t.manualRewards.rewardTypeDiscount },
               { value: "cashback", label: t.manualRewards.rewardTypeCashback },
@@ -353,8 +433,12 @@ export default function ManualRewardsPage() {
       </div>
 
       {/* Table */}
-      <div className={` ${tw.rounded} border overflow-hidden`}>
-        {filteredRewards.length === 0 ? (
+      <div className={`${tw.rounded} overflow-hidden`}>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className={`${tw.textSecondary} text-center`}>Loading manual rewards...</p>
+          </div>
+        ) : filteredRewards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Gift
               className="w-12 h-12 mb-4"
@@ -426,9 +510,9 @@ export default function ManualRewardsPage() {
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
         onReorderColumns={(reorderedCols) => {
-          const updatedColumns = columns.map((col) => {
-            const reordered = reorderedCols.find((c) => c.id === col.id);
-            return reordered ? { ...col, visible: reordered.visible } : col;
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
           });
           reorderColumns(updatedColumns);
         }}

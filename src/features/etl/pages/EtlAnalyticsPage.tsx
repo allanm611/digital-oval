@@ -56,12 +56,13 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-3 shadow-lg`}>
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -384,49 +385,53 @@ export default function EtlAnalyticsPage() {
 
         return (
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
               <div className="flex items-center gap-2">
                 <FileText
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">Total CDR Files</p>
+                <p className="text-sm font-medium text-sm">Total CDR Files</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {cdrMetrics.total.toLocaleString()}
               </p>
             </div>
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
               <div className="flex items-center gap-2">
                 <FileText
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">Total TDR Files</p>
+                <p className="text-sm font-medium text-sm">Total TDR Files</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {tdrMetrics.total.toLocaleString()}
               </p>
             </div>
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
               <div className="flex items-center gap-2">
                 <CheckCircle
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">Completed CDR</p>
+                <p className="text-sm font-medium text-sm">Completed CDR</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {cdrMetrics.completed.toLocaleString()}
               </p>
             </div>
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
               <div className="flex items-center gap-2">
                 <CheckCircle
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className="text-sm font-medium text-gray-600">Completed TDR</p>
+                <p className="text-sm font-medium text-sm">Completed TDR</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {tdrMetrics.completed.toLocaleString()}
@@ -440,7 +445,8 @@ export default function EtlAnalyticsPage() {
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         {/* File Count by Status */}
         {fileCountByStatus.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               File Count by Status
             </h3>
@@ -479,7 +485,7 @@ export default function EtlAnalyticsPage() {
                     verticalAlign="bottom"
                     height={36}
                     formatter={(value) => (
-                      <span style={{ fontSize: "12px", color: "#000000" }}>
+                      <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                         {value}
                       </span>
                     )}
@@ -492,7 +498,8 @@ export default function EtlAnalyticsPage() {
 
         {/* File Count by Category */}
         {fileCountByCategory.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               File Count by Category
             </h3>
@@ -531,7 +538,7 @@ export default function EtlAnalyticsPage() {
                     verticalAlign="bottom"
                     height={36}
                     formatter={(value) => (
-                      <span style={{ fontSize: "12px", color: "#000000" }}>
+                      <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                         {value}
                       </span>
                     )}
@@ -545,7 +552,8 @@ export default function EtlAnalyticsPage() {
 
       {/* Bar Charts */}
       {rowsInsertedByStatus.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Total Rows Inserted by Status
           </h3>
@@ -587,7 +595,8 @@ export default function EtlAnalyticsPage() {
       )}
 
       {dataSizeByStatus.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Total Data Size by Status (MB)
           </h3>
@@ -631,7 +640,8 @@ export default function EtlAnalyticsPage() {
 
       {/* Category Comparison - Grouped Bar Chart */}
       {categoryComparisonData.some((item) => item.CDR > 0 || item.TDR > 0) && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             File Count by Status - CDR vs TDR
           </h3>
@@ -661,7 +671,7 @@ export default function EtlAnalyticsPage() {
                   verticalAlign="top"
                   height={36}
                   formatter={(value) => (
-                    <span style={{ fontSize: "12px", color: "#000000" }}>
+                    <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                       {value}
                     </span>
                   )}
@@ -687,37 +697,41 @@ export default function EtlAnalyticsPage() {
       {/* NEW SECTION: Overview Stats Row 1 - File Registry */}
       {registryStats && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Total Files</p>
+              <p className="text-sm font-medium text-sm">Total Files</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {registryStats.total_files?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Active Files</p>
+              <p className="text-sm font-medium text-sm">Active Files</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {registryStats.active_files?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Failed Files</p>
+              <p className="text-sm font-medium text-sm">Failed Files</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {registryStats.failed_files?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Skipped Files</p>
+              <p className="text-sm font-medium text-sm">Skipped Files</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {registryStats.skipped_files?.toLocaleString() || 0}
@@ -729,26 +743,30 @@ export default function EtlAnalyticsPage() {
       {/* NEW SECTION: Overview Stats Row 2 - Row Metrics & Retry */}
       {(rowMetrics || retryAnalysis) && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Total Rows Parsed</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Total Rows Parsed</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {rowMetrics?.total_rows_parsed?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Total Rows Inserted</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Total Rows Inserted</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {rowMetrics?.total_rows_inserted?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Total Rows Failed</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Total Rows Failed</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {rowMetrics?.total_rows_failed?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Avg Retry Count</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Avg Retry Count</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {registryStats?.average_retry_count?.toFixed(2) || 0}
             </p>
@@ -759,24 +777,25 @@ export default function EtlAnalyticsPage() {
       {/* NEW SECTION: Performance Metrics (2-col grid) */}
       {(fetchDurationAnalytics || processingDurationAnalytics) && (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Fetch Analytics</h3>
             <div className="space-y-4">
-              <div className="pb-4 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-600">Avg Fetch Duration</p>
+              <div className="pb-4 border-b" style={{ borderColor: 'var(--c-border-default)' }}>
+                <p className="text-sm font-medium text-sm">Avg Fetch Duration</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">
                   {fetchDurationAnalytics?.average_fetch_duration_ms?.toLocaleString() || 0}
-                  <span className="text-sm font-medium text-gray-600 ml-1">ms</span>
+                  <span className="text-sm font-medium text-sm ml-1">ms</span>
                 </p>
               </div>
-              <div className="pb-4 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-600">Avg Fetch Attempts</p>
+              <div className="pb-4 border-b" style={{ borderColor: 'var(--c-border-default)' }}>
+                <p className="text-sm font-medium text-sm">Avg Fetch Attempts</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">
                   {fetchDurationAnalytics?.average_fetch_attempts?.toFixed(2) || 0}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Files with Fetch Errors</p>
+                <p className="text-sm font-medium text-sm">Files with Fetch Errors</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">
                   {fetchDurationAnalytics?.files_with_fetch_errors?.toLocaleString() || 0}
                 </p>
@@ -784,24 +803,25 @@ export default function EtlAnalyticsPage() {
             </div>
           </div>
 
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Processing Analytics</h3>
             <div className="space-y-4">
-              <div className="pb-4 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-600">Avg Processing Duration</p>
+              <div className="pb-4 border-b" style={{ borderColor: 'var(--c-border-default)' }}>
+                <p className="text-sm font-medium text-sm">Avg Processing Duration</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">
                   {processingDurationAnalytics?.average_processing_duration_ms?.toLocaleString() || 0}
-                  <span className="text-sm font-medium text-gray-600 ml-1">ms</span>
+                  <span className="text-sm font-medium text-sm ml-1">ms</span>
                 </p>
               </div>
-              <div className="pb-4 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-600">Avg Total Batches</p>
+              <div className="pb-4 border-b" style={{ borderColor: 'var(--c-border-default)' }}>
+                <p className="text-sm font-medium text-sm">Avg Total Batches</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">
                   {processingDurationAnalytics?.average_total_batches?.toFixed(2) || 0}
                 </p>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Processed Batches</p>
+                <p className="text-sm font-medium text-sm">Avg Processed Batches</p>
                 <p className="mt-2 text-2xl font-bold text-gray-900">
                   {processingDurationAnalytics?.average_processed_batches?.toFixed(2) || 0}
                 </p>
@@ -814,32 +834,37 @@ export default function EtlAnalyticsPage() {
       {/* NEW SECTION: Data Quality Section */}
       {(checksumUsage || rowMetrics) && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Files with Checksum</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Files with Checksum</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {checksumUsage?.files_with_checksum?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Unique Checksums</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Unique Checksums</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {checksumUsage?.unique_checksums?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Duplicate Files</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Duplicate Files</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {checksumUsage?.duplicate_files?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Insertion Rate (%)</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Insertion Rate (%)</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {rowMetrics?.insertion_rate?.toFixed(2) || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Failure Rate (%)</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Failure Rate (%)</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {rowMetrics?.failure_rate?.toFixed(2) || 0}
             </p>
@@ -850,26 +875,30 @@ export default function EtlAnalyticsPage() {
       {/* NEW SECTION: Reliability Section - Retry Analysis */}
       {retryAnalysis && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Files with Retries</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Files with Retries</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {retryAnalysis.files_with_retries?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Avg Retry Count</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Avg Retry Count</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {retryAnalysis.average_retry_count?.toFixed(2) || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Max Retry Count</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Max Retry Count</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {retryAnalysis.max_retry_count?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Recent Retries (7d)</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Recent Retries (7d)</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {retryAnalysis.recent_retries_last_7_days?.toLocaleString() || 0}
             </p>
@@ -881,14 +910,16 @@ export default function EtlAnalyticsPage() {
       {dataSizeAnalytics && (
         <>
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-              <p className="text-sm font-medium text-gray-600">Total Data Size (MB)</p>
+            <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+              <p className="text-sm font-medium text-sm">Total Data Size (MB)</p>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {dataSizeAnalytics.total_data_size_mb?.toFixed(2) || 0}
               </p>
             </div>
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-              <p className="text-sm font-medium text-gray-600">Avg Data Size (MB)</p>
+            <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+              <p className="text-sm font-medium text-sm">Avg Data Size (MB)</p>
               <p className="mt-2 text-3xl font-bold text-gray-900">
                 {dataSizeAnalytics.average_data_size_mb?.toFixed(2) || 0}
               </p>
@@ -896,7 +927,8 @@ export default function EtlAnalyticsPage() {
           </div>
 
           {dataSizeAnalytics.size_distribution && dataSizeAnalytics.size_distribution.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Size Distribution (MB)</h3>
               <div className="h-96 w-full min-h-[384px]">
                 <ResponsiveContainer width="100%" height={384}>
@@ -927,7 +959,8 @@ export default function EtlAnalyticsPage() {
 
       {/* NEW SECTION: File Registry Trends */}
       {fileRegistryTrends?.trends && fileRegistryTrends.trends.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">File Registry Trends</h3>
             <div className="flex gap-2">
@@ -938,7 +971,7 @@ export default function EtlAnalyticsPage() {
                   className={`px-3 py-1 text-sm font-medium rounded ${
                     fileRegistryGranularity === gran
                       ? "bg-blue-100 text-blue-700"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-gray-100 text-sm hover:bg-gray-200"
                   }`}
                 >
                   {gran.charAt(0).toUpperCase() + gran.slice(1)}
@@ -967,19 +1000,20 @@ export default function EtlAnalyticsPage() {
 
       {/* NEW SECTION: Error Message Distribution Table */}
       {errorMessages.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Error Message Distribution</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
+                <tr className="border-b bg-gray-50" style={{ borderColor: 'var(--c-border-default)' }}>
                   <th className="px-4 py-3 text-left font-semibold text-gray-900">Error Message</th>
                   <th className="px-4 py-3 text-right font-semibold text-gray-900">Count</th>
                 </tr>
               </thead>
               <tbody>
                 {errorMessages.map((item, idx) => (
-                  <tr key={idx} className={`border-b border-gray-200 hover:bg-gray-50 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                  <tr key={idx} className={`border-b hover:bg-gray-50 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`} style={{ borderColor: 'var(--c-border-default)' }}>
                     <td className="px-4 py-3 text-gray-900">{item.error_message || "-"}</td>
                     <td className="px-4 py-3 text-right text-gray-900 font-semibold">{item.count?.toLocaleString() || 0}</td>
                   </tr>
@@ -993,26 +1027,30 @@ export default function EtlAnalyticsPage() {
       {/* NEW SECTION: Task Queue Stats */}
       {taskQueueStats && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Total Tasks</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Total Tasks</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {taskQueueStats.total_tasks?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Pending Tasks</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {taskQueueStats.pending_tasks?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Completed Tasks</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Completed Tasks</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {taskQueueStats.completed_tasks?.toLocaleString() || 0}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Failed Tasks</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Failed Tasks</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {taskQueueStats.failed_tasks?.toLocaleString() || 0}
             </p>
@@ -1024,7 +1062,8 @@ export default function EtlAnalyticsPage() {
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         {/* Task Status Distribution */}
         {taskStatusDist?.statuses && taskStatusDist.statuses.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Status Distribution</h3>
             <div className="h-64 w-full min-h-[256px]">
               <ResponsiveContainer width="100%" height={256}>
@@ -1045,7 +1084,8 @@ export default function EtlAnalyticsPage() {
 
         {/* Task Type Distribution */}
         {taskTypeDist?.task_types && taskTypeDist.task_types.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Type Distribution</h3>
             <div className="h-64 w-full min-h-[256px]">
               <ResponsiveContainer width="100%" height={256}>
@@ -1067,7 +1107,8 @@ export default function EtlAnalyticsPage() {
 
       {/* Task Priority Distribution - Full Width */}
       {taskPriorityDist?.priorities && taskPriorityDist.priorities.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Priority Distribution</h3>
           <div className="h-96 w-full min-h-[384px]">
             <ResponsiveContainer width="100%" height={384}>
@@ -1086,16 +1127,19 @@ export default function EtlAnalyticsPage() {
       {/* NEW SECTION: Task Queue Performance (3 metric cards) */}
       {(taskDurationAnalytics || taskFileCorrelation || taskJobCorrelation) && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Avg Task Duration</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{taskDurationAnalytics?.average_duration_seconds?.toFixed(2) || 0}<span className="text-sm font-medium text-gray-600 ml-1">sec</span></p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Avg Task Duration</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{taskDurationAnalytics?.average_duration_seconds?.toFixed(2) || 0}<span className="text-sm font-medium text-sm ml-1">sec</span></p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Tasks per File</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Tasks per File</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{taskFileCorrelation?.average_tasks_per_file?.toFixed(2) || 0}</p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <p className="text-sm font-medium text-gray-600">Tasks per Job</p>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-sm">Tasks per Job</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{taskJobCorrelation?.average_tasks_per_job?.toFixed(2) || 0}</p>
           </div>
         </div>
@@ -1103,12 +1147,13 @@ export default function EtlAnalyticsPage() {
 
       {/* NEW SECTION: Task Queue Trends */}
       {taskQueueTrends?.trends && taskQueueTrends.trends.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Task Queue Trends</h3>
             <div className="flex gap-2">
               {["day", "week", "month"].map((gran) => (
-                <button key={gran} onClick={() => handleTaskQueueGranularityChange(gran as "day" | "week" | "month")} className={`px-3 py-1 text-sm font-medium rounded ${taskQueueGranularity === gran ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                <button key={gran} onClick={() => handleTaskQueueGranularityChange(gran as "day" | "week" | "month")} className={`px-3 py-1 text-sm font-medium rounded ${taskQueueGranularity === gran ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-sm hover:bg-gray-200"}`}>
                   {gran.charAt(0).toUpperCase() + gran.slice(1)}
                 </button>
               ))}
@@ -1135,7 +1180,8 @@ export default function EtlAnalyticsPage() {
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
         {/* Processing Status Distribution */}
         {processingStatusDist?.statuses && processingStatusDist.statuses.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Processing Status Distribution</h3>
             <div className="h-64 w-full min-h-[256px]">
               <ResponsiveContainer width="100%" height={256}>
@@ -1181,7 +1227,8 @@ export default function EtlAnalyticsPage() {
 
         {/* File Format Distribution */}
         {formatDist?.formats && formatDist.formats.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">File Format Distribution</h3>
             <div className="h-64 w-full min-h-[256px]">
               <ResponsiveContainer width="100%" height={256}>

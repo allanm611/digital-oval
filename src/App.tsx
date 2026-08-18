@@ -105,7 +105,8 @@ function AppRoutes() {
           />
           <Route path="/request-account" element={<RequestAccountPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/" element={isAuthenticated ? <Navigate to="/landingpage" /> : <Navigate to="/login" />} />
+          <Route path="/onboard" element={<LandingPage />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
@@ -129,9 +130,6 @@ function AppRoutes() {
               <Route path=":id" element={<ModuleDetailPage />} />
             </Route>
           </Route>
-
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/login" />} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<NotFoundPage />} />

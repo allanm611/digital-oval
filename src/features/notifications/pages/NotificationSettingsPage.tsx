@@ -226,10 +226,10 @@ export default function NotificationSettingsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleCancel}
-            className={`${tw.borderedButton} px-6 py-2`}
+            className={`${tw.borderedButton} px-6 py-2 dark:text-white dark:border-white`}
             style={{
-              borderColor: color.primary.action,
-              color: color.primary.action,
+              borderColor: 'var(--c-bordered-button-color)',
+              color: 'var(--c-bordered-button-color)',
             }}
           >
             {t.notifications.cancel}
@@ -250,49 +250,48 @@ export default function NotificationSettingsPage() {
       {/* Sound Settings and Notification Channels - Side by Side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Sound Settings Card */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div className={`bg-white dark:border-gray-700 ${tw.rounded} border border-gray-200 p-6`} style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
           <div className="mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
               {t.notifications.settings.soundTitle}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {t.notifications.settings.soundSubtitle}
             </p>
           </div>
 
-          <div className="pr-4 py-4 bg-gray-50 rounded space-y-3">
+          <div className="pr-4 py-4 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {localSettings.in_app_sound_enabled ? (
-                  <Volume2 className="h-5 w-5 text-gray-600" />
+                  <Volume2 className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                 ) : (
                   <VolumeX className="h-5 w-5 text-gray-400" />
                 )}
-                <label htmlFor="sound-enabled" className="text-sm font-medium text-gray-900">
+                <label htmlFor="sound-enabled" className="text-sm font-medium text-gray-900 dark:text-white">
                   {t.notifications.settings.soundEnabled}
                 </label>
               </div>
               <Checkbox
                 checked={localSettings.in_app_sound_enabled}
-                onChange={(checked) =>
-                  handleSettingChange("in_app_sound_enabled", checked)
+                onChange={() =>
+                  handleSettingChange("in_app_sound_enabled", !localSettings.in_app_sound_enabled)
                 }
                 id="sound-enabled"
               />
             </div>
 
             {localSettings.in_app_sound_enabled && (
-              <div className="space-y-6 ">
-                <label className="text-sm font-medium mt-6 text-gray-700">
-                  {t.notifications.settings.soundType}
-                </label>
+              <div className="space-y-6 mt-8">
                 <HeadlessSelect
+                  label={t.notifications.settings.soundType}
                   options={NOTIFICATION_SOUNDS}
                   value={localSettings.notification_sound}
                   onChange={(value) =>
                     handleSettingChange("notification_sound", value)
                   }
                   placeholder="Select sound..."
+                  className="w-full"
                 />
               </div>
             )}
@@ -300,84 +299,86 @@ export default function NotificationSettingsPage() {
         </div>
 
       {/* Notification Channels Card */}
-      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+      <div className={`bg-white dark:border-gray-700 ${tw.rounded} border border-gray-200 p-6`} style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             {t.notifications.settings.channelsTitle}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {t.notifications.settings.channelsSubtitle}
           </p>
         </div>
 
         <div className="space-y-4">
-          {/* SMS Alerts */}
-          <div className="flex items-center justify-between pb-1 bg-gray-50 rounded">
-            <label htmlFor="sms-enabled" className="text-sm font-medium text-gray-900">
-              {t.notifications.settings.smsAlerts}
-            </label>
-            <Checkbox
-              checked={localSettings.sms_alerts_enabled}
-              onChange={(checked) =>
-                handleSettingChange("sms_alerts_enabled", checked)
-              }
-              id="sms-enabled"
-            />
-          </div>
-
-          {/* Desktop Notifications */}
-          <div className="flex items-center justify-between pb-1  bg-gray-50 rounded">
-            <label htmlFor="desktop-enabled" className="text-sm font-medium text-gray-900">
-              {t.notifications.settings.desktopNotifications}
-            </label>
-            <Checkbox
-              checked={localSettings.desktop_notifications_enabled}
-              onChange={(checked) =>
-                handleSettingChange("desktop_notifications_enabled", checked)
-              }
-              id="desktop-enabled"
-            />
-          </div>
-
           {/* Email Notifications */}
           <div>
-            <div className="flex items-center justify-between pb-1 bg-gray-50 rounded">
-              <label htmlFor="email-enabled" className="text-sm font-medium text-gray-900">
+            <div className="flex items-center justify-between pb-1">
+              <label htmlFor="email-enabled" className="text-sm font-medium text-gray-900 dark:text-white">
                 {t.notifications.settings.emailNotifications}
               </label>
               <Checkbox
                 checked={localSettings.email_notifications_enabled}
-                onChange={(checked) =>
-                  handleSettingChange("email_notifications_enabled", checked)
+                onChange={() =>
+                  handleSettingChange("email_notifications_enabled", !localSettings.email_notifications_enabled)
                 }
                 id="email-enabled"
               />
             </div>
             {localSettings.email_notifications_enabled && (
-              <div className="mt-3 ml-0">
+              <div className="mt-4">
                 <HeadlessSelect
+                  label="Digest Frequency"
                   options={EMAIL_DIGEST_OPTIONS}
                   value={localSettings.email_digest_frequency}
                   onChange={(value) =>
                     handleSettingChange("email_digest_frequency", value)
                   }
                   placeholder="Select frequency..."
+                  className="w-full"
                 />
               </div>
             )}
+          </div>
+
+          {/* SMS Alerts */}
+          <div className="flex items-center justify-between pb-1 rounded">
+            <label htmlFor="sms-enabled" className="text-sm font-medium text-gray-900 dark:text-white">
+              {t.notifications.settings.smsAlerts}
+            </label>
+            <Checkbox
+              checked={localSettings.sms_alerts_enabled}
+              onChange={() =>
+                handleSettingChange("sms_alerts_enabled", !localSettings.sms_alerts_enabled)
+              }
+              id="sms-enabled"
+            />
+          </div>
+
+          {/* Desktop Notifications */}
+          <div className="flex items-center justify-between pb-1 rounded">
+            <label htmlFor="desktop-enabled" className="text-sm font-medium text-gray-900 dark:text-white">
+              {t.notifications.settings.desktopNotifications}
+            </label>
+            <Checkbox
+              checked={localSettings.desktop_notifications_enabled}
+              onChange={() =>
+                handleSettingChange("desktop_notifications_enabled", !localSettings.desktop_notifications_enabled)
+              }
+              id="desktop-enabled"
+            />
           </div>
         </div>
         </div>
       </div>
 
       {/* Message Delivery Quiet Hours Card */}
-      <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6`}>
+      <div className={`bg-white dark:border-gray-700 ${tw.rounded} border border-gray-200 p-5 sm:p-6`} style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
         <div className="mb-6 flex justify-between items-start">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               Message Delivery Quiet Hours
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Set quiet hours when messages will not be delivered
             </p>
           </div>
@@ -392,62 +393,50 @@ export default function NotificationSettingsPage() {
               onChange={() => handleDNDEnabledChange(!dndSettings.dnd_enabled)}
               className="w-5 h-5 text-emerald-600 rounded"
             />
-            <span className="text-sm font-semibold text-gray-700">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               Enable Quiet Hours
             </span>
           </div>
 
           {/* DND Settings - Only show if enabled */}
           {dndSettings.dnd_enabled && (
-            <div className="space-y-6 p-4 bg-gray-50 rounded-lg">
+            <div className="space-y-6 p-4 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* DND Days */}
                 <div>
-                  <label
-                    htmlFor="dnd-days"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    Apply To
-                  </label>
                   <HeadlessSelect
+                    label="Apply To"
                     value={dndSettings.dnd_days}
                     onChange={(value) => handleDNDDaysChange(value as string)}
                     options={DND_DAYS}
                     placeholder="Select days"
+                    className="w-full"
                   />
                 </div>
 
                 {/* DND Start Time */}
                 <div>
-                  <label
-                    htmlFor="dnd-start-time"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    Start Time (DND begins)
-                  </label>
-                  <input
-                    id="dnd-start-time"
+                  <Input
                     type="time"
+                    label="Start Time (DND begins)"
                     value={dndSettings.dnd_start_time}
-                    onChange={(e) => handleDNDStartTimeChange(e.target.value)}
-                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    onChange={(value) => handleDNDStartTimeChange(String(value))}
+                    className="w-full"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
 
                 {/* DND End Time */}
                 <div>
-                  <label
-                    htmlFor="dnd-end-time"
-                    className="block text-sm font-semibold text-gray-700 mb-2.5"
-                  >
-                    End Time (DND ends)
-                  </label>
-                  <input
-                    id="dnd-end-time"
+                  <Input
                     type="time"
+                    label="End Time (DND ends)"
                     value={dndSettings.dnd_end_time}
-                    onChange={(e) => handleDNDEndTimeChange(e.target.value)}
-                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    onChange={(value) => handleDNDEndTimeChange(String(value))}
+                    className="w-full"
+                    variant="default"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -455,7 +444,7 @@ export default function NotificationSettingsPage() {
               {/* Custom Days Selector - Only show when custom is selected */}
               {dndSettings.dnd_days === "custom" && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                     Select Days
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -468,7 +457,7 @@ export default function NotificationSettingsPage() {
                         />
                         <label
                           htmlFor={`dnd-day-${day.value}`}
-                          className="ml-2 text-sm font-medium text-gray-700 cursor-pointer"
+                          className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
                         >
                           {day.label.slice(0, 3)}
                         </label>
@@ -479,11 +468,11 @@ export default function NotificationSettingsPage() {
               )}
 
               {/* Preview */}
-              <div className="p-3 bg-white border border-gray-200 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">
+              <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg" style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                   Quiet Hours Preview:
                 </p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {dndSettings.dnd_days === "weekdays" && "Monday - Friday: "}
                   {dndSettings.dnd_days === "weekends" && "Saturday - Sunday: "}
                   {dndSettings.dnd_days === "daily" && "Daily: "}
@@ -504,12 +493,12 @@ export default function NotificationSettingsPage() {
       </div>
 
       {/* Subscriptions Card */}
-      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+      <div className={`bg-white dark:border-gray-700 ${tw.rounded} border border-gray-200 p-6`} style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             {t.notifications.settings.subscriptionsTitle}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {t.notifications.settings.subscriptionsSubtitle}
           </p>
         </div>
@@ -518,21 +507,21 @@ export default function NotificationSettingsPage() {
           {isLoadingSubscriptions ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
-              <p className="mt-3 text-sm text-gray-600">
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
                 {t.notifications.settings.loadingSubscriptions}
               </p>
             </div>
           ) : localSubscriptions.length === 0 ? (
-            <div className="p-8 text-center text-gray-600">
+            <div className="p-8 text-center text-gray-600 dark:text-gray-400">
               <p className="text-sm">{t.notifications.settings.noSubscriptions}</p>
             </div>
           ) : (
-            <div className="space-y-0 divide-y divide-gray-100">
+            <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-700">
               {(() => {
                 // Group subscriptions by category
                 const grouped: Record<string, NotificationSubscription[]> = {};
                 localSubscriptions.forEach((sub) => {
-                  const catId = String(sub.category_id || "Categories");
+                  const catId = String(sub.category_id || "Default");
                   if (!grouped[catId]) {
                     grouped[catId] = [];
                   }
@@ -542,9 +531,9 @@ export default function NotificationSettingsPage() {
                 // Only show categories that have subscriptions
                 return Object.entries(grouped).map(([categoryId, subs]) => {
                   const categoryName =
-                    categoryId !== "Categories"
-                      ? categoryMap[categoryId] || "Categories"
-                      : "Categories";
+                    categoryId !== "Default"
+                      ? categoryMap[categoryId] || "Default"
+                      : "Default";
 
                   const isExpanded = expandedCategories[categoryId] ?? true;
 
@@ -552,14 +541,14 @@ export default function NotificationSettingsPage() {
                     <div key={categoryId} className="py-4">
                       <button
                         onClick={() => toggleCategoryExpansion(categoryId)}
-                        className="w-full flex items-center gap-3 text-left hover:bg-gray-50 -mx-6 px-6 py-2"
+                        className="w-full flex items-center gap-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 -mx-6 px-6 py-2"
                       >
                         <ChevronDown
-                          className={`w-4 h-4 text-gray-600 transition-transform ${
+                          className={`w-4 h-4 text-gray-600 dark:text-gray-400 transition-transform ${
                             isExpanded ? "" : "-rotate-90"
                           }`}
                         />
-                        <h3 className="text-sm font-semibold text-gray-900 flex-1 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex-1 flex items-center gap-2">
                           {categoryName}
                           <span
                             className="text-xs text-white px-2 py-0.5 rounded"
@@ -575,7 +564,7 @@ export default function NotificationSettingsPage() {
                           {subs.map((subscription) => (
                             <div
                               key={subscription.rule_id}
-                              className="flex items-center gap-3 py-2 hover:bg-gray-50 transition-colors rounded px-2"
+                              className="flex items-center gap-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded px-2"
                             >
                               <div className="flex-shrink-0">
                                 <Checkbox
@@ -588,7 +577,7 @@ export default function NotificationSettingsPage() {
                               </div>
                               <label
                                 htmlFor={`subscription-${subscription.rule_id}`}
-                                className="text-sm text-gray-900 cursor-pointer flex-1"
+                                className="text-sm text-gray-900 dark:text-white cursor-pointer flex-1"
                               >
                                 {subscription.name}
                               </label>

@@ -70,6 +70,10 @@ const ROUTE_MAP: Record<string, string> = {
   'data-connectors': '/dashboard/data-connectors',
   'health-check': '/health-check',
   'gateway-configurations': '/dashboard/gateway-configurations',
+  'gateway-providers': '/dashboard/gateway-providers',
+  'reward-providers': '/dashboard/reward-providers',
+  'tracking-sources': '/dashboard/tracking-sources',
+  'reward-configurations': '/dashboard/reward-configurations',
   'job-workflow-steps': '/dashboard/job-workflow-steps',
   'team-roles': '/dashboard/team-roles',
   'segment-management': '/dashboard/segments',
@@ -151,7 +155,7 @@ export default function FeatureActionButton({
   return (
     <button
       onClick={handleClick}
-      className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300 ${className}`}
+      className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300 ${className}`}
       title={label || 'Edit'}
     >
       <Edit className="w-4 h-4" />

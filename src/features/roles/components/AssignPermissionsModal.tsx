@@ -112,7 +112,7 @@ export default function AssignPermissionsModal({
           : [];
         setAllPermissions(permsToSet);
       } catch (err) {
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -173,7 +173,7 @@ export default function AssignPermissionsModal({
 
       setAssignedPermissions(assigned);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -245,7 +245,7 @@ export default function AssignPermissionsModal({
 
     } catch (err) {
       console.error("Error toggling permission:", err);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       // Revert optimistic update on error
       if (isAssigned) {
         setAssignedPermissions([...assignedPermissions, permission]);
@@ -458,7 +458,7 @@ export default function AssignPermissionsModal({
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
     } catch (err) {
-      showError("Assignment Failed", extractBackendError(error, "Assignment Failed. Please try again."));
+      showError("Assignment Failed", extractBackendError(err, "Assignment Failed. Please try again."));
       // Revert optimistic update on error
       setAssignedPermissions(
         assignedPermissions.filter(
@@ -506,7 +506,7 @@ export default function AssignPermissionsModal({
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
     } catch (err) {
-      showError("Removal Failed", extractBackendError(error, "Removal Failed. Please try again."));
+      showError("Removal Failed", extractBackendError(err, "Removal Failed. Please try again."));
       // Revert optimistic update on error
       const removedIds = new Set(assignedToRemove);
       setAssignedPermissions((prev) => [
@@ -555,9 +555,9 @@ export default function AssignPermissionsModal({
             <div
               className="px-3 py-2 rounded-md text-sm font-semibold border whitespace-nowrap"
               style={{
-                backgroundColor: color.primary.action + "10",
-                borderColor: color.primary.action,
-                color: color.primary.action,
+                backgroundColor: "transparent",
+                borderColor: "var(--c-bordered-button-color)",
+                color: "var(--c-bordered-button-color)",
               }}
             >
               {assignedIds.size}/{allPermissions.length} assigned
@@ -578,15 +578,16 @@ export default function AssignPermissionsModal({
 
           {/* Bulk Actions Toolbar */}
           {isSelectionMode && selectedPermissionIds.size > 0 && (
-            <div className="flex items-center justify-between rounded border border-gray-200 bg-white px-4 py-3 mb-4">
+            <div className="flex items-center justify-between rounded border px-4 py-3 mb-4" style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-cards)" }}>
               {/* Left: Count + Clear */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium" style={{ color: "var(--c-text-primary)" }}>
                   {selectedPermissionIds.size} permission(s) selected
                 </span>
                 <button
                   onClick={() => setSelectedPermissionIds(new Set())}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                  className="transition-colors"
+                  style={{ color: "var(--c-text-muted)" }}
                   title="Clear selection"
                 >
                   <X size={16} />
@@ -610,8 +611,8 @@ export default function AssignPermissionsModal({
                         ? "All selected permissions are already assigned"
                         : "Assign selected permissions to role"
                     }
-                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                    style={{ backgroundColor: color.primary.action, color: 'white' }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white`}
+                    style={{ backgroundColor: "var(--c-primary-action)" }}
                   >
                     {isAssigning && <LoadingSpinner />}
                     <Plus size={14} />
@@ -634,10 +635,9 @@ export default function AssignPermissionsModal({
                         ? "No assigned permissions selected to remove"
                         : "Remove selected permissions from role"
                     }
-                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white`}
                     style={{
-                      backgroundColor: color.status.danger || "#dc2626",
-                      color: 'white',
+                      backgroundColor: "#dc2626",
                     }}
                   >
                     {isRemoving && <LoadingSpinner />}
@@ -658,88 +658,36 @@ export default function AssignPermissionsModal({
             <div className={`${tw.rounded} overflow-hidden`}>
               <Table<Permission>
                 columns={[
-                  ...(isSelectionMode
-                    ? [
-                        {
-                          id: "select",
-                          label: (
-                            <div
-                              className="flex items-center gap-2 cursor-pointer"
-                              onClick={toggleSelectAllVisible}
-                            >
-                              <Checkbox
-                                ref={headerCheckboxRef}
-                                id="select-all-permissions"
-                                checked={allVisibleSelected}
-                                onChange={toggleSelectAllVisible}
-                                aria-label="Select all visible permissions"
-                                className="cursor-pointer w-4 h-4"
-                              />
-                            </div>
-                          ),
-                          visible: true,
-                          sortable: false,
-                          render: (_, permission) => {
-                            const isAssigned = assignedIds.has(permission.id);
-                            const isSelected = selectedPermissionIds.has(permission.id);
-                            return (
-                              <div
-                                className="flex items-center gap-2 cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePermissionSelection(permission.id);
-                                }}
-                              >
-                                <Checkbox
-                                  id={`row-${permission.id}`}
-                                  checked={isSelected}
-                                  disabled={isAssigned}
-                                  onChange={(e) => {
-                                    e.stopPropagation();
-                                    togglePermissionSelection(permission.id);
-                                  }}
-                                  aria-label={`Select ${permission.name}`}
-                                  className={`cursor-pointer w-4 h-4 ${
-                                    isAssigned ? "opacity-50 cursor-not-allowed" : ""
-                                  }`}
-                                />
-                                {isAssigned && (
-                                  <span
-                                    className="ml-2 text-xs font-medium"
-                                    style={{ color: color.primary.accent }}
-                                  >
-                                    (Already assigned)
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          },
-                        } as TableColumn<Permission>,
-                      ]
-                    : []),
                   {
                     id: "name",
                     label: "Permission Name",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-medium text-gray-900">{value}</span>
-                    ),
+                    render: (value, permission) => {
+                      const isAssigned = assignedIds.has(permission.id);
+                      return (
+                        <div className="flex items-center gap-2">
+                          <span>{value}</span>
+                          {isAssigned && (
+                            <span
+                              className="text-xs font-medium px-2 py-0.5 rounded"
+                              style={{ backgroundColor: "rgba(107, 114, 128, 0.1)", color: "var(--c-icon-table-delete)" }}
+                            >
+                              Already assigned
+                            </span>
+                          )}
+                        </div>
+                      );
+                    },
                   },
                   {
                     id: "code",
                     label: "Code",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-mono text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "action",
                     label: "Action",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "is_sensitive",
@@ -768,9 +716,9 @@ export default function AssignPermissionsModal({
                           <button
                             onClick={() => handleTogglePermission(permission)}
                             disabled={isToggling || isAssigned}
-                            className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                            className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 text-white"
                             style={{
-                              backgroundColor: color.primary.action,
+                              backgroundColor: "var(--c-primary-action)",
                             }}
                             title={
                               isAssigned ? "Already assigned" : "Click to assign"
@@ -788,11 +736,11 @@ export default function AssignPermissionsModal({
                             className="px-4 py-2 text-sm font-medium rounded-md border transition-colors bg-transparent disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                             style={{
                               borderColor: isAssigned
-                                ? color.primary.action
-                                : "#D1D5DB",
+                                ? "var(--c-text-primary)"
+                                : "var(--c-border-default)",
                               color: isAssigned
-                                ? color.primary.action
-                                : "#9CA3AF",
+                                ? "var(--c-text-primary)"
+                                : "var(--c-text-muted)",
                             }}
                             title={
                               isAssigned
@@ -815,6 +763,11 @@ export default function AssignPermissionsModal({
                 totalItems={filteredPermissions.length}
                 currentPage={permissionsPaginationModel.page + 1}
                 pageSize={permissionsPaginationModel.pageSize}
+                enableRowSelection={isSelectionMode}
+                selectedRows={Array.from(selectedPermissionIds)}
+                onRowSelectChange={(selected) => {
+                  setSelectedPermissionIds(new Set(selected as number[]));
+                }}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -851,19 +804,19 @@ export default function AssignPermissionsModal({
         <div
           className="border-2 border-dashed rounded-lg p-8 text-center"
           style={{
-            borderColor: color.primary.action + "40",
-            backgroundColor: color.primary.action + "08",
+            borderColor: "var(--c-border-accent)",
+            backgroundColor: "var(--c-interactive-hover)",
           }}
         >
           <div className="flex justify-center mb-3">
             <AlertCircle
               className="w-6 h-6"
-              style={{ color: color.primary.action }}
+              style={{ color: "var(--c-text-primary)" }}
             />
           </div>
           <p
             className="text-sm font-medium"
-            style={{ color: color.primary.action }}
+            style={{ color: "var(--c-text-primary)" }}
           >
             Select a role to manage its permissions
           </p>

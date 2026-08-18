@@ -302,7 +302,7 @@ export default function TeamRolesPermissionsPage() {
         }
       }
 
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setCloningRoleId(null);
     }
@@ -545,64 +545,51 @@ export default function TeamRolesPermissionsPage() {
   return (
     <div className="space-y-6 p-0">
       {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <BackButton
-           
             showBreadcrumb={true}
-           
             currentLabel="Access Control"
           />
-          {activeTab === "assign" && selectedRoleForAssign && (
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  setIsSelectionMode(true);
-                } else {
-                  setIsSelectionMode(false);
-                }
-              }}
-              disabled={!selectedRoleForAssign}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
-                isSelectionMode
-                  ? "text-white"
-                  : "border text-gray-700 bg-transparent hover:border-gray-400"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                borderColor: isSelectionMode
-                  ? "transparent"
-                  : color.primary.action + "40",
-                color: isSelectionMode ? "white" : color.primary.action,
-              }}
-            >
-              {isSelectionMode ? (
-                <>
+          <div className="flex items-center gap-3">
+            {activeTab === "assign" && selectedRoleForAssign && (
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    setIsSelectionMode(true);
+                  } else {
+                    setIsSelectionMode(false);
+                  }
+                }}
+                disabled={!selectedRoleForAssign}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
+              >
+                {isSelectionMode ? (
                   <CheckSquare className="w-4 h-4" />
-                  Exit Selection
-                </>
-              ) : (
-                <>
+                ) : (
                   <Square className="w-4 h-4" />
-                  Select Multiple
-                </>
-              )}
-            </button>
-          )}
-          {activeTab !== "assign" && (
-            <FeatureActionButton
-              featureId="team-roles"
-              action="create"
-              onClick={
-                activeTab === "roles" ? handleCreateRole : handleCreatePermission
-              }
-              label={activeTab === "roles" ? "Create Role" : "Create Permission"}
-            />
-          )}
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select"}
+              </button>
+            )}
+            {activeTab !== "assign" && (
+              <FeatureActionButton
+                featureId="team-roles"
+                action="create"
+                onClick={
+                  activeTab === "roles" ? handleCreateRole : handleCreatePermission
+                }
+                label={activeTab === "roles" ? "Create Role" : "Create Permission"}
+              />
+            )}
+          </div>
         </div>
-        <p className={`${tw.textSecondary} text-sm`}>
+        <p className={`text-sm ${tw.textSecondary}`}>
           Manage roles, permissions, and access control
         </p>
       </div>
@@ -690,57 +677,38 @@ export default function TeamRolesPermissionsPage() {
                     id: "name",
                     label: "Role Name",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-medium text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "code",
                     label: "Code",
                     visible: true,
-                    render: (value) => (
-                      <span className="font-mono text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "role_level",
                     label: "Level",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value}</span>
-                    ),
                   },
                   {
                     id: "data_access_level",
                     label: "Data Access",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value || "—"}</span>
-                    ),
                   },
                   {
                     id: "current_user_count",
                     label: "Users",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">{value || 0}</span>
-                    ),
                   },
                   {
                     id: "is_active",
                     label: "Status",
                     visible: true,
-                    render: (value) => (
-                      <span className="text-sm text-gray-900">
-                        {value ? "Active" : "Inactive"}
-                      </span>
-                    ),
                   },
                   {
                     id: "actions",
                     label: "Actions",
                     visible: true,
                     sortable: false,
+      isActionColumn: true,
                     render: (_, role) => (
                       <div className="flex items-center gap-1">
                         <button
@@ -953,6 +921,7 @@ export default function TeamRolesPermissionsPage() {
                     label: "Actions",
                     visible: true,
                     sortable: false,
+      isActionColumn: true,
                     render: (_, permission) => (
                       <div className="flex items-center gap-1">
                         <button
@@ -1071,22 +1040,22 @@ export default function TeamRolesPermissionsPage() {
       {/* Delete Confirmation Dialog */}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="rounded-lg shadow-lg max-w-sm w-full mx-4" style={{ backgroundColor: "var(--c-surface-background)" }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: "var(--c-border-default)" }}>
+              <h3 className="text-lg font-semibold" style={{ color: "var(--c-text-primary)" }}>
                 {deleteTarget?.type === "role"
                   ? "Delete Role?"
                   : "Delete Permission?"}
               </h3>
             </div>
             <div className="px-6 py-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm" style={{ color: "var(--c-text-secondary)" }}>
                 {deleteTarget?.type === "role"
                   ? `Are you sure you want to delete "${roles.find((r) => r.id === deleteTarget?.id)?.name}"? This action cannot be undone.`
                   : `Are you sure you want to delete "${permissions.find((p) => p.id === deleteTarget?.id)?.name}"? This action cannot be undone.`}
               </p>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ borderColor: "var(--c-border-default)" }}>
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
                 className="transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
@@ -1114,15 +1083,15 @@ export default function TeamRolesPermissionsPage() {
       {/* Role Deactivation Modal */}
       {deactivateRoleModalOpen && roleToDeactivate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="rounded-lg shadow-lg max-w-md w-full mx-4" style={{ backgroundColor: "var(--c-surface-background)" }}>
+            <div className="px-6 py-4 border-b" style={{ borderColor: "var(--c-border-default)" }}>
+              <h3 className="text-lg font-semibold" style={{ color: "var(--c-text-primary)" }}>
                 Deactivate Role
               </h3>
             </div>
             <div className="px-6 py-4 space-y-4">
               <div>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm mb-3" style={{ color: "var(--c-text-secondary)" }}>
                   You are about to deactivate{" "}
                   <span className="font-medium">"{roleToDeactivate.name}"</span>
                   . Please provide a reason for this action.
@@ -1146,10 +1115,10 @@ export default function TeamRolesPermissionsPage() {
                   onChange={() => deactivatingRoleId === null && setCascadeToChildren(!cascadeToChildren)}
                   disabled={deactivatingRoleId !== null}
                 />
-                <span className="text-sm text-gray-700">Deactivate child roles too</span>
+                <span className="text-sm" style={{ color: "var(--c-text-primary)" }}>Deactivate child roles too</span>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t flex justify-end gap-3" style={{ borderColor: "var(--c-border-default)" }}>
               <button
                 onClick={() => {
                   setDeactivateRoleModalOpen(false);
@@ -1181,7 +1150,7 @@ export default function TeamRolesPermissionsPage() {
       {/* Clone Role Modal */}
       {cloneModalOpen && roleToClone && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="rounded-lg shadow-xl max-w-md w-full mx-4 p-6" style={{ backgroundColor: "var(--c-surface-background)" }}>
             <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Copy Role
             </h2>

@@ -50,6 +50,7 @@ export interface ManualBroadcastData {
   messageBody?: string;
   isRichText?: boolean;
   smsRoute?: string;
+  emailRoute?: string;
   selectedVariables?: TemplateVariable[];
   selectedCommunicationPolicy?: CommunicationPolicyConfiguration;
   selectedCommunicationPolicyId?: number;
@@ -218,7 +219,7 @@ export default function CreateManualBroadcastPage() {
           setBroadcastData(prefillData);
         } catch (err) {
           console.error("Failed to load broadcast details:", err);
-          showError("Failed to load broadcast details", extractBackendError(error, "Failed to load broadcast details. Please try again."));
+          showError("Failed to load broadcast details", extractBackendError(err, "Failed to load broadcast details. Please try again."));
           navigate("/dashboard/manual-communications");
         } finally {
           setIsLoading(false);
@@ -228,12 +229,12 @@ export default function CreateManualBroadcastPage() {
     }
   }, [isEditMode, executionId, showError, navigate]);
 
-  // Persist form data to localStorage
+  // Persist form data to localStorage (only in create mode, not edit mode)
   useFormDataPersistence(
     "broadcast_form_data",
     broadcastData,
     setBroadcastData,
-    false,
+    isEditMode,
   );
 
   const updateBroadcastData = (data: Partial<ManualBroadcastData>) => {
@@ -271,7 +272,9 @@ export default function CreateManualBroadcastPage() {
         return !!(
           broadcastData.channel &&
           broadcastData.messageBody &&
-          (broadcastData.channel !== "EMAIL" || broadcastData.messageTitle)
+          (broadcastData.channel !== "EMAIL" ||
+            (broadcastData.messageTitle && broadcastData.emailRoute)) &&
+          (broadcastData.channel !== "SMS" || broadcastData.smsRoute)
         );
       case 3: // Schedule
         if (broadcastData.scheduleType === "later") {

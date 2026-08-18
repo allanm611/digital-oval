@@ -19,6 +19,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import Checkbox from "../../../shared/components/ui/Checkbox";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import {
   CreativeChannel,
@@ -30,28 +31,25 @@ import { offerCreativeService } from "../services/offerCreativeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
-import { creativeTemplateService, CreativeTemplate } from "../../configurations/services/creativeTemplateService";
+import { creativeTemplateService, CreativeTemplate, creativeTemplateText, creativeTemplateHtml, matchesTemplateChannel } from "../../configurations/services/creativeTemplateService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { languageService, Language } from "../../configurations/services/languageService";
-import {
-  SMSSmartphonePreview,
-  EmailLaptopPreview,
-  WhatsAppPhonePreview,
-  PushNotificationPreview,
-  USSDMenuPreview,
-} from "./CreativePreviewComponents";
-import PreviewPanel from "../../communications/components/PreviewPanel";
+import CreativePreviewRenderer from "./CreativePreviewRenderer";
+import SimpleTextPreview from "./SimpleTextPreview";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
   validateInsertPosition,
+  validateNoEditInsideVariables,
+  isCursorInsideVariable,
 } from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
 import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
+import SelectOfferCreativesModal from "./SelectOfferCreativesModal";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
   id: string; // Use string for local temp ID
@@ -541,13 +539,19 @@ export default function OfferCreativeStep({
   const [languages, setLanguages] = useState<Language[]>([]);
   const [languagesLoading, setLanguagesLoading] = useState(true);
 
-  // Fetch creative templates on component mount
+  // Fetch existing creatives for dropdown selector
+  const [existingCreatives, setExistingCreatives] = useState<OfferCreative[]>([]);
+  const [existingCreativesLoading, setExistingCreativesLoading] = useState(true);
+
+  // Fetch reusable creative templates (GET /creative-template)
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         setTemplatesLoading(true);
-        const response = await creativeTemplateService.getCreativeTemplates();
-        // Extract data from ApiResponse wrapper
+        const channel = getDefaultChannelFromId(communicationChannelId);
+        const response = await creativeTemplateService.getCreativeTemplates({
+          channel,
+        });
         const templateData = response.data || [];
         setTemplates(Array.isArray(templateData) ? templateData : []);
       } catch (error) {
@@ -558,7 +562,7 @@ export default function OfferCreativeStep({
       }
     };
     fetchTemplates();
-  }, []);
+  }, [communicationChannelId]);
 
   // Fetch sender IDs on component mount
   useEffect(() => {
@@ -627,6 +631,29 @@ export default function OfferCreativeStep({
     fetchLanguages();
   }, []);
 
+  // Fetch existing creatives for dropdown selector
+  useEffect(() => {
+    const fetchExistingCreatives = async () => {
+      try {
+        setExistingCreativesLoading(true);
+        const channel = getDefaultChannelFromId(communicationChannelId);
+        const response = await offerCreativeService.superSearch({
+          channel,
+          limit: 100,
+          skipCache: true
+        });
+        const creativesData = response?.data || [];
+        setExistingCreatives(Array.isArray(creativesData) ? creativesData : []);
+      } catch (error) {
+        console.error("Failed to fetch existing creatives:", error);
+        setExistingCreatives([]);
+      } finally {
+        setExistingCreativesLoading(false);
+      }
+    };
+    fetchExistingCreatives();
+  }, [communicationChannelId]);
+
   // Handle language creation - auto-select it
   const handleLanguageCreated = async (newLanguage: Language) => {
     setLanguages((prev) => [...prev, newLanguage]);
@@ -679,6 +706,10 @@ export default function OfferCreativeStep({
       return creatives.length > 0 ? creatives[0].id : null;
     },
   );
+
+  const [showSelectCreativesModal, setShowSelectCreativesModal] =
+    useState(false);
+
 
   // Get languages already used by other creatives
   const getUsedLanguages = (): string[] => {
@@ -771,6 +802,22 @@ export default function OfferCreativeStep({
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
+  const mapCatalogCreative = (catalog: OfferCreative): LocalOfferCreative => ({
+    id: String(catalog.id),
+    channel: catalog.channel,
+    locale: catalog.locale as Locale,
+    title: catalog.title || catalog.name || "",
+    text_body: catalog.text_body || "",
+    html_body: catalog.html_body || "",
+    variables: (catalog.variables || {}) as Record<
+      string,
+      string | number | boolean
+    >,
+    is_active: catalog.is_active ?? true,
+    template_type_id: catalog.template_type_id,
+    save_as_template: false,
+  });
+
   const addCreative = () => {
     const defaultChannel = getDefaultChannelFromId(communicationChannelId);
 
@@ -783,6 +830,7 @@ export default function OfferCreativeStep({
       html_body: "",
       variables: {} as Record<string, string | number | boolean>,
       is_active: true,
+      save_as_template: false,
     };
 
     const updatedCreatives = [...creatives, newCreative];
@@ -790,6 +838,43 @@ export default function OfferCreativeStep({
     setSelectedCreative(newCreative.id);
     // Initialize empty template selection for new creative
     setSelectedTemplates((prev) => ({ ...prev, [newCreative.id]: null }));
+    setShowSelectCreativesModal(false);
+  };
+
+  const handleConfirmCatalogCreatives = (creativeIds: number[]) => {
+    const usedIds = new Set(creatives.map((c) => String(c.id)));
+    const usedLocales = new Set(
+      creatives.map((c) => c.locale).filter((locale): locale is string => !!locale),
+    );
+
+    const added: LocalOfferCreative[] = [];
+    for (const id of creativeIds) {
+      const catalog = existingCreatives.find((c) => c.id === id);
+      if (!catalog) continue;
+      if (usedIds.has(String(catalog.id))) continue;
+      if (catalog.locale && usedLocales.has(catalog.locale)) continue;
+
+      const mapped = mapCatalogCreative(catalog);
+      added.push(mapped);
+      usedIds.add(mapped.id);
+      if (mapped.locale) usedLocales.add(mapped.locale);
+    }
+
+    if (added.length === 0) {
+      setShowSelectCreativesModal(false);
+      return;
+    }
+
+    onCreativesChange([...creatives, ...added]);
+    setSelectedCreative(added[0].id);
+    setSelectedTemplates((prev) => {
+      const next = { ...prev };
+      added.forEach((c) => {
+        next[c.id] = c.template_type_id ?? null;
+      });
+      return next;
+    });
+    setShowSelectCreativesModal(false);
   };
 
   const removeCreative = (id: string) => {
@@ -818,12 +903,65 @@ export default function OfferCreativeStep({
     onCreativesChange(updatedCreatives);
   };
 
-  const selectedCreativeData = creatives.find((c) => c.id === selectedCreative);
+  // Filter creatives by the selected communication channel
+  const selectedChannelForFiltering = getDefaultChannelFromId(communicationChannelId);
+  const filteredCreatives = creatives.filter((c) => c.channel === selectedChannelForFiltering);
+
+  const usedLocalesOnOffer = useMemo(
+    () =>
+      new Set(
+        creatives
+          .map((c) => c.locale)
+          .filter((locale): locale is string => !!locale),
+      ),
+    [creatives],
+  );
+
+  const hasUnusedLanguage = useMemo(() => {
+    if (!languages || !Array.isArray(languages)) return false;
+    return languages.some(
+      (lang) =>
+        lang?.is_active &&
+        lang.language_code &&
+        !usedLocalesOnOffer.has(lang.language_code),
+    );
+  }, [languages, usedLocalesOnOffer]);
+
+  const availableCatalogCreatives = useMemo(() => {
+    const usedIds = new Set(creatives.map((c) => String(c.id)));
+    return existingCreatives.filter((c) => {
+      if (c.is_active === false) return false;
+      if (c.channel !== selectedChannelForFiltering) return false;
+      if (usedIds.has(String(c.id))) return false;
+      if (c.locale && usedLocalesOnOffer.has(c.locale)) return false;
+      return true;
+    });
+  }, [
+    existingCreatives,
+    creatives,
+    selectedChannelForFiltering,
+    usedLocalesOnOffer,
+  ]);
+
+  const canAddCreative =
+    availableCatalogCreatives.length > 0 || hasUnusedLanguage;
+
+  const selectedCreativeData = filteredCreatives.find((c) => c.id === selectedCreative) || creatives.find((c) => c.id === selectedCreative);
+
+  // Auto-enable Rich Text for Email channels
+  useEffect(() => {
+    if (selectedCreativeData?.channel === "Email" && selectedCreativeData.id) {
+      setIsRichTextMap((prev) => ({
+        ...prev,
+        [selectedCreativeData.id]: true,
+      }));
+    }
+  }, [selectedCreativeData?.channel, selectedCreativeData?.id]);
 
   // Use draft creative if none selected (for inline creation flow)
   const editingCreative = selectedCreativeData || {
     id: 'temp-draft',
-    channel: getDefaultChannelFromId(communicationChannelId),
+    channel: selectedChannelForFiltering,
     locale: languageOptions.find((opt) => !opt.isUsed)?.value || "en",
     title: "",
     text_body: "",
@@ -861,19 +999,13 @@ export default function OfferCreativeStep({
     locale: Locale,
   ) => {
     return templates.filter((template) => {
-      if (!template.is_active) return false;
-
-      // Check if template matches channel (compare with creative channel)
-      const matchesChannel =
-        template.channel?.toLowerCase() === channel.toLowerCase();
-
-      // Check if template has locale field
-      // If template doesn't have locale specified, show it for all locales (backward compatibility)
-      // If template has locale, it must match the creative's locale
+      if (template.is_active === false) return false;
+      if (!matchesTemplateChannel(template.channel, channel)) return false;
       const templateLocale = template.locale;
-      const matchesLocale = !templateLocale || templateLocale === locale;
-
-      return matchesChannel && matchesLocale;
+      const matchesLocale =
+        !templateLocale ||
+        templateLocale.toLowerCase() === (locale || "en").toLowerCase();
+      return matchesLocale;
     });
   };
 
@@ -899,33 +1031,23 @@ export default function OfferCreativeStep({
       [selectedCreativeData.id]: templateId,
     }));
 
-    // Get template variables (default values)
-    const templateVariables = template.variables || {};
-
-    // Populate creative fields with template content
     const updates: Partial<LocalOfferCreative> = {
-      // Set channel if template has a specific channel
       channel:
         (template.channel as CreativeChannel) ||
         selectedCreativeData.channel,
     };
 
-    // Populate title, text_body, html_body if template has them
-    // Replace placeholders with actual values immediately
+    // Copy template copy as-is. Resolve {{placeholders}} only in preview.
     if (template.title) {
-      updates.title = replaceVariables(template.title, templateVariables);
+      updates.title = template.title;
     }
-    if (template.body_text) {
-      updates.text_body = replaceVariables(
-        template.body_text,
-        templateVariables,
-      );
+    const bodyText = creativeTemplateText(template);
+    const bodyHtml = creativeTemplateHtml(template);
+    if (bodyText) {
+      updates.text_body = bodyText;
     }
-    if (template.body_html) {
-      updates.html_body = replaceVariables(
-        template.body_html,
-        templateVariables,
-      );
+    if (bodyHtml) {
+      updates.html_body = bodyHtml;
     }
     if (template.variables) {
       updates.variables = template.variables;
@@ -999,13 +1121,19 @@ export default function OfferCreativeStep({
         }
       }, 0);
     } else {
-      if (selectedCreativeData.channel === "Email" && isRichText) {
+      const isRichText = selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id];
+
+      if (isRichText) {
+        // For Rich Text mode: append variable (simpler, works with React's state management)
         const placeholder = formatVariablePlaceholder(variable);
-        const newBody = `${selectedCreativeData.text_body || ""} ${placeholder} `;
-        updateCreative(selectedCreativeData.id, { text_body: newBody });
+        const bodyField = selectedCreativeData.channel === "Email" ? (selectedCreativeData.html_body || "") : (selectedCreativeData.text_body || "");
+        const newBody = `${bodyField} ${placeholder} `;
+        updateCreative(selectedCreativeData.id, {
+          ...(selectedCreativeData.channel === "Email" ? { html_body: newBody, text_body: newBody } : { text_body: newBody }),
+        });
         setVariableError("");
       } else {
-        // Validate cursor position before insertion
+        // For Plain Text mode: use cursor-based insertion
         const positionError = validateInsertPosition(
           selectedCreativeData.text_body || "",
           actualCursorPosition,
@@ -1059,97 +1187,37 @@ export default function OfferCreativeStep({
     return { charCount, segments, isUnicode, remaining: Math.max(0, remaining) };
   };
 
-  // Handle preview button click
-  const handlePreview = async () => {
+  // Handle preview button click - client-side only
+  const handlePreview = () => {
     if (!selectedCreativeData) return;
 
     setIsPreviewOpen(true);
-    setPreviewLoading(true);
     setPreviewError(null);
-    setPreviewResult(null);
 
-    // Build preview variables using default_value from variable definitions
+    // Build preview variables from selected variables with default values
     const previewVars: Record<string, string | number | boolean> = {};
-    const storedVars = selectedCreativeData.variables || {};
-
-    // Use default_value from variable definitions if available, otherwise use stored value
-    Object.keys(storedVars).forEach((key) => {
-      const varDef = storedVars[key];
-      // If variable definition has default_value, use it; otherwise use the stored value
-      if (typeof varDef === 'object' && varDef !== null && 'default_value' in varDef) {
-        previewVars[key] = (varDef as any).default_value ?? storedVars[key];
-      } else {
-        previewVars[key] = storedVars[key];
-      }
+    selectedVariables.forEach((v) => {
+      // Variables are referenced as {{sourceValue.fieldValue}} in content
+      const variableKey = `${v.sourceValue}.${v.value}`;
+      previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
     });
 
-    // Check if creative has been saved (has numeric ID)
-    // Saved creatives have numeric string IDs (e.g., "123"), unsaved have random strings (e.g., "abc123xyz")
-    const creativeId = selectedCreativeData.id;
-    const numericId =
-      typeof creativeId === "number"
-        ? creativeId
-        : !isNaN(Number(creativeId)) &&
-            Number(creativeId) > 0 &&
-            String(Number(creativeId)) === String(creativeId)
-          ? Number(creativeId)
-          : null;
-
-    if (numericId !== null) {
-      // Creative has been saved - use render endpoint
-      try {
-        const overrides = previewVars; // Use preview variables with default values
-        const response = await offerCreativeService.render(
-          numericId,
-          { variableOverrides: overrides },
-          true, // Skip cache
-        );
-
-        const rendered = response.data;
-        setPreviewResult(rendered);
-      } catch (err) {
-        // Failed to render creative
-        setPreviewError(
-          err instanceof Error ? err.message : "Failed to render creative",
-        );
-
-        // Fallback to client-side preview
-        const clientPreview = {
-          rendered_title: replaceVariables(
-            selectedCreativeData.title || "",
-            previewVars,
-          ),
-          rendered_text_body: replaceVariables(
-            selectedCreativeData.text_body || "",
-            previewVars,
-          ),
-          rendered_html_body: replaceVariables(
-            selectedCreativeData.html_body || "",
-            previewVars,
-          ),
-        };
-        setPreviewResult(clientPreview);
-      }
-    } else {
-      // Creative not saved yet - use client-side preview
-      const clientPreview = {
-        rendered_title: replaceVariables(
-          selectedCreativeData.title || "",
-          previewVars,
-        ),
-        rendered_text_body: replaceVariables(
-          selectedCreativeData.text_body || "",
-          previewVars,
-        ),
-        rendered_html_body: replaceVariables(
-          selectedCreativeData.html_body || "",
-          previewVars,
-        ),
-      };
-      setPreviewResult(clientPreview);
-    }
-
-    setPreviewLoading(false);
+    // Client-side preview with variable replacement using default values
+    const clientPreview = {
+      rendered_title: replaceVariables(
+        selectedCreativeData.title || "",
+        previewVars,
+      ),
+      rendered_text_body: replaceVariables(
+        selectedCreativeData.text_body || "",
+        previewVars,
+      ),
+      rendered_html_body: replaceVariables(
+        selectedCreativeData.html_body || "",
+        previewVars,
+      ),
+    };
+    setPreviewResult(clientPreview);
   };
 
   return (
@@ -1180,7 +1248,7 @@ export default function OfferCreativeStep({
         </div>
       )}
 
-      {creatives.length === 0 ? (
+      {filteredCreatives.length === 0 ? (
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}
         >
@@ -1188,14 +1256,15 @@ export default function OfferCreativeStep({
             <MessageSquare className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {t.offers.creatives.noCreativesAdded}
+            {creatives.length === 0 ? t.offers.creatives.noCreativesAdded : `No ${selectedChannelForFiltering} creatives yet`}
           </h3>
           <p className="text-gray-500 text-sm mb-6">
-            {t.offers.creatives.subheadline}
+            {creatives.length === 0 ? t.offers.creatives.subheadline : `Create a ${selectedChannelForFiltering} creative to get started`}
           </p>
           <button
-            onClick={addCreative}
-            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
+            onClick={() => setShowSelectCreativesModal(true)}
+            disabled={!canAddCreative}
+            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${!canAddCreative ? "opacity-50 cursor-not-allowed" : ""}`}
             style={{
               backgroundColor: color.primary.action,
             }}
@@ -1216,20 +1285,24 @@ export default function OfferCreativeStep({
                   {t.offers.creatives.title}
                 </h3>
                 <button
-                  onClick={addCreative}
-                  disabled={languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0}
-                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={() => setShowSelectCreativesModal(true)}
+                  disabled={!canAddCreative}
+                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${!canAddCreative ? "opacity-50 cursor-not-allowed" : ""}`}
                   style={{
                     backgroundColor: color.primary.action,
                   }}
-                  title={languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 ? "All languages already have creatives" : ""}
+                  title={
+                    !canAddCreative
+                      ? "All languages already have creatives"
+                      : ""
+                  }
                 >
                   <Plus className="w-5 h-5 mr-1.5" />
                   {t.offers.creatives.addCreative}
                 </button>
               </div>
 
-              {languageOptions.length > 0 && languageOptions.filter((opt) => !opt.isUsed).length === 0 && creatives.length > 0 && (
+              {languageOptions.length > 0 && !canAddCreative && filteredCreatives.length > 0 && (
                 <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 mb-4">
                   <p className="text-xs text-amber-700">
                     Each creative is limited to one language. All available languages already have creatives. To add more creatives, create a new language in your configuration.
@@ -1238,7 +1311,7 @@ export default function OfferCreativeStep({
               )}
 
               <div className="space-y-2">
-                {creatives.map((creative) => {
+                {filteredCreatives.map((creative) => {
                   const channelConfig = getChannelConfig(creative.channel);
                   const Icon = channelConfig?.icon || MessageSquare;
 
@@ -1259,7 +1332,7 @@ export default function OfferCreativeStep({
                           <div
                             className={`w-8 h-8 ${tw.rounded} flex items-center justify-center bg-gray-100`}
                           >
-                            <Icon className={`p-2 icon-edit ${tw.rounded} w-4 h-4 `} />
+                            <Icon className={`p-0 icon-edit ${tw.rounded} w-4 h-4 `} />
                           </div>
                           <div>
                             <div className="font-medium text-sm text-gray-900">
@@ -1318,32 +1391,6 @@ export default function OfferCreativeStep({
                 </div>
               )}
               <div className="space-y-6">
-                  {/* Channel Selection - Commented out: will be moved to step 1 */}
-                  {/* <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t.offers.channel.label}
-                    </label>
-                    <HeadlessSelect
-                      value={selectedCreativeData.channel}
-                      onChange={(value) => {
-                        const newChannel = value as CreativeChannel;
-                        updateCreative(selectedCreativeData.id, {
-                          channel: newChannel,
-                        });
-                        setSelectedTemplates((prev) => ({
-                          ...prev,
-                          [selectedCreativeData.id]: null,
-                        }));
-                      }}
-                      options={CHANNEL_CONFIG.map((channel) => ({
-                        value: channel.value,
-                        label: getChannelLabel(channel.value),
-                      }))}
-                      placeholder={t.offers.channel.placeholder}
-                      zIndex={zIndex.popover}
-                    />
-                  </div> */}
-
                   {/* Locale Selection */}
                   <HeadlessSelect
                     label={t.offers.locale.label + " *"}
@@ -1362,7 +1409,6 @@ export default function OfferCreativeStep({
                       }
                     }}
                     options={[
-                      { label: "Select a language", value: "" },
                       ...languageOptions.filter((opt) => !opt.isUsed),
                     ]}
                     placeholder={
@@ -1396,7 +1442,6 @@ export default function OfferCreativeStep({
                         selectedCreativeData && handleTemplateSelect(value ? Number(value) : null)
                       }
                       options={[
-                        { value: "", label: "Select template" },
                         ...availableTemplates.map((template) => {
                           let languageLabel = "";
                           if (
@@ -1416,12 +1461,18 @@ export default function OfferCreativeStep({
                             }
                           }
                           return {
-                            value: template.id.toString(),
+                            value: String(template.id),
                             label: template.name + languageLabel + (template.description ? " - " + template.description : ""),
                           };
                         }),
                       ]}
-                      placeholder="Select a template to start with..."
+                      placeholder={
+                        templatesLoading
+                          ? "Loading templates..."
+                          : "Choose a reusable template"
+                      }
+                      disabled={!selectedCreativeData || templatesLoading}
+                      className="w-full"
                     />
                     {selectedTemplates[selectedCreativeData?.id] && (
                       <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
@@ -1433,6 +1484,33 @@ export default function OfferCreativeStep({
                       </div>
                     )}
                   </div>
+
+                  {selectedCreativeData && (
+                    <label
+                      htmlFor="save-as-template"
+                      className={`flex items-start gap-3 p-3 border ${tw.rounded} cursor-pointer`}
+                      style={{ borderColor: color.border?.default || "#e5e7eb" }}
+                    >
+                      <Checkbox
+                        id="save-as-template"
+                        checked={Boolean(selectedCreativeData.save_as_template)}
+                        onChange={(e) =>
+                          updateCreative(selectedCreativeData.id, {
+                            save_as_template: e.target.checked,
+                          })
+                        }
+                      />
+                      <span className="text-sm">
+                        <span className="font-medium text-gray-900 block">
+                          Save as reusable template
+                        </span>
+                        <span className="text-gray-500 block mt-0.5">
+                          Also store this creative in Creative Templates so it
+                          can be reused on other offers.
+                        </span>
+                      </span>
+                    </label>
+                  )}
 
                   {/* Sender ID (SMS) or Subject (Email) */}
                   <div className="space-y-4">
@@ -1447,7 +1525,6 @@ export default function OfferCreativeStep({
                           })
                         }
                         options={[
-                          { label: t.offers.senderId.defaultPlaceholder, value: "" },
                           ...(senderIds || [])
                             .filter((senderId) => senderId.is_active)
                             .map((senderId) => ({
@@ -1492,6 +1569,13 @@ export default function OfferCreativeStep({
                           value={editingCreative.title || ""}
                           onChange={(value) => {
                             setActiveField("title");
+                            // Validate and show error, but allow text update
+                            const editError = validateNoEditInsideVariables(editingCreative.title || "", value);
+                            if (editError) {
+                              setVariableError(editError);
+                            } else {
+                              setVariableError("");
+                            }
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               title: value,
                             });
@@ -1538,14 +1622,6 @@ export default function OfferCreativeStep({
                       </div>
                     )} */}
 
-                    {/* Email HTML Body Requirement Hint */}
-                    {editingCreative.channel === "Email" && (
-                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                        <p className="text-xs text-blue-700">
-                          ℹ️ For Email channels, you need to enable <strong>Rich Text</strong> mode to generate the HTML body required by the backend.
-                        </p>
-                      </div>
-                    )}
 
                     {/* Message content toolbar */}
                     <div
@@ -1556,10 +1632,11 @@ export default function OfferCreativeStep({
                         {t.offers.messageContent.label}
                       </span>
                       <div className="flex items-center gap-2">
-                        {(editingCreative.channel === "Email" ||
+                        {editingCreative.channel !== "Email" && (
                           editingCreative.channel === "SMS" ||
                           editingCreative.channel === "WhatsApp" ||
-                          editingCreative.channel === "Push") && (
+                          editingCreative.channel === "Push"
+                        ) && (
                           <button
                             type="button"
                             onClick={() =>
@@ -1620,20 +1697,21 @@ export default function OfferCreativeStep({
                     </div>
 
                     {/* Message Body */}
-                    {selectedCreativeData && isRichTextMap[selectedCreativeData.id] ? (
+                    {selectedCreativeData && (selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id]) ? (
                         <div
                           onClick={() => setActiveField("body")}
                           onFocus={() => setActiveField("body")}
                         >
                           <RichTextEditor
-                            value={editingCreative.text_body || ""}
+                            value={selectedCreativeData.channel === "Email" ? (editingCreative.html_body || "") : (editingCreative.text_body || "")}
                             onChange={(value) => {
                               selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                                text_body: value,
+                                ...(selectedCreativeData.channel === "Email" ? { html_body: value, text_body: value } : { text_body: value }),
                               });
                             }}
                             placeholder={t.offers.messageBody.placeholder}
                             minHeight="250px"
+                            onVariableError={setVariableError}
                           />
                         </div>
                       ) : (
@@ -1643,9 +1721,29 @@ export default function OfferCreativeStep({
                           value={editingCreative.text_body || ""}
                           onChange={(value) => {
                             setActiveField("body");
+                            const editError = validateNoEditInsideVariables(
+                              editingCreative.text_body || "",
+                              value,
+                            );
+                            if (editError) {
+                              setVariableError(editError);
+                            } else {
+                              setVariableError("");
+                            }
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               text_body: value,
+                              ...(selectedCreativeData.channel === "Email" && { html_body: value }),
                             });
+                          }}
+                          onKeyDown={(e) => {
+                            const textarea = e.currentTarget;
+                            const cursorPos = textarea.selectionStart || 0;
+                            if (isCursorInsideVariable(editingCreative.text_body || "", cursorPos)) {
+                              e.preventDefault();
+                              setVariableError("You can't edit inside a variable");
+                            } else {
+                              setVariableError("");
+                            }
                           }}
                           onClickCapture={(e) => {
                             setActiveField("body");
@@ -1691,11 +1789,27 @@ export default function OfferCreativeStep({
           {creatives.length > 0 && (
             <div className="lg:col-span-1">
               <div className="sticky top-4">
-                <PreviewPanel
-                  channel={editingCreative.channel === "SMS" ? "SMS" : editingCreative.channel === "Email" ? "EMAIL" : editingCreative.channel === "WhatsApp" ? "WHATSAPP" : "PUSH"}
-                  title={editingCreative.title}
-                  body={editingCreative.text_body || ""}
-                />
+                {(() => {
+                  // Build variables object with default values using same format as manual communications
+                  const previewVars: Record<string, string | number | boolean> = {};
+                  selectedVariables.forEach((v) => {
+                    // Use the same formatVariablePlaceholder logic to extract the key
+                    const placeholder = formatVariablePlaceholder(v);
+                    // Remove {{ and }} to get just the key part
+                    const variableKey = placeholder.slice(2, -2);
+                    previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
+                  });
+
+                  const replacedBody = replaceVariables(editingCreative.text_body || editingCreative.html_body || "", previewVars);
+
+                  return (
+                    <SimpleTextPreview
+                      channel={editingCreative.channel}
+                      title={replaceVariables(editingCreative.title, previewVars)}
+                      body={replacedBody}
+                    />
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -1729,139 +1843,12 @@ export default function OfferCreativeStep({
               <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
             </div>
           ) : previewResult ? (
-            <div className="space-y-6">
-              {/* Device-Specific Previews */}
-              {editingCreative?.channel === "SMS" ||
-              editingCreative?.channel === "SMS Flash" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    {t.offers.preview.smsPreview}
-                  </h3>
-                  <SMSSmartphonePreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : editingCreative?.channel === "Email" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    {t.offers.preview.emailPreview}
-                  </h3>
-                  <EmailLaptopPreview
-                    title={previewResult.rendered_title}
-                    htmlBody={previewResult.rendered_html_body}
-                    textBody={previewResult.rendered_text_body}
-                  />
-                </div>
-              ) : editingCreative?.channel === "WhatsApp" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    WhatsApp Preview
-                  </h3>
-                  <WhatsAppPhonePreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : editingCreative?.channel === "Push" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    Push Notification Preview
-                  </h3>
-                  <PushNotificationPreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : editingCreative?.channel === "USSD" ? (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    USSD Menu Preview
-                  </h3>
-                  <USSDMenuPreview
-                    message={
-                      previewResult.rendered_text_body ||
-                      previewResult.rendered_title ||
-                      ""
-                    }
-                    title={previewResult.rendered_title}
-                  />
-                </div>
-              ) : (
-                // Fallback for other channels
-                <div className="space-y-4">
-                  {previewResult.rendered_title && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.preview.renderedTitle}
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <p className="text-gray-900">
-                          {previewResult.rendered_title}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {previewResult.rendered_text_body && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.preview.renderedTextBody}
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <p className="text-gray-900 whitespace-pre-wrap">
-                          {previewResult.rendered_text_body}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {previewResult.rendered_html_body && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.preview.renderedHtmlBody}
-                      </label>
-                      <div
-                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
-                      >
-                        <div
-                          className="prose max-w-none"
-                          dangerouslySetInnerHTML={{
-                            __html: previewResult.rendered_html_body,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {!previewResult.rendered_title &&
-                    !previewResult.rendered_text_body &&
-                    !previewResult.rendered_html_body && (
-                      <div className="text-center py-8 text-gray-500">
-                        <p>
-                          {t.offers.preview.noContent}
-                        </p>
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
+            <CreativePreviewRenderer
+              channel={editingCreative?.channel}
+              title={previewResult.rendered_title}
+              textBody={previewResult.rendered_text_body}
+              htmlBody={previewResult.rendered_html_body}
+            />
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>
@@ -1892,6 +1879,24 @@ export default function OfferCreativeStep({
             handleTemplateCreated(newTemplate);
           }
         }}
+      />
+
+      <SelectOfferCreativesModal
+        open={showSelectCreativesModal}
+        creatives={availableCatalogCreatives}
+        loading={existingCreativesLoading}
+        channelLabel={getChannelLabel(selectedChannelForFiltering)}
+        canCreateNew={hasUnusedLanguage}
+        onClose={() => setShowSelectCreativesModal(false)}
+        onConfirm={handleConfirmCatalogCreatives}
+        onCreateNew={addCreative}
+        localeLabel={(locale) =>
+          getLocaleLabel(
+            locale,
+            Array.isArray(languages) ? languages : undefined,
+            t,
+          )
+        }
       />
     </div>
   );

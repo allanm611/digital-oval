@@ -5,6 +5,7 @@
  */
 
 import UserAnalyticsPage from "./UserAnalyticsPage";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
@@ -13,6 +14,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
  * Shows loading skeleton while UserAnalyticsPage mounts and loads its data
  */
 export default function UserAnalyticsPageWrapper() {
+  const { t } = useLanguage();
   return (
     <PermissionGate permission="users.read">
       <SuspenseBoundary type="page">

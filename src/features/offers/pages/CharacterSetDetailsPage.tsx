@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -13,6 +14,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CharacterSetDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
@@ -30,7 +32,7 @@ export default function CharacterSetDetailsPage() {
       const data = await characterSetService.getCharacterSetById(parseInt(id));
 
       if (!data) {
-        showError("Not Found", "Character set not found");
+        showError(t.common.notFound || "Not Found", t.common.error || "Character set not found");
         navigate("/dashboard/character-sets");
         return;
       }
@@ -38,7 +40,7 @@ export default function CharacterSetDetailsPage() {
       setCharacterSet(data);
     } catch (err) {
       console.error("Failed to load character set:", err);
-      showError("Failed to load character set", extractBackendError(error, "Failed to load character set. Please try again."));
+      showError(t.common.error || "Failed to load character set", extractBackendError(err, "Failed to load character set. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -56,10 +58,10 @@ export default function CharacterSetDetailsPage() {
     try {
       setIsDeleting(true);
       await characterSetService.deleteCharacterSet(characterSet.id);
-      success("Deleted", "Character set removed");
+      success(t.common.deleted || "Deleted", t.messages.removed || "Character set removed");
       navigate("/dashboard/character-sets");
     } catch (err: any) {
-      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
+      showError(t.common.deleteFailed || "Delete failed", extractBackendError(err, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -76,7 +78,7 @@ export default function CharacterSetDetailsPage() {
           className="mb-4"
         />
         <p className={`${tw.textMuted} font-medium text-sm`}>
-          Loading character set details...
+          {t.common.loadingDetails || "Loading character set details..."}
         </p>
       </div>
     );
@@ -87,10 +89,10 @@ export default function CharacterSetDetailsPage() {
       <div className="space-y-6">
         <div className="text-center py-12">
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-            Character Set Not Found
+            {t.common.notFound || "Character Set Not Found"}
           </h3>
           <p className={`${tw.textMuted} mb-6`}>
-            The character set you are looking for does not exist.
+            {t.configurations.characterSetNotFound || "The character set you are looking for does not exist."}
           </p>
           <button
             onClick={() => navigate("/dashboard/character-sets")}

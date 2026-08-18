@@ -7,6 +7,7 @@ import {
   lazy,
   Suspense,
 } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useConfirm } from "../../../contexts/ConfirmContext";
@@ -35,6 +36,9 @@ import Checkbox from "../../../shared/components/ui/Checkbox";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
+import { TableColumn } from "../../../shared/components/Table/types";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
@@ -49,6 +53,7 @@ import { offerCreativeService } from "../services/offerCreativeService";
 import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
+import { toRouteSelectOptions } from "../../routes/utils/routeSelect";
 import {
   OfferCreative,
   CreativeChannel,
@@ -80,7 +85,13 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
-import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
+import {
+  creativeTemplateService,
+  creativeTemplateText,
+  creativeTemplateHtml,
+  matchesTemplateChannel,
+  type CreativeTemplate,
+} from "../../configurations/services/creativeTemplateService";
 import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
@@ -234,6 +245,69 @@ export default function OfferDetailsPage() {
   const [creativesLoading, setCreativesLoading] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
+  // Table management states and hooks
+  const [showLinkedProductsColumnPicker, setShowLinkedProductsColumnPicker] = useState(false);
+  const [showCampaignFlowsColumnPicker, setShowCampaignFlowsColumnPicker] = useState(false);
+
+  const linkedProductsTable = useTable({
+    tableId: "offer-linked-products-table",
+    defaultColumns: useMemo(() => [
+      { id: "id", label: "Product ID", width: "100px", visible: true, filterConfig: { type: "number" } },
+      { id: "name", label: "Product Name", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "quantity", label: "Quantity", width: "100px", visible: true, filterConfig: { type: "number" } },
+      { id: "actions", label: "Actions", width: "120px", visible: true, sortable: false, isActionColumn: true },
+    ], []),
+    defaultPageSize: 25,
+  });
+
+  const creativesTable = useTable({
+    tableId: "offer-creatives-table",
+    defaultColumns: useMemo(() => [
+      { id: "channel", label: "Channel", width: "120px", visible: true, filterConfig: { type: "text" } },
+      { id: "locale", label: "Locale", width: "100px", visible: true, filterConfig: { type: "text" } },
+      { id: "title", label: "Title", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "status", label: "Status", width: "100px", visible: true, filterConfig: { type: "text" } },
+      { id: "actions", label: "Actions", width: "120px", visible: true, sortable: false, isActionColumn: true },
+    ], []),
+    defaultPageSize: 25,
+  });
+
+  const campaignFlowsTable = useTable({
+    tableId: "offer-campaign-flows-table",
+    defaultColumns: useMemo(() => [
+      { id: "campaignId", label: "Campaign ID", width: "120px", visible: true, filterConfig: { type: "number" } },
+      { id: "campaignName", label: "Campaign Name", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "segmentName", label: "Segment", width: "200px", visible: true, filterConfig: { type: "text" } },
+      { id: "flowType", label: "Flow Type", width: "150px", visible: true, filterConfig: { type: "text" } },
+      { id: "status", label: "Status", width: "100px", visible: true, filterConfig: { type: "text" } },
+      { id: "actions", label: "Actions", width: "120px", visible: true, sortable: false, isActionColumn: true },
+    ], []),
+    defaultPageSize: 25,
+  });
+
+  // Dropdown menu state for product actions
+  const [openProductMenu, setOpenProductMenu] = useState<string | null>(null);
+  const productMenuRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [productMenuPosition, setProductMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const productMenuPortalRef = useRef<HTMLDivElement | null>(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    if (!openProductMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const menuButton = Object.values(productMenuRefs.current).find(
+        (btn) => btn && btn.contains(e.target as Node)
+      );
+      if (!menuButton && productMenuPortalRef.current && !productMenuPortalRef.current.contains(e.target as Node)) {
+        setOpenProductMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openProductMenu]);
+
   // Creative edit modal state
   const [isEditCreativeModalOpen, setIsEditCreativeModalOpen] = useState(false);
   const [editingCreative, setEditingCreative] = useState<OfferCreative | null>(
@@ -249,6 +323,7 @@ export default function OfferDetailsPage() {
     text_body: string;
     html_body: string;
     is_active: boolean;
+    save_as_template: boolean;
     sms_route?: string;
     variables?: Record<string, string | number | boolean>;
   }>({
@@ -258,6 +333,7 @@ export default function OfferDetailsPage() {
     text_body: "",
     html_body: "",
     is_active: true,
+    save_as_template: false,
     sms_route: "",
     variables: {},
   });
@@ -332,26 +408,27 @@ export default function OfferDetailsPage() {
     return option?.label || flowType;
   };
 
-  // Load creative templates from API
-  const [apiTemplates, setApiTemplates] = useState<any[]>([]);
+  // Load creative templates from GET /creative-template
+  const [apiTemplates, setApiTemplates] = useState<CreativeTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
 
-  useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        setTemplatesLoading(true);
-        const response = await creativeTemplateService.getCreativeTemplates();
-        const templatesData = response?.data || response || [];
-        setApiTemplates(Array.isArray(templatesData) ? templatesData : []);
-      } catch (err) {
-        console.error("Failed to load creative templates:", err);
-        setApiTemplates([]);
-      } finally {
-        setTemplatesLoading(false);
-      }
-    };
-    loadTemplates();
+  const loadCreativeTemplates = useCallback(async () => {
+    try {
+      setTemplatesLoading(true);
+      const response = await creativeTemplateService.getCreativeTemplates();
+      const templatesData = response?.data || [];
+      setApiTemplates(Array.isArray(templatesData) ? templatesData : []);
+    } catch (err) {
+      console.error("Failed to load creative templates:", err);
+      setApiTemplates([]);
+    } finally {
+      setTemplatesLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadCreativeTemplates();
+  }, [loadCreativeTemplates]);
 
   const templates = apiTemplates;
 
@@ -445,25 +522,19 @@ export default function OfferDetailsPage() {
     return result;
   };
 
-  // Filter templates by channel and locale
+  // Filter templates by channel and locale (cvm.offer_creatives_template)
   const getTemplatesForChannelAndLocale = (
     channel: CreativeChannel,
     locale: string,
   ) => {
-    return (templates as ConfigurationItem[]).filter((template) => {
-      if (!template.isActive) return false;
-
-      // Check if template matches channel
-      const matchesChannel =
-        template.metadataValue?.toLowerCase() === channel.toLowerCase();
-
-      // Check if template has locale field
-      // If template doesn't have locale specified, show it for all locales (backward compatibility)
-      // If template has locale, it must match the creative's locale
+    return templates.filter((template) => {
+      if (template.is_active === false) return false;
+      if (!matchesTemplateChannel(template.channel, channel)) return false;
       const templateLocale = template.locale;
-      const matchesLocale = !templateLocale || templateLocale === locale;
-
-      return matchesChannel && matchesLocale;
+      const matchesLocale =
+        !templateLocale ||
+        templateLocale.toLowerCase() === (locale || "en").toLowerCase();
+      return matchesLocale;
     });
   };
 
@@ -523,6 +594,7 @@ export default function OfferDetailsPage() {
       text_body: "",
       html_body: "",
       is_active: true,
+      save_as_template: false,
       sms_route: "",
       variables: {},
     });
@@ -601,34 +673,24 @@ export default function OfferDetailsPage() {
       return;
     }
 
-    const template = templates.find((t) => t.id === templateId) as
-      | ConfigurationItem
-      | undefined;
+    const template = templates.find((t) => t.id === templateId);
     if (!template) return;
 
     setSelectedTemplateId(templateId);
 
-    // Get template variables (default values)
-    const templateVariables = template.variables || {};
+    const bodyText = creativeTemplateText(template);
+    const bodyHtml = creativeTemplateHtml(template);
 
-    // Update form with template content (replace placeholders with actual values)
+    // Keep {{placeholders}} — they are resolved only in preview.
     setNewCreativeForm((prev) => ({
       ...prev,
-      // Set channel if template has a specific channel
-      channel: (template.metadataValue as CreativeChannel) || prev.channel,
-      // Populate title, text_body, html_body if template has them
-      title: template.title
-        ? replaceVariables(template.title, templateVariables)
-        : prev.title,
-      text_body: template.text_body
-        ? replaceVariables(template.text_body, templateVariables)
-        : prev.text_body,
-      html_body: template.html_body
-        ? replaceVariables(template.html_body, templateVariables)
-        : prev.html_body,
+      channel: (template.channel as CreativeChannel) || prev.channel,
+      title: template.title || prev.title,
+      text_body: bodyText || prev.text_body,
+      html_body: bodyHtml || prev.html_body,
+      variables: template.variables || prev.variables,
     }));
 
-    // Update variables JSON
     if (template.variables) {
       setNewCreativeVariables(JSON.stringify(template.variables, null, 2));
     }
@@ -702,7 +764,7 @@ export default function OfferDetailsPage() {
         }
       } catch (err) {
         console.error("Failed to load offer:", err);
-        showError("Failed to load offer", extractBackendError(error, "Failed to load offer. Please try again."));
+        showError("Failed to load offer", extractBackendError(err, "Failed to load offer. Please try again."));
         setError(""); // Clear error state
       } finally {
         setLoading(false);
@@ -943,7 +1005,7 @@ export default function OfferDetailsPage() {
       );
     } catch (err) {
       console.error("Failed to delete creative:", err);
-      showError("Failed to delete creative", extractBackendError(error, "Failed to delete creative. Please try again."));
+      showError("Failed to delete creative", extractBackendError(err, "Failed to delete creative. Please try again."));
     } finally {
       setIsDeletingCreative(false);
     }
@@ -1022,6 +1084,7 @@ export default function OfferDetailsPage() {
         locale: newCreativeForm.locale,
         name: creativeName,
         is_active: newCreativeForm.is_active,
+        save_as_template: Boolean(newCreativeForm.save_as_template),
         created_by: user.user_id,
       };
 
@@ -1039,13 +1102,21 @@ export default function OfferDetailsPage() {
       }
 
       await offerCreativeService.create(payload);
-      success("Creative Created", "Creative has been created successfully.");
+      success(
+        "Creative Created",
+        payload.save_as_template
+          ? "Creative saved and copied to Creative Templates."
+          : "Creative has been created successfully.",
+      );
       setIsAddCreativeModalOpen(false);
       resetNewCreativeForm();
       loadCreatives(true);
+      if (payload.save_as_template) {
+        loadCreativeTemplates();
+      }
     } catch (err) {
       console.error("Failed to create creative:", err);
-      showError("Failed to create creative", extractBackendError(error, "Failed to create creative. Please try again."));
+      showError("Failed to create creative", extractBackendError(err, "Failed to create creative. Please try again."));
     } finally {
       setIsCreatingCreative(false);
     }
@@ -1206,7 +1277,7 @@ export default function OfferDetailsPage() {
       loadProducts(true);
     } catch (err) {
       console.error("Failed to link products:", err);
-      showError("Failed to link products", extractBackendError(error, "Failed to link products. Please try again."));
+      showError("Failed to link products", extractBackendError(err, "Failed to link products. Please try again."));
     } finally {
       setIsLinkingProducts(false);
     }
@@ -1433,14 +1504,19 @@ export default function OfferDetailsPage() {
       // Check if this is the primary product
       const isPrimary = productToUnlink.productId === primaryProductId;
 
-      // Unlink the product completely (whether it was primary or not)
-      // The backend will automatically remove primary status if this is the primary product
-      await offerService.unlinkProductById(productToUnlink.linkId);
+      // Optimistically remove from linked products
+      setLinkedProducts((prev) =>
+        prev.filter((p) => p.link_id !== productToUnlink.linkId),
+      );
 
       // Clear primary product from state if it was the primary
       if (isPrimary) {
         setPrimaryProductId(null);
       }
+
+      // Unlink the product completely (whether it was primary or not)
+      // The backend will automatically remove primary status if this is the primary product
+      await offerService.unlinkProductById(productToUnlink.linkId);
 
       success(
         "Product Unlinked",
@@ -1449,8 +1525,9 @@ export default function OfferDetailsPage() {
 
       setShowUnlinkModal(false);
       setProductToUnlink(null);
-      loadProducts(true); // Skip cache to get fresh data after unlinking
     } catch {
+      // Revert on error
+      loadProducts(true);
       showError("Failed to unlink product");
     } finally {
       setUnlinkingProductId(null);
@@ -1487,7 +1564,7 @@ export default function OfferDetailsPage() {
           : null) ||
         "Failed to delete product. Please try again.";
       // Bypass silent mode for delete operations to always show error
-      showError("Cannot Delete Product", extractBackendError(error, "Cannot Delete Product. Please try again."));
+      showError("Cannot Delete Product", extractBackendError(err, "Cannot Delete Product. Please try again."));
     } finally {
       setIsDeletingProduct(false);
     }
@@ -1583,7 +1660,7 @@ export default function OfferDetailsPage() {
       );
     } catch (err) {
       // Failed to set primary product - show generic message only
-      showError("Failed to set primary", extractBackendError(error, "Failed to set primary. Please try again."));
+      showError("Failed to set primary", extractBackendError(err, "Failed to set primary. Please try again."));
     } finally {
       setSettingPrimaryId(null);
     }
@@ -2133,11 +2210,11 @@ export default function OfferDetailsPage() {
                       filterConfig: { type: "text" },
                       render: (value: string) => (
                         value ? (
-                          <div className={`text-sm ${tw.textMuted} truncate`} title={value}>
+                          <div className="text-sm text-gray-900 truncate" title={value}>
                             {value}
                           </div>
                         ) : (
-                          <span className={`text-sm ${tw.textMuted}`}>No description provided</span>
+                          <span className="text-sm text-gray-900">No description provided</span>
                         )
                       ),
                     },
@@ -2148,13 +2225,9 @@ export default function OfferDetailsPage() {
                       visible: true,
                       filterConfig: { type: "multiselect", options: ["Primary", "—"] },
                       render: (value: string) => (
-                        value === "Primary" ? (
-                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            Primary
-                          </span>
-                        ) : (
-                          <span className={`text-sm ${tw.textMuted}`}>—</span>
-                        )
+                        <span className="text-sm text-gray-900">
+                          {value}
+                        </span>
                       ),
                     },
                     {
@@ -2163,6 +2236,7 @@ export default function OfferDetailsPage() {
                       width: "200px",
                       visible: true,
                       sortable: false,
+      isActionColumn: true,
                       render: (_, row) => {
                         const product = linkedProducts.find((p: any) => String(p.product_id ?? p.id) === row.id);
                         if (!product) return null;
@@ -2172,60 +2246,50 @@ export default function OfferDetailsPage() {
                         const isUnlinking = product.link_id && unlinkingProductId === product.link_id;
                         const isSettingPrimary = settingPrimaryId === productId;
                         return (
-                          <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-2 overflow-visible">
                             {hasValidProductId && (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleEditProduct(productId)}
-                                  className="text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  title="Edit product"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setProductToDelete({ id: productId, name: row.name });
-                                    setShowDeleteProductModal(true);
-                                  }}
-                                  disabled={isDeletingProduct}
-                                  className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  title="Delete product"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete
-                                </button>
-                              </>
-                            )}
-                            {!isPrimary && (product.link_id || hasValidProductId) && (
                               <button
                                 type="button"
-                                onClick={() => handleSetPrimaryProduct(productId, row.name)}
-                                disabled={isSettingPrimary || isUnlinking}
-                                className="text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:underline"
-                                style={{ color: color.primary.accent }}
-                                title="Set as primary"
+                                onClick={() => handleEditProduct(productId)}
+                                className={`flex items-center justify-center p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="Edit product"
                               >
-                                {isSettingPrimary || isUnlinking ? "Setting..." : "Set Primary"}
+                                <Edit className="h-4 w-4 text-gray-600" />
                               </button>
                             )}
-                            {(product.link_id || hasValidProductId) && (
+                            {hasValidProductId && (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  if (!product.link_id) {
-                                    showError("Cannot unlink: Link ID not available. Product may need to be re-linked.");
-                                    return;
-                                  }
-                                  setProductToUnlink({ linkId: product.link_id, productId, name: row.name });
-                                  setShowUnlinkModal(true);
-                                }}
-                                disabled={isUnlinking || isSettingPrimary || !product.link_id}
-                                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => navigateToProductDetails(productId)}
+                                className={`flex items-center justify-center p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="View product"
                               >
-                                {isUnlinking ? "Unlinking..." : "Unlink"}
+                                <Eye className="h-4 w-4 text-gray-600" />
+                              </button>
+                            )}
+                            {hasValidProductId && (
+                              <button
+                                ref={(el) => {
+                                  if (el) productMenuRefs.current[String(productId)] = el;
+                                }}
+                                type="button"
+                                onClick={(e) => {
+                                  const menuId = String(productId);
+                                  const button = productMenuRefs.current[menuId];
+                                  if (button) {
+                                    const rect = button.getBoundingClientRect();
+                                    // Position menu below and to the left of button, accounting for menu width (192px)
+                                    setProductMenuPosition({
+                                      top: rect.bottom + 8,
+                                      left: Math.max(8, rect.right - 192 - 8),
+                                    });
+                                  }
+                                  setOpenProductMenu(openProductMenu === menuId ? null : menuId);
+                                }}
+                                className={`flex items-center justify-center p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="More options"
+                              >
+                                <MoreVertical className="h-4 w-4 text-gray-600" />
                               </button>
                             )}
                           </div>
@@ -2246,6 +2310,10 @@ export default function OfferDetailsPage() {
                       primary: isPrimary ? "Primary" : "—",
                     };
                   })}
+                  onSort={linkedProductsTable.handleSort}
+                  sortConfigs={linkedProductsTable.sortConfigs}
+                  onHideColumn={linkedProductsTable.toggleColumn}
+                  onManageColumnsClick={() => setShowLinkedProductsColumnPicker(true)}
                   rowSpacing="0 8px"
                   totalItems={linkedProducts.length}
                   currentPage={1}
@@ -2265,6 +2333,85 @@ export default function OfferDetailsPage() {
           )}
         </div>
       </section>
+
+      {/* Product Menu Portal */}
+      {openProductMenu &&
+        productMenuPosition &&
+        createPortal(
+          <div
+            ref={productMenuPortalRef}
+            className="fixed bg-white border border-gray-200 rounded shadow-lg z-50 w-48"
+            style={{
+              top: `${productMenuPosition.top}px`,
+              left: `${productMenuPosition.left}px`,
+              maxHeight: "200px",
+              overflowY: "auto",
+            }}
+          >
+            {(() => {
+              const product = linkedProducts.find(
+                (p) => String(p.product_id ?? p.id) === openProductMenu
+              );
+              if (!product) return null;
+
+              const productId = Number(product.product_id ?? product.id);
+              const isPrimary = product.is_primary || primaryProductId === productId;
+              const isUnlinking = product.link_id && unlinkingProductId === product.link_id;
+              const isSettingPrimary = settingPrimaryId === productId;
+
+              return (
+                <>
+                  {!isPrimary && (product.link_id || !Number.isNaN(productId)) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleSetPrimaryProduct(productId, product.name || `Product ${productId}`);
+                        setOpenProductMenu(null);
+                      }}
+                      disabled={isSettingPrimary || isUnlinking}
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isSettingPrimary || isUnlinking ? "Setting..." : "Set Primary"}
+                    </button>
+                  )}
+                  {(product.link_id || !Number.isNaN(productId)) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!product.link_id) {
+                          showError("Cannot unlink: Link ID not available. Product may need to be re-linked.");
+                          return;
+                        }
+                        setProductToUnlink({ linkId: product.link_id, productId, name: product.name || `Product ${productId}` });
+                        setShowUnlinkModal(true);
+                        setOpenProductMenu(null);
+                      }}
+                      disabled={isUnlinking || isSettingPrimary || !product.link_id}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isUnlinking ? "Unlinking..." : "Unlink"}
+                    </button>
+                  )}
+                  {(product.link_id || !Number.isNaN(productId)) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProductToDelete({ id: productId, name: product.name || `Product ${productId}` });
+                        setShowDeleteProductModal(true);
+                        setOpenProductMenu(null);
+                      }}
+                      disabled={isDeletingProduct}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isDeletingProduct ? "Deleting..." : "Delete"}
+                    </button>
+                  )}
+                </>
+              );
+            })()}
+          </div>,
+          document.body
+        )}
 
       {/* Offer Creatives Section */}
       <section className="mt-12 space-y-4">
@@ -2336,6 +2483,9 @@ export default function OfferDetailsPage() {
                       width: "120px",
                       visible: true,
                       filterConfig: { type: "multiselect", options: ["SMS", "Email", "Push", "Web"] },
+                      render: (value: string) => (
+                        <span className="text-sm text-gray-900">{value}</span>
+                      ),
                     },
                     {
                       id: "locale",
@@ -2343,6 +2493,9 @@ export default function OfferDetailsPage() {
                       width: "120px",
                       visible: true,
                       filterConfig: { type: "text" },
+                      render: (value: string) => (
+                        <span className="text-sm text-gray-900">{value}</span>
+                      ),
                     },
                     {
                       id: "status",
@@ -2351,15 +2504,9 @@ export default function OfferDetailsPage() {
                       visible: true,
                       filterConfig: { type: "multiselect", options: ["Active", "Inactive"] },
                       render: (value: string) => (
-                        value === "Active" ? (
-                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
-                            Inactive
-                          </span>
-                        )
+                        <span className="text-sm text-gray-900">
+                          {value}
+                        </span>
                       ),
                     },
                     {
@@ -2370,9 +2517,11 @@ export default function OfferDetailsPage() {
                       filterConfig: { type: "date" },
                       render: (value: string) => (
                         value ? (
-                          <DateFormatter date={value} includeTime />
+                          <span className="text-sm text-gray-900">
+                            <DateFormatter date={value} includeTime />
+                          </span>
                         ) : (
-                          "—"
+                          <span className="text-sm text-gray-900">—</span>
                         )
                       ),
                     },
@@ -2382,37 +2531,44 @@ export default function OfferDetailsPage() {
                       width: "150px",
                       visible: true,
                       sortable: false,
+      isActionColumn: true,
                       render: (_, row) => {
                         const creative = offerCreatives.find((c) => String(c.id) === row.id);
                         if (!creative) return null;
                         const creativeId = creative.id ? Number(creative.id) : null;
                         const hasCreativeId = creativeId !== null && !Number.isNaN(creativeId);
                         return (
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 overflow-visible">
                             {hasCreativeId && (
                               <button
                                 type="button"
                                 onClick={() => navigateToCreativeDetails(creativeId)}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
                                 title="View details"
                               >
                                 <Eye className="w-4 h-4 text-gray-600" />
                               </button>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => handleEditCreative(creative)}
-                              className="text-sm font-medium hover:underline text-gray-600"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCreative(creative)}
-                              className="text-sm font-medium text-red-600 hover:text-red-700"
-                            >
-                              Delete
-                            </button>
+                            {hasCreativeId && (
+                              <button
+                                type="button"
+                                onClick={() => handleEditCreative(creative)}
+                                className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                                title="Edit creative"
+                              >
+                                <Edit className="w-4 h-4 text-gray-600" />
+                              </button>
+                            )}
+                            {hasCreativeId && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCreative(creative)}
+                                className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
+                                title="Delete creative"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </button>
+                            )}
                           </div>
                         );
                       },
@@ -2429,6 +2585,9 @@ export default function OfferDetailsPage() {
                       updated: creative.updated_at || creative.created_at || "",
                     };
                   })}
+                  onSort={creativesTable.handleSort}
+                  sortConfigs={creativesTable.sortConfigs}
+                  onHideColumn={creativesTable.toggleColumn}
                   rowSpacing="0 8px"
                   totalItems={offerCreatives.length}
                   currentPage={1}
@@ -2448,8 +2607,8 @@ export default function OfferDetailsPage() {
       </section>
 
       {/* Used in Campaigns Section */}
-      <section className={`${tw.rounded} border-gray-200 py-6`}>
-        <div className="px-6 mb-6">
+      <section className="mt-12 space-y-4">
+        <div className="mb-4">
           <h3 className={`${tw.cardHeading}`}>
             Used in Campaigns ({campaignFlows.length})
           </h3>
@@ -2458,20 +2617,21 @@ export default function OfferDetailsPage() {
           </p>
         </div>
 
-        {isLoadingCampaignFlows ? (
-          <div className="px-6 flex justify-center py-8">
-            <LoadingSpinner variant="modern" size="md" color="primary" />
-          </div>
-        ) : campaignFlows.length === 0 ? (
-          <div className="px-6 text-center py-8">
-            <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className={`text-sm ${tw.textSecondary}`}>
-              This offer is not used in any campaigns yet
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className={`overflow-x-auto ${tw.rounded}`}>
+        <div className={`${tw.rounded} overflow-hidden`}>
+          {isLoadingCampaignFlows ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner variant="modern" size="md" color="primary" />
+            </div>
+          ) : campaignFlows.length === 0 ? (
+            <div className="text-center py-8">
+              <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className={`text-sm ${tw.textSecondary}`}>
+                This offer is not used in any campaigns yet
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
               <Table<CampaignFlowTableRow>
                 columns={[
                   {
@@ -2556,26 +2716,95 @@ export default function OfferDetailsPage() {
                   waitHours: flow.wait_interval_hours,
                   allocation: flow.bucket_allocation || "—",
                 }))}
+                onSort={campaignFlowsTable.handleSort}
+                sortConfigs={campaignFlowsTable.sortConfigs}
+                onHideColumn={campaignFlowsTable.toggleColumn}
+                onManageColumnsClick={() => setShowCampaignFlowsColumnPicker(true)}
                 rowSpacing="0 8px"
                 totalItems={campaignFlows.length}
                 currentPage={1}
                 pageSize={20}
               />
             </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </section>
 
       {/* Add Creative Modal */}
-      <RegularModal
+      <OfferCreativeFormModal
         isOpen={isAddCreativeModalOpen}
         onClose={() => {
           setIsAddCreativeModalOpen(false);
           resetNewCreativeForm();
         }}
-        title="Add Creative"
-        size="2xl"
-      >
+        onSave={async (creativeData) => {
+          if (!id || !user?.user_id) {
+            showError("Missing required information. Please refresh and try again.");
+            return;
+          }
+
+          try {
+            setIsCreatingCreative(true);
+
+            const creativeName =
+              creativeData.name?.trim() ||
+              creativeData.title?.trim() ||
+              `${creativeData.channel} - ${creativeData.locale}`;
+
+            const createPayload: CreateOfferCreativeRequest = {
+              offer_id: Number(id),
+              channel: creativeData.channel,
+              locale: creativeData.locale,
+              name: creativeName,
+              title: creativeData.title || creativeName,
+              text_body: creativeData.text_body,
+              html_body: creativeData.html_body,
+              is_active: creativeData.is_active,
+              save_as_template: Boolean(creativeData.save_as_template),
+              created_by: user.user_id,
+            };
+
+            if (creativeData.sms_route) {
+              (createPayload as any).sms_route = creativeData.sms_route;
+            }
+
+            await offerCreativeService.create(createPayload);
+
+            setIsAddCreativeModalOpen(false);
+            resetNewCreativeForm();
+            loadCreatives(true);
+            if (createPayload.save_as_template) {
+              loadCreativeTemplates();
+            }
+            success(
+              "Creative Created",
+              createPayload.save_as_template
+                ? "Creative saved and copied to Creative Templates."
+                : "New creative has been added successfully.",
+            );
+          } catch (err) {
+            console.error("Failed to create creative:", err);
+            showError("Failed to create creative");
+            throw err;
+          } finally {
+            setIsCreatingCreative(false);
+          }
+        }}
+        initialCreative={{
+          channel: offer?.communication_channel_id ?
+            (offer.channel || "") : "",
+          locale: "en",
+          title: "",
+          text_body: "",
+          html_body: "",
+          is_active: true,
+        }}
+        mode="create"
+      />
+
+      {/* Placeholder div - removing old custom modal content */}
+      {false && (
         <div className="grid grid-cols-2 gap-6">
           {/* Left Column - Form Fields (1/2) */}
           <div className="space-y-4">
@@ -2769,14 +2998,9 @@ export default function OfferDetailsPage() {
                         sms_route: value,
                       }));
                     }}
-                    options={
-                      smsRoutes
-                        ?.filter((route) => route.is_active)
-                        .map((route) => ({
-                          value: route.id?.toString() || "",
-                          label: route.name,
-                        })) || []
-                    }
+                    options={toRouteSelectOptions(
+                      smsRoutes?.filter((route) => route.is_active !== false),
+                    )}
                     placeholder="Select SMS Route"
                     zIndex={zIndex.popover}
                     disabled={smsRoutesLoading}
@@ -3040,8 +3264,28 @@ export default function OfferDetailsPage() {
               />
             </div>
           </div>
+
+          {/* Right Column - Preview Panel (1/2) */}
+          <div>
+            <div>
+              <PreviewPanel
+                channel={
+                  newCreativeForm.channel === "SMS"
+                    ? "SMS"
+                    : newCreativeForm.channel === "Email"
+                      ? "EMAIL"
+                      : newCreativeForm.channel === "WhatsApp"
+                        ? "WHATSAPP"
+                        : "PUSH"
+                }
+                title={newCreativeForm.title}
+                body={newCreativeForm.text_body || ""}
+              />
+            </div>
+          </div>
         </div>
-      </RegularModal>
+      )}
+
       {/* Edit Creative Modal */}
       <OfferCreativeFormModal
         isOpen={isEditCreativeModalOpen}
@@ -3652,6 +3896,37 @@ export default function OfferDetailsPage() {
           )}
         </div>
       </RegularModal>
+
+      {/* Column Picker Modals */}
+      <ColumnPickerModal
+        isOpen={showLinkedProductsColumnPicker}
+        columns={linkedProductsTable.columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowLinkedProductsColumnPicker(false)}
+        onToggleColumn={linkedProductsTable.toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = linkedProductsTable.columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          linkedProductsTable.reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={linkedProductsTable.resetToDefaults}
+      />
+
+      <ColumnPickerModal
+        isOpen={showCampaignFlowsColumnPicker}
+        columns={campaignFlowsTable.columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowCampaignFlowsColumnPicker(false)}
+        onToggleColumn={campaignFlowsTable.toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = campaignFlowsTable.columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          campaignFlowsTable.reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={campaignFlowsTable.resetToDefaults}
+      />
     </div>
   );
 }

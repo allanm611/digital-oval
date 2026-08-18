@@ -165,13 +165,21 @@ export default function ProductsPage() {
       width: "180px",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         const isActive = row.is_active ?? false;
         return (
           <div className="flex items-center justify-center gap-2">
+            <ActivateDeactivateButton
+              isActive={isActive}
+              onToggle={() => row.product && handleToggleStatus(row.product)}
+              disabled={loadingProductId === row.id || !row.product}
+              isLoading={loadingProductId === row.id}
+              title={isActive ? "Deactivate" : "Activate"}
+            />
             <button
               onClick={() => navigate(`/dashboard/products/${row.id}`)}
-              className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
+              className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
@@ -182,18 +190,11 @@ export default function ProductsPage() {
               itemId={row.id}
               navigationState={{ returnTo: { pathname: "/dashboard/products" } }}
             />
-            <ActivateDeactivateButton
-              isActive={isActive}
-              onToggle={() => row.product && handleToggleStatus(row.product)}
-              disabled={loadingProductId === row.id || !row.product}
-              isLoading={loadingProductId === row.id}
-              title={isActive ? "Deactivate" : "Activate"}
-            />
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
-                className={`p-2 icon-delete ${tw.rounded} transition-all duration-200`}
-              
+                className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
+
                 title="Delete Product"
               >
                 <Trash2 className="w-4 h-4" />
@@ -485,13 +486,14 @@ export default function ProductsPage() {
       width: "180px",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         const isActive = row.is_active ?? false;
         return (
           <div className="flex items-center justify-center gap-2">
             <button
               onClick={() => navigate(`/dashboard/products/${row.id}`)}
-              className={`p-2 icon-edit ${tw.rounded} transition-all duration-200`}
+              className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
               title="View Details"
             >
               <Eye className="w-4 h-4" />
@@ -512,7 +514,7 @@ export default function ProductsPage() {
             <PermissionGate permission="products.delete">
               <button
                 onClick={() => handleDelete(row.id)}
-                className={`p-2 icon-delete ${tw.rounded} transition-all duration-200`}
+                className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
                 title="Delete Product"
               >
                 <Trash2 className="w-4 h-4" />
@@ -882,7 +884,15 @@ export default function ProductsPage() {
           pageSize={filters.pageSize || 25}
           totalItems={total}
           onPageChange={(page) => handlePageChange(page)}
-          onPageSizeChange={(pageSize) => setFilters(prev => ({ ...prev, pageSize, page: 1 }))}
+          onPageSizeChange={(pageSize) => {
+            // Save pageSize to localStorage (same as Pagination component)
+            try {
+              localStorage.setItem("app-pagination-page-size", String(pageSize));
+            } catch (e) {
+              console.error("Failed to save page size preference:", e);
+            }
+            setFilters(prev => ({ ...prev, pageSize, page: 1 }));
+          }}
         />
       )}
 

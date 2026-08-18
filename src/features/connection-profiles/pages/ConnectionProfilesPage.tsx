@@ -98,6 +98,7 @@ export default function ConnectionProfilesPage() {
   });
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   const [closingFiltersPanel, setClosingFiltersPanel] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -113,11 +114,9 @@ export default function ConnectionProfilesPage() {
   >(null);
 
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
-  const [currentPage, setCurrentPage] = useState(1);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<ConnectionProfileType | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [pageSize, setPageSize] = useState(20);
   const [totalProfiles, setTotalProfiles] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
@@ -127,6 +126,8 @@ export default function ConnectionProfilesPage() {
       id: "profile_name",
       label: "Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value, profile) => (
         <button
           type="button"
@@ -141,47 +142,47 @@ export default function ConnectionProfilesPage() {
       id: "profile_code",
       label: "Code",
       visible: true,
-      render: (value) => (
-        <span className={`p-2 icon-edit ${tw.rounded} text-sm `}>{value || "—"}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "connection_type",
       label: "Type",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">{value || "—"}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "environment",
       label: "Environment",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">{value || "—"}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "is_active",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          {value ? "Active" : "Inactive"}
-        </span>
-      ),
+      sortable: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
+      render: (value) => {
+        const isActive = value as boolean;
+        return (
+          <span className="text-sm font-medium">
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        );
+      },
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, profile) => (
         <div className="flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={() => navigate(`/dashboard/connection-profiles/${profile.id}`)}
-            className={`p-2 icon-edit ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`}
             aria-label="View"
             title="View details"
           >
@@ -206,6 +207,7 @@ export default function ConnectionProfilesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "connection-profiles-table",
     defaultColumns,
@@ -254,7 +256,7 @@ export default function ConnectionProfilesPage() {
       const serverId = debouncedServerFilter
         ? Number(debouncedServerFilter)
         : null;
-      const offset = (currentPage - 1) * pageSize;
+      const offset = (tableCurrentPage - 1) * tablePageSize;
       const shouldUseSearch = Boolean(
         debouncedSearchTerm ||
         filters.status === "inactive" ||
@@ -267,7 +269,7 @@ export default function ConnectionProfilesPage() {
         const response =
           await connectionProfileService.getProfilesByConnectionType(
             filters.connectionType,
-            { limit: pageSize, offset, skipCache: true },
+            { limit: tablePageSize, offset, skipCache: true },
           );
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
         paginationMetadata = response?.pagination;
@@ -278,7 +280,7 @@ export default function ConnectionProfilesPage() {
         const response =
           await connectionProfileService.getProfilesByEnvironment(
             filters.environment,
-            { limit: pageSize, offset, skipCache: true },
+            { limit: tablePageSize, offset, skipCache: true },
           );
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
         paginationMetadata = response?.pagination;
@@ -286,14 +288,14 @@ export default function ConnectionProfilesPage() {
         const response =
           await connectionProfileService.getProfilesByClassification(
             filters.classification,
-            { limit: pageSize, offset, skipCache: true },
+            { limit: tablePageSize, offset, skipCache: true },
           );
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
         paginationMetadata = response?.pagination;
       } else if (serverId) {
         const response =
           await connectionProfileService.getProfilesByServer(serverId, {
-            limit: pageSize,
+            limit: tablePageSize,
             offset,
             skipCache: true,
           });
@@ -304,7 +306,7 @@ export default function ConnectionProfilesPage() {
         data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
       } else if (shouldUseSearch) {
         const searchPayload: ConnectionProfileSearchQuery = {
-          limit: pageSize,
+          limit: tablePageSize,
           offset,
           skipCache: true,
         };
@@ -348,7 +350,7 @@ export default function ConnectionProfilesPage() {
         paginationMetadata = response.pagination;
       } else {
         const response = await connectionProfileService.listProfiles({
-          limit: pageSize,
+          limit: tablePageSize,
           offset,
           skipCache: true,
         });
@@ -374,7 +376,7 @@ export default function ConnectionProfilesPage() {
       setSelectedProfileIds(new Set());
     } catch (err) {
       console.error("Failed to load connection profiles", err);
-      showError("Unable to Load Profiles", extractBackendError(error, "Unable to Load Profiles. Please try again."));
+      showError("Unable to Load Profiles", extractBackendError(err, "Unable to Load Profiles. Please try again."));
       setProfiles([]);
     } finally {
       setLoadingProfiles(false);
@@ -390,13 +392,13 @@ export default function ConnectionProfilesPage() {
     filters.health,
     showError,
     t,
-    currentPage,
-    pageSize,
+    tableCurrentPage,
+    tablePageSize,
   ]);
 
   // Reset page when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    tableHandlePageChange(1);
   }, [
     debouncedSearchTerm,
     debouncedServerFilter,
@@ -406,6 +408,7 @@ export default function ConnectionProfilesPage() {
     filters.status,
     filters.pii,
     filters.health,
+    tableHandlePageChange,
   ]);
 
   useEffect(() => {
@@ -450,7 +453,7 @@ export default function ConnectionProfilesPage() {
       }));
     } catch (err) {
       console.error("Failed to load connection profile stats", err);
-      showError("Unable to Load Statistics", extractBackendError(error, "Unable to Load Statistics. Please try again."));
+      showError("Unable to Load Statistics", extractBackendError(err, "Unable to Load Statistics. Please try again."));
     } finally {
       setLoadingStats(false);
     }
@@ -627,7 +630,7 @@ export default function ConnectionProfilesPage() {
       await loadStats();
     } catch (err) {
       await reloadProfiles();
-      showError("Unable to Activate Profiles", extractBackendError(error, "Unable to Activate Profiles. Please try again."));
+      showError("Unable to Activate Profiles", extractBackendError(err, "Unable to Activate Profiles. Please try again."));
     } finally {
       setBulkActionType(null);
       setBulkActionLoading(false);
@@ -718,13 +721,13 @@ export default function ConnectionProfilesPage() {
       name: "Active Profiles",
       value: statsSummary.active,
       icon: CheckCircle,
-      color: color.tertiary.tag4,
+      color: color.primary.accent,
     },
     {
       name: "With PII",
       value: statsSummary.withPii,
       icon: Shield,
-      color: color.tertiary.tag3,
+      color: color.primary.accent,
     },
     {
       name: "Health Enabled",
@@ -757,8 +760,8 @@ export default function ConnectionProfilesPage() {
   return (
     <>
       <div className="">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
             <BackButton
               fallbackTo="/dashboard"
               showBreadcrumb={true}
@@ -781,13 +784,11 @@ export default function ConnectionProfilesPage() {
                     setSelectedProfileIds(new Set());
                   }
                 }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
                 style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
                 }}
               >
                 {isSelectionMode ? (
@@ -795,7 +796,7 @@ export default function ConnectionProfilesPage() {
                 ) : (
                   <Square size={16} />
                 )}
-                {isSelectionMode ? "Cancel Selection" : "Select Profiles"}
+                {isSelectionMode ? "Exit Selection" : "Select"}
               </button>
             </PermissionGate>
             <button
@@ -805,8 +806,10 @@ export default function ConnectionProfilesPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
               style={{
                 backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-bordered-button-color)",
+                borderColor: "var(--c-bordered-button-color)",
+                  borderWidth: "1px",
+                  borderStyle: "solid",
               }}
             >
               <BarChart3 className="h-4 w-4" />
@@ -815,10 +818,10 @@ export default function ConnectionProfilesPage() {
             <FeatureActionButton featureId="connection-profiles" action="create" />
           </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Manage secure connections and governance for integration endpoints
+          </p>
         </div>
-        <p className={`${tw.textSecondary} text-sm mt-1`}>
-          Manage secure connections and governance for integration endpoints
-        </p>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
@@ -840,45 +843,6 @@ export default function ConnectionProfilesPage() {
             );
           })}
         </div>
-
-        {isSelectionMode && selectedProfileIds.size > 0 && (
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between`}
-          >
-            <div className="flex items-center gap-3 text-sm text-black">
-              <span>
-                {selectedCount} selected / {filteredProfiles.length} visible
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <button
-                type="button"
-                onClick={handleBulkActivateSelected}
-                disabled={!selectedCount || bulkActionLoading}
-                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-white disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {bulkActionLoading && bulkActionType === "activate" && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                )}
-                Activate
-              </button>
-              <button
-                type="button"
-                onClick={handleAutoDeactivateExpired}
-                disabled={bulkActionLoading}
-                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
-              >
-                {bulkActionLoading && bulkActionType === "auto" ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-4 h-4" />
-                )}
-                Auto Deactivate Expired
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Search & Filters */}
         <div className="space-y-4 mt-6">
@@ -917,6 +881,46 @@ export default function ConnectionProfilesPage() {
           </div>
         </div>
 
+        {/* Batch Actions Toolbar */}
+        {isSelectionMode && selectedProfileIds.size > 0 && (
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mt-4 mb-6`}
+          >
+            <div className="flex items-center gap-3 text-sm text-black">
+              <span>
+                {selectedCount} selected / {filteredProfiles.length} visible
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <button
+                type="button"
+                onClick={handleBulkActivateSelected}
+                disabled={!selectedCount || bulkActionLoading}
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-white disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {bulkActionLoading && bulkActionType === "activate" && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
+                Activate
+              </button>
+              <button
+                type="button"
+                onClick={handleAutoDeactivateExpired}
+                disabled={bulkActionLoading}
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
+              >
+                {bulkActionLoading && bulkActionType === "auto" ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                Auto Deactivate Expired
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Profiles */}
         {loadingProfiles ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -936,28 +940,29 @@ export default function ConnectionProfilesPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<ConnectionProfileType>
               columns={columns}
-              data={filteredProfiles}
-              totalItems={filteredProfiles.length}
+              data={profiles}
+              totalItems={totalProfiles}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={loadingProfiles}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
-              style={{
-                headerBackground: color.surface.tableHeader,
-                headerTextColor: color.surface.tableHeaderText,
-                rowBackground: color.surface.tablebodybg,
-                rowSpacing: "0 8px",
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedProfileIds)}
+              onRowSelectChange={(selected) => {
+                setSelectedProfileIds(new Set(selected as number[]));
               }}
             />
             {/* Pagination Controls */}
-            {filteredProfiles.length > 0 && (
+            {totalProfiles > 0 && (
               <Pagination
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
-                totalItems={filteredProfiles.length}
+                totalItems={totalProfiles}
                 onPageChange={tableHandlePageChange}
                 onPageSizeChange={tableHandlePageSizeChange}
               />

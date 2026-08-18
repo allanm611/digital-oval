@@ -249,7 +249,7 @@ export default function DynamicMessageVariablesPage() {
       }
     } catch (error) {
       console.error('Failed to toggle category activation:', error);
-      showError(extractBackendError(error, 'Failed to update category'));
+      showError(extractBackendError(err, 'Failed to update category'));
     } finally {
       setTogglingCategoryId(null);
     }
@@ -289,7 +289,7 @@ export default function DynamicMessageVariablesPage() {
       }
     } catch (error) {
       console.error('Failed to toggle field activation:', error);
-      showError(extractBackendError(error, 'Failed to update field'));
+      showError(extractBackendError(err, 'Failed to update field'));
     } finally {
       setTogglingFieldIds((prev) => {
         const next = new Map(prev);

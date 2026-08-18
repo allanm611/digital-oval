@@ -66,16 +66,25 @@ export default function PreviewPanel({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center space-x-2 text-gray-700">
+      <div className="flex items-center space-x-2" style={{ color: "var(--c-text-secondary)" }}>
         <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
         <h3 className="text-xs sm:text-sm font-semibold">Message Preview</h3>
       </div>
 
-      <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
+      <div
+        className={`${tw.rounded} border overflow-hidden`}
+        style={{
+          backgroundColor: "var(--c-surface-cards)",
+          borderColor: "var(--c-border-default)",
+        }}
+      >
         {/* Header */}
         <div
           className={`px-3 sm:px-4 py-2 sm:py-3 border-b flex items-center space-x-2 ${getChannelColor()}`}
-          style={getChannelStyle()}
+          style={{
+            ...getChannelStyle(),
+            borderBottomColor: "var(--c-border-default)",
+          }}
         >
           {getChannelIcon()}
           <span className="text-xs sm:text-sm font-semibold">
@@ -87,10 +96,16 @@ export default function PreviewPanel({
         <div className="p-3 sm:p-4 space-y-3">
           {previewTitle && (
             <div>
-              <p className="text-[10px] sm:text-xs text-gray-500 font-medium mb-1">
+              <p
+                className="text-[10px] sm:text-xs font-medium mb-1"
+                style={{ color: "var(--c-text-muted)" }}
+              >
                 SUBJECT
               </p>
-              <p className="text-sm sm:text-base font-semibold text-gray-900 break-words">
+              <p
+                className="text-sm sm:text-base font-semibold break-words"
+                style={{ color: "var(--c-text-primary)" }}
+              >
                 {previewTitle}
               </p>
             </div>
@@ -98,13 +113,19 @@ export default function PreviewPanel({
 
           <div>
             {previewTitle && (
-              <p className="text-[10px] sm:text-xs text-gray-500 font-medium mb-1">
+              <p
+                className="text-[10px] sm:text-xs font-medium mb-1"
+                style={{ color: "var(--c-text-muted)" }}
+              >
                 MESSAGE
               </p>
             )}
-            <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap leading-relaxed break-words">
+            <p
+              className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed break-words"
+              style={{ color: "var(--c-text-secondary)" }}
+            >
               {previewBody || (
-                <span className="text-gray-400 italic">
+                <span style={{ color: "var(--c-text-muted)" }} className="italic">
                   Your message will appear here...
                 </span>
               )}
@@ -113,8 +134,17 @@ export default function PreviewPanel({
         </div>
 
         {/* Footer */}
-        <div className="px-3 sm:px-4 py-2 bg-gray-50 border-t">
-          <p className="text-[10px] sm:text-xs text-gray-500 break-words">
+        <div
+          className="px-3 sm:px-4 py-2 border-t"
+          style={{
+            backgroundColor: "var(--c-interactive-hover)",
+            borderTopColor: "var(--c-border-default)",
+          }}
+        >
+          <p
+            className="text-[10px] sm:text-xs break-words"
+            style={{ color: "var(--c-text-muted)" }}
+          >
             Preview with sample data:{" "}
             {Object.keys(sampleData).length > 0
               ? Object.keys(sampleData).join(", ")

@@ -359,7 +359,7 @@ export default function DeliverySMSReportsPage() {
   const [campaignQuery, setCampaignQuery] = useState("");
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
-  const tablePageSize = 20;
+  const [tablePageSize, setTablePageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const handleRun = () => {
     setAppliedCustomRange(customRange);
@@ -926,6 +926,10 @@ export default function DeliverySMSReportsPage() {
               pageSize={tablePageSize}
               totalItems={filteredLogs.length}
               onPageChange={setTablePage}
+              onPageSizeChange={(size) => {
+                setTablePageSize(size);
+                setTablePage(1);
+              }}
             />
           )}
         </>

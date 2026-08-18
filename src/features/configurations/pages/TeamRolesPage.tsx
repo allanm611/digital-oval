@@ -24,6 +24,7 @@ export default function TeamRolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [toggling, setToggling] = useState<number | null>(null);
@@ -46,7 +47,7 @@ export default function TeamRolesPage() {
       });
       setRoles(data || []);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load roles. Please try again."));
+      showError(extractBackendError(err, "Failed to load roles. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +75,7 @@ export default function TeamRolesPage() {
         `Role ${nextStatus ? "activated" : "deactivated"} successfully`
       );
     } catch (error) {
-      showError("Failed to update role", extractBackendError(error, "Failed to update role. Please try again."));
+      showError("Failed to update role", extractBackendError(err, "Failed to update role. Please try again."));
     } finally {
       setToggling(null);
     }
@@ -95,7 +96,7 @@ export default function TeamRolesPage() {
       showSuccess("Role deleted successfully");
       setRoleToDelete(null);
     } catch (error) {
-      showError("Failed to delete role", extractBackendError(error, "Failed to delete role. Please try again."));
+      showError("Failed to delete role", extractBackendError(err, "Failed to delete role. Please try again."));
     }
   };
 
@@ -132,31 +133,16 @@ export default function TeamRolesPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "code",
       label: "Code",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} font-mono truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "description",
       label: "Description",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
     },
     {
       id: "is_active",
@@ -173,11 +159,12 @@ export default function TeamRolesPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, role) => (
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => handleOpenEditModal(role)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -192,7 +179,7 @@ export default function TeamRolesPage() {
           <button
             onClick={() => handleDeleteClick(role)}
             disabled={deleting === role.id}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             {deleting === role.id ? (
@@ -214,6 +201,7 @@ export default function TeamRolesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "team-roles-table",
     defaultColumns,
@@ -231,12 +219,10 @@ export default function TeamRolesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <BackButton
-           
             showBreadcrumb={true}
-           
             currentLabel="Roles"
           />
           <button
@@ -298,6 +284,8 @@ export default function TeamRolesPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

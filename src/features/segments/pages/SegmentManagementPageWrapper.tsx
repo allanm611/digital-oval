@@ -6,6 +6,7 @@
  */
 
 import SegmentManagementPage from "./SegmentManagementPage";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
@@ -15,6 +16,7 @@ import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
  * Shows table skeleton while SegmentManagementPage mounts and loads its data
  */
 export default function SegmentManagementPageWrapper() {
+  const { t } = useLanguage();
   return (
     <PermissionGate permission="segments.read" fallback={<UnauthorizedPage />}>
       <SuspenseBoundary type="table">
@@ -28,20 +30,21 @@ export default function SegmentManagementPageWrapper() {
  * Alternative: Use this if you want custom error handling
  */
 export function SegmentManagementPageWithErrorHandling() {
+  const { t } = useLanguage();
   return (
     <SuspenseBoundary
       type="table"
       errorFallback={(error) => (
         <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
           <h3 className="text-red-900 font-bold mb-2">
-            Failed to Load Segments
+            {t.segments.failedToLoadSegments || "Failed to Load Segments"}
           </h3>
           <p className="text-red-700 text-sm">{error.message}</p>
           <button
             onClick={() => window.location.reload()}
             className={`mt-4 px-4 py-2 bg-red-600  rounded hover:bg-red-700`}
           >
-            Retry
+            {t.common.retry || "Retry"}
           </button>
         </div>
       )}

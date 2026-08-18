@@ -1,8 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import USSDRoutesPage from "./USSDRoutesPage";
 import CreateEditUSSDRoutePage from "./CreateEditUSSDRoutePage";
 
 export default function USSDRoutesContainer() {
+  const { t } = useLanguage();
   return (
     <Routes>
       <Route path="/" element={<USSDRoutesPage />} />

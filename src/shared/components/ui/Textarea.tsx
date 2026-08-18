@@ -10,6 +10,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   className?: string;
   variant?: 'default' | 'medium' | 'compact'; // default: px-4 py-2, medium: px-3 py-2, compact: px-3 py-1
   label?: string; // Floating label (optional)
+  labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
   rows?: number;
   style?: React.CSSProperties;
 }
@@ -23,6 +24,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   className = '',
   variant = 'medium',
   label,
+  labelBgColor,
   rows = 3,
   style = {},
   ...rest
@@ -33,35 +35,15 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   if (variant === 'default') paddingClass = 'px-4 py-2';
   if (variant === 'compact') paddingClass = 'px-3 py-1';
 
-  // Determine border color based on error state
-  const borderClass = hasError ? 'border-red-500' : 'border-gray-300';
-
-  // Explicit theme-aware colors so typed text stays legible in both light and
-  // dark mode (mirrors Input.tsx — previously this relied on inherited text
-  // color, which washed out against dark-mode surfaces).
+  // Determine background based on disabled/readOnly state
   const isReadOnly = rest.readOnly;
-  let textareaStyle: React.CSSProperties = {
-    backgroundColor: 'var(--c-input-bg)',
-    color: 'var(--c-text-primary)',
-    ...style,
+  let bgStyle: React.CSSProperties = {
+    backgroundColor: labelBgColor || 'var(--c-input-bg)',
+    borderColor: hasError ? '#ef4444' : 'var(--c-border-default)',
+    color: 'var(--c-text-primary)'
   };
-  let cursorClass = '';
-
-  if (disabled) {
-    textareaStyle = {
-      backgroundColor: 'var(--c-input-disabled-bg)',
-      color: 'var(--c-text-muted)',
-      ...style,
-    };
-    cursorClass = 'cursor-not-allowed';
-  } else if (isReadOnly) {
-    textareaStyle = {
-      backgroundColor: 'var(--c-input-bg)',
-      color: 'var(--c-text-primary)',
-      ...style,
-    };
-    cursorClass = 'cursor-default';
-  }
+  if (disabled) bgStyle = { backgroundColor: 'var(--c-input-disabled-bg)', cursor: 'not-allowed', color: 'var(--c-text-muted)', borderColor: 'var(--c-border-default)' };
+  else if (isReadOnly) bgStyle = { backgroundColor: 'var(--c-input-bg)', cursor: 'default', color: 'var(--c-text-secondary)', borderColor: 'var(--c-border-default)' };
 
   const hasValue = value !== '';
   const shouldFloatLabel = isFocused || hasValue;
@@ -76,12 +58,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         rows={rows}
-        className={`w-full ${paddingClass} text-sm placeholder:text-sm placeholder:text-[var(--c-text-muted)] border ${borderClass} ${tw.rounded}
+        className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           resize-none
-          ${cursorClass}
           ${className}`}
-        style={textareaStyle}
+        style={bgStyle}
         {...rest}
       />
     );
@@ -97,12 +78,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         rows={rows}
-        className={`w-full px-3 py-3 text-sm border ${borderClass} ${tw.rounded}
+        className={`w-full px-3 py-3 text-sm border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
           resize-none
-          ${cursorClass}
           ${className}`}
-        style={textareaStyle}
+        style={bgStyle}
         {...rest}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
@@ -116,10 +96,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
             : 'top-3 text-sm'
           }
         `}
-        style={{
-          color: 'var(--c-text-secondary)',
-          backgroundColor: shouldFloatLabel ? 'var(--c-input-bg)' : 'transparent',
-        }}
+        style={
+          shouldFloatLabel
+            ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+            : { color: 'var(--c-text-secondary)' }
+        }
       >
         {label}
       </label>

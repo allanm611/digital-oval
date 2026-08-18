@@ -32,6 +32,7 @@ export interface QuickListType {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  column_defaults?: Record<string, string>;
 }
 
 export interface QuickListWithDetails extends Partial<QuickListType> {
@@ -46,6 +47,7 @@ export interface QuickListWithDetails extends Partial<QuickListType> {
   created_by: string | null;
   created_at: string;
   column_mappings?: Record<string, string>;
+  column_defaults?: Record<string, string>;
   file_hash?: string;
   file_size_bytes?: number;
   processing_error?: string | null;
@@ -129,6 +131,7 @@ export interface CreateQuickListRequest {
   subscriber_id_field_mapping?: string; // Maps file column to customer identity field (e.g., "email", "phone")
   list_headers?: string; // CSV headers line
   upload_type?: string; // Type of upload (e.g., "generic")
+  // column_defaults?: Record<string, string>; // Default values for each column — pending backend integration
 }
 
 export interface UpdateQuickListRequest {

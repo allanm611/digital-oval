@@ -12,6 +12,7 @@ interface MultiCategorySelectorProps {
   onChange: (categoryIds: number[]) => void;
   placeholder?: string;
   label?: string; // Floating label (already supported but clarifying)
+  labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
   disabled?: boolean;
   hasError?: boolean; // Error state for styling
   allowCreate?: boolean;
@@ -28,6 +29,7 @@ export default function MultiCategorySelector({
   onChange,
   placeholder = "Select Catalogs",
   label,
+  labelBgColor,
   disabled = false,
   hasError = false,
   allowCreate = false,
@@ -48,7 +50,6 @@ export default function MultiCategorySelector({
   const [isFocused, setIsFocused] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const portalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const portalContentRef = useRef<HTMLDivElement>(null);
 
@@ -58,8 +59,8 @@ export default function MultiCategorySelector({
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node) &&
-        portalRef.current &&
-        !portalRef.current.contains(event.target as Node)
+        portalContentRef.current &&
+        !portalContentRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
         setSearchTerm("");
@@ -76,8 +77,27 @@ export default function MultiCategorySelector({
       if (dropdownRef.current) {
         const buttonRect = dropdownRef.current.querySelector("button")?.getBoundingClientRect();
         if (buttonRect) {
-          const spaceBelow = window.innerHeight - buttonRect.bottom;
-          const spaceAbove = buttonRect.top;
+          // Find parent scrollable container (modal, sidebar, etc.)
+          let container = dropdownRef.current.parentElement;
+          let containerRect = null;
+          let isInContainer = false;
+
+          while (container && container !== document.body) {
+            const style = window.getComputedStyle(container);
+            if (style.overflow === 'auto' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflowY === 'scroll') {
+              containerRect = container.getBoundingClientRect();
+              isInContainer = true;
+              break;
+            }
+            container = container.parentElement;
+          }
+
+          // Use container bounds if found, otherwise use viewport
+          const bottomBound = isInContainer && containerRect ? containerRect.bottom : window.innerHeight;
+          const topBound = isInContainer && containerRect ? containerRect.top : 0;
+
+          const spaceBelow = bottomBound - buttonRect.bottom;
+          const spaceAbove = buttonRect.top - topBound;
 
           // Use actual dropdown height if available, otherwise estimate
           const dropdownHeight = portalContentRef.current?.scrollHeight || 250;
@@ -278,13 +298,12 @@ export default function MultiCategorySelector({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`flex-1 px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0 ${
-            disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-          } ${
-            hasError ? "border-red-300" : "border-gray-300"
-          }`}
+          className={`flex-1 px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0`}
           style={{
             outline: "none",
+            backgroundColor: disabled ? 'var(--c-input-disabled-bg)' : (labelBgColor || 'var(--c-input-bg)'),
+            borderColor: hasError ? '#ef4444' : 'var(--c-border-default)',
+            cursor: disabled ? 'not-allowed' : 'pointer',
             borderTopRightRadius: allowCreate ? "0" : undefined,
             borderBottomRightRadius: allowCreate ? "0" : undefined,
           }}
@@ -373,9 +392,14 @@ export default function MultiCategorySelector({
         <label
           className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium z-10
             ${hasValue
-              ? "top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700"
-              : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+              ? "top-0 -translate-y-1/2 px-1 text-xs"
+              : "top-1/2 -translate-y-1/2 text-sm"
             }`}
+          style={
+            hasValue
+              ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+              : { color: 'var(--c-text-secondary)' }
+          }
         >
           {label}
         </label>

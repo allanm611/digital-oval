@@ -33,8 +33,6 @@ import FetchControlsModal from "../components/FetchControlsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import DateFormatter from "../../../shared/components/DateFormatter";
 
-const PAGE_SIZE = 15;
-
 type StatusFilter = "all" | "pending" | "processing" | "completed" | "failed";
 type CategoryFilter = "all" | "CDR" | "TDR" | string;
 type FetchMode = "immediate" | "by-time" | "by-range";
@@ -69,9 +67,9 @@ export default function EtlFileRegistryPage() {
   const [files, setFiles] = useState<EtlFileRegistryRowType[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
   // Table columns definition
@@ -80,47 +78,41 @@ export default function EtlFileRegistryPage() {
       id: "file_name",
       label: "File Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} text-sm`}>
-          {value || "—"}
-        </div>
-      ),
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (value) => value || "—",
     },
     {
       id: "file_category",
       label: "Category",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">{value || "—"}</span>
-      ),
+      sortable: true,
+      filterConfig: { type: 'text' },
+      render: (value) => value || "—",
     },
     {
       id: "processing_status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">{getStatusBadge(value)}</span>
-      ),
+      sortable: true,
+      filterConfig: { type: 'select', options: ['pending', 'processing', 'completed', 'failed'] },
+      render: (value) => getStatusBadge(value),
     },
     {
       id: "record_count",
       label: "Records",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          {value ? <NumberFormatter value={Number(value)} /> : "—"}
-        </span>
-      ),
+      sortable: true,
+      filterConfig: { type: 'number' },
+      render: (value) => value ? <NumberFormatter value={Number(value)} /> : "—",
     },
     {
       id: "created_at",
       label: "Created",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-600">
-          <DateFormatter date={value as string} useUserTimezone />
-        </span>
-      ),
+      sortable: true,
+      filterConfig: { type: 'date' },
+      render: (value) => <DateFormatter date={value as string} useUserTimezone />,
     },
   ];
 
@@ -132,6 +124,7 @@ export default function EtlFileRegistryPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "etl-files-table",
     defaultColumns,
@@ -162,8 +155,8 @@ export default function EtlFileRegistryPage() {
       const response = await etlService.getFileRegistry({
         category: categoryFilter !== "all" ? categoryFilter : undefined,
         status: statusFilter !== "all" ? statusFilter : undefined,
-        limit: PAGE_SIZE,
-        offset: (page - 1) * PAGE_SIZE,
+        limit: tablePageSize,
+        offset: (tableCurrentPage - 1) * tablePageSize,
       });
 
       const filesList = Array.isArray(response.data) ? response.data : [];
@@ -181,7 +174,7 @@ export default function EtlFileRegistryPage() {
     } finally {
       setIsLoadingFiles(false);
     }
-  }, [page, categoryFilter, statusFilter, showError, t.etl]);
+  }, [tableCurrentPage, tablePageSize, categoryFilter, statusFilter, showError, t.etl]);
 
   useEffect(() => {
     loadStats();
@@ -192,8 +185,8 @@ export default function EtlFileRegistryPage() {
   }, [loadRegistry]);
 
   useEffect(() => {
-    setPage(1);
-  }, [statusFilter, categoryFilter]);
+    tableHandlePageChange(1);
+  }, [statusFilter, categoryFilter, tableHandlePageChange]);
 
   const handleFetchModalOpen = (mode: FetchMode) => {
     setFetchModalMode(mode);
@@ -220,8 +213,6 @@ export default function EtlFileRegistryPage() {
     { label: t.etl.tdr, value: "TDR" },
   ];
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-
   const getStatusBadge = (status: string) => {
     return <span className="text-black text-sm">{status}</span>;
   };
@@ -245,87 +236,89 @@ export default function EtlFileRegistryPage() {
   return (
     <div className="overflow-x-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton
-          showBreadcrumb={true}
-          currentLabel="ETL"
-        />
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setShowFetchDropdown(!showFetchDropdown)}
-            className="inline-flex items-center gap-2 transition-colors"
-            style={getButtonStyles(button.action)}
-          >
-            {t.etl.fetchControlsButton}
-            <ChevronDown
-              className={`h-4 w-4 transition-transform ${showFetchDropdown ? "rotate-180" : ""}`}
-            />{" "}
-          </button>
-
-          <div className="relative">
-            {showFetchDropdown && (
-              <div
-                className={`absolute top-full right-0 mt-2 ${tw.rounded} border shadow-lg z-40`}
-                style={{
-                  backgroundColor: color.surface.background,
-                  borderColor: color.border.default,
-                  minWidth: "200px",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleFetchModalOpen("immediate")}
-                  className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
-                >
-                  {t.etl.fetchNow}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFetchModalOpen("by-time")}
-                  className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
-                >
-                  {t.etl.fetchByTime}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFetchModalOpen("by-range")}
-                  className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
-                >
-                  {t.etl.fetchByDateRange}
-                </button>
-              </div>
-            )}
-          </div>
-          <PermissionGate permission="etl.create">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton
+            showBreadcrumb={true}
+            currentLabel="ETL"
+          />
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setIsUploadModalOpen(true)}
+              onClick={() => setShowFetchDropdown(!showFetchDropdown)}
               className="inline-flex items-center gap-2 transition-colors"
               style={getButtonStyles(button.action)}
             >
-              <Upload className="h-4 w-4" />
-              Upload
+              {t.etl.fetchControlsButton}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showFetchDropdown ? "rotate-180" : ""}`}
+              />{" "}
             </button>
-          </PermissionGate>
 
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard/etl/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.borderedButton}`}
-            style={{
-              borderColor: color.primary.action,
-              color: color.primary.action,
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            {t.etl.analytics}
-          </button>
+            <div className="relative">
+              {showFetchDropdown && (
+                <div
+                  className={`absolute top-full right-0 mt-2 ${tw.rounded} border shadow-lg z-40`}
+                  style={{
+                    backgroundColor: color.surface.background,
+                    borderColor: color.border.default,
+                    minWidth: "200px",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleFetchModalOpen("immediate")}
+                    className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
+                  >
+                    {t.etl.fetchNow}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFetchModalOpen("by-time")}
+                    className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
+                  >
+                    {t.etl.fetchByTime}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFetchModalOpen("by-range")}
+                    className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
+                  >
+                    {t.etl.fetchByDateRange}
+                  </button>
+                </div>
+              )}
+            </div>
+            <PermissionGate permission="etl.create">
+              <button
+                type="button"
+                onClick={() => setIsUploadModalOpen(true)}
+                className="inline-flex items-center gap-2 transition-colors"
+                style={getButtonStyles(button.action)}
+              >
+                <Upload className="h-4 w-4" />
+                Upload
+              </button>
+            </PermissionGate>
+
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/etl/analytics")}
+              className={`inline-flex items-center gap-2 ${tw.borderedButton}`}
+              style={{
+                borderColor: "var(--c-bordered-button-color)",
+                color: "var(--c-bordered-button-color)",
+              }}
+            >
+              <BarChart3 className="h-4 w-4" />
+              {t.etl.analytics}
+            </button>
+          </div>
         </div>
+        <p className={`text-sm ${tw.textSecondary}`}>
+          {t.etl.fileRegistryDescription}
+        </p>
       </div>
-      <p className={`${tw.textSecondary} text-sm mt-1`}>
-        {t.etl.fileRegistryDescription}
-      </p>
 
       <div className="mt-6">
       {/* Stats Cards */}
@@ -502,15 +495,17 @@ export default function EtlFileRegistryPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<EtlFileRegistryRowType>
               columns={columns}
-              data={displayedFiles}
+              data={files}
               totalItems={totalCount}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={isLoadingFiles}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -523,13 +518,13 @@ export default function EtlFileRegistryPage() {
       </div>
 
       {/* Pagination */}
-      {!isLoadingFiles && files.length > 0 && (
+      {!isLoadingFiles && totalCount > 0 && (
         <Pagination
           currentPage={tableCurrentPage}
           pageSize={tablePageSize}
           totalItems={totalCount}
           onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+          onPageSizeChange={tableHandlePageSizeChange}
         />
       )}
 

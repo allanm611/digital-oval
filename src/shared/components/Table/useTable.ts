@@ -24,6 +24,7 @@ export function useTable<T = any>({
 
   // Initialize columns from localStorage or defaults
   const [columns, setColumns] = useState<TableColumn<T>[]>(() => {
+    if (!defaultColumns) return [];
     if (!persistToLocalStorage) return defaultColumns;
 
     try {
@@ -50,6 +51,8 @@ export function useTable<T = any>({
 
   // Update columns when defaultColumns structure changes (not on every render)
   useEffect(() => {
+    if (!defaultColumns) return;
+
     setColumns((prevColumns) => {
       // Only update if column count changed or first columns don't match
       if (prevColumns.length !== defaultColumns.length ||
@@ -59,13 +62,24 @@ export function useTable<T = any>({
           return prevCol ? { ...col, visible: prevCol.visible } : col;
         });
       }
+      // Update if any column's filterConfig options changed
+      const hasFilterConfigChanged = prevColumns.some((prevCol) => {
+        const newCol = defaultColumns.find((c) => c.id === prevCol.id);
+        return JSON.stringify(prevCol.filterConfig) !== JSON.stringify(newCol?.filterConfig);
+      });
+      if (hasFilterConfigChanged) {
+        return defaultColumns.map((col) => {
+          const prevCol = prevColumns.find((c) => c.id === col.id);
+          return prevCol ? { ...col, visible: prevCol.visible } : col;
+        });
+      }
       return prevColumns;
     });
-  }, [defaultColumns.length]);
+  }, [defaultColumns]);
 
   // Save columns to localStorage when they change
   useEffect(() => {
-    if (!persistToLocalStorage) return;
+    if (!persistToLocalStorage || !columns || columns.length === 0) return;
 
     try {
       const toStore = columns.map((col) => ({

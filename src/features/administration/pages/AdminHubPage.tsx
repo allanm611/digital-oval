@@ -189,6 +189,14 @@ export default function AdminHubPage() {
       description: "Configure channels, routes, and messaging gateways",
       cards: [
         {
+          title: "Gateway Providers",
+          description:
+            "Define provider templates and field schemas used by gateway configurations",
+          icon: Plug,
+          href: "/dashboard/gateway-providers",
+          category: "Communication & Messaging",
+        },
+        {
           title: "Gateway Configurations",
           description: "Configure message delivery gateways and endpoints",
           icon: Network,
@@ -250,6 +258,28 @@ export default function AdminHubPage() {
           icon: MessageSquare,
           href: "/dashboard/sender-ids",
           category: "Communication & Messaging",
+        },
+      ],
+    },
+    {
+      name: "Rewards & Offers",
+      description: "Configure reward providers, types, and fulfilment settings",
+      cards: [
+        {
+          title: "Reward Providers",
+          description:
+            "Define provider integrations and which reward types each can fulfil",
+          icon: Gift,
+          href: "/dashboard/reward-providers",
+          category: "Rewards & Offers",
+        },
+        {
+          title: "Reward Templates",
+          description:
+            "Configure auth credentials and payload templates for reward delivery",
+          icon: Gift,
+          href: "/dashboard/reward-configurations",
+          category: "Rewards & Offers",
         },
       ],
     },
@@ -340,7 +370,7 @@ export default function AdminHubPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className={`text-2xl sm:text-3xl font-bold ${tw.textPrimary}`}>
+        <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
           Administration
         </h1>
         <p className={`${tw.textSecondary} mt-2 text-sm`}>

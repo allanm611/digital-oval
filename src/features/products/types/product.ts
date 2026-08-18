@@ -1,17 +1,12 @@
 export type ProductScope = "segment" | "open_market";
 
 export type ProductUnit =
-  | "data_mb"
+  | "mb"
+  | "gb"
   | "sms_count"
-  | "airtime"
-  | "onnet_minutes"
-  | "offnet_minutes"
-  | "allnet_minutes"
-  | "roaming_data_mb"
-  | "roaming_minutes"
-  | "roaming_sms_count"
-  | "utility"
-  | "points"
+  | "minutes"
+  | "currency"
+  | "percentage"
   | "other";
 
 export type ProductOfferCategory =

@@ -22,6 +22,7 @@ interface HeadlessSelectProps {
   searchable?: boolean;
   zIndex?: number;
   label?: string;
+  labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
 }
 
 export default function HeadlessSelect({
@@ -35,6 +36,7 @@ export default function HeadlessSelect({
   searchable = false,
   zIndex,
   label,
+  labelBgColor,
 }: HeadlessSelectProps) {
   // Always use popover z-index by default so dropdowns appear above modals
   const effectiveZIndex = zIndex ?? zIndexTokens.popover;
@@ -49,7 +51,12 @@ export default function HeadlessSelect({
   const buttonRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedOption = options.find((option) => option.value === value);
+  const valueKey = String(value ?? "");
+  const isSameValue = (optionValue: string | number) =>
+    String(optionValue) === valueKey;
+
+  // Coerce to string so number/string option values still match (e.g. template ids).
+  const selectedOption = options.find((option) => isSameValue(option.value));
 
   const filteredOptions = searchable
     ? options.filter((option) =>
@@ -62,14 +69,34 @@ export default function HeadlessSelect({
     const updatePosition = () => {
       if (isOpen && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
+
+        // Find parent scrollable container (modal, sidebar, etc.)
+        let container = buttonRef.current.parentElement;
+        let containerRect = null;
+        let isInContainer = false;
+
+        while (container && container !== document.body) {
+          const style = window.getComputedStyle(container);
+          if (style.overflow === 'auto' || style.overflow === 'scroll' || style.overflowY === 'auto' || style.overflowY === 'scroll') {
+            containerRect = container.getBoundingClientRect();
+            isInContainer = true;
+            break;
+          }
+          container = container.parentElement;
+        }
+
+        // Use container bounds if found, otherwise use viewport
+        const bottomBound = isInContainer && containerRect ? containerRect.bottom : window.innerHeight;
+        const topBound = isInContainer && containerRect ? containerRect.top : 0;
+
+        const spaceBelow = bottomBound - rect.bottom;
+        const spaceAbove = rect.top - topBound;
 
         // Use actual dropdown height if available, otherwise estimate conservatively
         const dropdownHeight = dropdownRef.current?.scrollHeight || 200;
         const GAP_BELOW = 4;
         const GAP_ABOVE = 8; // Extra space when flipped above
-        const MIN_EDGE_PADDING = 8; // Minimum distance from viewport edges
+        const MIN_EDGE_PADDING = 8; // Minimum distance from edges
 
         // Auto-flip: use above if not enough space below and sufficient space above
         const shouldBeAbove =
@@ -99,7 +126,21 @@ export default function HeadlessSelect({
     }
   }, [isOpen]);
 
+  // Empty string is "no selection" for floating labels. Call sites often also pass a
+  // `{ value: "", label: "Select..." }` sentinel; that must NOT render as button text
+  // while the floating label is still centered (otherwise label + placeholder overlap).
+  // Plain (non-floating) selects may still use empty value as a real choice ("All …").
   const hasValue = value !== "" && value !== null && value !== undefined;
+  const shouldFloatLabel = Boolean(label) && (isOpen || hasValue);
+  const hasDisplaySelection = hasValue || (!label && !!selectedOption);
+  const selectedLabel = String(selectedOption?.label ?? "").trim();
+  const buttonDisplayText = hasDisplaySelection
+    ? selectedLabel || placeholder
+    : label
+      ? shouldFloatLabel
+        ? placeholder
+        : ""
+      : placeholder;
 
   // Without floating label (backward compatible)
   if (!label) {
@@ -118,7 +159,7 @@ export default function HeadlessSelect({
               setIsOpen(!isOpen);
             }}
             className={`
-            w-full cursor-default py-2 px-4 text-left transition-all duration-200 text-sm ${tw.rounded} border border-gray-200
+            w-full cursor-default py-2 px-4 text-left transition-all duration-200 text-sm ${tw.rounded} border
             ${
               disabled
                 ? "opacity-50 cursor-not-allowed"
@@ -128,10 +169,10 @@ export default function HeadlessSelect({
           `}
             style={
               error
-                ? { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)', borderColor: '#ef4444' }
                 : disabled
-                ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)' }
-                : { backgroundColor: 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+                ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)', borderColor: 'var(--c-border-default)' }
+                : { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)', borderColor: 'var(--c-border-default)' }
             }
           >
             <div className="flex items-center justify-between w-full">
@@ -139,10 +180,10 @@ export default function HeadlessSelect({
                 <span
                   className="block text-sm"
                   style={{
-                    color: selectedOption ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+                    color: hasDisplaySelection ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
                   }}
                 >
-                  {selectedOption ? selectedOption.label : placeholder}
+                  {buttonDisplayText}
                 </span>
               </div>
               <ChevronUpDownIcon
@@ -218,7 +259,7 @@ export default function HeadlessSelect({
                         : "cursor-pointer"
                     }`}
                     style={
-                      value === option.value
+                      isSameValue(option.value)
                         ? {
                             backgroundColor: 'var(--c-interactive-active)',
                             color: 'var(--c-text-primary)',
@@ -226,13 +267,13 @@ export default function HeadlessSelect({
                         : {}
                     }
                     onMouseEnter={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
                         (e.currentTarget as HTMLElement).style.color = 'var(--c-text-primary)';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = '';
                         (e.currentTarget as HTMLElement).style.color = '';
                       }
@@ -240,7 +281,7 @@ export default function HeadlessSelect({
                   >
                     <span
                       className={`block text-sm ${
-                        value === option.value ? "font-medium" : "font-normal"
+                        isSameValue(option.value) ? "font-medium" : "font-normal"
                       }`}
                       style={{ color: 'inherit' }}
                     >
@@ -281,20 +322,24 @@ export default function HeadlessSelect({
             onClick={() => {
               setIsOpen(!isOpen);
             }}
-            className={`w-full px-4 ${label ? 'pt-3 pb-3' : 'py-2'} text-left border ${tw.rounded} text-sm transition-all focus:outline-none focus:ring-0 ${
-              disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-            } ${
+            className={`w-full px-3 ${label ? 'pt-3 pb-2' : 'py-2'} text-left border ${tw.rounded} text-sm leading-tight transition-all focus:outline-none focus:ring-0 ${
               error ? "border-red-300" : "border-gray-300"
             }`}
+            style={
+              disabled
+                ? { backgroundColor: 'var(--c-input-disabled-bg)', color: 'var(--c-text-muted)' }
+                : { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+            }
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex-1 min-w-0">
                 <span
-                  className={`block text-sm ${
-                    hasValue ? "text-gray-900" : "text-gray-500"
-                  }`}
+                  className="block text-sm"
+                  style={{
+                    color: hasDisplaySelection ? 'var(--c-text-primary)' : 'var(--c-text-secondary)',
+                  }}
                 >
-                  {selectedOption && value ? selectedOption.label : (label ? "" : placeholder)}
+                  {buttonDisplayText}
                 </span>
               </div>
               <ChevronUpDownIcon
@@ -370,7 +415,7 @@ export default function HeadlessSelect({
                         : "cursor-pointer"
                     }`}
                     style={
-                      value === option.value
+                      isSameValue(option.value)
                         ? {
                             backgroundColor: 'var(--c-interactive-active)',
                             color: 'var(--c-text-primary)',
@@ -378,13 +423,13 @@ export default function HeadlessSelect({
                         : {}
                     }
                     onMouseEnter={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--c-interactive-hover)';
                         (e.currentTarget as HTMLElement).style.color = 'var(--c-text-primary)';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!option.disabled && value !== option.value) {
+                      if (!option.disabled && !isSameValue(option.value)) {
                         (e.currentTarget as HTMLElement).style.backgroundColor = '';
                         (e.currentTarget as HTMLElement).style.color = '';
                       }
@@ -392,7 +437,7 @@ export default function HeadlessSelect({
                   >
                     <span
                       className={`block text-sm ${
-                        value === option.value ? "font-medium" : "font-normal"
+                        isSameValue(option.value) ? "font-medium" : "font-normal"
                       }`}
                       style={{ color: 'inherit' }}
                     >
@@ -415,14 +460,19 @@ export default function HeadlessSelect({
         />
       )}
 
-      {/* Floating Label */}
+      {/* Floating Label — only floats when open or a real (non-empty) value is selected */}
       {label && (
         <label
           className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium z-10
-            ${isOpen || hasValue
-              ? "top-0 -translate-y-1/2 bg-white px-1 text-xs text-gray-700"
-              : "top-1/2 -translate-y-1/2 text-sm text-gray-500"
+            ${shouldFloatLabel
+              ? "top-0 -translate-y-1/2 px-1 text-xs"
+              : "top-1/2 -translate-y-1/2 text-sm"
             }`}
+          style={
+            shouldFloatLabel
+              ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+              : { color: 'var(--c-text-secondary)' }
+          }
         >
           {label}
         </label>

@@ -1,3 +1,4 @@
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Zap } from "lucide-react";
@@ -10,6 +11,7 @@ import { button } from "../../../shared/utils/utils";
 export default function SystemEventDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const location = useLocation();
   const parentLabel = (location.state as any)?.parentLabel;
   const [loading, setLoading] = useState(true);

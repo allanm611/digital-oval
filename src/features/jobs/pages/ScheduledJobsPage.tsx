@@ -78,6 +78,7 @@ export default function ScheduledJobsPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [deletingJob, setDeletingJob] = useState<ScheduledJob | null>(null);
   const [jobTypeMap, setJobTypeMap] = useState<Record<number, string>>({});
+  const [totalCount, setTotalCount] = useState(0);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteJob } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -107,6 +108,7 @@ export default function ScheduledJobsPage() {
   const [jobTypes, setJobTypes] = useState<Array<{ id: number; name: string }>>(
     [],
   );
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   // Table columns definition
   const defaultColumns: TableColumn<ScheduledJob>[] = [
@@ -132,57 +134,39 @@ export default function ScheduledJobsPage() {
       id: "name",
       label: "Job Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-          {value}
-        </div>
-      ),
+      sortable: true,
+      filterConfig: { type: 'text' },
     },
     {
       id: "code",
       label: "Code",
       visible: true,
-      render: (value) => (
-        <div className="text-sm">{value}</div>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "job_type_id",
       label: "Type",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary}`}>
-          {value && jobTypeMap[value as number]
-            ? jobTypeMap[value as number]
-            : value
-            ? `Type #${value}`
-            : "—"}
-        </div>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "schedule_type",
       label: "Schedule",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} capitalize`}>
-          {(value as string).replace("_", " ")}
-        </div>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-gray-900 font-medium">{value}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, job) => (
         <div className="flex items-center justify-end space-x-2">
           <button
@@ -191,7 +175,7 @@ export default function ScheduledJobsPage() {
                 state: { parentLabel: "Scheduled Jobs" },
               })
             }
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             aria-label="View details"
           >
             <Eye className="w-4 h-4" />
@@ -201,7 +185,7 @@ export default function ScheduledJobsPage() {
               onClick={() =>
                 navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)
               }
-              className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
               aria-label="Edit job"
             >
               <Edit className="w-4 h-4" />
@@ -213,7 +197,7 @@ export default function ScheduledJobsPage() {
                 setDeletingJob(job);
                 openDeleteConfirm(job.id, job.name || `Job #${job.id}`);
               }}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               aria-label="Delete job"
             >
               <Trash2 className="w-4 h-4" />
@@ -232,6 +216,7 @@ export default function ScheduledJobsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "scheduled-jobs-table",
     defaultColumns,
@@ -297,8 +282,8 @@ export default function ScheduledJobsPage() {
         } else if (hasSearchTerm) {
           // Use search endpoint when there's a search term
           const params: ScheduledJobSearchParams = {
-            limit: 50,
-            offset: 0,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             searchTerm: trimmedSearchTerm,
             ...overrideParams,
           };
@@ -309,8 +294,8 @@ export default function ScheduledJobsPage() {
         } else {
           // Use list endpoint when there's no search term
           const params = {
-            limit: 50,
-            offset: 0,
+            limit: tablePageSize,
+            offset: (tableCurrentPage - 1) * tablePageSize,
             ...overrideParams,
           };
           response = await scheduledJobService.listScheduledJobs({
@@ -328,11 +313,14 @@ export default function ScheduledJobsPage() {
           return createdB - createdA;
         });
         setJobs(sortedJobs);
+        if (response.pagination) {
+          setTotalCount(response.pagination.total);
+        }
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load scheduled jobs";
         setErrorMessage(message);
-        showError("Scheduled Jobs", extractBackendError(error, "Scheduled Jobs. Please try again."));
+        showError("Scheduled Jobs", extractBackendError(err, "Scheduled Jobs. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -349,6 +337,8 @@ export default function ScheduledJobsPage() {
       jobCodeFilter,
       activeJobsFilter,
       showError,
+      tableCurrentPage,
+      tablePageSize,
     ],
   );
 
@@ -603,62 +593,68 @@ export default function ScheduledJobsPage() {
   return (
     <>
       <div className="overflow-x-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <BackButton
-            showBreadcrumb={true}
-            currentLabel="Scheduled Jobs"
-          />
-          <div className="flex gap-3">
-          <button
-            onClick={() => navigate("/dashboard/scheduled-jobs/analytics")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            <BarChart3 className="h-4 w-4" />
-            {t.jobs.analytics}
-          </button>
-          <PermissionGate permission="jobs.select">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Scheduled Jobs"
+            />
+            <div className="flex gap-3">
             <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  // Entering selection mode - select all visible jobs
-                  setIsSelectionMode(true);
-                  setSelectedJobs(new Set(filteredJobs.map((job) => job.id)));
-                } else {
-                  // Exiting selection mode - clear selection
-                  setIsSelectionMode(false);
-                  setSelectedJobs(new Set());
-                }
-              }}
+              onClick={() => navigate("/dashboard/scheduled-jobs/analytics")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                backgroundColor: "transparent",
+                color: "var(--c-text-primary)",
+                border: "1px solid var(--c-text-primary)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              {isSelectionMode ? (
-                <CheckSquare className="h-4 w-4" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-              {isSelectionMode ? "Exit Selection" : "Select Jobs"}
+              <BarChart3 className="h-4 w-4" />
+              {t.jobs.analytics}
             </button>
-          </PermissionGate>
-          <PermissionGate permission="jobs.create">
-            <FeatureActionButton featureId="scheduled-jobs" action="create" onClick={() => setIsSelectTypeModalOpen(true)} />
-          </PermissionGate>
+            <PermissionGate permission="jobs.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    // Entering selection mode - select all visible jobs
+                    setIsSelectionMode(true);
+                    setSelectedJobs(new Set(filteredJobs.map((job) => job.id)));
+                  } else {
+                    // Exiting selection mode - clear selection
+                    setIsSelectionMode(false);
+                    setSelectedJobs(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                style={{
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select"}
+              </button>
+            </PermissionGate>
+            <PermissionGate permission="jobs.create">
+              <FeatureActionButton featureId="scheduled-jobs" action="create" onClick={() => setIsSelectTypeModalOpen(true)} />
+            </PermissionGate>
+            </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            {t.jobs.scheduledJobsDescription}
+          </p>
         </div>
-        <p className={`${tw.textSecondary} text-sm mt-1`}>
-          {t.jobs.scheduledJobsDescription}
-        </p>
 
         <div className="mt-6">
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
@@ -754,7 +750,7 @@ export default function ScheduledJobsPage() {
       </div>
 
       <div className="space-y-4 mt-6">
-        <div className="flex gap-4">
+        <div className="flex gap-4 mb-6">
           <SearchInput
           placeholder="Search by name or code"
           value={searchTerm}
@@ -791,7 +787,7 @@ export default function ScheduledJobsPage() {
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedJobs.size > 0 && (
         <div
-          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -874,15 +870,22 @@ export default function ScheduledJobsPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<ScheduledJob>
               columns={columns}
-              data={paginatedJobs}
-              totalItems={filteredJobs.length}
+              data={jobs}
+              totalItems={totalCount}
               currentPage={tableCurrentPage}
               pageSize={tablePageSize}
               isLoading={isLoading}
               onPageChange={tableHandlePageChange}
-                onPageSizeChange={tableHandlePageSizeChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedJobs)}
+              onRowSelectChange={(selected) => {
+                setSelectedJobs(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -891,11 +894,11 @@ export default function ScheduledJobsPage() {
               }}
             />
 
-            {paginatedJobs.length > 0 && filteredJobs.length > 0 && (
+            {jobs.length > 0 && totalCount > 0 && (
               <Pagination
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
-                totalItems={filteredJobs.length}
+                totalItems={totalCount}
                 onPageChange={tableHandlePageChange}
                 onPageSizeChange={tableHandlePageSizeChange}
               />

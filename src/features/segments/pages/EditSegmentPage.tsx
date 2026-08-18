@@ -70,7 +70,7 @@ export default function EditSegmentPage() {
       setBusinessPurpose(data.business_purpose || "");
     } catch (err) {
       console.error("Failed to load segment details:", err);
-      showError("Error loading segment", extractBackendError(error, "Error loading segment. Please try again."));
+      showError("Error loading segment", extractBackendError(err, "Error loading segment. Please try again."));
     } finally {
       setIsLoading(false);
     }

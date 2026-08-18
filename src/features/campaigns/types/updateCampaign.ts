@@ -9,6 +9,10 @@ export interface UpdateCampaignRequest {
   start_date?: string | null;
   end_date?: string | null;
   owner_team?: string | null;
+  execution_mode?: "immediate" | "schedule";
+  cron_expression?: string | null;
+  schedule_timezone?: string;
+  abort_pending_broadcasts?: boolean;
 }
 
 export interface UpdateCampaignResponse {

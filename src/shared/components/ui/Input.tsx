@@ -1,4 +1,5 @@
 import React, { forwardRef, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { tw } from '../../utils/utils';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -9,10 +10,13 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hasError?: boolean;
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  variant?: 'default' | 'medium' | 'compact'; 
+  variant?: 'default' | 'medium' | 'compact';
   type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local'; // default: text
-  label?: string; // Floating label 
+  label?: string; // Floating label
+  labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
   style?: React.CSSProperties;
+  /** Show eye toggle for password fields. Defaults to true when type is password. */
+  showPasswordToggle?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(({
@@ -26,23 +30,35 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   variant = 'default',
   type = 'text',
   label,
+  labelBgColor,
   style = {},
+  showPasswordToggle,
+  onFocus,
+  onBlur,
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isPasswordType = type === 'password';
+  const shouldShowToggle = isPasswordType && showPasswordToggle !== false;
+  const inputType = shouldShowToggle && showPassword ? 'text' : type;
+  /** Hides Edge/IE native reveal so only our single eye control is shown */
+  const passwordToggleInputClass = shouldShowToggle
+    ? 'c-input--password-toggle pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden'
+    : '';
 
   let paddingClass = 'px-4 py-2'; // default
   if (variant === 'medium') paddingClass = 'px-3 py-2';
   if (variant === 'compact') paddingClass = 'px-3 py-1';
 
-  // Determine border color based on error state
-  const borderClass = hasError ? 'border-red-500' : 'border-gray-200';
-
   // Determine background based on disabled/readOnly state
   const isReadOnly = rest.readOnly;
   let inputStyle: React.CSSProperties = {
-    backgroundColor: 'var(--c-input-bg)',
+    backgroundColor: labelBgColor || 'var(--c-input-bg)',
+    borderColor: hasError ? '#ef4444' : 'var(--c-border-default)',
     color: 'var(--c-text-primary)',
+    accentColor: ['date', 'time', 'datetime-local'].includes(type) ? 'var(--c-input-accent)' : undefined,
     ...style
   };
 
@@ -55,22 +71,44 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     };
   } else if (isReadOnly) {
     inputStyle = {
-      backgroundColor: 'var(--c-input-bg)',
+      backgroundColor: labelBgColor || 'var(--c-input-bg)',
       color: 'var(--c-text-primary)',
       cursor: 'default',
       ...style
     };
   }
 
-  const hasValue = value !== '' && value !== 0;
+  const hasValue = value !== '' && value !== null && value !== undefined;
   const shouldFloatLabel = isFocused || hasValue;
+
+  const passwordToggleButton = shouldShowToggle ? (
+    <button
+      type="button"
+      tabIndex={-1}
+      onClick={() => setShowPassword((prev) => !prev)}
+      disabled={disabled}
+      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      aria-label={showPassword ? 'Hide password' : 'Show password'}
+    >
+      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  ) : null;
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+    onFocus?.(e);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(false);
+    onBlur?.(e);
+  };
 
   // Without floating label (backward compatible)
   if (!label) {
-    return (
+    const inputEl = (
       <input
         ref={ref}
-        type={type}
         placeholder={placeholder}
         value={value}
         onChange={(e) => {
@@ -79,12 +117,27 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full ${paddingClass} text-sm placeholder:text-sm placeholder:text-[var(--c-text-muted)] border ${borderClass} ${tw.rounded}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        className={`w-full ${paddingClass} text-sm placeholder:text-sm border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          ${passwordToggleInputClass}
           ${className}`}
         style={inputStyle}
         {...rest}
+        type={inputType}
       />
+    );
+
+    if (!shouldShowToggle) {
+      return inputEl;
+    }
+
+    return (
+      <div className="relative w-full">
+        {inputEl}
+        {passwordToggleButton}
+      </div>
     );
   }
 
@@ -102,7 +155,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     <div className="relative w-full">
       <input
         ref={ref}
-        type={type}
         placeholder={shouldFloatLabel ? placeholder : " "}
         value={value}
         onChange={(e) => {
@@ -111,23 +163,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         }}
         disabled={disabled}
         onKeyDown={onKeyDown}
-        className={`w-full px-4 pt-3 pb-2 text-sm leading-tight border ${borderClass} ${tw.rounded}
+        className={`w-full px-3 pt-3 pb-2 text-sm leading-tight border ${tw.rounded}
           transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-transparent
-          ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-[var(--c-text-muted)]' : ''}
+          ${shouldFloatLabel && !isDateTimeInput && !isNumberInput ? 'placeholder:text-gray-400' : ''}
+          ${passwordToggleInputClass}
           ${className}`}
         style={{
           ...inputStyle,
           ...transparentStyle,
         }}
         {...rest}
+        type={inputType}
         onFocus={(e) => {
-          setIsFocused(true);
+          handleFocus(e);
           // Auto-select all text for number inputs so user can immediately type to replace
           if (isNumberInput && value !== '') {
             e.target.select();
           }
         }}
-        onBlur={() => setIsFocused(false)}
+        onBlur={handleBlur}
       />
 
       {/* Floating Label */}
@@ -138,13 +192,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             : 'top-1/2 -translate-y-1/2 text-sm'
           }
         `}
-        style={{
-          color: 'var(--c-text-secondary)',
-          backgroundColor: shouldFloatLabel ? 'var(--c-input-bg)' : 'transparent',
-        }}
+        style={
+          shouldFloatLabel
+            ? { backgroundColor: labelBgColor || 'var(--c-input-bg)', color: 'var(--c-text-primary)' }
+            : { color: 'var(--c-text-secondary)' }
+        }
       >
         {label}
       </label>
+
+      {passwordToggleButton}
     </div>
   );
 });

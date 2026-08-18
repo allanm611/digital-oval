@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Edit, MessageSquare, Eye, Power } from "lucide-react";
+import { Trash2, Edit, MessageSquare, Eye, Power } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import OfferCreativeFormModal from "../components/OfferCreativeFormModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -28,7 +27,6 @@ export default function OfferCreativesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCreative, setSelectedCreative] = useState<OfferCreative | null>(null);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [isTogglingActive, setIsTogglingActive] = useState<number | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [creativeToDelete, setCreativeToDelete] = useState<OfferCreative | null>(null);
@@ -57,25 +55,17 @@ export default function OfferCreativesPage() {
       creative.channel?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreate = () => {
-    setSelectedCreative(null);
-    setModalMode("create");
-    setIsModalOpen(true);
-  };
-
   const handleEdit = (creative: OfferCreative) => {
     setSelectedCreative(creative);
-    setModalMode("edit");
     setIsModalOpen(true);
   };
 
   const handleModalSave = async (creativeData: any) => {
+    if (!selectedCreative) return;
     try {
-      if (modalMode === "create") {
-        await offerCreativeService.create(creativeData);
-      } else if (selectedCreative) {
-        await offerCreativeService.update(selectedCreative.id, creativeData);
-      }
+      const { save_as_template: _ignored, name: _name, ...updateData } =
+        creativeData;
+      await offerCreativeService.update(selectedCreative.id, updateData);
       await loadCreatives();
     } catch (err) {
       throw err;
@@ -102,7 +92,7 @@ export default function OfferCreativesPage() {
       success("Success", creative.is_active ? "Creative deactivated" : "Creative activated");
     } catch (err) {
       setCreatives(originalCreatives);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsTogglingActive(null);
     }
@@ -130,7 +120,7 @@ export default function OfferCreativesPage() {
       setCreativeToDelete(null);
     } catch (err) {
       setCreatives(originalCreatives);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -138,14 +128,11 @@ export default function OfferCreativesPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton showBreadcrumb currentLabel="Offer Creatives" />
-
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="space-y-2">
+        <BackButton showBreadcrumb currentLabel="Offer Creatives" />
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage reusable creatives across different channels and locales
         </p>
-        <FeatureActionButton featureId="offer-creatives" action="create" onClick={handleCreate} />
       </div>
 
       {/* Search */}
@@ -159,7 +146,7 @@ export default function OfferCreativesPage() {
 
       {/* Table */}
       <div
-        className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className="overflow-hidden"
       >
         {loading ? (
           <div className="text-center py-12">
@@ -171,19 +158,11 @@ export default function OfferCreativesPage() {
         ) : filteredCreatives.length === 0 ? (
           <div className="text-center py-12">
             <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            {searchTerm && (
-              <p className={`${tw.textMuted} mb-6`}>
-                No offer creatives found. Try adjusting your search terms.
-              </p>
-            )}
-            {!searchTerm && (
-              <>
-                <p className={`${tw.textMuted} mb-6`}>
-                  Create your first offer creative to get started.
-                </p>
-                <FeatureActionButton featureId="offer-creatives" action="create" onClick={handleCreate} />
-              </>
-            )}
+            <p className={`${tw.textMuted} mb-6`}>
+              {searchTerm
+                ? "No offer creatives found. Try adjusting your search terms."
+                : "No offer creatives yet. Creatives are created from an offer."}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -283,13 +262,7 @@ export default function OfferCreativesPage() {
                         backgroundColor: color.surface.tablebodybg,
                       }}
                     >
-                      <div
-                        className={`text-sm font-medium ${
-                          creative.is_active
-                            ? tw.textSuccess
-                            : tw.textSecondary
-                        }`}
-                      >
+                      <div className={`text-sm font-medium ${tw.textPrimary}`}>
                         {creative.is_active ? t.genericConfig.active : t.genericConfig.inactive}
                       </div>
                     </td>
@@ -302,6 +275,13 @@ export default function OfferCreativesPage() {
                       }}
                     >
                       <div className="flex items-center justify-end gap-3">
+                        <ActivateDeactivateButton
+                          isActive={creative.is_active}
+                          onToggle={(e) => handleToggleActive(e, creative)}
+                          disabled={isTogglingActive === creative.id}
+                          isLoading={isTogglingActive === creative.id}
+                          title={creative.is_active ? "Deactivate" : "Activate"}
+                        />
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -309,7 +289,7 @@ export default function OfferCreativesPage() {
                               state: { returnTo: { pathname: "/dashboard/offer-creatives" } }
                             });
                           }}
-                          className={`${tw.textAction} hover:opacity-75 transition-opacity`}
+                          className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                           title="View details"
                         >
                           <Eye className="w-4 h-4" />
@@ -319,21 +299,14 @@ export default function OfferCreativesPage() {
                             e.stopPropagation();
                             handleEdit(creative);
                           }}
-                          className={`${tw.textAction} hover:opacity-75 transition-opacity`}
+                          className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <ActivateDeactivateButton
-                          isActive={creative.is_active}
-                          onToggle={(e) => handleToggleActive(e, creative)}
-                          disabled={isTogglingActive === creative.id}
-                          isLoading={isTogglingActive === creative.id}
-                          title={creative.is_active ? "Deactivate" : "Activate"}
-                        />
                         <button
                           onClick={(e) => handleDelete(e, creative)}
-                          className="text-red-600 hover:opacity-75 transition-opacity"
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -370,7 +343,7 @@ export default function OfferCreativesPage() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleModalSave}
         initialCreative={selectedCreative}
-        mode={modalMode}
+        mode="edit"
       />
     </div>
   );

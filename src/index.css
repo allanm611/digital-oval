@@ -1,25 +1,16 @@
-Satoshi
-  Variable
-  Font
-  -
-  Variable
-  font
-  supporting
-  weight
-  range
-  300-900
-  @font-face {
+/* Satoshi Variable Font - Using individual weight files (Regular, Bold) instead */
+/* @font-face {
   font-family: "Satoshi Variable";
-  src: url("./assets/fonts/Satoshi-Variable.ttf") format("truetype");
+  src: url("/fonts/Satoshi-Variable.ttf") format("truetype");
   font-weight: 300 900;
   font-style: normal;
   font-display: swap;
-}
+} */
 
 /* Satoshi Font - 3-weight system (Legacy) */
 @font-face {
   font-family: "Satoshi";
-  src: url("./assets/fonts/Satoshi/Satoshi-Regular.woff") format("woff");
+  src: url("/fonts/Satoshi/Satoshi-Regular.woff") format("woff");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -27,7 +18,7 @@ Satoshi
 
 @font-face {
   font-family: "Satoshi";
-  src: url("./assets/fonts/Satoshi/Satoshi-Medium.woff") format("woff");
+  src: url("/fonts/Satoshi/Satoshi-Medium.woff") format("woff");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -35,8 +26,16 @@ Satoshi
 
 @font-face {
   font-family: "Satoshi";
-  src: url("./assets/fonts/Satoshi/Satoshi-Bold.woff") format("woff");
+  src: url("/fonts/Satoshi/Satoshi-Bold.woff") format("woff");
   font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/Satoshi/Satoshi-Bold.woff") format("woff");
+  font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
@@ -2462,6 +2461,7 @@ Satoshi
   --c-surface-cards: #f5f5f5;
   --c-surface-background: #ffffff;
   --c-surface-card-bg: #ffffff;
+  --c-quicklist-inner-card: #F5FCFF;
   --c-surface-table-header: #e5e7eb;
   --c-surface-table-header-text: #000000;
   --c-surface-table-body: #ffffff;
@@ -2476,6 +2476,8 @@ Satoshi
   --c-text-primary: #111827;
   --c-text-secondary: #374151;
   --c-text-muted: #6b7280;
+  --c-table-text: #22282A;
+  --c-table-text-other: #394247;
   --c-text-inverse: #ffffff;
   --c-text-success: #059669;
   --c-text-danger: #821637;
@@ -2498,11 +2500,15 @@ Satoshi
 
   --c-input-disabled-bg: #f3f4f6;
   --c-input-bg: #ffffff;
+  --c-input-accent: #000000;
   --c-icon-color: #252829;
   --c-text-on-light: #111827;
   --c-toggle-active: #252829;
-  --c-icon-table-edit: #B1C5CE;
-  --c-icon-table-delete: #821637;
+  --c-toggle-inactive: #d1d5db;
+  --c-bordered-button-color: #000000;
+  --c-icon-table-edit: #5F6F77;
+  --c-icon-table-delete: #5F6F77;
+  --c-readonly-field-bg: #f9fafb;
 }
 
 .dark,
@@ -2514,6 +2520,7 @@ Satoshi
   --c-surface-cards: #394247;
   --c-surface-background: #394247;
   --c-surface-card-bg: #394247;
+  --c-quicklist-inner-card: #4b5563;
   --c-surface-table-header: #2a2f31;
   --c-surface-table-header-text: #f9fafb;
   --c-surface-table-body: #394247;
@@ -2528,6 +2535,8 @@ Satoshi
   --c-text-primary: #f9fafb;
   --c-text-secondary: #d1d5db;
   --c-text-muted: #9ca3af;
+  --c-table-text: #d1d5db;
+  --c-table-text-other: #d1d5db;
   --c-text-inverse: #000000;
   --c-text-success: #10b981;
   --c-text-danger: #FC9C9C;
@@ -2550,11 +2559,42 @@ Satoshi
 
   --c-input-disabled-bg: #4b5563;
   --c-input-bg: #394247;
+  --c-input-accent: #ffffff;
   --c-icon-color: #f9fafb;
   --c-text-on-light: #111827;
-  --c-toggle-active: #ffffff;
-  --c-icon-table-edit: #92A6B0;
-  --c-icon-table-delete: #FC9C9C;
+  --c-toggle-active: #22282A;
+  --c-toggle-inactive: #d1d5db;
+  --c-bordered-button-color: #ffffff;
+  --c-icon-table-edit: #D1DCE1;
+  --c-icon-table-delete: #D1DCE1;
+  --c-readonly-field-bg: #394247;
+}
+
+/* Recharts dark mode text colors */
+.dark .recharts-cartesian-axis-tick text,
+[color-mode="dark"] .recharts-cartesian-axis-tick text {
+  fill: #d1d5db !important;
+}
+
+.dark .recharts-legend-item-text,
+[color-mode="dark"] .recharts-legend-item-text {
+  color: #d1d5db !important;
+}
+
+.dark text.recharts-text,
+[color-mode="dark"] text.recharts-text {
+  fill: #d1d5db !important;
+}
+
+/* Pie chart and general chart labels in dark mode */
+.dark .recharts-pie-sector text,
+[color-mode="dark"] .recharts-pie-sector text {
+  fill: #d1d5db !important;
+}
+
+.dark .recharts-default-tooltip tspan,
+[color-mode="dark"] .recharts-default-tooltip tspan {
+  fill: #1f2223 !important;
 }
 
 /*
@@ -2600,6 +2640,15 @@ Satoshi
 .dark .text-gray-500,
 [color-mode="dark"] .text-gray-500 {
   color: var(--c-text-muted) !important;
+}
+
+.dark .hover\:bg-gray-50:hover,
+[color-mode="dark"] .hover\:bg-gray-50:hover,
+.dark .hover\:bg-blue-50:hover,
+[color-mode="dark"] .hover\:bg-blue-50:hover,
+.dark .hover\:bg-gray-100:hover,
+[color-mode="dark"] .hover\:bg-gray-100:hover {
+  background-color: var(--c-interactive-hover) !important;
 }
 
 .dark .border-gray-100,
@@ -2670,7 +2719,7 @@ input[type="time"] {
 
   body {
     font-family:
-      "Inter",
+      /* "Inter", */
       -apple-system,
       BlinkMacSystemFont,
       "Segoe UI",
@@ -2679,6 +2728,7 @@ input[type="time"] {
       "Ubuntu",
       "Cantarell",
       sans-serif;
+    font-weight: 400;
     @apply bg-white text-secondary-900 antialiased;
     background-color: var(--c-primary-background);
     color: var(--c-text-primary);
@@ -2732,11 +2782,11 @@ input[type="time"] {
 
 /* Table Action Icons */
 .icon-delete {
-  color: #821637;
+  color: var(--c-icon-table-delete);
 }
 
 .icon-edit {
-  color: #394247;
+  color: var(--c-icon-table-edit);
 }
 
 /* Component Styles */
@@ -3472,10 +3522,31 @@ input[type="time"] {
   }
 }
 
+/* Loader/Spinner Colors - Dark Mode Override */
+.dark .border-gray-600,
+[color-mode="dark"] .border-gray-600,
+.dark .border-gray-900,
+[color-mode="dark"] .border-gray-900,
+.dark .border-gray-400,
+[color-mode="dark"] .border-gray-400 {
+  border-color: #ffffff !important;
+}
+
+.dark .animate-spin,
+[color-mode="dark"] .animate-spin {
+  color: #ffffff !important;
+}
+
 /* Global Checkbox and Radio Styling - Accent Color Indicator */
 input[type="checkbox"],
 input[type="radio"] {
   accent-color: #00bbcc;
   cursor: pointer;
   background-color: white;
+}
+
+/* Custom password visibility toggle — hide browser-native reveal (e.g. Edge) */
+input.c-input--password-toggle::-ms-reveal,
+input.c-input--password-toggle::-ms-clear {
+  display: none;
 }

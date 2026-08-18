@@ -25,6 +25,20 @@ import type { ConfigurationType } from "../../../shared/services/configurationDa
 import { GATEWAY_KEY_OPTIONS, CHARACTER_SET_TYPE_OPTIONS } from "./ts";
 import { notificationTypeService } from "../../../shared/services/notificationTypeService";
 import { notificationService } from "../../notifications/services/notificationService";
+import {
+  ALL_TRACKING_METRICS,
+  ALL_TRACKING_PARAMETERS,
+  formatTrackingKeyLabel,
+  getDataSourceByType,
+  getMetricOptionsByType,
+  getMetricsByType,
+  getParameterOptionsByType,
+  getParametersByType,
+  METRIC_LABELS,
+  TRACKING_TYPE_OPTIONS,
+} from "../../offers/utils/trackingSourcesConfig";
+import { SEED_TRACKING_SOURCES } from "../services/trackingSourceService";
+import { kpiService } from "../../kpis/services/kpiService";
 
 // Default modal width for configuration modals (32rem = ~512px)
 export const DEFAULT_MODAL_WIDTH = "32rem";
@@ -86,189 +100,10 @@ export interface TypeConfigurationPageConfig {
   enableActivateDeactivate?: boolean;
 }
 
-// Hardcoded tracking sources data (for offer performance measurement)
-const hardcodedTrackingSources: ConfigurationItem[] = [
-  {
-    id: 1,
-    name: "Recharge Tracking",
-    description:
-      "Track recharge-based activities and transactions for offer performance",
-    isActive: true,
-    type: "recharge",
-    dataSource: "cdr_file",
-    parameters: [
-      "amount",
-      "datetime",
-      "subscriber_id",
-      "channel",
-      "payment_method",
-    ],
-    displayMetrics: [
-      "conversions",
-      "conversion_rate",
-      "avg_recharge_amount",
-      "revenue_generated",
-    ],
-    conditions: [
-      "equals",
-      "greater_than",
-      "less_than",
-      "contains",
-      "is_any_of",
-    ],
-    lookbackPeriod: "24h",
-    created_at: "2025-02-01T09:00:00Z",
-    updated_at: "2025-02-06T15:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Usage Metric Tracking",
-    description:
-      "Track usage-based metrics like data consumption, call duration, and SMS volume",
-    isActive: true,
-    type: "usage_metric",
-    dataSource: "usage_logs",
-    parameters: [
-      "data_volume_mb",
-      "voice_minutes",
-      "sms_count",
-      "datetime",
-      "subscriber_id",
-      "service_type",
-    ],
-    displayMetrics: [
-      "active_users",
-      "activation_rate",
-      "avg_usage",
-      "revenue_from_usage",
-    ],
-    conditions: [
-      "equals",
-      "greater_than",
-      "less_than",
-      "contains",
-      "is_any_of",
-    ],
-    lookbackPeriod: "7d",
-    created_at: "2025-02-02T11:15:00Z",
-    updated_at: "2025-02-06T15:00:00Z",
-  },
-  {
-    id: 3,
-    name: "Engagement Tracking",
-    description:
-      "Track customer engagement metrics like delivery, opens, clicks across channels",
-    isActive: true,
-    type: "engagement",
-    dataSource: "delivery_logs",
-    parameters: [
-      "delivered",
-      "opened",
-      "clicked",
-      "datetime",
-      "subscriber_id",
-      "channel",
-    ],
-    displayMetrics: [
-      "delivery_rate",
-      "open_rate",
-      "click_through_rate",
-      "engagement_score",
-    ],
-    conditions: [
-      "equals",
-      "greater_than",
-      "less_than",
-      "contains",
-      "is_any_of",
-    ],
-    lookbackPeriod: "24h",
-    created_at: "2025-02-03T12:40:00Z",
-    updated_at: "2025-02-06T15:00:00Z",
-  },
-  {
-    id: 4,
-    name: "Redemption Tracking",
-    description: "Track offer redemption rates and discount utilization",
-    isActive: true,
-    type: "redemption",
-    dataSource: "redemption_db",
-    parameters: [
-      "redeemed",
-      "redemption_date",
-      "discount_applied",
-      "subscriber_id",
-      "redemption_channel",
-    ],
-    displayMetrics: [
-      "redemption_count",
-      "redemption_rate",
-      "avg_discount_used",
-      "cost_per_redemption",
-    ],
-    conditions: [
-      "equals",
-      "greater_than",
-      "less_than",
-      "contains",
-      "is_any_of",
-    ],
-    lookbackPeriod: "30d",
-    created_at: "2025-02-04T13:20:00Z",
-    updated_at: "2025-02-06T15:00:00Z",
-  },
-  {
-    id: 5,
-    name: "Churn Prevention Tracking",
-    description: "Track if offers successfully prevent customer churn",
-    isActive: true,
-    type: "churn_prevention",
-    dataSource: "subscriber_activity",
-    parameters: [
-      "last_activity_date",
-      "days_inactive",
-      "subscriber_status",
-      "retention_period",
-    ],
-    displayMetrics: [
-      "customers_retained",
-      "retention_rate",
-      "churn_prevention_score",
-      "ltv_impact",
-    ],
-    conditions: [
-      "equals",
-      "greater_than",
-      "less_than",
-      "contains",
-      "is_any_of",
-    ],
-    lookbackPeriod: "90d",
-    created_at: "2025-02-05T08:10:00Z",
-    updated_at: "2025-02-06T15:00:00Z",
-  },
-  {
-    id: 6,
-    name: "Custom Tracking Source",
-    description:
-      "Custom tracking parameters for specific business requirements",
-    isActive: false,
-    type: "custom",
-    dataSource: "custom_api",
-    parameters: [],
-    displayMetrics: [],
-    conditions: [
-      "equals",
-      "greater_than",
-      "less_than",
-      "contains",
-      "is_any_of",
-    ],
-    lookbackPeriod: "24h",
-    created_at: "2025-02-06T10:30:00Z",
-    updated_at: "2025-02-06T15:00:00Z",
-  },
-];
+// Seed tracking sources (kept for backwards-compatible initialData consumers)
+const hardcodedTrackingSources: ConfigurationItem[] = SEED_TRACKING_SOURCES.map(
+  (s) => ({ ...s }),
+);
 
 // Hardcoded creative templates data
 const hardcodedCreativeTemplates: ConfigurationItem[] = [
@@ -1259,10 +1094,11 @@ export const campaignObjectivesConfig: ConfigurationPageConfig = {
 };
 
 // Departments Configuration
-export const departmentsConfig: ConfigurationPageConfig = {
+export const departmentsConfig: ConfigurationPageConfig & { description?: string } = {
   // Page configuration
   title: "Departments",
   subtitle: "Define and manage your departments",
+  description: "Create and manage organizational departments for campaign targeting and seed list distribution.",
   entityName: "department",
   entityNamePlural: "departments",
   configType: "departments",
@@ -1305,10 +1141,11 @@ export const departmentsConfig: ConfigurationPageConfig = {
 };
 
 // Line of Business Configuration
-export const lineOfBusinessConfig: ConfigurationPageConfig = {
+export const lineOfBusinessConfig: ConfigurationPageConfig & { description?: string } = {
   // Page configuration
   title: "Line of Business",
   subtitle: "Define and manage your business lines and services",
+  description: "Organize and manage different business lines or service divisions within your organization.",
   entityName: "business line",
   entityNamePlural: "business lines",
   configType: "lineOfBusiness",
@@ -1351,10 +1188,14 @@ export const lineOfBusinessConfig: ConfigurationPageConfig = {
 };
 
 // Tracking Sources Configuration (Offer)
-export const trackingSourcesConfig: ConfigurationPageConfig = {
+export const trackingSourcesConfig: ConfigurationPageConfig & {
+  description?: string;
+} = {
   title: "Offer Tracking Sources",
   subtitle:
     "Manage tracking sources for measuring offer performance and analytics",
+  description:
+    "Define tracking sources to measure and analyze offer performance across channels.",
   entityName: "tracking source",
   entityNamePlural: "tracking sources",
   configType: "trackingSources",
@@ -1373,6 +1214,7 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
   descriptionRequired: false,
   nameMaxLength: 120,
   descriptionMaxLength: 600,
+  modalWidth: "40rem",
   metadataFields: [
     {
       label: "Type",
@@ -1380,14 +1222,10 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
       type: "select",
       required: true,
       row: 0,
-      options: [
-        { value: "recharge", label: "Recharge" },
-        { value: "usage_metric", label: "Usage" },
-        { value: "engagement", label: "Engagement" },
-        { value: "redemption", label: "Redemption" },
-        { value: "churn_prevention", label: "Churn Prevention" },
-        { value: "custom", label: "Custom" },
-      ],
+      options: TRACKING_TYPE_OPTIONS.map((o) => ({
+        value: o.value,
+        label: o.label,
+      })),
     },
     {
       label: "Data Source",
@@ -1424,12 +1262,145 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
       type: "date",
       required: false,
       row: 2,
-      condition: (values: any) => values.lookbackPeriod === "custom",
+      condition: (values: Record<string, any>) =>
+        values.lookbackPeriod === "custom",
+    },
+    {
+      label: "Parameters",
+      key: "parameters",
+      type: "multiselect",
+      required: true,
+      row: 3,
+      placeholder: "Select parameters for rule building...",
+      allowCustomValues: true,
+      loadOptions: async (formData) => {
+        const type = String(formData?.type || "");
+        const typeOpts = getParameterOptionsByType(type);
+        // Include full catalog so operators can extend beyond type defaults
+        const byValue = new Map(
+          [...ALL_TRACKING_PARAMETERS, ...typeOpts].map((o) => [o.value, o]),
+        );
+        return Array.from(byValue.values());
+      },
+    },
+    {
+      label: "Display Metrics",
+      key: "displayMetrics",
+      type: "multiselect",
+      required: false,
+      row: 4,
+      placeholder: "Select metrics (aligned with KPIs when available)...",
+      allowCustomValues: true,
+      loadOptions: async (formData) => {
+        const type = String(formData?.type || "");
+        const typeOpts = getMetricOptionsByType(type);
+        const byValue = new Map<string, { value: string; label: string }>(
+          [...ALL_TRACKING_METRICS, ...typeOpts].map((o) => [
+            o.value,
+            { value: o.value, label: o.label },
+          ]),
+        );
+
+        try {
+          const kpis = await kpiService.getAllKPIs(undefined, true, true);
+          for (const kpi of kpis) {
+            if (kpi.is_active === false) continue;
+            const key =
+              (kpi.field_value || kpi.field_name || "").trim() ||
+              String(kpi.id || "");
+            if (!key) continue;
+            const normalized = key.toLowerCase().replace(/\s+/g, "_");
+            if (!byValue.has(normalized)) {
+              byValue.set(normalized, {
+                value: normalized,
+                label:
+                  kpi.field_name ||
+                  formatTrackingKeyLabel(normalized, METRIC_LABELS),
+              });
+            }
+          }
+        } catch {
+          // KPI catalog optional — curated metrics still available
+        }
+
+        return Array.from(byValue.values());
+      },
+    },
+  ],
+  getFieldDefaultsOnChange: (changedKey, value, current) => {
+    if (changedKey !== "type" || typeof value !== "string") return {};
+
+    const type = value;
+    const defaultParams = getParametersByType(type);
+    const defaultMetrics = getMetricsByType(type);
+    const defaultDataSource = getDataSourceByType(type);
+
+    const prevType = String(current.type || "");
+    // Prefer current form value before patch overwrites; use previous type defaults to detect "untouched"
+    const prevDefaultParams = getParametersByType(prevType);
+    const prevDefaultMetrics = getMetricsByType(prevType);
+
+    const currentParams = Array.isArray(current.parameters)
+      ? (current.parameters as string[])
+      : [];
+    const currentMetrics = Array.isArray(current.displayMetrics)
+      ? (current.displayMetrics as string[])
+      : [];
+
+    const paramsUntouched =
+      currentParams.length === 0 ||
+      (prevDefaultParams.length > 0 &&
+        currentParams.length === prevDefaultParams.length &&
+        currentParams.every((p) => prevDefaultParams.includes(p)));
+
+    const metricsUntouched =
+      currentMetrics.length === 0 ||
+      (prevDefaultMetrics.length > 0 &&
+        currentMetrics.length === prevDefaultMetrics.length &&
+        currentMetrics.every((m) => prevDefaultMetrics.includes(m)));
+
+    const patches: Record<string, any> = {};
+    if (defaultDataSource) {
+      patches.dataSource = defaultDataSource;
+    }
+    if (paramsUntouched) {
+      patches.parameters = [...defaultParams];
+    }
+    if (metricsUntouched) {
+      patches.displayMetrics = [...defaultMetrics];
+    }
+    return patches;
+  },
+  extraColumns: [
+    {
+      id: "type",
+      label: "Type",
+      render: (item) =>
+        TRACKING_TYPE_OPTIONS.find((o) => o.value === item.type)?.label ||
+        String(item.type || "—"),
+    },
+    {
+      id: "parametersCount",
+      label: "Parameters",
+      render: (item) => {
+        const count = Array.isArray(item.parameters) ? item.parameters.length : 0;
+        return `${count}`;
+      },
+    },
+    {
+      id: "metricsCount",
+      label: "Metrics",
+      render: (item) => {
+        const count = Array.isArray(item.displayMetrics)
+          ? item.displayMetrics.length
+          : 0;
+        return `${count}`;
+      },
     },
   ],
   deleteConfirmTitle: "Delete Tracking Source",
   deleteConfirmMessage: (name: string) =>
-    `Are you sure you want to delete "${name}"?`,
+    `Are you sure you want to delete "${name}"? Prefer deactivating if offers still reference this source.`,
   deleteSuccessMessage: (name: string) =>
     `"${name}" has been deleted successfully.`,
   createSuccessMessage: "Tracking source created successfully",
@@ -1439,10 +1410,11 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
 };
 
 // Creative Templates Configuration
-export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
+export const creativeTemplatesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Creative Templates",
   subtitle:
     "Manage reusable creative templates for SMS, Email, Push, and other channels",
+  description: "Create and manage message templates for reuse across multiple campaigns and channels.",
   entityName: "creative template",
   entityNamePlural: "creative templates",
   configType: "creativeTemplates",
@@ -1486,6 +1458,8 @@ export const offerCreativesConfig: TypeConfigurationPageConfig = {
   searchPlaceholder: "Search offer creatives...",
   initialData: [],
   createButtonText: "Create",
+  // Creatives require offer_id; they are created from an offer, not this list
+  disableCreate: true,
   enableActivateDeactivate: true,
   modalTitle: {
     create: "Create Offer Creative",
@@ -1510,9 +1484,10 @@ export const offerCreativesConfig: TypeConfigurationPageConfig = {
 };
 
 // Reward Types Configuration
-export const rewardTypesConfig: TypeConfigurationPageConfig = {
+export const rewardTypesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Reward Types",
   subtitle: "Define reusable reward fulfilment types for offer rewards",
+  description: "Manage reward types used to fulfill offer rewards.",
   entityName: "reward type",
   entityNamePlural: "reward types",
   configType: "rewardTypes",
@@ -2363,9 +2338,10 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
 };
 
 // Combo Types Configuration
-export const comboTypesConfig: TypeConfigurationPageConfig = {
+export const comboTypesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Combo Types",
   subtitle: "Define and manage different types of product combinations",
+  description: "Create product combinations bundling data, voice, SMS, and other services together.",
   entityName: "combo type",
   entityNamePlural: "combo types",
   configType: "comboTypes",
@@ -2472,39 +2448,11 @@ export const notificationTypesConfig: TypeConfigurationPageConfig = {
     },
     {
       key: "event_condition",
-      label: "Event Condition",
-      type: "select",
-      required: true,
-      placeholder: "Select an event condition",
+      label: "Event Condition (JSON Filter)",
+      type: "textarea",
+      required: false,
+      placeholder: 'e.g., {"status": "approved"} or {} for any change',
       row: 2,
-      loadOptions: async (formData?: Record<string, any>) => {
-        try {
-          const tableName = formData?.table_name;
-          const actionType = formData?.action_type;
-
-          if (!tableName || !actionType) {
-            console.log("Table or action type not selected, no event conditions available");
-            return [];
-          }
-
-          console.log(`Fetching event conditions for table: ${tableName}, action: ${actionType}`);
-          const response = await notificationService.getEventConditions(tableName);
-
-          // Filter event conditions by action_type
-          const options = response.data
-            .filter((condition) => condition.action_type === actionType)
-            .map((condition) => ({
-              value: condition.name,
-              label: condition.name,
-            }));
-
-          console.log(`Event conditions for ${tableName}/${actionType}:`, options);
-          return options;
-        } catch (error) {
-          console.error("Failed to load event conditions:", error);
-          return [];
-        }
-      },
     },
     {
       key: "message_template",
@@ -2561,10 +2509,11 @@ export const vipListsConfig: TypeConfigurationPageConfig = {
 };
 
 // Communication Channels Configuration
-export const communicationChannelsConfig: TypeConfigurationPageConfig = {
+export const communicationChannelsConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Communication Channels",
   subtitle:
     "Manage channels such as SMS, Email, USSD, Push and control their availability",
+  description: "Configure and manage communication channels for reaching customers across multiple platforms",
   entityName: "communication channel",
   entityNamePlural: "communication channels",
   configType: "communicationChannels",
@@ -2597,10 +2546,11 @@ export const communicationChannelsConfig: TypeConfigurationPageConfig = {
 };
 
 // Sender IDs Configuration
-export const senderIdsConfig: TypeConfigurationPageConfig = {
+export const senderIdsConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Sender IDs",
   subtitle:
     "Manage SMS sender IDs for branding and compliance. Only Super Admins can create or modify sender IDs.",
+  description: "Create and manage sender IDs for SMS authentication and branding compliance",
   entityName: "sender ID",
   entityNamePlural: "sender IDs",
   configType: "senderIds",
@@ -2917,10 +2867,11 @@ const hardcodedCharacterSets: ConfigurationItem[] = [
 ];
 
 // Languages/Locales Configuration
-export const languagesConfig: TypeConfigurationPageConfig = {
+export const languagesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Languages",
   subtitle:
     "Manage available languages and locales for offer creatives. Each language can be used to create localized message content.",
+  description: "Define and manage languages available for localizing message content across your campaigns.",
   entityName: "language",
   entityNamePlural: "languages",
   configType: "languages",
@@ -2983,10 +2934,11 @@ export const languagesConfig: TypeConfigurationPageConfig = {
 };
 
 // Character Sets Configuration
-export const characterSetsConfig: TypeConfigurationPageConfig & { createEditPath?: string; detailsPath?: string } = {
+export const characterSetsConfig: TypeConfigurationPageConfig & { createEditPath?: string; detailsPath?: string; description?: string } = {
   title: "Character Sets",
   subtitle:
     "Manage character encoding sets for language support. Character sets determine how text is encoded and displayed for different languages.",
+  description: "Define character encoding sets for proper text rendering across different languages and locales.",
   entityName: "character set",
   entityNamePlural: "character sets",
   configType: "characterSets",
@@ -3053,9 +3005,10 @@ export const characterSetsConfig: TypeConfigurationPageConfig & { createEditPath
 };
 
 // Resource Types Configuration
-export const resourceTypesConfig: TypeConfigurationPageConfig = {
+export const resourceTypesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Resource Types",
   subtitle: "Define and manage resource types with their units and categories",
+  description: "Create and manage resource types with their corresponding units.",
   entityName: "resource type",
   entityNamePlural: "resource types",
   configType: "resourceTypes",
@@ -3117,9 +3070,10 @@ export const resourceTypesConfig: TypeConfigurationPageConfig = {
 };
 
 // Utilities Configuration
-export const utilitiesConfig: TypeConfigurationPageConfig = {
+export const utilitiesConfig: TypeConfigurationPageConfig & { description?: string } = {
   title: "Utilities",
   subtitle: "Define and manage utility services that can be included in combos",
+  description: "Manage utility services that can be included in product bundles.",
   entityName: "utility",
   entityNamePlural: "utilities",
   configType: "utilities",
@@ -3409,6 +3363,7 @@ export function getDNDTypesApiConfig(
   return {
     title: "DND Types",
     subtitle: "Manage Do Not Disturb configuration types",
+    description: "Define DND types to control which customer groups are restricted from receiving messages.",
     entityName: "DND type",
     entityNamePlural: "DND types",
     configType: "dndTypes",
@@ -3479,10 +3434,11 @@ export function getCampaignObjectivesApiConfig(
 
 export function getTimezonesApiConfig(
   _t: (key: string) => string,
-): APIConfigurationPageConfig {
+): APIConfigurationPageConfig & { description?: string } {
   return {
     title: "Timezones",
     subtitle: "Manage available timezones for your organization",
+    description: "Configure timezone settings for accurate scheduling and time-based campaign execution",
     entityName: "timezone",
     entityNamePlural: "timezones",
     configType: "timezones",
@@ -3618,6 +3574,7 @@ export function getPolicyTypesApiConfig(
   return {
     title: "Policy Types",
     subtitle: "Define and manage communication policy types",
+    description: "Manage policy types used to control communication rules and frequency.",
     entityName: "policy type",
     entityNamePlural: "policy types",
     configType: "policyTypes",
@@ -3741,6 +3698,7 @@ export function getLineOfBusinessApiConfig(
   return {
     title: "Line of Business",
     subtitle: "Define and manage your business lines and services",
+    description: "Organize and manage different business lines or service divisions within your organization.",
     entityName: "business line",
     entityNamePlural: "business lines",
     configType: "lineOfBusiness",

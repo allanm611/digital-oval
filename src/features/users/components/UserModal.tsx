@@ -12,9 +12,12 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
+import { departmentService } from "../../campaigns/services/departmentService";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -40,7 +43,12 @@ export default function UserModal({
   onUserSaved,
 }: UserModalProps) {
   const { success, error } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<UserFormData>({
     username: "",
     first_name: "",
@@ -53,6 +61,8 @@ export default function UserModal({
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
   const [rolesError, setRolesError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<Array<{ id: number | string; name: string }>>([]);
+  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -154,6 +164,47 @@ export default function UserModal({
     [roles],
   );
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isCancelled = false;
+
+    const fetchDepartments = async () => {
+      setIsLoadingDepartments(true);
+      try {
+        const fetchedDepartments = await departmentService.getDepartments();
+        if (isCancelled) return;
+        setDepartments(fetchedDepartments.map((dept) => ({
+          id: dept.id || dept.metadataValue,
+          name: dept.name,
+        })));
+      } catch (err) {
+        if (isCancelled) return;
+        console.error("Failed to load departments", err);
+        setDepartments([]);
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingDepartments(false);
+        }
+      }
+    };
+
+    fetchDepartments();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen]);
+
+  const departmentOptions = useMemo(
+    () =>
+      departments.map((dept) => ({
+        value: String(dept.id),
+        label: dept.name,
+      })),
+    [departments],
+  );
+
   const handleInputChange = (fieldName: keyof UserFormData) => (value: string | number) => {
     setFormData((prev) => ({
       ...prev,
@@ -161,15 +212,43 @@ export default function UserModal({
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.first_name?.trim()) {
+      newErrors.first_name = "First name is required";
+    }
+
+    if (!formData.last_name?.trim()) {
+      newErrors.last_name = "Last name is required";
+    }
+
+    if (!formData.email_address?.trim()) {
+      newErrors.email_address = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_address)) {
+      newErrors.email_address = "Invalid email format";
+    }
+
+    if (!user && (!formData.password || formData.password.length < 8)) {
+      newErrors.password = "Password is required and must be at least 8 characters";
+    }
 
     if (!formData.primary_role_id) {
-      error("Validation Error", "Role is required to create or update a user");
-      setIsLoading(false);
+      newErrors.primary_role_id = "Role is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) {
       return;
     }
+
+    setIsLoading(true);
 
     try {
       if (user) {
@@ -196,14 +275,6 @@ export default function UserModal({
         );
       } else {
         // Create new user - need to hash password first
-        if (!formData.password || formData.password.length < 8) {
-          error(
-            "Validation Error",
-            "Password is required and must be at least 8 characters",
-          );
-          setIsLoading(false);
-          return;
-        }
 
         // Hash password using the dev endpoint
         const hashResponse = await accountService.hashPassword(
@@ -286,67 +357,47 @@ export default function UserModal({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
-                  </div>
+                <FormField error={errors?.first_name} ref={registerFieldRef('first_name')}>
                   <Input
                     label="First Name *"
                     name="first_name"
                     value={formData.first_name}
                     onChange={handleInputChange('first_name')}
                     required
-                    className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                     placeholder="First Name"
                   />
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <UserIcon className={`w-5 h-5 ${tw.textMuted}`} />
-                  </div>
+                </FormField>
+                <FormField error={errors?.last_name} ref={registerFieldRef('last_name')}>
                   <Input
                     label="Last Name *"
                     name="last_name"
                     value={formData.last_name}
                     onChange={handleInputChange('last_name')}
                     required
-                    className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                     placeholder="Last Name"
                   />
-                </div>
+                </FormField>
               </div>
 
-              <div>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className={`w-5 h-5 ${tw.textMuted}`} />
-                  </div>
-                  <Input
-                    label="Email *"
-                    name="email_address"
-                    type="email"
-                    value={formData.email_address}
-                    onChange={handleInputChange('email_address')}
-                    required
-                    disabled={!!user}
-                    className={`block w-full pl-10 pr-3 py-3 border ${
-                      tw.borderDefault
-                    } ${
-                      tw.rounded
-                    } focus:outline-none transition-all duration-200 text-sm ${
-                      user ? "bg-gray-100 cursor-not-allowed opacity-75" : ""
-                    }`}
-                    placeholder="email@example.com"
-                  />
-                </div>
+              <FormField error={errors?.email_address} ref={registerFieldRef('email_address')}>
+                <Input
+                  label="Email *"
+                  name="email_address"
+                  type="email"
+                  value={formData.email_address}
+                  onChange={handleInputChange('email_address')}
+                  required
+                  disabled={!!user}
+                  placeholder="email@example.com"
+                />
                 {user && (
                   <p className="mt-1 text-xs text-gray-500">
                     Email cannot be changed after user creation
                   </p>
                 )}
-              </div>
+              </FormField>
 
               {!user && (
                 <>
@@ -356,14 +407,10 @@ export default function UserModal({
                     type="text"
                     value={formData.username}
                     onChange={handleInputChange('username')}
-                    className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                     placeholder="Leave empty to auto-generate from email"
                   />
 
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className={`w-5 h-5 ${tw.textMuted}`} />
-                    </div>
+                  <FormField error={errors?.password} ref={registerFieldRef('password')}>
                     <Input
                       label={<>Password * <span className="text-xs text-gray-500">(min 8 characters)</span></>}
                       name="password"
@@ -372,15 +419,14 @@ export default function UserModal({
                       onChange={handleInputChange('password')}
                       required
                       minLength={8}
-                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                       placeholder="Password"
                     />
-                  </div>
+                  </FormField>
                 </>
               )}
 
               <div className="space-y-4">
-                <div>
+                <FormField error={errors?.primary_role_id || rolesError} ref={registerFieldRef('primary_role_id')}>
                   <HeadlessSelect
                     label="Role *"
                     options={roleOptions}
@@ -407,18 +453,28 @@ export default function UserModal({
                     className="w-full"
                     zIndex={zIndex.popover}
                   />
-                  {rolesError && (
-                    <p className="mt-2 text-xs text-red-600">{rolesError}</p>
-                  )}
-                </div>
-                <Input
+                </FormField>
+                <HeadlessSelect
                   label="Department"
-                  name="department"
-                  type="text"
-                  value={formData.department}
-                  onChange={handleInputChange('department')}
-                  className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
-                  placeholder="Department"
+                  options={departmentOptions}
+                  value={formData.department || ""}
+                  onChange={(value) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      department: String(value),
+                    }));
+                  }}
+                  placeholder={
+                    isLoadingDepartments
+                      ? "Loading departments..."
+                      : departmentOptions.length > 0
+                        ? "Select a department"
+                        : "No departments available"
+                  }
+                  disabled={isLoadingDepartments || departmentOptions.length === 0}
+                  searchable
+                  className="w-full"
+                  zIndex={zIndex.popover}
                 />
               </div>
 

@@ -54,15 +54,8 @@ export default function SubscriptionIdSelector({
 
   return (
     <div className="space-y-2">
-      <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-        {t.manualBroadcast.subscriptionIdLabel || "Subscriber ID Field *"}
-      </label>
-      <p className={`text-xs ${tw.textSecondary} mb-0`}>
-        {t.manualBroadcast.subscriptionIdHelper ||
-          "Select the column that contains the unique identifier for each customer"}
-      </p>
-
       <HeadlessSelect
+        label={t.manualBroadcast.subscriptionIdLabel || "Subscriber ID Field *"}
         options={options}
         value={selectedColumn || ""}
         onChange={handleChange}
@@ -75,6 +68,10 @@ export default function SubscriptionIdSelector({
         zIndex={10100}
         placeholderClassName="text-sm"
       />
+      <p className={`text-xs ${tw.textSecondary} mb-0`}>
+        {t.manualBroadcast.subscriptionIdHelper ||
+          "Select the column that contains the unique identifier for each customer"}
+      </p>
 
       {/* Error message display */}
       {error && errorMessage && (

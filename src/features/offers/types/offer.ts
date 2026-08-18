@@ -35,8 +35,13 @@ export interface Offer {
   offer_type_label?: string; // Backend field - string label of offer type
   category_id?: number;
   communication_channel_id?: number; // Communication channel for the offer
+  route?: string | number; // Route for the selected communication channel
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   email_route_id?: number; // Email route ID (only used when channel is EMAIL)
+  whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
+  ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
+  push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
+  transactional_route_id?: number; // Route for fulfillment success/failure messages
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -58,6 +63,10 @@ export interface Offer {
   updated_at: string;
   created_by?: number;
   updated_by?: number;
+  /** Hydrated from metadata / JSONB column by database-service */
+  tracking_sources?: unknown[];
+  /** Hydrated from metadata / JSONB column by database-service */
+  reward_configuration?: unknown;
 }
 
 // creating a new offer
@@ -69,8 +78,13 @@ export interface CreateOfferRequest {
   offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: string | number;
   communication_channel_id?: number; // Communication channel for the offer
+  route?: string | number; // Route for the selected communication channel
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   email_route_id?: number; // Email route ID (only used when channel is EMAIL)
+  whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
+  ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
+  push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
+  transactional_route_id?: number; // Route for fulfillment success/failure messages
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -84,6 +98,10 @@ export interface CreateOfferRequest {
   supports_multi_language?: boolean;
   metadata?: object;
   tags?: string[];
+  /** Top-level JSONB column — dual-written with metadata.tracking_sources */
+  tracking_sources?: unknown[];
+  /** Top-level JSONB column — dual-written with metadata.rewards */
+  reward_configuration?: unknown;
   created_by?: number;
 }
 
@@ -96,8 +114,13 @@ export interface UpdateOfferRequest {
   offer_type?: string; // Backend field - string value of offer type (for API response compatibility)
   category_id?: string | number;
   communication_channel_id?: number; // Communication channel for the offer
+  route?: string | number; // Route for the selected communication channel
   sms_route_id?: number; // SMS route ID (only used when channel is SMS)
   email_route_id?: number; // Email route ID (only used when channel is EMAIL)
+  whatsapp_route_id?: number; // WhatsApp route ID (only used when channel is WhatsApp)
+  ussd_route_id?: number; // USSD route ID (only used when channel is USSD)
+  push_notification_route_id?: number; // Push notification route ID (only used when channel is Push)
+  transactional_route_id?: number; // Route for fulfillment success/failure messages
   primary_product_id?: number;
   discount_percentage?: number;
   discount_amount?: number;
@@ -111,6 +134,10 @@ export interface UpdateOfferRequest {
   supports_multi_language?: boolean;
   metadata?: object;
   tags?: string[];
+  /** Top-level JSONB column — dual-written with metadata.tracking_sources */
+  tracking_sources?: unknown[];
+  /** Top-level JSONB column — dual-written with metadata.rewards */
+  reward_configuration?: unknown;
   updated_by?: number;
 }
 

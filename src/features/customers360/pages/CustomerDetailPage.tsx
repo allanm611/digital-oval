@@ -22,7 +22,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import Pagination from "../../../shared/components/ui/Pagination";
+import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import Radio from "../../../shared/components/ui/Radio";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -48,7 +48,8 @@ import { customerService } from "../services/customerServices";
 import { revenueMetricService } from "../../kpis/services/revenueMetricService";
 import type { RevenueMetric } from "../../kpis/types/revenueMetrics";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
-import { Table, type TableColumn } from "../../../shared/components/Table";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Extract types from API response
 type CustomerSegment = CustomerSearchResultsResponse["segments"][number];
@@ -511,6 +512,7 @@ export default function CustomerDetailPage() {
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
   const [kpiSearchTerm, setKpiSearchTerm] = useState<string>("");
   const [expandedKpi, setExpandedKpi] = useState<string | null>(null);
+  const [showKpiColumnPicker, setShowKpiColumnPicker] = useState(false);
   const { t } = useLanguage();
   const { success: showSuccess, error: showError } = useToast();
 
@@ -520,12 +522,18 @@ export default function CustomerDetailPage() {
     name: string;
     category: string;
     value: string | number;
+    type?: string;
     unit?: string;
     description: string;
     trend?: "up" | "down" | "neutral";
     trendPercent?: number;
     detailedInfo: string | React.ReactNode;
     defaultValue?: string | number;
+    field_type?: string;
+    created?: string;
+    lastUpdated?: string;
+    firstRecorded?: string;
+    firstRecordedValue?: string | number;
   };
 
   const [revenueMetrics, setRevenueMetrics] = useState<RevenueMetric[]>([]);
@@ -546,30 +554,163 @@ export default function CustomerDetailPage() {
     loadRevenueMetrics();
   }, []);
 
-  const generateKpiData = (): KpiData[] =>
-    revenueMetrics.map((metric) => ({
-      id: String(metric.id),
-      name: metric.name,
-      category: "Revenue",
-      value: "—",
-      unit: metric.unit,
-      description: metric.description,
-      defaultValue: (metric as any).default_value ?? 0,
-      detailedInfo: (
-        <div className="space-y-3">
-          <p className="text-sm text-gray-900">{metric.description}</p>
-          <div>
-            <p className="text-xs font-semibold text-gray-700 mb-1">Details:</p>
-            <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
-              <li>Category: {metric.category}</li>
-              <li>Data Source: {metric.data_source}</li>
-              <li>Frequency: {metric.frequency}</li>
-              <li>Source Table: {metric.source_table}</li>
-            </ul>
-          </div>
-        </div>
+  const defaultKpiColumns: TableColumn<any>[] = [
+    {
+      id: "name",
+      label: "KPI Name",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+    },
+    {
+      id: "category",
+      label: "Category",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+    },
+    {
+      id: "type",
+      label: "Type",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+
+    },
+    {
+      id: "value",
+      label: "Current Value",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+
+    },
+    {
+      id: "firstRecordedValue",
+      label: "First Recorded Value",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+
+    },
+    {
+      id: "defaultValue",
+      label: "Default Value",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+
+    },
+    {
+      id: "lastUpdated",
+      label: "Last Updated",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+
+    },
+    {
+      id: "created",
+      label: "Created",
+      visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
+
+    },
+    {
+      id: "action",
+      label: "Action",
+      visible: true,
+      sortable: false,
+      render: (_, row) => (
+        <button
+          onClick={() =>
+            navigate(
+              `/dashboard/kpis/revenue-metrics/${row.id}`,
+              { state: { parentLabel: "Customer Profile" } }
+            )
+          }
+          className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+          title="View details"
+        >
+          <Eye className="h-4 w-4" />
+        </button>
       ),
-    }));
+    },
+  ];
+
+  const {
+    columns: kpiColumns,
+    toggleColumn: toggleKpiColumn,
+    reorderColumns: reorderKpiColumns,
+    resetToDefaults: resetKpiDefaults,
+  } = useTable({
+    tableId: "customer-kpi-table",
+    defaultColumns: defaultKpiColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
+
+  const generateKpiData = (): KpiData[] => {
+    const createdDate = selectedSubscription?.created_at
+      ? new Date(selectedSubscription.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      : "—";
+
+    const lastUpdatedDate = selectedSubscription?.updated_at
+      ? new Date(selectedSubscription.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      : "—";
+
+    const firstRecordedDate = selectedSubscription?.created_at
+      ? new Date(new Date(selectedSubscription.created_at).getTime() + (7 * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      : "—";
+
+    const kpiData = revenueMetrics.map((metric) => {
+      const currentValue = 0;
+      const previousValue = 0;
+
+      const kpiCreatedDate = metric.created_at
+        ? new Date(metric.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : "—";
+
+      const kpiFirstRecordedDate = metric.created_at
+        ? new Date(new Date(metric.created_at).getTime() + (7 * 24 * 60 * 60 * 1000)).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : "—";
+
+      return {
+        id: String(metric.id),
+        name: metric.name,
+        category: "Revenue",
+        value: currentValue,
+        type: metric.field_type,
+        unit: metric.unit,
+        description: metric.description,
+        defaultValue: metric.default_value ?? "-",
+        field_type: metric.field_type,
+        created: kpiCreatedDate,
+        lastUpdated: lastUpdatedDate,
+        firstRecorded: kpiFirstRecordedDate,
+        firstRecordedValue: previousValue,
+        detailedInfo: (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-900">{metric.description}</p>
+            <div>
+              <p className="text-xs font-semibold text-gray-700 mb-1">Details:</p>
+              <ul className="text-sm text-gray-900 space-y-1 list-disc list-inside">
+                <li>Category: {metric.category}</li>
+                <li>Data Source: {metric.data_source}</li>
+                <li>Frequency: {metric.frequency}</li>
+                <li>Source Table: {metric.source_table}</li>
+              </ul>
+            </div>
+          </div>
+        ),
+      };
+    });
+
+    return kpiData;
+
+    return kpiData;
+  };
 
   const kpiList = generateKpiData();
 
@@ -609,6 +750,11 @@ export default function CustomerDetailPage() {
     eventDateFrom,
     eventDateTo,
   ]);
+
+  // Reset KPI pagination when search changes
+  useEffect(() => {
+    setKpiPage(1);
+  }, [kpiSearchTerm]);
 
   const { segments, offers, events, lists, quicklists, campaigns } = useMemo(() => {
     if (!selectedSubscription)
@@ -975,7 +1121,7 @@ export default function CustomerDetailPage() {
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <BackButton
-           
+
             showBreadcrumb={true}
             currentLabel="Customer Details"
           />
@@ -1075,7 +1221,8 @@ export default function CustomerDetailPage() {
                       {section.items.map(({ label, value }) => (
                         <div
                           key={`${section.title}-${label}`}
-                          className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                          className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                          style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                         >
                           <p className="text-xs uppercase text-gray-500">
                             {label}
@@ -1102,7 +1249,7 @@ export default function CustomerDetailPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Key Performance Indicators
                 </h3>
-                
+
                 {/* KPI Search Bar */}
                 <div className="mb-6">
                   <SearchInput
@@ -1120,57 +1267,14 @@ export default function CustomerDetailPage() {
                 ) : (
                   <div className={`${tw.rounded} overflow-hidden`}>
                     <Table<any>
-                      columns={[
-                        {
-                          id: "name",
-                          label: "KPI Name",
-                          visible: true,
-                          render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                        },
-                        {
-                          id: "category",
-                          label: "Category",
-                          visible: true,
-                          render: (_, row) => <span className="text-sm text-gray-900">{row.category}</span>,
-                        },
-                        {
-                          id: "type",
-                          label: "Type",
-                          visible: true,
-                          render: (_, row) => <span className="text-sm text-gray-900">{revenueMetrics.find((m) => m.id === Number(row.id))?.field_type || "—"}</span>,
-                        },
-                        {
-                          id: "defaultValue",
-                          label: "Default Value",
-                          visible: true,
-                          render: (_, row) => <span className="text-sm text-gray-900">{row.defaultValue ?? 0}</span>,
-                        },
-                        {
-                          id: "action",
-                          label: "Action",
-                          visible: true,
-                          sortable: false,
-                          render: (_, row) => (
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/dashboard/kpis/revenue-metrics/${row.id}`,
-                                  { state: { parentLabel: "Customer Profile" } }
-                                )
-                              }
-                              className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
-                              title="View details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                          ),
-                        },
-                      ]}
+                      columns={kpiColumns}
                       data={paginatedKpis}
                       totalItems={filteredKpis.length}
                       currentPage={kpiPage}
                       pageSize={pageSize}
                       onPageChange={setKpiPage}
+                      onHideColumn={toggleKpiColumn}
+                      onManageColumnsClick={() => setShowKpiColumnPicker(true)}
                       style={{
                         headerBackground: color.surface.tableHeader,
                         headerTextColor: color.surface.tableHeaderText,
@@ -1223,7 +1327,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventSearchTerm(String(value))}
                       placeholder="Search events..."
                       className="pl-10 pr-4"
-                     
+
                     />
                   </div>
                   <HeadlessSelect
@@ -1260,7 +1364,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventDateFrom(String(value))}
                       placeholder="From Date"
                       className="pl-10 pr-10"
-                     
+
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }
@@ -1282,7 +1386,7 @@ export default function CustomerDetailPage() {
                       onChange={(value) => setEventDateTo(String(value))}
                       placeholder="To Date"
                       className="pl-10 pr-10"
-                     
+
                       onClick={(e) =>
                         (e.currentTarget as HTMLInputElement).showPicker()
                       }
@@ -1306,26 +1410,22 @@ export default function CustomerDetailPage() {
                         id: "title",
                         label: "Event Type",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.title}</span>,
-                      },
+                        },
                       {
                         id: "description",
                         label: "Description",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.description}</span>,
-                      },
+                        },
                       {
                         id: "type",
                         label: "Channel",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type.toUpperCase()}</span>,
-                      },
+                        },
                       {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                      },
+                        },
                     ]}
                     data={paginatedEvents}
                     totalItems={filteredEvents.length}
@@ -1548,14 +1648,12 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "Segment Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "type",
                         label: "Type",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                      },
+                        },
                       {
                         id: "addedDate",
                         label: "Added Date",
@@ -1618,20 +1716,17 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "Offer Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "type",
                         label: "Type",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                      },
+                        },
                       {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                      },
+                        },
                       {
                         id: "value",
                         label: "Value",
@@ -1702,14 +1797,12 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "QuickList Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "recordCount",
                         label: "Total Members",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.recordCount || 0}</span>,
-                      },
+                        },
                       {
                         id: "createdDate",
                         label: "Created Date",
@@ -1726,8 +1819,7 @@ export default function CustomerDetailPage() {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm font-medium text-gray-900">{row.status}</span>,
-                      },
+                        },
                     ]}
                     data={paginatedQuicklists}
                     totalItems={quicklists.length}
@@ -1780,14 +1872,12 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "Campaign Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "type",
                         label: "Type",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                      },
+                        },
                       {
                         id: "participationDate",
                         label: "Participation Date",
@@ -1804,8 +1894,7 @@ export default function CustomerDetailPage() {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                      },
+                        },
                     ]}
                     data={campaigns}
                     totalItems={campaigns.length}
@@ -1847,8 +1936,7 @@ export default function CustomerDetailPage() {
                         id: "name",
                         label: "List Name",
                         visible: true,
-                        render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                      },
+                                        },
                       {
                         id: "subscribedDate",
                         label: "Subscribed Date",
@@ -1865,8 +1953,7 @@ export default function CustomerDetailPage() {
                         id: "status",
                         label: "Status",
                         visible: true,
-                        render: (_, row) => <span className="text-sm text-gray-900">{row.status === "active" ? "Active" : "Unsubscribed"}</span>,
-                      },
+                        },
                     ]}
                     data={paginatedLists}
                     totalItems={lists.length}
@@ -1916,14 +2003,12 @@ export default function CustomerDetailPage() {
                     id: "subject",
                     label: "Subject",
                     visible: true,
-                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.subject}</span>,
-                  },
+                    },
                   {
                     id: "channel",
                     label: "Channel",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.channel}</span>,
-                  },
+                    },
                   {
                     id: "date",
                     label: "Sent Date",
@@ -1934,8 +2019,7 @@ export default function CustomerDetailPage() {
                     id: "status",
                     label: "Status",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                  },
+                    },
                 ]}
                 data={[
                   {
@@ -1997,14 +2081,12 @@ export default function CustomerDetailPage() {
                     id: "id",
                     label: "Transaction ID",
                     visible: true,
-                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.id}</span>,
-                  },
+                    },
                   {
                     id: "product",
                     label: "Product",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.product}</span>,
-                  },
+                    },
                   {
                     id: "amount",
                     label: "Amount",
@@ -2021,8 +2103,7 @@ export default function CustomerDetailPage() {
                     id: "status",
                     label: "Status",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                  },
+                    },
                 ]}
                 data={[
                   {
@@ -2108,14 +2189,12 @@ export default function CustomerDetailPage() {
                       id: "name",
                       label: "Reward Name",
                       visible: true,
-                      render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.name}</span>,
-                    },
+                                    },
                     {
                       id: "points",
                       label: "Points",
                       visible: true,
-                      render: (_, row) => <span className="text-sm text-gray-900">{row.points.toLocaleString()}</span>,
-                    },
+                      },
                     {
                       id: "date",
                       label: "Redeemed Date",
@@ -2174,7 +2253,8 @@ export default function CustomerDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {/* Email Preference */}
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <div className="flex items-center gap-3">
                       <Radio
@@ -2196,7 +2276,8 @@ export default function CustomerDetailPage() {
 
                   {/* SMS Preference */}
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <div className="flex items-center gap-3">
                       <Radio
@@ -2218,7 +2299,8 @@ export default function CustomerDetailPage() {
 
                   {/* Push Preference */}
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <div className="flex items-center gap-3">
                       <Radio
@@ -2247,7 +2329,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-md">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       Preferred Language
@@ -2289,26 +2372,22 @@ export default function CustomerDetailPage() {
                     id: "id",
                     label: "Ticket ID",
                     visible: true,
-                    render: (_, row) => <span className="font-semibold text-sm text-gray-900">{row.id}</span>,
-                  },
+                    },
                   {
                     id: "type",
                     label: "Type",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.type}</span>,
-                  },
+                    },
                   {
                     id: "subject",
                     label: "Subject",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.subject}</span>,
-                  },
+                    },
                   {
                     id: "status",
                     label: "Status",
                     visible: true,
-                    render: (_, row) => <span className="text-sm text-gray-900">{row.status}</span>,
-                  },
+                    },
                   {
                     id: "date",
                     label: "Date",
@@ -2369,7 +2448,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Status
@@ -2380,7 +2460,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Account Created
@@ -2397,7 +2478,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Last Login
@@ -2413,7 +2495,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       Primary Device
@@ -2422,7 +2505,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       OS Version
@@ -2431,7 +2515,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-1">
                       App Version
@@ -2447,7 +2532,8 @@ export default function CustomerDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       Email Verified
@@ -2458,7 +2544,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       Phone Verified
@@ -2469,7 +2556,8 @@ export default function CustomerDetailPage() {
                   </div>
 
                   <div
-                    className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
+                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
+                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
                   >
                     <p className="text-xs uppercase text-gray-500 mb-2">
                       KYC Verified
@@ -2520,6 +2608,22 @@ export default function CustomerDetailPage() {
           isLoading={isDeleting}
           confirmText="Delete"
           cancelText="Cancel"
+        />
+
+        {/* KPI Column Picker Modal */}
+        <ColumnPickerModal
+          isOpen={showKpiColumnPicker}
+          columns={kpiColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowKpiColumnPicker(false)}
+          onToggleColumn={toggleKpiColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = kpiColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderKpiColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetKpiDefaults}
         />
       </div>
     </PermissionGate>

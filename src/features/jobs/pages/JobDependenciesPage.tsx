@@ -27,7 +27,7 @@ import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pag
 import DateFormatter from "../../../shared/components/DateFormatter";
 import Input from "../../../shared/components/ui/Input";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import { color, tw, zIndex, button, getButtonStyles } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -224,7 +224,7 @@ function JobDependencyModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {isLoadingJobs ? (
             <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
               <LoadingSpinner size="sm" />
@@ -417,8 +417,8 @@ function JobDependencyViewModal({
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Job ID
@@ -435,7 +435,7 @@ function JobDependencyViewModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Dependency Type
@@ -454,7 +454,7 @@ function JobDependencyViewModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Max Wait Minutes
@@ -1319,7 +1319,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency";
-      showError("Unable to load dependency", extractBackendError(error, "Unable to load dependency. Please try again."));
+      showError("Unable to load dependency", extractBackendError(err, "Unable to load dependency. Please try again."));
     }
   };
 
@@ -1342,7 +1342,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load blocking dependencies";
-      showError("Unable to load blocking dependencies", extractBackendError(error, "Unable to load blocking dependencies. Please try again."));
+      showError("Unable to load blocking dependencies", extractBackendError(err, "Unable to load blocking dependencies. Please try again."));
       setShowBlockingDependenciesModal(false);
     } finally {
       setIsLoadingBlockingDependencies(false);
@@ -1370,7 +1370,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency chain";
-      showError("Unable to load dependency chain", extractBackendError(error, "Unable to load dependency chain. Please try again."));
+      showError("Unable to load dependency chain", extractBackendError(err, "Unable to load dependency chain. Please try again."));
       setShowChainModal(false);
     } finally {
       setIsLoadingChain(false);
@@ -1395,7 +1395,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load critical path";
-      showError("Unable to load critical path", extractBackendError(error, "Unable to load critical path. Please try again."));
+      showError("Unable to load critical path", extractBackendError(err, "Unable to load critical path. Please try again."));
       setShowChainModal(false);
     } finally {
       setIsLoadingChain(false);
@@ -1421,7 +1421,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load immediate dependencies";
-      showError("Unable to load immediate dependencies", extractBackendError(error, "Unable to load immediate dependencies. Please try again."));
+      showError("Unable to load immediate dependencies", extractBackendError(err, "Unable to load immediate dependencies. Please try again."));
       setShowImmediateDependenciesModal(false);
     } finally {
       setIsLoadingImmediateDependencies(false);
@@ -1439,7 +1439,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependents";
-      showError("Unable to load dependents", extractBackendError(error, "Unable to load dependents. Please try again."));
+      showError("Unable to load dependents", extractBackendError(err, "Unable to load dependents. Please try again."));
       setShowAllDependentsModal(false);
     } finally {
       setIsLoadingAllDependents(false);
@@ -1469,7 +1469,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to check dependencies";
-      showError("Unable to check dependencies", extractBackendError(error, "Unable to check dependencies. Please try again."));
+      showError("Unable to check dependencies", extractBackendError(err, "Unable to check dependencies. Please try again."));
     }
   };
 
@@ -1491,7 +1491,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load unsatisfied dependencies";
-      showError("Unable to load unsatisfied dependencies", extractBackendError(error, "Unable to load unsatisfied dependencies. Please try again."));
+      showError("Unable to load unsatisfied dependencies", extractBackendError(err, "Unable to load unsatisfied dependencies. Please try again."));
       setShowUnsatisfiedDependenciesModal(false);
     } finally {
       setIsLoadingUnsatisfiedDependencies(false);
@@ -1522,7 +1522,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency status";
-      showError("Unable to load dependency status", extractBackendError(error, "Unable to load dependency status. Please try again."));
+      showError("Unable to load dependency status", extractBackendError(err, "Unable to load dependency status. Please try again."));
       setShowStatusModal(false);
     } finally {
       setIsLoadingStatus(false);
@@ -1572,7 +1572,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate dependencies";
-      showError("Unable to activate dependencies", extractBackendError(error, "Unable to activate dependencies. Please try again."));
+      showError("Unable to activate dependencies", extractBackendError(err, "Unable to activate dependencies. Please try again."));
     }
   };
 
@@ -1600,7 +1600,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to deactivate dependencies";
-      showError("Unable to deactivate dependencies", extractBackendError(error, "Unable to deactivate dependencies. Please try again."));
+      showError("Unable to deactivate dependencies", extractBackendError(err, "Unable to deactivate dependencies. Please try again."));
     }
   };
 
@@ -1616,7 +1616,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency graph";
-      showError("Unable to load dependency graph", extractBackendError(error, "Unable to load dependency graph. Please try again."));
+      showError("Unable to load dependency graph", extractBackendError(err, "Unable to load dependency graph. Please try again."));
       setShowGraphModal(false);
     } finally {
       setIsLoadingGraph(false);
@@ -1637,7 +1637,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load orphaned jobs";
-      showError("Unable to load orphaned jobs", extractBackendError(error, "Unable to load orphaned jobs. Please try again."));
+      showError("Unable to load orphaned jobs", extractBackendError(err, "Unable to load orphaned jobs. Please try again."));
     }
   };
 
@@ -1660,7 +1660,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load most depended jobs";
-      showError("Unable to load most depended jobs", extractBackendError(error, "Unable to load most depended jobs. Please try again."));
+      showError("Unable to load most depended jobs", extractBackendError(err, "Unable to load most depended jobs. Please try again."));
     }
   };
 
@@ -1676,7 +1676,7 @@ export default function JobDependenciesPage() {
         err instanceof Error
           ? err.message
           : "Failed to load complex dependencies";
-      showError("Unable to load complex dependencies", extractBackendError(error, "Unable to load complex dependencies. Please try again."));
+      showError("Unable to load complex dependencies", extractBackendError(err, "Unable to load complex dependencies. Please try again."));
       setShowComplexDependenciesModal(false);
     } finally {
       setIsLoadingComplexDependencies(false);
@@ -1713,7 +1713,7 @@ export default function JobDependenciesPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete dependencies";
-      showError("Unable to delete dependencies", extractBackendError(error, "Unable to delete dependencies. Please try again."));
+      showError("Unable to delete dependencies", extractBackendError(err, "Unable to delete dependencies. Please try again."));
     } finally {
       setIsDeletingAll(false);
     }
@@ -1751,13 +1751,11 @@ export default function JobDependenciesPage() {
                     setSelectedDependencyIds(new Set());
                   }
                 }}
-                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
                 style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  backgroundColor: "transparent",
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
                 }}
               >
                 {isSelectionMode ? (
@@ -1766,7 +1764,7 @@ export default function JobDependenciesPage() {
                   <Square className="h-4 w-4" />
                 )}
                 <span className="hidden sm:inline">
-                  {isSelectionMode ? "Exit Selection" : "Select Dependencies"}
+                  {isSelectionMode ? "Exit Selection" : "Select"}
                 </span>
                 <span className="sm:hidden">
                   {isSelectionMode ? "Exit" : "Select"}
@@ -1778,8 +1776,14 @@ export default function JobDependenciesPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-3 sm:px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-text-primary)",
+                border: "1px solid var(--c-text-primary)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
               <BarChart3 className="h-4 w-4" />
@@ -1937,7 +1941,7 @@ export default function JobDependenciesPage() {
       {isSelectionMode && selectedDependencyIds.size > 0 && (
         <PermissionGate permission="job-dependencies.update">
           <div
-            className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+            className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
           >
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">
@@ -2009,115 +2013,59 @@ export default function JobDependenciesPage() {
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<any>
               columns={[
-                ...(isSelectionMode
-                  ? [
-                      {
-                        id: "select",
-                        label: (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={handleSelectAll}
-                          >
-                            <Checkbox
-                              id="select-all-dependencies"
-                              checked={
-                                filteredDependencies.length > 0 &&
-                                selectedDependencyIds.size ===
-                                  filteredDependencies.length
-                              }
-                              onChange={handleSelectAll}
-                            />
-                          </div>
-                        ),
-                        visible: true,
-                        sortable: false,
-                        render: (_, dependency) => (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer"
-                            onClick={() => handleToggleSelection(dependency.id)}
-                          >
-                            <Checkbox
-                              id={`dependency-${dependency.id}`}
-                              checked={selectedDependencyIds.has(dependency.id)}
-                              onChange={() =>
-                                handleToggleSelection(dependency.id)
-                              }
-                            />
-                          </div>
-                        ),
-                      } as TableColumn<any>,
-                    ]
-                  : []),
                 {
                   id: "job_id",
                   label: "Job Name",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900">
-                      {jobsMap.get(value as number) || "Unknown Job"}
-                    </span>
-                  ),
+                  render: (value) => jobsMap.get(value as number) || "Unknown Job",
                 },
                 {
                   id: "depends_on_job_id",
                   label: "Depends On Job Name",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900">
-                      {jobsMap.get(value as number) || "Unknown Job"}
-                    </span>
-                  ),
+                  render: (value) => jobsMap.get(value as number) || "Unknown Job",
                 },
                 {
                   id: "dependency_type",
                   label: "Type",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900 capitalize">
-                      {value}
-                    </span>
-                  ),
+                  render: (value) => {
+                    const text = (value as string) || "";
+                    return text.charAt(0).toUpperCase() + text.slice(1);
+                  },
                 },
                 {
                   id: "wait_for_status",
                   label: "Wait For",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-900 capitalize">
-                      {value}
-                    </span>
-                  ),
+                  render: (value) => {
+                    const text = (value as string) || "";
+                    return text.charAt(0).toUpperCase() + text.slice(1);
+                  },
                 },
                 {
                   id: "is_active",
                   label: "Status",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-black capitalize">
-                      {value ? "Active" : "Inactive"}
-                    </span>
-                  ),
+                  render: (value) => value ? "Active" : "Inactive",
                 },
                 {
                   id: "created_at",
                   label: "Created",
                   visible: true,
-                  render: (value) => (
-                    <span className="text-sm text-gray-600">
-                      <DateFormatter date={value as string} />
-                    </span>
-                  ),
+                  render: (value) => <DateFormatter date={value as string} />,
                 },
                 {
                   id: "actions",
                   label: "Actions",
                   visible: true,
                   sortable: false,
+      isActionColumn: true,
                   render: (_, dependency) => (
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleView(dependency)}
-                        className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                        className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                         aria-label="View dependency"
                         title="View"
                       >
@@ -2126,7 +2074,7 @@ export default function JobDependenciesPage() {
                       <PermissionGate permission="job-dependencies.update">
                         <button
                           onClick={() => handleEdit(dependency)}
-                          className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                          className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                           aria-label="Edit dependency"
                           title="Edit"
                         >
@@ -2136,7 +2084,7 @@ export default function JobDependenciesPage() {
                       <PermissionGate permission="job-dependencies.delete">
                         <button
                           onClick={() => handleDeleteClick(dependency)}
-                          className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                          className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                           aria-label="Delete dependency"
                           title="Delete"
                         >
@@ -2168,6 +2116,11 @@ export default function JobDependenciesPage() {
               totalItems={filteredDependencies.length}
               currentPage={currentPage}
               pageSize={PAGE_SIZE}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedDependencyIds)}
+              onRowSelectChange={(selected) => {
+                setSelectedDependencyIds(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

@@ -20,6 +20,8 @@ import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 
 type ServerFormPageProps = {
   mode: "create" | "edit";
@@ -53,6 +55,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
   const { success, error } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   const [form, setForm] = useState({ ...defaultFormValues });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -251,7 +256,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             Basic Information
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
+            <FormField error={errors?.name} ref={registerFieldRef('name')}>
               <Input
                 label="Name*"
                 placeholder="Server name"
@@ -259,12 +264,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 onChange={(val) => setForm((prev) => ({...prev, name: val}))}
                 hasError={!!errors.name}
               />
-              {errors.name && (
-                <p className="mt-1 text-xs text-red-500">{errors.name}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
+            <FormField error={errors?.code} ref={registerFieldRef('code')}>
               <Input
                 label="Code*"
                 placeholder="Server code"
@@ -272,10 +274,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 onChange={(val) => setForm((prev) => ({...prev, code: val}))}
                 hasError={!!errors.code}
               />
-              {errors.code && (
-                <p className="mt-1 text-xs text-red-500">{errors.code}</p>
-              )}
-            </div>
+            </FormField>
 
             <div>
               <HeadlessSelect
@@ -302,7 +301,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               />
             </div>
 
-            <div>
+            <FormField error={errors?.host} ref={registerFieldRef('host')}>
               <Input
                 label="Host*"
                 placeholder="Host address"
@@ -310,10 +309,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 onChange={(val) => setForm((prev) => ({...prev, host: val}))}
                 hasError={!!errors.host}
               />
-              {errors.host && (
-                <p className="mt-1 text-xs text-red-500">{errors.host}</p>
-              )}
-            </div>
+            </FormField>
 
             <div>
               <HeadlessSelect

@@ -8,6 +8,8 @@ import {
   Download,
 
 } from "lucide-react";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import * as XLSX from "xlsx";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
@@ -127,6 +129,10 @@ export default function CreateCustomerModal({
   existingCustomers = [],
 }: CreateCustomerModalProps) {
   const { success, error } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const nextSubscriptionId = useMemo(
     () => getNextSubscriptionId(existingCustomers),
     [existingCustomers],
@@ -831,27 +837,22 @@ export default function CreateCustomerModal({
         </div>
 
         {/* Content */}
-        <form className="p-6 space-y-4" ref={formContainerRef}>
+        <form className="p-6 space-y-6" ref={formContainerRef}>
           {/* Single Customer Tab */}
           {activeTab === "single" && (
             <>
-              <div className="space-y-4">
-                <div>
+              <div className="space-y-6">
+                <FormField error={formErrors?.msisdn} ref={registerFieldRef('msisdn')}>
                   <Input
                     label="Phone Number (MSISDN)"
                     placeholder=""
                     value={formData.msisdn}
                     onChange={(value) => handleInputChange({ target: { name: "msisdn", value } } as any)}
                     hasError={!!formErrors.msisdn}
-                   
+
                     required
                   />
-                  {formErrors.msisdn && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {formErrors.msisdn}
-                    </p>
-                  )}
-                </div>
+                </FormField>
               </div>
 
               {/* Personal Information Section */}
@@ -861,38 +862,28 @@ export default function CreateCustomerModal({
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <FormField error={formErrors?.firstName} ref={registerFieldRef('firstName')}>
                     <Input
                       label="First Name"
                       placeholder="First Name"
                       value={formData.firstName}
                       onChange={(value) => handleInputChange({ target: { name: "firstName", value } } as any)}
                       hasError={!!formErrors.firstName}
-                     
+
                       required
                     />
-                    {formErrors.firstName && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {formErrors.firstName}
-                      </p>
-                    )}
-                  </div>
-                  <div>
+                  </FormField>
+                  <FormField error={formErrors?.lastName} ref={registerFieldRef('lastName')}>
                     <Input
                       label="Last Name"
                       placeholder="Last Name"
                       value={formData.lastName}
                       onChange={(value) => handleInputChange({ target: { name: "lastName", value } } as any)}
                       hasError={!!formErrors.lastName}
-                     
+
                       required
                     />
-                    {formErrors.lastName && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {formErrors.lastName}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
@@ -928,7 +919,7 @@ export default function CreateCustomerModal({
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
+                  <FormField error={formErrors?.email} ref={registerFieldRef('email')}>
                     <Input
                       label="Email"
                       type="email"
@@ -936,14 +927,9 @@ export default function CreateCustomerModal({
                       value={formData.email}
                       onChange={(value) => handleInputChange({ target: { name: "email", value } } as any)}
                       hasError={!!formErrors.email}
-                     
+
                     />
-                    {formErrors.email && (
-                      <p className="text-red-600 text-sm mt-1">
-                        {formErrors.email}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                   <div>
                     <Input
                       label="Alternate Email"
@@ -1140,7 +1126,7 @@ export default function CreateCustomerModal({
 
               {/* Real-time Validation Feedback */}
               {bulkText.trim() && (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-5">
                   {/* Status Text */}
                   <p className="text-sm font-medium text-gray-700">
                     <span className="text-green-600">
@@ -1376,7 +1362,7 @@ export default function CreateCustomerModal({
                   <div>
                     <h3 className={`font-medium mb-2 ${tw.textPrimary}`}>Map Your Columns</h3>
                     <p className={`text-sm ${tw.textSecondary} mb-3`}>Select which column contains each required field:</p>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-5">
                       {[
                         { field: "firstName", label: "First Name *" },
                         { field: "lastName", label: "Last Name *" },
@@ -1521,7 +1507,7 @@ export default function CreateCustomerModal({
 
               {/* Import Preview */}
               {importPreview && mappingConfirmed && (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-5">
                   {/* Status Text */}
                   <p className="text-sm font-medium text-gray-700">
                     <span className="text-green-600">

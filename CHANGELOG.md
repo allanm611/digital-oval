@@ -1,3 +1,81 @@
+# [1.5.0](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.20...v1.5.0) (2026-07-28)
+
+
+### Features
+
+* connected routes for route management, gateway providers ([74fe005](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/74fe0058da79245955bc814d99e7f090aec2ccc7))
+
+## [1.4.20](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.19...v1.4.20) (2026-07-23)
+
+
+### Bug Fixes
+
+* fixing offer creatives ([4b5789f](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/4b5789fa5de857b995817804371c65c73d17740b))
+
+## [1.4.19](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.18...v1.4.19) (2026-06-29)
+
+
+### Bug Fixes
+
+* comprehensive translation keys audit and remediation ([8b5dfc6](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/8b5dfc63957e5a557c788109f4c3faff6af5387a))
+* fixing different bugs, translaitons,ui changes ([2f5ac75](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/2f5ac75524407312b1a2dcc1a7a9493d11f72330))
+
+## [1.4.18](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.17...v1.4.18) (2026-06-27)
+
+
+### Bug Fixes
+
+* added more languages, fixed quciklist tables ([9c8e14d](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/9c8e14de6e586fbd58a80b68f5968dd91adce162))
+
+## [1.4.17](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.16...v1.4.17) (2026-06-27)
+
+
+### Bug Fixes
+
+* changes to the landing page ,table compoent ([7eb5e1c](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/7eb5e1cb9870a92f2acd5fceeb9855aad5e594c2))
+
+## [1.4.16](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.15...v1.4.16) (2026-06-25)
+
+
+### Bug Fixes
+
+* add quicklist columns, fix reordering in the column component, add a search modal on customers page ([916435b](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/916435b13c8ce428c467603b8542cb76ee9d7d60))
+
+## [1.4.15](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.14...v1.4.15) (2026-06-24)
+
+
+### Bug Fixes
+
+* validate quciklists and segments counts before there creation has been added, integrated ccustomer staticisc endpoint ([e954e5f](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/e954e5f0af4f86654b1f33845dbe6a7df1b78ce6))
+
+## [1.4.14](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.13...v1.4.14) (2026-06-23)
+
+
+### Bug Fixes
+
+* add icons on catalogs, floating labels in create communciaiton modal, fixes in manual communicaitons, integration of add and remove endpoints of quicklists, preview on manual communicaitons on a quicklist ([c7c52d3](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/c7c52d34ae1ba9094444c6a09a2059d22964ce5e))
+
+## [1.4.13](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.12...v1.4.13) (2026-06-20)
+
+
+### Bug Fixes
+
+* fixing the dark theme ([75106c6](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/75106c6d341c844557b9df7a3f03e71ca0fb2676))
+
+## [1.4.12](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.11...v1.4.12) (2026-06-18)
+
+
+### Bug Fixes
+
+* fixed the filtering logic in the table compoent ([d121e00](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/d121e00e130f8e030480ad2f8f27268cd1450103))
+
+## [1.4.11](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.10...v1.4.11) (2026-06-18)
+
+
+### Bug Fixes
+
+* data connectors and connection profiles fixed ([685ff7b](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/685ff7bf58115bc8fb4dc0fa53a55f71b35d1aee))
+
 ## [1.4.10](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.9...v1.4.10) (2026-06-17)
 
 

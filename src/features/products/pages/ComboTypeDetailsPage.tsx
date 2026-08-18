@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { Edit, Trash2, Briefcase } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -12,11 +13,12 @@ import { tw, color, button } from "../../../shared/utils/utils";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function ComboTypeDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
-  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm } = useDeleteConfirm({ onDelete: async () => await handleConfirmDelete() });
+  const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } = useDeleteConfirm({ onDelete: async () => await handleConfirmDelete() });
 
   const [comboType, setComboType] = useState<ComboType | null>(null);
   const [loading, setLoading] = useState(!!id);
@@ -30,8 +32,8 @@ export default function ComboTypeDetailsPage() {
           setComboType(data);
         } catch (err) {
           console.error("Failed to load combo type:", err);
-          showError("Error", "Failed to load combo type");
-          setError("Failed to load combo type");
+          showError(t.common.error || "Error", t.common.error || "Failed to load combo type");
+          setError(t.common.error || "Failed to load combo type");
         } finally {
           setLoading(false);
         }
@@ -40,7 +42,7 @@ export default function ComboTypeDetailsPage() {
     }
   }, [id, showError]);
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
     openDeleteConfirm(comboType?.id || 0, comboType?.name || "");
   };
 
@@ -50,13 +52,13 @@ export default function ComboTypeDetailsPage() {
     try {
       await comboTypeService.deleteComboType(comboType.id);
       success(
-        "Combo Type Deleted",
-        `"${comboType.name}" has been deleted successfully.`
+        t.products.comboTypeDeleted || "Combo Type Deleted",
+        `"${comboType.name}" ${t.messages.deletedSuccessfully || "has been deleted successfully."}`
       );
       navigate("/dashboard/combo-types");
     } catch (err) {
       console.error("Failed to delete:", err);
-      showError("Cannot Delete Combo Type", extractBackendError(err, "Cannot Delete Combo Type. Please try again."));
+      showError(t.products.cannotDeleteComboType || "Cannot Delete Combo Type", extractBackendError(err, "Cannot Delete Combo Type. Please try again."));
     } finally {
       closeDeleteConfirm();
     }
@@ -67,7 +69,7 @@ export default function ComboTypeDetailsPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <LoadingSpinner variant="modern" size="xl" color="primary" className="mb-4" />
         <p className={`${tw.textMuted} font-medium text-sm`}>
-          Loading combo type details...
+          {t.common.loadingDetails || "Loading combo type details..."}
         </p>
       </div>
     );
@@ -80,17 +82,17 @@ export default function ComboTypeDetailsPage() {
         <div className="text-center py-12">
           <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-            Combo Type Not Found
+            {t.products.comboTypeNotFound || "Combo Type Not Found"}
           </h3>
           <p className={`${tw.textMuted} mb-6`}>
-            The combo type you are looking for does not exist.
+            {t.products.comboTypeNotFoundDesc || "The combo type you are looking for does not exist."}
           </p>
           <button
             onClick={() => navigate("/dashboard/combo-types")}
             className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-colors`}
             style={{ backgroundColor: color.primary.action }}
           >
-            Back to Combo Types
+            {t.products.backToComboTypes || "Back to Combo Types"}
           </button>
         </div>
       </div>
@@ -422,10 +424,11 @@ export default function ComboTypeDetailsPage() {
       <DeleteConfirmModal
         isOpen={deleteConfirm.id !== null}
         title="Delete Combo Type"
-        message={`Are you sure you want to delete "${comboType.name}"? This action cannot be undone.`}
+        description="Are you sure you want to delete this combo type? This action cannot be undone."
+        itemName={deleteConfirm.itemName}
         isLoading={isDeleting}
-        onConfirm={confirmDeleteItem}
-        onCancel={() => closeDeleteConfirm()}
+        onConfirm={handleDelete}
+        onClose={closeDeleteConfirm}
       />
     </div>
   );

@@ -102,44 +102,34 @@ export default function NotificationsPage() {
     }
   };
 
-  const getRouteFromNotification = (notification: InboxNotification): string | null => {
-    const entityId = notification.payload?.id;
-    if (!entityId) return null;
-
-    const ruleName = notification.rule_name?.toLowerCase() || "";
-
-    // Campaign-related notifications
-    if (ruleName.includes("campaign")) {
-      return `/dashboard/campaigns/${entityId}`;
-    }
-
-    // Offer-related notifications
-    if (ruleName.includes("offer")) {
-      return `/dashboard/offers/${entityId}`;
-    }
-
-    // Segment-related notifications
-    if (ruleName.includes("segment")) {
-      return `/dashboard/segments/${entityId}`;
-    }
-
-    // Default to campaign if no rule match
-    return `/dashboard/campaigns/${entityId}`;
-  };
-
   const handleNotificationClick = async (notification: InboxNotification) => {
     try {
-      setLoadingIndividual((prev) => ({ ...prev, [notification.id]: "navigating" }));
+      setLoadingIndividual((prev) => ({ ...prev, [notification.id]: "marking" }));
 
       if (!notification.is_read) {
         await markAsRead([notification.id]);
       }
 
-      // Navigate to appropriate details page based on entity type
-      const route = getRouteFromNotification(notification);
+      let route: string | null = null;
+
+      if (notification.notification_action?.match(/^\/[\w-]+\/?(\/([\w-]+))?$/)) {
+        // If action has an ID (e.g., /offers/123), use it as-is
+        if (notification.notification_action.match(/\/[\w-]+$/)) {
+          route = `/dashboard${notification.notification_action}`;
+        }
+        // If action is just /entity-type/ (no ID) but payload has id, construct full route
+        else if (notification.payload?.id) {
+          const entityType = notification.notification_action.match(/^\/(\w+)/)?.[1];
+          route = `/dashboard/${entityType}/${notification.payload.id}`;
+        }
+      }
+
       if (route) {
+        console.log('Navigating to:', route, 'from notification:', notification);
         navigate(route);
       }
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
     } finally {
       setLoadingIndividual((prev) => {
         const updated = { ...prev };
@@ -290,7 +280,7 @@ export default function NotificationsPage() {
         />
 
         {/* Read Status Tabs */}
-        <div className="flex gap-1 border-b border-gray-200">
+        <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700">
           {[
             { id: "all", label: t.notifications.statusAll },
             { id: "unread", label: t.notifications.statusUnread },
@@ -301,8 +291,8 @@ export default function NotificationsPage() {
               onClick={() => setReadFilter(tab.id as "all" | "read" | "unread")}
               className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
                 readFilter === tab.id
-                  ? "text-black"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "text-black dark:text-white"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
               {tab.label}
@@ -323,7 +313,7 @@ export default function NotificationsPage() {
               setSearchTerm("");
               setReadFilter("all");
             }}
-            className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
           >
             <X className="h-4 w-4" />
             {t.notifications.clearFilters}
@@ -334,18 +324,18 @@ export default function NotificationsPage() {
       {/* Bulk Actions */}
       {bulkMode && (
         <div
-          className={`${tw.rounded} px-4 py-3 mb-4 bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}
+          className={`${tw.rounded} px-4 py-3 mb-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}
         >
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <button
               onClick={handleSelectAll}
-              className="text-sm text-gray-900 hover:text-gray-700 font-medium text-left sm:text-center"
+              className="text-sm text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 font-medium text-left sm:text-center"
             >
               {selectedNotifications.length === filteredNotifications.length
                 ? t.notifications.deselectAll
                 : t.notifications.selectAll}
             </button>
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
               {selectedNotifications.length > 0
                 ? t.notifications.selectedCount.replace(
                     "{count}",
@@ -415,25 +405,25 @@ export default function NotificationsPage() {
       {/* Notifications List */}
       <div>
         {error && (
-          <div className="p-4 bg-red-50 border-b border-red-200">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-900">
+            <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {isLoading && filteredNotifications.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
-            <p className="mt-3 text-sm text-gray-600">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 dark:border-gray-500 mx-auto"></div>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
               {t.notifications.loadingNotifications}
             </p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-12  text-center">
-            <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-lg font-medium text-gray-900 mb-2">
+            <Bell className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               {t.notifications.emptyTitle}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {searchTerm || readFilter !== "all"
                 ? t.notifications.emptyFiltered
                 : t.notifications.emptyNoData}
@@ -451,9 +441,10 @@ export default function NotificationsPage() {
                 return (
                   <div
                     key={notification.id}
-                    className={`bg-white ${tw.rounded} border border-gray-200 p-4 hover:bg-gray-50 transition-colors ${
+                    className={`bg-white ${tw.rounded} border border-gray-200 dark:border-gray-700 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
                       loadingIndividual[notification.id] ? "opacity-60" : ""
                     }`}
+                    style={{ backgroundColor: 'var(--c-surface-card-bg)' }}
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       {bulkMode && (
@@ -491,20 +482,20 @@ export default function NotificationsPage() {
                                 <h3
                                   className={`text-sm font-semibold ${
                                     !notification.is_read
-                                      ? "text-gray-900"
-                                      : "text-gray-700"
+                                      ? "text-gray-900 dark:text-white"
+                                      : "text-gray-700 dark:text-gray-300"
                                   }`}
                                 >
                                   {notification.title}
                                 </h3>
                                 {!notification.is_read && (
-                                  <span className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></span>
+                                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color.primary.accent }}></span>
                                 )}
                               </div>
-                              <p className="text-sm text-gray-600 mb-2 break-words">
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 break-words">
                                 {notification.message}
                               </p>
-                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500 dark:text-gray-500">
                                 <span className="whitespace-nowrap">
                                   <DateFormatter
                                     date={notification.created_at}
@@ -534,10 +525,9 @@ export default function NotificationsPage() {
                                   }}
                                   style={{
                                     borderColor: color.primary.action,
-                                    color: color.primary.action,
                                   }}
                                   disabled={loadingIndividual[notification.id] === "marking"}
-                                  className={`${tw.borderedButton} text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap flex items-center justify-center gap-1 disabled:opacity-50`}
+                                  className={`border text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap flex items-center justify-center gap-1 disabled:opacity-50 rounded transition-colors text-gray-900 dark:text-white dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600`}
                                   title={t.notifications.bulkMarkAsRead}
                                 >
                                   {loadingIndividual[notification.id] === "marking" ? (
@@ -555,7 +545,7 @@ export default function NotificationsPage() {
                                   e.stopPropagation();
                                   handleDeleteClick(notification);
                                 }}
-                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0 disabled:opacity-50 flex items-center justify-center"
+                                className="p-0 icon-delete rounded transition-colors flex-shrink-0 disabled:opacity-50 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20"
                                 title={t.notifications.bulkDelete}
                               >
                                 <Trash2 className="h-4 w-4" />

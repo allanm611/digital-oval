@@ -21,8 +21,24 @@ import {
 const BASE_URL = `${API_CONFIG.BASE_URL}/campaign-flows`;
 
 /** Remove optional fields that are null/undefined before sending to API */
-function cleanFlowData(flow: any) {
+function cleanFlowData(flow: any, isUpdate: boolean = false) {
   const cleaned = { ...flow };
+
+  // Remove read-only fields (not allowed on update)
+  // For CREATE, we need campaign_id; for UPDATE, remove it
+  const readOnlyFields = [
+    "id",
+    ...(isUpdate ? ["campaign_id"] : []), // Only remove campaign_id on UPDATE
+    "created_at",
+    "updated_at",
+    "created_by",
+    "updated_by",
+  ];
+  readOnlyFields.forEach((field) => {
+    delete cleaned[field];
+  });
+
+  // Remove null/undefined optional fields
   const optionalFields = [
     "offer_creative_id",
     "template_id",
@@ -102,7 +118,7 @@ class CampaignFlowService {
     data: UpdateCampaignFlowRequest,
   ): Promise<CampaignFlowResponse> {
     const url = `${BASE_URL}/${id}`;
-    const cleanedData = cleanFlowData(data);
+    const cleanedData = cleanFlowData(data, true); // true = isUpdate
 
     const response = await fetch(url, {
       method: "PUT",

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Star, Users, Trash2, X, Eye } from "lucide-react";
+import { Plus, Star, Users, Trash2, X, Eye, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -17,6 +17,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Types
 export interface VIPCustomer {
@@ -103,62 +104,63 @@ export default function VIPListManagementPage() {
     useState<VIPList | null>(null);
   const [listMembers, setListMembers] = useState<VIPCustomer[]>([]);
   const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState<"customers" | "lists" | null>(null);
 
   const vipCustomerTableColumns: TableColumn<VIPCustomerTableRow>[] = [
     {
       id: "name",
       label: "Name",
       visible: true,
-      render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
-          {row.name}
-        </div>
-      ),
+      sortable: true,
+      filterConfig: { type: 'text' },
     },
     {
       id: "email",
       label: "Email",
       visible: true,
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.email || "-"}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "vipList",
       label: "VIP List",
       visible: true,
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.vipList || "Default"}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (_, row) => (
-        <span className="text-sm text-black capitalize">{row.status}</span>
-      ),
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
     },
     {
       id: "addedDate",
       label: "Added Date",
       visible: true,
-      render: (_, row) => (
-        <DateFormatter date={row.addedDate} useUserTimezone />
-      ),
+      filterConfig: { type: 'date' },
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         if (!row._full) return null;
         return (
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => navigate(`/dashboard/customers/details/${row._full.customer_id}`)}
+              disabled={row._full.customer_id === 0}
+              className={`p-0 ${tw.rounded} transition-colors ${
+                row._full.customer_id === 0 ? "opacity-50 cursor-not-allowed" : "icon-edit"
+              }`}
+              title={row._full.customer_id === 0 ? "External customer - no details page" : "View customer details"}
+            >
+              <Eye className="w-4 h-4" />
+            </button>
             <button
               onClick={() => setMemberToRemove(row._full)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title="Remove from VIP List"
             >
               <Trash2 className="w-4 h-4" />
@@ -174,6 +176,8 @@ export default function VIPListManagementPage() {
       id: "name",
       label: "List Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <button
           onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
@@ -187,6 +191,7 @@ export default function VIPListManagementPage() {
       id: "description",
       label: "Description",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <div className={`text-sm ${tw.textSecondary} max-w-md`}>
           {row.description || "No description"}
@@ -197,6 +202,7 @@ export default function VIPListManagementPage() {
       id: "members",
       label: "Customers",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => {
         if (!row._full) return <span>{row.members}</span>;
         return (
@@ -218,6 +224,7 @@ export default function VIPListManagementPage() {
       id: "rowsImported",
       label: "Rows Imported",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.rowsImported}</span>
       ),
@@ -226,6 +233,7 @@ export default function VIPListManagementPage() {
       id: "rowsFailed",
       label: "Rows Failed",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.rowsFailed}</span>
       ),
@@ -234,6 +242,7 @@ export default function VIPListManagementPage() {
       id: "status",
       label: "Status",
       visible: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <span className="text-sm text-black">{row.status}</span>
       ),
@@ -243,20 +252,31 @@ export default function VIPListManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         if (!row._full) return null;
         return (
           <div className="flex items-center justify-center gap-2">
             <button
+              onClick={() => {
+                setEditingList(row._full);
+                setIsCreateListModalOpen(true);
+              }}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+              title="Edit VIP List"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => navigate(`/dashboard/vip-list-management/${row.id}`)}
-              className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+              className={`p-0 icon-edit ${tw.rounded} transition-colors`}
               title="View details"
             >
               <Eye className="w-4 h-4" />
             </button>
             <button
               onClick={() => handleDeleteVIPList(row._full)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title="Delete VIP List"
             >
               <Trash2 className="w-4 h-4" />
@@ -274,6 +294,9 @@ export default function VIPListManagementPage() {
     handlePageChange: customerHandlePageChange,
     sortConfigs: customerSortConfigs,
     handleSort: customerHandleSort,
+    toggleColumn: toggleCustomerColumn,
+    reorderColumns: reorderCustomerColumns,
+    resetToDefaults: resetCustomerDefaults,
   } = useTable({
     tableId: "vip-customers-table",
     defaultColumns: vipCustomerTableColumns,
@@ -288,6 +311,9 @@ export default function VIPListManagementPage() {
     handlePageChange: vipListHandlePageChange,
     sortConfigs: vipListSortConfigs,
     handleSort: vipListHandleSort,
+    toggleColumn: toggleVipListColumn,
+    reorderColumns: reorderVipListColumns,
+    resetToDefaults: resetVipListDefaults,
   } = useTable({
     tableId: "vip-lists-table",
     defaultColumns: vipListTableColumns,
@@ -312,7 +338,7 @@ export default function VIPListManagementPage() {
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch VIP lists:", error);
-      showError(extractBackendError(error, "Failed to fetch VIP lists. Please try again."));
+      showError(extractBackendError(err, "Failed to fetch VIP lists. Please try again."));
       setVipLists([]);
       setLoading(false);
     }
@@ -342,6 +368,22 @@ export default function VIPListManagementPage() {
       setLoading(false);
     }
   }, [vipLists, showError]);
+
+  const loadListMembers = useCallback(async (listId: number) => {
+    setIsLoadingListMembers(true);
+    try {
+      const members = await vipListService.getMembers(listId);
+      if (Array.isArray(members)) {
+        setListMembers(members);
+      }
+    } catch (error) {
+      console.error("Failed to fetch list members:", error);
+      showError(extractBackendError(error, "Failed to fetch list members. Please try again."));
+      setListMembers([]);
+    } finally {
+      setIsLoadingListMembers(false);
+    }
+  }, [showError]);
 
   useEffect(() => {
     if (activeTab === "customers" && vipLists.length > 0) {
@@ -416,15 +458,19 @@ export default function VIPListManagementPage() {
         const response = await vipListService.update(editingList.id, data);
         if (response) {
           showToast("VIP list updated successfully");
+          setVipLists((prev) =>
+            prev.map((list) =>
+              list.id === editingList.id ? { ...list, ...data } : list
+            )
+          );
         }
       } else {
         const response = await vipListService.create(data);
         if (response) {
           showToast("VIP list created successfully");
+          setVipLists((prev) => [...prev, response]);
         }
       }
-
-      await loadVIPLists();
     } catch (error) {
       showError(
         editingList ? "Failed to update VIP list" : "Failed to create VIP list",
@@ -494,7 +540,7 @@ export default function VIPListManagementPage() {
       );
       await loadAllMembers();
     } catch (error) {
-      showError(extractBackendError(error, "Failed to add members. Please try again."));
+      showError(extractBackendError(err, "Failed to add members. Please try again."));
       throw error;
     } finally {
       setIsAddingMembers(false);
@@ -509,7 +555,7 @@ export default function VIPListManagementPage() {
       setListMembers(Array.isArray(members) ? members : []);
       setIsListMembersModalOpen(true);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to fetch list members. Please try again."));
+      showError(extractBackendError(err, "Failed to fetch list members. Please try again."));
       console.error("Error fetching members:", error);
     } finally {
       setIsLoadingListMembers(false);
@@ -779,6 +825,8 @@ export default function VIPListManagementPage() {
                 onPageChange={customerHandlePageChange}
                 onSort={customerHandleSort}
                 sortConfigs={customerSortConfigs}
+                onHideColumn={toggleCustomerColumn}
+                onManageColumnsClick={() => setShowColumnPicker("customers")}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -819,6 +867,8 @@ export default function VIPListManagementPage() {
               onPageChange={vipListHandlePageChange}
               onSort={vipListHandleSort}
               sortConfigs={vipListSortConfigs}
+              onHideColumn={toggleVipListColumn}
+              onManageColumnsClick={() => setShowColumnPicker("lists")}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -997,7 +1047,7 @@ export default function VIPListManagementPage() {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handleViewCustomerDetail(customer)}
-                                className={`p-2 icon-edit ${tw.rounded} inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors  hover:text-gray-700`}
+                                className={`p-0 icon-edit ${tw.rounded} inline-flex items-center justify-center w-8 h-8 rounded hover:bg-gray-100 transition-colors  hover:text-gray-700`}
                                 title="View customer details"
                               >
                                 <Eye className="w-4 h-4" />
@@ -1020,6 +1070,40 @@ export default function VIPListManagementPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showColumnPicker === "customers" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={customerColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleCustomerColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = customerColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderCustomerColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetCustomerDefaults}
+        />
+      )}
+
+      {showColumnPicker === "lists" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={vipListColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleVipListColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = vipListColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderVipListColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetVipListDefaults}
+        />
       )}
     </div>
   );

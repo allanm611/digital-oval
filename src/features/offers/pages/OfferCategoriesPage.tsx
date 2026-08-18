@@ -13,11 +13,13 @@ import {
   Archive,
   Star,
   X,
+  Gift,
 } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -104,150 +106,6 @@ interface BasicOffer {
   [key: string]: unknown;
 }
 
-interface CategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  category?: OfferCategoryType;
-  onSave: (category: { name: string; description?: string }) => Promise<void>;
-}
-
-function CategoryModal({
-  isOpen,
-  onClose,
-  category,
-  onSave,
-}: CategoryModalProps) {
-  const { t } = useLanguage();
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [formError, setFormError] = useState("");
-
-  useEffect(() => {
-    if (category) {
-      setFormData({
-        name: category.name,
-        description: category.description || "",
-      });
-    } else {
-      setFormData({ name: "", description: "" });
-    }
-    setFormError("");
-  }, [category, isOpen]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setFormError(t.offerCatalogs.catalogNameRequired);
-      return;
-    }
-
-    setIsLoading(true);
-    setFormError("");
-
-    try {
-      const categoryData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-      };
-
-      await onSave(categoryData); // Wait for save to complete
-      onClose(); // Only close after save succeeds
-    } catch (err) {
-      console.error("Failed to save category:", err);
-      setFormError(t.offerCatalogs.saveFailed);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return isOpen
-    ? createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div
-            className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex-1 min-w-0">
-                {category
-                  ? t.offerCatalogs.editModalTitle
-                  : t.offerCatalogs.createModalTitle}
-              </h2>
-              <button
-                onClick={onClose}
-                className={`p-2 icon-edit icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-              <div className="space-y-8">
-                <Input
-                  type="text"
-                  label={t.offerCatalogs.catalogNameLabel}
-                  value={formData.name}
-                  onChange={(value) =>
-                    setFormData((prev) => ({ ...prev, name: String(value) }))
-                  }
-                  required
-                />
-
-                <Textarea
-                  label={t.offerCatalogs.description}
-                  value={formData.description}
-                  onChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: value,
-                    }))
-                  }
-                  rows={3}
-                />
-              </div>
-
-              {formError && (
-                <p className="text-sm text-red-600 mt-4">{formError}</p>
-              )}
-
-              <div className="flex items-center justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className={`px-4 py-2 ${tw.rounded} transition-colors`}
-                  style={{
-                    background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
-                  }}
-                >
-                  {t.offerCatalogs.cancel}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  {isLoading
-                    ? category
-                      ? "Updating..."
-                      : "Creating..."
-                    : category
-                      ? t.offerCatalogs.update
-                      : t.offerCatalogs.create}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body,
-      )
-    : null;
-}
-
 interface OffersModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -311,7 +169,7 @@ function OffersModal({
     } catch (err) {
       console.error("Failed to load offers:", err);
       const errorMsg1 = extractBackendError(err, "Failed to load offers");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       setModalError("Failed to load offers. Please try again later.");
     } finally {
       setLoading(false);
@@ -414,7 +272,7 @@ function OfferCategoriesPage() {
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteCategory } = useDeleteConfirm({
     onDelete: async (id) => {
       const numId = typeof id === "string" ? parseInt(id) : id;
-      setCategories((prev) => prev.filter((c) => c.id !== numId));
+      setOfferCategories((prev) => prev.filter((c) => c.id !== numId));
       await offerCategoryService.deleteCategory(numId);
     },
     itemLabel: "Offer Category",
@@ -837,7 +695,7 @@ function OfferCategoriesPage() {
     } catch (err) {
       console.error("Failed to load categories:", err);
       const errorMsg2 = extractBackendError(err, "Failed to load categories");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       setPageError("Failed to load offer catalogs. Please try again later.");
       setOfferCategories([]);
     } finally {
@@ -909,31 +767,50 @@ function OfferCategoriesPage() {
   }) => {
     try {
       if (editingCategory) {
-        // Update existing category
+        // Optimistic update for existing category
+        const previousCategories = offerCategories;
+        setOfferCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === editingCategory.id
+              ? { ...cat, ...categoryData, updated_at: new Date().toISOString() }
+              : cat
+          )
+        );
+
         await offerCategoryService.updateCategory(
           editingCategory.id,
           categoryData as UpdateOfferCategoryRequest,
         );
         success(t.offerCatalogs.updateSuccess);
       } else {
-        // Create new category
+        // Optimistic create for new category
+        const tempId = Math.min(...offerCategories.map(c => c.id), 0) - 1;
+        const newCategory = {
+          id: tempId,
+          name: categoryData.name,
+          description: categoryData.description || "",
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          offer_count: 0,
+        };
+
+        setOfferCategories((prev) => [newCategory, ...prev]);
+
         await offerCategoryService.createCategory(
           categoryData as CreateOfferCategoryRequest,
         );
         success(t.offerCatalogs.createSuccess);
       }
 
-      // Refresh both offers and categories to get updated counts
-      await loadAllOffers();
-      await loadCategories(true);
-      await loadStats(); // Refresh stats too
-
       setIsModalOpen(false);
       setEditingCategory(undefined);
     } catch (err) {
       console.error("Failed to save category:", err);
-      const errorMsg3 = extractBackendError(err, t.offerCatalogs.saveFailed);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      const errorMessage = extractBackendError(err, t.offerCatalogs.saveFailed);
+      showError("Error", errorMessage);
+      // Reload on error since optimistic update failed
+      await Promise.all([loadCategories(true), loadStats()]);
     }
   };
 
@@ -1276,15 +1153,18 @@ function OfferCategoriesPage() {
               style={{ backgroundColor: color.surface.cards }}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3
-                  className={`${tw.tableFirstColumn} text-gray-900 flex-1 truncate`}
-                >
-                  {category.name}
-                </h3>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Gift className="w-5 h-5 flex-shrink-0" style={{ color: color.primary.accent }} />
+                  <h3
+                    className={`${tw.tableFirstColumn} text-gray-900 truncate`}
+                  >
+                    {category.name}
+                  </h3>
+                </div>
                 <div className="flex items-center space-x-1">
                   {/* <button
                     onClick={() => handleViewDetails(category)}
-                    className={`p-2 icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                     title="View Details"
                   >
                     <Eye className="w-4 h-4 " />
@@ -1304,14 +1184,14 @@ function OfferCategoriesPage() {
                   </PermissionGate>
                   <button
                     onClick={() => handleEditCategory(category)}
-                    className={`p-2 icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.edit}
                   >
-                    <Edit className="w-4 h-4 text-gray-600" />
+                    <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1481,7 +1361,7 @@ function OfferCategoriesPage() {
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
                   {/* <button
                   onClick={() => handleViewDetails(category)}
-                  className={`p-2 icon-edit hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                  className={`p-0 icon-edit hover:bg-gray-100 dark:hover:bg-gray-700 ${tw.rounded} transition-colors`}
                   title="View Details"
                 >
                   <Eye className="w-4 h-4 " />
@@ -1502,11 +1382,11 @@ function OfferCategoriesPage() {
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.edit}
                   >
-                    <Edit className="w-4 h-4 text-gray-600" />
+                    <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                     title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1538,7 +1418,23 @@ function OfferCategoriesPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         category={editingCategory}
-        onSave={handleCategorySaved}
+        onCategoryCreated={async () => {
+          // Reload to get new category (needed since modal creates)
+          await Promise.all([loadCategories(true), loadStats()]);
+        }}
+        onCategoryUpdated={async (updatedCategory) => {
+          // Update local state with new data from modal
+          if (updatedCategory) {
+            setOfferCategories((prev) =>
+              prev.map((cat) =>
+                cat.id === updatedCategory.id
+                  ? { ...cat, name: updatedCategory.name, description: updatedCategory.description }
+                  : cat
+              )
+            );
+          }
+        }}
+        entityType="offer"
       />
 
       <OffersModal

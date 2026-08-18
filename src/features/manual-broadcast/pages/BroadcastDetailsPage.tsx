@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   Mail,
   MessageSquare,
@@ -24,6 +25,7 @@ import { userService } from "../../users/services/userService";
 import { UserType } from "../../users/types/user";
 
 export default function BroadcastDetailsPage() {
+  const { t } = useLanguage();
   const { id: executionId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError } = useToast();

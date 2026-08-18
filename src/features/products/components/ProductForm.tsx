@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { HelpCircle, Plus, Trash2, X, ChevronDown, Edit } from "lucide-react";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import {
   CreateProductRequest,
   UpdateProductRequest,
@@ -9,7 +11,7 @@ import {
   ComboProductData,
 } from "../types/product";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
-import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import CreateProductTypeModal from "./CreateProductTypeModal";
@@ -69,6 +71,9 @@ export default function ProductForm({
   // Get resource types and utilities from backend hooks
   const { data: resourceTypesData } = useBackendConfigurationData("resourceTypes");
   const { data: utilitiesData } = useBackendConfigurationData("utilities");
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   // Error state
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -342,13 +347,13 @@ export default function ProductForm({
         Array.isArray(selectedComboType.combo_resources)
       ) {
         selectedComboType.combo_resources.forEach((apiResource: any) => {
-          // Map API resource_type to form resource_unit (keeping it as-is since it's already in correct format)
-          const resourceType: ProductUnit = apiResource.resource_unit as ProductUnit;
+          // Map API fields to form fields (unit -> resource_unit, unit_value -> resource_value, resource_type stays same)
+          const resourceType: ProductUnit = apiResource.unit as ProductUnit;
 
           resources.push({
-            resource_type: resourceType,
-            resource_unit: apiResource.resource_unit,
-            resource_value: apiResource.resource_value,
+            resource_type: apiResource.resource_type,
+            resource_unit: apiResource.unit,
+            resource_value: apiResource.unit_value,
           });
         });
       }
@@ -459,17 +464,12 @@ export default function ProductForm({
   };
 
   const unitEnumOptions: { label: string; value: ProductUnit }[] = [
-    { label: "Data (MB)", value: "data_mb" },
+    { label: "MB", value: "mb" },
+    { label: "GB", value: "gb" },
     { label: "SMS Count", value: "sms_count" },
-    { label: "Airtime", value: "airtime" },
-    { label: "Onnet Minutes", value: "onnet_minutes" },
-    { label: "Offnet Minutes", value: "offnet_minutes" },
-    { label: "Allnet Minutes", value: "allnet_minutes" },
-    { label: "Roaming Data (MB)", value: "roaming_data_mb" },
-    { label: "Roaming Minutes", value: "roaming_minutes" },
-    { label: "Roaming SMS Count", value: "roaming_sms_count" },
-    { label: "Utility", value: "utility" },
-    { label: "Points", value: "points" },
+    { label: "Minutes", value: "minutes" },
+    { label: "Currency", value: "currency" },
+    { label: "Percentage", value: "percentage" },
     { label: "Other", value: "other" },
   ];
 
@@ -551,7 +551,7 @@ export default function ProductForm({
           <div className="space-y-6">
             {/* Product Name & Product Code */}
             <div className="grid gap-5 md:grid-cols-2">
-              <div>
+              <FormField error={errors?.name} ref={registerFieldRef('name')}>
                 <Input
                   label={t.products.form.productName}
                   value={formData.name || ""}
@@ -570,149 +570,82 @@ export default function ProductForm({
                   onBlur={() => setFocusedField(null)}
                   required
                 />
-                {errors.name && (
-                  <p
-                    className="mt-1.5 text-xs font-semibold cursor-pointer"
-                    style={{
-                      color: color.status.danger,
-                      fontWeight: 600,
-                    }}
-                    onClick={() => {
-                      const element =
-                        document.querySelector('input[name="name"]');
-                      if (element) {
-                        (element as HTMLInputElement).focus();
-                        (element as HTMLInputElement).scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        });
-                      }
-                    }}
-                  >
-                    {errors.name}
-                  </p>
-                )}
-              </div>
+              </FormField>
 
-              <div>
+              <FormField error={errors?.product_code} ref={registerFieldRef('product_code')}>
                 <Input
                   label={t.products.form.productCode}
                   value={formData.product_code || ""}
-                  onChange={(value) =>
-                    onInputChange("product_code", value)
-                  }
+                  onChange={(value) => {
+                    onInputChange("product_code", value);
+                    if (errors.product_code) {
+                      setErrors((prev) => {
+                        const newErrors = { ...prev };
+                        delete newErrors.product_code;
+                        return newErrors;
+                      });
+                    }
+                  }}
                   hasError={!!errors.product_code}
                   onFocus={() => setFocusedField("product_code")}
                   onBlur={() => setFocusedField(null)}
                   required
                 />
-                {errors.product_code && (
-                  <p
-                    className="text-xs mt-1 cursor-pointer"
-                    style={{
-                      color: color.status.danger,
-                    }}
-                    onClick={() => {
-                      const element = document.querySelector(
-                        'input[name="product_code"]',
-                      );
-                      if (element) {
-                        (element as HTMLInputElement).focus();
-                        (element as HTMLInputElement).scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        });
-                      }
-                    }}
-                  >
-                    {errors.product_code}
-                  </p>
-                )}
-              </div>
+              </FormField>
             </div>
 
             {/* Price & DAID */}
             <div className="grid gap-5 md:grid-cols-2">
               {!isComboType && (
-                <div>
+                <FormField error={errors?.price} ref={registerFieldRef('price')}>
                   <Input
                     type="number"
                     label={t.products.form.pricing}
                     value={String(formData.price || "")}
-                    onChange={(value) =>
-                      onInputChange("price", parseFloat(value) || 0)
-                    }
+                    onChange={(value) => {
+                      onInputChange("price", parseFloat(value) || 0);
+                      if (errors.price) {
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.price;
+                          return newErrors;
+                        });
+                      }
+                    }}
                     hasError={!!errors.price}
                     onFocus={() => setFocusedField("price")}
                     onBlur={() => setFocusedField(null)}
                     required
                   />
-                  {errors.price && (
-                    <p
-                      className="text-xs mt-1 font-semibold cursor-pointer"
-                      style={{
-                        color: color.status.danger,
-                        fontWeight: 600,
-                      }}
-                      onClick={() => {
-                        const element = document.querySelector(
-                          'input[name="price"]',
-                        );
-                        if (element) {
-                          (element as HTMLInputElement).focus();
-                          (element as HTMLInputElement).scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                          });
-                        }
-                      }}
-                    >
-                      {errors.price}
-                    </p>
-                  )}
-                </div>
+                </FormField>
               )}
 
               {!isComboType && (
-                <div>
+                <FormField error={errors?.da_id} ref={registerFieldRef('da_id')}>
                   <Input
                     label="DA ID"
                     value={formData.da_id || ""}
-                    onChange={(value) => onInputChange("da_id", value)}
+                    onChange={(value) => {
+                      onInputChange("da_id", value);
+                      if (errors.da_id) {
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.da_id;
+                          return newErrors;
+                        });
+                      }
+                    }}
                     hasError={!!errors.da_id}
                     onFocus={() => setFocusedField("da_id")}
                     onBlur={() => setFocusedField(null)}
                     required
                   />
-                  {errors.da_id && (
-                    <p
-                      className="text-xs mt-1 font-semibold cursor-pointer"
-                      style={{
-                        color: color.status.danger,
-                        fontWeight: 600,
-                      }}
-                      onClick={() => {
-                        const element = document.querySelector(
-                          'input[name="da_id"]',
-                        );
-                        if (element) {
-                          (element as HTMLInputElement).focus();
-                          (element as HTMLInputElement).scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                          });
-                        }
-                      }}
-                    >
-                      {errors.da_id}
-                    </p>
-                  )}
-                </div>
+                </FormField>
               )}
             </div>
 
             {/* Description */}
-            <div>
+            <FormField error={errors?.description} ref={registerFieldRef('description')}>
               <Textarea
                 label={t.products.form.productDescription}
                 value={formData.description || ""}
@@ -731,30 +664,7 @@ export default function ProductForm({
                 onBlur={() => setFocusedField(null)}
                 rows={4}
               />
-              {errors.description && (
-                <p
-                  className="mt-1.5 text-xs font-semibold cursor-pointer"
-                  style={{
-                    color: color.status.danger,
-                    fontWeight: 600,
-                  }}
-                  onClick={() => {
-                    const element = document.querySelector(
-                      'textarea[name="description"]',
-                    );
-                    if (element) {
-                      (element as HTMLTextAreaElement).focus();
-                      (element as HTMLTextAreaElement).scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                      });
-                    }
-                  }}
-                >
-                  {errors.description}
-                </p>
-              )}
-            </div>
+            </FormField>
 
             {/* Tags - Full Width */}
             <div className="space-y-2">
@@ -927,7 +837,6 @@ export default function ProductForm({
                 <HeadlessSelect
                   label="Combo Type"
                   options={[
-                    { value: "", label: "Select a combo type" },
                     ...comboTypes
                       .filter((ct) => ct.is_active !== false)
                       .map((ct) => ({
@@ -1742,9 +1651,15 @@ export default function ProductForm({
                 onClick={onCancel}
                 className={`px-6 py-2.5 ${tw.rounded} text-sm font-medium transition-colors`}
                 style={{
-                  background: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  backgroundColor: 'transparent',
+                  color: 'var(--c-text-primary)',
+                  border: '1px solid var(--c-text-primary)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
                 Cancel
@@ -1772,7 +1687,7 @@ export default function ProductForm({
       </form>
 
       {/* Create Catalog Modal */}
-      <CreateCategoryModal
+      <CategoryModal
         isOpen={showCreateModal}
         onClose={() => onShowCreateModal(false)}
         onCategoryCreated={onCategoryCreated}

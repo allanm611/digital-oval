@@ -137,6 +137,8 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../offers/pages/OfferCategoriesPageWrapper"),
   "/dashboard/offer-tracking-sources": () =>
     import("../../offers/pages/TrackingSourcesPage"),
+  "/dashboard/tracking-sources": () =>
+    import("../../configurations/pages/EngineTrackingSourcesContainer"),
   "/dashboard/products": () =>
     import("../../products/pages/ProductsPageWrapper"),
   "/dashboard/product-types": () =>

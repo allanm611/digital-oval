@@ -44,6 +44,7 @@ import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -117,14 +118,174 @@ export default function JobExecutionsPage() {
     new Set(),
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(getInitialPageSize());
   const [totalExecutions, setTotalExecutions] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [showArchiveManagementModal, setShowArchiveManagementModal] = useState(false);
   const [archiveOldDays, setArchiveOldDays] = useState<number>(30);
   const [isArchiveManagementProcessing, setIsArchiveManagementProcessing] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const filtersModalRef = useRef<HTMLDivElement>(null);
+
+  // Table columns definition - moved early so useTable can use it
+  const defaultColumns = useMemo(
+    () =>
+      [
+        {
+          id: "id",
+          label: "Execution ID",
+          visible: true,
+          render: (value) => `${(value as string).substring(0, 8)}...`,
+        },
+        {
+          id: "job_id",
+          label: "Job ID",
+          visible: true,
+          render: (value) => value,
+        },
+        {
+          id: "execution_status",
+          label: "Status",
+          visible: true,
+          render: (value) => value,
+        },
+        {
+          id: "started_at",
+          label: "Started At",
+          visible: true,
+          render: (value) => value ? new Date(value as string).toLocaleString() : "—",
+        },
+        {
+          id: "duration_seconds",
+          label: "Duration",
+          visible: true,
+          render: (value) => formatDuration(value as number | null),
+        },
+        {
+          id: "triggered_by",
+          label: "Triggered By",
+          visible: true,
+          render: (value) => {
+            const text = (value as string) || "—";
+            return text.charAt(0).toUpperCase() + text.slice(1);
+          },
+        },
+        {
+          id: "actions",
+          label: "Actions",
+          visible: true,
+          sortable: false,
+      isActionColumn: true,
+          render: (value, execution) => (
+            <div className="flex items-center justify-end space-x-2">
+              <button
+                onClick={() =>
+                  navigate(
+                    `/dashboard/job-executions/${execution.id}`,
+                  )
+                }
+                className={`p-0 icon-edit ${tw.rounded}`}
+                title="View details"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+              {canWrite && !execution.archived && (
+                <button
+                  onClick={() => handleAction(execution, "archive")}
+                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  title="Archive execution"
+                >
+                  <Archive className="w-4 h-4" />
+                </button>
+              )}
+              {canWrite && execution.archived && (
+                <button
+                  onClick={() => handleAction(execution, "unarchive")}
+                  className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                  title="Unarchive execution"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              )}
+              {canWrite && (execution.execution_status === "running" || execution.execution_status === "failure") && (
+                <>
+                  <button
+                    ref={(el) => {
+                      if (el) menuRefs.current[execution.id] = el;
+                    }}
+                    data-execution-menu-button
+                    onClick={(e) => handleMenuToggle(execution.id, e)}
+                    className={`p-0 ${tw.rounded} text-gray-600 hover:text-gray-900`}
+                    title="More actions"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                  {openMenuId === execution.id &&
+                    menuPosition &&
+                    createPortal(
+                      <div
+                        className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-lg z-50`}
+                        style={{
+                          top: `${menuPosition.top}px`,
+                          left: `${menuPosition.left}px`,
+                          width: "140px",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        {execution.execution_status === "running" && (
+                          <button
+                            onClick={() => {
+                              handleAction(execution, "abort");
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            Abort
+                          </button>
+                        )}
+                        {execution.execution_status === "failure" && (
+                          <button
+                            onClick={() => {
+                              handleAction(execution, "retry");
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                          >
+                            Retry
+                          </button>
+                        )}
+                      </div>,
+                      document.body,
+                    )}
+                </>
+              )}
+            </div>
+          ),
+        },
+      ] as TableColumn<JobExecution>[],
+    [canWrite, navigate],
+  );
+
+  // Initialize pagination and table state
+  const {
+    columns,
+    currentPage: tableCurrentPage,
+    pageSize: tablePageSize,
+    handlePageChange: tableHandlePageChange,
+    handlePageSizeChange: tableHandlePageSizeChange,
+    sortConfigs,
+    handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+  } = useTable({
+    tableId: "job-executions-table",
+    defaultColumns,
+    defaultPageSize: DEFAULT_PAGE_SIZE,
+    persistToLocalStorage: true,
+  });
 
   useClickOutside(filtersModalRef, () => {
     if (showAdvancedFilters) {
@@ -197,7 +358,8 @@ export default function JobExecutionsPage() {
 
       try {
         let response;
-        const offset = (currentPage - 1) * pageSize;
+        // For pagination: use offset for endpoints that support it properly
+        const offset = (tableCurrentPage - 1) * tablePageSize;
 
         // Quick filters
         if (quickFilter === "sla-breached") {
@@ -221,7 +383,7 @@ export default function JobExecutionsPage() {
               data: [exec],
               pagination: {
                 total: 1,
-                limit: pageSize,
+                limit: tablePageSize,
                 offset: 0,
                 hasMore: false,
               },
@@ -231,7 +393,7 @@ export default function JobExecutionsPage() {
               data: [],
               pagination: {
                 total: 0,
-                limit: pageSize,
+                limit: tablePageSize,
                 offset: 0,
                 hasMore: false,
               },
@@ -246,7 +408,7 @@ export default function JobExecutionsPage() {
             startDate: startDateFilter,
             endDate: endDateFilter,
             jobId: jobIdFilter || undefined,
-            limit: pageSize,
+            limit: tablePageSize,
             offset,
           });
         } else if (statusFilter === "running") {
@@ -262,7 +424,7 @@ export default function JobExecutionsPage() {
           response = await jobExecutionService.getExecutionsByStatus(
             statusFilter,
             {
-              limit: pageSize,
+              limit: tablePageSize,
               offset,
             },
           );
@@ -270,15 +432,15 @@ export default function JobExecutionsPage() {
           response = await jobExecutionService.getExecutionsByJobId(
             Number(jobIdFilter),
             {
-              limit: pageSize,
+              limit: tablePageSize,
               offset,
             },
           );
         } else {
-          // Use search endpoint for general queries
+          // Use search endpoint for general queries with server-side pagination
           const params: JobExecutionSearchParams = {
             filters: {},
-            limit: pageSize,
+            limit: tablePageSize,
             offset,
             skipCache: true,
             ...overrideParams,
@@ -317,10 +479,18 @@ export default function JobExecutionsPage() {
         }
 
         // Extract pagination metadata
+        let total = 0;
         if (response && "pagination" in response && response.pagination) {
-          setTotalExecutions(response.pagination.total || 0);
-          setHasMore(response.pagination.hasMore || false);
+          total = (response.pagination as { total?: number }).total || 0;
+          setHasMore((response.pagination as { hasMore?: boolean }).hasMore || false);
+        } else if (response && "count" in response) {
+          // Search endpoint returns count field
+          total = (response as { count?: number }).count || executionList.length;
+        } else {
+          // Fallback: use the fetched data length
+          total = executionList.length;
         }
+        setTotalExecutions(total);
 
         const sortedExecutions = [...executionList].sort((a, b) => {
           const startedB = b.started_at ? new Date(b.started_at).getTime() : 0;
@@ -332,7 +502,7 @@ export default function JobExecutionsPage() {
         const message =
           err instanceof Error ? err.message : "Failed to load job executions";
         setErrorMessage(message);
-        showError("Job Executions", extractBackendError(error, "Job Executions. Please try again."));
+        showError("Job Executions", extractBackendError(err, "Job Executions. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -348,8 +518,8 @@ export default function JobExecutionsPage() {
       endDateFilter,
       longRunningThreshold,
       showError,
-      currentPage,
-      pageSize,
+      tableCurrentPage,
+      tablePageSize,
     ],
   );
 
@@ -391,7 +561,7 @@ export default function JobExecutionsPage() {
       }
     } catch (err) {
       console.error("Failed to load stats:", err);
-      showError("Failed to load execution statistics", extractBackendError(error, "Failed to load execution statistics. Please try again."));
+      showError("Failed to load execution statistics", extractBackendError(err, "Failed to load execution statistics. Please try again."));
     } finally {
       setIsLoadingStats(false);
     }
@@ -399,7 +569,7 @@ export default function JobExecutionsPage() {
 
   // Reset page when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    tableHandlePageChange(1);
   }, [
     statusFilter,
     jobIdFilter,
@@ -411,6 +581,7 @@ export default function JobExecutionsPage() {
     endDateFilter,
     longRunningThreshold,
     searchTerm,
+    tableHandlePageChange,
   ]);
 
   useEffect(() => {
@@ -643,7 +814,7 @@ export default function JobExecutionsPage() {
     } catch (err) {
       // Rollback optimistic update on error
       fetchExecutions();
-      showError("Action Failed", extractBackendError(error, "Action Failed. Please try again."));
+      showError("Action Failed", extractBackendError(err, "Action Failed. Please try again."));
     } finally {
       setIsProcessingAction(false);
     }
@@ -667,7 +838,7 @@ export default function JobExecutionsPage() {
     } catch (err) {
       showError(
         "Archive Old Failed",
-        extractBackendError(error, "Failed to archive old executions. Please try again."),
+        extractBackendError(err, "Failed to archive old executions. Please try again."),
       );
     } finally {
       setIsArchiveManagementProcessing(false);
@@ -692,260 +863,87 @@ export default function JobExecutionsPage() {
     } catch (err) {
       showError(
         "Cleanup Failed",
-        extractBackendError(error, "Failed to cleanup archived executions. Please try again."),
+        extractBackendError(err, "Failed to cleanup archived executions. Please try again."),
       );
     } finally {
       setIsArchiveManagementProcessing(false);
     }
   };
 
-  // Table columns definition
-  const defaultColumns = useMemo(
-    () =>
-      [
-        {
-          id: "id",
-          label: "Execution ID",
-          visible: true,
-          render: (value) => (
-            <div className={`text-sm font-mono ${tw.textPrimary}`}>
-              {(value as string).substring(0, 8)}...
-            </div>
-          ),
-        },
-        {
-          id: "job_id",
-          label: "Job ID",
-          visible: true,
-          render: (value) => (
-            <div className={`text-sm font-medium ${tw.textSecondary}`}>
-              {value}
-            </div>
-          ),
-        },
-        {
-          id: "execution_status",
-          label: "Status",
-          visible: true,
-          render: (value) => (
-            <span className="text-sm text-black font-medium">
-              {value}
-            </span>
-          ),
-        },
-        {
-          id: "started_at",
-          label: "Started At",
-          visible: true,
-          render: (value) => (
-            <div className={`text-sm ${tw.textSecondary}`}>
-              {value ? new Date(value as string).toLocaleString() : "—"}
-            </div>
-          ),
-        },
-        {
-          id: "duration_seconds",
-          label: "Duration",
-          visible: true,
-          render: (value) => (
-            <div className={`text-sm ${tw.textSecondary}`}>
-              {formatDuration(value as number | null)}
-            </div>
-          ),
-        },
-        {
-          id: "triggered_by",
-          label: "Triggered By",
-          visible: true,
-          render: (value) => (
-            <div className={`text-sm capitalize ${tw.textSecondary}`}>
-              {value || "—"}
-            </div>
-          ),
-        },
-        {
-          id: "actions",
-          label: "Actions",
-          visible: true,
-          sortable: false,
-          render: (value, execution) => (
-            <div className="flex items-center justify-end space-x-2">
-              <button
-                onClick={() =>
-                  navigate(
-                    `/dashboard/job-executions/${execution.id}`,
-                  )
-                }
-                className={`p-2 icon-edit ${tw.rounded} text-gray-600 hover:text-gray-900`}
-                title="View details"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
-              {canWrite && !execution.archived && (
-                <button
-                  onClick={() => handleAction(execution, "archive")}
-                  className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
-                  title="Archive execution"
-                >
-                  <Archive className="w-4 h-4" />
-                </button>
-              )}
-              {canWrite && execution.archived && (
-                <button
-                  onClick={() => handleAction(execution, "unarchive")}
-                  className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
-                  title="Unarchive execution"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-              )}
-              {canWrite && (execution.execution_status === "running" || execution.execution_status === "failure") && (
-                <>
-                  <button
-                    ref={(el) => {
-                      if (el) menuRefs.current[execution.id] = el;
-                    }}
-                    data-execution-menu-button
-                    onClick={(e) => handleMenuToggle(execution.id, e)}
-                    className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900`}
-                    title="More actions"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                  {openMenuId === execution.id &&
-                    menuPosition &&
-                    createPortal(
-                      <div
-                        className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-lg z-50`}
-                        style={{
-                          top: `${menuPosition.top}px`,
-                          left: `${menuPosition.left}px`,
-                          width: "140px",
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
-                        {execution.execution_status === "running" && (
-                          <button
-                            onClick={() => {
-                              handleAction(execution, "abort");
-                              setOpenMenuId(null);
-                              setMenuPosition(null);
-                            }}
-                            className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
-                          >
-                            Abort
-                          </button>
-                        )}
-                        {execution.execution_status === "failure" && (
-                          <button
-                            onClick={() => {
-                              handleAction(execution, "retry");
-                              setOpenMenuId(null);
-                              setMenuPosition(null);
-                            }}
-                            className="block w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
-                          >
-                            Retry
-                          </button>
-                        )}
-                      </div>,
-                      document.body,
-                    )}
-                </>
-              )}
-            </div>
-          ),
-        },
-      ] as TableColumn<JobExecution>[],
-    [canWrite, navigate],
-  );
-
-  const {
-    columns,
-    currentPage: tableCurrentPage,
-    pageSize: tablePageSize,
-    handlePageChange: tableHandlePageChange,
-    handlePageSizeChange: tableHandlePageSizeChange,
-    sortConfigs,
-    handleSort,
-  } = useTable({
-    tableId: "job-executions-table",
-    defaultColumns,
-    defaultPageSize: DEFAULT_PAGE_SIZE,
-    persistToLocalStorage: true,
-  });
-
   return (
     <>
       <div className="overflow-x-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <BackButton
-            showBreadcrumb={true}
-            currentLabel="Job Executions"
-          />
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate("/dashboard/job-executions/analytics")}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-              style={{
-                backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </button>
-            <PermissionGate permission="job-executions.select">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <BackButton
+              showBreadcrumb={true}
+              currentLabel="Job Executions"
+            />
+            <div className="flex gap-3">
               <button
-                onClick={() => {
-                  if (!isSelectionMode) {
-                    setIsSelectionMode(true);
-                    setSelectedExecutions(
-                      new Set(filteredExecutions.map((exec) => exec.id)),
-                    );
-                  } else {
-                    setIsSelectionMode(false);
-                    setSelectedExecutions(new Set());
-                  }
-                }}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-                style={{
-                  backgroundColor: isSelectionMode
-                    ? color.primary.action
-                    : "transparent",
-                  color: isSelectionMode ? "white" : color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
-                }}
-              >
-                {isSelectionMode ? (
-                  <CheckSquare className="h-4 w-4" />
-                ) : (
-                  <Square className="h-4 w-4" />
-                )}
-                {isSelectionMode ? "Exit Selection" : "Select Executions"}
-              </button>
-            </PermissionGate>
-            <PermissionGate permission="job-executions.write">
-              <button
-                onClick={() => setShowArchiveManagementModal(true)}
-                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                onClick={() => navigate("/dashboard/job-executions/analytics")}
+                className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
                 style={{
                   backgroundColor: "transparent",
-                  color: color.primary.action,
-                  border: `1px solid ${color.primary.action}`,
+                  color: "var(--c-bordered-button-color)",
+                  borderColor: "var(--c-bordered-button-color)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
                 }}
               >
-                <Archive className="h-4 w-4" />
-                Manage Archive
+                <BarChart3 className="h-4 w-4" />
+                Analytics
               </button>
-            </PermissionGate>
+              <PermissionGate permission="job-executions.select">
+                <button
+                  onClick={() => {
+                    if (!isSelectionMode) {
+                      setIsSelectionMode(true);
+                      setSelectedExecutions(
+                        new Set(filteredExecutions.map((exec) => exec.id)),
+                      );
+                    } else {
+                      setIsSelectionMode(false);
+                      setSelectedExecutions(new Set());
+                    }
+                  }}
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-sm ${tw.rounded} transition-colors border w-auto`}
+                  style={{
+                    backgroundColor: "transparent",
+                    borderColor: "var(--c-bordered-button-color)",
+                    color: "var(--c-bordered-button-color)",
+                  }}
+                >
+                  {isSelectionMode ? (
+                    <CheckSquare className="h-4 w-4" />
+                  ) : (
+                    <Square className="h-4 w-4" />
+                  )}
+                  {isSelectionMode ? "Exit Selection" : "Select"}
+                </button>
+              </PermissionGate>
+              <PermissionGate permission="job-executions.write">
+                <button
+                  onClick={() => setShowArchiveManagementModal(true)}
+                  className={`inline-flex items-center gap-0 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                  style={{
+                    backgroundColor: "transparent",
+                    color: "var(--c-bordered-button-color)",
+                    borderColor: "var(--c-bordered-button-color)",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                  }}
+                >
+                  <Archive className="h-4 w-4" />
+                  Manage Archive
+                </button>
+              </PermissionGate>
+            </div>
           </div>
+          <p className={`text-sm ${tw.textSecondary}`}>
+            Monitor and track all job execution records
+          </p>
         </div>
-        <p className={`${tw.textSecondary} text-sm mt-1`}>
-          Monitor and track all job execution records
-        </p>
 
       <div className="mt-6">
       {/* Stats Cards */}
@@ -1058,7 +1056,7 @@ export default function JobExecutionsPage() {
         />
         <button
           onClick={() => setShowAdvancedFilters(true)}
-          className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
+          className={`inline-flex items-center justify-center gap-0 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
@@ -1079,7 +1077,7 @@ export default function JobExecutionsPage() {
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedExecutions.size > 0 && (
         <div
-          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mt-4 mb-6`}
         >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
@@ -1096,7 +1094,7 @@ export default function JobExecutionsPage() {
             <button
               onClick={() => handleBatchAction("abort")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-red-700 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-red-700 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Ban className="h-4 w-4" />
               Abort Running
@@ -1104,7 +1102,7 @@ export default function JobExecutionsPage() {
             <button
               onClick={() => handleBatchAction("archive")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Archive className="h-4 w-4" />
               Archive
@@ -1112,7 +1110,7 @@ export default function JobExecutionsPage() {
             <button
               onClick={() => handleBatchAction("retry")}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`inline-flex items-center gap-0 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               <RotateCcw className="h-4 w-4" />
@@ -1147,7 +1145,7 @@ export default function JobExecutionsPage() {
                   </h2>
                   <button
                     onClick={() => setShowAdvancedFilters(false)}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-0 text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1368,12 +1366,20 @@ export default function JobExecutionsPage() {
               columns={columns}
               data={filteredExecutions}
               totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
-              currentPage={currentPage}
-              pageSize={pageSize}
+              currentPage={tableCurrentPage}
+              pageSize={tablePageSize}
               isLoading={isLoading}
-              onPageChange={setCurrentPage}
+              onPageChange={tableHandlePageChange}
+              onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
+              enableRowSelection={isSelectionMode}
+              selectedRows={Array.from(selectedExecutions)}
+              onRowSelectChange={(selected) => {
+                setSelectedExecutions(new Set(selected as number[]));
+              }}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1386,11 +1392,11 @@ export default function JobExecutionsPage() {
             {filteredExecutions.length > 0 && (
               <div className="mt-4">
                 <Pagination
-                  currentPage={currentPage}
-                  pageSize={pageSize}
+                  currentPage={tableCurrentPage}
+                  pageSize={tablePageSize}
                   totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setPageSize}
+                  onPageChange={tableHandlePageChange}
+                  onPageSizeChange={tableHandlePageSizeChange}
                 />
               </div>
             )}
@@ -1560,6 +1566,21 @@ export default function JobExecutionsPage() {
           </div>
         </div>
       )}
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
     </>
   );

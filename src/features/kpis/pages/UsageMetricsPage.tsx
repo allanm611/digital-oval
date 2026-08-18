@@ -5,11 +5,14 @@ import Input from "../../../shared/components/ui/Input";
 import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { UsageMetric } from "../types/usageMetrics";
 import { usageMetricService } from "../services/usageMetricService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { color, tw } from "../../../shared/utils/utils";
@@ -17,6 +20,7 @@ import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
 
 export default function UsageMetricsPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { success, error: showError } = useToast();
 
   const [metrics, setMetrics] = useState<UsageMetric[]>([]);
@@ -25,6 +29,7 @@ export default function UsageMetricsPage() {
   const [toggling, setToggling] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
@@ -33,7 +38,7 @@ export default function UsageMetricsPage() {
   const tableColumns: TableColumn<UsageMetric>[] = [
     {
       id: "name",
-      label: "Metric Name",
+      label: t.kpis.metricName,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -44,9 +49,9 @@ export default function UsageMetricsPage() {
     },
     {
       id: "category",
-      label: "Category",
+      label: t.common.category,
       visible: true,
-      filterConfig: { type: "select", options: ["Data Usage", "Voice Usage", "SMS Usage", "Bundle Usage", "DOU Metrics"] },
+      filterConfig: { type: "select", options: ["data_usage", "voice_usage", "sms_usage", "bundle_usage", "dou_metrics"] },
       render: (_, row) => (
         <span className="text-sm text-black">
           {row.category
@@ -57,7 +62,7 @@ export default function UsageMetricsPage() {
     },
     {
       id: "field_type",
-      label: "Type",
+      label: t.common.type,
       visible: true,
       filterConfig: { type: "select", options: ["Decimal", "Numeric"] },
       render: (_, row) => (
@@ -68,7 +73,7 @@ export default function UsageMetricsPage() {
     },
     {
       id: "description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       filterConfig: { type: "text" },
       render: (_, row) => (
@@ -79,22 +84,34 @@ export default function UsageMetricsPage() {
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
-      filterConfig: { type: "select", options: ["Active", "Inactive"] },
+      filterConfig: { type: "select", options: [t.common.active, t.common.inactive] },
       render: (_, row) => (
         <span className="text-sm text-black">
-          {row.is_active ? "Active" : "Inactive"}
+          {row.is_active ? t.common.active : t.common.inactive}
+        </span>
+      ),
+    },
+    {
+      id: "default_value",
+      label: t.kpis.defaultValue,
+      visible: true,
+      filterConfig: { type: "text" },
+      render: (_, row) => (
+        <span className="text-sm text-black">
+          {row.default_value || "—"}
         </span>
       ),
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
-        <div className="flex items-center justify-end space-x-2">
+        <div className="flex items-center justify-end gap-3">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleActive(row)}
@@ -109,7 +126,7 @@ export default function UsageMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-delete ${tw.rounded} text-black disabled:opacity-60`}
+            className={`p-0 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -121,7 +138,7 @@ export default function UsageMetricsPage() {
               )
             }
             disabled={deleting === row.id}
-            className={`p-2 icon-delete ${tw.rounded} text-black disabled:opacity-60`}
+            className={`p-0 icon-edit ${tw.rounded} disabled:opacity-60`}
             title="Edit metric"
           >
             <Edit className="w-4 h-4" />
@@ -129,7 +146,7 @@ export default function UsageMetricsPage() {
           <button
             onClick={() => handleDeleteClick(row)}
             disabled={deleting === row.id}
-            className={`p-2 icon-delete ${tw.rounded} disabled:opacity-60`}
+            className={`p-0 icon-delete ${tw.rounded} disabled:opacity-60`}
             title="Delete metric"
           >
             <Trash2 className="w-4 h-4" />
@@ -147,6 +164,9 @@ export default function UsageMetricsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "usage-metrics-table",
     defaultColumns: tableColumns,
@@ -201,7 +221,7 @@ export default function UsageMetricsPage() {
 
       success(
         "Success",
-        `"${metric.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+        `"${metric.name}" has been ${newStatus ? t.common.activated : t.common.deactivated} successfully`
       );
     } catch (err) {
       console.error("Failed to toggle metric status:", err);
@@ -232,7 +252,7 @@ export default function UsageMetricsPage() {
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setDeleting(null);
     }
@@ -270,7 +290,7 @@ export default function UsageMetricsPage() {
   ];
 
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "all", label: t.kpis.filters.allCategories },
     { value: "data_usage", label: "Data Usage" },
     { value: "voice_usage", label: "Voice Usage" },
     { value: "sms_usage", label: "SMS Usage" },
@@ -334,7 +354,7 @@ export default function UsageMetricsPage() {
           options={categoryOptions}
           value={categoryFilter}
           onChange={(value) => handleCategoryChange(value || "all")}
-          placeholder="Filter by category"
+          placeholder={t.kpis.filters.filterByCategory}
           className="min-w-[180px]"
         />
       </div>
@@ -379,6 +399,8 @@ export default function UsageMetricsPage() {
             )}
             onFilteredCountChange={handleFilteredCountChange}
             clearFiltersKey={clearFiltersKey}
+            onHideColumn={toggleColumn}
+            onManageColumnsClick={() => setShowColumnPicker(true)}
             style={{
               headerBackground: color.surface.tableHeader,
               headerTextColor: color.surface.tableHeaderText,
@@ -401,35 +423,25 @@ export default function UsageMetricsPage() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmId !== null && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-              Delete Usage Metric
-            </h3>
-            <p className={`${tw.textSecondary} text-sm mb-6`}>
-              Are you sure you want to delete "{deleteConfirmName}"? This action
-              cannot be undone.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirmId(null)}
-                disabled={deleting !== null}
-                className="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={deleting !== null}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-60"
-              >
-                {deleting === deleteConfirmId ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={deleteConfirmId !== null}
+        title="Delete Usage Metric"
+        description="Are you sure you want to delete this usage metric? This action cannot be undone."
+        itemName={deleteConfirmName}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setDeleteConfirmId(null)}
+        isLoading={deleting !== null}
+      />
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

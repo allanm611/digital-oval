@@ -5,6 +5,7 @@
  */
 
 import UserManagementPage from "./UserManagementPage";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
@@ -13,6 +14,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
  * Shows table skeleton while UserManagementPage mounts and loads its data
  */
 export default function UserManagementPageWrapper() {
+  const { t } = useLanguage();
   return (
     <PermissionGate permission="users.read">
       <SuspenseBoundary type="table">

@@ -339,14 +339,15 @@ export default function StepExecutionsAnalyticsPage() {
       {/* Key Metrics - All Statistics */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <BarChart3
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-sm font-medium text-sm">
               Total Executions
             </p>
           </div>
@@ -357,14 +358,15 @@ export default function StepExecutionsAnalyticsPage() {
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Successful</p>
+            <p className="text-sm font-medium text-sm">Successful</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {statistics?.successful
@@ -375,14 +377,15 @@ export default function StepExecutionsAnalyticsPage() {
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Failed</p>
+            <p className="text-sm font-medium text-sm">Failed</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {statistics?.failed
@@ -393,14 +396,15 @@ export default function StepExecutionsAnalyticsPage() {
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Timed Out</p>
+            <p className="text-sm font-medium text-sm">Timed Out</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {statistics?.timed_out
@@ -411,14 +415,15 @@ export default function StepExecutionsAnalyticsPage() {
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Success Rate</p>
+            <p className="text-sm font-medium text-sm">Success Rate</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {successRate?.success_rate
@@ -427,14 +432,15 @@ export default function StepExecutionsAnalyticsPage() {
           </p>
         </div>
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
             <TrendingUp
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Avg Duration</p>
+            <p className="text-sm font-medium text-sm">Avg Duration</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {averageDuration?.average_duration_seconds
@@ -453,7 +459,8 @@ export default function StepExecutionsAnalyticsPage() {
         {/* Status Distribution */}
         {statusDistribution.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Status Distribution
@@ -488,7 +495,8 @@ export default function StepExecutionsAnalyticsPage() {
         {/* Execution Distribution */}
         {executionDistribution.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Execution Distribution
@@ -509,7 +517,8 @@ export default function StepExecutionsAnalyticsPage() {
         {/* Trend Data */}
         {trendData.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Execution Trends
@@ -535,7 +544,8 @@ export default function StepExecutionsAnalyticsPage() {
         {/* Executions By Hour */}
         {executionsByHour.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Executions By Hour
@@ -556,7 +566,8 @@ export default function StepExecutionsAnalyticsPage() {
         {/* Error Analysis */}
         {errorAnalysis.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Error Analysis
@@ -577,7 +588,8 @@ export default function StepExecutionsAnalyticsPage() {
         {/* Failure Patterns */}
         {failurePatterns.length > 0 && (
           <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            className={`${tw.rounded} border bg-white"
+                style={{ borderColor: 'var(--c-border-default)' }} p-6 shadow-sm`}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Failure Patterns

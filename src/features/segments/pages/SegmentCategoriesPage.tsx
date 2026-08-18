@@ -17,6 +17,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import NumberFormatter from "../../../shared/components/NumberFormatter";
@@ -52,211 +53,6 @@ const parseSegmentCatalogTag = (tag?: string): number | null => {
   const parsed = Number(value);
   return Number.isNaN(parsed) ? null : parsed;
 };
-
-interface CategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  category?: SegmentCategory;
-  onSave: (category: { name: string; description?: string }) => Promise<void>;
-}
-
-function CategoryModal({
-  isOpen,
-  onClose,
-  category,
-  onSave,
-}: CategoryModalProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [nameValidationError, setNameValidationError] = useState("");
-  const [isCheckingName, setIsCheckingName] = useState(false);
-
-  useEffect(() => {
-    if (category) {
-      setFormData({
-        name: category.name,
-        description: category.description || "",
-      });
-    } else {
-      setFormData({ name: "", description: "" });
-    }
-    setError("");
-    setNameValidationError("");
-  }, [category, isOpen]);
-
-  // Debounce name validation
-  useEffect(() => {
-    if (!formData.name.trim()) {
-      setNameValidationError("");
-      return;
-    }
-
-    // Don't validate if name hasn't changed (for edit mode)
-    if (category && formData.name === category.name) {
-      setNameValidationError("");
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsCheckingName(true);
-      try {
-        const result = await segmentService.checkSegmentCategoryName(
-          formData.name.trim()
-        );
-        // If exists is true, it means the name is taken
-        if (result.data?.exists) {
-          setNameValidationError("This catalog name is already in use");
-        } else {
-          setNameValidationError("");
-        }
-      } catch (err) {
-        // On error, allow submission (don't block user)
-        setNameValidationError("");
-      } finally {
-        setIsCheckingName(false);
-      }
-    }, 500); // Debounce 500ms
-
-    return () => clearTimeout(timer);
-  }, [formData.name, category]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setError("Catalog name is required");
-      return;
-    }
-
-    if (nameValidationError) {
-      setError(nameValidationError);
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const categoryData = {
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-      };
-
-      await onSave(categoryData);
-      onClose();
-    } catch (err) {
-      console.error("Failed to save category:", err);
-      // Extract actual backend error message and bypass silent mode
-      const errorMessage = err instanceof Error ? err.message : "Please try again later.";
-      showError("Failed to save category", extractBackendError(error, "Failed to save category. Please try again."));
-      setError(""); // Clear error state
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return isOpen
-    ? createPortal(
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div
-            className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
-          >
-            <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex-1 min-w-0">
-                {category
-                  ? "Edit Segment Catalog"
-                  : "Create New Segment Catalog"}
-              </h2>
-              <button
-                onClick={onClose}
-                className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-              <div className="space-y-8">
-                <div>
-                  <Input
-                    label="Segment Catalog Name"
-                    value={formData.name}
-                    onChange={(value) =>
-                      setFormData((prev) => ({ ...prev, name: value }))
-                    }
-                    hasError={!!nameValidationError}
-                  />
-                  {nameValidationError && (
-                    <p className="mt-1 text-sm text-red-600">{nameValidationError}</p>
-                  )}
-                  {isCheckingName && (
-                    <p className="mt-1 text-sm text-gray-500">Checking availability...</p>
-                  )}
-                </div>
-
-                <Textarea
-                  label="Description"
-                  rows={3}
-                  value={formData.description}
-                  onChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: value,
-                    }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className={`px-4 py-2 ${tw.rounded} transition-colors`}
-                  style={{
-                    background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading || !!nameValidationError || isCheckingName}
-                  className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ backgroundColor: color.primary.action }}
-                  onMouseEnter={(e) => {
-                    if (!e.currentTarget.disabled) {
-                      (e.target as HTMLButtonElement).style.backgroundColor =
-                        color.primary.action;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.backgroundColor =
-                      color.primary.action;
-                  }}
-                >
-                  {isLoading
-                    ? category
-                      ? "Updating..."
-                      : "Creating..."
-                    : isCheckingName
-                      ? "Checking..."
-                      : category
-                        ? "Update"
-                        : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body,
-      )
-    : null;
-}
 
 interface SegmentsModalProps {
   isOpen: boolean;
@@ -473,7 +269,7 @@ export default function SegmentCategoriesPage() {
         await loadSegmentCounts(validCategoriesData);
       } catch (err) {
         const errorMsg = extractBackendError(err, "Failed to load segment catalogs");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", errorMsg);
         setCategories([]);
       } finally {
         setIsLoading(false);
@@ -552,6 +348,18 @@ export default function SegmentCategoriesPage() {
     description?: string;
   }) => {
     try {
+      // Optimistic add to list
+      const tempId = Math.min(...categories.map(c => c.id), 0) - 1;
+      const newCategory: SegmentCategory = {
+        id: tempId,
+        name: categoryData.name,
+        description: categoryData.description || "",
+        is_active: true,
+        created_at: new Date().toISOString(),
+        segment_count: 0,
+      };
+      setCategories((prev) => [newCategory, ...prev]);
+
       const request: CreateSegmentCategoryRequest = {
         name: categoryData.name,
         description: categoryData.description,
@@ -562,9 +370,9 @@ export default function SegmentCategoriesPage() {
         "Catalog created",
         `Segment catalog "${categoryData.name}" has been created successfully`,
       );
-      await loadCategories(true); // skipCache = true
     } catch (err) {
-      // Re-throw with actual backend error message
+      // Reload on error since optimistic update failed
+      await loadCategories(true);
       throw err;
     }
   };
@@ -576,6 +384,16 @@ export default function SegmentCategoriesPage() {
     if (!selectedCategory) return;
 
     try {
+      // Optimistic update
+      const previousCategories = categories;
+      setCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === selectedCategory.id
+            ? { ...cat, ...categoryData }
+            : cat
+        )
+      );
+
       const request: UpdateSegmentCategoryRequest = {
         name: categoryData.name,
         description: categoryData.description,
@@ -586,9 +404,9 @@ export default function SegmentCategoriesPage() {
         "Catalog updated",
         `Segment catalog "${categoryData.name}" has been updated successfully`,
       );
-      await loadCategories(true); // skipCache = true
     } catch (err) {
-      // Re-throw with actual backend error message
+      // Reload on error since optimistic update failed
+      await loadCategories(true);
       throw err;
     }
   };
@@ -628,9 +446,8 @@ export default function SegmentCategoriesPage() {
       // Revert optimistic update on error by reloading
       await loadCategories(true);
       // Display backend error message and bypass silent mode for important errors
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update category";
-      showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
+      const errorMessage = extractBackendError(err, "Failed to update category");
+      showError("Toggle Failed", errorMessage);
     } finally {
       setTogglingCategoryId(null);
     }
@@ -656,7 +473,7 @@ export default function SegmentCategoriesPage() {
       setCategoryToDelete(null);
     } catch (err) {
       const errorMsg2 = extractBackendError(err, "Failed to delete segment catalog");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
       // Revert optimistic update on error
       setCategories(previousCategories);
     } finally {
@@ -924,9 +741,12 @@ export default function SegmentCategoriesPage() {
               className={`bg-white border border-gray-200 ${tw.rounded} p-6 hover:shadow-md transition-all`}
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className={`${tw.tableFirstColumn} text-gray-900`}>
-                  {category.name}
-                </h3>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Users className="w-5 h-5 flex-shrink-0" style={{ color: color.primary.accent }} />
+                  <h3 className={`${tw.tableFirstColumn} text-gray-900 truncate`}>
+                    {category.name}
+                  </h3>
+                </div>
                 <div className="flex items-center space-x-1">
                   <ActivateDeactivateButton
                     isActive={category.is_active}
@@ -947,7 +767,7 @@ export default function SegmentCategoriesPage() {
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1037,7 +857,7 @@ export default function SegmentCategoriesPage() {
                 </button>
                 <button
                   onClick={() => handleDeleteCategory(category)}
-                  className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                  className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4 " />
@@ -1072,7 +892,24 @@ export default function SegmentCategoriesPage() {
           setSelectedCategory(null);
         }}
         category={selectedCategory || undefined}
-        onSave={selectedCategory ? handleUpdateCategory : handleCreateCategory}
+        onCategoryUpdated={async (updatedCategory) => {
+          setSelectedCategory(null);
+          // Update local state with new data from modal
+          if (updatedCategory) {
+            setCategories((prev) =>
+              prev.map((cat) =>
+                cat.id === updatedCategory.id
+                  ? { ...cat, name: updatedCategory.name, description: updatedCategory.description }
+                  : cat
+              )
+            );
+          }
+        }}
+        onCategoryCreated={async () => {
+          // Reload to get new category (needed since modal creates)
+          await loadCategories(true);
+        }}
+        entityType="segment"
       />
 
       <SegmentsModal

@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+*.tmp
+build_output.log
 
 # Editor directories and files
 .vscode/*
@@ -25,5 +27,9 @@ dist-ssr
 .env
 .vercel
 .env*.local
-CLAUDE.md
 .env*
+.qodo
+.bolt
+.venv
+venv
+.claude

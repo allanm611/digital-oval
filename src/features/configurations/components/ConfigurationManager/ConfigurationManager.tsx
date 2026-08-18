@@ -3,7 +3,7 @@ import { Edit, Trash2, X, LucideIcon } from "lucide-react";
 import SearchInput from "../../../../shared/components/ui/SearchInput";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../../shared/utils/utils";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../../shared/utils/errorHandler";
 import { useToast } from "../../../../contexts/ToastContext";
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
@@ -15,6 +15,7 @@ import DeleteConfirmModal from "../../../../shared/components/ui/DeleteConfirmMo
 import ConfigurationModal from "./ConfigurationModal";
 import { useDeleteConfirm } from "../../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../../shared/components/ColumnPickerModal";
 
 export interface ConfigurationItem {
   id: number | string;
@@ -29,13 +30,25 @@ export interface ConfigurationItem {
 export interface MetadataField {
   label: string;
   key: string;
-  type: "text" | "select" | "toggle" | "textarea" | "date" | "number";
+  type:
+    | "text"
+    | "select"
+    | "multiselect"
+    | "toggle"
+    | "textarea"
+    | "date"
+    | "number";
   required?: boolean;
   options?: { value: string | number | boolean; label: string }[];
-  loadOptions?: (formData?: Record<string, any>) => Promise<{ value: string | number; label: string }[]>;
+  loadOptions?: (
+    formData?: Record<string, any>,
+  ) => Promise<{ value: string | number; label: string }[]>;
   placeholder?: string;
   condition?: (values: Record<string, any>) => boolean;
   row?: number;
+  /** When true, empty arrays fail required validation for multiselect */
+  /** Allow typing custom values into multiselect (e.g. custom tracking parameters) */
+  allowCustomValues?: boolean;
 }
 
 export interface ConfigurationPageConfig {
@@ -59,6 +72,21 @@ export interface ConfigurationPageConfig {
   nameMaxLength: number;
   descriptionMaxLength: number;
   metadataFields?: MetadataField[];
+  /**
+   * When a metadata field changes, return extra field patches
+   * (e.g. type change → default parameters / displayMetrics).
+   */
+  getFieldDefaultsOnChange?: (
+    changedKey: string,
+    value: unknown,
+    current: Record<string, any>,
+  ) => Record<string, any>;
+  /** Optional extra table columns beyond name/description/status */
+  extraColumns?: Array<{
+    id: string;
+    label: string;
+    render: (item: ConfigurationItem) => React.ReactNode;
+  }>;
   deleteConfirmTitle: string;
   deleteConfirmMessage: (name: string) => string;
   deleteSuccessMessage: (name: string) => string;
@@ -66,31 +94,56 @@ export interface ConfigurationPageConfig {
   updateSuccessMessage: string;
   deleteErrorMessage: string;
   saveErrorMessage: string;
+  configType?: string;
+  modalWidth?: string | number;
 }
 
 interface ConfigurationManagerProps {
   config: ConfigurationPageConfig;
+  loading?: boolean;
+  /** When provided, create/update/delete/toggle persist through these callbacks */
+  persistence?: {
+    onCreate: (data: Record<string, any>) => Promise<ConfigurationItem>;
+    onUpdate: (
+      id: number | string,
+      data: Record<string, any>,
+    ) => Promise<ConfigurationItem>;
+    onDelete: (id: number | string) => Promise<void>;
+    onToggleActive?: (
+      id: number | string,
+      isActive: boolean,
+    ) => Promise<ConfigurationItem | void>;
+  };
 }
 
 export default function ConfigurationManager({
   config,
+  loading = false,
+  persistence,
 }: ConfigurationManagerProps) {
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
 
   const [items, setItems] = useState<ConfigurationItem[]>(config.initialData);
-  const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ConfigurationItem | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const [togglingItemId, setTogglingItemId] = useState<number | string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ConfigurationItem | null>(null);
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
+
+  // Sync items when initialData prop changes
+  useEffect(() => {
+    setItems(config.initialData);
+  }, [config.initialData]);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteItem } = useDeleteConfirm({
     onDelete: async (id) => {
-      const numId = typeof id === "string" ? parseInt(id) : id;
-      setItems((prev) => prev.filter((i) => i.id !== numId));
+      if (persistence) {
+        await persistence.onDelete(id);
+      }
+      setItems((prev) => prev.filter((i) => String(i.id) !== String(id)));
       showToast(
         config.deleteConfirmTitle,
         config.deleteSuccessMessage(itemToDelete?.name || "")
@@ -114,58 +167,111 @@ export default function ConfigurationManager({
     openDeleteConfirm(item.id, item.name);
   };
 
-  const handleToggleActive = (item: ConfigurationItem) => {
+  const handleToggleActive = async (item: ConfigurationItem) => {
     const newActive = !(item.isActive ?? true);
     setTogglingItemId(item.id);
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === item.id ? { ...i, isActive: newActive } : i
-      )
-    );
-    setTimeout(() => setTogglingItemId(null), 300);
-    showToast(
-      newActive ? "Activated" : "Deactivated",
-      newActive
-        ? `${item.name} has been activated`
-        : `${item.name} has been deactivated`
-    );
+    try {
+      if (persistence?.onToggleActive) {
+        const updated = await persistence.onToggleActive(item.id, newActive);
+        if (updated && typeof updated === "object") {
+          setItems((prev) =>
+            prev.map((i) =>
+              String(i.id) === String(item.id)
+                ? { ...i, ...updated, isActive: newActive }
+                : i,
+            ),
+          );
+        } else {
+          setItems((prev) =>
+            prev.map((i) =>
+              String(i.id) === String(item.id)
+                ? { ...i, isActive: newActive }
+                : i,
+            ),
+          );
+        }
+      } else {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === item.id ? { ...i, isActive: newActive } : i,
+          ),
+        );
+      }
+      showToast(
+        newActive ? "Activated" : "Deactivated",
+        newActive
+          ? `${item.name} has been activated`
+          : `${item.name} has been deactivated`,
+      );
+    } catch (err) {
+      showError(
+        t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
+        extractBackendError(err, config.saveErrorMessage),
+      );
+    } finally {
+      setTogglingItemId(null);
+    }
   };
 
   const handleItemSaved = async (itemData: Record<string, any>) => {
     try {
       setIsSaving(true);
       if (editingItem) {
-        // Update existing item
-        setItems((prev) =>
-          prev.map((item) =>
-            item.id === editingItem.id
-              ? {
-                  ...item,
-                  ...itemData,
-                  updated_at: new Date().toISOString(),
-                }
-              : item
-          )
-        );
+        if (persistence) {
+          const updated = await persistence.onUpdate(editingItem.id, itemData);
+          setItems((prev) =>
+            prev.map((item) =>
+              String(item.id) === String(editingItem.id)
+                ? {
+                    ...item,
+                    ...updated,
+                    updated_at: new Date().toISOString(),
+                  }
+                : item,
+            ),
+          );
+        } else {
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === editingItem.id
+                ? {
+                    ...item,
+                    ...itemData,
+                    updated_at: new Date().toISOString(),
+                  }
+                : item,
+            ),
+          );
+        }
         showToast(config.updateSuccessMessage);
       } else {
-        // Create new item
-        const newItem: ConfigurationItem = {
-          id: Math.max(...items.map((i) => (i.id as number) || 0)) + 1,
-          ...itemData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        setItems((prev) => [...prev, newItem]);
+        if (persistence) {
+          const created = await persistence.onCreate(itemData);
+          setItems((prev) => {
+            if (prev.some((i) => String(i.id) === String(created.id))) {
+              return prev.map((i) =>
+                String(i.id) === String(created.id) ? { ...i, ...created } : i,
+              );
+            }
+            return [...prev, created];
+          });
+        } else {
+          const newItem: ConfigurationItem = {
+            id: Math.max(...items.map((i) => (i.id as number) || 0), 0) + 1,
+            ...itemData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+          setItems((prev) => [...prev, newItem]);
+        }
         showToast(config.createSuccessMessage);
       }
       setIsModalOpen(false);
       setEditingItem(undefined);
     } catch (err) {
-      console.error(`Failed to save ${config.entityName}:`, err);
       showError(
         t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
-        config.saveErrorMessage
+        extractBackendError(err, config.saveErrorMessage),
       );
     } finally {
       setIsSaving(false);
@@ -189,8 +295,10 @@ export default function ConfigurationManager({
       id: "name",
       label: config.entityName,
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
+        <div className="truncate" title={value as string}>
           {value}
         </div>
       ),
@@ -199,8 +307,9 @@ export default function ConfigurationManager({
       id: "description",
       label: t.genericConfig.description,
       visible: true,
+      filterConfig: { type: 'text' },
       render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
+        <div className="truncate max-w-md" title={value ? String(value) : "-"}>
           {value || t.genericConfig.noDescription}
         </div>
       ),
@@ -209,17 +318,24 @@ export default function ConfigurationManager({
       id: "isActive",
       label: t.genericConfig.status,
       visible: true,
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
       render: (value) => (
-        <span className={`text-sm font-medium ${tw.textSecondary}`}>
-          {value !== false ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'}
-        </span>
+        value !== false ? t.genericConfig.active || 'Active' : t.genericConfig.inactive || 'Inactive'
       ),
     },
+    ...(config.extraColumns || []).map((col) => ({
+      id: col.id,
+      label: col.label,
+      visible: true,
+      sortable: false,
+      render: (_value: unknown, item: ConfigurationItem) => col.render(item),
+    })),
     {
       id: "actions",
       label: t.genericConfig.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, item) => (
         <div className="flex items-center justify-center space-x-2">
           <ActivateDeactivateButton
@@ -235,13 +351,13 @@ export default function ConfigurationManager({
           />
           <button
             onClick={() => handleEditItem(item)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDeleteClick(item)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -258,6 +374,9 @@ export default function ConfigurationManager({
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "configuration-table",
     defaultColumns,
@@ -293,29 +412,40 @@ export default function ConfigurationManager({
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
+      {/* Breadcrumb with Create Button and Description */}
       {showBackButton && (
-        <BackButton
-         
-          showBreadcrumb={true}
-          currentLabel={config.title}
-        />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <BackButton
+
+              showBreadcrumb={true}
+              currentLabel={config.title}
+            />
+            <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} label={config.createButtonText} />
+          </div>
+          {(config as any).description && (
+            <p className={`text-sm ${tw.textSecondary}`}>{(config as any).description}</p>
+          )}
+        </div>
       )}
       {!showBackButton && (
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            {config.title}
-          </h1>
-        </div>
-      )}
-
-      {/* Description and Create Button */}
-      <div className="flex items-start justify-between gap-4">
-        <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
-        <div className="flex items-center gap-3 w-auto ml-auto">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+          <div className="space-y-1.5">
+            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+              {config.title}
+            </h1>
+            <div className="space-y-1">
+              <p className={`text-sm ${tw.textSecondary}`}>{config.subtitle}</p>
+              {(config as any).description && (
+                <p className={`text-sm ${tw.textSecondary}`}>
+                  {(config as any).description}
+                </p>
+              )}
+            </div>
+          </div>
           <FeatureActionButton featureId="configuration" action="create" onClick={handleCreateItem} label={config.createButtonText} />
         </div>
-      </div>
+      )}
 
       {/* Search */}
       <div className="my-5">
@@ -370,6 +500,8 @@ export default function ConfigurationManager({
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -425,6 +557,21 @@ export default function ConfigurationManager({
         description={itemToDelete ? config.deleteConfirmMessage(itemToDelete.name) : ""}
         itemName={deleteConfirm.itemName || ""}
         isLoading={isDeleting}
+      />
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

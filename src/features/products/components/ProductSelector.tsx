@@ -273,8 +273,8 @@ export default function ProductSelector({
                     </p>
                     <div className="flex items-center space-x-2 mt-1">
                       <span
-                        className={`text-xs px-2 py-1  rounded-full`}
-                        style={{ backgroundColor: color.primary.action }}
+                        className={`text-xs px-2 py-1 rounded-full text-white`}
+                        style={{ backgroundColor: color.primary.accent }}
                       >
                         {getCategoryName(product.category_id)}
                       </span>
@@ -288,10 +288,9 @@ export default function ProductSelector({
                 </div>
                 <button
                   onClick={() => handleRemoveProduct(product.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} border border-red-200 hover:border-red-300 transition-colors duration-200`}
+                  className={`px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} border border-red-200 hover:border-red-300 transition-colors duration-200`}
                   title="Remove product"
                 >
-                  <X className="w-4 h-4" />
                   <span>Remove</span>
                 </button>
               </div>
@@ -487,7 +486,7 @@ export default function ProductSelector({
                             Category
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                            Code
+                            Description
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                             Price
@@ -531,9 +530,6 @@ export default function ProductSelector({
                                   <div className="text-sm font-medium text-gray-900 truncate">
                                     {product.name}
                                   </div>
-                                  <div className="text-xs text-gray-500 truncate">
-                                    {product.description || "No description"}
-                                  </div>
                                 </div>
                               </td>
                               <td className="px-4 py-3">
@@ -542,8 +538,8 @@ export default function ProductSelector({
                                 </span>
                               </td>
                               <td className="px-4 py-3">
-                                <span className="text-sm font-mono text-gray-600">
-                                  {product.product_code}
+                                <span className="text-sm text-gray-600 truncate block">
+                                  {product.description || "-"}
                                 </span>
                               </td>
                               <td className="px-4 py-3">

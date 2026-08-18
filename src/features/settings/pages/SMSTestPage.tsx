@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {  AlertCircle, CheckCircle, Loader } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
@@ -45,6 +46,7 @@ const getChannelCategory = (channelCode: string): "SMS" | "EMAIL" | "WHATSAPP" |
 };
 
 export default function SMSTestPage() {
+  const { t } = useLanguage();
   const { success, error: showError } = useToast();
   const [channel, setChannel] = useState<ChannelCode>("SMS");
   const [channels, setChannels] = useState<ChannelOption[]>([]);
@@ -96,7 +98,7 @@ export default function SMSTestPage() {
         }
       } catch (err) {
         console.error("Failed to load communication channels:", err);
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoadingChannels(false);
       }
@@ -336,7 +338,7 @@ export default function SMSTestPage() {
         success: false,
         error: (err as Error).message,
       });
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsLoading(false);
     }
@@ -359,7 +361,7 @@ export default function SMSTestPage() {
               </h2>
 
               {/* Channel Selection */}
-              <div className="mb-4">
+              <div className="mb-6">
                 {isLoadingChannels ? (
                   <div className="flex items-center gap-2 text-gray-500">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -374,12 +376,13 @@ export default function SMSTestPage() {
                     onChange={setChannel}
                     options={channels}
                     placeholder="Select a channel..."
+                    labelBgColor="var(--c-primary-background)"
                   />
                 )}
               </div>
 
               {/* Recipient Input */}
-              <div className="mb-4">
+              <div className="mb-6">
                 <Input
                   label={
                     channelCategory === "EMAIL"
@@ -395,12 +398,14 @@ export default function SMSTestPage() {
                   }
                   value={msisdn}
                   onChange={setMsisdn}
+                  labelBgColor="var(--c-primary-background)"
+                  style={{ borderColor: '#cbd5e1' }}
                 />
               </div>
 
               {/* Sender ID Selection - SMS/USSD only */}
               {(channelCategory === "SMS" || channelCategory === "USSD") && (
-                <div className="mb-4">
+                <div className="mb-6">
                   {isLoadingSenderIds ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -420,6 +425,7 @@ export default function SMSTestPage() {
                           label: sender.name,
                         }))}
                       placeholder="Select a Sender ID..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -427,7 +433,7 @@ export default function SMSTestPage() {
 
               {/* Email Route Selection - EMAIL only */}
               {channelCategory === "EMAIL" && (
-                <div className="mb-4">
+                <div className="mb-6">
                   {isLoadingEmailRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -447,6 +453,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select an email route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -454,7 +461,7 @@ export default function SMSTestPage() {
 
               {/* SMS Route Selection - SMS only */}
               {channelCategory === "SMS" && (
-                <div className="mb-4">
+                <div className="mb-6">
                   {isLoadingRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -474,6 +481,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select a route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -481,7 +489,7 @@ export default function SMSTestPage() {
 
               {/* WhatsApp Route Selection - WHATSAPP only */}
               {channelCategory === "WHATSAPP" && (
-                <div className="mb-4">
+                <div className="mb-6">
                   {isLoadingWhatsappRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -501,6 +509,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select a WhatsApp route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -508,7 +517,7 @@ export default function SMSTestPage() {
 
               {/* Push Notification App Selection - PUSH only */}
               {channelCategory === "PUSH" && (
-                <div className="mb-4">
+                <div className="mb-6">
                   {isLoadingPushRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -528,6 +537,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select an app..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -535,7 +545,7 @@ export default function SMSTestPage() {
 
               {/* USSD Route Selection - USSD only */}
               {channelCategory === "USSD" && (
-                <div className="mb-4">
+                <div className="mb-6">
                   {isLoadingUssdRoutes ? (
                     <div className="flex items-center gap-2 text-gray-500">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
@@ -555,6 +565,7 @@ export default function SMSTestPage() {
                           label: route.name,
                         }))}
                       placeholder="Select a USSD route..."
+                      labelBgColor="var(--c-primary-background)"
                     />
                   )}
                 </div>
@@ -562,19 +573,21 @@ export default function SMSTestPage() {
 
               {/* USSD Code Input - USSD only */}
               {channelCategory === "USSD" && (
-                <div className="mb-4">
+                <div className="mb-6">
                   <Input
                     label="USSD Code *"
                     placeholder="e.g., *123#"
                     value={ussdCode}
                     onChange={setUssdCode}
+                    labelBgColor="var(--c-primary-background)"
+                    style={{ borderColor: '#cbd5e1' }}
                   />
                 </div>
               )}
 
               {/* Message/Body Input - not shown for USSD */}
               {channelCategory !== "USSD" && (
-                <div>
+                <div className="mb-6">
                   <Textarea
                     label={<>{channelCategory === "PUSH" ? "Body *" : "Message *"}</>}
                     value={message}
@@ -589,6 +602,7 @@ export default function SMSTestPage() {
                     }
                     rows={5}
                     hasError={!!messageError}
+                    labelBgColor="var(--c-primary-background)"
                   />
                   {messageError ? (
                     <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">

@@ -32,14 +32,12 @@ import {
   validateNoEditInsideVariables,
   isCursorInsideVariable,
 } from "../../../shared/utils/variableInsertion";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
 import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
-import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useToast } from "../../../contexts/ToastContext";
 import {
   validatePhoneOnly,
@@ -53,6 +51,7 @@ import { emailRouteService } from "../../routes/services/emailRouteService";
 import { EmailRoute } from "../../routes/types/emailRoute";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import SeedListRecipientsModal from "../../../shared/components/SeedListRecipientsModal";
+import { quicklistService } from "../../quicklists/services/quicklistService";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -77,6 +76,7 @@ export default function DefineCommunicationStep({
 }: DefineCommunicationStepProps) {
   const { t } = useLanguage();
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
+  const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
   const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
 
   const [selectedChannel, setSelectedChannel] = useState<Channel>(
@@ -86,11 +86,33 @@ export default function DefineCommunicationStep({
   const [messageBody, setMessageBody] = useState(data.messageBody || "");
   const [isRichText, setIsRichText] = useState(data.isRichText || false);
   const [smsRoute, setSmsRoute] = useState(data.smsRoute || "");
-  const [emailRoute, setEmailRoute] = useState("");
+  const [emailRoute, setEmailRoute] = useState(data.emailRoute || "");
+  const [loadedQuicklist, setLoadedQuicklist] = useState<any>(null);
 
-  // Load email routes from configuration (dummy data)
-  const emailRoutesConfig = useConfigurationData("emailRoutes");
-  const emailRoutes = emailRoutesConfig?.data?.filter((r: any) => r.isActive || r.is_active) || [];
+  // Load quicklist data columns if we have quicklistId
+  useEffect(() => {
+    if (data.quicklistId) {
+      quicklistService.getQuickListData(data.quicklistId, { limit: 1 }).then((response) => {
+        if (response.success && response.data && response.data.length > 0) {
+          // Extract column names from first row's row_data
+          const firstRow = response.data[0];
+          const columns = firstRow?.row_data ? Object.keys(firstRow.row_data) : [];
+          setLoadedQuicklist({
+            columns: columns.map((name) => ({ name })),
+          });
+        }
+      }).catch((err) => {
+        console.error("Failed to load quicklist data:", err);
+      });
+    } else if (data.quicklist) {
+      setLoadedQuicklist(data.quicklist);
+    }
+  }, [data.quicklistId, data.quicklist]);
+
+  // Extract quicklist columns for variable insertion
+  const quicklistData = loadedQuicklist || data.quicklist;
+  const quicklistColumns = quicklistData?.columns || [];
+
   const [error, setError] = useState("");
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
@@ -121,29 +143,33 @@ export default function DefineCommunicationStep({
   >([]);
   const [selectedPolicy, setSelectedPolicy] =
     useState<CommunicationPolicyConfiguration | null>(null);
-  const [isPolicyDropdownOpen, setIsPolicyDropdownOpen] = useState(false);
   const [isCustomizationModalOpen, setIsCustomizationModalOpen] =
     useState(false);
   const [policyToCustomize, setPolicyToCustomize] =
     useState<CommunicationPolicyConfiguration | null>(null);
 
-  const policyDropdownRef = useRef<HTMLDivElement>(null);
   const { success: showToast, error: showError } = useToast();
 
-  useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
-
-  // Fetch SMS routes on component mount
+  // Fetch SMS and Email routes on component mount
   useEffect(() => {
-    const fetchSmsRoutes = async () => {
+    const fetchRoutes = async () => {
       try {
         const routes = await smsRouteService.getAllRoutes();
-        setSmsRoutes(Array.isArray(routes) ? routes : []);
+        setSmsRoutes(Array.isArray(routes) ? routes.filter((r) => r.is_active) : []);
       } catch (error) {
         console.error("Failed to fetch SMS routes:", error);
         setSmsRoutes([]);
       }
+
+      try {
+        const routes = await emailRouteService.getAllRoutes();
+        setEmailRoutes(Array.isArray(routes) ? routes.filter((r) => r.is_active) : []);
+      } catch (error) {
+        console.error("Failed to fetch Email routes:", error);
+        setEmailRoutes([]);
+      }
     };
-    fetchSmsRoutes();
+    fetchRoutes();
   }, []);
 
 
@@ -363,6 +389,7 @@ export default function DefineCommunicationStep({
     if (data.messageBody) setMessageBody(data.messageBody);
     if (data.isRichText !== undefined) setIsRichText(data.isRichText);
     if (data.smsRoute) setSmsRoute(data.smsRoute);
+    if (data.emailRoute) setEmailRoute(data.emailRoute);
   }, []);
 
   // Sync selectedPolicy with parent data
@@ -386,8 +413,9 @@ export default function DefineCommunicationStep({
       messageBody: messageBody,
       isRichText: isRichText,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      emailRoute: selectedChannel === "EMAIL" ? emailRoute : undefined,
     });
-  }, [selectedChannel, messageBody, messageTitle, isRichText, smsRoute]);
+  }, [selectedChannel, messageBody, messageTitle, isRichText, smsRoute, emailRoute]);
 
   const handleVariableSelect = (variable: TemplateVariable) => {
     // Validate input data
@@ -583,7 +611,7 @@ export default function DefineCommunicationStep({
       setIsCustomizationModalOpen(false);
       setPolicyToCustomize(null);
 
-      showError(extractBackendError(error, "Failed to update policy. Changes reverted.. Please try again."));
+      showError(extractBackendError(err, "Failed to update policy. Changes reverted.. Please try again."));
     }
   };
 
@@ -638,27 +666,34 @@ export default function DefineCommunicationStep({
           return; // Skip undefined variables
         }
         const key = `${(variable.sourceName || "source").toLowerCase().replace(/\s+/g, "_")}.${variable.value || "field"}`;
-        switch (variable.fieldType) {
-          case "text":
-            if ((variable.value || "").includes("name"))
-              sampleData[key] = "John Doe";
-            else if ((variable.value || "").includes("email"))
-              sampleData[key] = "john@example.com";
-            else if ((variable.value || "").includes("phone"))
-              sampleData[key] = "+1234567890";
-            else sampleData[key] = `Sample ${variable.name || "value"}`;
-            break;
-          case "numeric":
-            sampleData[key] = "12345";
-            break;
-          case "date":
-            sampleData[key] = formatDateWithTimezone(new Date(), getSettingsTimezoneOffset());
-            break;
-          case "boolean":
-            sampleData[key] = "Yes";
-            break;
-          default:
-            sampleData[key] = `[${variable.name || "value"}]`;
+
+        // Use KPI default value if available, otherwise use hardcoded sample values
+        const defaultVal = (variable as any).default_value ?? variable.defaultValue;
+        if (defaultVal !== undefined && defaultVal !== null) {
+          sampleData[key] = String(defaultVal);
+        } else {
+          switch (variable.fieldType) {
+            case "text":
+              if ((variable.value || "").includes("name"))
+                sampleData[key] = "John Doe";
+              else if ((variable.value || "").includes("email"))
+                sampleData[key] = "john@example.com";
+              else if ((variable.value || "").includes("phone"))
+                sampleData[key] = "+1234567890";
+              else sampleData[key] = `Sample ${variable.name || "value"}`;
+              break;
+            case "numeric":
+              sampleData[key] = "12345";
+              break;
+            case "date":
+              sampleData[key] = formatDateWithTimezone(new Date(), getSettingsTimezoneOffset());
+              break;
+            case "boolean":
+              sampleData[key] = "Yes";
+              break;
+            default:
+              sampleData[key] = `[${variable.name || "value"}]`;
+          }
         }
       });
     }
@@ -705,6 +740,10 @@ export default function DefineCommunicationStep({
         setError(titleSyntaxError);
         return;
       }
+      if (!emailRoute || typeof emailRoute !== "string" || !emailRoute.trim()) {
+        setError("Please select an email route");
+        return;
+      }
     }
 
     // Validate SMS requirements
@@ -737,6 +776,7 @@ export default function DefineCommunicationStep({
       messageBody: messageBody.trim(),
       isRichText,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      emailRoute: selectedChannel === "EMAIL" ? emailRoute : undefined,
       selectedVariables: validatedVariables,
       // Add communication policy data
       selectedCommunicationPolicy: selectedPolicy || undefined,
@@ -787,15 +827,10 @@ export default function DefineCommunicationStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="SMS Route *"
-                options={[
-                  { value: "", label: "Select SMS Route" },
-                  ...(smsRoutes || [])
-                    .filter((route) => route.is_active)
-                    .map((route) => ({
-                      value: route.id.toString(),
-                      label: route.name,
-                    })),
-                ]}
+                options={(smsRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={smsRoute}
                 onChange={(value) => {
                   setSmsRoute(value);
@@ -815,13 +850,10 @@ export default function DefineCommunicationStep({
             <div className="flex-1">
               <HeadlessSelect
                 label="Email Route *"
-                options={[
-                  { value: "", label: "Select Email Route" },
-                  ...(emailRoutes || []).map((route: any) => ({
-                    value: route.id.toString(),
-                    label: route.name,
-                  })),
-                ]}
+                options={(emailRoutes || []).map((route) => ({
+                  value: route.id.toString(),
+                  label: route.name,
+                }))}
                 value={emailRoute}
                 onChange={(value) => {
                   setEmailRoute(value);
@@ -838,130 +870,69 @@ export default function DefineCommunicationStep({
         </div>
 
         {/* Communication Policy */}
-        <div className="mb-6">
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-            Communication Policy
-          </label>
-          <div className="relative" ref={policyDropdownRef}>
+        <HeadlessSelect
+          label="Communication Policy"
+          options={[
+            { value: "", label: "No Policy" },
+            ...(communicationPolicies && Array.isArray(communicationPolicies)
+              ? communicationPolicies
+                  .filter((policy) => policy && policy.is_active !== false)
+                  .map((policy) => ({
+                    value: policy.id.toString(),
+                    label: policy.name,
+                  }))
+              : []),
+          ]}
+          value={selectedPolicy?.id.toString() || ""}
+          onChange={(value) => {
+            if (value === "") {
+              setSelectedPolicy(null);
+              onUpdate({
+                selectedCommunicationPolicy: undefined,
+                selectedCommunicationPolicyId: undefined,
+              });
+            } else {
+              const policy = communicationPolicies?.find(
+                (p) => p?.id.toString() === value,
+              );
+              if (policy) {
+                setSelectedPolicy(policy);
+                onUpdate({
+                  selectedCommunicationPolicy: policy,
+                  selectedCommunicationPolicyId: policy.id,
+                });
+              }
+            }
+          }}
+          placeholder="Choose a communication policy (optional)"
+          zIndex={zIndex.popover}
+        />
+
+        {/* Customization Toggle */}
+        {selectedPolicy && (
+          <div
+            className={`flex items-center justify-between px-3 py-2 mt-4 rounded-md border`}
+            style={{
+              backgroundColor: color.surface.background,
+              borderColor: color.border.default,
+            }}
+          >
+            <span
+              className={`text-xs ${tw.textSecondary} flex items-center gap-2`}
+            >
+              <Settings className="w-3 h-3" />
+              Want to modify this policy?
+            </span>
             <button
               type="button"
-              onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
-              className={`${
-                components.input.default
-              } w-full px-3 py-2 text-left flex items-center justify-between ${
-                selectedPolicy ? "" : "text-gray-500"
-              }`}
+              onClick={() => handleCustomizePolicy(selectedPolicy)}
+              style={getButtonStyles(button.action)}
             >
-              <span className="text-sm">
-                {selectedPolicy
-                  ? selectedPolicy.name
-                  : "Choose a communication policy (optional)"}
-              </span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  isPolicyDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
+              <Settings className="w-3 h-3" />
+              Customize
             </button>
-
-            {isPolicyDropdownOpen && (
-              <div
-                className={`absolute z-50 w-full mt-1 bg-white border ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
-                style={{ borderColor: color.border.default }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPolicy(null);
-                    setIsPolicyDropdownOpen(false);
-                    onUpdate({
-                      selectedCommunicationPolicy: undefined,
-                      selectedCommunicationPolicyId: undefined,
-                    });
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
-                  style={{ borderColor: color.border.default }}
-                >
-                  <div className={`text-sm font-medium ${tw.textPrimary}`}>
-                    No Policy
-                  </div>
-                  <div className={`text-xs ${tw.textSecondary}`}>
-                    Broadcast will use default communication settings
-                  </div>
-                </button>
-
-                <div className="max-h-48 overflow-y-auto">
-                  {communicationPolicies && Array.isArray(communicationPolicies) ? (
-                    (() => {
-                      const activePolicies = communicationPolicies.filter(
-                        (policy) => policy && policy.is_active !== false
-                      );
-                      if (!activePolicies || activePolicies.length === 0) {
-                        return null;
-                      }
-                      return activePolicies.map((policy) => (
-                        <button
-                          key={policy.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedPolicy(policy);
-                            setIsPolicyDropdownOpen(false);
-                            onUpdate({
-                              selectedCommunicationPolicy: policy,
-                              selectedCommunicationPolicyId: policy.id,
-                            });
-                          }}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
-                            selectedPolicy?.id === policy.id ? "bg-blue-50" : ""
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <div
-                              className={`text-sm font-medium ${tw.textPrimary}`}
-                            >
-                              {policy.name}
-                            </div>
-                          </div>
-                          {policy.description && (
-                            <div className={`text-xs ${tw.textSecondary} ml-4`}>
-                              {policy.description}
-                            </div>
-                          )}
-                        </button>
-                      ));
-                    })()
-                  ) : null}
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Customization Toggle */}
-          {selectedPolicy && (
-            <div
-              className={`flex items-center justify-between px-3 py-2 mt-2 rounded-md border`}
-              style={{
-                backgroundColor: color.surface.background,
-                borderColor: color.border.default,
-              }}
-            >
-              <span
-                className={`text-xs ${tw.textSecondary} flex items-center gap-2`}
-              >
-                <Settings className="w-3 h-3" />
-                Want to modify this policy?
-              </span>
-              <button
-                type="button"
-                onClick={() => handleCustomizePolicy(selectedPolicy)}
-                style={getButtonStyles(button.action)}
-              >
-                <Settings className="w-3 h-3" />
-                Customize
-              </button>
-            </div>
-          )}
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left Column - Message Editor (3/5) */}
@@ -1021,6 +992,7 @@ export default function DefineCommunicationStep({
                     isOpen={showVariableSelector}
                     onClose={() => setShowVariableSelector(false)}
                     onVariableSelect={handleVariableSelect}
+                    quicklistColumns={quicklistColumns}
                   />
                 </div>
               </div>

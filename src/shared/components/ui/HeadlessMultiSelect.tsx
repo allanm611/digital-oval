@@ -38,8 +38,9 @@ export default function HeadlessMultiSelect({
 }: HeadlessMultiSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
+  const valueKeys = new Set(value.map((v) => String(v)));
   const selectedOptions = options.filter((option) =>
-    value.includes(option.value),
+    valueKeys.has(String(option.value)),
   );
 
   const filteredOptions = searchable
@@ -49,7 +50,8 @@ export default function HeadlessMultiSelect({
     : options;
 
   const handleRemove = (optionValue: string | number) => {
-    onChange(value.filter((v) => v !== optionValue));
+    const removeKey = String(optionValue);
+    onChange(value.filter((v) => String(v) !== removeKey));
   };
 
   const displayText = () => {

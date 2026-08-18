@@ -418,7 +418,7 @@ export default function CommunicationAnalyticsPage() {
 
                 {/* Executions Pagination */}
                 {executions.length > itemsPerPage && (
-                  <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200">
+                  <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t" style={{ borderColor: 'var(--c-border-default)' }}>
                     <div className="text-sm text-gray-700">
                       Showing {(executionsPage - 1) * itemsPerPage + 1} to{" "}
                       {Math.min(
@@ -574,7 +574,7 @@ export default function CommunicationAnalyticsPage() {
 
                 {/* Logs Pagination */}
                 {logs.length > itemsPerPage && (
-                  <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200">
+                  <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t" style={{ borderColor: 'var(--c-border-default)' }}>
                     <div className="text-sm text-gray-700">
                       Showing {(logsPage - 1) * itemsPerPage + 1} to{" "}
                       {Math.min(logsPage * itemsPerPage, logs.length)} of{" "}

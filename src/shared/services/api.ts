@@ -37,6 +37,8 @@ export const API_CONFIG = {
     SEGMENTS: "/segments",
     OFFER_PRODUCTS: "/offer-products",
     OFFER_CREATIVES: "/offer-creatives",
+    OFFER_TRACKING_SOURCES: "/offer-tracking-sources",
+    TRACKING_SOURCES: "/tracking-sources",
     NOTIFICATIONS: "/notifications",
     DOCUMENTATION: "/documentation",
     HEALTH: "/playwright-health",
@@ -71,12 +73,6 @@ export const getAuthHeaders = (includeContentType: boolean = true) => {
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-  } else {
-    console.warn(
-      " WARNING: No auth token found in localStorage. Request will be sent without Authorization header."
-    );
-    console.warn(" Checked keys: 'authToken' and 'auth_token'");
-    console.warn(" Please ensure you are logged in.");
   }
 
   return headers;

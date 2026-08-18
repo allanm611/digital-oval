@@ -58,7 +58,7 @@ export default function CreateCampaignTypeModal({
       }
     } catch (err) {
       console.error("Failed to create campaign type:", err);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsCreating(false);
     }

@@ -29,8 +29,8 @@ export default function SMSRouteCreateModal({
   const [formData, setFormData] = useState<CreateSMSRouteRequest>({
     name: "",
     description: "",
+    configuration_id: undefined,
     gateway_provider: undefined,
-    communication_channel: undefined,
     is_active: true,
   });
 
@@ -45,16 +45,17 @@ export default function SMSRouteCreateModal({
       setFormData({
         name: editingRoute.name || "",
         description: editingRoute.description || "",
+        configuration_id: editingRoute.configuration_id ?? undefined,
         gateway_provider: editingRoute.gateway_provider,
-        communication_channel: editingRoute.communication_channel,
+        communication_channel_id: editingRoute.communication_channel_id ?? undefined,
         is_active: editingRoute.is_active,
       });
     } else {
       setFormData({
         name: "",
         description: "",
+        configuration_id: undefined,
         gateway_provider: undefined,
-        communication_channel: undefined,
         is_active: true,
       });
     }
@@ -68,12 +69,9 @@ export default function SMSRouteCreateModal({
     if (!formData.name.trim()) {
       newErrors.name = "Route name is required";
     }
-    if (!formData.gateway_provider) {
-      newErrors.gateway_provider = "Gateway provider is required";
+    if (!formData.configuration_id && !formData.gateway_provider) {
+      newErrors.gateway_provider = "Gateway configuration or provider is required";
     }
-    // if (!formData.communication_channel) {
-    //   newErrors.communication_channel = "Communication channel is required";
-    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -109,7 +107,7 @@ export default function SMSRouteCreateModal({
         err instanceof Error
           ? err.message
           : `Failed to ${isEditMode ? "update" : "create"} route`;
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setLoading(false);
     }

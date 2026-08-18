@@ -29,6 +29,8 @@ import {
   DATABASE_TYPE_OPTIONS,
 } from "../constants/connectionTypes";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import {
   APIConfig,
   JDBCConfig,
@@ -39,8 +41,7 @@ import {
   SMSInboxConfig,
   SFTPConfig,
   FTPConfig,
-  ConfigComponentProps,
-} from "../../../shared/components/ConnectorConfigComponents";
+} from "../../../shared/components/ConnectorConfigs";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 
 interface ConnectionProfileFormPageProps {
@@ -74,6 +75,9 @@ export default function ConnectionProfileFormPage({
   const { success, error: showError } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
@@ -126,6 +130,17 @@ export default function ConnectionProfileFormPage({
   const togglePasswordVisibility = useCallback((field: string) => {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   }, []);
+
+  const patchConfiguration = useCallback((updates: Record<string, unknown>) => {
+    setFormData((prev) => ({
+      ...prev,
+      configuration: { ...(prev.configuration || {}), ...updates },
+    }));
+  }, []);
+
+  const updateConfiguration = useCallback((key: string, value: unknown) => {
+    patchConfiguration({ [key]: value });
+  }, [patchConfiguration]);
 
   const handleProfileCodeChange = useCallback((val: string) => {
     const alphanumericOnly = val.replace(/[^a-zA-Z0-9]/g, "");
@@ -212,7 +227,44 @@ export default function ConnectionProfileFormPage({
       }
     } else if (formData.connection_type === "api" || formData.connection_type === "webhook") {
       if (!config.base_url?.trim()) {
-        newErrors.base_url = "Base URL is required";
+        newErrors.base_url = "Request URL is required";
+      } else {
+        const rawUrl = String(config.base_url).trim();
+        const hasTemplateVars = /\{\{[^}]+\}\}/.test(rawUrl);
+        if (!hasTemplateVars) {
+          try {
+            const url = new URL(rawUrl);
+            if (url.protocol !== "http:" && url.protocol !== "https:") {
+              newErrors.base_url = "URL must start with http:// or https://";
+            }
+          } catch {
+            newErrors.base_url = "Enter a valid request URL";
+          }
+        } else if (!/^https?:\/\//i.test(rawUrl.replace(/\{\{[^}]+\}\}/g, "placeholder"))) {
+          // Allow Postman-style {{vars}} but still require an http(s) scheme shape
+          if (!/^https?:\/\//i.test(rawUrl) && !rawUrl.startsWith("{{")) {
+            newErrors.base_url = "URL must start with http://, https://, or a {{variable}}";
+          }
+        }
+      }
+      if (!config.method) {
+        newErrors.method = "HTTP method is required";
+      }
+      if (config.auth_type === "basic") {
+        const auth = (config.auth_config || {}) as Record<string, string>;
+        if (!(auth.username || config.username)?.toString().trim()) {
+          newErrors.auth = "Basic Auth username is required";
+        }
+      } else if (config.auth_type === "bearer") {
+        const auth = (config.auth_config || {}) as Record<string, string>;
+        if (!(auth.token || config.bearer_token || config.password)?.toString().trim()) {
+          newErrors.auth = "Bearer token is required";
+        }
+      } else if (config.auth_type === "api_key") {
+        const auth = (config.auth_config || {}) as Record<string, string>;
+        if (!(auth.api_key || config.api_key)?.toString().trim()) {
+          newErrors.auth = "API key value is required";
+        }
       }
     } else if (formData.connection_type === "kafka") {
       if (!config.brokers || (Array.isArray(config.brokers) && config.brokers.length === 0)) {
@@ -309,7 +361,7 @@ export default function ConnectionProfileFormPage({
       });
     } catch (err) {
       console.error("Failed to load connection profile:", err);
-      showError("Unable to Load Profile", extractBackendError(error, "Unable to Load Profile. Please try again."));
+      showError("Unable to Load Profile", extractBackendError(err, "Unable to Load Profile. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -565,15 +617,15 @@ export default function ConnectionProfileFormPage({
         />
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Basic Information
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField error={errors?.profile_name} ref={registerFieldRef('profile_name')}>
               <Input
                 label="Profile Name*"
                 placeholder="Profile name"
@@ -584,11 +636,8 @@ export default function ConnectionProfileFormPage({
                 }}
                 hasError={!!errors.profile_name}
               />
-              {errors.profile_name && (
-                <p className="text-sm text-red-500 mt-1">{errors.profile_name}</p>
-              )}
-            </div>
-            <div>
+            </FormField>
+            <FormField error={errors?.profile_code} ref={registerFieldRef('profile_code')}>
               <Input
                 label="Profile Code*"
                 placeholder="Profile code (letters and numbers only)"
@@ -599,17 +648,14 @@ export default function ConnectionProfileFormPage({
                 }}
                 hasError={!!errors.profile_code}
               />
-              {errors.profile_code && (
-                <p className="text-sm text-red-500 mt-1">{errors.profile_code}</p>
-              )}
-            </div>
+            </FormField>
             <div>
               {loadingConnectorTypes ? (
                 <div className="text-sm text-gray-500 py-2">
                   Loading connection types...
                 </div>
               ) : (
-                <>
+                <FormField error={errors?.connection_type} ref={registerFieldRef('connection_type')}>
                   <HeadlessSelect
                     label="Connection Type *"
                     options={connectorTypes.map((type) => ({
@@ -625,8 +671,11 @@ export default function ConnectionProfileFormPage({
                         newConfig.database_type = newConfig.database_type || "mysql";
                         newConfig.port = newConfig.port || 3306;
                       } else if (value === "api" || value === "webhook") {
+                        newConfig.method = newConfig.method || "GET";
                         newConfig.content_type = newConfig.content_type || "JSON";
-                        newConfig.method = newConfig.method || "POST";
+                        newConfig.auth_type = newConfig.auth_type || "none";
+                        newConfig.body_mode = newConfig.body_mode || "none";
+                        newConfig.raw_language = newConfig.raw_language || "json";
                       } else if (value === "websocket") {
                         newConfig.http_path = newConfig.http_path || "/ws";
                       } else if (value === "sftp") {
@@ -651,13 +700,10 @@ export default function ConnectionProfileFormPage({
                     placeholder="Select a connection type..."
                     className="w-full"
                   />
-                  {errors.connection_type && (
-                    <p className="text-sm text-red-500 mt-1">{errors.connection_type}</p>
-                  )}
-                </>
+                </FormField>
               )}
             </div>
-            <div>
+            <FormField error={errors?.environment} ref={registerFieldRef('environment')}>
               <HeadlessSelect
                 label="Environment *"
                 options={[
@@ -676,11 +722,8 @@ export default function ConnectionProfileFormPage({
                 }}
                 className="w-full"
               />
-              {errors.environment && (
-                <p className="text-sm text-red-500 mt-1">{errors.environment}</p>
-              )}
-            </div>
-            <div>
+            </FormField>
+            <FormField error={errors?.load_strategy} ref={registerFieldRef('load_strategy')}>
               {/* <p className="text-xs text-gray-500 mb-2">
                 How new data is brought in.
               </p> */}
@@ -705,10 +748,7 @@ export default function ConnectionProfileFormPage({
                 }}
                 className="w-full"
               />
-              {errors.load_strategy && (
-                <p className="text-sm text-red-500 mt-1">{errors.load_strategy}</p>
-              )}
-            </div>
+            </FormField>
             <div>
               {/* <p className="text-xs text-gray-500 mb-2">
                 Select the server endpoint for this connection.
@@ -771,11 +811,13 @@ export default function ConnectionProfileFormPage({
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
             {/* Configuration Validation Errors */}
-            {(errors.database_type || errors.jdbc_connection || errors.base_url || errors.brokers || errors.topic_name || errors.sftp_host || errors.sftp_username || errors.sftp_auth || errors.ftp_host || errors.ftp_username || errors.ftp_password) && (
+            {(errors.database_type || errors.jdbc_connection || errors.base_url || errors.method || errors.auth || errors.brokers || errors.topic_name || errors.sftp_host || errors.sftp_username || errors.sftp_auth || errors.ftp_host || errors.ftp_username || errors.ftp_password) && (
               <div className="mb-4 space-y-1">
                 {errors.database_type && <p className="text-sm text-red-500">{errors.database_type}</p>}
                 {errors.jdbc_connection && <p className="text-sm text-red-500">{errors.jdbc_connection}</p>}
                 {errors.base_url && <p className="text-sm text-red-500">{errors.base_url}</p>}
+                {errors.method && <p className="text-sm text-red-500">{errors.method}</p>}
+                {errors.auth && <p className="text-sm text-red-500">{errors.auth}</p>}
                 {errors.brokers && <p className="text-sm text-red-500">{errors.brokers}</p>}
                 {errors.topic_name && <p className="text-sm text-red-500">{errors.topic_name}</p>}
                 {errors.sftp_host && <p className="text-sm text-red-500">{errors.sftp_host}</p>}
@@ -790,14 +832,20 @@ export default function ConnectionProfileFormPage({
               <APIConfig
                 config={{
                   content_type: "JSON",
-                  method: "POST",
+                  method: "GET",
+                  auth_type: "none",
+                  body_mode: "none",
                   ...(formData.configuration || {}),
                 }}
-                updateConfiguration={(key, value) =>
-                  setFormData({
-                    ...formData,
-                    configuration: { ...(formData.configuration || {}), [key]: value },
-                  })
+                updateConfiguration={updateConfiguration}
+                patchConfiguration={patchConfiguration}
+                hydrateKey={
+                  mode === "edit"
+                    ? `edit-${id}-${loading ? "loading" : "ready"}`
+                    : `create-${formData.connection_type}`
+                }
+                profileId={
+                  mode === "edit" && id ? Number(id) : undefined
                 }
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}
@@ -884,13 +932,19 @@ export default function ConnectionProfileFormPage({
                 config={{
                   content_type: "JSON",
                   method: "POST",
+                  auth_type: "none",
+                  body_mode: "raw",
                   ...(formData.configuration || {}),
                 }}
-                updateConfiguration={(key, value) =>
-                  setFormData({
-                    ...formData,
-                    configuration: { ...(formData.configuration || {}), [key]: value },
-                  })
+                updateConfiguration={updateConfiguration}
+                patchConfiguration={patchConfiguration}
+                hydrateKey={
+                  mode === "edit"
+                    ? `edit-webhook-${id}-${loading ? "loading" : "ready"}`
+                    : `create-webhook`
+                }
+                profileId={
+                  mode === "edit" && id ? Number(id) : undefined
                 }
                 showPasswords={showPasswords}
                 togglePasswordVisibility={togglePasswordVisibility}
@@ -947,7 +1001,7 @@ export default function ConnectionProfileFormPage({
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Performance Settings
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Input
                 label="Records Per Batch*"
@@ -1125,7 +1179,7 @@ export default function ConnectionProfileFormPage({
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Data Governance
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <HeadlessSelect
                 label="Data Classification *"
@@ -1150,7 +1204,7 @@ export default function ConnectionProfileFormPage({
                 <p className="text-sm text-red-500 mt-1">{errors.data_classification}</p>
               )}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() =>
                 setFormData({
                   ...formData,
@@ -1238,7 +1292,7 @@ export default function ConnectionProfileFormPage({
             <p className="text-xs text-gray-500 mb-4">
               Configure incremental sync settings for detecting changes.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Input
                   label="Sync Column Name"
@@ -1339,7 +1393,7 @@ export default function ConnectionProfileFormPage({
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Advanced Settings
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Input
                 label="Encryption Key Version"

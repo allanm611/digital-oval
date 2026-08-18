@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Mail, Trash2, Eye, X } from "lucide-react";
+import { Plus, Mail, Trash2, Eye, X, Edit } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -20,6 +20,7 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Types
 export interface SeedListRecipient {
@@ -149,54 +150,57 @@ export default function SeedListManagementPage() {
   const [isLoadingListMembers, setIsLoadingListMembers] = useState(false);
   const [memberToRemoveFromList, setMemberToRemoveFromList] = useState<SeedListRecipient | null>(null);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
+  const [showColumnPicker, setShowColumnPicker] = useState<"recipients" | "lists" | null>(null);
 
   const recipientTableColumns: TableColumn<RecipientTableRow>[] = [
     {
       id: "name",
       label: "Name",
       visible: true,
-      render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm`}>
-          {row.name}
-        </div>
-      ),
+      sortable: true,
+      filterConfig: { type: 'text' },
     },
     {
       id: "email",
       label: "Email",
       visible: true,
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.email || "-"}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "seedList",
       label: "Seed List",
       visible: true,
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.seedList || "-"}</span>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (_, row) => (
-        <span className="text-sm text-black">{row.status}</span>
-      ),
+      filterConfig: { type: 'select', options: ['active', 'inactive'] },
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => {
         if (!row._full) return null;
         return (
           <div className="flex items-center justify-center gap-2">
             <button
+              onClick={() => navigate(`/dashboard/user-management/${row._full.customer_id}`)}
+              disabled={row._full.customer_id === 0}
+              className={`p-0 ${tw.rounded} transition-colors ${
+                row._full.customer_id === 0 ? "opacity-50 cursor-not-allowed" : "icon-edit"
+              }`}
+              title={row._full.customer_id === 0 ? "External customer - no details page" : "View customer details"}
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => handleRemoveRecipient(row._full)}
-              className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+              className={`p-0 icon-delete ${tw.rounded} transition-colors`}
               title={row._full.status === "active" ? "Remove from Seed List" : "Delete from Seed List"}
             >
               <Trash2 className="w-4 h-4" />
@@ -212,6 +216,8 @@ export default function SeedListManagementPage() {
       id: "name",
       label: "List Name",
       visible: true,
+      sortable: true,
+      filterConfig: { type: 'text' },
       render: (_, row) => (
         <button
           onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
@@ -225,16 +231,13 @@ export default function SeedListManagementPage() {
       id: "description",
       label: "Description",
       visible: true,
-      render: (_, row) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-          {row.description || "No description"}
-        </div>
-      ),
+      filterConfig: { type: 'text' },
     },
     {
       id: "recipients",
       label: "Recipients",
       visible: true,
+      filterConfig: { type: 'number' },
       render: (_, row) => (
         <button
           onClick={() => handleOpenListMembersModal({ id: row.id, name: row.name })}
@@ -250,11 +253,22 @@ export default function SeedListManagementPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center gap-2">
           <button
+            onClick={() => {
+              setEditingList(row._full);
+              setIsCreateListModalOpen(true);
+            }}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+            title="Edit seed list"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => navigate(`/dashboard/seed-list-management/${row.id}`)}
-            className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
             title="View details"
           >
             <Eye className="w-4 h-4" />
@@ -266,7 +280,7 @@ export default function SeedListManagementPage() {
                 name: row.name,
               })
             }
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
             title="Delete seed list"
           >
             <Trash2 className="w-4 h-4" />
@@ -283,6 +297,9 @@ export default function SeedListManagementPage() {
     handlePageChange: recipientHandlePageChange,
     sortConfigs: recipientSortConfigs,
     handleSort: recipientHandleSort,
+    toggleColumn: toggleRecipientColumn,
+    reorderColumns: reorderRecipientColumns,
+    resetToDefaults: resetRecipientDefaults,
   } = useTable({
     tableId: "seed-list-recipients-table",
     defaultColumns: recipientTableColumns,
@@ -297,6 +314,9 @@ export default function SeedListManagementPage() {
     handlePageChange: seedListHandlePageChange,
     sortConfigs: seedListSortConfigs,
     handleSort: seedListHandleSort,
+    toggleColumn: toggleSeedListColumn,
+    reorderColumns: reorderSeedListColumns,
+    resetToDefaults: resetSeedListDefaults,
   } = useTable({
     tableId: "seed-lists-table",
     defaultColumns: seedListTableColumns,
@@ -380,7 +400,7 @@ export default function SeedListManagementPage() {
       setRecipients(allMembers);
     } catch (error) {
       console.error("Failed to load members:", error);
-      showError("Unable to Load Members", extractBackendError(error, "Failed to load seed list members. Please try again later."));
+      showError("Unable to Load Members", extractBackendError(err, "Failed to load seed list members. Please try again later."));
     } finally {
       setLoading(false);
     }
@@ -436,7 +456,7 @@ export default function SeedListManagementPage() {
       );
     } catch (error) {
       console.error("Failed to load seed lists:", error);
-      showError("Unable to Load Seed Lists", extractBackendError(error, "Failed to load seed lists. Please try again later."));
+      showError("Unable to Load Seed Lists", extractBackendError(err, "Failed to load seed lists. Please try again later."));
       setSeedLists([]);
     }
   };
@@ -515,7 +535,7 @@ export default function SeedListManagementPage() {
       showToast("Recipient removed successfully");
     } catch (error) {
       console.error("Failed to remove recipient:", error);
-      showError(extractBackendError(error, "Failed to remove recipient. Please try again."));
+      showError(extractBackendError(err, "Failed to remove recipient. Please try again."));
     } finally {
       setIsRemovingRecipient(false);
       setRecipientToRemove(null);
@@ -550,7 +570,7 @@ export default function SeedListManagementPage() {
       }
     } catch (error) {
       console.error("Failed to load list members:", error);
-      showError(extractBackendError(error, "Failed to load list members. Please try again."));
+      showError(extractBackendError(err, "Failed to load list members. Please try again."));
       setListMembers([]);
     } finally {
       setIsLoadingListMembers(false);
@@ -601,35 +621,48 @@ export default function SeedListManagementPage() {
       showToast("Member removed successfully");
     } catch (error) {
       console.error("Failed to remove member:", error);
-      showError(extractBackendError(error, "Failed to remove member. Please try again."));
+      showError(extractBackendError(err, "Failed to remove member. Please try again."));
     } finally {
       setIsRemovingMember(false);
       setMemberToRemoveFromList(null);
     }
   }, [memberToRemoveFromList, selectedListForMembers, listMembers, showToast, showError]);
 
+  const [editingList, setEditingList] = useState<SeedListTableRow | null>(null);
+
   const handleSaveTestList = async (data: { name: string; description?: string }) => {
     setIsCreatingList(true);
     try {
-      const newList = await seedListService.create({
-        name: data.name,
-        description: data.description,
-      });
-      setSeedLists([
-        ...seedLists,
-        {
-          id: newList.id,
-          name: newList.name,
-          description: newList.description,
-        },
-      ]);
-      showToast("Seed list created successfully");
+      if (editingList) {
+        await seedListService.update(editingList.id as number, data);
+        setSeedLists((prev) =>
+          prev.map((list) =>
+            list.id === editingList.id ? { ...list, ...data } : list
+          )
+        );
+        showToast("Seed list updated successfully");
+      } else {
+        const newList = await seedListService.create({
+          name: data.name,
+          description: data.description,
+        });
+        setSeedLists([
+          ...seedLists,
+          {
+            id: newList.id,
+            name: newList.name,
+            description: newList.description,
+          },
+        ]);
+        showToast("Seed list created successfully");
+      }
       setIsCreateListModalOpen(false);
     } catch (error) {
-      console.error("Failed to create seed list:", error);
-      showError(extractBackendError(error, "Failed to create seed list. Please try again."));
+      console.error(editingList ? "Failed to update seed list:" : "Failed to create seed list:", error);
+      showError(extractBackendError(error, editingList ? "Failed to update seed list. Please try again." : "Failed to create seed list. Please try again."));
     } finally {
       setIsCreatingList(false);
+      setEditingList(null);
     }
   };
 
@@ -666,7 +699,7 @@ export default function SeedListManagementPage() {
       showToast("Seed list deleted successfully");
     } catch (error) {
       console.error("Failed to delete seed list:", error);
-      showError(extractBackendError(error, "Failed to delete seed list. Please try again."));
+      showError(extractBackendError(err, "Failed to delete seed list. Please try again."));
     } finally {
       setIsDeletingList(false);
       setListToDelete(null);
@@ -837,7 +870,7 @@ export default function SeedListManagementPage() {
       handleCloseModal();
     } catch (error) {
       console.error("Failed to add recipient:", error);
-      showError(extractBackendError(error, "Failed to add recipient. Please try again."));
+      showError(extractBackendError(err, "Failed to add recipient. Please try again."));
     } finally {
       setIsAddingRecipient(false);
     }
@@ -1064,6 +1097,8 @@ export default function SeedListManagementPage() {
               onPageChange={recipientHandlePageChange}
               onSort={recipientHandleSort}
               sortConfigs={recipientSortConfigs}
+              onHideColumn={toggleRecipientColumn}
+              onManageColumnsClick={() => setShowColumnPicker("recipients")}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -1116,6 +1151,8 @@ export default function SeedListManagementPage() {
                 onPageChange={seedListHandlePageChange}
                 onSort={seedListHandleSort}
                 sortConfigs={seedListSortConfigs}
+                onHideColumn={toggleSeedListColumn}
+                onManageColumnsClick={() => setShowColumnPicker("lists")}
                 style={{
                   headerBackground: color.surface.tableHeader,
                   headerTextColor: color.surface.tableHeaderText,
@@ -1188,7 +1225,7 @@ export default function SeedListManagementPage() {
               </div>
 
               {/* Form Fields */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Existing User Mode */}
                 {formData.mode === "existing_user" && (
                   <>
@@ -1205,13 +1242,12 @@ export default function SeedListManagementPage() {
                             }
                           }}
                           options={[
-                            { value: "", label: "Select a user" },
                             ...systemUsers.map((user) => ({
                               value: user.id.toString(),
                               label: `${user.first_name} ${user.last_name}${user.department ? ` (${user.department})` : ""}`,
                             })),
                           ]}
-                          placeholder="Select user..."
+                          placeholder="Select a user"
                           disabled={loadingUsers}
                         />
                       </div>
@@ -1325,13 +1361,12 @@ export default function SeedListManagementPage() {
                         }
                       }}
                       options={[
-                        { value: "", label: "Select a seed list" },
                         ...seedLists.map((list) => ({
                           value: list.id.toString(),
                           label: list.name,
                         })),
                       ]}
-                      placeholder="Select seed list..."
+                      placeholder="Select a seed list"
                       zIndex={zIndex.popover}
                     />
                   </div>
@@ -1352,7 +1387,6 @@ export default function SeedListManagementPage() {
                     // }
                   }}
                   options={[
-                    { value: "", label: "Select Line of Business" },
                     ...linesOfBusiness.map((lob) => ({
                       value: lob.id.toString(),
                       label: lob.name,
@@ -1431,10 +1465,14 @@ export default function SeedListManagementPage() {
       {/* Create Test List Modal */}
       <CreateTestListModal
         isOpen={isCreateListModalOpen}
-        onClose={() => setIsCreateListModalOpen(false)}
+        onClose={() => {
+          setIsCreateListModalOpen(false);
+          setEditingList(null);
+        }}
         onSubmit={handleSaveTestList}
         isLoading={isCreatingList}
-        mode="create"
+        mode={editingList ? "edit" : "create"}
+        initialData={editingList ? { name: editingList.name, description: editingList.description } : undefined}
       />
 
       {/* List Members Modal */}
@@ -1506,7 +1544,7 @@ export default function SeedListManagementPage() {
                                     onClick={() => {
                                       navigate(`/dashboard/user-management/${member.customer_id}`);
                                     }}
-                                    className={`p-2 icon-edit ${tw.rounded} transition-colors`}
+                                    className={`p-0 icon-edit ${tw.rounded} transition-colors`}
                                     title="View user details"
                                   >
                                     <Eye className="w-4 h-4" style={{ color: "inherit" }} />
@@ -1545,6 +1583,40 @@ export default function SeedListManagementPage() {
           isLoading={isRemovingMember}
           confirmText="Remove"
           cancelText="Cancel"
+        />
+      )}
+
+      {showColumnPicker === "recipients" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={recipientColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleRecipientColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = recipientColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderRecipientColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetRecipientDefaults}
+        />
+      )}
+
+      {showColumnPicker === "lists" && (
+        <ColumnPickerModal
+          isOpen={true}
+          columns={seedListColumns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+          onClose={() => setShowColumnPicker(null)}
+          onToggleColumn={toggleSeedListColumn}
+          onReorderColumns={(reorderedCols) => {
+            const updatedColumns = seedListColumns.map((col) => {
+              const reordered = reorderedCols.find((c) => c.id === col.id);
+              return reordered ? { ...col, visible: reordered.visible } : col;
+            });
+            reorderSeedListColumns(updatedColumns);
+          }}
+          onResetToDefaults={resetSeedListDefaults}
         />
       )}
     </div>

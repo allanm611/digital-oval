@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect, MouseEvent } from "react";
-import { ChevronDown, ArrowUp, ArrowDown, MoreVertical, Filter, Search, Settings, Eye, EyeOff, X } from "lucide-react";
+import { ChevronDown, ArrowUp, ArrowDown, MoreVertical, Filter, Settings, Eye, EyeOff, X, ChevronRight } from "lucide-react";
 import { TableProps, TableColumn, SortConfig } from "./types";
 import { tw, color } from "../../utils/utils";
 import { buttons } from "../../utils/tokens";
@@ -8,6 +8,7 @@ import Checkbox from "../ui/Checkbox";
 import Radio from "../ui/Radio";
 import Input from "../ui/Input";
 import HeadlessSelect from "../ui/HeadlessSelect";
+import { FilterBuilder } from "./FilterBuilder";
 import { createPortal } from "react-dom";
 
 export function Table<T extends { id?: number | string } = any>({
@@ -54,13 +55,17 @@ export function Table<T extends { id?: number | string } = any>({
   const [resizingColumn, setResizingColumn] = useState<string | null>(null);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
-  const [columnSearches, setColumnSearches] = useState<{ [columnId: string]: string }>({});
-  const [searchingColumn, setSearchingColumn] = useState<string | null>(null);
   const [columnFilters, setColumnFilters] = useState<{ [columnId: string]: any }>({});
-  const [filteringColumn, setFilteringColumn] = useState<string | null>(null);
+  const [isFilterBuilderOpen, setIsFilterBuilderOpen] = useState(false);
+  const [filterFromColumnId, setFilterFromColumnId] = useState<string | null>(null);
+  const [autoSizedOnce, setAutoSizedOnce] = useState(false);
+  const [hasHorizontalOverflow, setHasHorizontalOverflow] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const [isAtEnd, setIsAtEnd] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const tableRef = useRef<HTMLDivElement | null>(null);
+  const headersRef = useRef<{ [key: string]: HTMLElement | null }>({});
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -110,13 +115,43 @@ export function Table<T extends { id?: number | string } = any>({
   // Clear filters when clearFiltersKey changes
   useEffect(() => {
     setColumnFilters({});
-    setColumnSearches({});
   }, [clearFiltersKey]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     onPageChange?.(1);
-  }, [columnFilters, columnSearches, onPageChange]);
+  }, [columnFilters, onPageChange]);
+
+  // Detect horizontal overflow and scroll position
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (tableRef.current) {
+        const hasOverflow = tableRef.current.scrollWidth > tableRef.current.clientWidth;
+        setHasHorizontalOverflow(hasOverflow);
+
+        // Check if at end
+        const scrollLeft = tableRef.current.scrollLeft;
+        const clientWidth = tableRef.current.clientWidth;
+        const scrollWidth = tableRef.current.scrollWidth;
+        const atEnd = scrollLeft + clientWidth >= scrollWidth - 1; // -1 for rounding
+        setIsAtEnd(atEnd);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+
+    // Listen for scroll events
+    const tableElement = tableRef.current;
+    if (tableElement) {
+      tableElement.addEventListener('scroll', checkOverflow);
+      return () => {
+        window.removeEventListener('resize', checkOverflow);
+        tableElement.removeEventListener('scroll', checkOverflow);
+      };
+    }
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [columns, columnWidths, data]);
 
   const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
     e.preventDefault();
@@ -125,6 +160,15 @@ export function Table<T extends { id?: number | string } = any>({
       setResizingColumn(columnId);
       setStartX(e.clientX);
       setStartWidth(thElement.offsetWidth);
+    }
+  };
+
+  const handleScrollToMore = () => {
+    if (tableRef.current) {
+      tableRef.current.scrollTo({
+        left: tableRef.current.scrollWidth,
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -150,28 +194,67 @@ export function Table<T extends { id?: number | string } = any>({
     [columns],
   );
 
+  // Auto-scroll to newly visible columns
+  useEffect(() => {
+    if (tableRef.current && visibleColumns.length > 0) {
+      requestAnimationFrame(() => {
+        if (tableRef.current) {
+          // Scroll to the end to show newly added columns
+          tableRef.current.scrollLeft = tableRef.current.scrollWidth - tableRef.current.clientWidth;
+        }
+      });
+    }
+  }, [visibleColumns.map((c) => c.id).join(',')]); // Track visible column IDs
+
+
+  // Auto-size columns on first load based on content
+  useEffect(() => {
+    if (!autoSizedOnce && visibleColumns.length > 0 && data.length > 0) {
+      requestAnimationFrame(() => {
+        const newWidths: { [key: string]: number } = {};
+        const padding = 48; // px-6 = 24px on each side
+
+        visibleColumns.forEach((col) => {
+          if (headersRef.current[col.id]) {
+            const headerEl = headersRef.current[col.id];
+            const headerText = (headerEl?.textContent || col.label || '').trim();
+            const headerWidth = headerText.length * 8 + padding; // Rough estimate: ~8px per character
+
+            // Sample first few rows to estimate content width
+            let maxContentWidth = headerWidth;
+            for (let i = 0; i < Math.min(5, data.length); i++) {
+              const cellContent = col.render
+                ? col.render(data[i][col.id as keyof typeof data[i]], data[i])
+                : data[i][col.id as keyof typeof data[i]];
+
+              const text = typeof cellContent === 'string' ? cellContent : String(cellContent || '');
+              const contentWidth = Math.min(text.length * 8 + padding, 300); // Cap at 300px
+              maxContentWidth = Math.max(maxContentWidth, contentWidth);
+            }
+
+            newWidths[col.id] = Math.max(100, Math.min(maxContentWidth, 400)); // Min 100px, max 400px
+          }
+        });
+
+        if (Object.keys(newWidths).length > 0) {
+          setColumnWidths(newWidths);
+          setAutoSizedOnce(true);
+        }
+      });
+    }
+  }, [autoSizedOnce, visibleColumns, data]);
+
   // Calculate pagination
   const totalPages = Math.ceil(totalItems / pageSize);
   const currentIndex = (currentPage - 1) * pageSize;
 
-  // Apply column searches, filters, and sorting to data
+  // Apply filters and sorting to data
   const sortedData = useMemo(() => {
     let filtered = [...data];
 
-    // Apply column searches
-    Object.entries(columnSearches).forEach(([columnId, searchText]) => {
-      if (searchText.trim()) {
-        filtered = filtered.filter((row) => {
-          const value = row[columnId as keyof T];
-          const stringValue = String(value || '').toLowerCase();
-          return stringValue.includes(searchText.toLowerCase());
-        });
-      }
-    });
-
     // Apply column filters
-    Object.entries(columnFilters).forEach(([columnId, filterValue]) => {
-      if (filterValue === null || filterValue === undefined) return;
+    Object.entries(columnFilters).forEach(([columnId, filterCondition]) => {
+      if (!filterCondition || !filterCondition.operator) return;
 
       const column = columns.find(c => c.id === columnId);
       if (!column?.filterConfig) return;
@@ -179,72 +262,183 @@ export function Table<T extends { id?: number | string } = any>({
       filtered = filtered.filter((row) => {
         const value = row[columnId as keyof T];
         const filterType = column.filterConfig!.type;
+        const operator = filterCondition.operator;
+        const filterValue = filterCondition.value;
+
+        // Handle operators without values
+        if (operator === 'is empty') {
+          return value === null || value === undefined || String(value).trim() === '';
+        }
+        if (operator === 'is not empty') {
+          return value !== null && value !== undefined && String(value).trim() !== '';
+        }
 
         if (filterType === 'text') {
           const stringValue = String(value || '').toLowerCase();
-          return stringValue.includes(String(filterValue).toLowerCase());
+          const filterStr = String(filterValue || '').toLowerCase();
+
+          switch (operator) {
+            case 'contains':
+              return stringValue.includes(filterStr);
+            case 'does not contain':
+              return !stringValue.includes(filterStr);
+            case 'equals':
+              return stringValue === filterStr;
+            case 'does not equal':
+              return stringValue !== filterStr;
+            case 'starts with':
+              return stringValue.startsWith(filterStr);
+            case 'ends with':
+              return stringValue.endsWith(filterStr);
+            case 'is any of':
+              return filterStr.split(',').map(s => s.trim()).includes(stringValue);
+            default:
+              return true;
+          }
         } else if (filterType === 'number') {
           const numValue = Number(value) || 0;
-          if (filterValue && typeof filterValue === 'object' && filterValue.operator && filterValue.value !== undefined) {
-            const filterNum = Number(filterValue.value);
-            switch (filterValue.operator) {
-              case '>': return numValue > filterNum;
-              case '<': return numValue < filterNum;
-              case '>=': return numValue >= filterNum;
-              case '<=': return numValue <= filterNum;
-              case '==': return numValue === filterNum;
-              default: return true;
-            }
+          const filterNum = Number(filterValue);
+
+          switch (operator) {
+            case '=':
+              return numValue === filterNum;
+            case '!=':
+              return numValue !== filterNum;
+            case '>':
+              return numValue > filterNum;
+            case '>=':
+              return numValue >= filterNum;
+            case '<':
+              return numValue < filterNum;
+            case '<=':
+              return numValue <= filterNum;
+            case 'is any of':
+              const nums = filterStr.split(',').map(s => Number(s.trim()));
+              return nums.includes(numValue);
+            default:
+              return true;
           }
-          return true;
         } else if (filterType === 'select' || filterType === 'multiselect') {
-          if (Array.isArray(filterValue)) {
-            if (Array.isArray(value)) {
-              return filterValue.some(f => value.includes(f));
-            }
-            return filterValue.includes(value);
+          switch (operator) {
+            case 'is':
+              return value === filterValue;
+            case 'is not':
+              return value !== filterValue;
+            case 'is any of':
+              if (Array.isArray(filterValue)) {
+                return filterValue.includes(value);
+              }
+              return value === filterValue;
+            default:
+              return true;
           }
-          return value === filterValue;
         } else if (filterType === 'date') {
-          if (Array.isArray(filterValue)) {
-            const rowDate = new Date(value).getTime();
-            const [startDate, endDate] = filterValue.map(d => new Date(d).getTime());
-            return rowDate >= startDate && rowDate <= endDate;
+          switch (operator) {
+            case 'is':
+              return new Date(value).toDateString() === new Date(filterValue).toDateString();
+            case 'is not':
+              return new Date(value).toDateString() !== new Date(filterValue).toDateString();
+            case 'is after':
+              return new Date(value).getTime() > new Date(filterValue).getTime();
+            case 'is on or after':
+              return new Date(value).getTime() >= new Date(filterValue).getTime();
+            case 'is before':
+              return new Date(value).getTime() < new Date(filterValue).getTime();
+            case 'is on or before':
+              return new Date(value).getTime() <= new Date(filterValue).getTime();
+            default:
+              return true;
           }
-          return new Date(value).toDateString() === new Date(filterValue).toDateString();
         }
         return true;
       });
     });
 
-    // Apply sorting
+    // Apply sorting (non-mutating copy; empty/invalid values always sort last)
     if (sortConfigs.length === 0) return filtered;
 
-    const sorted = filtered.sort((a, b) => {
-      for (const sort of sortConfigs) {
-        const aVal = a[sort.columnId as keyof T];
-        const bVal = b[sort.columnId as keyof T];
+    const isEmptySortValue = (value: unknown) =>
+      value === null ||
+      value === undefined ||
+      (typeof value === "string" && value.trim() === "");
 
-        let comparison = 0;
-        if (aVal === null || aVal === undefined) comparison = 1;
-        else if (bVal === null || bVal === undefined) comparison = -1;
-        else if (typeof aVal === 'string' && typeof bVal === 'string') {
-          comparison = aVal.localeCompare(bVal);
-        } else if (typeof aVal === 'number' && typeof bVal === 'number') {
-          comparison = aVal - bVal;
-        } else {
-          comparison = String(aVal).localeCompare(String(bVal));
+    const toSortableTimestamp = (value: unknown): number | null => {
+      if (value instanceof Date) {
+        const time = value.getTime();
+        return Number.isNaN(time) ? null : time;
+      }
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      if (typeof value === "string" && value.trim()) {
+        const time = new Date(value).getTime();
+        return Number.isNaN(time) ? null : time;
+      }
+      return null;
+    };
+
+    const compareValues = (
+      aVal: unknown,
+      bVal: unknown,
+      column?: TableColumn<T>,
+    ): number => {
+      const aEmpty = isEmptySortValue(aVal);
+      const bEmpty = isEmptySortValue(bVal);
+      if (aEmpty && bEmpty) return 0;
+      if (aEmpty) return 1;
+      if (bEmpty) return -1;
+
+      // Date columns: chronological by timestamp (supports full ISO datetimes)
+      if (column?.filterConfig?.type === "date") {
+        const aTime = toSortableTimestamp(aVal);
+        const bTime = toSortableTimestamp(bVal);
+        if (aTime === null && bTime === null) return 0;
+        if (aTime === null) return 1;
+        if (bTime === null) return -1;
+        return aTime - bTime;
+      }
+
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return aVal - bVal;
+      }
+
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        // Prefer numeric compare when both look like numbers (e.g. "12.5%")
+        const aNum = Number(String(aVal).replace(/[%,\s]/g, ""));
+        const bNum = Number(String(bVal).replace(/[%,\s]/g, ""));
+        if (
+          Number.isFinite(aNum) &&
+          Number.isFinite(bNum) &&
+          /^-?\d/.test(String(aVal).trim()) &&
+          /^-?\d/.test(String(bVal).trim())
+        ) {
+          return aNum - bNum;
         }
+        return aVal.localeCompare(bVal, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }
 
+      return String(aVal).localeCompare(String(bVal), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    };
+
+    return [...filtered].sort((a, b) => {
+      for (const sort of sortConfigs) {
+        const column = columns.find((col) => col.id === sort.columnId);
+        const comparison = compareValues(
+          a[sort.columnId as keyof T],
+          b[sort.columnId as keyof T],
+          column,
+        );
         if (comparison !== 0) {
-          return sort.direction === 'asc' ? comparison : -comparison;
+          return sort.direction === "asc" ? comparison : -comparison;
         }
       }
       return 0;
     });
-
-    return sorted;
-  }, [data, sortConfigs, columnSearches, columnFilters, columns]);
+  }, [data, sortConfigs, columnFilters, columns]);
 
   // Notify parent of actual filtered count
   useEffect(() => {
@@ -294,28 +488,131 @@ export function Table<T extends { id?: number | string } = any>({
     );
   }
 
-  if (pageData.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-6">
-        <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>No data found</h3>
-        <p className={`${tw.textMuted} text-sm`}>Try adjusting your filters or search criteria.</p>
-      </div>
-    );
-  }
+  // Get filter display value
+  const getFilterDisplayValue = (columnId: string, filterCondition: any): string => {
+    if (!filterCondition) return '';
+
+    const operator = filterCondition.operator;
+    const value = filterCondition.value;
+
+    if (['is empty', 'is not empty'].includes(operator)) {
+      return operator;
+    }
+
+    const valueStr = Array.isArray(value) ? value.join(', ') : String(value || '');
+    return `${operator} ${valueStr}`;
+  };
+
 
   return (
     <div className="space-y-4">
-      <div
-        ref={tableRef}
-        className={`${tw.rounded} ${tableWrapperClassName}`}
-        style={{
-          maxHeight: 'min(calc(100vh - 350px), 800px)',
-          minHeight: '300px',
-          overflowY: 'auto',
-          overflowX: 'auto',
-          userSelect: resizingColumn ? 'none' : 'auto',
-        }}
-      >
+      {Object.keys(columnFilters).length > 0 && (
+        <>
+          <div className="flex flex-wrap gap-2 items-center">
+            {Object.entries(columnFilters).map(([columnId, filterValue]) => {
+            const column = columns.find(c => c.id === columnId);
+            return (
+              <div
+                key={columnId}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                style={{
+                  backgroundColor: 'var(--c-surface-cards)',
+                  border: '1px solid var(--c-text-secondary)',
+                  color: 'var(--c-text-primary)',
+                }}
+              >
+                <span>
+                  {column?.label}: {getFilterDisplayValue(columnId, filterValue)}
+                </span>
+                <button
+                  onClick={() => {
+                    setColumnFilters(prev => {
+                      const next = { ...prev };
+                      delete next[columnId];
+                      return next;
+                    });
+                  }}
+                  className="hover:opacity-70 transition-opacity ml-1"
+                  title="Remove filter"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            );
+          })}
+          <button
+            onClick={() => setColumnFilters({})}
+            className="text-sm font-medium px-3 py-1.5 rounded"
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--c-text-primary)',
+              border: '1px solid var(--c-text-secondary)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+          >
+            Clear all
+          </button>
+          </div>
+        </>
+      )}
+
+      {pageData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 px-6">
+          <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>No data found</h3>
+          <p className={`${tw.textMuted} text-sm`}>Try adjusting your filters or search criteria.</p>
+        </div>
+      ) : (
+        <div style={{ position: 'relative' }}>
+          {/* Scroll Indicator Button */}
+          {hasHorizontalOverflow && !isAtEnd && (
+            <div style={{ position: 'absolute', top: '-8px', right: '0', zIndex: 20 }}>
+              <button
+                onClick={handleScrollToMore}
+                onMouseEnter={() => setShowScrollHint(true)}
+                onMouseLeave={() => setShowScrollHint(false)}
+                className="p-2 rounded transition-all duration-200 hover:opacity-70"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: color.primary.accent,
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              {showScrollHint && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: '0',
+                    marginTop: '4px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    color: 'white',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none',
+                    zIndex: 30,
+                  }}
+                >
+                  Scroll horizontally to see more columns
+                </div>
+              )}
+            </div>
+          )}
+          <div
+            ref={tableRef}
+            className={`${tw.rounded} ${tableWrapperClassName}`}
+            style={{
+              maxHeight: 'min(calc(100vh - 350px), 800px)',
+              overflowY: 'auto',
+              overflowX: 'auto',
+              userSelect: resizingColumn ? 'none' : 'auto',
+            }}
+          >
         <table className={`w-full ${tableClassName}`} style={{ borderCollapse: "separate", borderSpacing: rowSpacing }}>
             {/* Header */}
             <thead
@@ -326,7 +623,7 @@ export function Table<T extends { id?: number | string } = any>({
               <tr>
                 {enableRowSelection && (
                   <th
-                    className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
+                    className={`px-6 py-3 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
                       headerClassName
                     } ${styleHeaderClassName}`}
                     style={{
@@ -349,14 +646,23 @@ export function Table<T extends { id?: number | string } = any>({
                 )}
                 {visibleColumns.map((col, colIndex) => {
                   const sortConfig = sortConfigs.find((s) => s.columnId === col.id);
-                  const isSortable = col.sortable !== false && col.id !== 'actions';
+                  const isSortable = col.sortable !== false && !col.isActionColumn;
                   const isLastColumn = colIndex === visibleColumns.length - 1;
+
+                  // Calculate cumulative width for sticky positioning
+                  let cumulativeWidth = enableRowSelection ? 60 : 0;
+                  for (let i = 0; i < colIndex; i++) {
+                    cumulativeWidth += columnWidths[visibleColumns[i].id] || 120;
+                  }
 
                   return (
                     <th
                       key={col.id}
-                      className={`px-6 py-4 text-left text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
-                        headerClassName
+                      ref={(el) => {
+                        if (el) headersRef.current[col.id] = el;
+                      }}
+                      className={`px-6 py-3 ${!col.headerClassName ? 'text-left' : ''} text-sm font-medium uppercase tracking-wider whitespace-nowrap group relative ${
+                        col.headerClassName || headerClassName
                       } ${styleHeaderClassName}`}
                       style={{
                         color: headerTextColor || color.surface.tableHeaderText,
@@ -368,8 +674,8 @@ export function Table<T extends { id?: number | string } = any>({
                         minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                       }}
                     >
-                      <div className="flex items-center justify-between">
-                        <span>{col.label}</span>
+                      <div className={`flex items-center ${col.isActionColumn ? 'justify-center' : 'justify-between'}`}>
+                        <span className="truncate">{col.label}</span>
 
                         {/* Sort Icon & Menu */}
                         <div className="flex items-center gap-1">
@@ -377,7 +683,11 @@ export function Table<T extends { id?: number | string } = any>({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onSort?.(col.id, false);
+                                if (sortConfig) {
+                                  onSort?.(col.id, false, sortConfig.direction === 'asc' ? 'desc' : undefined);
+                                } else {
+                                  onSort?.(col.id, false, 'asc');
+                                }
                               }}
                               className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/20"
                               title="Sort column"
@@ -459,7 +769,7 @@ export function Table<T extends { id?: number | string } = any>({
                             backgroundColor: 'var(--c-surface-cards)',
                           }}
                         >
-                          {col.id !== 'actions' && (
+                          {!col.isActionColumn && (
                             <>
                               {isSortable && (
                                 <>
@@ -507,7 +817,8 @@ export function Table<T extends { id?: number | string } = any>({
                               {col.filterConfig && (
                                 <button
                                   onClick={() => {
-                                    setFilteringColumn(col.id);
+                                    setFilterFromColumnId(col.id);
+                                    setIsFilterBuilderOpen(true);
                                     setOpenColumnMenu(null);
                                   }}
                                   className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
@@ -516,22 +827,9 @@ export function Table<T extends { id?: number | string } = any>({
                                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                                 >
                                   <Filter size={16} style={{ color: 'var(--c-text-secondary)' }} />
-                                  Filter
+                                  Filters
                                 </button>
                               )}
-                              <button
-                                onClick={() => {
-                                  setSearchingColumn(col.id);
-                                  setOpenColumnMenu(null);
-                                }}
-                                className="w-full text-left px-4 py-3 text-sm flex items-center gap-3"
-                                style={{ color: 'var(--c-text-primary)' }}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                              >
-                                <Search size={16} style={{ color: 'var(--c-text-secondary)' }} />
-                                Search
-                              </button>
                             </>
                           )}
                           <button
@@ -579,11 +877,11 @@ export function Table<T extends { id?: number | string } = any>({
                 return (
                   <React.Fragment key={rowId}>
                     {/* Main Row */}
-                    <tr className={`transition-colors ${rowClassName} ${styleRowClassName}`}>
+                    <tr className={`transition-colors ${rowClassName} ${styleRowClassName} min-h-[44px]`}>
                       {/* Selection Checkbox */}
                       {enableRowSelection && (
                         <td
-                          className={`px-6 py-4 ${cellClassName}`}
+                          className={`px-6 py-3 ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: '60px',
@@ -599,23 +897,32 @@ export function Table<T extends { id?: number | string } = any>({
                         </td>
                       )}
                       {/* Data Cells */}
-                      {visibleColumns.map((col, colIdx) => (
+                      {visibleColumns.map((col, colIdx) => {
+                        // Calculate cumulative width for sticky positioning
+                        let cumulativeWidth = enableRowSelection ? 60 : 0;
+                        for (let i = 0; i < colIdx; i++) {
+                          cumulativeWidth += columnWidths[visibleColumns[i].id] || 120;
+                        }
+
+                        return (
                         <td
                           key={`${rowId}-${col.id}`}
-                          className={`px-6 py-4 text-sm ${cellClassName}`}
+                          className={`px-6 py-3 text-sm ${colIdx === 0 ? `font-semibold text-gray-900` : `text-gray-900`} ${cellClassName}`}
                           style={{
                             backgroundColor: bgColor,
                             width: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                             minWidth: columnWidths[col.id] ? `${columnWidths[col.id]}px` : undefined,
                           }}
                         >
-                          <div className="flex items-center gap-2">
-                            {renderCellContent(col, row)}
+                          <div className={`flex items-center gap-2 overflow-hidden ${col.isActionColumn ? 'justify-center' : ''}`}>
+                            <div className={`${!col.isActionColumn ? 'truncate flex-1' : ''}`}>
+                              {renderCellContent(col, row)}
+                            </div>
                             {/* Expand button after first column content */}
                             {colIdx === 0 && expandedContent && (
                               <button
                                 onClick={() => handleRowExpand(rowId)}
-                                className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors`}
+                                className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors flex-shrink-0`}
                                 title={isExpanded ? "Collapse" : "Expand"}
                               >
                                 <ChevronDown
@@ -626,7 +933,8 @@ export function Table<T extends { id?: number | string } = any>({
                             )}
                           </div>
                         </td>
-                      ))}
+                        );
+                      })}
                     </tr>
 
                     {/* Expanded Content Row */}
@@ -634,8 +942,8 @@ export function Table<T extends { id?: number | string } = any>({
                       <tr>
                         <td colSpan={visibleColumns.length + (expandedContent ? 1 : 0)}>
                           <div
-                            className={`px-6 py-4 border-t ${borderColor}`}
-                            style={{ backgroundColor: bgColor }}
+                            className={`px-6 py-0`}
+                            style={{ backgroundColor: bgColor, marginTop: '-8px' }}
                           >
                             {expandedContent(row)}
                           </div>
@@ -647,262 +955,24 @@ export function Table<T extends { id?: number | string } = any>({
               })}
             </tbody>
           </table>
-      </div>
-
-      {searchingColumn && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Search {columns.find(c => c.id === searchingColumn)?.label}</h3>
-              <button
-                onClick={() => setSearchingColumn(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
             </div>
-            <div className="mb-6">
-              <Input
-                type="text"
-                value={columnSearches[searchingColumn] || ''}
-                onChange={(value) => {
-                  setColumnSearches(prev => ({
-                    ...prev,
-                    [searchingColumn]: String(value)
-                  }));
-                }}
-                variant="medium"
-                label="Search text"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  setColumnSearches(prev => {
-                    const next = { ...prev };
-                    delete next[searchingColumn];
-                    return next;
-                  });
-                  setSearchingColumn(null);
-                }}
-                style={{
-                  background: buttons.bordered.background,
-                  color: buttons.bordered.color,
-                  border: buttons.bordered.border,
-                  padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
-                  borderRadius: buttons.bordered.borderRadius,
-                  fontSize: buttons.bordered.fontSize,
-                }}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => setSearchingColumn(null)}
-                style={{
-                  background: buttons.action.background,
-                  color: buttons.action.color,
-                  border: buttons.action.border,
-                  padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
-                  borderRadius: buttons.action.borderRadius,
-                  fontSize: buttons.action.fontSize,
-                }}
-                className="hover:opacity-90 transition-opacity font-medium"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
+        </div>
       )}
 
-      {filteringColumn && createPortal(
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="rounded-lg shadow-lg p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'var(--c-surface-cards)' }}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold" style={{ color: 'var(--c-text-primary)' }}>Filter {columns.find(c => c.id === filteringColumn)?.label}</h3>
-              <button onClick={() => setFilteringColumn(null)} style={{ color: 'var(--c-text-muted)' }} className="hover:opacity-70 transition-opacity">
-                <X size={20} />
-              </button>
-            </div>
-
-            {filteringColumn && (() => {
-              const column = columns.find(c => c.id === filteringColumn);
-              const filterType = column?.filterConfig?.type;
-              const currentFilter = columnFilters[filteringColumn];
-
-              return (
-                <>
-                  {filterType === 'text' && (
-                    <div className="mb-6">
-                      <Input
-                        type="text"
-                        value={currentFilter || ''}
-                        onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: String(value) }))}
-                        variant="medium"
-                        label="Contains"
-                      />
-                    </div>
-                  )}
-
-                  {filterType === 'number' && (
-                    <div className="space-y-4 mb-6">
-                      <div>
-                        <HeadlessSelect
-                          options={[
-                            { value: '>', label: 'Greater than' },
-                            { value: '<', label: 'Less than' },
-                            { value: '>=', label: 'Greater than or equal' },
-                            { value: '<=', label: 'Less than or equal' },
-                            { value: '==', label: 'Equals' }
-                          ]}
-                          value={currentFilter?.operator || '>'}
-                          onChange={(value) => {
-                            setColumnFilters(prev => ({
-                              ...prev,
-                              [filteringColumn]: {
-                                operator: value,
-                                value: currentFilter?.value || 0
-                              }
-                            }));
-                          }}
-                          placeholder="Select operator"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          value={currentFilter?.value || ''}
-                          onChange={(value) => {
-                            setColumnFilters(prev => ({
-                              ...prev,
-                              [filteringColumn]: {
-                                operator: currentFilter?.operator || '>',
-                                value: Number(value)
-                              }
-                            }));
-                          }}
-                          variant="medium"
-                          label="Value"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {(filterType === 'select' || filterType === 'multiselect') && (
-                    <div className="space-y-3 mb-6 max-h-48 overflow-y-auto">
-                      {column?.filterConfig?.options?.map((option) => {
-                        const labelText = String(option).charAt(0).toUpperCase() + String(option).slice(1);
-                        return (
-                            <div key={option} className="flex items-center gap-2 cursor-pointer">
-                              {filterType === 'multiselect' ? (
-                                <>
-                                  <Checkbox
-                                    checked={Array.isArray(currentFilter) ? currentFilter.includes(option) : false}
-                                    onChange={(e) => {
-                                      const arr = Array.isArray(currentFilter) ? [...currentFilter] : [];
-                                      if (e.target.checked) {
-                                        arr.push(option);
-                                      } else {
-                                        arr.splice(arr.indexOf(option), 1);
-                                      }
-                                      setColumnFilters(prev => ({ ...prev, [filteringColumn]: arr.length > 0 ? arr : null }));
-                                    }}
-                                    className="h-4 w-4"
-                                  />
-                                  <span className="text-sm font-medium" style={{ color: 'var(--c-text-primary)' }}>{labelText}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Radio
-                                    checked={currentFilter === option}
-                                    onChange={(e) => {
-                                      setColumnFilters(prev => ({ ...prev, [filteringColumn]: e.target.checked ? option : null }));
-                                    }}
-                                  />
-                                  <span className="text-sm font-medium" style={{ color: 'var(--c-text-primary)' }}>{labelText}</span>
-                                </>
-                              )}
-                            </div>
-                          );
-                        })}
-                    </div>
-                  )}
-
-                  {filterType === 'date' && (
-                    <div className="space-y-4 mb-6">
-                      <div>
-                        <Input
-                          type="date"
-                          value={Array.isArray(currentFilter) ? currentFilter[0] : currentFilter || ''}
-                          onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: [String(value), Array.isArray(prev[filteringColumn]) ? prev[filteringColumn][1] : String(value)] }))}
-                          variant="medium"
-                          label="From"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="date"
-                          value={Array.isArray(currentFilter) ? currentFilter[1] : currentFilter || ''}
-                          onChange={(value) => setColumnFilters(prev => ({ ...prev, [filteringColumn]: [Array.isArray(prev[filteringColumn]) ? prev[filteringColumn][0] : '', String(value)] }))}
-                          variant="medium"
-                          label="To"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => {
-                        setColumnFilters(prev => {
-                          const next = { ...prev };
-                          delete next[filteringColumn];
-                          return next;
-                        });
-                        setFilteringColumn(null);
-                      }}
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: 'var(--c-text-primary)',
-                        border: '1px solid var(--c-text-primary)',
-                        padding: `${buttons.bordered.paddingY} ${buttons.bordered.paddingX}`,
-                        borderRadius: buttons.bordered.borderRadius,
-                        fontSize: buttons.bordered.fontSize,
-                      }}
-                      className="transition-colors font-medium"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      onClick={() => setFilteringColumn(null)}
-                      style={{
-                        background: buttons.action.background,
-                        color: buttons.action.color,
-                        border: buttons.action.border,
-                        padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
-                        borderRadius: buttons.action.borderRadius,
-                        fontSize: buttons.action.fontSize,
-                      }}
-                      className="hover:opacity-90 transition-opacity font-medium"
-                    >
-                      Done
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Filter Builder Modal */}
+      <FilterBuilder
+        columns={columns}
+        isOpen={isFilterBuilderOpen}
+        onClose={() => {
+          setIsFilterBuilderOpen(false);
+          setFilterFromColumnId(null);
+        }}
+        onApply={(filters) => {
+          setColumnFilters(filters);
+        }}
+        currentFilters={columnFilters}
+        defaultColumnId={filterFromColumnId}
+      />
     </div>
   );
 }

@@ -45,6 +45,7 @@ export interface OfferCreative {
   template_type_id?: number;
   channel: CreativeChannel; // One of: "SMS", "Email", "Push", "InApp", "Web", "IVR", "USSD", "WhatsApp"
   locale: Locale; // Pattern: ^[a-z]{2}(-[A-Z]{2})?$ (e.g., "en", "en-US", "fr", "fr-CA")
+  name?: string;
   title?: string;
   text_body?: string;
   html_body?: string;
@@ -54,6 +55,8 @@ export interface OfferCreative {
   version?: number;
   is_active?: boolean;
   is_latest?: boolean;
+  /** When true on create, backend also copies this creative into offer_creatives_template. */
+  save_as_template?: boolean;
   created_at?: string; // ISO timestamp
   updated_at?: string; // ISO timestamp
   created_by?: number; // User ID
@@ -79,6 +82,34 @@ export interface CreateOfferCreativeRequest {
   version?: number; // Must be positive integer if provided, backend auto-assigns if not provided
   is_active?: boolean; // Default: true
   created_by?: number; // Must be positive integer if provided
+  /**
+   * When true, the backend also inserts a reusable row into
+   * cvm.offer_creatives_template (no offer_id) so other offers can reuse it.
+   * Create-only; ignored on update.
+   */
+  save_as_template?: boolean;
+}
+
+/** Collect {{placeholder}} keys from creative content for template variables. */
+export function collectPlaceholderVariables(
+  ...contents: Array<string | undefined | null>
+): Record<string, string> {
+  const keys = new Set<string>();
+  const pattern = /\{\{\s*([^{}]+?)\s*\}\}/g;
+  for (const content of contents) {
+    if (!content) continue;
+    pattern.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(content))) {
+      const key = match[1].trim();
+      if (key) keys.add(key);
+    }
+  }
+  const variables: Record<string, string> = {};
+  keys.forEach((key) => {
+    variables[key] = "";
+  });
+  return variables;
 }
 
 // Update creative request
@@ -207,6 +238,8 @@ export interface PaginatedResponse<T> extends BaseResponse<T[]> {
 // Response types
 export interface OfferCreativeResponse extends BaseResponse<OfferCreative> {
   insertId?: number;
+  /** Present when create was called with save_as_template: true */
+  template?: Record<string, unknown> | null;
 }
 
 export type OfferCreativesResponse = PaginatedResponse<OfferCreative>;

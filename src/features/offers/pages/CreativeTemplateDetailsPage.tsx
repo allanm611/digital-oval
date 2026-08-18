@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { creativeTemplateService } from "../../configurations/services/creativeTemplateService";
+import {
+  creativeTemplateService,
+  creativeTemplateText,
+  creativeTemplateHtml,
+} from "../../configurations/services/creativeTemplateService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { tw, color, button } from "../../../shared/utils/utils";
@@ -13,6 +18,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function CreativeTemplateDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success } = useToast();
@@ -34,7 +40,7 @@ export default function CreativeTemplateDetailsPage() {
       setTemplate(data);
     } catch (err) {
       console.error("Failed to load creative template:", err);
-      showError("Failed to load creative template", extractBackendError(error, "Failed to load creative template. Please try again."));
+      showError(t.common.error || "Failed to load creative template", extractBackendError(err, "Failed to load creative template. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -52,10 +58,10 @@ export default function CreativeTemplateDetailsPage() {
     try {
       setIsDeleting(true);
       await creativeTemplateService.deleteCreativeTemplate(template.id);
-      success("Deleted", "Creative template removed");
+      success(t.common.deleted || "Deleted", t.messages.removed || "Creative template removed");
       navigate("/dashboard/creative-templates");
     } catch (err: any) {
-      showError("Delete failed", extractBackendError(error, "Delete failed. Please try again."));
+      showError(t.common.deleteFailed || "Delete failed", extractBackendError(err, "Delete failed. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -72,7 +78,7 @@ export default function CreativeTemplateDetailsPage() {
           className="mb-4"
         />
         <p className={`${tw.textMuted} font-medium text-sm`}>
-          Loading template details...
+          {t.common.loadingDetails || "Loading template details..."}
         </p>
       </div>
     );
@@ -83,10 +89,10 @@ export default function CreativeTemplateDetailsPage() {
       <div className="space-y-6">
         <div className="text-center py-12">
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-            Template Not Found
+            {t.common.notFound || "Template Not Found"}
           </h3>
           <p className={`${tw.textMuted} mb-6`}>
-            The creative template you are looking for does not exist.
+            {t.offers.templateNotFound || "The creative template you are looking for does not exist."}
           </p>
           <button
             onClick={() => navigate("/dashboard/creative-templates")}
@@ -94,7 +100,7 @@ export default function CreativeTemplateDetailsPage() {
             style={{ backgroundColor: button.action.background }}
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Templates
+            {t.common.backTo || "Back to"} Templates
           </button>
         </div>
       </div>
@@ -169,14 +175,16 @@ export default function CreativeTemplateDetailsPage() {
               Template Content
             </h3>
             <div className="space-y-6">
-              <div className="space-y-1">
-                <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
-                  Code
-                </label>
-                <p className={`text-sm ${tw.textPrimary} font-mono`}>
-                  {template.code}
-                </p>
-              </div>
+              {template.code ? (
+                <div className="space-y-1">
+                  <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
+                    Code
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} font-mono`}>
+                    {template.code}
+                  </p>
+                </div>
+              ) : null}
 
               {template.title && (
                 <div className="space-y-1">
@@ -187,24 +195,24 @@ export default function CreativeTemplateDetailsPage() {
                 </div>
               )}
 
-              {template.body_text && (
+              {creativeTemplateText(template) && (
                 <div className="space-y-1">
                   <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                     Body Text
                   </label>
                   <p className={`text-sm ${tw.textPrimary} whitespace-pre-wrap`}>
-                    {template.body_text}
+                    {creativeTemplateText(template)}
                   </p>
                 </div>
               )}
 
-              {template.body_html && (
+              {creativeTemplateHtml(template) && (
                 <div className="space-y-1">
                   <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                     Body HTML
                   </label>
                   <pre className={`text-xs ${tw.textPrimary} overflow-x-auto`}>
-                    {template.body_html}
+                    {creativeTemplateHtml(template)}
                   </pre>
                 </div>
               )}

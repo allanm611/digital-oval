@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import KPIPickerModal from "../components/KPIPickerModal";
 import { type KPI } from "../types/kpi";
 import { generateAllKPIs } from "../utils/kpiGenerator";
@@ -6,6 +7,7 @@ import { generateAllKPIs } from "../utils/kpiGenerator";
 const allKPIs = generateAllKPIs();
 
 export default function KPIModalDemoPage() {
+  const { t } = useLanguage();
   const [modalCategory, setModalCategory] = useState<
     null | KPI["category"]
   >(null);

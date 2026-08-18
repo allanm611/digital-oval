@@ -251,7 +251,7 @@ export default function SegmentDetailsPage() {
       setAllCustomersForSelection(customers);
     } catch (err) {
       console.error("Failed to load customers:", err);
-      showError("Unable to Load Customers", extractBackendError(error, "Failed to load customers. Please try again later."));
+      showError("Unable to Load Customers", extractBackendError(err, "Failed to load customers. Please try again later."));
       setAllCustomersForSelection([]);
     } finally {
       setIsLoadingCustomersForSelection(false);
@@ -716,7 +716,7 @@ export default function SegmentDetailsPage() {
       navigate("/dashboard/segments");
     } catch (err) {
       console.error("Failed to delete segment:", err);
-      showError("Unable to Delete Segment", extractBackendError(error, "Failed to delete segment. Please try again later."));
+      showError("Unable to Delete Segment", extractBackendError(err, "Failed to delete segment. Please try again later."));
     } finally {
       setIsDeleting(false);
     }
@@ -758,7 +758,7 @@ export default function SegmentDetailsPage() {
       await loadMembers();
     } catch (err) {
       console.error("Failed to add members:", err);
-      showError("Unable to Add Members", extractBackendError(error, "Failed to add members to segment. Please try again later."));
+      showError("Unable to Add Members", extractBackendError(err, "Failed to add members to segment. Please try again later."));
     }
   };
 
@@ -790,7 +790,7 @@ export default function SegmentDetailsPage() {
       await loadMembers();
     } catch (err) {
       console.error("Failed to remove members:", err);
-      showError("Unable to Remove Members", extractBackendError(error, "Failed to remove members from segment. Please try again later."));
+      showError("Unable to Remove Members", extractBackendError(err, "Failed to remove members from segment. Please try again later."));
     }
   };
 
@@ -827,7 +827,7 @@ export default function SegmentDetailsPage() {
       await loadMembers();
     } catch (err) {
       console.error("Failed to add members:", err);
-      showError("Unable to Add Members", extractBackendError(error, "Failed to add members to segment. Please try again later."));
+      showError("Unable to Add Members", extractBackendError(err, "Failed to add members to segment. Please try again later."));
     }
   };
 
@@ -853,36 +853,22 @@ export default function SegmentDetailsPage() {
         );
       }
     } catch (err) {
-      showError("Failed to recompute", extractBackendError(error, "Failed to recompute. Please try again."));
+      showError("Failed to recompute", extractBackendError(err, "Failed to recompute. Please try again."));
     } finally {
       setIsRecomputingMembers(false);
     }
   };
 
   const handleComputeSize = async () => {
-    console.log("=== handleComputeSize called ===");
-    if (!id) {
-      console.log("No ID provided");
-      return;
-    }
+    if (!id) return;
     setIsComputingSize(true);
     try {
-      console.log("Calling computeSegmentSize with id:", id);
       const response = await segmentService.computeSegmentSize(Number(id));
-      console.log("=== Full response ===", response);
-      console.log("=== response.data ===", response.data);
-      console.log("=== size_estimate ===", response.data?.size_estimate);
-      console.log("=== response.success ===", response.success);
 
       if (response.success) {
-        // Update the customer count with the backend response
         const computedSize = response.data?.size_estimate ? Number(response.data.size_estimate) : null;
-        console.log("=== Computed size (final) ===", computedSize);
         setSegmentSize(computedSize);
-
         success("Size computed", `Segment size: ${computedSize} customers`);
-      } else {
-        console.log("Response not successful:", response);
       }
     } catch (err) {
       console.error("=== Error in handleComputeSize ===", err);

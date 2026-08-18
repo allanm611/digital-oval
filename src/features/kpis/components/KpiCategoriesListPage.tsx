@@ -35,51 +35,40 @@ export default function KpiCategoriesListPage() {
   const tableColumns: TableColumn<KpiCategory>[] = [
     {
       id: "name",
-      label: "Name",
+      label: t.common.name,
       visible: true,
-      render: (_, row) => (
-        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary}`}>
-          {row.name}
-        </div>
-      ),
+      render: (_, row) => row.name,
     },
     {
       id: "description",
-      label: "Description",
+      label: t.common.description,
       visible: true,
       render: (_, row) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md`}>
+        <div className="max-w-md">
           {row.description || "-"}
         </div>
       ),
     },
     {
       id: "display_order",
-      label: "Order",
+      label: t.kpis.order,
       visible: true,
-      render: (_, row) => (
-        <div className={`text-sm ${tw.textSecondary} text-center`}>
-          {row.display_order || "0"}
-        </div>
-      ),
+      render: (_, row) => row.display_order || "0",
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
-      render: (_, row) => (
-        <span className={`text-sm font-medium ${tw.textSecondary} text-center`}>
-          {row.is_active ?? true ? "Active" : "Inactive"}
-        </span>
-      ),
+      render: (_, row) => row.is_active ?? true ? t.common.active : t.common.inactive,
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-3">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleActive(row)}
@@ -100,8 +89,8 @@ export default function KpiCategoriesListPage() {
               togglingItemId === row.id ||
               (categoryToDelete?.id === row.id && isDeleting)
             }
-            className={`p-2 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-            title="Edit"
+            className={`p-0 icon-edit ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            title={t.common.edit}
           >
             <Edit className="w-4 h-4" />
           </button>
@@ -111,8 +100,8 @@ export default function KpiCategoriesListPage() {
               togglingItemId === row.id ||
               (categoryToDelete?.id === row.id && isDeleting)
             }
-            className={`p-2 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-            title="Delete"
+            className={`p-0 icon-delete ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -220,7 +209,7 @@ export default function KpiCategoriesListPage() {
       });
       showToast(
         newActive ? "Activated" : "Deactivated",
-        `"${category.name}" has been ${newActive ? "activated" : "deactivated"}`
+        `"${category.name}" has been ${newActive ? t.common.activated : t.common.deactivated}`
       );
     } catch (err) {
       console.error("Failed to update category:", err);
@@ -303,7 +292,7 @@ export default function KpiCategoriesListPage() {
       {!showBackButton && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
+            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               KPI Categories
             </h1>
             <p className={`text-sm ${tw.textSecondary} mt-2`}>

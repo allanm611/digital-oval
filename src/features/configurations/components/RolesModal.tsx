@@ -7,6 +7,8 @@ import { useAuth } from "../../../contexts/AuthContext";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import { roleService } from "../../roles/services/roleService";
 import { Role, CreateRoleRequest, UpdateRoleRequest } from "../../roles/types/role";
 
@@ -32,7 +34,12 @@ export default function RolesModal({
 }: RolesModalProps) {
   const { error: showError, success: showSuccess } = useToast();
   const { user } = useAuth();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -64,16 +71,25 @@ export default function RolesModal({
     }
   }, [editingRole, isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      showError("Name is required");
-      return;
+      newErrors.name = "Name is required";
     }
 
     if (!formData.code.trim()) {
-      showError("Code is required");
+      newErrors.code = "Code is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) {
       return;
     }
 
@@ -121,13 +137,13 @@ export default function RolesModal({
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div
-        className={`${tw.rounded} bg-white w-full max-w-md shadow-lg`}
-        style={{ maxHeight: "90vh", overflowY: "auto" }}
+        className={`${tw.rounded} w-full max-w-md shadow-lg`}
+        style={{ maxHeight: "90vh", overflowY: "auto", backgroundColor: "var(--c-surface-background)" }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4 border-b"
-          style={{ borderColor: color.border.default }}
+          style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}
         >
           <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
             {editingRole ? "Edit Role" : "Create Role"}
@@ -136,10 +152,10 @@ export default function RolesModal({
             onClick={onClose}
             className={`p-1 ${tw.rounded} transition-colors`}
             style={{
-              color: color.primary.action,
+              color: "var(--c-text-muted)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
+              e.currentTarget.style.backgroundColor = "var(--c-icon-table-edit)10";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
@@ -152,36 +168,40 @@ export default function RolesModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Name */}
-          <Input
-            label={<>Name <span className="text-red-500">*</span></>}
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g., Administrator"
-            className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-            style={{
-              borderColor: color.border.default,
-              backgroundColor: color.surface.input,
-            }}
-            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-          />
+          <FormField error={errors?.name} ref={registerFieldRef('name')}>
+            <Input
+              label={<>Name <span className="text-red-500">*</span></>}
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="e.g., Administrator"
+              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
+              style={{
+                borderColor: "var(--c-border-default)",
+                backgroundColor: "var(--c-input-bg)",
+              }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--c-primary-accent)")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--c-border-default)")}
+            />
+          </FormField>
 
           {/* Code */}
-          <Input
-            label={<>Code <span className="text-red-500">*</span></>}
-            type="text"
-            value={formData.code}
-            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-            placeholder="e.g., ADMIN"
-            className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
-            style={{
-              borderColor: color.border.default,
-              backgroundColor: color.surface.input,
-            }}
-            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
-          />
+          <FormField error={errors?.code} ref={registerFieldRef('code')}>
+            <Input
+              label={<>Code <span className="text-red-500">*</span></>}
+              type="text"
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              placeholder="e.g., ADMIN"
+              className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
+              style={{
+                borderColor: "var(--c-border-default)",
+                backgroundColor: "var(--c-input-bg)",
+              }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--c-primary-accent)")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--c-border-default)")}
+            />
+          </FormField>
 
           {/* Description */}
           <Textarea
@@ -192,11 +212,11 @@ export default function RolesModal({
             rows={2}
             className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none resize-none`}
             style={{
-              borderColor: color.border.default,
-              backgroundColor: color.surface.input,
+              borderColor: "var(--c-border-default)",
+              backgroundColor: "var(--c-input-bg)",
             }}
-            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+            onFocus={(e) => (e.target.style.borderColor = "var(--c-primary-accent)")}
+            onBlur={(e) => (e.target.style.borderColor = "var(--c-border-default)")}
           />
 
           {/* Data Access Level */}
@@ -220,11 +240,11 @@ export default function RolesModal({
             placeholder="0"
             className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
             style={{
-              borderColor: color.border.default,
-              backgroundColor: color.surface.input,
+              borderColor: "var(--c-border-default)",
+              backgroundColor: "var(--c-input-bg)",
             }}
-            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+            onFocus={(e) => (e.target.style.borderColor = "var(--c-primary-accent)")}
+            onBlur={(e) => (e.target.style.borderColor = "var(--c-border-default)")}
           />
 
           {/* Max Users */}
@@ -236,11 +256,11 @@ export default function RolesModal({
             placeholder="Unlimited"
             className={`w-full px-3 py-2 ${tw.rounded} border text-sm transition-colors focus:outline-none`}
             style={{
-              borderColor: color.border.default,
-              backgroundColor: color.surface.input,
+              borderColor: "var(--c-border-default)",
+              backgroundColor: "var(--c-input-bg)",
             }}
-            onFocus={(e) => (e.target.style.borderColor = color.primary.action)}
-            onBlur={(e) => (e.target.style.borderColor = color.border.default)}
+            onFocus={(e) => (e.target.style.borderColor = "var(--c-primary-accent)")}
+            onBlur={(e) => (e.target.style.borderColor = "var(--c-border-default)")}
           />
 
           {/* Actions */}
@@ -257,7 +277,7 @@ export default function RolesModal({
             <button
               type="submit"
               className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-60`}
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: "var(--c-primary-action)" }}
               disabled={isSubmitting}
             >
               {isSubmitting ? (

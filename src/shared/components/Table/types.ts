@@ -15,6 +15,8 @@ export interface TableColumn<T = any> {
   width?: string;
   sortable?: boolean;
   filterConfig?: FilterConfig;
+  isActionColumn?: boolean;
+  headerClassName?: string;
 }
 
 export interface SortConfig {
@@ -74,8 +76,13 @@ export interface TableProps<T = any> {
   onPageChange?: (page: number) => void;
   onColumnVisibilityToggle?: (columnId: string) => void;
   onColumnReorder?: (columns: TableColumn<T>[]) => void;
-  onSort?: (columnId: string, multiSelect: boolean) => void;
+  onSort?: (
+    columnId: string,
+    multiSelect: boolean,
+    direction?: "asc" | "desc",
+  ) => void;
   sortConfigs?: SortConfig[];
+  onHideColumn?: (columnId: string) => void;
   onManageColumnsClick?: () => void;
   onFilteredCountChange?: (count: number) => void;
   enableRowSelection?: boolean;

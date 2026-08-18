@@ -1,3 +1,4 @@
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useState, useMemo } from "react";
 import { Filter, MoreHorizontal, Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
 import SearchInput from "../../../shared/components/ui/SearchInput";
@@ -12,6 +13,7 @@ const allKPIs = generateAllKPIs();
 const ITEMS_PER_PAGE = 10;
 
 export default function KPIsPage() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,29 +66,29 @@ export default function KPIsPage() {
   // Calculate statistics
   const stats = {
     totalKPIs: kpis.length,
-    systemEvents: kpis.filter((k) => k.category === "System Event").length,
-    usageMetrics: kpis.filter((k) => k.category === "Usage Metric").length,
-    revenueMetrics: kpis.filter((k) => k.category === "Revenue Metric").length,
+    systemEvents: kpis.filter((k) => k.category === t.kpis.categories.systemEvent).length,
+    usageMetrics: kpis.filter((k) => k.category === t.kpis.categories.usageMetric).length,
+    revenueMetrics: kpis.filter((k) => k.category === t.kpis.categories.revenueMetric).length,
   };
 
   const statCards = [
     {
-      name: "Total KPIs",
+      name: t.kpis.totalKPIs,
       value: stats.totalKPIs,
       icon: ListChecks,
     },
     {
-      name: "System Events",
+      name: t.kpis.systemEvents,
       value: stats.systemEvents,
       icon: ListChecks,
     },
     {
-      name: "Usage Metrics",
+      name: t.kpis.usageMetrics,
       value: stats.usageMetrics,
       icon: Activity,
     },
     {
-      name: "Revenue Metrics",
+      name: t.kpis.revenueMetrics,
       value: stats.revenueMetrics,
       icon: DollarSign,
     },
@@ -113,7 +115,7 @@ export default function KPIsPage() {
                   className="h-5 w-5"
                   style={{ color: color.primary.accent }}
                 />
-                <p className={`p-2 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
+                <p className={`p-0 icon-edit ${tw.rounded} text-sm font-medium `}>{stat.name}</p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
             </div>
@@ -124,7 +126,7 @@ export default function KPIsPage() {
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-wrap">
         <SearchInput
-          placeholder="Search KPIs..."
+          placeholder={t.kpis.filters.searchKPIs}
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
@@ -135,12 +137,12 @@ export default function KPIsPage() {
 
         <HeadlessSelect
           options={[
-            { value: "all", label: "All Categories" },
+            { value: "all", label: t.kpis.filters.allCategories },
             ...categories.map((cat) => ({ value: cat, label: cat })),
           ]}
           value={categoryFilter}
           onChange={(value) => handleCategoryChange(value || "all")}
-          placeholder="Filter by category"
+          placeholder={t.kpis.filters.filterByCategory}
           className="min-w-[180px]"
         />
       </div>
@@ -261,14 +263,14 @@ export default function KPIsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
-                            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                            title="View Details"
+                            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+                            title={t.common.view}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                            title="Edit"
+                            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+                            title={t.common.edit}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -281,7 +283,7 @@ export default function KPIsPage() {
                           <button
                             className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
                             style={{ color: "#DC2626" }}
-                            title="Delete"
+                            title={t.common.delete}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -310,7 +312,7 @@ export default function KPIsPage() {
                         <h4 className="font-semibold text-sm text-gray-900">
                           {kpi.name}
                         </h4>
-                        <p className={`p-2 icon-edit ${tw.rounded} text-xs  mt-1`}>{kpi.description}</p>
+                        <p className={`p-0 icon-edit ${tw.rounded} text-xs  mt-1`}>{kpi.description}</p>
                       </div>
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 text-gray-900">
                         {kpi.category}
@@ -334,14 +336,14 @@ export default function KPIsPage() {
                     </div>
                     <div className="flex items-center gap-2 justify-end">
                       <button
-                        className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                        title="View"
+                        className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+                        title={t.common.view}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-                        title="Edit"
+                        className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+                        title={t.common.edit}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -352,7 +354,7 @@ export default function KPIsPage() {
                       <button
                         className={`p-1 ${tw.rounded} hover:text-red-700 transition-colors`}
                         style={{ color: "#DC2626" }}
-                        title="Delete"
+                        title={t.common.delete}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -371,7 +373,7 @@ export default function KPIsPage() {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className={`p-2 icon-delete ${tw.rounded} transition-colors ${
+                  className={`p-0 icon-delete ${tw.rounded} transition-colors ${
                     currentPage === 1
                       ? "text-gray-300 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"
@@ -386,7 +388,7 @@ export default function KPIsPage() {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className={`p-2 icon-delete ${tw.rounded} transition-colors ${
+                  className={`p-0 icon-delete ${tw.rounded} transition-colors ${
                     currentPage === totalPages
                       ? "text-gray-300 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"

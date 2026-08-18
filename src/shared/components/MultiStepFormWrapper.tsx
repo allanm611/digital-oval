@@ -78,11 +78,11 @@ export default function MultiStepFormWrapper({
                 {showCancel && (
                   <button
                     onClick={onCancel}
-                    className={`inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-all duration-200 sm:w-auto`}
+                    className={`inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium ${tw.rounded} transition-all duration-200 sm:w-auto dark:text-white dark:border-white`}
                     style={{
                       background: "transparent",
-                      color: color.primary.action,
-                      border: `1px solid ${color.primary.action}`,
+                      color: "var(--c-bordered-button-color)",
+                      border: `1px solid var(--c-bordered-button-color)`,
                     }}
                   >
                     Cancel
@@ -140,7 +140,11 @@ export default function MultiStepFormWrapper({
               <button
                 onClick={onPrev}
                 disabled={currentStep === 1}
-                className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`inline-flex items-center px-4 py-2 border text-sm font-medium ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed dark:text-white dark:border-white hover:dark:bg-gray-700`}
+                style={{
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 Previous
               </button>

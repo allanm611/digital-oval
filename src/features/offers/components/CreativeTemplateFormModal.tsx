@@ -8,7 +8,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import type { CreativeTemplate } from "../../configurations/services/creativeTemplateService";
 import { languageService, Language } from "../../configurations/services/languageService";
 import { useToast } from "../../../contexts/ToastContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 
 interface CreativeTemplateFormModalProps {
   isOpen: boolean;
@@ -83,7 +83,7 @@ export default function CreativeTemplateFormModal({
     if (isOpen) {
       loadData();
     }
-  }, [isOpen, communicationChannels]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (template) {
@@ -94,8 +94,8 @@ export default function CreativeTemplateFormModal({
         primaryChannel: template.channel,
         locale: template.locale || "en",
         title: template.title || "",
-        text_body: template.body_text || "",
-        html_body: template.body_html || "",
+        text_body: template.text_body || template.body_text || "",
+        html_body: template.html_body || template.body_html || "",
         variables: template.variables || {},
       });
       setErrors({});
@@ -121,9 +121,6 @@ export default function CreativeTemplateFormModal({
 
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
-    }
-    if (!formData.code.trim()) {
-      newErrors.code = "Code is required";
     }
     if (!formData.text_body.trim() && !formData.html_body.trim()) {
       newErrors.body = "Either text body or HTML body is required";
@@ -192,8 +189,19 @@ export default function CreativeTemplateFormModal({
     e.preventDefault();
     if (!validateForm()) return;
 
+    const generatedCode =
+      formData.code.trim() ||
+      formData.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "")
+        .slice(0, 100) ||
+      `tpl_${Date.now()}`;
+
     const dataToSubmit = {
       ...formData,
+      code: generatedCode,
       primaryChannel: mapChannelNameToEnum(formData.primaryChannel),
     };
 
@@ -202,7 +210,7 @@ export default function CreativeTemplateFormModal({
       await onSave(dataToSubmit);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save template";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsSaving(false);
     }
@@ -212,8 +220,8 @@ export default function CreativeTemplateFormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)", zIndex: zIndex.popover }}
       onClick={onClose}
     >
       <div
@@ -304,7 +312,6 @@ export default function CreativeTemplateFormModal({
                 }));
               }}
               options={[
-                { value: "", label: "Select a language" },
                 ...languages.map((lang) => ({ value: lang.id.toString(), label: lang.name }))
               ]}
               placeholder="Select a language"
@@ -356,8 +363,8 @@ export default function CreativeTemplateFormModal({
               className="px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 background: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-bordered-button-color)",
+                border: "1px solid var(--c-bordered-button-color)",
               }}
             >
               Cancel
@@ -366,7 +373,7 @@ export default function CreativeTemplateFormModal({
               type="submit"
               disabled={isSaving}
               className="px-4 py-2 text-white rounded text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
-              style={{ backgroundColor: color.primary.action }}
+              style={{ backgroundColor: "var(--c-primary-action)" }}
             >
               {isSaving && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

@@ -73,13 +73,14 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 
   return (
     <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+      className={`${tw.rounded} border p-3 shadow-lg`}
+      style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
     >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
+      <p className="mb-2 text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>{label}</p>
       {payload.map((entry, idx) => (
         <div
           key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+          className="flex items-center justify-between gap-4 text-sm text-sm"
         >
           <span className="flex items-center gap-2">
             <span
@@ -93,7 +94,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
             />
             {entry.name || "Count"}
           </span>
-          <span className="font-semibold text-gray-900">
+          <span className="font-semibold" style={{ color: 'var(--c-text-primary)' }}>
             {typeof entry.value === "number"
               ? entry.value.toLocaleString()
               : entry.value}
@@ -160,7 +161,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       visible: true,
       sortable: true,
       filterConfig: { type: 'number' },
-      render: (value) => <span className="font-medium">{value}</span>,
+      render: (value) => value,
     },
     {
       id: "campaign_name",
@@ -171,7 +172,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       render: (value, row) => (
         <button
           onClick={() => navigate(`/dashboard/campaigns/${row.campaign_id}`)}
-          className="hover:underline font-medium"
+          className="hover:underline"
           style={{ color: color.primary.accent }}
         >
           {value}
@@ -654,50 +655,53 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           {stats && (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
                 <div className="flex items-center gap-2">
                   <Target
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>
                     {t.common.total} {t.campaigns.campaigns}
                   </p>
                 </div>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {getTotalCampaigns(stats).toLocaleString()}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>
                     Active Campaigns
                   </p>
                 </div>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {getActiveCampaigns(stats).toLocaleString()}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
                 <div className="flex items-center gap-2">
                   <TrendingUp
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>
                     Total Budget Allocated
                   </p>
                 </div>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   <CurrencyFormatter
                     amount={
                       stats.budget_metrics?.total_allocated ||
@@ -708,18 +712,19 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>
                     Total Budget Spent
                   </p>
                 </div>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   <CurrencyFormatter
                     amount={
                       stats.budget_metrics?.total_spent ||
@@ -736,40 +741,44 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           {stats && (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
-                <p className="text-sm font-medium text-gray-600">In Draft</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>In Draft</p>
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {(stats.status_breakdown?.draft || 0).toLocaleString()}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Pending Approval
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {(
                     stats.status_breakdown?.pending_approval || 0
                   ).toLocaleString()}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="text-sm font-medium" style={{ color: 'var(--c-text-secondary)' }}>Completed</p>
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   {(stats.status_breakdown?.completed || 0).toLocaleString()}
                 </p>
               </div>
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-sm">
                   Avg Campaign Budget
                 </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
+                <p className="mt-2 text-3xl font-bold" style={{ color: 'var(--c-text-primary)' }}>
                   <CurrencyFormatter
                     amount={stats.budget_metrics?.average_allocated || 0}
                   />
@@ -782,32 +791,32 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           {!isLoadingFlowAnalytics && flowStats && relationshipStats && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     Total Flows
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
                     {parseInt(flowStats.total_flows) || 0}
                   </p>
                 </div>
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     Standard Flows
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
                     {parseInt(flowStats.standard_flows) || 0}
                   </p>
                 </div>
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     A/B Tests
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
                     {parseInt(flowStats.ab_tests) || 0}
                   </p>
                 </div>
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     Multi-level Flows
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
@@ -817,32 +826,32 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     Unique Campaigns
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
                     {parseInt(relationshipStats.unique_campaigns) || 0}
                   </p>
                 </div>
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     Unique Segments
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
                     {parseInt(relationshipStats.unique_segments) || 0}
                   </p>
                 </div>
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     Advanced Logic Flows
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
                     {parseInt(relationshipStats.advanced_logic_count) || 0}
                   </p>
                 </div>
-                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                <div className={`${tw.rounded} border bg-white p-6 shadow-sm`} style={{ borderColor: 'var(--c-border-default)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--c-text-muted)' }}>
                     Active Campaigns
                   </p>
                   <p className={`text-3xl font-bold ${tw.textPrimary}`}>
@@ -857,9 +866,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
             {approvalStatusBreakdown.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                   Approval Status Distribution
                 </h3>
                 <div className="h-64 w-full min-h-[256px]">
@@ -899,7 +909,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                         verticalAlign="bottom"
                         height={36}
                         formatter={(value) => (
-                          <span style={{ fontSize: "12px", color: "#000000" }}>
+                          <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                             {value}
                           </span>
                         )}
@@ -912,9 +922,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
             {controlGroupsBreakdown.length > 0 && (
               <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                   Control Groups Distribution
                 </h3>
                 <div className="h-64 w-full min-h-[256px]">
@@ -954,7 +965,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                         verticalAlign="bottom"
                         height={36}
                         formatter={(value) => (
-                          <span style={{ fontSize: "12px", color: "#000000" }}>
+                          <span style={{ fontSize: "12px", color: "var(--c-text-secondary)" }}>
                             {value}
                           </span>
                         )}
@@ -969,9 +980,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           {/* Bar Charts */}
           {targetsBreakdown.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Targets Distribution
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -982,8 +994,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.value,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1025,9 +1038,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {statusBreakdown.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Campaign Status Distribution
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -1038,8 +1052,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1069,9 +1084,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {activityStatusBreakdown.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Activity Status Overview
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -1082,8 +1098,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1113,9 +1130,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {budgetDistributionBreakdown.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Budget Distribution
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -1126,8 +1144,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1157,9 +1176,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {organizationBreakdown.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Organization Overview
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -1170,8 +1190,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1201,9 +1222,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {participantMetrics.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Participant Metrics
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -1214,8 +1236,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1245,9 +1268,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {recentActivityBreakdown.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Recent Activity
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -1258,8 +1282,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1289,9 +1314,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {timelineBreakdown.length > 0 && (
             <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              className={`${tw.rounded} border bg-white p-6 shadow-sm`}
+                style={{ borderColor: 'var(--c-border-default)' }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Campaign Timeline
               </h3>
               <div className="h-96 w-full min-h-[384px]">
@@ -1302,8 +1328,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                       count: item.count,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis
                       dataKey="name"
                       angle={-45}
@@ -1341,9 +1368,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
               {topPerformersData.by_participants &&
                 topPerformersData.by_participants.length > 0 && (
                   <div
-                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                    className={`${tw.rounded} border p-6 shadow-sm`}
+                style={{ backgroundColor: 'var(--c-surface-cards)', borderColor: 'var(--c-border-default)' }}
                   >
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                       Top Campaigns by Participants
                     </h3>
                     <div className="h-96 w-full min-h-[384px]">
@@ -1362,8 +1390,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                               id: campaign.id,
                             }))}
                           margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                          style={{ backgroundColor: 'var(--c-surface-cards)' }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                           <XAxis
                             dataKey="name"
                             angle={-45}
@@ -1383,14 +1412,15 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                               const data = props.payload[0].payload;
                               return (
                                 <div
-                                  className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+                                  className={`${tw.rounded} border bg-white p-3 shadow-lg`}
+                                  style={{ borderColor: 'var(--c-border-default)' }}
                                 >
                                   <p className="mb-2 text-sm font-semibold text-gray-900">
                                     {data.fullName}
                                   </p>
-                                  <div className="flex items-center justify-between gap-4 text-sm text-gray-600">
+                                  <div className="flex items-center justify-between gap-4 text-sm text-sm">
                                     <span>Participants:</span>
-                                    <span className="font-semibold text-gray-900">
+                                    <span className="font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                                       {(
                                         data.participants || 0
                                       ).toLocaleString()}
@@ -1416,9 +1446,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
               {topPerformersData.by_spend &&
                 topPerformersData.by_spend.length > 0 && (
                   <div
-                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}
+                    className={`${tw.rounded} border bg-white p-6 shadow-sm mb-6`}
+                    style={{ borderColor: 'var(--c-border-default)' }}
                   >
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                       Top Campaigns by Spend
                     </h3>
                     <div className="h-96 w-full">
@@ -1437,8 +1468,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                               id: campaign.id,
                             }))}
                           margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                          style={{ backgroundColor: 'var(--c-surface-cards)' }}
                         >
-                          <CartesianGrid strokeDasharray="3 3" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                           <XAxis
                             dataKey="name"
                             angle={-45}
@@ -1458,14 +1490,15 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                               const data = props.payload[0].payload;
                               return (
                                 <div
-                                  className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+                                  className={`${tw.rounded} border bg-white p-3 shadow-lg`}
+                                  style={{ borderColor: 'var(--c-border-default)' }}
                                 >
                                   <p className="mb-2 text-sm font-semibold text-gray-900">
                                     {data.fullName}
                                   </p>
-                                  <div className="flex items-center justify-between gap-4 text-sm text-gray-600">
+                                  <div className="flex items-center justify-between gap-4 text-sm text-sm">
                                     <span>Budget:</span>
-                                    <span className="font-semibold text-gray-900">
+                                    <span className="font-semibold" style={{ color: 'var(--c-text-primary)' }}>
                                       <CurrencyFormatter
                                         amount={data.budget || 0}
                                       />
@@ -1493,8 +1526,8 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {/* Flow Growth Trends Chart */}
           {flowGrowthTrends.length > 0 && !isLoadingFlowAnalytics && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mt-6`}>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className={`${tw.rounded} border bg-white p-6 shadow-sm mt-6`} style={{ borderColor: 'var(--c-border-default)' }}>
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--c-text-primary)' }}>
                 Flow Creation Trends
               </h3>
               <div className="h-80 w-full">
@@ -1502,8 +1535,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                   <LineChart
                     data={flowGrowthTrends}
                     margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    style={{ backgroundColor: 'var(--c-surface-cards)' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--c-border-default)" />
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
@@ -1593,9 +1627,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
         onReorderColumns={(reorderedCols) => {
-          const updatedColumns = columns.map((col) => {
-            const reordered = reorderedCols.find((c) => c.id === col.id);
-            return reordered ? { ...col, visible: reordered.visible } : col;
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
           });
           reorderColumns(updatedColumns);
         }}

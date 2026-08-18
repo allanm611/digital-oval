@@ -130,6 +130,7 @@ export default function CampaignsPage() {
   >([]);
   const [totalCampaigns, setTotalCampaigns] = useState(0);
   const [categories, setCategories] = useState<CampaignCategory[]>([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const categoryMap = useMemo(() => {
     const map: Record<number, string> = {};
     categories.forEach((category) => {
@@ -138,14 +139,6 @@ export default function CampaignsPage() {
     return map;
   }, [categories]);
 
-  // Helper to get category name from category_id at render time
-  const getCategoryName = (categoryId: string | number | undefined): string => {
-    if (!categoryId) return "Uncategorized";
-    const category = categories.find(
-      (cat) => String(cat.id) === String(categoryId),
-    );
-    return category?.name || "Uncategorized";
-  };
 
   const [campaignStats, setCampaignStats] = useState<{
     total: number;
@@ -175,28 +168,17 @@ export default function CampaignsPage() {
       sortable: true,
       filterConfig: { type: 'text' },
       render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value}>
+        <div className="truncate" title={value}>
           {value}
         </div>
       ),
     },
     {
-      id: "category",
+      id: "category_name",
       label: "Category",
       visible: true,
       sortable: true,
-      filterConfig: {
-        type: 'select',
-        options: categories.map(c => c.name)
-      },
-      render: (value, campaign) => {
-        const categoryName = getCategoryName(campaign.category_id);
-        return (
-          <span className={`text-sm ${tw.textPrimary}`} title={categoryName || "No category assigned"}>
-            {categoryName}
-          </span>
-        );
-      },
+      filterConfig: { type: 'text' },
     },
     {
       id: "status",
@@ -207,11 +189,7 @@ export default function CampaignsPage() {
         type: 'select',
         options: ['draft', 'scheduled', 'running', 'paused', 'completed']
       },
-      render: (value) => (
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-black`}>
-          {value?.replace(/_/g, " ") || "Unknown"}
-        </span>
-      ),
+      render: (value) => value?.replace(/_/g, " ") || "Unknown",
     },
     {
       id: "approval_status",
@@ -222,19 +200,15 @@ export default function CampaignsPage() {
         type: 'select',
         options: ['pending', 'approved', 'rejected']
       },
-      render: (value) => (
-        <span className={`text-sm ${tw.textPrimary}`}>
-          {value?.replace(/_/g, " ") || "Pending"}
-        </span>
-      ),
+      render: (value) => value?.replace(/_/g, " ") || "Pending",
     },
     {
-      id: "offers",
+      id: "offer_count",
       label: "Offers",
       visible: true,
       filterConfig: { type: 'number' },
       render: (value, campaign) => (
-        <button
+        <span
           onClick={async () => {
             if (campaign.offer_count > 0) {
               if (Array.isArray(campaign.offers) && campaign.offers.length > 0) {
@@ -256,21 +230,19 @@ export default function CampaignsPage() {
               }
             }
           }}
-          className={`text-sm ${tw.textPrimary} font-medium ${
-            campaign.offer_count > 0 ? "cursor-pointer hover:underline" : ""
-          }`}
+          className={campaign.offer_count > 0 ? "cursor-pointer" : ""}
         >
           {campaign.offer_count ?? 0}
-        </button>
+        </span>
       ),
     },
     {
-      id: "segments",
+      id: "segment_count",
       label: "Segments",
       visible: true,
       filterConfig: { type: 'number' },
       render: (value, campaign) => (
-        <button
+        <span
           onClick={async () => {
             if (campaign.segment_count > 0) {
               if (Array.isArray(campaign.segments) && campaign.segments.length > 0) {
@@ -292,41 +264,27 @@ export default function CampaignsPage() {
               }
             }
           }}
-          className={`text-sm ${tw.textPrimary} font-medium ${
-            campaign.segment_count > 0 ? "cursor-pointer hover:underline" : ""
-          }`}
+          className={campaign.segment_count > 0 ? "cursor-pointer" : ""}
         >
           {campaign.segment_count ?? 0}
-        </button>
+        </span>
       ),
     },
     {
       id: "performance",
       label: "Performance",
       visible: true,
-      render: () => (
-        <div className="flex flex-col gap-1">
-          <span className={`text-sm ${tw.textPrimary}`}>
-            Conversion: <span className="font-medium">0%</span>
-          </span>
-          <span className={`text-sm ${tw.textPrimary}`}>
-            Revenue: <span className="font-medium">0</span>
-          </span>
-        </div>
-      ),
+      render: () => "Conversion: 0%",
     },
     {
       id: "created_by",
       label: "Created By",
       visible: false,
-      render: (value) => (
-        <span className={`text-sm ${tw.textPrimary}`}>
-          {value ? userNamesCache.get(value) || "—" : "—"}
-        </span>
-      ),
+      filterConfig: { type: 'number' },
+      render: (value) => value ? userNamesCache.get(value) || "—" : "—",
     },
     {
-      id: "created_on",
+      id: "created_at",
       label: "Created On",
       visible: false,
       filterConfig: { type: 'date' },
@@ -338,18 +296,20 @@ export default function CampaignsPage() {
         ),
     },
     {
-      id: "updated_by",
-      label: "Last Updated By",
+      id: "start_date",
+      label: "Start Date",
       visible: false,
-      render: (value) => (
-        <span className={`text-sm ${tw.textPrimary}`}>
-          {value ? userNamesCache.get(value) || "—" : "—"}
-        </span>
-      ),
+      filterConfig: { type: 'date' },
+      render: (value) =>
+        value ? (
+          <DateFormatter date={value} useUserTimezone className="text-sm" />
+        ) : (
+          <span className={`text-sm ${tw.textMuted}`}>—</span>
+        ),
     },
     {
-      id: "updated_on",
-      label: "Last Updated On",
+      id: "end_date",
+      label: "End Date",
       visible: false,
       filterConfig: { type: 'date' },
       render: (value) =>
@@ -364,11 +324,12 @@ export default function CampaignsPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, campaign) => (
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/dashboard/campaigns/${campaign.id}`)}
-            className={`group p-3 ${tw.rounded} icon-edit`}
+            className={`group p-0 ${tw.rounded} icon-edit`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -387,7 +348,7 @@ export default function CampaignsPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(campaign.id, e)}
-              className={`group p-3 ${tw.rounded} icon-edit hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} icon-edit hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -395,7 +356,7 @@ export default function CampaignsPage() {
         </div>
       ),
     },
-  ], [categories, categoryMap]);
+  ], [categoryMap, categories]);
 
   const {
     columns,
@@ -639,13 +600,15 @@ export default function CampaignsPage() {
   // Fetch Campaigns catalogs from API
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await campaignService.getCampaignCategories();
+      const response = await campaignService.getCampaignCategories({ skipCache: true });
       // Service now normalizes all categories, so we can use them directly
       const categoriesData = response?.data ?? [];
       setCategories(categoriesData as CampaignCategory[]);
+      setCategoriesLoaded(true);
     } catch (error) {
       console.error("Failed to load campaign catalogs:", error);
       setCategories([]);
+      setCategoriesLoaded(true);
     }
   }, []);
 
@@ -727,20 +690,9 @@ export default function CampaignsPage() {
 
       // Service now normalizes all campaigns, so we can use them directly
       const campaignsData: CampaignDisplay[] = response.data.map((campaign) => {
-        // Pre-compute category name to avoid closure issues in render function
-        let categoryName = "";
-        if (campaign.category_id && categories.length > 0) {
-          // Only look up if categories are loaded
-          const categoryId = Number(campaign.category_id);
-          const foundCategory = categories.find((c) => c.id === categoryId);
-          categoryName = foundCategory?.name || campaign.category || "";
-        } else if (campaign.category) {
-          // Fallback to original category field if no lookup available
-          categoryName = campaign.category;
-        }
         return {
           ...campaign,
-          category: categoryName, // Override with looked-up category name
+          category_id: campaign.category_id ?? undefined,
           offer_count: campaign.offer_count ?? campaign.offers?.length ?? 0,
           segment_count: campaign.segment_count ?? campaign.segments?.length ?? 0,
         };
@@ -757,7 +709,12 @@ export default function CampaignsPage() {
       // Use pagination.total from API response
       const totalCount = (response as any).pagination?.total || campaignsToDisplay.length;
 
-      setCampaigns(campaignsToDisplay);
+      // Normalize campaigns to include category names
+      const normalizedCampaigns = campaignsToDisplay.map(campaign => ({
+        ...campaign,
+        category_name: categories.find(cat => cat?.id && String(cat.id) === String(campaign.category_id))?.name || "Uncategorized"
+      }));
+      setCampaigns(normalizedCampaigns);
       setTotalCampaigns(totalCount);
       setIsLoading(false);
     } catch (error) {
@@ -770,7 +727,7 @@ export default function CampaignsPage() {
       setTotalCampaigns(0);
       setIsLoading(false);
     }
-  }, [selectedStatus, searchQuery, filters, tableCurrentPage, tablePageSize, showToast]);
+  }, [selectedStatus, searchQuery, filters, tableCurrentPage, tablePageSize, showToast, categories]);
 
 
   // Fetch campaign stats
@@ -829,6 +786,7 @@ export default function CampaignsPage() {
 
   // Fetch campaigns when filters change or when navigating back to this page
   useEffect(() => {
+    if (!categoriesLoaded) return; // Skip if categories haven't loaded yet
     fetchCampaigns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -838,7 +796,8 @@ export default function CampaignsPage() {
     tableCurrentPage,
     tablePageSize,
     location.key,
-    categories, // Ensure categories are loaded before campaigns
+    categories,
+    categoriesLoaded, // Only fetch campaigns after categories are loaded
   ]);
 
   // Fetch campaign stats when navigating to this page
@@ -1065,14 +1024,15 @@ export default function CampaignsPage() {
       if (!userId) {
         throw new Error("User ID not available");
       }
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: "archived" } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: Math.max(0, prev.active - 1) } : prev);
       await campaignService.archiveCampaign(campaignId, userId);
       showToast("success", "Campaign archived successfully!");
       setShowActionMenu(null);
-      fetchCampaigns(); // Refresh campaigns list
-      fetchCampaignStats(); // Refresh stats cards
     } catch (error) {
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: c.status } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: prev.active + 1 } : prev);
       console.error("Failed to archive campaign:", error);
-      // Extract error message from backend response
       let errorMessage = "Failed to archive campaign";
 
       if (error instanceof Error) {
@@ -1099,12 +1059,14 @@ export default function CampaignsPage() {
       if (!userId) {
         throw new Error("User ID not available");
       }
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: "draft" } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: prev.active + 1 } : prev);
       await campaignService.unarchiveCampaign(campaignId, userId);
       showToast("success", "Campaign unarchived successfully!");
       setShowActionMenu(null);
-      fetchCampaigns();
-      fetchCampaignStats();
     } catch (error) {
+      setCampaigns((prev) => prev.map((c) => (c.id === campaignId ? { ...c, status: "archived" } : c)));
+      setCampaignStats((prev) => prev ? { ...prev, active: Math.max(0, prev.active - 1) } : prev);
       console.error("Failed to unarchive campaign:", error);
       let errorMessage = "Failed to unarchive campaign";
 
@@ -1300,7 +1262,7 @@ export default function CampaignsPage() {
           totalItems={totalCampaigns}
           currentPage={tableCurrentPage}
           pageSize={tablePageSize}
-          isLoading={isLoading}
+          isLoading={isLoading || !categoriesLoaded}
           onPageChange={tableHandlePageChange}
           onSort={handleSort}
           sortConfigs={sortConfigs}
@@ -1355,9 +1317,8 @@ export default function CampaignsPage() {
             >
               {!(campaign.approval_status === "rejected" || campaign.status === "rejected") && (
                 <>
-                  <PermissionGate permission="campaigns.run">
-                    {campaign.approval_status === "approved" &&
-                    campaign.is_active === true ? (
+                  <PermissionGate permission="campaigns.execute">
+                    {canShowCampaignButton(campaign, "execute") ? (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1640,9 +1601,9 @@ export default function CampaignsPage() {
                   e.stopPropagation();
                   handleDeleteCampaign(campaign.id, campaign.name);
                 }}
-                className={`w-full flex items-center px-4 py-3 text-sm icon-delete`}
+                className="w-full flex items-center px-4 py-3 text-sm text-black"
               >
-                <Trash2 className="w-4 h-4 mr-4" />
+                <Trash2 className={`w-4 h-4 mr-4 icon-delete`} />
                 Delete Campaign
               </button>
             </PermissionGate>
@@ -1962,9 +1923,9 @@ export default function CampaignsPage() {
         onClose={() => setShowColumnPicker(false)}
         onToggleColumn={toggleColumn}
         onReorderColumns={(reorderedCols) => {
-          const updatedColumns = columns.map((col) => {
-            const reordered = reorderedCols.find((c) => c.id === col.id);
-            return reordered ? { ...col, visible: reordered.visible } : col;
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
           });
           reorderColumns(updatedColumns);
         }}

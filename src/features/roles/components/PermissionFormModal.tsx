@@ -10,6 +10,8 @@ import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 
 interface PermissionFormModalProps {
   isOpen: boolean;
@@ -45,6 +47,9 @@ export default function PermissionFormModal({
   onSave,
 }: PermissionFormModalProps) {
   const { success, error: showError } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
 
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -220,16 +225,17 @@ export default function PermissionFormModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" style={{ backgroundColor: "var(--c-surface-background)" }}>
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
+          <h2 className="text-xl font-semibold" style={{ color: "var(--c-text-primary)" }}>
             {permission ? "Edit Permission" : "Create New Permission"}
           </h2>
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+            className="disabled:opacity-50"
+            style={{ color: "var(--c-text-muted)" }}
           >
             <X className="w-5 h-5" />
           </button>
@@ -239,7 +245,7 @@ export default function PermissionFormModal({
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {/* Name and Code Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <FormField error={errors?.name} ref={registerFieldRef('name')}>
               <Input
                 label="Permission Name *"
                 type="text"
@@ -248,12 +254,9 @@ export default function PermissionFormModal({
                 placeholder="e.g., User Management"
                 hasError={!!errors.name}
               />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
+            <FormField error={errors?.code} ref={registerFieldRef('code')}>
               <Input
                 label="Code *"
                 type="text"
@@ -263,16 +266,13 @@ export default function PermissionFormModal({
                 placeholder="e.g., permission.action.resource"
                 hasError={!!errors.code}
               />
-              {errors.code && (
-                <p className="mt-1 text-sm text-red-600">{errors.code}</p>
-              )}
               {!errors.code && !permission && (
                 <p className="mt-1 text-xs text-gray-500">Use dot notation for readability</p>
               )}
               {permission && (
                 <p className="mt-1 text-xs text-gray-500">(Cannot be changed)</p>
               )}
-            </div>
+            </FormField>
           </div>
 
           {/* Description */}
@@ -286,7 +286,7 @@ export default function PermissionFormModal({
 
           {/* Action and Resource Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <FormField error={errors?.action} ref={registerFieldRef('action')}>
               <HeadlessSelect
                 label="Action *"
                 options={AVAILABLE_ACTIONS}
@@ -300,10 +300,7 @@ export default function PermissionFormModal({
                 error={!!errors.action}
                 className="w-full"
               />
-              {errors.action && (
-                <p className="mt-1 text-sm text-red-600">{errors.action}</p>
-              )}
-            </div>
+            </FormField>
 
             <Input
               label="Resource Type ID (Optional)"
@@ -356,15 +353,15 @@ export default function PermissionFormModal({
         </form>
 
         {/* Footer */}
-        <div className="sticky bottom-0 flex justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-white">
+        <div className="sticky bottom-0 flex justify-end gap-3 px-6 py-4 border-t" style={{ borderColor: "var(--c-border-default)", backgroundColor: "var(--c-surface-background)" }}>
           <button
             onClick={onClose}
             disabled={isLoading}
             className="px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               background: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
+              color: "var(--c-bordered-button-color)",
+              border: `1px solid var(--c-bordered-button-color)`,
             }}
           >
             Cancel
@@ -372,8 +369,8 @@ export default function PermissionFormModal({
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`px-4 py-2 text-sm font-medium  rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-            style={{ backgroundColor: color.primary.action }}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-white`}
+            style={{ backgroundColor: "var(--c-primary-action)" }}
           >
             {isLoading && <LoadingSpinner />}
             {isLoading ? (permission ? "Updating..." : "Creating...") : (permission ? "Update" : "Create")}

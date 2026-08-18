@@ -1,16 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Trash2,
   Edit,
   Download,
+  Eye,
 } from "lucide-react";
 import { seedListService } from "../../../shared/services/seedListService";
+import { userService } from "../../users/services/userService";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -66,6 +70,8 @@ export default function SeedListDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [userNames, setUserNames] = useState<Record<number, string>>({});
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -78,6 +84,93 @@ export default function SeedListDetailsPage() {
       loadAuditTrail();
     }
   }, [seedList?.id]);
+
+  const getUserDisplayName = (userId: number) => {
+    return userNames[userId] || userId;
+  };
+
+  const auditColumns = useMemo(() => [
+    { id: "customer_name", label: "Customer Name", visible: true },
+    { id: "customer_email", label: "Email", visible: true },
+    { id: "added_at", label: "Added At", visible: true, render: (_, row) => <DateFormatter date={row.added_at} includeTime /> },
+    { id: "added_by", label: "Added By", visible: true, render: (_, row) => row._full?.added_by ? (
+      <button
+        onClick={() => navigate(`/dashboard/user-management/${row._full.added_by}`)}
+        className="text-sm hover:underline transition-colors"
+        style={{ color: color.primary.accent, background: "none", border: "none", padding: "0", cursor: "pointer" }}
+      >
+        {getUserDisplayName(row._full.added_by)}
+      </button>
+    ) : <span className="text-sm">-</span> },
+    { id: "removed_at", label: "Removed At", visible: true, render: (_, row) => row.removed_at ? <DateFormatter date={row.removed_at} includeTime /> : "-" },
+    { id: "removed_by", label: "Removed By", visible: true, render: (_, row) => row._full?.removed_by ? (
+      <button
+        onClick={() => navigate(`/dashboard/user-management/${row._full.removed_by}`)}
+        className="text-sm hover:underline transition-colors"
+        style={{ color: color.primary.accent, background: "none", border: "none", padding: "0", cursor: "pointer" }}
+      >
+        {getUserDisplayName(row._full.removed_by)}
+      </button>
+    ) : <span className="text-sm">-</span> },
+    { id: "status", label: "Status", visible: true, render: (_, row) => <span className="text-sm text-black">{row.status}</span> },
+    { id: "actions", label: "Actions", visible: true, isActionColumn: true, render: (_, row) => (
+      <button
+        onClick={() => navigate(`/dashboard/user-management/${row._full.customer_id}`)}
+        disabled={row._full.customer_id === 0}
+        className={`p-0 ${tw.rounded} transition-colors ${
+          row._full.customer_id === 0 ? "opacity-50 cursor-not-allowed" : "icon-edit"
+        }`}
+        title={row._full.customer_id === 0 ? "External customer - no details page" : "View customer details"}
+      >
+        <Eye className="w-4 h-4" />
+      </button>
+    ) },
+  ] as TableColumn<any>[], []);
+
+  const {
+    columns,
+    currentPage,
+    pageSize,
+    handlePageChange,
+    sortConfigs,
+    handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
+  } = useTable({
+    tableId: "seed-list-audit-trail",
+    defaultColumns: auditColumns,
+    persistToLocalStorage: false,
+  });
+
+  useEffect(() => {
+    if (auditTrail.length === 0) return;
+
+    const fetchUserDetails = async (userId: number) => {
+      if (userNames[userId]) return;
+
+      try {
+        const response = await userService.getUserById(userId, true);
+        if (response.data) {
+          const userName = response.data.display_name || response.data.username || response.data.first_name || null;
+          setUserNames((prev) => ({
+            ...prev,
+            [userId]: userName || String(userId),
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err);
+      }
+    };
+
+    const userIds = new Set<number>();
+    auditTrail.forEach((entry) => {
+      if (entry.added_by) userIds.add(entry.added_by);
+      if (entry.removed_by) userIds.add(entry.removed_by);
+    });
+
+    userIds.forEach(fetchUserDetails);
+  }, [auditTrail]);
 
   const loadSeedListDetails = async () => {
     if (!id) return;
@@ -164,8 +257,8 @@ export default function SeedListDetailsPage() {
           </button>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit text-red-600 disabled:opacity-50 disabled:cursor-not-allowed`}
-            style={{ backgroundColor: "#FEE2E2", border: "1px solid #FECACA" }}
+            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+            style={{ backgroundColor: "#DC2626", border: "1px solid #DC2626" }}
             onMouseEnter={(e) => {
               (e.target as HTMLButtonElement).style.opacity = "0.9";
             }}
@@ -181,7 +274,7 @@ export default function SeedListDetailsPage() {
 
       {/* Seed List Information */}
       <div className={`${tw.rounded} border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm`}>
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
           Seed List Information
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -291,8 +384,8 @@ export default function SeedListDetailsPage() {
       </div>
 
       {/* Member Activity */}
-      <div className={`${tw.rounded} border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm`}>
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      <div className={`${tw.rounded} border border-gray-200 dark:border-gray-700 p-6`}>
+        <h2 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">
           Member Activity ({auditTrail.length})
         </h2>
 
@@ -301,100 +394,39 @@ export default function SeedListDetailsPage() {
             <LoadingSpinner />
           </div>
         ) : auditTrail.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full min-w-[1200px]"
-              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-            >
-              <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Customer Name
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Email
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Action
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Added At
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Removed At
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditTrail.map((entry) => (
-                  <tr key={entry.id} className="transition-colors">
-                    <td
-                      className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.customer_name}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.customer_email || "-"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm font-medium"
-                      style={{ backgroundColor: color.surface.tablebodybg, color: color.primary.accent }}
-                    >
-                      {entry.removed_at ? "Removed" : "Added"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <DateFormatter date={entry.added_at} includeTime />
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      {entry.removed_at ? <DateFormatter date={entry.removed_at} includeTime /> : "-"}
-                    </td>
-                    <td
-                      className="px-6 py-4 text-sm capitalize"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                        entry.status === "active"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                      }`}>
-                        {entry.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="overflow-x-auto -mx-6">
+            <div className="px-6">
+              <Table
+              columns={columns}
+              data={auditTrail.map((entry) => ({
+                id: entry.id,
+                customer_name: entry.customer_name || "-",
+                customer_email: entry.customer_email || "-",
+                added_at: entry.added_at,
+                added_by: entry.added_by,
+                removed_at: entry.removed_at,
+                removed_by: entry.removed_by,
+                status: entry.status,
+                _full: entry,
+              }))}
+              totalItems={auditTrail.length}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              isLoading={false}
+              onPageChange={handlePageChange}
+              onSort={handleSort}
+              sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
+              getRowId={(row) => `${row.id}`}
+              style={{
+                headerBackground: color.surface.tableHeader,
+                headerTextColor: color.surface.tableHeaderText,
+                rowBackground: color.surface.tablebodybg,
+                rowSpacing: "0 8px",
+              }}
+              />
+            </div>
           </div>
         ) : (
           <div className="text-center py-8">
@@ -409,9 +441,10 @@ export default function SeedListDetailsPage() {
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         title="Delete Seed List"
-        message={`Are you sure you want to delete "${seedList?.name}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete "${seedList?.name}"? This action cannot be undone.`}
+        itemName={seedList?.name || ""}
         onConfirm={handleDelete}
-        onCancel={() => setShowDeleteModal(false)}
+        onClose={() => setShowDeleteModal(false)}
         isLoading={isDeleting}
       />
       {isEditModalOpen && (
@@ -425,6 +458,14 @@ export default function SeedListDetailsPage() {
           initialData={seedList ? { name: seedList.name, description: seedList.description } : undefined}
         />
       )}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
+        onClose={() => setShowColumnPicker(false)}
+      />
     </div>
   );
 }

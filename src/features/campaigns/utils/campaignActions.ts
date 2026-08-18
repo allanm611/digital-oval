@@ -38,7 +38,7 @@ export function canShowCampaignButton(
       return (
         campaign.approval_status === "approved" &&
         campaign.is_active === true &&
-        campaign.approval_status !== "rejected"
+        (campaign.status === "approved" || campaign.status === "active")
       );
     case "submit":
       return campaign.status === "draft" && campaign.approval_status !== "rejected";

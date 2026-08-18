@@ -52,7 +52,7 @@ export default function CharacterSetFormPage() {
           setTripleChars(data.triple_chars || "");
           setQuadChars(data.quad_chars || "");
         } catch (err) {
-          showError("Error", extractBackendError(error, "Error. Please try again."));
+          showError("Error", extractBackendError(err, "Error. Please try again."));
           navigate("/dashboard/character-sets");
         } finally {
           setLoading(false);
@@ -99,7 +99,7 @@ export default function CharacterSetFormPage() {
       }
       navigate("/dashboard/character-sets");
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setSaving(false);
     }

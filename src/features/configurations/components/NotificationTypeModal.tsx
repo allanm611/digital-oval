@@ -7,6 +7,8 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import { notificationTypeService, NotificationRule, CreateNotificationRuleRequest } from "../../../shared/services/notificationTypeService";
 import { notificationCategoryService } from "../../notifications/services/notificationCategoryService";
 import { notificationService } from "../../notifications/services/notificationService";
@@ -31,13 +33,19 @@ export default function NotificationTypeModal({
   editingRule,
 }: NotificationTypeModalProps) {
   const { error: showError, success: showSuccess } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoadingTables, setIsLoadingTables] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isLoadingEventConditions, setIsLoadingEventConditions] = useState(false);
   const [tableOptions, setTableOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [categoryOptions, setCategoryOptions] = useState<Array<{ value: number | string; label: string }>>([]);
   const [eventConditionOptions, setEventConditionOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [eventConditionsMap, setEventConditionsMap] = useState<Record<string, any>>({});
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -71,7 +79,7 @@ export default function NotificationTypeModal({
       setTableOptions(options);
     } catch (error) {
       console.error("Failed to load tables:", error);
-      showError(extractBackendError(error, "Failed to load tables. Please try again."));
+      showError(extractBackendError(err, "Failed to load tables. Please try again."));
     } finally {
       setIsLoadingTables(false);
     }
@@ -88,7 +96,7 @@ export default function NotificationTypeModal({
       setCategoryOptions(options);
     } catch (error) {
       console.error("Failed to load notification categories:", error);
-      showError(extractBackendError(error, "Failed to load categories. Please try again."));
+      showError(extractBackendError(err, "Failed to load categories. Please try again."));
     } finally {
       setIsLoadingCategories(false);
     }
@@ -103,20 +111,30 @@ export default function NotificationTypeModal({
     setIsLoadingEventConditions(true);
     try {
       const response = await notificationService.getEventConditions(formData.table_name);
-      const options = response.data
-        .filter((condition) => condition.action_type === formData.action_type)
-        .map((condition) => ({
-          value: String(condition.id || ""),
-          label: condition.display_name || condition.name || "",
-        }));
+      const filtered = response.data.filter((condition) => condition.action_type === formData.action_type);
+
+      const options = filtered.map((condition) => ({
+        value: String(condition.id),
+        label: condition.display_name || condition.name || "",
+      }));
+
+      // Store full conditions for lookup
+      const conditionMap: Record<string, any> = {};
+      filtered.forEach((condition) => {
+        const key = String(condition.id || condition.name);
+        conditionMap[key] = condition;
+      });
+      setEventConditionsMap(conditionMap);
       setEventConditionOptions(options);
     } catch (error) {
       console.error("Failed to load event conditions:", error);
       setEventConditionOptions([]);
+      setEventConditionsMap({});
     } finally {
       setIsLoadingEventConditions(false);
     }
   };
+
 
   useEffect(() => {
     if (isOpen) {
@@ -128,6 +146,7 @@ export default function NotificationTypeModal({
   useEffect(() => {
     loadEventConditions();
   }, [formData.table_name, formData.action_type]);
+
 
   useEffect(() => {
     if (editingRule) {
@@ -153,39 +172,55 @@ export default function NotificationTypeModal({
     }
   }, [editingRule, isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name.trim()) {
-      showError("Name is required");
-      return;
-    }
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
 
     if (!formData.table_name) {
-      showError("Table name is required");
-      return;
+      newErrors.table_name = "Table name is required";
     }
 
     if (!formData.action_type) {
-      showError("Action type is required");
-      return;
+      newErrors.action_type = "Action type is required";
     }
 
     if (!formData.message_template.trim()) {
-      showError("Message template is required");
+      newErrors.message_template = "Message template is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validate()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // Extract event_condition from selected condition
+      let eventCondition: any = null;
+      if (formData.event_condition) {
+        const selectedCondition = eventConditionsMap[formData.event_condition];
+        if (selectedCondition && selectedCondition.event_condition) {
+          eventCondition = selectedCondition.event_condition;
+        }
+      }
+
       const payload: any = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         table_name: formData.table_name,
         action_type: formData.action_type,
-        event_condition: formData.event_condition,
         message_template: formData.message_template.trim(),
       };
+
+      // Only include event_condition if found from the selected condition
+      if (eventCondition !== null) {
+        payload.event_condition = eventCondition;
+      }
 
       if (formData.category_id) {
         payload.category_id = formData.category_id;
@@ -244,7 +279,7 @@ export default function NotificationTypeModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Name */}
           <div className="space-y-1.5">
             <Input
@@ -271,24 +306,28 @@ export default function NotificationTypeModal({
           {/* Table Name and Action Type on Same Line */}
           <div className="grid grid-cols-2 gap-4">
             {/* Table Name */}
-            <HeadlessSelect
-              label="Table Name *"
-              options={tableOptions}
-              value={formData.table_name}
-              onChange={(value) => setFormData({ ...formData, table_name: String(value) })}
-              placeholder="Select a table..."
-              disabled={isLoadingTables}
-              searchable={true}
-            />
+            <FormField error={errors?.table_name} ref={registerFieldRef('table_name')}>
+              <HeadlessSelect
+                label="Table Name *"
+                options={tableOptions}
+                value={formData.table_name}
+                onChange={(value) => setFormData({ ...formData, table_name: String(value) })}
+                placeholder="Select a table..."
+                disabled={isLoadingTables}
+                searchable={true}
+              />
+            </FormField>
 
             {/* Action Type */}
-            <HeadlessSelect
-              label="Action Type *"
-              options={ACTION_OPTIONS}
-              value={formData.action_type}
-              onChange={(value) => setFormData({ ...formData, action_type: String(value) })}
-              placeholder="Select an action..."
-            />
+            <FormField error={errors?.action_type} ref={registerFieldRef('action_type')}>
+              <HeadlessSelect
+                label="Action Type *"
+                options={ACTION_OPTIONS}
+                value={formData.action_type}
+                onChange={(value) => setFormData({ ...formData, action_type: String(value) })}
+                placeholder="Select an action..."
+              />
+            </FormField>
           </div>
 
           {/* Event Condition and Category on Same Line */}
@@ -317,24 +356,24 @@ export default function NotificationTypeModal({
           </div>
 
           {/* Message Template */}
-          <div className="relative">
-            <div className="flex items-center gap-1 mb-1">
-              <label className={`text-sm font-medium ${tw.textPrimary}`}>Message Template *</label>
-              <div className="group relative cursor-help">
+          <FormField error={errors?.message_template} ref={registerFieldRef('message_template')}>
+            <div className="space-y-1.5 relative">
+              <Textarea
+                label="Message Template *"
+                value={formData.message_template}
+                onChange={(value) => setFormData({ ...formData, message_template: value })}
+                placeholder="e.g., {actor_id} created {table_name} {record_id}"
+                rows={3}
+                required
+              />
+              <div className="group absolute top-2 right-3 cursor-pointer" title="">
                 <HelpCircle className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
+                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-3 py-2 z-10 whitespace-nowrap">
                   Use placeholders: {"{record_id}"}, {"{actor_id}"}, {"{table_name}"}, {"{action_type}"}
                 </div>
               </div>
             </div>
-            <Textarea
-              value={formData.message_template}
-              onChange={(value) => setFormData({ ...formData, message_template: value })}
-              placeholder="e.g., {actor_id} created {table_name} {record_id}"
-              rows={3}
-              required
-            />
-          </div>
+          </FormField>
 
           {/* Actions */}
           <div className="flex gap-3 pt-4 justify-end">

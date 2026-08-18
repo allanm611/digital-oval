@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus } from "lucide-react";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 import {
   Segment,
   CreateSegmentRequest,
@@ -20,7 +22,7 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
-import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import CreateSegmentTypeModal from "./CreateSegmentTypeModal";
 import { useMessageVariableFields } from "../../manual-broadcast/hooks/useMessageVariableFields";
 import { convertConditionsToPayload } from "../utils/conditionPayloadBuilder";
@@ -42,6 +44,10 @@ export default function SegmentModal({
   segment,
 }: SegmentModalProps) {
   const { error: showError } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef, hasError } = useFormValidation();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -1117,7 +1123,7 @@ export default function SegmentModal({
                         </p>
                       </div>
                     ) : (
-                      <>
+                      <FormField error={fieldErrors?.unique_identifier} ref={registerFieldRef('unique_identifier')}>
                         <HeadlessSelect
                           label="Map to Customer Identity Field *"
                           options={customerIdentityFields.map((field) => ({
@@ -1139,12 +1145,7 @@ export default function SegmentModal({
                           placeholder="Select identity field..."
                           disabled={isLoadingIdentityFields}
                         />
-                        {fieldErrors.unique_identifier && (
-                          <p className="mt-2 text-sm text-red-600">
-                            {fieldErrors.unique_identifier}
-                          </p>
-                        )}
-                      </>
+                      </FormField>
                     )}
                   </div>
 
@@ -1244,7 +1245,7 @@ export default function SegmentModal({
                       </div>
                     </div>
 
-                    <div>
+                    <FormField error={fieldErrors?.segment_type_id} ref={registerFieldRef('segment_type_id')}>
                       <TypeSelector
                         label="Segment Type *"
                         value={
@@ -1284,17 +1285,12 @@ export default function SegmentModal({
                         }
                         allowCreate={true}
                         onCreate={() => setShowCreateTypeModal(true)}
-                        error={!!fieldErrors.segment_type_id}
+                        error={hasError('segment_type_id')}
                       />
-                      {fieldErrors.segment_type_id && (
-                        <p className="mt-2 text-sm text-red-600">
-                          {fieldErrors.segment_type_id}
-                        </p>
-                      )}
-                    </div>
+                    </FormField>
                   </div>
 
-                  <div>
+                  <FormField error={fieldErrors?.description} ref={registerFieldRef('description')}>
                     <Textarea
                       label="Description"
                       value={formData.description}
@@ -1320,26 +1316,21 @@ export default function SegmentModal({
                       }
                       placeholder="Describe this segment..."
                       rows={3}
-                      hasError={!!fieldErrors.description}
+                      hasError={hasError('description')}
                       required
                     />
-                    {fieldErrors.description && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {fieldErrors.description}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
 
                   {/* Segment Conditions - Builder now includes title and preview button */}
                   {/* Segment Conditions/Rules Builder - now with type selector */}
-                  <div>
+                  <FormField error={fieldErrors?.conditions} ref={registerFieldRef('conditions')}>
                     <div
                       className={`${tw.rounded} p-4`}
                       style={{
                         border: `1px solid ${
                           fieldErrors.conditions ? "#ef4444" : tw.borderDefault
                         }`,
-                        backgroundColor: color.surface.cards,
+                        backgroundColor: "transparent",
                       }}
                     >
                       <SegmentConditionsBuilder
@@ -1366,12 +1357,7 @@ export default function SegmentModal({
                         onSqlPreview={handleSqlPreview}
                       />
                     </div>
-                    {fieldErrors.conditions && (
-                      <p className="mt-2 text-sm text-red-600">
-                        {fieldErrors.conditions}
-                      </p>
-                    )}
-                  </div>
+                  </FormField>
                 </form>
               </div>
 
@@ -1384,9 +1370,15 @@ export default function SegmentModal({
                   onClick={onClose}
                   className={`px-6 py-2 ${tw.rounded} transition-colors text-sm`}
                   style={{
-                    background: "transparent",
-                    color: color.primary.action,
-                    border: `1px solid ${color.primary.action}`,
+                    backgroundColor: 'transparent',
+                    color: 'var(--c-text-primary)',
+                    border: '1px solid var(--c-text-primary)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
                   Cancel
@@ -1605,11 +1597,17 @@ export default function SegmentModal({
                         setShowConfirmModal(false);
                         setPendingQueries(null);
                       }}
-                      className={`px-5 py-2.5 ${tw.rounded} text-sm font-medium transition-colors hover:bg-gray-100`}
+                      className={`px-5 py-2.5 ${tw.rounded} text-sm font-medium transition-colors`}
                       style={{
-                        backgroundColor: "white",
-                        border: `1px solid ${color.border.default}`,
-                        color: color.text.primary,
+                        backgroundColor: 'transparent',
+                        border: '1px solid var(--c-text-primary)',
+                        color: 'var(--c-text-primary)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
                       Cancel
@@ -1637,7 +1635,7 @@ export default function SegmentModal({
             )}
 
             {/* Create Catalog Modal */}
-            <CreateCategoryModal
+            <CategoryModal
               isOpen={showCreateCatalogModal}
               onClose={() => setShowCreateCatalogModal(false)}
               entityType="segment"

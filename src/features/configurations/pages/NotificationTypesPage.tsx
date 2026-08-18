@@ -23,6 +23,7 @@ export default function NotificationTypesPage() {
   const [categoryMap, setCategoryMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingRule, setEditingRule] = useState<NotificationRule | null>(null);
 
@@ -51,7 +52,7 @@ export default function NotificationTypesPage() {
       });
       setCategoryMap(map);
     } catch (error) {
-      showError(extractBackendError(error, "Failed to load notification types. Please try again."));
+      showError(extractBackendError(err, "Failed to load notification types. Please try again."));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -100,72 +101,40 @@ export default function NotificationTypesPage() {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "table_name",
       label: "Table",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "action_type",
       label: "Action Type",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={value as string}>
-          {value}
-        </div>
-      ),
     },
     {
       id: "category_id",
       label: "Category",
       visible: true,
-      render: (value, rule) => (
-        <div className={`text-sm ${tw.textSecondary} truncate`} title={rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}>
-          {rule.category_id ? categoryMap[String(rule.category_id)] || "-" : "-"}
-        </div>
-      ),
+      render: (value) => value || "—",
     },
     {
       id: "description",
       label: "Description",
       visible: true,
-      render: (value) => (
-        <div className={`text-sm ${tw.textSecondary} max-w-md truncate`} title={value ? String(value) : "-"}>
-          {value || "-"}
-        </div>
-      ),
+      render: (value) => value || "—",
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, rule) => (
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleOpenEditModal(rule)}
-            className={`p-2 icon-delete ${tw.rounded} transition-colors`}
-            style={{
-              color: color.primary.action,
-              backgroundColor: "transparent",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${color.primary.action}10`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
+            className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit"
           >
             <Edit className="w-4 h-4" />
@@ -173,7 +142,7 @@ export default function NotificationTypesPage() {
           <button
             onClick={() => handleDeleteClick(rule)}
             disabled={isDeleting && deleteConfirm.id === rule.id}
-            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`p-0 icon-delete ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Delete"
           >
             {isDeleting && deleteConfirm.id === rule.id ? (
@@ -195,6 +164,7 @@ export default function NotificationTypesPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "notification-types-table",
     defaultColumns,
@@ -215,12 +185,10 @@ export default function NotificationTypesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
           <BackButton
-           
             showBreadcrumb={true}
-           
             currentLabel="Notification Types"
           />
           <button
@@ -283,6 +251,8 @@ export default function NotificationTypesPage() {
               onPageChange={tableHandlePageChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -314,7 +284,7 @@ export default function NotificationTypesPage() {
             await confirmDeleteRule(deleteConfirm.id);
             showSuccess("Notification type deleted successfully");
           } catch (error) {
-            showError("Failed to delete notification type", extractBackendError(error, "Failed to delete notification type. Please try again."));
+            showError("Failed to delete notification type", extractBackendError(err, "Failed to delete notification type. Please try again."));
           }
         }}
         title="Delete Notification Type"

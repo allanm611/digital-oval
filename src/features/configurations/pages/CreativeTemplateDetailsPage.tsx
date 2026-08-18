@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { creativeTemplateService, CreativeTemplate } from "../services/creativeTemplateService";
+import { creativeTemplateService, CreativeTemplate, creativeTemplateText, creativeTemplateHtml } from "../services/creativeTemplateService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
@@ -25,7 +25,7 @@ export default function CreativeTemplateDetailsPage() {
     try {
       setLoading(true);
       const response = await creativeTemplateService.getCreativeTemplateById(Number(id));
-      setTemplate(response.data);
+      setTemplate(response);
     } catch (err) {
       showError(t("messages.error"), t("creativeTemplates.loadError"));
       navigate("/dashboard/creative-templates");
@@ -133,18 +133,18 @@ export default function CreativeTemplateDetailsPage() {
             </div>
           )}
 
-          {template.body_text && (
+          {creativeTemplateText(template) && (
             <div>
               <p className={`text-xs font-medium ${tw.textSecondary} mb-2`}>
                 {t("creativeTemplates.bodyText")}
               </p>
               <p className={`text-sm ${tw.textPrimary} whitespace-pre-wrap`}>
-                {template.body_text}
+                {creativeTemplateText(template)}
               </p>
             </div>
           )}
 
-          {template.body_html && (
+          {creativeTemplateHtml(template) && (
             <div>
               <p className={`text-xs font-medium ${tw.textSecondary} mb-2`}>
                 {t("creativeTemplates.htmlBody")}
@@ -153,7 +153,7 @@ export default function CreativeTemplateDetailsPage() {
                 className={`text-sm ${tw.textPrimary} bg-gray-50 p-4 rounded border`}
                 style={{ borderColor: color.border.default }}
               >
-                <pre className="overflow-x-auto text-xs">{template.body_html}</pre>
+                <pre className="overflow-x-auto text-xs">{creativeTemplateHtml(template)}</pre>
               </div>
             </div>
           )}

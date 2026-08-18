@@ -40,62 +40,65 @@ export default function MonitoringPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
 
   const defaultColumns: TableColumn<Execution>[] = [
     {
       id: "name",
       label: "Name",
       visible: true,
-      render: (value) => <div className={`${tw.tableFirstColumn}`}>{value}</div>,
     },
     {
       id: "type",
       label: "Type",
       visible: true,
-      render: (value) => <span className="text-sm">{getTypeLabel(value)}</span>,
+      render: (value) => {
+        if (!value) return "—";
+        return value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      },
     },
     {
       id: "recipientsCount",
       label: "Recipients",
       visible: true,
-      render: (value) => <span className="text-sm">{value || "—"}</span>,
+      render: (value) => value || "—",
     },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm" style={{ color: 'var(--c-text-primary)' }}>
-          {value}
-        </span>
-      ),
+      render: (value) => value || "—",
     },
     {
       id: "successCount",
       label: "Success",
       visible: true,
-      render: (value) => <span className="text-sm">{value || "—"}</span>,
+      render: (value) => value || "—",
     },
     {
       id: "failureCount",
       label: "Failed",
       visible: true,
-      render: (value) => <span className="text-sm">{value || "—"}</span>,
+      render: (value) => value || "—",
     },
     {
       id: "duration",
       label: "Duration",
       visible: true,
-      render: (value) => <span className="text-sm">{formatDuration(value)}</span>,
+      render: (value) => value || "—",
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, execution) => (
         <div className="flex items-center justify-center gap-2">
-          <button onClick={() => handleRetry(execution)} className={`p-2 ${tw.rounded} transition-colors`} style={{ color: 'var(--c-text-primary)' }} title="Retry">
+          <button onClick={() => navigate(`/dashboard/monitoring/${execution.id}`)} className={`p-0 icon-edit ${tw.rounded} transition-colors`} title="View details">
+            <Eye className="w-4 h-4" />
+          </button>
+          <button onClick={() => handleRetry(execution)} className={`p-0 icon-edit ${tw.rounded} transition-colors`} title="Retry">
             <RotateCcw className="w-4 h-4" />
           </button>
         </div>
@@ -111,6 +114,7 @@ export default function MonitoringPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "execution-monitoring-table",
     defaultColumns,
@@ -263,14 +267,12 @@ export default function MonitoringPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4">
+      <div className="space-y-2">
         <BackButton
-         
           showBreadcrumb={true}
-         
           currentLabel="Execution Monitoring"
         />
-        <p className={`${tw.textSecondary} text-sm`}>
+        <p className={`text-sm ${tw.textSecondary}`}>
           Monitor campaigns, broadcasts, rewards, and scheduled jobs execution status
         </p>
       </div>
@@ -377,6 +379,8 @@ export default function MonitoringPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

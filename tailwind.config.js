@@ -5,8 +5,21 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["sans-serif"],
+        sans: [
+          // "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          "sans-serif",
+        ],
         mono: ["monospace"],
+        satoshi: ["Satoshi Variable", "sans-serif"],
+        // "supply-mono": ["PP Supply Mono", "monospace"],
+        "et-mono": ["ET Mono", "monospace"],
       },
       colors: {
         primary: {

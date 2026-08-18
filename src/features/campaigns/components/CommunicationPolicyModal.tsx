@@ -967,8 +967,8 @@ export default function CommunicationPolicyModal({
               className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} transition-colors`}
               style={{
                 background: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
+                color: "var(--c-bordered-button-color)",
+                border: `1px solid var(--c-bordered-button-color)`,
               }}
             >
               Cancel

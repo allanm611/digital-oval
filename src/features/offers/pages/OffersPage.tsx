@@ -124,11 +124,6 @@ export default function OffersPage() {
       visible: true,
       sortable: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} text-sm truncate`} title={row.name}>
-          {row.name}
-        </div>
-      ),
     },
     {
       id: "category",
@@ -139,11 +134,6 @@ export default function OffersPage() {
         type: 'select',
         options: categories.map(c => c.name)
       },
-      render: (value) => (
-        <span className={`text-sm`} style={{ color: 'var(--c-text-primary)' }}>
-          {value}
-        </span>
-      ),
     },
     {
       id: "status",
@@ -180,11 +170,12 @@ export default function OffersPage() {
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => handleViewOffer(row.id)}
-            className={`p-1 rounded icon-edit`}
+            className={`p-0 rounded icon-edit`}
             title="View Details"
           >
             <Eye className="h-4 w-4" />
@@ -198,7 +189,7 @@ export default function OffersPage() {
           >
             <button
               onClick={(e) => handleActionMenuToggle(row.id, e)}
-              className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
+              className={`${tw.textMuted} hover:${tw.textPrimary} p-0 rounded`}
               title="More Actions"
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -254,11 +245,11 @@ export default function OffersPage() {
 
   const loadOffers = async (skipCache = false) => {
     try {
-      setLoading(true);
+        setLoading(true);
 
-      // Calculate offset from page number
-      const pageSize = filters.limit || 15;
-      const offset = (filters.page - 1) * pageSize;
+      // Calculate offset from page number and table page size
+      const pageSize = tablePageSize;
+      const offset = (tableCurrentPage - 1) * pageSize;
 
       // If category filter is applied, use the specific category endpoint
       if (filters.categoryId) {
@@ -271,21 +262,21 @@ export default function OffersPage() {
           },
         );
 
-        if (response.success && response.data) {
+        if (response?.success && response?.data && Array.isArray(response.data)) {
           // Apply additional client-side filters if needed
           let filteredOffers = response.data;
 
           // Filter by status if selected
           if (selectedStatus && selectedStatus !== "all") {
             filteredOffers = filteredOffers.filter(
-              (offer) => offer.status === selectedStatus,
+              (offer) => offer?.status === selectedStatus,
             );
           } else if (selectedStatus === "all") {
             // By default, exclude archived and expired offers
             filteredOffers = filteredOffers.filter(
               (offer) =>
-                offer.status !== OfferStatusEnum.ARCHIVED &&
-                offer.status !== OfferStatusEnum.EXPIRED,
+                offer?.status !== OfferStatusEnum.ARCHIVED &&
+                offer?.status !== OfferStatusEnum.EXPIRED,
             );
           }
 
@@ -294,32 +285,31 @@ export default function OffersPage() {
             const searchLower = debouncedSearchTerm.toLowerCase();
             filteredOffers = filteredOffers.filter(
               (offer) =>
-                offer.name?.toLowerCase().includes(searchLower) ||
-                offer.code?.toLowerCase().includes(searchLower) ||
-                offer.description?.toLowerCase().includes(searchLower),
+                offer?.name?.toLowerCase().includes(searchLower) ||
+                offer?.code?.toLowerCase().includes(searchLower) ||
+                offer?.description?.toLowerCase().includes(searchLower),
             );
           }
 
           // Sort offers by created_at descending (newest first)
           filteredOffers.sort((a, b) => {
-            const dateA = new Date(a.created_at).getTime();
-            const dateB = new Date(b.created_at).getTime();
+            const dateA = a?.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b?.created_at ? new Date(b.created_at).getTime() : 0;
             return dateB - dateA; // Descending order (newest first)
           });
 
           setOffers(filteredOffers);
-          const total = filteredOffers.length;
+          const total = filteredOffers?.length || 0;
           setTotalOffers(total);
           return; // Success - exit early to avoid catch block
         }
         // If response.success is false, fall through to error handling
       } else {
         // No category filter - use regular search
-        // Note: Backend doesn't support status filter, so we filter client-side
-        // When filtering client-side by status, we need to fetch all offers to get accurate totals
+        // Note: Backend doesn't support status filter, so we filter client-side when needed
+        // Only filter client-side when a specific status is selected
         const needsClientSideFiltering =
-          (selectedStatus && selectedStatus !== "all") ||
-          selectedStatus === "all";
+          selectedStatus && selectedStatus !== "all";
 
         if (needsClientSideFiltering) {
           // Fetch all offers in batches when we need to filter client-side
@@ -339,14 +329,14 @@ export default function OffersPage() {
               skipCache: skipCache,
             });
 
-            if (batchResponse.success && batchResponse.data) {
-              allOffers = [...allOffers, ...batchResponse.data];
+            if (batchResponse?.success && batchResponse?.data && Array.isArray(batchResponse.data)) {
+              allOffers = [...allOffers, ...(batchResponse.data || [])];
 
               // Check if there are more offers to fetch
-              const totalFromPagination = batchResponse.pagination?.total || 0;
+              const totalFromPagination = batchResponse?.pagination?.total || 0;
               hasMore =
                 allOffers.length < totalFromPagination &&
-                batchResponse.data.length === batchSize;
+                (batchResponse?.data?.length || 0) === batchSize;
               batchOffset += batchSize;
             } else {
               hasMore = false;
@@ -355,29 +345,29 @@ export default function OffersPage() {
 
           // Sort offers by created_at descending (newest first)
           allOffers.sort((a, b) => {
-            const dateA = new Date(a.created_at).getTime();
-            const dateB = new Date(b.created_at).getTime();
+            const dateA = a?.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b?.created_at ? new Date(b.created_at).getTime() : 0;
             return dateB - dateA; // Descending order (newest first)
           });
 
           // Apply status filter client-side
-          let filteredOffers = allOffers;
+          let filteredOffers = allOffers || [];
           if (selectedStatus && selectedStatus !== "all") {
             filteredOffers = filteredOffers.filter(
-              (offer) => offer.status === selectedStatus,
+              (offer) => offer?.status === selectedStatus,
             );
           } else if (selectedStatus === "all") {
             // By default, exclude archived and expired offers
             filteredOffers = filteredOffers.filter(
               (offer) =>
-                offer.status !== OfferStatusEnum.ARCHIVED &&
-                offer.status !== OfferStatusEnum.EXPIRED,
+                offer?.status !== OfferStatusEnum.ARCHIVED &&
+                offer?.status !== OfferStatusEnum.EXPIRED,
             );
           }
 
           // Apply client-side pagination
           const page = filters.page || 1;
-          const pageSize = filters.pageSize || 10;
+          const pageSize = tablePageSize;
           const startIndex = (page - 1) * pageSize;
           const endIndex = startIndex + pageSize;
           const paginatedOffers = filteredOffers.slice(startIndex, endIndex);
@@ -397,10 +387,10 @@ export default function OffersPage() {
 
           const response = await offerService.searchOffers(searchParams);
 
-          if (response.success && response.data) {
-            setOffers(response.data);
-            // Use backend pagination total when no client-side filtering
-            const total = response.pagination?.total || response.data.length;
+          if (response?.success && response?.data && Array.isArray(response.data)) {
+            setOffers(response.data || []);
+            // Use backend pagination total (campaigns API returns correct total, offers should too)
+            const total = response?.pagination?.total || response?.data?.length || 0;
             setTotalOffers(total);
             return; // Success - exit early to avoid catch block
           }
@@ -428,8 +418,8 @@ export default function OffersPage() {
   // Helper to get category name from category_id
   const getCategoryName = (categoryId: string | number | undefined): string => {
     if (!categoryId) return "Uncategorized";
-    const category = categories.find(
-      (cat) => String(cat.id) === String(categoryId),
+    const category = categories?.find(
+      (cat) => cat?.id && String(cat.id) === String(categoryId),
     );
     return category?.name || "Uncategorized";
   };
@@ -566,11 +556,13 @@ export default function OffersPage() {
     selectedApproval,
     debouncedSearchTerm,
     location.key,
+    tablePageSize,
+    tableCurrentPage,
   ]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    setFilters((prev) => ({ ...prev, page: 1 }));
+    // Don't reset page here - let pagination handle it
   };
 
   const handleStatusFilter = (status: OfferStatusEnum | "all") => {
@@ -1243,6 +1235,7 @@ export default function OffersPage() {
     return matchesSearch && matchesStatus && matchesApproval;
   });
 
+
   // Offer stats cards data
   const offerStatsCards = [
     {
@@ -1400,7 +1393,7 @@ export default function OffersPage() {
               Loading offers...
             </p>
           </div>
-        ) : filteredOffers.length === 0 ? (
+        ) : !filteredOffers || filteredOffers.length === 0 ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <p className={`${tw.textSecondary}`}>No offers found</p>
@@ -1416,20 +1409,19 @@ export default function OffersPage() {
             <div className="overflow-x-auto">
               <Table<OfferTableRow>
                 columns={columns}
-                data={filteredOffers.map((offer) => ({
-                  id: offer.id || 0,
-                  name: offer.name || "",
-                  category: getCategoryName(offer.category_id),
-                  status: offer.status,
+                data={filteredOffers?.map((offer) => ({
+                  id: offer?.id || 0,
+                  name: offer?.name || "",
+                  category: getCategoryName(offer?.category_id),
+                  status: offer?.status || "",
                   approval:
-                    offer.status === "approved"
+                    offer?.status === "approved"
                       ? "approved"
-                      : offer.status === "rejected"
+                      : offer?.status === "rejected"
                         ? "rejected"
                         : "pending",
-                  created: offer.created_at,
-                }))}
-                totalItems={filteredOffers.length}
+                  created: offer?.created_at || "",
+                })) || []}
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
                 isLoading={loading}
@@ -1533,11 +1525,11 @@ export default function OffersPage() {
             </div>
 
             {/* Pagination */}
-            {!loading && filteredOffers.length > 0 && (
+            {!loading && filteredOffers && filteredOffers.length > 0 && (
               <Pagination
                 currentPage={tableCurrentPage}
                 pageSize={tablePageSize}
-                totalItems={filteredOffers.length}
+                totalItems={totalOffers}
                 onPageChange={tableHandlePageChange}
                 onPageSizeChange={tableHandlePageSizeChange}
               />

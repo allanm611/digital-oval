@@ -8,10 +8,12 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import { kpiService } from "../services/kpiService";
 import { systemEventService } from "../services/systemEventService";
 import { type KPI } from "../types/kpi";
@@ -22,10 +24,12 @@ import KPIDetailsExpandedRow from "../components/KPIDetailsExpandedRow";
 export default function AllKPIsPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [allKPIs, setAllKPIs] = useState<KPI[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [kpiToDelete, setKpiToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -48,29 +52,31 @@ export default function AllKPIsPage() {
       const kpis: KPI[] = kpiData.map((kpi, idx) => {
         // Map tag to category
         const categoryMap: Record<string, string> = {
-          revenue_metric: "Revenue Metric",
-          usage_metric: "Usage Metric",
-          kpi: "Subscriber Profile",
+          revenue_metric: t.kpis.categories.revenueMetric,
+          usage_metric: t.kpis.categories.usageMetric,
+          kpi: t.kpis.categories.subscriberProfile,
         };
 
         return {
           id: kpi.id?.toString() || `kpi-${idx + 1}`,
           name: kpi.field_name || "",
-          category: categoryMap[kpi.tag || "kpi"] || "KPI",
+          category: categoryMap[kpi.tag || "kpi"] || t.kpis.allKPIs,
           subcategory: kpi.tag || "",
           description: kpi.description || "",
           source: `${kpi.field_source_table || "Unknown"}`,
           field_type: kpi.field_type || "",
           is_active: kpi.is_active ?? true,
           field_value: kpi.field_value || "",
+          default_value: kpi.default_value || "-",
+          display_order: kpi.display_order ?? 0,
         };
-      });
+      }).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
       // Add system events
       const systemEventKPIs: KPI[] = systemEventsData.map((event: SystemEvent) => ({
         id: `event-${event.id}`,
         name: event.event_name,
-        category: "System Event",
+        category: t.kpis.categories.systemEvent,
         subcategory: event.category,
         description: event.event_description || "",
         source: event.category,
@@ -81,7 +87,7 @@ export default function AllKPIsPage() {
       setAllKPIs([...kpis, ...systemEventKPIs]);
     } catch (err) {
       console.error("Failed to load KPIs:", err);
-      showToast("error", "Failed to load KPIs");
+      showToast("error", t.kpis.messages.failedLoadKPIs);
       setAllKPIs([]);
     } finally {
       setIsLoading(false);
@@ -109,62 +115,62 @@ export default function AllKPIsPage() {
   // Calculate statistics
   const stats = {
     totalKPIs: allKPIs.length,
-    subscriberProfiles: allKPIs.filter((k) => k.category === "Subscriber Profile").length,
-    systemEvents: allKPIs.filter((k) => k.category === "System Event").length,
-    usageMetrics: allKPIs.filter((k) => k.category === "Usage Metric").length,
-    revenueMetrics: allKPIs.filter((k) => k.category === "Revenue Metric").length,
+    subscriberProfiles: allKPIs.filter((k) => k.category === t.kpis.categories.subscriberProfile).length,
+    systemEvents: allKPIs.filter((k) => k.category === t.kpis.categories.systemEvent).length,
+    usageMetrics: allKPIs.filter((k) => k.category === t.kpis.categories.usageMetric).length,
+    revenueMetrics: allKPIs.filter((k) => k.category === t.kpis.categories.revenueMetric).length,
   };
 
   const statCards = [
     {
-      name: "Total KPIs",
+      name: t.kpis.totalKPIs,
       value: stats.totalKPIs,
       icon: ListChecks,
     },
     {
-      name: "Subscriber Profiles",
+      name: t.kpis.subscriberProfiles,
       value: stats.subscriberProfiles,
       icon: Users,
     },
     {
-      name: "System Events",
+      name: t.kpis.systemEvents,
       value: stats.systemEvents,
       icon: ListChecks,
     },
     {
-      name: "Usage Metrics",
+      name: t.kpis.usageMetrics,
       value: stats.usageMetrics,
       icon: Activity,
     },
     {
-      name: "Revenue Metrics",
+      name: t.kpis.revenueMetrics,
       value: stats.revenueMetrics,
       icon: DollarSign,
     },
   ];
 
   const categoryOptions = [
-    { value: "all", label: "All Categories" },
+    { value: "all", label: t.kpis.filters.allCategories },
     ...categories.map((cat) => ({ value: cat, label: cat })),
   ];
 
   const tableColumns: TableColumn<typeof allKPIs[0]>[] = [
     {
       id: "name",
-      label: "KPI Name",
+      label: t.kpis.kpiName,
       visible: true,
       filterConfig: { type: 'text' },
       render: (_, row) => (
-        <div className={`text-sm ${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={row.name}>
+        <div className="truncate" title={row.name}>
           {row.name}
         </div>
       ),
     },
     {
       id: "category",
-      label: "Category",
+      label: t.common.category,
       visible: true,
-      filterConfig: { type: 'select', options: ["Revenue Metric", "Usage Metric", "Subscriber Profile", "System Event"] },
+      filterConfig: { type: 'select', options: [t.kpis.categories.revenueMetric, t.kpis.categories.usageMetric, t.kpis.categories.subscriberProfile, t.kpis.categories.systemEvent] },
       render: (_, row) => (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
           {row.category}
@@ -173,47 +179,33 @@ export default function AllKPIsPage() {
     },
     {
       id: "field_type",
-      label: "Type",
+      label: t.common.type,
       visible: true,
       filterConfig: { type: 'text' },
-      render: (_, row) => (
-        <p className="text-sm text-gray-700">
-          {row.field_type ? row.field_type.charAt(0).toUpperCase() + row.field_type.slice(1) : "-"}
-        </p>
-      ),
+      render: (_, row) => row.field_type ? row.field_type.charAt(0).toUpperCase() + row.field_type.slice(1) : "-",
     },
     {
       id: "is_active",
-      label: "Status",
+      label: t.common.status,
       visible: true,
-      filterConfig: { type: 'select', options: ["Active", "Inactive"] },
-      render: (_, row) => (
-        <span className="text-sm font-medium text-gray-900 text-center block">
-          {row.is_active ? "Active" : "Inactive"}
-        </span>
-      ),
+      filterConfig: { type: 'select', options: [t.common.active, t.common.inactive] },
+      render: (_, row) => row.is_active ? t.common.active : t.common.inactive,
+    },
+    {
+      id: "default_value",
+      label: t.kpis.defaultValue,
+      visible: true,
+      filterConfig: { type: 'text' },
+      render: (_, row) => row.default_value,
     },
     {
       id: "actions",
-      label: "Actions",
+      label: t.common.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (_, row) => (
-        <div className="flex items-center justify-center space-x-2">
-          <button
-            onClick={() => handleViewDetails(row)}
-            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-            title="View Details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => navigate(`/dashboard/kpis/${extractNumericId(row.id)}/edit`, { state: { parentLabel: "All KPIs" } })}
-            className={`p-1 icon-edit ${tw.rounded} transition-colors`}
-            title="Edit"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
+        <div className="flex items-center justify-center gap-3">
           <ActivateDeactivateButton
             isActive={row.is_active ?? true}
             onToggle={() => handleToggleStatus(row)}
@@ -221,9 +213,23 @@ export default function AllKPIsPage() {
             isLoading={togglingKpiId === row.id}
           />
           <button
+            onClick={() => handleViewDetails(row)}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+            title={t.common.viewDetails}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => navigate(`/dashboard/kpis/${extractNumericId(row.id)}/edit`, { state: { parentLabel: t.kpis.allKPIs } })}
+            className={`p-0 icon-edit ${tw.rounded} transition-colors`}
+            title={t.common.edit}
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => handleDeleteClick(row)}
-            className={`p-1 icon-delete ${tw.rounded} transition-colors`}
-            title="Delete"
+            className={`p-0 icon-delete ${tw.rounded} transition-colors`}
+            title={t.common.delete}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -240,6 +246,9 @@ export default function AllKPIsPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "all-kpis-table",
     defaultColumns: tableColumns,
@@ -267,11 +276,11 @@ export default function AllKPIsPage() {
   const handleEdit = (kpi: typeof allKPIs[0]) => {
     const numericId = extractNumericId(kpi.id);
 
-    if (kpi.category === "System Event") {
+    if (kpi.category === t.kpis.categories.systemEvent) {
       navigate(`/dashboard/kpis/system-events/${numericId}`, { state: { parentLabel: "All KPIs" } });
-    } else if (kpi.category === "Usage Metric") {
+    } else if (kpi.category === t.kpis.categories.usageMetric) {
       navigate(`/dashboard/kpis/usage-metrics/${numericId}/edit`, { state: { parentLabel: "All KPIs" } });
-    } else if (kpi.category === "Revenue Metric") {
+    } else if (kpi.category === t.kpis.categories.revenueMetric) {
       navigate(`/dashboard/kpis/revenue-metrics/${numericId}/edit`, { state: { parentLabel: "All KPIs" } });
     }
   };
@@ -322,7 +331,7 @@ export default function AllKPIsPage() {
 
       showToast(
         "success",
-        `KPI "${kpi.name}" has been ${newStatus ? "activated" : "deactivated"} successfully`
+        `KPI "${kpi.name}" has been ${newStatus ? t.common.activated : t.common.deactivated} successfully`
       );
     } catch (error) {
       console.error("Failed to toggle KPI status:", error);
@@ -347,7 +356,7 @@ export default function AllKPIsPage() {
         <FeatureActionButton featureId="kpi" action="create" />
       </div>
 <p className={`text-sm ${tw.textSecondary}`}>
-            View all available KPIs across all categories
+            {t.kpis.viewAllKPIsDescription}
           </p>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
@@ -374,7 +383,7 @@ export default function AllKPIsPage() {
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-wrap">
         <Input
-          placeholder="Search KPIs..."
+          placeholder={t.kpis.filters.searchKPIs}
           value={searchTerm}
           onChange={(value) => {
             setSearchTerm(value);
@@ -387,7 +396,7 @@ export default function AllKPIsPage() {
           options={categoryOptions}
           value={categoryFilter}
           onChange={(value) => handleCategoryChange(value || "all")}
-          placeholder="Filter by category"
+          placeholder={t.kpis.filters.filterByCategory}
           className="min-w-[180px]"
         />
       </div>
@@ -408,12 +417,12 @@ export default function AllKPIsPage() {
           <div className="text-center py-12">
             <ListChecks className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm || categoryFilter !== "all" ? "No KPIs found" : "No KPIs yet"}
+              {searchTerm || categoryFilter !== "all" ? t.kpis.messages.noKPIsFound : t.kpis.messages.noKPIsYet}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm || categoryFilter !== "all"
-                ? "Try adjusting your search or filters"
-                : "Create your first KPI"}
+                ? t.kpis.messages.adjustSearch
+                : t.kpis.messages.createFirst}
             </p>
           </div>
         ) : (
@@ -435,6 +444,8 @@ export default function AllKPIsPage() {
               )}
               onFilteredCountChange={handleFilteredCountChange}
               clearFiltersKey={clearFiltersKey}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -462,12 +473,22 @@ export default function AllKPIsPage() {
         isOpen={showDeleteModal}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Delete KPI"
-        description="Are you sure you want to delete this KPI? This action cannot be undone."
+        title={t.kpis.modals.deleteKPI}
+        description={t.kpis.modals.deleteKPIDescription}
         itemName={kpiToDelete?.name || ""}
         isLoading={isDeleting}
-        confirmText="Delete KPI"
-        cancelText="Cancel"
+        confirmText={t.kpis.modals.deleteKPI}
+        cancelText={t.common.cancel}
+      />
+
+      {/* Column Picker Modal */}
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={reorderColumns}
+        onResetToDefaults={resetToDefaults}
       />
     </div>
   );

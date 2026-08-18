@@ -3,7 +3,9 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Edit, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { kpiService, KPIProfile } from "../services/kpiService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { button } from "../../../shared/utils/utils";
@@ -11,6 +13,7 @@ import { button } from "../../../shared/utils/utils";
 export default function KpiDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const location = useLocation();
   const parentLabel = (location.state as any)?.parentLabel;
   const { success, error: showError } = useToast();
@@ -32,11 +35,11 @@ export default function KpiDetailsPage() {
       if (data && data.id) {
         setKpi(data);
       } else {
-        showError("Error", "KPI not found");
+        showError("Error", t.kpis.messages.notFound);
         navigate("/dashboard/kpis/all");
       }
     } catch (err) {
-      showError("Error", "Failed to load KPI details");
+      showError("Error", t.kpis.messages.failedToLoadDetails);
       navigate("/dashboard/kpis/all");
     } finally {
       setLoading(false);
@@ -52,10 +55,10 @@ export default function KpiDetailsPage() {
     try {
       setDeleting(true);
       await kpiService.deleteKPI(kpi.id || 0);
-      success("Success", `"${kpi.field_name}" has been deleted successfully`);
+      success(t.common.success, `"${kpi.field_name}" ${t.messages.deleted}`);
       navigate("/dashboard/kpis/all");
     } catch (err) {
-      showError("Error", "Failed to delete KPI");
+      showError(t.common.error, t.kpis.messages.failedLoadKPIs);
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
@@ -67,7 +70,7 @@ export default function KpiDetailsPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <LoadingSpinner variant="modern" size="xl" color="primary" />
-        <p className={`${tw.textMuted} font-medium mt-4`}>Loading KPI details...</p>
+        <p className={`${tw.textMuted} font-medium mt-4`}>{t.common.loading}</p>
       </div>
     );
   }
@@ -76,8 +79,8 @@ export default function KpiDetailsPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <BackButton showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
-          <p className={tw.textSecondary}>KPI not found</p>
+          <BackButton showBreadcrumb={true} currentLabel={t.kpis.kpiName || "KPI"} parentLabel={parentLabel} />
+          <p className={tw.textSecondary}>{t.kpis.messages.notFound}</p>
         </div>
       </div>
     );
@@ -88,7 +91,7 @@ export default function KpiDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton showBreadcrumb={true} currentLabel="KPI Details" parentLabel={parentLabel} />
+          <BackButton showBreadcrumb={true} currentLabel={t.kpis.kpiName || "KPI"} parentLabel={parentLabel} />
           <div></div>
         </div>
 
@@ -108,7 +111,7 @@ export default function KpiDetailsPage() {
             }}
           >
             <Edit className="w-4 h-4" />
-            Edit
+            {t.common.edit}
           </button>
           <button
             onClick={handleDelete}
@@ -129,7 +132,7 @@ export default function KpiDetailsPage() {
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            {t.common.delete}
           </button>
         </div>
       </div>
@@ -323,7 +326,7 @@ export default function KpiDetailsPage() {
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                 Status
               </label>
-              <p className={`text-sm ${tw.textPrimary}`}>{kpi.is_active ? "Active" : "Inactive"}</p>
+              <p className={`text-sm ${tw.textPrimary}`}>{kpi.is_active ? t.common.active : t.common.inactive}</p>
             </div>
             <div className="space-y-1">
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
@@ -401,35 +404,15 @@ export default function KpiDetailsPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
-            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
-              Delete KPI
-            </h3>
-            <p className={`text-sm ${tw.textSecondary} mb-6`}>
-              Are you sure you want to delete "{kpi.field_name}"? This action
-              cannot be undone.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deleting}
-                className="px-4 py-2 text-xs font-medium border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={deleting}
-                className="px-4 py-2 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-60"
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete KPI"
+        description="Are you sure you want to delete this KPI? This action cannot be undone."
+        itemName={kpi?.field_name || ""}
+        onConfirm={handleConfirmDelete}
+        onClose={() => setShowDeleteModal(false)}
+        isLoading={deleting}
+      />
     </div>
   );
 }

@@ -163,6 +163,8 @@ export const tw = {
   textDanger: "text-[var(--c-text-danger)]",
   textLight: "text-white",
   textAction: "text-white",
+  tableText: "text-[var(--c-table-text)]",
+  tableTextOther: "text-[var(--c-table-text-other)]",
 
   hover: "hover:bg-[var(--c-interactive-hover)]",
   active: "active:bg-[var(--c-interactive-active)]",
@@ -177,10 +179,14 @@ export const tw = {
 
   fontPrimary: "font-sans",
   fontSecondary: "font-mono",
+  // fontSupplyMono: "font-supply-mono",
+  fontEtMono: "font-et-mono",
 
   // Typography classes using Satoshi Variable and Impact fonts
   // Main headings - Satoshi Variable, weight 800, 87.552px, line-height 110%, letter-spacing -4%
-  mainHeading: `font-['Satoshi_Variable',sans-serif] text-[2rem] font-[800] leading-[110%] tracking-[-0.04em]`,
+  mainHeading: `font-satoshi text-[2rem] font-[800] leading-[110%] tracking-[-0.04em]`,
+  // Test with Poppins (external font from Google Fonts)
+  testPoppins: `font-['Poppins',sans-serif] text-[2rem] font-[800] leading-[110%] tracking-[-0.04em]`,
   // Sub-headings - sans-serif, weight 400, 17.5104px, letter-spacing -8%
   subHeading: `font-sans text-[1.0944rem] font-normal leading-normal tracking-[-0.08em]`,
   // Card headings - sans-serif, weight 600, 18px

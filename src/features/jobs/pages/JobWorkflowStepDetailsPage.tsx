@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   Edit,
   Trash2,
@@ -29,6 +30,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 
 export default function JobWorkflowStepDetailsPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const jobIdParam = searchParams.get("job_id");
@@ -121,7 +123,7 @@ export default function JobWorkflowStepDetailsPage() {
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load workflow step";
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
       } finally {
         setIsLoading(false);
       }
@@ -146,7 +148,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       closeDeleteConfirm();
     }
@@ -169,7 +171,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to duplicate step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsDuplicating(false);
     }
@@ -190,7 +192,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsToggling(false);
     }
@@ -214,7 +216,7 @@ export default function JobWorkflowStepDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to deactivate step";
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsToggling(false);
     }

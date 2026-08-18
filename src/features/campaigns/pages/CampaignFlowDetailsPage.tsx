@@ -4,6 +4,7 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AlertCircle, Trash2, X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -28,6 +29,7 @@ export default function CampaignFlowDetailsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
+  const { t } = useLanguage();
 
   const [flow, setFlow] = useState<CampaignFlowResponseData | null>(
     (location.state as { flow?: CampaignFlowResponseData })?.flow || null
@@ -36,7 +38,6 @@ export default function CampaignFlowDetailsPage() {
   const [segment, setSegment] = useState<CampaignSegmentDetail | null>(null);
   const [offer, setOffer] = useState<Offer | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
   const [activeSegments, setActiveSegments] = useState<SegmentType[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
@@ -44,6 +45,15 @@ export default function CampaignFlowDetailsPage() {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [rawConditionRuleInput, setRawConditionRuleInput] = useState<string>("");
   const [conditionRuleError, setConditionRuleError] = useState<string>("");
+
+  const deleteConfirm = useDeleteConfirm({
+    onDelete: async (id) => {
+      if (!flow) return;
+      await campaignFlowService.deleteCampaignFlow(flow.id);
+      navigate(-1);
+    },
+    itemLabel: "Flow",
+  });
 
   useEffect(() => {
     const loadFlowDetails = async () => {
@@ -89,7 +99,7 @@ export default function CampaignFlowDetailsPage() {
         }
       } catch (error) {
         console.error("Error loading flow details:", error);
-        showToast("error", "Failed to load flow details");
+        showToast("error", t.common.error || "Failed to load flow details");
       } finally {
         setIsLoading(false);
       }
@@ -154,7 +164,7 @@ export default function CampaignFlowDetailsPage() {
         }
       } catch (error) {
         console.error("Error loading active segments/offers:", error);
-        showToast("warning", "Failed to load active options");
+        showToast("warning", t.common.error || "Failed to load active options");
       } finally {
         setIsLoadingActiveData(false);
       }
@@ -201,7 +211,7 @@ export default function CampaignFlowDetailsPage() {
       };
 
       await campaignFlowService.updateCampaignFlow(flow.id, updateData);
-      showToast("success", "Flow updated successfully");
+      showToast("success", t.messages.updated || "Flow updated successfully");
       setIsEditModalOpen(false);
       setRawConditionRuleInput(""); // Reset raw input
 
@@ -212,37 +222,21 @@ export default function CampaignFlowDetailsPage() {
       }
     } catch (error) {
       console.error("Error updating flow:", error);
-      showToast("error", "Failed to update flow");
+      showToast("error", t.common.error || "Failed to update flow");
     } finally {
       setIsActionLoading(false);
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!flow?.id) return;
-
-    try {
-      setIsActionLoading(true);
-      await campaignFlowService.deleteCampaignFlow(flow.id);
-      showToast("success", "Flow deleted successfully");
-      setIsDeleteModalOpen(false);
-      navigate(-1);
-    } catch (error) {
-      console.error("Error deleting flow:", error);
-      showToast("error", "Failed to delete flow");
-    } finally {
-      setIsActionLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <BackButton showBreadcrumb={true} currentLabel="Campaign Flow Details" />
+        <BackButton showBreadcrumb={true} currentLabel={typeof t.campaigns.flowDetails === 'string' ? t.campaigns.flowDetails : t.campaigns.flowDetails?.title || "Campaign Flow Details"} />
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner variant="modern" size="xl" color="primary" className="mb-4" />
           <p className={`${tw.textMuted} font-medium text-sm`}>
-            Loading flow details...
+            {t.common.loadingDetails || "Loading flow details..."}
           </p>
         </div>
       </div>
@@ -252,14 +246,14 @@ export default function CampaignFlowDetailsPage() {
   if (!flow) {
     return (
       <div className="space-y-6">
-        <BackButton showBreadcrumb={true} currentLabel="Campaign Flow Details" />
+        <BackButton showBreadcrumb={true} currentLabel={typeof t.campaigns.flowDetails === 'string' ? t.campaigns.flowDetails : t.campaigns.flowDetails?.title || "Campaign Flow Details"} />
         <div className="text-center py-12">
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-            Flow Not Found
+            {t.common.notFound || "Flow Not Found"}
           </h3>
           <p className={`text-sm ${tw.textSecondary}`}>
-            The campaign flow doesn't exist or has been deleted.
+            {t.campaigns.flowNotFound || "The campaign flow doesn't exist or has been deleted."}
           </p>
         </div>
       </div>
@@ -271,7 +265,7 @@ export default function CampaignFlowDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButton showBreadcrumb={true} currentLabel="Campaign Flow Details" />
+          <BackButton showBreadcrumb={true} currentLabel={typeof t.campaigns.flowDetails === 'string' ? t.campaigns.flowDetails : t.campaigns.flowDetails?.title || "Campaign Flow Details"} />
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -282,10 +276,10 @@ export default function CampaignFlowDetailsPage() {
               color: "white",
             }}
           >
-            Edit
+            {t.common.edit || "Edit"}
           </button>
           <button
-            onClick={() => setIsDeleteModalOpen(true)}
+            onClick={() => flow && deleteConfirm.openDeleteConfirm(flow.id, `Flow ${flow.step_order || ""}`)}
             className={`inline-flex items-center px-4 py-2 text-sm font-medium transition-colors ${tw.rounded}`}
             style={{
               backgroundColor: button.delete.background,
@@ -293,7 +287,7 @@ export default function CampaignFlowDetailsPage() {
             }}
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Delete
+            {t.common.delete || "Delete"}
           </button>
         </div>
       </div>
@@ -305,7 +299,7 @@ export default function CampaignFlowDetailsPage() {
       >
         <div className="px-6 py-4" style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide`}>
-            Basic Information
+            {t.common.basicInformation || "Basic Information"}
           </h3>
         </div>
         <div className="overflow-x-auto">
@@ -313,19 +307,19 @@ export default function CampaignFlowDetailsPage() {
             <tbody>
               <tr style={{ borderBottom: `1px solid ${color.border.default}`, backgroundColor: 'var(--c-surface-card-bg)' }}>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
-                  Flow ID
+                  {t.campaigns.flowId || "Flow ID"}
                 </td>
                 <td className={`px-6 py-4 text-sm ${tw.textPrimary} font-semibold`}>
                   {flow.id || "—"}
                 </td>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
-                  Campaign
+                  {t.campaigns.campaign || "Campaign"}
                 </td>
                 <td className={`px-6 py-4 text-sm ${tw.textPrimary} font-semibold`}>
                   {flow.campaign_id}
                 </td>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
-                  Flow Type
+                  {t.campaigns.flowType || "Flow Type"}
                 </td>
                 <td className={`px-6 py-4 text-sm ${tw.textPrimary} font-semibold`}>
                   {getFlowTypeLabel(flow.flow_type)}
@@ -333,19 +327,19 @@ export default function CampaignFlowDetailsPage() {
               </tr>
               <tr style={{ borderBottom: `1px solid ${color.border.default}`, backgroundColor: 'var(--c-surface-card-bg)' }}>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
-                  Step Order
+                  {t.common.stepOrder || "Step Order"}
                 </td>
                 <td className={`px-6 py-4 text-sm ${tw.textPrimary} font-semibold`}>
                   {flow.step_order}
                 </td>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
-                  Wait Interval
+                  {t.campaigns.waitInterval || "Wait Interval"}
                 </td>
                 <td className={`px-6 py-4 text-sm ${tw.textPrimary} font-semibold`}>
                   {flow.wait_interval_hours}h
                 </td>
                 <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/6">
-                  Status
+                  {t.common.status || "Status"}
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <span
@@ -355,7 +349,7 @@ export default function CampaignFlowDetailsPage() {
                       color: "white",
                     }}
                   >
-                    {flow.is_active ? "Active" : "Inactive"}
+                    {flow.is_active ? (t.common.active || "Active") : (t.common.inactive || "Inactive")}
                   </span>
                 </td>
               </tr>
@@ -370,13 +364,13 @@ export default function CampaignFlowDetailsPage() {
         style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
       >
         <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-          Targeting
+          {t.campaigns.targeting || "Targeting"}
         </h3>
         <div className="space-y-6">
           {/* Segment */}
           <div>
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
-              Segment
+              {t.campaigns.segment || "Segment"}
             </label>
             <button
               onClick={() => navigate(`/dashboard/segments/${flow.segment_id}`)}
@@ -391,7 +385,7 @@ export default function CampaignFlowDetailsPage() {
           {flow?.condition_rule && (
             <div>
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
-                Condition Rule
+                {t.campaigns.conditionRule || "Condition Rule"}
               </label>
               <pre className={`text-sm ${tw.textSecondary} p-3 ${tw.rounded} overflow-auto max-h-40`} style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
                 {JSON.stringify(flow.condition_rule, null, 2)}
@@ -407,13 +401,13 @@ export default function CampaignFlowDetailsPage() {
         style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
       >
         <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-          Offer Configuration
+          {t.campaigns.offerConfiguration || "Offer Configuration"}
         </h3>
         <div className="space-y-6">
           {/* Offer */}
           <div>
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
-              Offer
+              {t.campaigns.offer || "Offer"}
             </label>
             <button
               onClick={() => navigate(`/dashboard/offers/${flow.offer_id}`)}
@@ -428,7 +422,7 @@ export default function CampaignFlowDetailsPage() {
           {flow?.offer_creative_id && (
             <div>
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
-                Offer Creative ID
+                {t.campaigns.offerCreativeId || "Offer Creative ID"}
               </label>
               <p className={`text-base ${tw.textPrimary} font-semibold`}>
                 {flow.offer_creative_id}
@@ -440,7 +434,7 @@ export default function CampaignFlowDetailsPage() {
           {flow?.template_id && (
             <div>
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
-                Template ID
+                {t.common.templateId || "Template ID"}
               </label>
               <p className={`text-base ${tw.textPrimary} font-semibold`}>
                 {flow.template_id}
@@ -457,11 +451,11 @@ export default function CampaignFlowDetailsPage() {
           style={{ backgroundColor: 'var(--c-surface-card-bg)', borderColor: color.border.default }}
         >
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-            Advanced Settings
+            {t.common.advancedSettings || "Advanced Settings"}
           </h3>
           <div>
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
-              Bucket Allocation
+              {t.campaigns.bucketAllocation || "Bucket Allocation"}
             </label>
             <p className={`text-base ${tw.textPrimary} font-semibold`}>
               {flow.bucket_allocation}
@@ -477,7 +471,7 @@ export default function CampaignFlowDetailsPage() {
       >
         <div className="px-6 py-4" style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} uppercase tracking-wide`}>
-            Metadata
+            {t.common.metadata || "Metadata"}
           </h3>
         </div>
         <div className="overflow-x-auto">
@@ -486,13 +480,13 @@ export default function CampaignFlowDetailsPage() {
               {flow?.created_at && (
                 <tr style={{ borderBottom: `1px solid ${color.border.default}`, backgroundColor: 'var(--c-surface-card-bg)' }}>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
-                    Created At
+                    {t.common.createdAt || "Created At"}
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textSecondary}`}>
                     <DateFormatter date={flow.created_at} useUserTimezone includeTime />
                   </td>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
-                    Updated At
+                    {t.common.updatedAt || "Updated At"}
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textSecondary}`}>
                     {flow.updated_at ? (
@@ -506,13 +500,13 @@ export default function CampaignFlowDetailsPage() {
               {flow?.created_by && (
                 <tr style={{ backgroundColor: 'var(--c-surface-card-bg)' }}>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
-                    Created By
+                    {t.common.createdBy || "Created By"}
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textPrimary}`}>
                     {flow.created_by}
                   </td>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
-                    Updated By
+                    {t.common.updatedBy || "Updated By"}
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textPrimary}`}>
                     {flow.updated_by || "—"}
@@ -829,15 +823,15 @@ export default function CampaignFlowDetailsPage() {
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
-        isOpen={isDeleteModalOpen && flow !== null}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Flow"
-        description="Are you sure you want to delete this campaign flow? This action cannot be undone and the flow will be permanently removed."
-        itemName={`Flow ${flow?.step_order || ""}`}
-        isLoading={isActionLoading}
-        confirmText="Delete Flow"
-        cancelText="Cancel"
+        isOpen={deleteConfirm.isOpen}
+        onClose={deleteConfirm.closeDeleteConfirm}
+        onConfirm={deleteConfirm.handleDelete}
+        title={t.campaigns.deleteFlow || "Delete Flow"}
+        description={t.campaigns.deleteFlowConfirm || "Are you sure you want to delete this campaign flow? This action cannot be undone and the flow will be permanently removed."}
+        itemName={deleteConfirm.deleteConfirm.itemName}
+        isLoading={deleteConfirm.isDeleting}
+        confirmText={t.campaigns.deleteFlow || "Delete Flow"}
+        cancelText={t.common.cancel || "Cancel"}
       />
     </div>
   );

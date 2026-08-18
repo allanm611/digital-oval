@@ -41,6 +41,10 @@ export const USSD_GATEWAY_DUMMY_DATA: USSDGatewayConfig[] = [
 ];
 
 class USSDGatewayConfigService {
+  getDummyConfigs(): USSDGatewayConfig[] {
+    return USSD_GATEWAY_DUMMY_DATA;
+  }
+
   getAllConfigs(): Promise<USSDGatewayConfig[]> {
     return Promise.resolve(USSD_GATEWAY_DUMMY_DATA);
   }

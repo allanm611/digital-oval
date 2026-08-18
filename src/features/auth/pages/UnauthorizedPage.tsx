@@ -1,9 +1,11 @@
 import { Lock, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { color } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function UnauthorizedPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div
@@ -19,7 +21,7 @@ export default function UnauthorizedPage() {
           className="text-sm font-medium mb-8"
           style={{ color: color.text.primary }}
         >
-          You don't have the permissions to view this page
+          {t.auth.unauthorized}
         </p>
         <button
           onClick={() => navigate("/dashboard")}
@@ -27,7 +29,7 @@ export default function UnauthorizedPage() {
           style={{ backgroundColor: color.primary.action }}
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
+          {t.common.back}
         </button>
       </div>
     </div>

@@ -266,7 +266,7 @@ export default function AddDNDMembersModal({
           </div>
 
           {/* Form Fields */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Existing Customer Mode */}
             {formData.mode === "existing_customer" && (
               <>
@@ -283,13 +283,12 @@ export default function AddDNDMembersModal({
                         }
                       }}
                       options={[
-                        { value: "", label: "Select a customer" },
                         ...customers.map((customer) => ({
                           value: String(customer.customerId || customer.id),
                           label: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "Unknown",
                         })),
                       ]}
-                      placeholder="Select customer..."
+                      placeholder="Select a customer"
                       disabled={loadingCustomers}
                     />
                   </div>

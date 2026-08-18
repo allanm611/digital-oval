@@ -13,6 +13,8 @@ import { tw, zIndex } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import FormField from "../../../shared/components/FormField";
+import { useFormValidation } from "../../../shared/hooks/useFormValidation";
 
 interface CreateServerModalProps {
   isOpen: boolean;
@@ -46,6 +48,10 @@ export default function CreateServerModal({
   onSuccess,
 }: CreateServerModalProps) {
   const { success, error } = useToast();
+
+  // Form validation hook for auto-scroll and error management
+  const { registerFieldRef } = useFormValidation();
+
   const [form, setForm] = useState({ ...defaultFormValues });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -140,39 +146,27 @@ export default function CreateServerModal({
 
         <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Name<span className="text-red-500">*</span>
-              </label>
+            <FormField error={errors?.name} ref={registerFieldRef('name')}>
               <Input
+                label="Name*"
                 placeholder="Server name"
                 name="name"
                 value={form.name}
                 onChange={(val) => setForm((prev) => ({...prev, name: val}))}
                 hasError={!!errors.name}
-               
               />
-              {errors.name && (
-                <p className="mt-1 text-xs text-red-500">{errors.name}</p>
-              )}
-            </div>
+            </FormField>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Code<span className="text-red-500">*</span>
-              </label>
+            <FormField error={errors?.code} ref={registerFieldRef('code')}>
               <Input
+                label="Code*"
                 placeholder="Server code"
                 name="code"
                 value={form.code}
                 onChange={(val) => setForm((prev) => ({...prev, code: val}))}
                 hasError={!!errors.code}
-               
               />
-              {errors.code && (
-                <p className="mt-1 text-xs text-red-500">{errors.code}</p>
-              )}
-            </div>
+            </FormField>
 
             <div>
               <label className="text-sm font-medium text-gray-700">
@@ -197,22 +191,16 @@ export default function CreateServerModal({
               />
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700">
-                Host<span className="text-red-500">*</span>
-              </label>
+            <FormField error={errors?.host} ref={registerFieldRef('host')}>
               <Input
+                label="Host*"
                 placeholder="Host address"
                 name="host"
                 value={form.host}
                 onChange={(val) => setForm((prev) => ({...prev, host: val}))}
                 hasError={!!errors.host}
-               
               />
-              {errors.host && (
-                <p className="mt-1 text-xs text-red-500">{errors.host}</p>
-              )}
-            </div>
+            </FormField>
 
             <div>
               <label className="text-sm font-medium text-gray-700">

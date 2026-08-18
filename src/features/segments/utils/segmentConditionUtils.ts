@@ -95,8 +95,9 @@ export const getFirstBackendOperator = (
 export const isDateFieldType = (
   field: Record<string, any> | null | undefined
 ): boolean => {
-  if (!field?.field_type) return false;
-  const ft = field.field_type.toLowerCase();
+  const fieldType = field?.field_type || field?.type;
+  if (!fieldType) return false;
+  const ft = fieldType.toLowerCase();
   return (
     ft === "date" ||
     ft === "timestamp" ||
@@ -111,7 +112,7 @@ export const getFieldType = (
 ): string => {
   const backendField = getFieldByValue(fieldKey);
   if (backendField) {
-    const ft = (backendField.field_type || "").toLowerCase();
+    const ft = (backendField.field_type || backendField.type || "").toLowerCase();
     switch (ft) {
       case "numeric":
       case "number":

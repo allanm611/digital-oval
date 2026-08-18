@@ -10,38 +10,38 @@ export default function KPIsHubPage() {
 
   const cards = [
     {
-      title: "All KPIs",
-      description: "View all KPIs across all categories",
+      title: t.kpis.allKPIs,
+      description: t.kpis.descriptions.allKPIs,
       icon: ListChecks,
       onClick: () => navigate("/dashboard/kpis/all"),
     },
     {
-      title: "KPI Categories",
-      description: "Manage KPI categories and organize profile fields",
+      title: t.kpis.categories.title,
+      description: t.kpis.descriptions.categories,
       icon: Tag,
       onClick: () => navigate("/dashboard/kpis/kpi-categories"),
     },
     {
-      title: "Revenue Metrics",
-      description: "Manage and track revenue performance indicators",
+      title: t.kpis.revenueMetrics,
+      description: t.kpis.descriptions.revenueMetrics,
       icon: DollarSign,
       onClick: () => navigate("/dashboard/kpis/revenue-metrics"),
     },
     {
-      title: "Usage Metrics",
-      description: "Monitor customer usage and consumption patterns",
+      title: t.kpis.usageMetrics,
+      description: t.kpis.descriptions.usageMetrics,
       icon: Activity,
       onClick: () => navigate("/dashboard/kpis/usage-metrics"),
     },
     {
-      title: "System Events",
-      description: "View platform system events and interactions",
+      title: t.kpis.systemEvents,
+      description: t.kpis.descriptions.systemEvents,
       icon: Zap,
       onClick: () => navigate("/dashboard/kpis/system-events"),
     },
     {
-      title: "Subscriber Profile",
-      description: "Manage customer profile fields and attributes",
+      title: t.kpis.categories.subscriberProfile,
+      description: t.kpis.descriptions.subscriberProfiles,
       icon: Users,
       onClick: () => navigate("/dashboard/kpis/subscriber-profiles"),
     },
@@ -53,13 +53,13 @@ export default function KPIsHubPage() {
         {/* Header */}
         <div className="flex flex-col gap-4">
           <BackButton
-           
+
             showBreadcrumb={true}
-           
-            currentLabel="KPIs"
+
+            currentLabel={t.kpis.title}
           />
           <p className={`${tw.textSecondary} text-sm`}>
-            Manage and monitor key performance indicators
+            {t.kpis.descriptions.allKPIs}
           </p>
         </div>
 
@@ -86,7 +86,7 @@ export default function KPIsHubPage() {
               <div className="flex items-center gap-4">
                 <Icon
                   className="w-8 h-8 flex-shrink-0"
-                  style={{ color: color.primary.action }}
+                  style={{ color: 'var(--c-icon-color)' }}
                 />
                 <div className="flex-1">
                   <h3

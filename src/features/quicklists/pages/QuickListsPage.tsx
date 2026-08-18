@@ -19,6 +19,7 @@ import {
 import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import FeatureActionButton from "../../../shared/components/FeatureActionButton";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -40,12 +41,15 @@ import QuickListDetailsExpandedRow from "../components/QuickListDetailsExpandedR
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(null);
+  const [isManagingCustomers, setIsManagingCustomers] = useState(false);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete: confirmDeleteQuicklist } = useDeleteConfirm({
     onDelete: async (id) => {
@@ -59,6 +63,7 @@ export default function QuickListsPage() {
   const [allQuicklists, setAllQuicklists] = useState<QuickList[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [stats, setStats] = useState<QuickListStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -178,7 +183,7 @@ export default function QuickListsPage() {
       setAllQuicklists(allData);
     } catch (err) {
       console.error("Failed to load initial data:", err);
-      showError(extractBackendError(error, "Failed to load QuickLists. Please try again."));
+      showError(extractBackendError(err, "Failed to load QuickLists. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -428,6 +433,8 @@ export default function QuickListsPage() {
       id: "name",
       label: t.quickList.name,
       visible: true,
+      sortable: true,
+      filterConfig: { type: "text" },
       render: (value, quicklist) => (
         <div>
           <button
@@ -453,6 +460,7 @@ export default function QuickListsPage() {
       id: "rows_imported",
       label: t.quickList.rowsImported,
       visible: true,
+      filterConfig: { type: "number" },
       render: (value) =>
         value != null ? (value as number).toLocaleString() : "N/A",
     },
@@ -460,6 +468,7 @@ export default function QuickListsPage() {
       id: "rows_failed",
       label: t.quickList.rowsFailed,
       visible: true,
+      filterConfig: { type: "number" },
       render: (value) =>
         value != null ? (value as number).toLocaleString() : "N/A",
     },
@@ -467,12 +476,14 @@ export default function QuickListsPage() {
       id: "processing_status",
       label: t.quickList.status,
       visible: true,
+      filterConfig: { type: "select", options: ["pending", "processing", "completed", "failed"] },
       render: (value) => (value as string || "N/A").replace(/_/g, " "),
     },
     {
       id: "created_at",
       label: t.quickList.createdAt,
       visible: true,
+      filterConfig: { type: "date" },
       render: (value) => (
         <DateFormatter
           date={value as string}
@@ -489,11 +500,12 @@ export default function QuickListsPage() {
       label: t.quickList.actions,
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, quicklist) => (
         <div className="flex items-center justify-center space-x-2">
           <button
             onClick={() => navigate(`/dashboard/quick-lists/${quicklist.id}`)}
-            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+            className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
             title={t.quickList.viewDetails}
           >
             <Eye className="w-4 h-4" />
@@ -501,7 +513,7 @@ export default function QuickListsPage() {
           <PermissionGate permission="quicklists.update">
             <button
               onClick={() => handleEdit(quicklist)}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
               title={t.quickList.edit}
             >
               <Edit className="w-4 h-4" />
@@ -512,7 +524,7 @@ export default function QuickListsPage() {
           }}>
             <button
               onClick={(e) => handleActionMenuToggle(quicklist.id, e)}
-              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
+              className={`group p-0 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.action}]/10 transition-all duration-300`}
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
@@ -532,6 +544,9 @@ export default function QuickListsPage() {
     handleSort,
     expandedRowId,
     setExpandedRowId,
+    toggleColumn,
+    reorderColumns,
+    resetToDefaults,
   } = useTable({
     tableId: "quicklists-table",
     defaultColumns,
@@ -607,6 +622,8 @@ export default function QuickListsPage() {
         onExpandChange={setExpandedRowId}
         onFilteredCountChange={handleFilteredCountChange}
         clearFiltersKey={clearFiltersKey}
+        onHideColumn={toggleColumn}
+        onManageColumnsClick={() => setShowColumnPicker(true)}
         style={{
           headerBackground: color.surface.tableHeader,
           headerTextColor: color.surface.tableHeaderText,
@@ -778,16 +795,131 @@ export default function QuickListsPage() {
           }}
           quicklist={selectedQuicklistForCustomer}
           mode={manageCustomersMode}
+          isLoading={isManagingCustomers}
           onSubmit={async (customers) => {
-            const action = manageCustomersMode === "add" ? "added to" : "removed from";
-            showToast(
-              `${customers.length} customer${customers.length !== 1 ? "s" : ""} ${action} ${selectedQuicklistForCustomer.name}`,
-            );
-            setIsManageCustomersModalOpen(false);
-            setSelectedQuicklistForCustomer(null);
+            if (!user?.user_id) {
+              showError("Error", "User ID not available");
+              return;
+            }
+
+            setIsManagingCustomers(true);
+            try {
+              if (manageCustomersMode === "add") {
+                // Add customers one by one
+                const results = await Promise.all(
+                  customers.map((customer) =>
+                    quicklistService.addMemberToQuickList(
+                      selectedQuicklistForCustomer.id,
+                      customer.customer_phone || customer.customer_email || String(customer.customer_id),
+                      customer.customer_phone ? "msisdn" : "email",
+                      user.user_id,
+                    ),
+                  ),
+                );
+
+                // Check if all succeeded
+                const allSucceeded = results.every((r) => r.success);
+                if (!allSucceeded) {
+                  showError("Partial Error", "Some customers could not be added. Please try again.");
+                } else {
+                  showToast(
+                    `${customers.length} customer${customers.length !== 1 ? "s" : ""} added to ${selectedQuicklistForCustomer.name}`,
+                  );
+                  // Optimistic update: increment rows_imported in the list
+                  setAllQuicklists((prev) =>
+                    prev.map((ql) =>
+                      ql.id === selectedQuicklistForCustomer.id
+                        ? { ...ql, rows_imported: (ql.rows_imported ?? 0) + customers.length }
+                        : ql,
+                    ),
+                  );
+                  // Update stats optimistically
+                  setStats((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          overall: {
+                            ...prev.overall,
+                            total_rows_imported:
+                              (prev.overall.total_rows_imported ?? 0) + customers.length,
+                          },
+                        }
+                      : prev,
+                  );
+                }
+              } else {
+                // Remove customers one by one
+                const results = await Promise.all(
+                  customers.map((customer) =>
+                    quicklistService.removeMemberFromQuickList(
+                      selectedQuicklistForCustomer.id,
+                      customer.customer_id,
+                      user.user_id,
+                    ),
+                  ),
+                );
+
+                const allSucceeded = results.every((r) => r.success);
+                if (!allSucceeded) {
+                  showError("Partial Error", "Some customers could not be removed. Please try again.");
+                } else {
+                  showToast(
+                    `${customers.length} customer${customers.length !== 1 ? "s" : ""} removed from ${selectedQuicklistForCustomer.name}`,
+                  );
+                  // Optimistic update: decrement rows_imported in the list
+                  setAllQuicklists((prev) =>
+                    prev.map((ql) =>
+                      ql.id === selectedQuicklistForCustomer.id
+                        ? { ...ql, rows_imported: Math.max(0, (ql.rows_imported ?? 0) - customers.length) }
+                        : ql,
+                    ),
+                  );
+                  // Update stats optimistically
+                  setStats((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          overall: {
+                            ...prev.overall,
+                            total_rows_imported: Math.max(
+                              0,
+                              (prev.overall.total_rows_imported ?? 0) - customers.length,
+                            ),
+                          },
+                        }
+                      : prev,
+                  );
+                }
+              }
+
+              setIsManageCustomersModalOpen(false);
+              setSelectedQuicklistForCustomer(null);
+            } catch (err) {
+              showError(
+                "Error",
+                extractBackendError(err, `Failed to ${manageCustomersMode} customer${customers.length !== 1 ? "s" : ""}. Please try again.`),
+              );
+            } finally {
+              setIsManagingCustomers(false);
+            }
           }}
         />
       )}
+
+      <ColumnPickerModal
+        isOpen={showColumnPicker}
+        columns={columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowColumnPicker(false)}
+        onToggleColumn={toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = columns.map((col) => {
+            const reordered = reorderedCols.find((c) => c.id === col.id);
+            return reordered ? { ...col, visible: reordered.visible } : col;
+          });
+          reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={resetToDefaults}
+      />
     </div>
   );
 }

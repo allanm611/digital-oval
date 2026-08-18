@@ -10,8 +10,9 @@ import Input from '../../../shared/components/ui/Input';
 import Textarea from '../../../shared/components/ui/Textarea';
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate } from "react-router-dom";
-import { Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
+import { Edit, Trash2, MessageSquare, Grid, List, Megaphone } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import CategoryModal from "../../../shared/components/CategoryModal";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -50,144 +51,6 @@ interface CampaignCategory {
   created_at: string;
   updated_at?: string;
   campaign_count?: number;
-}
-
-interface CategoryModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  category?: CampaignCategory;
-  onSave: (category: { name: string; description?: string }) => Promise<void>;
-  isSaving?: boolean;
-}
-
-function CategoryModal({
-  isOpen,
-  onClose,
-  category,
-  onSave,
-  isSaving = false,
-}: CategoryModalProps) {
-  const { error: showError } = useToast();
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
-
-  useEffect(() => {
-    if (category) {
-      setFormData({
-        name: category.name,
-        description: category.description || "",
-      });
-    } else {
-      setFormData({ name: "", description: "" });
-    }
-  }, [category, isOpen]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      showError("Validation Error", "Catalog name is required", true);
-      return;
-    }
-
-    if (formData.name.length > 64) {
-      showError("Validation Error", "Catalog name must be 64 characters or less", true);
-      return;
-    }
-
-    if (formData.description && formData.description.length > 500) {
-      showError("Validation Error", "Description must be 500 characters or less", true);
-      return;
-    }
-
-    const categoryData = {
-      name: formData.name.trim(),
-      description: formData.description.trim() || undefined,
-    };
-
-    await onSave(categoryData);
-  };
-
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
-      >
-        <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 min-w-0">
-            {category ? "Edit Campaign Catalog" : "Create New Campaign Catalog"}
-          </h2>
-          <button
-            onClick={onClose}
-            className={`p-2 ${tw.rounded} transition-colors flex-shrink-0`}
-          >
-            <X className="w-5 h-5 text-gray-500" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-          <div className="space-y-8">
-            <Input
-              type="text"
-              label="Campaign Catalog Name"
-              value={formData.name}
-              onChange={(value) =>
-                setFormData((prev) => ({ ...prev, name: String(value) }))
-              }
-              maxLength={64}
-              required
-            />
-
-            <Textarea
-              label="Description"
-              value={formData.description}
-              onChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: value,
-                }))
-              }
-              rows={3}
-              maxLength={500}
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className={`px-4 py-2 ${tw.rounded} transition-colors`}
-              style={{
-                background: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isSaving
-                ? category
-                  ? "Updating..."
-                  : "Creating..."
-                : category
-                  ? "Update"
-                  : "Create"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    document.body,
-  );
 }
 
 export default function CampaignCategoriesPage() {
@@ -431,7 +294,7 @@ export default function CampaignCategoriesPage() {
       } catch (err) {
         console.error("Failed to load Campaigns catalogs:", err);
         const errorMessage = extractBackendError(err, "Failed to load catalogs");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
         setCampaignCategories([]);
       } finally {
         setLoading(false);
@@ -514,7 +377,7 @@ export default function CampaignCategoriesPage() {
     } catch (err) {
       console.error("Failed to delete category:", err);
       const errorMessage = extractBackendError(err, "Failed to delete category");
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", errorMessage);
       // Revert optimistic update on error
       setCampaignCategories(previousCategories);
     } finally {
@@ -555,9 +418,8 @@ export default function CampaignCategoriesPage() {
         // Revert optimistic update on error by reloading
         await loadCategories(true);
         // Display backend error message and bypass silent mode for important errors
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to update category";
-        showError("Toggle Failed", extractBackendError(error, "Toggle Failed. Please try again."));
+        const errorMessage = extractBackendError(err, "Failed to update category");
+        showError("Toggle Failed", errorMessage);
       } finally {
         setTogglingCategoryId(null);
       }
@@ -570,12 +432,20 @@ export default function CampaignCategoriesPage() {
       try {
         setIsSaving(true);
         if (editingCategory) {
-          // Update existing category
+          // Optimistic update for existing category
+          const previousCategories = campaignCategories;
+          setCampaignCategories((prev) =>
+            prev.map((cat) =>
+              cat.id === editingCategory.id
+                ? { ...cat, ...categoryData, updated_at: new Date().toISOString() }
+                : cat
+            )
+          );
+
           await campaignService.updateCampaignCategory(
             editingCategory.id,
             categoryData,
           );
-          await loadCategories(true);
           showToast("Category updated successfully");
         } else {
           // Create new category - ensure created_by is a number
@@ -594,28 +464,44 @@ export default function CampaignCategoriesPage() {
             return;
           }
 
+          // Optimistic add to list - create with temp ID, will be updated when response comes back
+          const tempId = Math.min(...campaignCategories.map(c => c.id), 0) - 1;
+          const newCategory: CampaignCategory = {
+            id: tempId,
+            name: categoryData.name,
+            description: categoryData.description || "",
+            parent_category_id: null,
+            display_order: 10,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            campaign_count: 0,
+          };
+
+          setCampaignCategories((prev) => [newCategory, ...prev]);
+
           // Create new category with all required and optional fields
           await campaignService.createCampaignCategory({
             name: categoryData.name,
-            description: categoryData.description || "", // required, default to empty string
-            parent_category_id: null, // optional, default to null
-            display_order: 10, // optional, default to 10
-            is_active: true, // optional, default to true
-            created_by: createdByNumber, // required, must be a number
+            description: categoryData.description || "",
+            parent_category_id: null,
+            display_order: 10,
+            is_active: true,
+            created_by: createdByNumber,
           });
-          await loadCategories(true);
           showToast("Category created successfully");
         }
         setIsModalOpen(false);
         setEditingCategory(undefined);
       } catch (err) {
         const errorMessage = extractBackendError(err, "Failed to save category");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", errorMessage);
+        // Reload on error since optimistic update failed
+        await loadCategories(true);
       } finally {
         setIsSaving(false);
       }
     },
-    [editingCategory, loadCategories, showToast, showError, user],
+    [editingCategory, campaignCategories, loadCategories, showToast, showError, user],
   );
 
   const handleViewCampaigns = useCallback(
@@ -623,7 +509,7 @@ export default function CampaignCategoriesPage() {
       try {
         const categoryId = Number(category.id);
         if (isNaN(categoryId)) {
-          showError("Invalid category", extractBackendError(error, "Invalid category. Please try again."));
+          showError("Invalid category", extractBackendError(err, "Invalid category. Please try again."));
           return;
         }
 
@@ -671,7 +557,7 @@ export default function CampaignCategoriesPage() {
         setCampaigns(formattedCampaigns);
       } catch (err) {
         const errorMessage = extractBackendError(err, "Failed to load campaigns");
-        showError("Error", extractBackendError(error, "Error. Please try again."));
+        showError("Error", extractBackendError(err, "Error. Please try again."));
         setCampaigns([]);
       } finally {
         setCampaignsLoading(false);
@@ -942,11 +828,14 @@ export default function CampaignCategoriesPage() {
               style={{ backgroundColor: color.surface.cards }}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3
-                  className={`${tw.tableFirstColumn} text-gray-900 flex-1 truncate`}
-                >
-                  {category.name}
-                </h3>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Megaphone className="w-5 h-5 flex-shrink-0" style={{ color: color.primary.accent }} />
+                  <h3
+                    className={`${tw.tableFirstColumn} text-gray-900 truncate`}
+                  >
+                    {category.name}
+                  </h3>
+                </div>
                 <div className="flex items-center space-x-1">
                   <ActivateDeactivateButton
                     isActive={category.is_active}
@@ -964,7 +853,7 @@ export default function CampaignCategoriesPage() {
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
-                    className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                    className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4 " />
@@ -1062,7 +951,7 @@ export default function CampaignCategoriesPage() {
                 </button>
                 <button
                   onClick={() => handleDeleteCategory(category)}
-                  className={`p-2 icon-delete ${tw.rounded} transition-colors`}
+                  className={`p-0 icon-delete ${tw.rounded} transition-colors`}
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4 " />
@@ -1096,8 +985,23 @@ export default function CampaignCategoriesPage() {
           setEditingCategory(undefined);
         }}
         category={editingCategory}
-        onSave={handleCategorySaved}
-        isSaving={isSaving}
+        onCategoryUpdated={async (updatedCategory) => {
+          setEditingCategory(undefined);
+          // Update local state with new data from modal
+          if (updatedCategory) {
+            setCampaignCategories((prev) =>
+              prev.map((cat) =>
+                cat.id === updatedCategory.id
+                  ? { ...cat, name: updatedCategory.name, description: updatedCategory.description }
+                  : cat
+              )
+            );
+          }
+        }}
+        onCategoryCreated={async () => {
+          await loadCategories(true);
+        }}
+        entityType="campaign"
       />
 
       {/* Campaigns Modal */}
@@ -1162,7 +1066,11 @@ export default function CampaignCategoriesPage() {
                   setShowPrimaryCategoryModal(false);
                   setPrimaryCategoryItemId(null);
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium border rounded-md transition-colors dark:text-white dark:border-white"
+                style={{
+                  borderColor: "var(--c-bordered-button-color)",
+                  color: "var(--c-bordered-button-color)",
+                }}
               >
                 Cancel
               </button>

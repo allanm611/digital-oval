@@ -53,6 +53,14 @@ class OfferService {
         description: OFFER_FIELD_DEFAULTS.description,
         offer_type: OFFER_FIELD_DEFAULTS.offer_type,
         category_id: null,
+        communication_channel_id: null,
+        route: null,
+        sms_route_id: null,
+        email_route_id: null,
+        whatsapp_route_id: null,
+        ussd_route_id: null,
+        push_notification_route_id: null,
+        transactional_route_id: null,
         primary_product_id: null,
         discount_percentage: null,
         discount_amount: null,
@@ -83,6 +91,14 @@ class OfferService {
       description: data.description || OFFER_FIELD_DEFAULTS.description,
       offer_type: data.offer_type || OFFER_FIELD_DEFAULTS.offer_type,
       category_id: data.category_id || null,
+      communication_channel_id: data.communication_channel_id || null,
+      route: data.route || null,
+      sms_route_id: data.sms_route_id || null,
+      email_route_id: data.email_route_id || null,
+      whatsapp_route_id: data.whatsapp_route_id || null,
+      ussd_route_id: data.ussd_route_id || null,
+      push_notification_route_id: data.push_notification_route_id || null,
+      transactional_route_id: data.transactional_route_id || null,
       primary_product_id: data.primary_product_id || null,
       discount_percentage: data.discount_percentage ?? null,
       discount_amount: data.discount_amount ?? null,
@@ -103,6 +119,13 @@ class OfferService {
       updated_at: data.updated_at || new Date().toISOString(),
       created_by: data.created_by || null,
       updated_by: data.updated_by || null,
+      tracking_sources: Array.isArray(data.tracking_sources)
+        ? data.tracking_sources
+        : data.tracking_sources ?? null,
+      reward_configuration:
+        data.reward_configuration !== undefined
+          ? data.reward_configuration
+          : null,
     };
   }
 

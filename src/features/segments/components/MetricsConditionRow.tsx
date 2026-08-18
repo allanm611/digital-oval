@@ -84,7 +84,11 @@ export const MetricsConditionRow: React.FC<MetricsConditionRowProps> = ({
         <div className="flex-1 min-w-[120px]">
           <HeadlessSelect
             options={(() => {
-              const operators = getOperatorsForFieldType("money");
+              const selectedField = categoryFields.find(
+                (f: any) => f.field_value === condition.field || f.id === condition.field_id
+              );
+              const fieldType = selectedField?.field_type || selectedField?.type || "money";
+              const operators = getOperatorsForFieldType(fieldType);
               return operators.map((op) => ({
                 value: `${op.label}|${op.id}`,
                 label: op.label

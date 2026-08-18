@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, type To } from "react-router-dom";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { navigateBackOrFallback } from "../../utils/navigation";
 import { useNavigationHistory } from "../../contexts/NavigationHistoryContext";
@@ -11,6 +11,11 @@ interface BackButtonProps {
   showBreadcrumb?: boolean;
   currentLabel?: string;
   parentLabel?: string;
+  /**
+   * Hierarchy parent path. When set, the back arrow and parent crumb go here
+   * instead of using browser history (which labels list pages as "Details").
+   */
+  parentTo?: To;
 }
 
 function toTitleCaseLabel(value: string): string {
@@ -42,6 +47,25 @@ function toSingular(value: string): string {
   return value;
 }
 
+function findEntitySegment(segments: string[]): string | null {
+  for (let i = segments.length - 1; i >= 0; i -= 1) {
+    const segment = segments[i];
+    if (
+      !segment ||
+      segment === "dashboard" ||
+      isLikelyIdSegment(segment) ||
+      segment === "create" ||
+      segment === "edit" ||
+      segment === "new" ||
+      segment === "details"
+    ) {
+      continue;
+    }
+    return segment;
+  }
+  return null;
+}
+
 function getPathLabel(path: string): string {
   const segments = path.split("/").filter(Boolean);
   if (segments.length === 0) {
@@ -62,6 +86,22 @@ function getPathLabel(path: string): string {
     return `${toTitleCaseLabel(toSingular(previousSegment))} Catalogs`;
   }
 
+  // Avoid bare "Edit" / "Create" crumbs when previous path ends in an action
+  // segment (e.g. /offers/138/edit → "Edit Offer").
+  if (
+    lastSegment === "create" ||
+    lastSegment === "edit" ||
+    lastSegment === "new" ||
+    lastSegment === "details"
+  ) {
+    const entity = findEntitySegment(segments.slice(0, -1));
+    if (entity) {
+      const entityLabel = toTitleCaseLabel(toSingular(entity));
+      if (lastSegment === "details") return `${entityLabel} Details`;
+      return `${toTitleCaseLabel(lastSegment)} ${entityLabel}`;
+    }
+  }
+
   return toTitleCaseLabel(lastSegment);
 }
 
@@ -72,6 +112,7 @@ export default function BackButton({
   showBreadcrumb,
   currentLabel,
   parentLabel,
+  parentTo,
 }: BackButtonProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,7 +120,13 @@ export default function BackButton({
 
   const handleClick = onClick
     ? onClick
-    : () => navigateBackOrFallback(navigate, "/");
+    : () => {
+        if (parentTo != null) {
+          navigate(parentTo);
+          return;
+        }
+        navigateBackOrFallback(navigate, "/");
+      };
 
   // Keep compact/icon-only behavior for places that provide explicit icon sizing.
   const shouldShowBreadcrumb = showBreadcrumb ?? !iconSize;

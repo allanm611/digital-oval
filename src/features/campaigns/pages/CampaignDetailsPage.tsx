@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { getUserDisplayName } from "../../../shared/utils/userNameCache";
@@ -75,7 +76,9 @@ import { SegmentType } from "../../segments/types/segment";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table } from "../../../shared/components/Table/Table";
+import { useTable } from "../../../shared/components/Table/useTable";
 import { TableColumn } from "../../../shared/components/Table/types";
+import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 interface ChannelStat {
   channel: CreativeChannel;
@@ -101,6 +104,7 @@ export default function CampaignDetailsPage() {
   const location = useLocation();
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   // Check if we came from a catalog modal
   const returnTo = (
@@ -140,6 +144,24 @@ export default function CampaignDetailsPage() {
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
   const [flows, setFlows] = useState<CampaignFlowResponseData[]>([]);
   const [isLoadingFlows, setIsLoadingFlows] = useState(false);
+  const [showFlowColumnPicker, setShowFlowColumnPicker] = useState(false);
+
+  const flowTableDefaultColumns: TableColumn<FlowTableRow>[] = useMemo(() => [
+    { id: "step", label: "Step", width: "80px", visible: true, filterConfig: { type: "number" } },
+    { id: "segmentName", label: "Segment", width: "200px", visible: true, filterConfig: { type: "text" } },
+    { id: "offerName", label: "Offer", width: "200px", visible: true, filterConfig: { type: "text" } },
+    { id: "campaignType", label: "Campaign Type", width: "150px", visible: true, filterConfig: { type: "text" } },
+    { id: "waitHours", label: "Wait (hours)", width: "120px", visible: true, filterConfig: { type: "number" } },
+    { id: "allocation", label: "Allocation", width: "150px", visible: true, filterConfig: { type: "text" } },
+    { id: "actions", label: "Actions", width: "120px", visible: true, sortable: false, isActionColumn: true },
+  ], []);
+
+  const flowTable = useTable({
+    tableId: "campaign-flows-table",
+    defaultColumns: flowTableDefaultColumns,
+    defaultPageSize: 25,
+  });
+
   const [budgetUtilisation, setBudgetUtilisation] =
     useState<CampaignBudgetUtilisation | null>(null);
   const [isLoadingBudgetUtil, setIsLoadingBudgetUtil] = useState(false);
@@ -584,7 +606,7 @@ export default function CampaignDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to submit campaign for approval:", error);
-      const errorMessage = extractBackendError(error, "Failed to submit campaign for approval");
+      const errorMessage = extractBackendError(err, "Failed to submit campaign for approval");
       showToast("error", errorMessage);
     } finally {
       setIsApproveLoading(false);
@@ -594,11 +616,15 @@ export default function CampaignDetailsPage() {
   const handleApproveCampaign = async () => {
     if (!id) return;
 
+    const userId = user?.user_id;
+    if (!userId) {
+      showToast("error", "User ID not available. Please log in again.");
+      return;
+    }
+
     try {
       setIsApproveLoading(true);
-      await campaignService.approveCampaign(parseInt(id), {
-        comments: "Approved from details page",
-      });
+      await campaignService.approveCampaign(parseInt(id), userId);
       showToast("success", "Campaign approved successfully");
       // Refresh campaign data with both approval_status and status updates
       if (campaign) {
@@ -656,7 +682,7 @@ export default function CampaignDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to reject campaign:", error);
-      const errorMessage = extractBackendError(error, "Failed to reject campaign");
+      const errorMessage = extractBackendError(err, "Failed to reject campaign");
       showToast("error", errorMessage);
     } finally {
       setIsActionLoading(false);
@@ -676,7 +702,7 @@ export default function CampaignDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to activate campaign:", error);
-      const errorMessage = extractBackendError(error, "Failed to activate campaign");
+      const errorMessage = extractBackendError(err, "Failed to activate campaign");
       showToast("error", errorMessage);
     } finally {
       setIsActionLoading(false);
@@ -871,7 +897,7 @@ export default function CampaignDetailsPage() {
       await fetchCampaignFlows(campaignId);
     } catch (error) {
       console.error("Error updating flow:", error);
-      const errorMessage = extractBackendError(error, "Failed to update flow");
+      const errorMessage = extractBackendError(err, "Failed to update flow");
       showToast("error", errorMessage);
     } finally {
       setIsFlowActionLoading(false);
@@ -913,7 +939,7 @@ export default function CampaignDetailsPage() {
       await fetchCampaignFlows(campaignId);
     } catch (error) {
       console.error("Error deleting flow:", error);
-      const errorMessage = extractBackendError(error, "Failed to delete flow");
+      const errorMessage = extractBackendError(err, "Failed to delete flow");
       showToast("error", errorMessage);
     } finally {
       setIsFlowActionLoading(false);
@@ -978,7 +1004,7 @@ export default function CampaignDetailsPage() {
           {/* Scheduled Run Clock Button */}
           <button
             onClick={() => setShowScheduledModal(true)}
-            className={`flex items-center justify-center p-2 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
+            className={`flex items-center justify-center p-1 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
             style={{ backgroundColor: color.primary.accent }}
             title="View campaign schedule"
           >
@@ -1042,8 +1068,7 @@ export default function CampaignDetailsPage() {
                 )}
 
               {/* Step 4: Execute Campaign (approved + is_active=true) */}
-              {campaign.approval_status === "approved" &&
-                campaign?.is_active === true && (
+              {canShowCampaignButton(campaign, "execute") && (
                   <PermissionGate permission="campaigns.execute">
                     <button
                       onClick={() => setShowRunModal(true)}
@@ -1082,7 +1107,7 @@ export default function CampaignDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm`}
+              className={`flex items-center gap-0 ${tw.rounded} font-semibold text-sm`}
               style={{
                 backgroundColor: button.secondaryAction.background,
                 color: button.secondaryAction.color,
@@ -1176,7 +1201,7 @@ export default function CampaignDetailsPage() {
                         setShowMoreMenu(false);
                       } catch (error) {
                         console.error("Failed to unarchive campaign:", error);
-                        const errorMessage = extractBackendError(error, "Failed to unarchive campaign");
+                        const errorMessage = extractBackendError(err, "Failed to unarchive campaign");
                         showToast("error", errorMessage);
                       } finally {
                         setIsActionLoading(false);
@@ -1199,7 +1224,7 @@ export default function CampaignDetailsPage() {
                         setShowMoreMenu(false);
                       } catch (error) {
                         console.error("Failed to archive campaign:", error);
-                        const errorMessage = extractBackendError(error, "Failed to archive campaign");
+                        const errorMessage = extractBackendError(err, "Failed to archive campaign");
                         showToast("error", errorMessage);
                       } finally {
                         setIsActionLoading(false);
@@ -1554,6 +1579,62 @@ export default function CampaignDetailsPage() {
               <p className={`text-sm ${tw.textPrimary}`}>{getSettingsTimezone()}</p>
             </div>
           </div>
+
+          {/* Broadcast Schedule */}
+          {(campaign?.metadata as any)?.broadcast_schedule && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                Broadcast Schedule
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.type && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Schedule Type
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary} capitalize`}>
+                      {((campaign?.metadata as any)?.broadcast_schedule as any)?.type}
+                    </p>
+                  </div>
+                )}
+
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.recurrence_pattern && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Recurrence Pattern
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary} capitalize`}>
+                      {((campaign?.metadata as any)?.broadcast_schedule as any)?.recurrence_pattern}
+                    </p>
+                  </div>
+                )}
+
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.start_time && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Start Time
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary}`}>
+                      {((campaign?.metadata as any)?.broadcast_schedule as any)?.start_time}
+                    </p>
+                  </div>
+                )}
+
+                {((campaign?.metadata as any)?.broadcast_schedule as any)?.selected_days?.length > 0 && (
+                  <div>
+                    <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                      Days
+                    </label>
+                    <p className={`text-sm ${tw.textPrimary}`}>
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+                        .filter((_, idx) => ((campaign?.metadata as any)?.broadcast_schedule as any)?.selected_days?.includes(idx + 1) || ((campaign?.metadata as any)?.broadcast_schedule as any)?.selected_days?.includes(idx))
+                        .join(", ") || "—"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Divider */}
@@ -2512,65 +2593,76 @@ export default function CampaignDetailsPage() {
           <>
             <div className={`overflow-x-auto ${tw.rounded}`}>
               <Table<FlowTableRow>
-                columns={[
-                  { id: "step", label: "Step", width: "80px", visible: true, filterConfig: { type: "number" } },
-                  { id: "segmentName", label: "Segment", width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <button
-                      onClick={() => navigate(`/dashboard/segments/${row.segmentId}`)}
-                      className="text-sm font-medium hover:underline"
-                      style={{ color: color.primary.accent }}
-                    >
-                      {row.segmentName}
-                    </button>
-                  ) },
-                  { id: "offerName", label: "Offer", width: "200px", visible: true, filterConfig: { type: "text" }, render: (_, row) => (
-                    <button
-                      onClick={() => navigate(`/dashboard/offers/${row.offerId}`)}
-                      className="text-sm font-medium hover:underline"
-                      style={{ color: color.primary.accent }}
-                    >
-                      {row.offerName}
-                    </button>
-                  ) },
-                  { id: "campaignType", label: "Campaign Type", width: "150px", visible: true, filterConfig: { type: "text" } },
-                  { id: "waitHours", label: "Wait (hours)", width: "120px", visible: true, filterConfig: { type: "number" }, render: (value) => `${value}h` },
-                  { id: "allocation", label: "Allocation", width: "150px", visible: true, filterConfig: { type: "text" } },
-                  {
-                    id: "actions",
-                    label: "Actions",
-                    width: "120px",
-                    visible: true,
-                    sortable: false,
-                    render: (_, row) => {
-                      const flow = flows.find((f) => f.id === row.id);
-                      return (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => flow && handleFlowView(flow)}
-                            title="View flow details"
-                            className="p-2 hover:bg-gray-50 rounded transition-colors"
-                          >
-                            <Eye className="w-4 h-4 text-gray-600" />
-                          </button>
-                          <button
-                            onClick={() => flow && handleFlowEdit(flow)}
-                            title="Edit flow"
-                            className="p-2 hover:bg-gray-50 rounded transition-colors"
-                          >
-                            <Edit className="w-4 h-4 text-gray-600" />
-                          </button>
-                          <button
-                            onClick={() => flow && handleFlowDelete(flow)}
-                            title="Delete flow"
-                            className="p-2 hover:bg-red-50 rounded transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </button>
-                        </div>
-                      );
-                    },
-                  },
-                ]}
+                columns={flowTable.columns.map((col) => {
+                  if (col.id === "segmentName") {
+                    return {
+                      ...col,
+                      render: (_, row) => (
+                        <button
+                          onClick={() => navigate(`/dashboard/segments/${row.segmentId}`)}
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {row.segmentName}
+                        </button>
+                      ),
+                    };
+                  }
+                  if (col.id === "offerName") {
+                    return {
+                      ...col,
+                      render: (_, row) => (
+                        <button
+                          onClick={() => navigate(`/dashboard/offers/${row.offerId}`)}
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {row.offerName}
+                        </button>
+                      ),
+                    };
+                  }
+                  if (col.id === "waitHours") {
+                    return {
+                      ...col,
+                      render: (value) => `${value}h`,
+                    };
+                  }
+                  if (col.id === "actions") {
+                    return {
+                      ...col,
+                      render: (_, row) => {
+                        const flow = flows.find((f) => f.id === row.id);
+                        return (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => flow && handleFlowView(flow)}
+                              title="View flow details"
+                              className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                            >
+                              <Eye className="w-4 h-4 text-gray-600" />
+                            </button>
+                            <button
+                              onClick={() => flow && handleFlowEdit(flow)}
+                              title="Edit flow"
+                              className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
+                            >
+                              <Edit className="w-4 h-4 text-gray-600" />
+                            </button>
+                            <button
+                              onClick={() => flow && handleFlowDelete(flow)}
+                              title="Delete flow"
+                              className={`p-0 icon-delete ${tw.rounded} transition-all duration-200`}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </button>
+                          </div>
+                        );
+                      },
+                    };
+                  }
+                  return col;
+                })}
                 data={flows.map((flow) => {
                   const segment = segments.find((s) => s.segment_id === flow.segment_id);
                   const offer = offers.find((o) => parseInt(o.id) === flow.offer_id);
@@ -2586,6 +2678,10 @@ export default function CampaignDetailsPage() {
                     allocation: flow.bucket_allocation || "—",
                   };
                 })}
+                onHideColumn={flowTable.toggleColumn}
+                onManageColumnsClick={() => setShowFlowColumnPicker(true)}
+                onSort={flowTable.handleSort}
+                sortConfigs={flowTable.sortConfigs}
                 rowSpacing="0 8px"
               />
             </div>
@@ -3065,6 +3161,22 @@ export default function CampaignDetailsPage() {
           />
         </>
       )}
+
+      {/* Column Picker Modal for Flow Table */}
+      <ColumnPickerModal
+        isOpen={showFlowColumnPicker}
+        columns={flowTable.columns.map((col) => ({ id: col.id, label: col.label, visible: col.visible }))}
+        onClose={() => setShowFlowColumnPicker(false)}
+        onToggleColumn={flowTable.toggleColumn}
+        onReorderColumns={(reorderedCols) => {
+          const updatedColumns = reorderedCols.map((reordered) => {
+            const original = flowTable.columns.find((c) => c.id === reordered.id);
+            return original ? { ...original, visible: reordered.visible } : reordered as any;
+          });
+          flowTable.reorderColumns(updatedColumns);
+        }}
+        onResetToDefaults={flowTable.resetToDefaults}
+      />
     </div>
   );
 }

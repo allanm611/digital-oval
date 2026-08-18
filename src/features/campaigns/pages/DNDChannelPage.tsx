@@ -37,6 +37,7 @@ export default function DNDChannelPage() {
   const [loadingDNDData, setLoadingDNDData] = useState(false);
   const [channelInfo, setChannelInfo] = useState<ChannelData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnPicker, setShowColumnPicker] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -93,7 +94,7 @@ export default function DNDChannelPage() {
       setDndTypes(types);
       setDndSubscriptions(subscriptions);
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setLoadingDNDData(false);
     }
@@ -116,62 +117,38 @@ export default function DNDChannelPage() {
       id: "customer_name",
       label: "Customer",
       visible: true,
-      render: (value) => (
-        <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`} title={value as string || "Unknown"}>
-          {value || "Unknown"}
-        </div>
-      ),
     },
     {
       id: "customer_phone",
       label: "Phone",
       visible: true,
-      render: (value) => (
-        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
-          {value || "—"}
-        </div>
-      ),
     },
     {
       id: "customer_email",
       label: "Email",
       visible: true,
-      render: (value) => (
-        <div className="text-sm text-black truncate" title={value ? String(value) : "—"}>
-          {value || "—"}
-        </div>
-      ),
     },
     {
       id: "dnd_type_name",
       label: "DND Type",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-black capitalize">
-          {value || "Unknown"}
-        </span>
-      ),
     },
     {
       id: "status",
       label: "Status",
       visible: true,
-      render: (value) => (
-        <span className="text-sm text-black capitalize">
-          {value}
-        </span>
-      ),
     },
     {
       id: "actions",
       label: "Actions",
       visible: true,
       sortable: false,
+      isActionColumn: true,
       render: (value, subscription) => (
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => navigate(`/dashboard/dnd-management/${channelInfo?.id}/${subscription.id}`)}
-            className={`p-2 ${tw.textSecondary} hover:bg-gray-100 ${tw.rounded} transition-colors`}
+            className={`p-0 ${tw.textSecondary} hover:bg-gray-100 ${tw.rounded} transition-colors`}
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -179,7 +156,7 @@ export default function DNDChannelPage() {
           {subscription.status === "active" && (
             <button
               onClick={() => handleRemoveCustomer(subscription)}
-              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`p-0 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
               disabled={isRemoving}
               title="Remove from DND"
             >
@@ -199,6 +176,7 @@ export default function DNDChannelPage() {
     handlePageSizeChange: tableHandlePageSizeChange,
     sortConfigs,
     handleSort,
+    toggleColumn,
   } = useTable({
     tableId: "dnd-channel-table",
     defaultColumns,
@@ -249,7 +227,7 @@ export default function DNDChannelPage() {
       setShowAddModal(false);
       await loadDNDData();
     } catch (err) {
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsAddingCustomers(false);
     }
@@ -283,7 +261,7 @@ export default function DNDChannelPage() {
       setDeleteConfirmName("");
     } catch (err) {
       setDndSubscriptions(oldSubscriptions);
-      showError("Error", extractBackendError(error, "Error. Please try again."));
+      showError("Error", extractBackendError(err, "Error. Please try again."));
     } finally {
       setIsRemoving(false);
     }
@@ -319,21 +297,19 @@ export default function DNDChannelPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb and Add Button */}
-      <div className="flex items-center justify-between gap-4">
-        <BackButton showBreadcrumb={true} currentLabel={channelInfo?.name || "Channel"} />
-        <button
-          onClick={() => setShowAddModal(true)}
-          className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-4 h-4" />
-          Add Customer
-        </button>
-      </div>
-
-      {/* Description */}
-      <div>
+      {/* Breadcrumb with Add Button and Description */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <BackButton showBreadcrumb={true} currentLabel={channelInfo?.name || "Channel"} />
+          <button
+            onClick={() => setShowAddModal(true)}
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white`}
+            style={{ backgroundColor: color.primary.action }}
+          >
+            <Plus className="w-4 h-4" />
+            Add Customer
+          </button>
+        </div>
         <p className={`text-sm ${tw.textSecondary}`}>
           Manage Do Not Disturb lists for {channelInfo?.name || 'this channel'}. Add or remove customers who should not receive messages on this channel.
         </p>
@@ -419,6 +395,8 @@ export default function DNDChannelPage() {
                 onPageSizeChange={tableHandlePageSizeChange}
               onSort={handleSort}
               sortConfigs={sortConfigs}
+              onHideColumn={toggleColumn}
+              onManageColumnsClick={() => setShowColumnPicker(true)}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,

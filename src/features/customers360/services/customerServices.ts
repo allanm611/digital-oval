@@ -202,6 +202,19 @@ class CustomerService {
       throw error;
     }
   }
+
+  async getSubscriberStats(skipCache?: boolean): Promise<any> {
+    try {
+      const params = new URLSearchParams();
+      if (skipCache) {
+        params.append("skipCache", "true");
+      }
+      return await this.request(`/stats${params.toString() ? `?${params.toString()}` : ""}`);
+    } catch (error) {
+      console.error("Failed to fetch subscriber stats:", error);
+      throw error;
+    }
+  }
 }
 
 export const customerService = new CustomerService();
