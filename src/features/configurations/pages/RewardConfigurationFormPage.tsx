@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Eye } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
-import { tw } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import {
   rewardProviderService,
   RewardProvider,
@@ -16,6 +17,12 @@ import {
   UpdateRewardConfigurationRequest,
 } from "../types/rewardConfiguration";
 import RewardConfigurationForm from "../components/reward-forms/RewardConfigurationForm";
+import {
+  readRewardNavState,
+  rewardProviderDetailsPath,
+  rewardTemplateDetailsPath,
+  rewardTemplatesListPath,
+} from "../utils/rewardNavigation";
 
 interface RewardConfigurationFormPageProps {
   mode: "create" | "edit";
@@ -28,7 +35,30 @@ export default function RewardConfigurationFormPage({
   const [searchParams] = useSearchParams();
   const providerIdFromUrl = searchParams.get("provider_id");
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error: showError } = useToast();
+  const navState = readRewardNavState(location.state);
+
+  const templatesListPath = rewardTemplatesListPath(
+    navState?.providerId ?? providerIdFromUrl,
+  );
+
+  const leaveToParent = (createdId?: number) => {
+    if (mode === "create" && createdId != null && createdId > 0) {
+      navigate(rewardTemplateDetailsPath(createdId), { replace: true });
+      return;
+    }
+    if (mode === "edit" && id && navState?.from === "details") {
+      navigate(rewardTemplateDetailsPath(id), { replace: true });
+      return;
+    }
+    if (navState?.from === "provider" && (navState.providerId || providerIdFromUrl)) {
+      const providerId = navState.providerId ?? Number(providerIdFromUrl);
+      navigate(rewardProviderDetailsPath(providerId));
+      return;
+    }
+    navigate(templatesListPath);
+  };
 
   const [providers, setProviders] = useState<RewardProvider[]>([]);
   const [providersLoading, setProvidersLoading] = useState(false);
@@ -113,7 +143,7 @@ export default function RewardConfigurationFormPage({
           "Failed to load configuration. Please try again.",
         ),
       );
-      navigate("/dashboard/reward-configurations");
+      navigate(templatesListPath);
     } finally {
       setIsLoading(false);
     }
@@ -131,16 +161,15 @@ export default function RewardConfigurationFormPage({
           Number(id),
           payload as UpdateRewardConfigurationRequest,
         );
+        success("Saved", "Reward template updated successfully");
+        leaveToParent();
       } else {
-        await rewardConfigurationService.create(
+        const created = await rewardConfigurationService.create(
           payload as CreateRewardConfigurationRequest,
         );
+        success("Saved", "Reward template created successfully");
+        leaveToParent(created.id);
       }
-      success(
-        "Saved",
-        `Reward template ${mode === "edit" ? "updated" : "created"} successfully`,
-      );
-      navigate("/dashboard/reward-configurations");
     } catch (err) {
       showError(
         "Error",
@@ -171,14 +200,45 @@ export default function RewardConfigurationFormPage({
 
   return (
     <div className="space-y-6">
-      <BackButton
-        showBreadcrumb={true}
-        currentLabel={
-          mode === "create"
-            ? "Create Reward Template"
-            : "Edit Reward Template"
-        }
-      />
+      <div className="flex items-center justify-between gap-4">
+        <BackButton
+          showBreadcrumb={true}
+          parentLabel={
+            navState?.parentLabel ||
+            (navState?.from === "details" && editingConfig?.name
+              ? editingConfig.name
+              : selectedProvider && navState?.from === "provider"
+                ? selectedProvider.name
+                : "Reward Templates")
+          }
+          parentTo={
+            mode === "edit" && id && navState?.from === "details"
+              ? rewardTemplateDetailsPath(id)
+              : navState?.from === "provider" &&
+                  (navState.providerId || providerIdFromUrl)
+                ? rewardProviderDetailsPath(
+                    navState.providerId ?? Number(providerIdFromUrl),
+                  )
+                : templatesListPath
+          }
+          currentLabel={
+            mode === "create"
+              ? "Create Reward Template"
+              : "Edit Reward Template"
+          }
+        />
+        {mode === "edit" && id ? (
+          <button
+            type="button"
+            onClick={() => navigate(rewardTemplateDetailsPath(id))}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-200 bg-white hover:bg-gray-50"
+            style={{ color: color.primary.action }}
+          >
+            <Eye className="w-4 h-4" />
+            View details
+          </button>
+        ) : null}
+      </div>
 
       <RewardConfigurationForm
         mode={mode}
@@ -187,7 +247,7 @@ export default function RewardConfigurationFormPage({
         providersLoading={providersLoading}
         initialData={editingConfig || initialDataForCreate}
         initialProvider={selectedProvider}
-        onCancel={() => navigate("/dashboard/reward-configurations")}
+        onCancel={() => leaveToParent()}
         onSave={handleSave}
       />
     </div>

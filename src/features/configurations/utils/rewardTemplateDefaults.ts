@@ -4,10 +4,14 @@ import type {
   CreateRewardConfigurationRequest,
   RewardConfiguration,
 } from "../types/rewardConfiguration";
-import type { RewardProvider } from "../types/rewardProvider";
+import type {
+  RewardProvider,
+  RewardProviderSchemaField,
+} from "../types/rewardProvider";
 import {
   buildInitialConfigValues,
   normalizeConfigFields,
+  resolveSchemaConfigValues,
 } from "../components/reward-forms/rewardSchemaFieldUtils";
 
 /** Canonical name for the system default template created per provider */
@@ -19,8 +23,20 @@ export const DEFAULT_REWARD_TEMPLATE_NAME = "Default Template";
  */
 export const VIRTUAL_DEFAULT_TEMPLATE_ID_BASE = -1_000_000_000;
 
+export type SyncDefaultTemplateResult = {
+  template: RewardConfiguration | null;
+  /** True when a persisted default was created or updated */
+  synced: boolean;
+  /** True when stored configs already matched the provider */
+  skipped: boolean;
+  error?: string;
+};
+
 /** In-flight ensure calls keyed by provider id (dedupe concurrent UI loads) */
 const ensureInFlight = new Map<number, Promise<RewardConfiguration>>();
+
+/** In-flight default-template syncs keyed by provider id */
+const syncInFlight = new Map<number, Promise<SyncDefaultTemplateResult>>();
 
 export function toVirtualDefaultTemplateId(providerId: number): number {
   return VIRTUAL_DEFAULT_TEMPLATE_ID_BASE - providerId;
@@ -167,6 +183,33 @@ export function sortRewardTemplates(
   });
 }
 
+function schemaFieldsOf(
+  schema: RewardProvider["auth_schema"] | RewardProvider["payload_schema"] | undefined,
+): RewardProviderSchemaField[] {
+  return schema?.fields || [];
+}
+
+function storedConfigOnSchema(
+  fields: RewardProviderSchemaField[],
+  stored?: Record<string, unknown>,
+): Record<string, unknown> {
+  return normalizeConfigFields(fields, buildInitialConfigValues(fields, stored));
+}
+
+function stableConfigKey(value: unknown): string {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
+function configMapsEqual(
+  a: Record<string, unknown>,
+  b: Record<string, unknown>,
+): boolean {
+  const keys = Array.from(new Set([...Object.keys(a), ...Object.keys(b)])).sort();
+  return keys.every((key) => stableConfigKey(a[key]) === stableConfigKey(b[key]));
+}
+
 /**
  * Build auth/payload maps from every provider schema field + its default value.
  */
@@ -174,8 +217,8 @@ export function buildProviderSchemaDefaultConfigs(provider: RewardProvider): {
   auth_config: Record<string, unknown>;
   payload_config: Record<string, unknown>;
 } {
-  const authFields = provider.auth_schema?.fields || [];
-  const payloadFields = provider.payload_schema?.fields || [];
+  const authFields = schemaFieldsOf(provider.auth_schema);
+  const payloadFields = schemaFieldsOf(provider.payload_schema);
   return {
     auth_config: normalizeConfigFields(
       authFields,
@@ -186,6 +229,177 @@ export function buildProviderSchemaDefaultConfigs(provider: RewardProvider): {
       buildInitialConfigValues(payloadFields),
     ),
   };
+}
+
+/**
+ * Default template configs that mirror the current provider schema.
+ * Preserves stored secrets when the schema default is empty or masked.
+ */
+export function resolveDefaultTemplateConfigs(
+  provider: RewardProvider,
+  stored?: Pick<RewardConfiguration, "auth_config" | "payload_config"> | null,
+): {
+  auth_config: Record<string, unknown>;
+  payload_config: Record<string, unknown>;
+} {
+  const authFields = schemaFieldsOf(provider.auth_schema);
+  const payloadFields = schemaFieldsOf(provider.payload_schema);
+  return {
+    auth_config: normalizeConfigFields(
+      authFields,
+      resolveSchemaConfigValues(authFields, stored?.auth_config, "default_template"),
+    ),
+    payload_config: normalizeConfigFields(
+      payloadFields,
+      resolveSchemaConfigValues(
+        payloadFields,
+        stored?.payload_config,
+        "default_template",
+      ),
+    ),
+  };
+}
+
+/**
+ * Overlay current provider defaults onto a template for display / grant use.
+ * Default templates inherit every field; custom templates inherit locked fields.
+ */
+export function applyProviderDefaultsToTemplate(
+  template: RewardConfiguration,
+  provider: RewardProvider,
+): RewardConfiguration {
+  const mode = isDefaultRewardTemplate(template)
+    ? "default_template"
+    : "custom_template";
+  const authFields = schemaFieldsOf(provider.auth_schema);
+  const payloadFields = schemaFieldsOf(provider.payload_schema);
+  return {
+    ...template,
+    auth_config: resolveSchemaConfigValues(
+      authFields,
+      template.auth_config,
+      mode,
+    ),
+    payload_config: resolveSchemaConfigValues(
+      payloadFields,
+      template.payload_config,
+      mode,
+    ),
+    provider_name: template.provider_name || provider.name,
+    reward_type: template.reward_type || provider.reward_type,
+    api_path: template.api_path || provider.api_path,
+  };
+}
+
+function defaultTemplateHasDrift(
+  provider: RewardProvider,
+  stored: RewardConfiguration,
+  desired: {
+    auth_config: Record<string, unknown>;
+    payload_config: Record<string, unknown>;
+  },
+): boolean {
+  const currentAuth = storedConfigOnSchema(
+    schemaFieldsOf(provider.auth_schema),
+    stored.auth_config,
+  );
+  const currentPayload = storedConfigOnSchema(
+    schemaFieldsOf(provider.payload_schema),
+    stored.payload_config,
+  );
+  return (
+    !configMapsEqual(desired.auth_config, currentAuth) ||
+    !configMapsEqual(desired.payload_config, currentPayload)
+  );
+}
+
+/**
+ * Persist the provider's current schema defaults onto its system default
+ * template. Idempotent: no write when values already match.
+ *
+ * Custom (duplicated) templates are left unchanged except for locked fields
+ * that inherit at read/grant time.
+ */
+export async function syncProviderDefaultTemplate(
+  provider: RewardProvider,
+  existing?: RewardConfiguration | null,
+): Promise<SyncDefaultTemplateResult> {
+  if (!provider?.id || provider.id <= 0) {
+    return {
+      template: null,
+      synced: false,
+      skipped: true,
+      error: "Invalid reward provider id",
+    };
+  }
+
+  const inFlight = syncInFlight.get(provider.id);
+  if (inFlight) return inFlight;
+
+  const run = (async (): Promise<SyncDefaultTemplateResult> => {
+    try {
+      const current =
+        existing &&
+        !isVirtualDefaultTemplateId(existing.id) &&
+        existing.provider_id === provider.id &&
+        isDefaultRewardTemplate(existing)
+          ? existing
+          : findDefaultInList(await listProviderTemplates(provider.id));
+
+      if (!current || isVirtualDefaultTemplateId(current.id)) {
+        const created = await tryCreateDefaultTemplate(provider);
+        return { template: created, synced: true, skipped: false };
+      }
+
+      const desired = resolveDefaultTemplateConfigs(provider, current);
+      if (!defaultTemplateHasDrift(provider, current, desired)) {
+        return { template: current, synced: false, skipped: true };
+      }
+
+      let updated: RewardConfiguration;
+      try {
+        updated = await rewardConfigurationService.update(current.id, {
+          auth_config: desired.auth_config,
+          payload_config: desired.payload_config,
+          is_default: true,
+          is_active: true,
+        });
+      } catch {
+        updated = await rewardConfigurationService.update(current.id, {
+          auth_config: desired.auth_config,
+          payload_config: desired.payload_config,
+        });
+      }
+
+      return {
+        template: {
+          ...updated,
+          is_default: true,
+          auth_config: desired.auth_config,
+          payload_config: desired.payload_config,
+        },
+        synced: true,
+        skipped: false,
+      };
+    } catch (err) {
+      return {
+        template: existing ?? null,
+        synced: false,
+        skipped: false,
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to sync default reward template",
+      };
+    }
+  })();
+
+  syncInFlight.set(provider.id, run);
+  try {
+    return await run;
+  } finally {
+    syncInFlight.delete(provider.id);
+  }
 }
 
 /**
@@ -377,7 +591,15 @@ export async function ensureProviderDefaultTemplateDetailed(
     const list = await listProviderTemplates(providerId);
     const existing = findDefaultInList(list);
     if (existing) {
-      return reactivateIfNeeded(existing);
+      const reactivated = await reactivateIfNeeded(existing);
+      if (provider && provider.id === providerId) {
+        const synced = await syncProviderDefaultTemplate(
+          provider,
+          reactivated,
+        );
+        return synced.template || reactivated;
+      }
+      return reactivated;
     }
 
     const resolvedProvider =

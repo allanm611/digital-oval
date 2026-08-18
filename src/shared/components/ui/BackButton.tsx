@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, type To } from "react-router-dom";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { navigateBackOrFallback } from "../../utils/navigation";
 import { useNavigationHistory } from "../../contexts/NavigationHistoryContext";
@@ -11,6 +11,11 @@ interface BackButtonProps {
   showBreadcrumb?: boolean;
   currentLabel?: string;
   parentLabel?: string;
+  /**
+   * Hierarchy parent path. When set, the back arrow and parent crumb go here
+   * instead of using browser history (which labels list pages as "Details").
+   */
+  parentTo?: To;
 }
 
 function toTitleCaseLabel(value: string): string {
@@ -86,13 +91,14 @@ function getPathLabel(path: string): string {
   if (
     lastSegment === "create" ||
     lastSegment === "edit" ||
-    lastSegment === "new"
+    lastSegment === "new" ||
+    lastSegment === "details"
   ) {
     const entity = findEntitySegment(segments.slice(0, -1));
     if (entity) {
-      return `${toTitleCaseLabel(lastSegment)} ${toTitleCaseLabel(
-        toSingular(entity),
-      )}`;
+      const entityLabel = toTitleCaseLabel(toSingular(entity));
+      if (lastSegment === "details") return `${entityLabel} Details`;
+      return `${toTitleCaseLabel(lastSegment)} ${entityLabel}`;
     }
   }
 
@@ -106,6 +112,7 @@ export default function BackButton({
   showBreadcrumb,
   currentLabel,
   parentLabel,
+  parentTo,
 }: BackButtonProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,7 +120,13 @@ export default function BackButton({
 
   const handleClick = onClick
     ? onClick
-    : () => navigateBackOrFallback(navigate, "/");
+    : () => {
+        if (parentTo != null) {
+          navigate(parentTo);
+          return;
+        }
+        navigateBackOrFallback(navigate, "/");
+      };
 
   // Keep compact/icon-only behavior for places that provide explicit icon sizing.
   const shouldShowBreadcrumb = showBreadcrumb ?? !iconSize;

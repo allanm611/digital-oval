@@ -133,8 +133,9 @@ export default function HeadlessSelect({
   const hasValue = value !== "" && value !== null && value !== undefined;
   const shouldFloatLabel = Boolean(label) && (isOpen || hasValue);
   const hasDisplaySelection = hasValue || (!label && !!selectedOption);
+  const selectedLabel = String(selectedOption?.label ?? "").trim();
   const buttonDisplayText = hasDisplaySelection
-    ? (selectedOption?.label ?? String(value))
+    ? selectedLabel || placeholder
     : label
       ? shouldFloatLabel
         ? placeholder

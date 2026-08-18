@@ -24,6 +24,12 @@ import {
   useTable,
   type TableColumn,
 } from "../../../shared/components/Table";
+import {
+  CONFIGURATION_HUB_PATH,
+  REWARD_PROVIDERS_PATH,
+  rewardProviderDetailsPath,
+  rewardProviderEditPath,
+} from "../utils/rewardNavigation";
 
 type StatusFilter = "" | "active" | "inactive";
 
@@ -215,7 +221,7 @@ export default function RewardProvidersPage() {
           />
           <button
             onClick={() =>
-              navigate(`/dashboard/reward-providers/${provider.id}/details`)
+              navigate(rewardProviderDetailsPath(provider.id))
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="View details"
@@ -224,7 +230,9 @@ export default function RewardProvidersPage() {
           </button>
           <button
             onClick={() =>
-              navigate(`/dashboard/reward-providers/${provider.id}/edit`)
+              navigate(rewardProviderEditPath(provider.id), {
+                state: { from: "list" },
+              })
             }
             className={`p-0 icon-edit ${tw.rounded} transition-all duration-200`}
             title="Edit provider"
@@ -272,11 +280,16 @@ export default function RewardProvidersPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
-          <BackButton showBreadcrumb={true} currentLabel="Reward Providers" />
+          <BackButton
+            showBreadcrumb={true}
+            parentLabel="Configuration"
+            parentTo={CONFIGURATION_HUB_PATH}
+            currentLabel="Reward Providers"
+          />
           <FeatureActionButton
             featureId="reward-providers"
             action="create"
-            onClick={() => navigate("/dashboard/reward-providers/create")}
+            onClick={() => navigate(`${REWARD_PROVIDERS_PATH}/create`)}
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
@@ -333,7 +346,7 @@ export default function RewardProvidersPage() {
               <FeatureActionButton
                 featureId="reward-providers"
                 action="create"
-                onClick={() => navigate("/dashboard/reward-providers/create")}
+                onClick={() => navigate(`${REWARD_PROVIDERS_PATH}/create`)}
                 className="mx-auto"
               />
             )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Copy, Edit, Gift, Trash2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
@@ -10,13 +10,22 @@ import { rewardProviderService } from "../services/rewardProviderService";
 import { RewardConfiguration } from "../types/rewardConfiguration";
 import { RewardProviderSchemaField } from "../types/rewardProvider";
 import {
+  applyProviderDefaultsToTemplate,
   canDuplicateRewardTemplate,
   isDefaultRewardTemplate,
+  syncProviderDefaultTemplate,
 } from "../utils/rewardTemplateDefaults";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import {
+  readRewardNavState,
+  rewardProviderDetailsPath,
+  rewardTemplateDetailsPath,
+  rewardTemplateEditPath,
+  rewardTemplatesListPath,
+} from "../utils/rewardNavigation";
 
 function isSensitiveKey(key: string): boolean {
   const lower = key.toLowerCase();
@@ -45,18 +54,26 @@ function ConfigSection({
   fields: RewardProviderSchemaField[];
   values: Record<string, unknown>;
 }) {
-  const entries = Object.entries(values || {});
+  const keys = fields.length
+    ? [
+        ...fields.map((field) => field.name),
+        ...Object.keys(values || {}).filter(
+          (key) => !fields.some((field) => field.name === key),
+        ),
+      ]
+    : Object.keys(values || {});
 
   return (
     <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
       <h2 className={`text-sm font-semibold ${tw.textPrimary} mb-6`}>
         {title}
       </h2>
-      {entries.length === 0 ? (
+      {keys.length === 0 ? (
         <p className={`text-sm ${tw.textMuted}`}>No values configured.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {entries.map(([key, value]) => {
+          {keys.map((key) => {
+            const value = values?.[key];
             const schemaField = fields.find((f) => f.name === key);
             const label = schemaField?.label || key.replace(/_/g, " ");
             const sensitive =
@@ -97,7 +114,9 @@ function ConfigSection({
 export default function RewardConfigurationDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { success: showSuccess, error: showError } = useToast();
+  const navState = readRewardNavState(location.state);
 
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<RewardConfiguration | null>(null);
@@ -121,7 +140,7 @@ export default function RewardConfigurationDetailsPage() {
       setLoading(true);
       if (!id) return;
       const found = await rewardConfigurationService.getById(Number(id));
-      setConfig(found);
+      let nextConfig = found;
 
       try {
         const provider = await rewardProviderService.getById(
@@ -129,10 +148,16 @@ export default function RewardConfigurationDetailsPage() {
         );
         setAuthFields(provider.auth_schema?.fields || []);
         setPayloadFields(provider.payload_schema?.fields || []);
+        nextConfig = applyProviderDefaultsToTemplate(found, provider);
+        if (isDefaultRewardTemplate(found)) {
+          void syncProviderDefaultTemplate(provider, found);
+        }
       } catch {
         setAuthFields([]);
         setPayloadFields([]);
       }
+
+      setConfig(nextConfig);
     } catch (err) {
       showError(
         extractBackendError(
@@ -140,7 +165,11 @@ export default function RewardConfigurationDetailsPage() {
           "Failed to load configuration. Please try again.",
         ),
       );
-      navigate("/dashboard/reward-configurations");
+      navigate(
+        rewardTemplatesListPath(
+          navState?.from === "provider" ? navState.providerId : undefined,
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -203,7 +232,12 @@ export default function RewardConfigurationDetailsPage() {
         "Template duplicated",
         `"${duplicated.name}" was created from "${config.name}".`,
       );
-      navigate(`/dashboard/reward-configurations/${duplicated.id}/details`);
+      navigate(rewardTemplateDetailsPath(duplicated.id), {
+        state: {
+          from: navState?.from === "provider" ? "provider" : "list",
+          providerId: navState?.providerId ?? config.provider_id,
+        },
+      });
     } catch (err) {
       showError(
         extractBackendError(
@@ -230,7 +264,13 @@ export default function RewardConfigurationDetailsPage() {
       setDeleting(true);
       await rewardConfigurationService.delete(config.id);
       showSuccess(`"${config.name}" has been deleted successfully.`);
-      navigate("/dashboard/reward-configurations");
+      navigate(
+        rewardTemplatesListPath(
+          navState?.from === "provider"
+            ? navState.providerId ?? config.provider_id
+            : undefined,
+        ),
+      );
     } catch (err) {
       showError(
         extractBackendError(
@@ -265,7 +305,13 @@ export default function RewardConfigurationDetailsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton
           showBreadcrumb={true}
-          currentLabel="Reward Template Details"
+          parentLabel="Reward Templates"
+          parentTo={rewardTemplatesListPath(
+            navState?.from === "provider"
+              ? navState.providerId ?? config.provider_id
+              : undefined,
+          )}
+          currentLabel={config.name}
         />
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -279,7 +325,13 @@ export default function RewardConfigurationDetailsPage() {
           </ActivateDeactivateButton>
           <button
             onClick={() =>
-              navigate(`/dashboard/reward-configurations/${config.id}/edit`)
+              navigate(rewardTemplateEditPath(config.id), {
+                state: {
+                  from: "details",
+                  parentLabel: config.name,
+                  providerId: config.provider_id,
+                },
+              })
             }
             disabled={isDefaultTemplate}
             title={
@@ -351,8 +403,9 @@ export default function RewardConfigurationDetailsPage() {
             </p>
             {isDefaultTemplate ? (
               <p className={`text-xs ${tw.textMuted} mt-2`}>
-                Default templates cannot be edited or deleted. Duplicate this
-                template to create an editable copy.
+                This default template is owned by the provider. Authentication
+                values such as username stay in sync when the provider is
+                edited. Duplicate it to create an independent, editable copy.
               </p>
             ) : null}
           </div>
@@ -454,9 +507,7 @@ export default function RewardConfigurationDetailsPage() {
             <button
               type="button"
               onClick={() =>
-                navigate(
-                  `/dashboard/reward-providers/${config.provider_id}/details`,
-                )
+                navigate(rewardProviderDetailsPath(config.provider_id))
               }
               className={`text-sm font-medium underline ${tw.textPrimary}`}
             >

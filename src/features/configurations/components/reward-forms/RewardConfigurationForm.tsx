@@ -10,10 +10,10 @@ import {
 } from "../../services/rewardProviderService";
 import { RewardProviderSchemaField } from "../../types/rewardProvider";
 import {
-  coerceConfigValue,
   isSchemaFieldEditable,
   lockedSchemaFieldValue,
   normalizeConfigValueForApi,
+  resolveSchemaConfigValues,
   validateRequiredSchemaValue,
 } from "./rewardSchemaFieldUtils";
 import {
@@ -21,6 +21,7 @@ import {
   RewardConfiguration,
   UpdateRewardConfigurationRequest,
 } from "../../types/rewardConfiguration";
+import { isDefaultRewardTemplate } from "../../utils/rewardTemplateDefaults";
 
 interface RewardConfigurationFormProps {
   mode: "create" | "edit";
@@ -35,25 +36,6 @@ interface RewardConfigurationFormProps {
       | CreateRewardConfigurationRequest
       | UpdateRewardConfigurationRequest,
   ) => void;
-}
-
-function buildInitialConfigValues(
-  fields: RewardProviderSchemaField[],
-  existing?: Record<string, unknown>,
-): Record<string, unknown> {
-  const values: Record<string, unknown> = {};
-  fields.forEach((field) => {
-    if (existing && existing[field.name] !== undefined) {
-      values[field.name] = coerceConfigValue(field, existing[field.name]);
-      return;
-    }
-    if (field.default !== undefined && field.default !== "") {
-      values[field.name] = coerceConfigValue(field, field.default);
-      return;
-    }
-    values[field.name] = coerceConfigValue(field, undefined);
-  });
-  return values;
 }
 
 export default function RewardConfigurationForm({
@@ -148,25 +130,27 @@ export default function RewardConfigurationForm({
   }, [providerId, initialProvider, providers]);
 
   useEffect(() => {
+    const storedAuth =
+      (initialData?.auth_config as Record<string, unknown>) || undefined;
+    const storedPayload =
+      (initialData?.payload_config as Record<string, unknown>) || undefined;
+    const resolveMode =
+      initialData && isDefaultRewardTemplate(initialData)
+        ? "default_template"
+        : "custom_template";
     setAuthValues(
-      buildInitialConfigValues(
-        authFields,
-        (initialData?.auth_config as Record<string, unknown>) || undefined,
-      ),
+      resolveSchemaConfigValues(authFields, storedAuth, resolveMode),
     );
     setPayloadValues(
-      buildInitialConfigValues(
-        payloadFields,
-        (initialData?.payload_config as Record<string, unknown>) || undefined,
-      ),
+      resolveSchemaConfigValues(payloadFields, storedPayload, resolveMode),
     );
   }, [authFields, payloadFields, initialData?.id]);
 
   useEffect(() => {
     if (mode !== "create" || !providerId) return;
     if (initialData?.id) return;
-    setAuthValues(buildInitialConfigValues(authFields));
-    setPayloadValues(buildInitialConfigValues(payloadFields));
+    setAuthValues(resolveSchemaConfigValues(authFields));
+    setPayloadValues(resolveSchemaConfigValues(payloadFields));
   }, [providerId, mode, authFields, payloadFields, initialData?.id]);
 
   const setFieldValue = (
@@ -310,8 +294,7 @@ export default function RewardConfigurationForm({
         />
         {locked && (
           <p className={`text-xs ${tw.textMuted} mt-1`}>
-            Locked by provider schema — uses the{" "}
-            {mode === "edit" ? "saved template" : "provider default"} value.
+            Locked by provider schema — uses the current provider default.
           </p>
         )}
       </div>
@@ -402,8 +385,7 @@ export default function RewardConfigurationForm({
         </h2>
         <p className={`text-xs ${tw.textMuted} mb-6`}>
           OAuth and API credentials defined by the provider&apos;s auth schema.
-          Fields marked not editable stay locked to the provider default
-          {mode === "edit" ? " (or saved template value)" : ""}.
+          Fields marked not editable always follow the current provider default.
         </p>
 
         {!providerId ? (
@@ -431,9 +413,8 @@ export default function RewardConfigurationForm({
         </h2>
         <p className={`text-xs ${tw.textMuted} mb-6`}>
           Reward delivery parameters mapped into the provider&apos;s request
-          template. Fields marked not editable stay locked to the provider
-          default
-          {mode === "edit" ? " (or saved template value)" : ""}.
+          template. Fields marked not editable always follow the current
+          provider default.
         </p>
 
         {!providerId ? (

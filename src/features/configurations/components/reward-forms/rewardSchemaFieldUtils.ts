@@ -107,21 +107,114 @@ export function coerceConfigValue(
   }
 }
 
+const PLACEHOLDER_SECRET_RE = /^[\s•·\u2022*xX]+$/;
+
+export function isSecretSchemaField(
+  field: Pick<RewardProviderSchemaField, "name" | "type">,
+): boolean {
+  if (field.type === "password") return true;
+  const key = String(field.name || "").toLowerCase();
+  return (
+    key.includes("password") ||
+    key.includes("secret") ||
+    key.includes("token") ||
+    key.includes("api_key") ||
+    key.includes("apikey")
+  );
+}
+
+/** Empty, bullets, or asterisk-only values that must not overwrite a real secret. */
+export function isPlaceholderSecretValue(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  const str = String(value).trim();
+  if (!str) return true;
+  return str.length >= 4 && PLACEHOLDER_SECRET_RE.test(str);
+}
+
 /**
- * Canonical value for a locked schema field:
- * prefer saved master config, otherwise the provider schema default.
+ * Provider-owned value for a field (locked fields, and every field on the
+ * system default template).
+ *
+ * Prefers the current schema default so provider edits like username
+ * `YB` → `YBs` are reflected. Secrets keep the stored value when the
+ * schema default is empty or masked (user did not re-enter the password).
+ */
+export function inheritProviderFieldValue(
+  field: RewardProviderSchemaField,
+  stored?: Record<string, unknown>,
+): unknown {
+  const schemaDefault = field.default;
+  const storedValue = stored?.[field.name];
+  const schemaIsPlaceholder =
+    isSecretSchemaField(field) && isPlaceholderSecretValue(schemaDefault);
+  const storedIsUsable =
+    storedValue !== undefined &&
+    !(isSecretSchemaField(field) && isPlaceholderSecretValue(storedValue));
+
+  if (schemaIsPlaceholder && storedIsUsable) {
+    return coerceConfigValue(field, storedValue);
+  }
+
+  if (
+    schemaDefault !== undefined &&
+    schemaDefault !== "" &&
+    !schemaIsPlaceholder
+  ) {
+    return coerceConfigValue(field, schemaDefault);
+  }
+
+  if (storedIsUsable) {
+    return coerceConfigValue(field, storedValue);
+  }
+
+  return coerceConfigValue(field, schemaDefault);
+}
+
+/**
+ * Canonical value for a locked schema field: current provider default,
+ * with stored secret fallback when the schema default is empty/masked.
  */
 export function lockedSchemaFieldValue(
   field: RewardProviderSchemaField,
   masterValues?: Record<string, unknown>,
 ): unknown {
-  if (masterValues && masterValues[field.name] !== undefined) {
-    return coerceConfigValue(field, masterValues[field.name]);
-  }
-  if (field.default !== undefined && field.default !== "") {
-    return coerceConfigValue(field, field.default);
-  }
-  return coerceConfigValue(field, undefined);
+  return inheritProviderFieldValue(field, masterValues);
+}
+
+export type ResolveSchemaConfigMode = "default_template" | "custom_template";
+
+/**
+ * Merge stored template config with the current provider schema.
+ *
+ * - Default template: every field follows the provider (system-owned mirror).
+ * - Custom template: locked fields follow the provider; editable fields keep
+ *   the stored template value.
+ * Keys that were removed from the schema are dropped.
+ */
+export function resolveSchemaConfigValues(
+  fields: RewardProviderSchemaField[],
+  stored?: Record<string, unknown>,
+  mode: ResolveSchemaConfigMode = "custom_template",
+): Record<string, unknown> {
+  const values: Record<string, unknown> = {};
+  fields.forEach((field) => {
+    const inheritFromProvider =
+      mode === "default_template" || !isSchemaFieldEditable(field);
+    if (inheritFromProvider) {
+      values[field.name] = inheritProviderFieldValue(field, stored);
+      return;
+    }
+    if (stored && stored[field.name] !== undefined) {
+      values[field.name] = coerceConfigValue(field, stored[field.name]);
+      return;
+    }
+    if (field.default !== undefined && field.default !== "") {
+      values[field.name] = coerceConfigValue(field, field.default);
+      return;
+    }
+    values[field.name] = coerceConfigValue(field, undefined);
+  });
+  return values;
 }
 
 export function normalizeConfigValueForApi(
