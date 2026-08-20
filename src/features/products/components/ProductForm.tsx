@@ -1649,13 +1649,15 @@ export default function ProductForm({
               <button
                 type="button"
                 onClick={onCancel}
-                className={`px-6 py-2.5 ${tw.rounded} text-sm font-medium transition-colors`}
+                disabled={isLoading}
+                className={`px-6 py-2.5 ${tw.rounded} text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{
                   backgroundColor: 'transparent',
                   color: 'var(--c-text-primary)',
                   border: '1px solid var(--c-text-primary)',
                 }}
                 onMouseEnter={(e) => {
+                  if (isLoading) return;
                   e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
                 }}
                 onMouseLeave={(e) => {

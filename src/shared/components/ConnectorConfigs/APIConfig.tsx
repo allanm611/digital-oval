@@ -404,8 +404,7 @@ export const APIConfig: React.FC<APIConfigProps> = ({
         <div>
           <h4 className={`${tw.cardHeading} text-gray-900`}>API Request</h4>
           <p className="mt-1 text-sm text-gray-500">
-            Configure the request the way you would in Postman — method, URL,
-            params, auth, headers, body — then Send to inspect the response.
+            Configure the API requests, then Send to inspect the response.
           </p>
         </div>
       </div>

@@ -27,7 +27,6 @@ import {
   OfferCreative,
   RenderCreativeResponse,
 } from "../types/offerCreative";
-import { offerCreativeService } from "../services/offerCreativeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
@@ -49,7 +48,6 @@ import {
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
 import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
-import SelectOfferCreativesModal from "./SelectOfferCreativesModal";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
   id: string; // Use string for local temp ID
@@ -539,10 +537,6 @@ export default function OfferCreativeStep({
   const [languages, setLanguages] = useState<Language[]>([]);
   const [languagesLoading, setLanguagesLoading] = useState(true);
 
-  // Fetch existing creatives for dropdown selector
-  const [existingCreatives, setExistingCreatives] = useState<OfferCreative[]>([]);
-  const [existingCreativesLoading, setExistingCreativesLoading] = useState(true);
-
   // Fetch reusable creative templates (GET /creative-template)
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -631,29 +625,6 @@ export default function OfferCreativeStep({
     fetchLanguages();
   }, []);
 
-  // Fetch existing creatives for dropdown selector
-  useEffect(() => {
-    const fetchExistingCreatives = async () => {
-      try {
-        setExistingCreativesLoading(true);
-        const channel = getDefaultChannelFromId(communicationChannelId);
-        const response = await offerCreativeService.superSearch({
-          channel,
-          limit: 100,
-          skipCache: true
-        });
-        const creativesData = response?.data || [];
-        setExistingCreatives(Array.isArray(creativesData) ? creativesData : []);
-      } catch (error) {
-        console.error("Failed to fetch existing creatives:", error);
-        setExistingCreatives([]);
-      } finally {
-        setExistingCreativesLoading(false);
-      }
-    };
-    fetchExistingCreatives();
-  }, [communicationChannelId]);
-
   // Handle language creation - auto-select it
   const handleLanguageCreated = async (newLanguage: Language) => {
     setLanguages((prev) => [...prev, newLanguage]);
@@ -706,10 +677,6 @@ export default function OfferCreativeStep({
       return creatives.length > 0 ? creatives[0].id : null;
     },
   );
-
-  const [showSelectCreativesModal, setShowSelectCreativesModal] =
-    useState(false);
-
 
   // Get languages already used by other creatives
   const getUsedLanguages = (): string[] => {
@@ -802,29 +769,19 @@ export default function OfferCreativeStep({
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const mapCatalogCreative = (catalog: OfferCreative): LocalOfferCreative => ({
-    id: String(catalog.id),
-    channel: catalog.channel,
-    locale: catalog.locale as Locale,
-    title: catalog.title || catalog.name || "",
-    text_body: catalog.text_body || "",
-    html_body: catalog.html_body || "",
-    variables: (catalog.variables || {}) as Record<
-      string,
-      string | number | boolean
-    >,
-    is_active: catalog.is_active ?? true,
-    template_type_id: catalog.template_type_id,
-    save_as_template: false,
-  });
-
   const addCreative = () => {
+    const unfinishedDraft = creatives.find((c) => !c.locale);
+    if (unfinishedDraft) {
+      setSelectedCreative(unfinishedDraft.id);
+      return;
+    }
+
     const defaultChannel = getDefaultChannelFromId(communicationChannelId);
 
     const newCreative: LocalOfferCreative = {
       id: generateId(),
-      channel: defaultChannel, // Use channel from step 1 communication channel selection
-      locale: "" as Locale, // User must explicitly select language
+      channel: defaultChannel,
+      locale: "" as Locale,
       title: "",
       text_body: "",
       html_body: "",
@@ -833,48 +790,9 @@ export default function OfferCreativeStep({
       save_as_template: false,
     };
 
-    const updatedCreatives = [...creatives, newCreative];
-    onCreativesChange(updatedCreatives);
+    onCreativesChange([...creatives, newCreative]);
     setSelectedCreative(newCreative.id);
-    // Initialize empty template selection for new creative
     setSelectedTemplates((prev) => ({ ...prev, [newCreative.id]: null }));
-    setShowSelectCreativesModal(false);
-  };
-
-  const handleConfirmCatalogCreatives = (creativeIds: number[]) => {
-    const usedIds = new Set(creatives.map((c) => String(c.id)));
-    const usedLocales = new Set(
-      creatives.map((c) => c.locale).filter((locale): locale is string => !!locale),
-    );
-
-    const added: LocalOfferCreative[] = [];
-    for (const id of creativeIds) {
-      const catalog = existingCreatives.find((c) => c.id === id);
-      if (!catalog) continue;
-      if (usedIds.has(String(catalog.id))) continue;
-      if (catalog.locale && usedLocales.has(catalog.locale)) continue;
-
-      const mapped = mapCatalogCreative(catalog);
-      added.push(mapped);
-      usedIds.add(mapped.id);
-      if (mapped.locale) usedLocales.add(mapped.locale);
-    }
-
-    if (added.length === 0) {
-      setShowSelectCreativesModal(false);
-      return;
-    }
-
-    onCreativesChange([...creatives, ...added]);
-    setSelectedCreative(added[0].id);
-    setSelectedTemplates((prev) => {
-      const next = { ...prev };
-      added.forEach((c) => {
-        next[c.id] = c.template_type_id ?? null;
-      });
-      return next;
-    });
-    setShowSelectCreativesModal(false);
   };
 
   const removeCreative = (id: string) => {
@@ -927,24 +845,8 @@ export default function OfferCreativeStep({
     );
   }, [languages, usedLocalesOnOffer]);
 
-  const availableCatalogCreatives = useMemo(() => {
-    const usedIds = new Set(creatives.map((c) => String(c.id)));
-    return existingCreatives.filter((c) => {
-      if (c.is_active === false) return false;
-      if (c.channel !== selectedChannelForFiltering) return false;
-      if (usedIds.has(String(c.id))) return false;
-      if (c.locale && usedLocalesOnOffer.has(c.locale)) return false;
-      return true;
-    });
-  }, [
-    existingCreatives,
-    creatives,
-    selectedChannelForFiltering,
-    usedLocalesOnOffer,
-  ]);
-
   const canAddCreative =
-    availableCatalogCreatives.length > 0 || hasUnusedLanguage;
+    languagesLoading || !languages?.length || hasUnusedLanguage;
 
   const selectedCreativeData = filteredCreatives.find((c) => c.id === selectedCreative) || creatives.find((c) => c.id === selectedCreative);
 
@@ -1262,7 +1164,8 @@ export default function OfferCreativeStep({
             {creatives.length === 0 ? t.offers.creatives.subheadline : `Create a ${selectedChannelForFiltering} creative to get started`}
           </p>
           <button
-            onClick={() => setShowSelectCreativesModal(true)}
+            type="button"
+            onClick={addCreative}
             disabled={!canAddCreative}
             className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${!canAddCreative ? "opacity-50 cursor-not-allowed" : ""}`}
             style={{
@@ -1285,7 +1188,8 @@ export default function OfferCreativeStep({
                   {t.offers.creatives.title}
                 </h3>
                 <button
-                  onClick={() => setShowSelectCreativesModal(true)}
+                  type="button"
+                  onClick={addCreative}
                   disabled={!canAddCreative}
                   className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${!canAddCreative ? "opacity-50 cursor-not-allowed" : ""}`}
                   style={{
@@ -1294,7 +1198,7 @@ export default function OfferCreativeStep({
                   title={
                     !canAddCreative
                       ? "All languages already have creatives"
-                      : ""
+                      : "Add a blank creative for this offer"
                   }
                 >
                   <Plus className="w-5 h-5 mr-1.5" />
@@ -1879,24 +1783,6 @@ export default function OfferCreativeStep({
             handleTemplateCreated(newTemplate);
           }
         }}
-      />
-
-      <SelectOfferCreativesModal
-        open={showSelectCreativesModal}
-        creatives={availableCatalogCreatives}
-        loading={existingCreativesLoading}
-        channelLabel={getChannelLabel(selectedChannelForFiltering)}
-        canCreateNew={hasUnusedLanguage}
-        onClose={() => setShowSelectCreativesModal(false)}
-        onConfirm={handleConfirmCatalogCreatives}
-        onCreateNew={addCreative}
-        localeLabel={(locale) =>
-          getLocaleLabel(
-            locale,
-            Array.isArray(languages) ? languages : undefined,
-            t,
-          )
-        }
       />
     </div>
   );

@@ -842,8 +842,6 @@ function OfferTrackingStepWrapper({
   requiresTrackingRewardMapping = false,
   usesDefaultReward = false,
   validationErrors,
-  initialOpenSourceModal = false,
-  onInitialOpenSourceModalConsumed,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -864,10 +862,7 @@ function OfferTrackingStepWrapper({
   | "onSaveDraft"
   | "onCancel"
 > &
-  Pick<StepProps, "validationErrors"> & {
-    initialOpenSourceModal?: boolean;
-    onInitialOpenSourceModalConsumed?: () => void;
-  }) {
+  Pick<StepProps, "validationErrors">) {
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -893,8 +888,6 @@ function OfferTrackingStepWrapper({
       <OfferTrackingStep
         trackingSources={trackingSources}
         onTrackingSourcesChange={setTrackingSources}
-        initialOpenSourceModal={initialOpenSourceModal}
-        onInitialOpenSourceModalConsumed={onInitialOpenSourceModalConsumed}
       />
     </div>
   );
@@ -1724,9 +1717,6 @@ export default function CreateOfferPage({
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** Re-open Select Tracking Sources after Create Tracking Source round-trip. */
-  const [openSelectTrackingSources, setOpenSelectTrackingSources] =
-    useState(false);
   const [isEditMode, setIsEditMode] = useState(
     () => Boolean(id || duplicateIdParam),
   );
@@ -1764,37 +1754,6 @@ export default function CreateOfferPage({
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1])); // Track visited steps
   const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
   const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
-
-  // Resume Offer Tracking after creating an engine tracking source.
-  useEffect(() => {
-    const resume = (
-      location.state as {
-        resumeOfferWizard?: {
-          step?: number;
-          openSelectTrackingSources?: boolean;
-        };
-      } | null
-    )?.resumeOfferWizard;
-    if (!resume) return;
-
-    const step =
-      typeof resume.step === "number" && resume.step >= 1 && resume.step <= 6
-        ? resume.step
-        : 4;
-    setCurrentStep(step);
-    setVisitedSteps((prev) => {
-      const next = new Set(prev);
-      for (let i = 1; i <= step; i += 1) next.add(i);
-      return next;
-    });
-    if (resume.openSelectTrackingSources) {
-      setOpenSelectTrackingSources(true);
-    }
-    navigate(`${location.pathname}${location.search}`, {
-      replace: true,
-      state: {},
-    });
-  }, [location.pathname, location.search, location.state, navigate]);
 
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -3424,10 +3383,6 @@ export default function CreateOfferPage({
           {currentStep === 4 && (
             <OfferTrackingStepWrapper
               {...stepProps}
-              initialOpenSourceModal={openSelectTrackingSources}
-              onInitialOpenSourceModalConsumed={() =>
-                setOpenSelectTrackingSources(false)
-              }
             />
           )}
           {currentStep === 5 && <OfferRewardStepWrapper {...stepProps} />}
