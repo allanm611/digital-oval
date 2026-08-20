@@ -1,11 +1,14 @@
-import type { GatewayProviderField } from "../services/gatewayProviderService";
+import type {
+  GatewayProviderField,
+  SupportedGatewayProtocol,
+} from "../services/gatewayProviderService";
 
 /**
  * How CVM connects to a gateway vendor.
  * Distinct from communication channel (SMS/Email/WhatsApp) — a channel
  * can be served over more than one protocol (e.g. SMS over SMPP or HTTP).
  */
-export type GatewayProtocol =
+export type KnownGatewayProtocol =
   | "smpp"
   | "smtp"
   | "smtps"
@@ -16,8 +19,12 @@ export type GatewayProtocol =
   | "apns"
   | "custom";
 
+export type GatewayProtocol = KnownGatewayProtocol | (string & {});
+
+export const CUSTOM_PROTOCOL = "custom";
+
 export interface GatewayProtocolDefinition {
-  value: GatewayProtocol;
+  value: string;
   label: string;
   description: string;
   /** Channel families this protocol typically applies to. Empty = all. */
@@ -262,16 +269,32 @@ export function cloneProtocolFields(
   }));
 }
 
-export function getGatewayProtocol(
-  value?: string | null,
-): GatewayProtocolDefinition | undefined {
-  if (!value) return undefined;
-  return PROTOCOL_BY_VALUE.get(value as GatewayProtocol);
+export function normalizeProtocolCode(value?: string | null): string {
+  return (value || "").trim().toLowerCase();
 }
 
-export function gatewayProtocolLabel(value?: string | null): string {
+function catalogMap(
+  catalog?: GatewayProtocolDefinition[],
+): Map<string, GatewayProtocolDefinition> {
+  if (!catalog?.length) return PROTOCOL_BY_VALUE;
+  return new Map(catalog.map((item) => [item.value, item]));
+}
+
+export function getGatewayProtocol(
+  value?: string | null,
+  catalog?: GatewayProtocolDefinition[],
+): GatewayProtocolDefinition | undefined {
+  const code = normalizeProtocolCode(value);
+  if (!code) return undefined;
+  return catalogMap(catalog).get(code);
+}
+
+export function gatewayProtocolLabel(
+  value?: string | null,
+  catalog?: GatewayProtocolDefinition[],
+): string {
   if (!value) return "—";
-  return getGatewayProtocol(value)?.label || value.toUpperCase();
+  return getGatewayProtocol(value, catalog)?.label || value.toUpperCase();
 }
 
 export function normalizeChannelKey(input?: string | null): string {
@@ -296,21 +319,24 @@ export function resolveChannelFamily(
 export function protocolsForChannel(
   code?: string | null,
   name?: string | null,
+  catalog: GatewayProtocolDefinition[] = GATEWAY_PROTOCOLS,
 ): GatewayProtocolDefinition[] {
+  const source = catalog.length ? catalog : GATEWAY_PROTOCOLS;
   const family = resolveChannelFamily(code, name);
-  if (!family) return GATEWAY_PROTOCOLS;
-  const matched = GATEWAY_PROTOCOLS.filter(
+  if (!family) return source;
+  const matched = source.filter(
     (p) =>
       p.channelFamilies.length === 0 || p.channelFamilies.includes(family),
   );
-  return matched.length ? matched : GATEWAY_PROTOCOLS;
+  return matched.length ? matched : source;
 }
 
 export function protocolSelectOptions(
   code?: string | null,
   name?: string | null,
+  catalog?: GatewayProtocolDefinition[],
 ): { value: string; label: string }[] {
-  return protocolsForChannel(code, name).map((p) => ({
+  return protocolsForChannel(code, name, catalog).map((p) => ({
     value: p.value,
     label: p.label,
   }));
@@ -320,10 +346,8 @@ export function resolveGatewayProtocol(source: {
   protocol?: string | null;
   field_schema?: { protocol?: string | null } | null;
 }): string {
-  return (
-    source.protocol?.trim() ||
-    source.field_schema?.protocol?.trim() ||
-    ""
+  return normalizeProtocolCode(
+    source.protocol || source.field_schema?.protocol || "",
   );
 }
 
@@ -335,14 +359,18 @@ export function applyProtocolFields(
   nextProtocol: string,
   currentFields: GatewayProviderField[],
   previousProtocol?: string | null,
+  catalog?: GatewayProtocolDefinition[],
+  nextPresetFields?: GatewayProviderField[],
 ): GatewayProviderField[] {
   const nextPreset = cloneProtocolFields(
-    getGatewayProtocol(nextProtocol)?.fields || [],
+    nextPresetFields ||
+      getGatewayProtocol(nextProtocol, catalog)?.fields ||
+      [],
   );
   const prevKeys = new Set(
-    (getGatewayProtocol(previousProtocol || "")?.fields || []).map(
-      (f) => f.name,
-    ),
+    (
+      getGatewayProtocol(previousProtocol || "", catalog)?.fields || []
+    ).map((f) => f.name),
   );
   const nextKeys = new Set(nextPreset.map((f) => f.name));
   const customFields = currentFields.filter((f) => {
@@ -356,9 +384,76 @@ export function applyProtocolFields(
 export function isProtocolOwnedField(
   protocol: string | null | undefined,
   fieldName: string,
+  catalog?: GatewayProtocolDefinition[],
+  protocolDefinition?: GatewayProtocolDefinition,
 ): boolean {
-  if (!protocol || protocol === "custom") return false;
-  return (getGatewayProtocol(protocol)?.fields || []).some(
-    (f) => f.name === fieldName,
+  const code = normalizeProtocolCode(protocol);
+  if (!code || code === CUSTOM_PROTOCOL) return false;
+  const fields =
+    protocolDefinition?.fields ||
+    getGatewayProtocol(code, catalog)?.fields ||
+    [];
+  return fields.some((f) => f.name === fieldName);
+}
+
+function protocolLabelFromCode(code: string): string {
+  return getGatewayProtocol(code)?.label || code.toUpperCase();
+}
+
+/**
+ * Merge backend protocol presets with local labels, descriptions, and
+ * channel-family hints. Local field lists are the fallback when the API
+ * is unavailable or a preset has no fields.
+ */
+export function mergeProtocolCatalog(
+  remote: SupportedGatewayProtocol[] = [],
+): GatewayProtocolDefinition[] {
+  const remoteByCode = new Map(
+    remote
+      .map((item) => {
+        const code = normalizeProtocolCode(item.protocol);
+        if (!code || code === CUSTOM_PROTOCOL) return null;
+        return [
+          code,
+          cloneProtocolFields(item.field_schema?.fields || []),
+        ] as const;
+      })
+      .filter(
+        (entry): entry is readonly [string, GatewayProviderField[]] =>
+          Boolean(entry),
+      ),
   );
+
+  const merged: GatewayProtocolDefinition[] = GATEWAY_PROTOCOLS.filter(
+    (item) => item.value !== CUSTOM_PROTOCOL,
+  ).map((local) => {
+    const remoteFields = remoteByCode.get(local.value);
+    return {
+      ...local,
+      fields:
+        remoteFields && remoteFields.length > 0
+          ? remoteFields
+          : cloneProtocolFields(local.fields),
+    };
+  });
+
+  remoteByCode.forEach((fields, code) => {
+    if (merged.some((item) => item.value === code)) return;
+    merged.push({
+      value: code,
+      label: protocolLabelFromCode(code),
+      description: `Connection fields defined by the ${protocolLabelFromCode(code)} protocol.`,
+      channelFamilies: [],
+      fields,
+    });
+  });
+
+  const custom = GATEWAY_PROTOCOLS.find(
+    (item) => item.value === CUSTOM_PROTOCOL,
+  );
+  if (custom) {
+    merged.push({ ...custom, fields: [] });
+  }
+
+  return merged;
 }

@@ -7,7 +7,10 @@ import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { gatewayConfigurationService } from "../services/gatewayConfigurationService";
 import { GatewayConfiguration } from "../types/gatewayConfiguration";
-import { gatewayProtocolLabel } from "../constants/gatewayProtocol";
+import {
+  gatewayProtocolLabel,
+  resolveGatewayProtocol,
+} from "../constants/gatewayProtocol";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
@@ -130,6 +133,10 @@ export default function GatewayConfigDetailsPage() {
 
   const schemaFields = config.field_schema?.fields || [];
   const configEntries = Object.entries(config.config || {});
+  const protocol = resolveGatewayProtocol({
+    protocol: config.field_schema?.protocol,
+    field_schema: config.field_schema,
+  });
 
   return (
     <div className="space-y-6">
@@ -236,9 +243,7 @@ export default function GatewayConfigDetailsPage() {
               Protocol
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
-              {config.field_schema?.protocol
-                ? gatewayProtocolLabel(config.field_schema.protocol)
-                : "—"}
+              {protocol ? gatewayProtocolLabel(protocol) : "—"}
             </p>
           </div>
           <div className="space-y-1">

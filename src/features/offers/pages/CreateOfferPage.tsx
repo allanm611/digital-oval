@@ -43,7 +43,7 @@ import { offerService } from "../services/offerService";
 import { offerCategoryService } from "../services/offerCategoryService";
 import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
-import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
+import { communicationChannelService, CommunicationChannel, toCommunicationChannelOptions } from "../../../shared/services/communicationChannelService";
 import { routeService } from "../../routes/services/routeService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 // import { productCategoryService } from "../../products/services/productCategoryService";
@@ -324,7 +324,7 @@ function BasicInfoStep({
   const selectedChannel = communicationChannels?.find(
     (ch) => String(ch.id) === String(formData.communication_channel_id),
   );
-  const channelKind = resolveCommunicationChannelKind(selectedChannel?.name);
+  const channelKind = resolveCommunicationChannelKind(selectedChannel);
   const channelRouteMeta = channelKind
     ? CHANNEL_ROUTE_FIELD_META[channelKind]
     : null;
@@ -345,6 +345,7 @@ function BasicInfoStep({
         channelType: "SMS",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -353,6 +354,7 @@ function BasicInfoStep({
         channelType: "EMAIL",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -361,6 +363,7 @@ function BasicInfoStep({
         channelType: "WHATSAPP",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -369,6 +372,7 @@ function BasicInfoStep({
         channelType: "USSD",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -377,6 +381,7 @@ function BasicInfoStep({
         channelType: "PUSH",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -388,6 +393,7 @@ function BasicInfoStep({
       channelType: channelKindToRouteType(channelKind),
       channel: selectedChannel,
       selectedRouteId: formData.transactional_route_id,
+      allChannels: communicationChannels,
     },
   );
 
@@ -510,12 +516,7 @@ function BasicInfoStep({
           >
             <HeadlessSelect
               label="Communication Channel"
-              options={
-                communicationChannels?.map((channel) => ({
-                  value: String(channel.id),
-                  label: channel.name,
-                })) || []
-              }
+              options={toCommunicationChannelOptions(communicationChannels)}
               disabled={channelsLoading}
               value={
                 formData.communication_channel_id
@@ -1098,7 +1099,7 @@ function ReviewStep({
   const reviewChannel = communicationChannels?.find(
     (ch) => String(ch.id) === String(formData.communication_channel_id),
   );
-  const reviewChannelKind = resolveCommunicationChannelKind(reviewChannel?.name);
+  const reviewChannelKind = resolveCommunicationChannelKind(reviewChannel);
   const reviewCampaignRouteId = reviewChannelKind
     ? getEffectiveRouteIdForChannel(formData, reviewChannelKind)
     : undefined;
@@ -2296,7 +2297,9 @@ export default function CreateOfferPage({
     const loadRoutes = async () => {
       try {
         setRoutesLoading(true);
-        const allRoutes = await routeService.getAllRoutesEnriched();
+        const allRoutes = await routeService.getAllRoutesEnriched({
+          skipCache: true,
+        });
         setDeliveryRoutes(
           Array.isArray(allRoutes)
             ? allRoutes.filter((route) => route.is_active !== false)
@@ -2389,7 +2392,7 @@ export default function CreateOfferPage({
     const channel = communicationChannels.find(
       (ch) => String(ch.id) === String(formData.communication_channel_id),
     );
-    const channelKind = resolveCommunicationChannelKind(channel?.name);
+    const channelKind = resolveCommunicationChannelKind(channel);
     if (!channelKind) {
       offerRouteHydrationDoneRef.current = true;
       return;
@@ -2462,7 +2465,7 @@ export default function CreateOfferPage({
     );
     Object.assign(
       errors,
-      collectOfferRouteValidationErrors(formData, selectedChannel?.name),
+      collectOfferRouteValidationErrors(formData, selectedChannel),
     );
 
     Object.assign(
@@ -2510,9 +2513,7 @@ export default function CreateOfferPage({
         const selectedChannel = communicationChannels?.find(
           (ch) => String(ch.id) === String(formData.communication_channel_id),
         );
-        const channelKind = resolveCommunicationChannelKind(
-          selectedChannel?.name,
-        );
+        const channelKind = resolveCommunicationChannelKind(selectedChannel);
         if (!channelKind) return true;
 
         return (
@@ -2602,9 +2603,7 @@ export default function CreateOfferPage({
         const reviewSelectedChannel = communicationChannels?.find(
           (ch) => String(ch.id) === String(formData.communication_channel_id),
         );
-        const reviewKind = resolveCommunicationChannelKind(
-          reviewSelectedChannel?.name,
-        );
+        const reviewKind = resolveCommunicationChannelKind(reviewSelectedChannel);
         if (!reviewKind) return true;
 
         return (
@@ -2679,7 +2678,7 @@ export default function CreateOfferPage({
         );
         Object.assign(
           errors,
-          collectOfferRouteValidationErrors(formData, selectedChannel?.name),
+          collectOfferRouteValidationErrors(formData, selectedChannel),
         );
       } else if (currentStep === 3) {
         // Step 3: Creative validation errors
@@ -2760,7 +2759,7 @@ export default function CreateOfferPage({
         );
         Object.assign(
           errors,
-          collectOfferRouteValidationErrors(formData, reviewChannel?.name),
+          collectOfferRouteValidationErrors(formData, reviewChannel),
         );
         Object.assign(
           errors,

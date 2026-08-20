@@ -62,9 +62,15 @@ class CommunicationChannelService {
   async getAll() {
     const data = await this.request<{
       success: boolean;
-      data: CommunicationChannel[];
+      data: CommunicationChannel[] | { items?: CommunicationChannel[]; data?: CommunicationChannel[] };
     }>("");
-    return data.data;
+    const payload = data.data;
+    if (Array.isArray(payload)) return payload;
+    if (payload && typeof payload === "object") {
+      if (Array.isArray(payload.items)) return payload.items;
+      if (Array.isArray(payload.data)) return payload.data;
+    }
+    return [];
   }
 
   async getById(id: number) {
@@ -143,3 +149,22 @@ class CommunicationChannelService {
 }
 
 export const communicationChannelService = new CommunicationChannelService();
+
+/** Map catalog channels to select options — same source Offer Management uses. */
+export function toCommunicationChannelOptions(
+  channels: CommunicationChannel[] | null | undefined,
+  options?: { includeIds?: Array<number | null | undefined> },
+): { value: string; label: string }[] {
+  const includeIds = new Set(
+    (options?.includeIds ?? []).filter(
+      (id): id is number => typeof id === "number" && Number.isFinite(id),
+    ),
+  );
+
+  return (channels ?? [])
+    .filter((channel) => channel.is_active || includeIds.has(channel.id))
+    .map((channel) => ({
+      value: String(channel.id),
+      label: channel.name || channel.code,
+    }));
+}

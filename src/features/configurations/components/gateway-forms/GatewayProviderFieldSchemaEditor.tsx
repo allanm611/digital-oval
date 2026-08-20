@@ -5,9 +5,10 @@ import Checkbox from "../../../../shared/components/ui/Checkbox";
 import { color, tw } from "../../../../shared/utils/utils";
 import { GatewayProviderField } from "../../services/gatewayProviderService";
 import {
-  getGatewayProtocol,
+  CUSTOM_PROTOCOL,
   gatewayProtocolLabel,
   isProtocolOwnedField,
+  type GatewayProtocolDefinition,
 } from "../../constants/gatewayProtocol";
 import CommaSeparatedOptionsInput from "../CommaSeparatedOptionsInput";
 
@@ -22,10 +23,12 @@ const FIELD_TYPES: { value: GatewayProviderField["type"]; label: string }[] = [
 interface GatewayProviderFieldSchemaEditorProps {
   fields: GatewayProviderField[];
   protocol?: string;
+  protocolDefinition?: GatewayProtocolDefinition;
   errors?: Record<string, string>;
   disabled?: boolean;
+  loading?: boolean;
   onChange: (fields: GatewayProviderField[]) => void;
-  onResetToProtocolDefaults?: () => void;
+  onResetToProtocolDefaults?: () => void | Promise<void>;
 }
 
 function emptyField(): GatewayProviderField {
@@ -52,19 +55,21 @@ export function slugifyFieldName(value: string): string {
 export function validateFieldSchema(
   fields: GatewayProviderField[],
   protocol?: string,
+  protocolDefinition?: GatewayProtocolDefinition,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
   const seen = new Set<string>();
-  const definition = getGatewayProtocol(protocol);
+  const definition = protocolDefinition;
+  const protocolLabel = definition?.label || gatewayProtocolLabel(protocol);
 
   if (!protocol) {
     errors.schema = "Select a protocol to load the connection fields";
   } else if (fields.length === 0) {
     errors.schema =
-      protocol === "custom"
+      protocol === CUSTOM_PROTOCOL
         ? "Add at least one configuration field for this provider"
-        : `No fields defined. Reset to ${gatewayProtocolLabel(protocol)} defaults or add fields.`;
-  } else if (definition && protocol !== "custom") {
+        : `No fields defined. Reset to ${protocolLabel} defaults or add fields.`;
+  } else if (definition && protocol !== CUSTOM_PROTOCOL) {
     const names = new Set(
       fields.map((f) => f.name?.trim()).filter((n): n is string => Boolean(n)),
     );
@@ -113,15 +118,18 @@ export function validateFieldSchema(
 export default function GatewayProviderFieldSchemaEditor({
   fields,
   protocol,
+  protocolDefinition,
   errors = {},
   disabled = false,
+  loading = false,
   onChange,
   onResetToProtocolDefaults,
 }: GatewayProviderFieldSchemaEditorProps) {
-  const protocolDef = getGatewayProtocol(protocol);
+  const protocolDef = protocolDefinition;
+  const protocolLabel = protocolDef?.label || gatewayProtocolLabel(protocol);
   const canReset =
     Boolean(protocol) &&
-    protocol !== "custom" &&
+    protocol !== CUSTOM_PROTOCOL &&
     Boolean(onResetToProtocolDefaults);
 
   const updateField = (index: number, patch: Partial<GatewayProviderField>) => {
@@ -146,8 +154,8 @@ export default function GatewayProviderFieldSchemaEditor({
             Connection fields
           </h2>
           <p className={`text-xs ${tw.textSecondary} mt-1`}>
-            {protocolDef && protocol !== "custom"
-              ? `${protocolDef.label} fields are seeded from the protocol. Add extra keys only for vendor-specific parameters.`
+            {protocolDef && protocol !== CUSTOM_PROTOCOL
+              ? `${protocolDef.label} fields are seeded from the protocol catalog. Add extra keys only for vendor-specific parameters.`
               : "These fields appear when creating a gateway configuration for this provider."}
           </p>
         </div>
@@ -159,7 +167,7 @@ export default function GatewayProviderFieldSchemaEditor({
               disabled={disabled}
               className={`px-3 py-1.5 text-sm font-medium ${tw.rounded} border border-gray-200 disabled:opacity-60`}
             >
-              Reset to {protocolDef?.label} defaults
+              Reset to {protocolLabel} defaults
             </button>
           )}
           <button
@@ -179,6 +187,12 @@ export default function GatewayProviderFieldSchemaEditor({
         <p className="text-red-500 text-xs">{errors.schema}</p>
       )}
 
+      {loading && (
+        <p className={`text-xs ${tw.textMuted}`}>
+          Loading {protocolLabel} connection fields...
+        </p>
+      )}
+
       {fields.length === 0 ? (
         <div
           className={`border border-dashed border-gray-300 ${tw.rounded} p-8 text-center`}
@@ -186,16 +200,23 @@ export default function GatewayProviderFieldSchemaEditor({
           <p className={`text-sm ${tw.textMuted}`}>
             {!protocol
               ? "Select a protocol to load the connection fields for this provider."
-              : protocol === "custom"
+              : protocol === CUSTOM_PROTOCOL
                 ? "No fields yet. Add fields such as host, port, api_key, or username."
-                : `No ${gatewayProtocolLabel(protocol)} fields yet. Reset to protocol defaults or add fields.`}
+                : loading
+                  ? `Loading ${protocolLabel} connection fields...`
+                  : `No ${protocolLabel} fields yet. Reset to protocol defaults or add fields.`}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           {fields.map((field, index) => {
             const prefix = `field_${index}`;
-            const protocolOwned = isProtocolOwnedField(protocol, field.name);
+            const protocolOwned = isProtocolOwnedField(
+              protocol,
+              field.name,
+              undefined,
+              protocolDef,
+            );
             return (
               <div
                 key={protocolOwned ? field.name : `${field.name || "new"}-${index}`}
@@ -211,7 +232,7 @@ export default function GatewayProviderFieldSchemaEditor({
                       <span
                         className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 ${tw.rounded} bg-gray-200 ${tw.textSecondary}`}
                       >
-                        {gatewayProtocolLabel(protocol)}
+                        {protocolLabel}
                       </span>
                     )}
                   </div>

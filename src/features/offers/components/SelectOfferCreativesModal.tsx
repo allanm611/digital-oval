@@ -153,11 +153,11 @@ export default function SelectOfferCreativesModal({
         <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200 flex-shrink-0">
           <div className="min-w-0">
             <h2 className="text-xl font-semibold text-gray-900">
-              Select Creatives
+              Select Creative Templates
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Choose creatives and their languages for this offer
-              {channelLabel ? ` (${channelLabel})` : ""}. Each creative, and
+              Choose creative templates and their languages for this offer
+              {channelLabel ? ` (${channelLabel})` : ""}. Each creative template, and
               each language on this channel, can only be added once.
             </p>
           </div>
