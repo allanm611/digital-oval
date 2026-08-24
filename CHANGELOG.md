@@ -1,3 +1,11 @@
+## [1.5.1](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.0...v1.5.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* configure campaign  setup ([16a03f7](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/16a03f7ee420f972f3c9674e94cc4c026ab221b4))
+* Merge pull request [#12](https://github.com/YellowBird-UG/Sentra_cvm_front/issues/12) from YellowBird-UG/fplex/master-sz ([c6aa3f2](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/c6aa3f2d84477ad78933cd18520f0fce5a90ca4b))
+
 # [1.5.0](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.4.20...v1.5.0) (2026-07-28)
 
 
