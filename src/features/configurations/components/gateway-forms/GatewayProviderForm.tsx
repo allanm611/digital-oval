@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Input from "../../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
@@ -18,12 +18,13 @@ import GatewayProviderFieldSchemaEditor, {
   validateFieldSchema,
 } from "./GatewayProviderFieldSchemaEditor";
 import {
+  CUSTOM_PROTOCOL,
   applyProtocolFields,
   cloneProtocolFields,
-  getGatewayProtocol,
   protocolSelectOptions,
   resolveGatewayProtocol,
 } from "../../constants/gatewayProtocol";
+import { useGatewayProtocols } from "../../hooks/useGatewayProtocols";
 
 interface ChannelOption {
   value: string;
@@ -60,6 +61,13 @@ function serializeFields(fields: GatewayProviderField[]): GatewayProviderField[]
   }));
 }
 
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === "AbortError") ||
+    (error instanceof Error && error.name === "AbortError")
+  );
+}
+
 export default function GatewayProviderForm({
   mode,
   isLoading,
@@ -68,6 +76,13 @@ export default function GatewayProviderForm({
   onCancel,
   onSave,
 }: GatewayProviderFormProps) {
+  const {
+    catalog,
+    loading: protocolsLoading,
+    getProtocol,
+    fetchPreset,
+  } = useGatewayProtocols();
+
   const [name, setName] = useState(initialData?.name || "");
   const [channelId, setChannelId] = useState(
     initialData?.channel_id ? String(initialData.channel_id) : "",
@@ -82,6 +97,20 @@ export default function GatewayProviderForm({
       : [],
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [presetLoading, setPresetLoading] = useState(false);
+
+  const fieldsRef = useRef(fields);
+  const protocolRef = useRef(protocol);
+  const presetRequestRef = useRef<AbortController | null>(null);
+
+  fieldsRef.current = fields;
+  protocolRef.current = protocol;
+
+  useEffect(() => {
+    return () => {
+      presetRequestRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (!initialData) return;
@@ -99,18 +128,34 @@ export default function GatewayProviderForm({
     [channels, channelId],
   );
 
-  const protocolOptions = useMemo(
-    () => protocolSelectOptions(selectedChannel?.code, selectedChannel?.label),
-    [selectedChannel],
-  );
+  const protocolOptions = useMemo(() => {
+    const options = protocolSelectOptions(
+      selectedChannel?.code,
+      selectedChannel?.label,
+      catalog,
+    );
+    if (protocol && !options.some((item) => item.value === protocol)) {
+      const definition = getProtocol(protocol);
+      options.push({
+        value: protocol,
+        label: definition?.label || protocol.toUpperCase(),
+      });
+    }
+    return options;
+  }, [selectedChannel, catalog, protocol, getProtocol]);
 
-  const protocolDefinition = getGatewayProtocol(protocol);
+  const protocolDefinition = getProtocol(protocol);
 
   const handleChannelChange = (nextChannelId: string) => {
     setChannelId(nextChannelId);
     const nextChannel = channels.find((ch) => ch.value === nextChannelId);
-    const allowed = protocolSelectOptions(nextChannel?.code, nextChannel?.label);
+    const allowed = protocolSelectOptions(
+      nextChannel?.code,
+      nextChannel?.label,
+      catalog,
+    );
     if (protocol && !allowed.some((p) => p.value === protocol)) {
+      presetRequestRef.current?.abort();
       setProtocol("");
       setFields([]);
     }
@@ -122,8 +167,8 @@ export default function GatewayProviderForm({
     });
   };
 
-  const handleProtocolChange = (nextProtocol: string) => {
-    setFields(applyProtocolFields(nextProtocol, fields, protocol));
+  const handleProtocolChange = async (nextProtocol: string) => {
+    const previousProtocol = protocolRef.current;
     setProtocol(nextProtocol);
     setErrors((prev) => {
       const next = { ...prev };
@@ -131,15 +176,75 @@ export default function GatewayProviderForm({
       delete next.schema;
       return next;
     });
+
+    presetRequestRef.current?.abort();
+    const controller = new AbortController();
+    presetRequestRef.current = controller;
+    setPresetLoading(true);
+
+    try {
+      const presetFields = await fetchPreset(nextProtocol, {
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
+      setFields(
+        applyProtocolFields(
+          nextProtocol,
+          fieldsRef.current,
+          previousProtocol,
+          catalog,
+          presetFields,
+        ),
+      );
+    } catch (error) {
+      if (isAbortError(error) || controller.signal.aborted) return;
+      setFields(
+        applyProtocolFields(
+          nextProtocol,
+          fieldsRef.current,
+          previousProtocol,
+          catalog,
+        ),
+      );
+    } finally {
+      if (!controller.signal.aborted) {
+        setPresetLoading(false);
+      }
+    }
   };
 
-  const handleResetToProtocolDefaults = () => {
-    const preset = cloneProtocolFields(protocolDefinition?.fields || []);
-    const protocolKeys = new Set(preset.map((f) => f.name));
-    const customFields = fields.filter(
-      (f) => f.name?.trim() && !protocolKeys.has(f.name),
-    );
-    setFields([...preset, ...customFields]);
+  const handleResetToProtocolDefaults = async () => {
+    if (!protocol || protocol === CUSTOM_PROTOCOL) return;
+
+    presetRequestRef.current?.abort();
+    const controller = new AbortController();
+    presetRequestRef.current = controller;
+    setPresetLoading(true);
+
+    try {
+      const preset = await fetchPreset(protocol, {
+        signal: controller.signal,
+        refresh: true,
+      });
+      if (controller.signal.aborted) return;
+      const protocolKeys = new Set(preset.map((field) => field.name));
+      const customFields = fieldsRef.current.filter(
+        (field) => field.name?.trim() && !protocolKeys.has(field.name),
+      );
+      setFields([...cloneProtocolFields(preset), ...customFields]);
+    } catch (error) {
+      if (isAbortError(error) || controller.signal.aborted) return;
+      const fallback = cloneProtocolFields(protocolDefinition?.fields || []);
+      const protocolKeys = new Set(fallback.map((field) => field.name));
+      const customFields = fieldsRef.current.filter(
+        (field) => field.name?.trim() && !protocolKeys.has(field.name),
+      );
+      setFields([...fallback, ...customFields]);
+    } finally {
+      if (!controller.signal.aborted) {
+        setPresetLoading(false);
+      }
+    }
   };
 
   const validate = (): boolean => {
@@ -160,13 +265,17 @@ export default function GatewayProviderForm({
       next.protocol = "Select a protocol that matches this channel";
     }
 
-    Object.assign(next, validateFieldSchema(fields, protocol));
+    Object.assign(
+      next,
+      validateFieldSchema(fields, protocol, protocolDefinition),
+    );
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (presetLoading) return;
     if (!validate()) return;
 
     const field_schema = {
@@ -178,19 +287,22 @@ export default function GatewayProviderForm({
       onSave({
         name: name.trim(),
         channel_id: Number(channelId),
+        protocol,
         field_schema,
         is_active: isActive,
       } as CreateGatewayProviderRequest);
       return;
     }
 
-    // Backend update does not allow changing channel_id
     onSave({
       name: name.trim(),
+      protocol,
       field_schema,
       is_active: isActive,
     } as UpdateGatewayProviderRequest);
   };
+
+  const fieldsBusy = isLoading || presetLoading;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -246,10 +358,17 @@ export default function GatewayProviderForm({
                 options={protocolOptions}
                 placeholder={
                   channelId || mode === "edit"
-                    ? "Select protocol"
+                    ? protocolsLoading
+                      ? "Loading protocols..."
+                      : "Select protocol"
                     : "Select a channel first"
                 }
-                disabled={isLoading || (!channelId && mode === "create")}
+                disabled={
+                  isLoading ||
+                  protocolsLoading ||
+                  presetLoading ||
+                  (!channelId && mode === "create")
+                }
                 error={!!errors.protocol}
               />
               {errors.protocol && (
@@ -292,8 +411,10 @@ export default function GatewayProviderForm({
         <GatewayProviderFieldSchemaEditor
           fields={fields}
           protocol={protocol}
+          protocolDefinition={protocolDefinition}
           errors={errors}
-          disabled={isLoading}
+          disabled={fieldsBusy}
+          loading={presetLoading}
           onChange={setFields}
           onResetToProtocolDefaults={handleResetToProtocolDefaults}
         />
@@ -318,7 +439,7 @@ export default function GatewayProviderForm({
         </button>
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || presetLoading}
           className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
           style={{ backgroundColor: color.primary.action }}
         >

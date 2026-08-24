@@ -1,5 +1,4 @@
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
 import CreateProductPage from "../pages/CreateProductPage";
 import { tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
@@ -26,6 +25,8 @@ export default function CreateProductModalWrapper({
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
       style={{ zIndex: zIndex.popover }}
+      role="dialog"
+      aria-modal="true"
     >
       {/* Backdrop */}
       <div
@@ -37,6 +38,7 @@ export default function CreateProductModalWrapper({
       <div
         className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden`}
         style={{ zIndex: zIndex.popover + 1 }}
+        onClick={(event) => event.stopPropagation()}
       >
         {/* Page Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">

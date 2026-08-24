@@ -114,7 +114,8 @@ export default function RouteDetailsPage() {
     );
   }
 
-  const channelLabel = route.channel_type || route.channel_code || "—";
+  const channelLabel =
+    route.channel_name || route.channel_type || route.channel_code || "—";
   const gatewayLabel =
     route.configuration_name ||
     route.provider_name ||
@@ -158,7 +159,11 @@ export default function RouteDetailsPage() {
             onClick={() =>
               navigate(
                 `/dashboard/routes/edit/${route.id}${
-                  route.channel_type ? `?channel=${route.channel_type}` : ""
+                  route.communication_channel_id
+                    ? `?channel_id=${route.communication_channel_id}`
+                    : route.channel_type
+                      ? `?channel=${route.channel_type}`
+                      : ""
                 }`,
               )
             }

@@ -11,6 +11,7 @@ interface ModalFooterProps {
   cancelStyle?: CSSProperties;
   confirmStyle?: CSSProperties;
   isLoading?: boolean;
+  /** Disables the confirm action only. Cancel stays available unless `isLoading` is true. */
   disabled?: boolean;
   leftContent?: ReactNode;
 }
@@ -35,7 +36,7 @@ export default function ModalFooter({
         <button
           type="button"
           onClick={onCancel}
-          disabled={isLoading || disabled}
+          disabled={isLoading}
           className={
             cancelClassName ||
             "transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"

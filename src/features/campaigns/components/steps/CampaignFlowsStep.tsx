@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import Input from '../../../../shared/components/ui/Input';
-import { useNavigate } from "react-router-dom";
-import { Plus, Trash2, Eye, Edit } from "lucide-react";
+import { Trash2, Eye, Edit, Settings } from "lucide-react";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -9,9 +8,15 @@ import {
 } from "../../types/campaign";
 import { CampaignFlowConfig, CampaignFlowType } from "../../types/campaignFlow";
 import { color, tw, components, getButtonStyles, button } from "../../../../shared/utils/utils";
-import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import OfferSelectionModal from "./OfferSelectionModal";
 import OfferPreviewModal from "./OfferPreviewModal";
+import ConfigureTrackingRewardsModal from "./ConfigureTrackingRewardsModal";
+import type { MappingTrackingRewardConfig } from "../../types/trackingRewardConfig";
+import {
+  hasCommittedTrackingReward,
+  readTrackingRewardFromConditionRule,
+  writeTrackingRewardToConditionRule,
+} from "../../utils/trackingRewardConfig";
 
 const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 
@@ -37,6 +42,8 @@ interface SegmentFlowState {
   offers: CampaignOffer[];
   offerWaitHours: { [offerId: string]: number }; // Per-offer wait hours
   allocation?: string;
+  trackingRewardByOffer: { [offerId: string]: MappingTrackingRewardConfig };
+  existingFlowByOffer: { [offerId: string]: CampaignFlowConfig };
 }
 
 export default function CampaignFlowsStep({
@@ -49,7 +56,6 @@ export default function CampaignFlowsStep({
   validationErrors = {},
   stepOrder,
 }: CampaignFlowsStepProps) {
-  const navigate = useNavigate();
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -59,6 +65,12 @@ export default function CampaignFlowsStep({
   const [segmentFlows, setSegmentFlows] = useState<{
     [segmentId: string]: SegmentFlowState;
   }>({});
+  const [showTrackingRewardModal, setShowTrackingRewardModal] = useState(false);
+  const [configuringMapping, setConfiguringMapping] = useState<{
+    segmentId: string;
+    segmentName: string;
+    offer: CampaignOffer;
+  } | null>(null);
   const hasInitializedFromFlowsRef = useRef(false);
 
   // Initialize segmentFlows from existing campaignFlows when editing
@@ -85,6 +97,8 @@ export default function CampaignFlowsStep({
             offers: [],
             offerWaitHours: {},
             allocation: flow.bucket_allocation,
+            trackingRewardByOffer: {},
+            existingFlowByOffer: {},
           };
         }
 
@@ -99,6 +113,9 @@ export default function CampaignFlowsStep({
         // Store wait hours per offer
         flowsBySegment[segmentIdStr].offerWaitHours[offerIdStr] =
           flow.wait_interval_hours;
+        flowsBySegment[segmentIdStr].existingFlowByOffer[offerIdStr] = flow;
+        flowsBySegment[segmentIdStr].trackingRewardByOffer[offerIdStr] =
+          readTrackingRewardFromConditionRule(flow.condition_rule);
       });
 
       setSegmentFlows(flowsBySegment);
@@ -111,6 +128,14 @@ export default function CampaignFlowsStep({
   // Sync campaign flows from segment flows state
   useEffect(() => {
     if (!setCampaignFlows) return;
+
+    const hasLocalMappings = Object.values(segmentFlows).some(
+      (data) => data.offers.length > 0,
+    );
+    // Do not wipe hydrated campaign flows before local state is initialized.
+    if (!hasLocalMappings && campaignFlows.length > 0) {
+      return;
+    }
 
     const getFlowType = (): CampaignFlowType => {
       switch (formData.campaign_type) {
@@ -132,14 +157,21 @@ export default function CampaignFlowsStep({
 
     Object.entries(segmentFlows).forEach(([segmentId, data]) => {
       data.offers.forEach((offer) => {
+        const existing = data.existingFlowByOffer?.[offer.id];
+        const trackingReward = data.trackingRewardByOffer?.[offer.id];
         flows.push({
-          campaign_id: 0,
+          ...existing,
+          campaign_id: existing?.campaign_id ?? 0,
           segment_id: parseInt(segmentId),
           offer_id: parseInt(offer.id),
-          flow_type: getFlowType(),
-          step_order: flowStepOrder, // Hard coded to value from Step 2
+          flow_type: existing?.flow_type || getFlowType(),
+          step_order: existing?.step_order ?? flowStepOrder,
           wait_interval_hours: data.offerWaitHours[offer.id] || 0,
           bucket_allocation: data.allocation,
+          condition_rule: writeTrackingRewardToConditionRule(
+            existing?.condition_rule,
+            trackingReward,
+          ),
         });
       });
     });
@@ -161,19 +193,36 @@ export default function CampaignFlowsStep({
       const currentState = updated[editingSegmentId] || {
         offers: [],
         offerWaitHours: {},
+        trackingRewardByOffer: {},
+        existingFlowByOffer: {},
       };
 
       // Preserve existing wait hours for offers that are still selected
       const newOfferWaitHours: { [offerId: string]: number } = {};
+      const newTrackingRewardByOffer: {
+        [offerId: string]: MappingTrackingRewardConfig;
+      } = {};
+      const newExistingFlowByOffer: { [offerId: string]: CampaignFlowConfig } =
+        {};
       offers.forEach((offer) => {
         newOfferWaitHours[offer.id] =
           currentState.offerWaitHours[offer.id] || 0;
+        if (currentState.trackingRewardByOffer[offer.id]) {
+          newTrackingRewardByOffer[offer.id] =
+            currentState.trackingRewardByOffer[offer.id];
+        }
+        if (currentState.existingFlowByOffer[offer.id]) {
+          newExistingFlowByOffer[offer.id] =
+            currentState.existingFlowByOffer[offer.id];
+        }
       });
 
       updated[editingSegmentId] = {
         ...currentState,
         offers,
         offerWaitHours: newOfferWaitHours,
+        trackingRewardByOffer: newTrackingRewardByOffer,
+        existingFlowByOffer: newExistingFlowByOffer,
       };
       return updated;
     });
@@ -198,6 +247,15 @@ export default function CampaignFlowsStep({
         updated[segmentId].offers = updated[segmentId].offers.filter(
           (o) => o.id !== offerId,
         );
+        const nextTracking = { ...updated[segmentId].trackingRewardByOffer };
+        const nextExisting = { ...updated[segmentId].existingFlowByOffer };
+        const nextWait = { ...updated[segmentId].offerWaitHours };
+        delete nextTracking[offerId];
+        delete nextExisting[offerId];
+        delete nextWait[offerId];
+        updated[segmentId].trackingRewardByOffer = nextTracking;
+        updated[segmentId].existingFlowByOffer = nextExisting;
+        updated[segmentId].offerWaitHours = nextWait;
       }
       return updated;
     });
@@ -222,7 +280,12 @@ export default function CampaignFlowsStep({
     setSegmentFlows((prev) => {
       const updated = { ...prev };
       if (!updated[segmentId]) {
-        updated[segmentId] = { offers: [], offerWaitHours: {} };
+        updated[segmentId] = {
+          offers: [],
+          offerWaitHours: {},
+          trackingRewardByOffer: {},
+          existingFlowByOffer: {},
+        };
       }
       updated[segmentId].offerWaitHours[offerId] = hours;
       return updated;
@@ -233,7 +296,12 @@ export default function CampaignFlowsStep({
     setSegmentFlows((prev) => {
       const updated = { ...prev };
       if (!updated[segmentId]) {
-        updated[segmentId] = { offers: [], offerWaitHours: {} };
+        updated[segmentId] = {
+          offers: [],
+          offerWaitHours: {},
+          trackingRewardByOffer: {},
+          existingFlowByOffer: {},
+        };
       }
       updated[segmentId].allocation = allocation;
       return updated;
@@ -248,6 +316,69 @@ export default function CampaignFlowsStep({
     setPreviewOffer(offer);
     setShowPreviewModal(true);
   };
+
+  const handleConfigureTrackingRewards = (
+    segment: CampaignSegment,
+    offer: CampaignOffer,
+  ) => {
+    setConfiguringMapping({
+      segmentId: segment.id,
+      segmentName: segment.name,
+      offer,
+    });
+    setShowTrackingRewardModal(true);
+  };
+
+  const handleSaveTrackingRewards = (config: MappingTrackingRewardConfig) => {
+    if (!configuringMapping) return;
+    const { segmentId, offer } = configuringMapping;
+    setSegmentFlows((prev) => {
+      const updated = { ...prev };
+      const current = updated[segmentId] || {
+        offers: [],
+        offerWaitHours: {},
+        trackingRewardByOffer: {},
+        existingFlowByOffer: {},
+      };
+      updated[segmentId] = {
+        ...current,
+        trackingRewardByOffer: {
+          ...current.trackingRewardByOffer,
+          [offer.id]: config,
+        },
+        existingFlowByOffer: {
+          ...current.existingFlowByOffer,
+          [offer.id]: {
+            ...current.existingFlowByOffer[offer.id],
+            campaign_id: current.existingFlowByOffer[offer.id]?.campaign_id ?? 0,
+            segment_id: parseInt(segmentId, 10) || 0,
+            offer_id: parseInt(offer.id, 10) || 0,
+            flow_type:
+              current.existingFlowByOffer[offer.id]?.flow_type || "STANDARD",
+            step_order: current.existingFlowByOffer[offer.id]?.step_order ?? 1,
+            wait_interval_hours:
+              current.offerWaitHours[offer.id] ||
+              current.existingFlowByOffer[offer.id]?.wait_interval_hours ||
+              0,
+            condition_rule: writeTrackingRewardToConditionRule(
+              current.existingFlowByOffer[offer.id]?.condition_rule,
+              config,
+            ),
+          },
+        },
+      };
+      return updated;
+    });
+    setShowTrackingRewardModal(false);
+    setConfiguringMapping(null);
+  };
+
+  const emptyFlowState = (): SegmentFlowState => ({
+    offers: [],
+    offerWaitHours: {},
+    trackingRewardByOffer: {},
+    existingFlowByOffer: {},
+  });
 
   return (
     <div className="space-y-6">
@@ -305,10 +436,7 @@ export default function CampaignFlowsStep({
               <tbody className="bg-white divide-y divide-gray-200">
                 {selectedSegments.flatMap((segment, segmentIndex) => {
                   const offers = getOffersForSegment(segment.id);
-                  const flowState = segmentFlows[segment.id] || {
-                    offers: [],
-                    offerWaitHours: {},
-                  };
+                  const flowState = segmentFlows[segment.id] || emptyFlowState();
 
                   if (offers.length === 0) {
                     // Show one empty row for segment with no offers
@@ -455,6 +583,34 @@ export default function CampaignFlowsStep({
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          {(() => {
+                            const configured = hasCommittedTrackingReward(
+                              flowState.trackingRewardByOffer?.[offer.id],
+                            );
+                            return (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleConfigureTrackingRewards(segment, offer)
+                                }
+                                className={`p-1.5 rounded transition-colors cursor-pointer hover:bg-gray-100 ${
+                                  configured ? "" : "text-gray-900"
+                                }`}
+                                style={
+                                  configured
+                                    ? { color: color.primary.accent }
+                                    : undefined
+                                }
+                                title={
+                                  configured
+                                    ? "View tracking and rewards configuration"
+                                    : "Configure tracking and rewards"
+                                }
+                              >
+                                <Settings className="w-4 h-4" />
+                              </button>
+                            );
+                          })()}
                           <button
                             onClick={() => {
                               setEditingOfferId(Number(offer.id));
@@ -523,6 +679,25 @@ export default function CampaignFlowsStep({
           setShowEditOfferModal(true);
           setShowPreviewModal(false);
         }}
+      />
+
+      <ConfigureTrackingRewardsModal
+        isOpen={showTrackingRewardModal && Boolean(configuringMapping)}
+        segmentName={configuringMapping?.segmentName || ""}
+        offerName={configuringMapping?.offer.name || ""}
+        offerId={configuringMapping?.offer.id || ""}
+        initialConfig={
+          configuringMapping
+            ? segmentFlows[configuringMapping.segmentId]?.trackingRewardByOffer[
+                configuringMapping.offer.id
+              ]
+            : undefined
+        }
+        onClose={() => {
+          setShowTrackingRewardModal(false);
+          setConfiguringMapping(null);
+        }}
+        onSave={handleSaveTrackingRewards}
       />
 
       {/* Edit Offer Modal */}

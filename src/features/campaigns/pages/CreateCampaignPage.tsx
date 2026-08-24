@@ -951,12 +951,16 @@ export default function CreateCampaignPage() {
                 ) || [];
               if (newFlows.length > 0) {
                 const flowsToCreate = newFlows.map(
-                  (flow: any, index: number) => ({
+                  (flow: CampaignFlowConfig, index: number) => ({
+                    ...flow,
                     campaign_id: parseInt(id),
                     segment_id: flow?.segment_id || 0,
                     offer_id: flow?.offer_id || 0,
                     flow_type: flow?.flow_type || "STANDARD",
-                    step_order: index + 1,
+                    step_order: flow?.step_order || index + 1,
+                    wait_interval_hours: flow?.wait_interval_hours || 0,
+                    bucket_allocation: flow?.bucket_allocation,
+                    condition_rule: flow?.condition_rule,
                     created_by: user?.user_id,
                   }),
                 );

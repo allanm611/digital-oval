@@ -14,16 +14,23 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
-import { routeService } from "../services/routeService";
+import { routeService, resolveChannelType } from "../services/routeService";
 import { SMSRoute, RouteChannelType } from "../types/smsRoute";
+import {
+  communicationChannelService,
+  toCommunicationChannelOptions,
+  type CommunicationChannel,
+} from "../../../shared/services/communicationChannelService";
 
-type CommunicationChannel = Exclude<RouteChannelType, "">;
+type ChannelKind = Exclude<RouteChannelType, "">;
 
 interface UnifiedRoute {
   id: number;
   name: string;
   description?: string;
-  channel: CommunicationChannel | "UNKNOWN";
+  channel: ChannelKind | "UNKNOWN";
+  channel_id?: number | null;
+  channel_name?: string;
   gateway_provider?: string;
   configuration_name?: string;
   is_active: boolean;
@@ -60,6 +67,9 @@ export default function RoutesManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterChannel, setFilterChannel] = useState<string>("all");
+  const [communicationChannels, setCommunicationChannels] = useState<
+    CommunicationChannel[]
+  >([]);
   const [togglingStatus, setTogglingStatus] = useState<number | null>(null);
 
   const { deleteConfirm, isDeleting, openDeleteConfirm, closeDeleteConfirm, handleDelete } =
@@ -74,7 +84,17 @@ export default function RoutesManagementPage() {
 
   useEffect(() => {
     loadAllRoutes();
+    loadCommunicationChannels();
   }, []);
+
+  const loadCommunicationChannels = async () => {
+    try {
+      const channels = await communicationChannelService.getAll();
+      setCommunicationChannels(Array.isArray(channels) ? channels : []);
+    } catch {
+      setCommunicationChannels([]);
+    }
+  };
 
   const loadAllRoutes = async () => {
     try {
@@ -85,7 +105,9 @@ export default function RoutesManagementPage() {
         id: route.id,
         name: route.name,
         description: route.description,
-        channel: (route.channel_type || "UNKNOWN") as CommunicationChannel | "UNKNOWN",
+        channel: (route.channel_type || "UNKNOWN") as ChannelKind | "UNKNOWN",
+        channel_id: route.communication_channel_id,
+        channel_name: route.channel_name,
         gateway_provider: route.provider_name || route.gateway_provider,
         configuration_name: route.configuration_name,
         is_active: route.is_active,
@@ -106,9 +128,22 @@ export default function RoutesManagementPage() {
     const matchesSearch = route.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesChannel =
-      filterChannel === "all" || route.channel === filterChannel;
-    return matchesSearch && matchesChannel;
+    if (filterChannel === "all") return matchesSearch;
+
+    const selectedFilterChannel = communicationChannels.find(
+      (channel) => String(channel.id) === filterChannel,
+    );
+    const matchesChannelId =
+      route.channel_id != null && String(route.channel_id) === filterChannel;
+    const matchesLegacyType =
+      route.channel_id == null &&
+      !!selectedFilterChannel &&
+      route.channel ===
+        resolveChannelType(
+          selectedFilterChannel.code || selectedFilterChannel.name,
+        );
+
+    return matchesSearch && (matchesChannelId || matchesLegacyType);
   });
 
   const defaultColumns: TableColumn<UnifiedRoute>[] = [
@@ -142,12 +177,12 @@ export default function RoutesManagementPage() {
       id: "channel",
       label: t.routes.channel,
       visible: true,
-      render: (value) => (
+      render: (_value, route) => (
         <div
           className={`text-sm ${tw.textSecondary} truncate`}
-          title={formatDisplayValue(value as string)}
+          title={route.channel_name || formatDisplayValue(route.channel)}
         >
-          {formatDisplayValue(value as string)}
+          {route.channel_name || formatDisplayValue(route.channel)}
         </div>
       ),
     },
@@ -274,18 +309,17 @@ export default function RoutesManagementPage() {
   };
 
   const navigateToEdit = (route: UnifiedRoute) => {
-    const channelQuery =
-      route.channel !== "UNKNOWN" ? `?channel=${route.channel}` : "";
+    const channelQuery = route.channel_id
+      ? `?channel_id=${route.channel_id}`
+      : route.channel !== "UNKNOWN"
+        ? `?channel=${route.channel}`
+        : "";
     navigate(`/dashboard/routes/edit/${route.id}${channelQuery}`);
   };
 
   const channelOptions = [
     { value: "all", label: t.routes.allChannels },
-    { value: "SMS", label: t.routes.channels.sms },
-    { value: "EMAIL", label: t.routes.channels.email },
-    { value: "WHATSAPP", label: t.routes.channels.whatsapp },
-    { value: "PUSH", label: t.routes.channels.push },
-    { value: "USSD", label: t.routes.channels.ussd },
+    ...toCommunicationChannelOptions(communicationChannels),
   ];
 
   return (

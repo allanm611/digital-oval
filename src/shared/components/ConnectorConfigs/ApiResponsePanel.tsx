@@ -38,7 +38,7 @@ function EmptyResponseState() {
         Click Send to get a response
       </p>
       <p className="mt-2 max-w-md text-xs text-gray-500">
-        The request is executed server-side (like a Postman proxy) so proxy
+        The request is executed server-side so proxy
         settings and non-CORS APIs still work. Status, timing, headers, and body
         appear here.
       </p>

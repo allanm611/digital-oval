@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
@@ -15,19 +15,19 @@ import {
   resolveChannelType,
   routeService,
 } from "../services/routeService";
+import { gatewayConfigurationService } from "../../configurations/services/gatewayConfigurationService";
 import {
-  gatewayConfigurationService,
-  filterGatewayConfigsByChannelType,
-} from "../../configurations/services/gatewayConfigurationService";
-import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+  communicationChannelService,
+  toCommunicationChannelOptions,
+  type CommunicationChannel,
+} from "../../../shared/services/communicationChannelService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { GatewayConfiguration } from "../../configurations/types/gatewayConfiguration";
 import type { RouteChannelType, SMSRoute } from "../types/smsRoute";
-
-type Channel = RouteChannelType;
+import { filterRoutesForOfferChannel } from "../utils/routeSelect";
 
 interface FormData {
-  channel: Channel;
+  channel: RouteChannelType;
   channel_id?: number;
   name: string;
   description: string;
@@ -38,10 +38,24 @@ interface FormData {
   retry_attempts: number;
 }
 
+function parsePositiveInt(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function channelTypeOf(
+  channel?: Pick<CommunicationChannel, "code" | "name"> | null,
+): RouteChannelType {
+  return resolveChannelType(channel?.code || channel?.name);
+}
+
 export default function CreateRoutePage() {
   const { id } = useParams<{ id: string }>();
-  const searchParams = new URLSearchParams(window.location.search);
-  const channelFromUrl = searchParams.get("channel") as Channel | null;
+  const [searchParams] = useSearchParams();
+  const channelIdFromUrl = parsePositiveInt(searchParams.get("channel_id"));
+  const channelTypeFromUrl = (searchParams.get("channel") ||
+    "") as RouteChannelType;
   const isEditMode = !!id;
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
@@ -49,8 +63,8 @@ export default function CreateRoutePage() {
   const { registerFieldRef } = useFormValidation();
 
   const [formData, setFormData] = useState<FormData>({
-    channel: channelFromUrl || "",
-    channel_id: undefined,
+    channel: channelTypeFromUrl || "",
+    channel_id: channelIdFromUrl,
     name: "",
     description: "",
     configuration_id: 0,
@@ -61,9 +75,7 @@ export default function CreateRoutePage() {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [channels, setChannels] = useState<
-    Awaited<ReturnType<typeof communicationChannelService.getAll>>
-  >([]);
+  const [channels, setChannels] = useState<CommunicationChannel[]>([]);
   const [gatewayConfigs, setGatewayConfigs] = useState<GatewayConfiguration[]>(
     [],
   );
@@ -71,19 +83,27 @@ export default function CreateRoutePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const channelOptions = useMemo(
+    () =>
+      toCommunicationChannelOptions(channels, {
+        includeIds: [formData.channel_id],
+      }),
+    [channels, formData.channel_id],
+  );
+
   useEffect(() => {
     loadInitialData();
   }, [id]);
 
   useEffect(() => {
-    if (formData.channel) {
+    if (formData.channel_id) {
       loadGatewayConfigs();
       loadBackupRoutes();
     } else {
       setGatewayConfigs([]);
       setBackupRoutes([]);
     }
-  }, [formData.channel, channels]);
+  }, [formData.channel_id, channels]);
 
   const loadInitialData = async () => {
     try {
@@ -101,15 +121,16 @@ export default function CreateRoutePage() {
     if (!id) return;
     try {
       const route = await routeService.getRouteByIdEnriched(Number(id));
-      const channel =
-        (channelFromUrl as Channel) ||
-        route.channel_type ||
-        resolveChannelType(route.channel_code) ||
-        "";
+      const channelId =
+        route.communication_channel_id ?? channelIdFromUrl ?? undefined;
 
       setFormData({
-        channel,
-        channel_id: route.communication_channel_id ?? undefined,
+        channel:
+          route.channel_type ||
+          resolveChannelType(route.channel_code) ||
+          channelTypeFromUrl ||
+          "",
+        channel_id: channelId,
         name: route.name,
         description: route.description || "",
         configuration_id: route.configuration_id || route.gateway_config_id || 0,
@@ -126,35 +147,58 @@ export default function CreateRoutePage() {
   const loadChannels = async () => {
     try {
       const allChannels = await communicationChannelService.getAll();
-      setChannels(allChannels || []);
+      const list = Array.isArray(allChannels) ? allChannels : [];
+      setChannels(list);
+
+      setFormData((prev) => {
+        if (prev.channel_id) {
+          const selected = list.find((channel) => channel.id === prev.channel_id);
+          return {
+            ...prev,
+            channel: channelTypeOf(selected) || prev.channel,
+          };
+        }
+
+        if (!channelTypeFromUrl) return prev;
+
+        const matches = list.filter(
+          (channel) =>
+            channel.is_active &&
+            channelTypeOf(channel) === channelTypeFromUrl,
+        );
+        if (matches.length !== 1) {
+          return { ...prev, channel: channelTypeFromUrl };
+        }
+
+        return {
+          ...prev,
+          channel_id: matches[0].id,
+          channel: channelTypeFromUrl,
+        };
+      });
     } catch (error) {
       console.error("Failed to load channels:", error);
       setChannels([]);
+      showError(
+        t.common.error,
+        extractBackendError(
+          error,
+          "Failed to load communication channels. Please try again.",
+        ),
+      );
     }
   };
 
   const loadGatewayConfigs = async () => {
-    if (!formData.channel) {
+    if (!formData.channel_id) {
       setGatewayConfigs([]);
       return;
     }
     try {
-      const matchedChannel = channels.find(
-        (ch) => resolveChannelType(ch.code || ch.name) === formData.channel,
-      );
-      const data = await gatewayConfigurationService.getAll(
-        matchedChannel ? { channel_id: matchedChannel.id } : undefined,
-      );
-      const filtered = matchedChannel
-        ? data.filter((c) => c.is_active !== false)
-        : filterGatewayConfigsByChannelType(data, formData.channel).filter(
-            (c) => c.is_active !== false,
-          );
-      setGatewayConfigs(filtered);
-
-      if (matchedChannel && formData.channel_id !== matchedChannel.id) {
-        setFormData((prev) => ({ ...prev, channel_id: matchedChannel.id }));
-      }
+      const data = await gatewayConfigurationService.getAll({
+        channel_id: formData.channel_id,
+      });
+      setGatewayConfigs(data.filter((config) => config.is_active !== false));
     } catch (error) {
       console.error("Failed to load gateway configs:", error);
       setGatewayConfigs([]);
@@ -162,16 +206,20 @@ export default function CreateRoutePage() {
   };
 
   const loadBackupRoutes = async () => {
-    if (!formData.channel) {
+    if (!formData.channel_id) {
       setBackupRoutes([]);
       return;
     }
     try {
-      const routes = await routeService.getRoutesByChannel(formData.channel);
-      // Exclude the route being edited from backup options
-      const options = isEditMode && id
-        ? routes.filter((r) => r.id !== Number(id))
-        : routes;
+      const routes = await routeService.getAllRoutesEnriched();
+      const selected = channels.find(
+        (channel) => channel.id === formData.channel_id,
+      );
+      const options = filterRoutesForOfferChannel(routes, {
+        channelType: channelTypeOf(selected) || formData.channel,
+        channel: selected,
+        allChannels: channels,
+      }).filter((route) => !(isEditMode && id && route.id === Number(id)));
       setBackupRoutes(options);
     } catch (error) {
       console.error("Failed to load backup routes:", error);
@@ -182,7 +230,7 @@ export default function CreateRoutePage() {
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.channel) {
+    if (!formData.channel_id) {
       newErrors.channel = "Channel is required";
     }
     if (!formData.name.trim()) {
@@ -210,17 +258,22 @@ export default function CreateRoutePage() {
     try {
       setSaving(true);
 
+      const selectedConfig = gatewayConfigs.find(
+        (config) => config.id === formData.configuration_id,
+      );
       const matchedChannel =
-        channels.find(
-          (ch) => resolveChannelType(ch.code || ch.name) === formData.channel,
-        ) || channels.find((ch) => ch.id === formData.channel_id);
+        channels.find((channel) => channel.id === formData.channel_id) ||
+        channels.find((channel) => channel.id === selectedConfig?.channel_id);
 
       const payload = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         configuration_id: formData.configuration_id,
         communication_channel_id:
-          matchedChannel?.id ?? formData.channel_id ?? null,
+          formData.channel_id ??
+          matchedChannel?.id ??
+          selectedConfig?.channel_id ??
+          null,
         is_active: formData.is_active,
         use_backup_on_failure: formData.use_backup_on_failure,
         backup_route_id: formData.use_backup_on_failure
@@ -280,27 +333,38 @@ export default function CreateRoutePage() {
               >
                 <HeadlessSelect
                   label={t.routes.channel}
-                  value={formData.channel}
+                  value={
+                    formData.channel_id != null ? String(formData.channel_id) : ""
+                  }
                   onChange={(value) => {
+                    if (!value) return;
+                    const nextChannelId = Number(value);
+                    const nextChannel = channels.find(
+                      (channel) => channel.id === nextChannelId,
+                    );
                     setFormData({
                       ...formData,
-                      channel: value as Channel,
+                      channel_id: nextChannelId,
+                      channel: channelTypeOf(nextChannel),
                       configuration_id: 0,
-                      channel_id: undefined,
                       backup_route_id: undefined,
                     });
                     setErrors({});
                   }}
-                  options={[
-                    { value: "SMS", label: t.routes.channels.sms },
-                    { value: "EMAIL", label: t.routes.channels.email },
-                    { value: "PUSH", label: t.routes.channels.push },
-                    { value: "WHATSAPP", label: t.routes.channels.whatsapp },
-                    { value: "USSD", label: t.routes.channels.ussd },
-                  ]}
-                  placeholder="Select channel..."
-                  disabled={saving || isEditMode}
+                  options={channelOptions}
+                  placeholder={
+                    channelOptions.length === 0
+                      ? "No communication channels available"
+                      : "Select channel..."
+                  }
+                  disabled={saving || isEditMode || channelOptions.length === 0}
                 />
+                {channelOptions.length === 0 && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Add communication channels under Configurations before
+                    creating a route.
+                  </p>
+                )}
               </FormField>
 
               <FormField error={errors?.name} ref={registerFieldRef("name")}>
@@ -340,9 +404,15 @@ export default function CreateRoutePage() {
                 label={t.routes.gatewayProvider}
                 value={String(formData.configuration_id)}
                 onChange={(value) => {
+                  const configurationId = Number(value);
+                  const selectedConfig = gatewayConfigs.find(
+                    (config) => config.id === configurationId,
+                  );
                   setFormData({
                     ...formData,
-                    configuration_id: Number(value),
+                    configuration_id: configurationId,
+                    channel_id:
+                      selectedConfig?.channel_id ?? formData.channel_id,
                   });
                   if (errors.configuration_id) {
                     const { configuration_id: _, ...rest } = errors;
@@ -359,7 +429,7 @@ export default function CreateRoutePage() {
                   })),
                 ]}
                 placeholder="Select a gateway configuration"
-                disabled={saving || !formData.channel}
+                disabled={saving || !formData.channel_id}
               />
             </FormField>
           </div>

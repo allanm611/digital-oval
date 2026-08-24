@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { offerTypeService } from "../services/offerTypeService";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -28,11 +28,11 @@ export default function CreateOfferTypeModal({
   const [isSeedingReward, setIsSeedingReward] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setNewTypeName("");
     setNewTypeDescription("");
     setIsSeedingReward(false);
-  };
+  }, []);
 
   const handleCreateType = async () => {
     if (!newTypeName.trim()) return;
@@ -73,10 +73,24 @@ export default function CreateOfferTypeModal({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
+    if (isCreating) return;
     onClose();
     resetForm();
-  };
+  }, [isCreating, onClose, resetForm]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        handleClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
@@ -84,17 +98,21 @@ export default function CreateOfferTypeModal({
     <div
       className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
       style={{ zIndex: zIndex.modal }}
+      onClick={handleClose}
     >
       <div
         className={`bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 border border-gray-100 max-h-[90vh] overflow-y-auto`}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex-1 min-w-0">
             New Offer Type
           </h2>
           <button
+            type="button"
             onClick={handleClose}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
+            disabled={isCreating}
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed`}
             title="Close"
           >
             <X className="w-5 h-5 text-gray-400 hover:text-gray-600" />
