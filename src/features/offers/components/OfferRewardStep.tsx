@@ -1566,6 +1566,74 @@ export default function OfferRewardStep({
               </div>
 
               <div className="space-y-4">
+                {showTrackingRuleBinding ? (
+                  <div>
+                    {requiresTrackingRuleSelect ? (
+                      <>
+                        <HeadlessSelect
+                          label="Tracking rule"
+                          options={trackingRuleOptionsForEditing}
+                          value={editingRule.tracking_rule_id ?? ""}
+                          onChange={(value) => {
+                            const sourceId =
+                              selectedRewardData?.tracking_source_id ||
+                              editingRule.tracking_source_id;
+                            const source = getLinkedTrackingSource(sourceId);
+                            const selected = source?.rules?.find(
+                              (r) => r.id === value,
+                            );
+                            const nextName =
+                              editingRule.name === "New Rule" ||
+                              !editingRule.name?.trim()
+                                ? selected?.name?.trim()
+                                  ? `${selected.name} reward`
+                                  : editingRule.name
+                                : editingRule.name;
+                            setEditingRule({
+                              ...editingRule,
+                              tracking_rule_id: value as string,
+                              name: nextName,
+                            });
+                          }}
+                          placeholder={
+                            trackingRuleOptionsForEditing.length === 0
+                              ? "No available tracking rules"
+                              : "Select tracking rule to fulfil"
+                          }
+                          disabled={trackingRuleOptionsForEditing.length === 0}
+                          zIndex={zIndex.popover}
+                        />
+                        {trackingRuleOptionsForEditing.length === 0 ? (
+                          <p className="mt-1 text-xs text-amber-800">
+                            No unused enabled tracking rules on this source. Add
+                            rules on the Tracking step, or disable an existing
+                            configuration that already uses one.
+                          </p>
+                        ) : (
+                          <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                            Fulfilment runs when this specific tracking rule
+                            matches. One enabled configuration per rule.
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <div
+                        className={`p-3 border border-dashed border-gray-200 ${tw.rounded}`}
+                      >
+                        <p className="text-sm text-gray-700">
+                          Source-level fulfilment
+                        </p>
+                        <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+                          This tracking source has no enabled rules (rules are
+                          optional). Fulfilment runs on events from the source
+                          itself. Add rules on the Tracking step if you need
+                          condition-based matching.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
                     label="Configuration Name"
@@ -1653,74 +1721,6 @@ export default function OfferRewardStep({
                     />
                   ) : null}
                 </div>
-
-                {showTrackingRuleBinding ? (
-                  <div>
-                    {requiresTrackingRuleSelect ? (
-                      <>
-                        <HeadlessSelect
-                          label="Tracking rule"
-                          options={trackingRuleOptionsForEditing}
-                          value={editingRule.tracking_rule_id ?? ""}
-                          onChange={(value) => {
-                            const sourceId =
-                              selectedRewardData?.tracking_source_id ||
-                              editingRule.tracking_source_id;
-                            const source = getLinkedTrackingSource(sourceId);
-                            const selected = source?.rules?.find(
-                              (r) => r.id === value,
-                            );
-                            const nextName =
-                              editingRule.name === "New Rule" ||
-                              !editingRule.name?.trim()
-                                ? selected?.name?.trim()
-                                  ? `${selected.name} reward`
-                                  : editingRule.name
-                                : editingRule.name;
-                            setEditingRule({
-                              ...editingRule,
-                              tracking_rule_id: value as string,
-                              name: nextName,
-                            });
-                          }}
-                          placeholder={
-                            trackingRuleOptionsForEditing.length === 0
-                              ? "No available tracking rules"
-                              : "Select tracking rule to fulfil"
-                          }
-                          disabled={trackingRuleOptionsForEditing.length === 0}
-                          zIndex={zIndex.popover}
-                        />
-                        {trackingRuleOptionsForEditing.length === 0 ? (
-                          <p className="mt-1 text-xs text-amber-800">
-                            No unused enabled tracking rules on this source. Add
-                            rules on the Tracking step, or disable an existing
-                            configuration that already uses one.
-                          </p>
-                        ) : (
-                          <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                            Fulfilment runs when this specific tracking rule
-                            matches. One enabled configuration per rule.
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <div
-                        className={`p-3 border border-dashed border-gray-200 ${tw.rounded}`}
-                      >
-                        <p className="text-sm text-gray-700">
-                          Source-level fulfilment
-                        </p>
-                        <p className={`mt-1 text-xs ${tw.textSecondary}`}>
-                          This tracking source has no enabled rules (rules are
-                          optional). Fulfilment runs on events from the source
-                          itself. Add rules on the Tracking step if you need
-                          condition-based matching.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : null}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

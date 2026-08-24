@@ -821,7 +821,7 @@ function OfferCreativeStepWrapper({
           Offer Creative
         </h2>
         <p className="text-sm text-gray-600">
-          Design the creative content for your offer
+          Design the creative template content for your offer
         </p>
       </div>
       <OfferCreativeStep

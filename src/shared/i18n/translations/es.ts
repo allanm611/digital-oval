@@ -2815,7 +2815,7 @@ export const es: Translations = {
   },
   offers: {
     creatives: {
-      addCreative: "Agregar Creativo",
+      addCreative: "Agregar plantilla creativa",
       noCreativesAdded: "Sin Creativos Agregados",
       description: "Cree contenido atractivo para su oferta en diferentes canales",
       creatives: "Creativos",

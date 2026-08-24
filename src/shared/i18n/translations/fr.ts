@@ -3093,7 +3093,7 @@ export const fr: Translations = {
   },
   offers: {
     creatives: {
-      addCreative: "Ajouter une Créative",
+      addCreative: "Ajouter un modèle créatif",
       noCreativesAdded: "Aucune Créative Ajoutée",
       description: "Créez du contenu convaincant pour votre offre sur différents canaux",
       creatives: "Créatives",

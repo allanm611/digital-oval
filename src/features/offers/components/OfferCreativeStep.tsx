@@ -1198,7 +1198,7 @@ export default function OfferCreativeStep({
                   title={
                     !canAddCreative
                       ? "All languages already have creatives"
-                      : "Add a blank creative for this offer"
+                      : "Add a blank creative template for this offer"
                   }
                 >
                   <Plus className="w-5 h-5 mr-1.5" />

@@ -3003,7 +3003,7 @@ export const sw: Translations = {
   },
   offers: {
     creatives: {
-      addCreative: "Ongeza Sanaa",
+      addCreative: "Ongeza Kiolezo cha Sanaa",
       noCreativesAdded: "Hakuna Sanaa Iliyoongezwa",
       description: "Tengeneza maudhui ya kukamatia kwa ajili ya ofa yako katika njia mbalimbali",
       creatives: "Sanaa",

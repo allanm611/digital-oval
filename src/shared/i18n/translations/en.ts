@@ -3395,7 +3395,7 @@ export const en: Translations = {
   },
   offers: {
     creatives: {
-      addCreative: "Add Creative",
+      addCreative: "Add Creative Template",
       noCreativesAdded: "No Creatives Added",
       description:
         "Create compelling content for your offer across different channels",

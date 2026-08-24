@@ -403,9 +403,7 @@ export default function RewardConfigurationDetailsPage() {
             </p>
             {isDefaultTemplate ? (
               <p className={`text-xs ${tw.textMuted} mt-2`}>
-                This default template is owned by the provider. Authentication
-                values such as username stay in sync when the provider is
-                edited. Duplicate it to create an independent, editable copy.
+                This default template is owned by the provider.
               </p>
             ) : null}
           </div>
