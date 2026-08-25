@@ -73,15 +73,18 @@ export default function StepFlowLayout({
         </div>
 
         <div className="flex items-center space-x-3">
+          {currentStep > 1 && (
+            <button
+              type="button"
+              onClick={onPrev}
+              className={`inline-flex items-center px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} text-sm font-medium hover:bg-[var(--c-interactive-hover)] transition-all duration-200`}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Previous
+            </button>
+          )}
           <button
-            onClick={onPrev}
-            disabled={currentStep === 1}
-            className={`inline-flex items-center px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} text-sm font-medium hover:bg-[var(--c-interactive-hover)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Previous
-          </button>
-          <button
+            type="button"
             onClick={onNext}
             disabled={isNextDisabled}
             className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-all duration-200 ${

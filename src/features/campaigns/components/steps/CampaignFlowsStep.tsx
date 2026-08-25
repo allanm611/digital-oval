@@ -17,6 +17,11 @@ import {
   readTrackingRewardFromConditionRule,
   writeTrackingRewardToConditionRule,
 } from "../../utils/trackingRewardConfig";
+import {
+  exclusiveOfferLimitMessage,
+  isMutuallyExclusiveCampaign,
+  segmentsExceedingExclusiveOfferLimit,
+} from "../../utils/mutuallyExclusiveOffers";
 
 const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 
@@ -72,6 +77,10 @@ export default function CampaignFlowsStep({
     offer: CampaignOffer;
   } | null>(null);
   const hasInitializedFromFlowsRef = useRef(false);
+  const isMutuallyExclusive = isMutuallyExclusiveCampaign(
+    selectedSegments,
+    formData.metadata,
+  );
 
   // Initialize segmentFlows from existing campaignFlows when editing
   // Allows initialization once on mount OR once when campaignFlows is loaded (for edit mode)
@@ -188,6 +197,8 @@ export default function CampaignFlowsStep({
   const handleOfferSelect = (offers: CampaignOffer[]) => {
     if (!editingSegmentId) return;
 
+    const nextOffers = isMutuallyExclusive ? offers.slice(0, 1) : offers;
+
     setSegmentFlows((prev) => {
       const updated = { ...prev };
       const currentState = updated[editingSegmentId] || {
@@ -204,7 +215,7 @@ export default function CampaignFlowsStep({
       } = {};
       const newExistingFlowByOffer: { [offerId: string]: CampaignFlowConfig } =
         {};
-      offers.forEach((offer) => {
+      nextOffers.forEach((offer) => {
         newOfferWaitHours[offer.id] =
           currentState.offerWaitHours[offer.id] || 0;
         if (currentState.trackingRewardByOffer[offer.id]) {
@@ -219,7 +230,7 @@ export default function CampaignFlowsStep({
 
       updated[editingSegmentId] = {
         ...currentState,
-        offers,
+        offers: nextOffers,
         offerWaitHours: newOfferWaitHours,
         trackingRewardByOffer: newTrackingRewardByOffer,
         existingFlowByOffer: newExistingFlowByOffer,
@@ -229,7 +240,7 @@ export default function CampaignFlowsStep({
 
     // Update selectedOffers to include all unique offers from all segments
     const offerMap = new Map(selectedOffers.map((offer) => [offer.id, offer]));
-    offers.forEach((offer) => {
+    nextOffers.forEach((offer) => {
       if (!offerMap.has(offer.id)) {
         offerMap.set(offer.id, offer);
       }
@@ -380,6 +391,55 @@ export default function CampaignFlowsStep({
     existingFlowByOffer: {},
   });
 
+  const exclusiveViolations = isMutuallyExclusive
+    ? segmentsExceedingExclusiveOfferLimit(
+        Object.entries(segmentFlows).flatMap(([segmentId, data]) =>
+          data.offers.map(() => ({ segment_id: segmentId })),
+        ),
+        selectedSegments,
+      )
+    : [];
+
+  const canAddOfferToSegment = (segmentId: string, currentOfferCount: number) =>
+    !isMutuallyExclusive || currentOfferCount < 1;
+
+  const renderAddOfferButton = (
+    segmentId: string,
+    currentOfferCount: number,
+  ) => {
+    const allowed = canAddOfferToSegment(segmentId, currentOfferCount);
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          if (!allowed) return;
+          handleSelectOffers(segmentId);
+        }}
+        disabled={!allowed}
+        title={
+          allowed
+            ? "Add Offer"
+            : "Mutually exclusive campaigns allow only one offer per segment"
+        }
+        style={{
+          ...getButtonStyles(button.action),
+          fontWeight: "500",
+          transition: "opacity 0.2s",
+          opacity: allowed ? 1 : 0.45,
+          cursor: allowed ? "pointer" : "not-allowed",
+        }}
+        onMouseEnter={(e) => {
+          if (allowed) e.currentTarget.style.opacity = "0.9";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.opacity = allowed ? "1" : "0.45";
+        }}
+      >
+        Add Offer
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -389,8 +449,19 @@ export default function CampaignFlowsStep({
         </h2>
         <p className={`text-xs ${tw.textMuted}`}>
           Select offers for each segment to create the mappings.
+          {isMutuallyExclusive
+            ? " Mutually exclusive is on: each segment can have only one offer."
+            : ""}
         </p>
       </div>
+
+      {exclusiveViolations.length > 0 && (
+        <div className="rounded-md bg-red-50 p-4 border border-red-200">
+          <p className="text-sm text-red-700">
+            {exclusiveOfferLimitMessage(exclusiveViolations[0].name)}
+          </p>
+        </div>
+      )}
 
       {/* Error Display */}
       {validationErrors?.flows && (
@@ -482,18 +553,7 @@ export default function CampaignFlowsStep({
                         )}
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end">
-                            <button
-                              onClick={() => handleSelectOffers(segment.id)}
-                              style={{
-                                ...getButtonStyles(button.action),
-                                fontWeight: "500",
-                                transition: "opacity 0.2s",
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-                              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                            >
-                              Add Offer
-                            </button>
+                            {renderAddOfferButton(segment.id, 0)}
                           </div>
                         </td>
                       </tr>
@@ -630,18 +690,7 @@ export default function CampaignFlowsStep({
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleSelectOffers(segment.id)}
-                            style={{
-                              ...getButtonStyles(button.action),
-                              fontWeight: "500",
-                              transition: "opacity 0.2s",
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-                            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                          >
-                            Add Offer
-                          </button>
+                          {renderAddOfferButton(segment.id, offers.length)}
                         </div>
                       </td>
                     </tr>
@@ -664,6 +713,7 @@ export default function CampaignFlowsStep({
         selectedOffers={
           editingSegmentId ? getOffersForSegment(editingSegmentId) : []
         }
+        singleSelect={isMutuallyExclusive}
       />
 
       {/* Offer Preview Modal */}

@@ -125,7 +125,7 @@ export const en: Translations = {
       timeWindow: "Time window (days)",
       mutuallyExclusiveSegments: "Mutually Exclusive Segments",
       mutuallyExclusiveSegmentsDesc:
-        "Ensure customers are not included in multiple segments",
+        "Customers are not included in multiple segments, and each segment can have only one offer",
       championChallengers: "Champion vs Challenger",
       abTestVariants: "A/B Test Variants",
       roundRobinTarget: "Round Robin Target",

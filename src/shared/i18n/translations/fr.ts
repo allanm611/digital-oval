@@ -110,7 +110,7 @@ export const fr: Translations = {
       maxMessages: "Nombre maximum de messages par client",
       timeWindow: "Fenêtre de temps (jours)",
       mutuallyExclusiveSegments: "Segments Mutuellement Exclusifs",
-      mutuallyExclusiveSegmentsDesc: "Assurez-vous que les clients ne sont pas inclus dans plusieurs segments",
+      mutuallyExclusiveSegmentsDesc: "Assurez-vous que les clients ne sont pas inclus dans plusieurs segments, et chaque segment ne peut avoir qu'une seule offre",
       championChallengers: "Champion vs Challenger",
       abTestVariants: "Variantes de Test A/B",
       roundRobinTarget: "Cible du Round Robin",

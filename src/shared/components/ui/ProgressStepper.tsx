@@ -75,10 +75,7 @@ export default function ProgressStepper({
   };
 
   return (
-    <nav
-      aria-label="Progress"
-      className="sticky top-16 z-40 bg-[var(--c-surface-background)] py-4 sm:py-6 px-2 sm:px-0"
-    >
+    <nav aria-label="Progress" className="py-4 sm:py-6 px-2 sm:px-0">
       {/* Mobile - Simple dots */}
       <div className="md:hidden flex items-center justify-center gap-2 flex-wrap">
         {steps.map((step) => {

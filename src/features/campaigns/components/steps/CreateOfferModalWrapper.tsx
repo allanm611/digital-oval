@@ -1,3 +1,4 @@
+import { CSSProperties } from "react";
 import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 import CreateOfferPage from "../../../offers/pages/CreateOfferPage";
@@ -70,8 +71,16 @@ export default function CreateOfferModalWrapper({
           </button>
         </div>
 
-        {/* Modal Content - Scrollable, with sticky bottom nav support */}
-        <div className="flex-1 overflow-y-auto relative" style={{ zIndex: 1 }}>
+        {/* Modal Content - Scrollable; wizard chrome sticks to the top of this pane */}
+        <div
+          className="flex-1 overflow-y-auto relative"
+          style={
+            {
+              zIndex: 1,
+              ["--sticky-toolbar-offset"]: "0px",
+            } as CSSProperties
+          }
+        >
           <div className="p-6 relative z-10 bg-white min-h-[calc(100vh-120px)]">
             <CreateOfferPage onSuccess={handleSuccess} offerId={offerId} />
           </div>
