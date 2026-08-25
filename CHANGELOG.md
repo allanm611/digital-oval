@@ -1,3 +1,11 @@
+## [1.5.2](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.1...v1.5.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* button flow setup ([bc768cd](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/bc768cdd41f8dd091c3ff50483b247c84526f0c3))
+* Merge pull request [#13](https://github.com/YellowBird-UG/Sentra_cvm_front/issues/13) from YellowBird-UG/fplex/master-sz ([84b746a](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/84b746adcb07105d82db14c7393a887d37f8e450))
+
 ## [1.5.1](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.0...v1.5.1) (2026-08-24)
 
 
