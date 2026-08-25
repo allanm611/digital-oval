@@ -26,6 +26,7 @@ export default function StepNavigation({
     >
       {showPrevButton && (
         <button
+          type="button"
           onClick={onPrev}
           className={`inline-flex items-center px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} text-sm font-medium hover:bg-[var(--c-interactive-hover)] transition-all duration-200`}
         >

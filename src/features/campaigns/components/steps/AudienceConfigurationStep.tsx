@@ -36,6 +36,10 @@ import Checkbox from "../../../../shared/components/ui/Checkbox";
 import Radio from "../../../../shared/components/ui/Radio";
 import { controlGroupService } from "../../../control-groups/services/controlGroupService";
 import { seedListService, SeedList } from "../../../../shared/services/seedListService";
+import {
+  stampMutuallyExclusiveOnSegments,
+  MUTUALLY_EXCLUSIVE_METADATA_KEY,
+} from "../../utils/mutuallyExclusiveOffers";
 
 interface AvailableControlGroup {
   id: string;
@@ -127,6 +131,20 @@ export default function AudienceConfigurationStep({
     }
   };
 
+  const applyMutuallyExclusive = (enabled: boolean) => {
+    setMutuallyExclusive(enabled);
+    setSelectedSegments(
+      stampMutuallyExclusiveOnSegments(selectedSegments, enabled),
+    );
+    setFormData({
+      ...formData,
+      metadata: {
+        ...(formData.metadata || {}),
+        mutually_exclusive: enabled,
+      },
+    });
+  };
+
   const campaignTypeDropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(campaignTypeDropdownRef, () =>
@@ -148,12 +166,13 @@ export default function AudienceConfigurationStep({
       sharedControlGroupConfig,
       seedListMode,
       segmentSeedLists,
+      mutuallyExclusive,
     };
     localStorage.setItem(
       "campaign_audience_config",
       JSON.stringify(audienceConfig)
     );
-  }, [controlGroupMode, sharedControlGroupId, sharedControlGroupConfig, seedListMode, segmentSeedLists]);
+  }, [controlGroupMode, sharedControlGroupId, sharedControlGroupConfig, seedListMode, segmentSeedLists, mutuallyExclusive]);
 
   // Load audience configuration from localStorage on mount
   useEffect(() => {
@@ -172,11 +191,25 @@ export default function AudienceConfigurationStep({
           propSetSegmentSeedLists(config.segmentSeedLists);
           setSegmentSeedLists(config.segmentSeedLists);
         }
+        if (typeof config.mutuallyExclusive === "boolean") {
+          setMutuallyExclusive(config.mutuallyExclusive);
+        }
       } catch (e) {
         console.error("Failed to load audience configuration:", e);
       }
     }
   }, []);
+
+  useEffect(() => {
+    const metadata = formData.metadata;
+    if (metadata && MUTUALLY_EXCLUSIVE_METADATA_KEY in metadata) {
+      setMutuallyExclusive(metadata[MUTUALLY_EXCLUSIVE_METADATA_KEY] === true);
+      return;
+    }
+    if (selectedSegments.some((segment) => segment.is_mutually_exclusive === true)) {
+      setMutuallyExclusive(true);
+    }
+  }, [formData.metadata, selectedSegments]);
 
   // Campaign type options
   const campaignTypeOptions = [
@@ -273,10 +306,10 @@ export default function AudienceConfigurationStep({
       const processedSegments = segments.map((seg, index) => {
         if (selectedSegments.length === 0 && index === 0) {
           // First segment when none exist = Champion with priority 1
-          return { ...seg, priority: 1 };
+          return { ...seg, priority: 1, is_mutually_exclusive: mutuallyExclusive };
         } else {
           // All others are challengers with priority > 1
-          return { ...seg, priority: selectedSegments.length + index + 1 };
+          return { ...seg, priority: selectedSegments.length + index + 1, is_mutually_exclusive: mutuallyExclusive };
         }
       });
       setSelectedSegments([...selectedSegments, ...processedSegments]);
@@ -285,7 +318,7 @@ export default function AudienceConfigurationStep({
       const processedSegments = segments
         .slice(0, 2 - selectedSegments.length)
         .map((seg, index) => {
-          return { ...seg, priority: selectedSegments.length + index + 1 };
+          return { ...seg, priority: selectedSegments.length + index + 1, is_mutually_exclusive: mutuallyExclusive };
         });
       setSelectedSegments([...selectedSegments, ...processedSegments]);
     } else if (
@@ -293,10 +326,12 @@ export default function AudienceConfigurationStep({
       formData.campaign_type === "multiple_level"
     ) {
       // For Round Robin and Multiple Level: only 1 segment allowed
-      setSelectedSegments([segments[0]]);
+      setSelectedSegments([{ ...segments[0], is_mutually_exclusive: mutuallyExclusive }]);
     } else {
       // Multiple Target Group: normal behavior
-      setSelectedSegments(segments);
+      setSelectedSegments(
+        stampMutuallyExclusiveOnSegments(segments, mutuallyExclusive),
+      );
     }
     setIsModalOpen(false);
   };
@@ -329,6 +364,7 @@ export default function AudienceConfigurationStep({
       created_at: segment.created_at || new Date().toISOString(),
       criteria: {}, // Empty criteria object - will be populated from conditions if needed
       priority: selectedSegments.length + 1,
+      is_mutually_exclusive: mutuallyExclusive,
     };
 
     // For Champion-Challenger: first segment gets priority 1
@@ -682,25 +718,13 @@ export default function AudienceConfigurationStep({
       {selectedSegments.length > 1 && (
         <div className={`${tw.rounded} p-3`}>
           <div className="flex items-start space-x-3 cursor-pointer" onClick={() => {
-            setMutuallyExclusive(!mutuallyExclusive);
-            // Update all segments with mutual exclusivity
-            const updatedSegments = selectedSegments.map((segment) => ({
-              ...segment,
-              is_mutually_exclusive: !mutuallyExclusive,
-            }));
-            setSelectedSegments(updatedSegments);
+            applyMutuallyExclusive(!mutuallyExclusive);
           }}>
             <Checkbox
               id="mutually-exclusive"
               checked={mutuallyExclusive}
               onChange={() => {
-                setMutuallyExclusive(!mutuallyExclusive);
-                // Update all segments with mutual exclusivity
-                const updatedSegments = selectedSegments.map((segment) => ({
-                  ...segment,
-                  is_mutually_exclusive: !mutuallyExclusive,
-                }));
-                setSelectedSegments(updatedSegments);
+                applyMutuallyExclusive(!mutuallyExclusive);
               }}
               className="mt-1 w-4 h-4 border-gray-300 rounded"
               style={{ accentColor: color.primary.accent }} />

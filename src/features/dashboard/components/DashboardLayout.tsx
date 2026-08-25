@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { CSSProperties, ReactNode, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Footer from "../../../shared/components/Footer";
@@ -29,6 +29,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <main
           className={`flex-1 px-5 lg:px-8 py-6 ${tw.primaryBackground} pb-24`}
+          style={
+            {
+              "--sticky-toolbar-offset": "4rem",
+            } as CSSProperties
+          }
         >
           {children}
         </main>

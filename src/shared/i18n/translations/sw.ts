@@ -110,7 +110,7 @@ export const sw: Translations = {
       maxMessages: "Ujumbe wa juu zaidi kwa kila mteja",
       timeWindow: "Dirisha la muda (siku)",
       mutuallyExclusiveSegments: "Sehemu Zinazoharibu Kila Nyingine",
-      mutuallyExclusiveSegmentsDesc: "Hakikisha kuwa wateja hawajajumuishwa katika sehemu nyingi",
+      mutuallyExclusiveSegmentsDesc: "Hakikisha kuwa wateja hawajajumuishwa katika sehemu nyingi, na kila sehemu inaweza kuwa na ofa moja tu",
       championChallengers: "Mfalme vs Mtesi",
       abTestVariants: "Lahaja za Mtihani wa A/B",
       roundRobinTarget: "Shabaha ya Round Robin",
