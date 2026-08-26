@@ -15,6 +15,7 @@ import type { OfferReward } from "../../../offers/types/offerReward";
 import { engineTrackingSourceService } from "../../../configurations/services/engineTrackingSourceService";
 import { engineSourceTypeLabel } from "../../../configurations/types/engineTrackingSource";
 import { TRACKING_TYPE_OPTIONS } from "../../../offers/utils/trackingSourcesConfig";
+import SelectOfferRewardTrackingSourcesModal from "../../../offers/components/SelectOfferRewardTrackingSourcesModal";
 import type { MappingTrackingRewardConfig } from "../../types/trackingRewardConfig";
 import {
   cloneMappingTrackingRewardConfig,
@@ -66,14 +67,17 @@ export default function ConfigureTrackingRewardsModal({
   const [loadError, setLoadError] = useState("");
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [sourceToAdd, setSourceToAdd] = useState("");
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [showSourcePicker, setShowSourcePicker] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
   const resetLocalState = useCallback(() => {
-    setConfig(cloneMappingTrackingRewardConfig(initialConfig));
+    const next = cloneMappingTrackingRewardConfig(initialConfig);
+    setConfig(next);
     setFormError("");
     setFieldErrors({});
-    setSourceToAdd("");
+    setSelectedCardId(next.sources[0]?.id ?? null);
+    setShowSourcePicker(false);
     setLoadError("");
   }, [initialConfig]);
 
@@ -125,59 +129,83 @@ export default function ConfigureTrackingRewardsModal({
     [trackingSources, config],
   );
 
-  const sourceOptions = useMemo(
+  const selectedCard = useMemo(
+    () => config.sources.find((card) => card.id === selectedCardId) ?? null,
+    [config.sources, selectedCardId],
+  );
+
+  const configuredSourceOptions = useMemo(
     () =>
-      availableSources.map((source) => ({
-        value: source.id,
-        label: `${source.name || source.code || source.id} (${trackingTypeLabel(source.type)})`,
+      config.sources.map((card) => ({
+        value: card.tracking_source_id,
+        label: `${card.tracking_source_name} (${trackingTypeLabel(card.tracking_source_type)})`,
       })),
-    [availableSources],
+    [config.sources],
   );
 
   useEffect(() => {
-    if (availableSources.length === 0) {
-      setSourceToAdd("");
+    if (config.sources.length === 0) {
+      setSelectedCardId(null);
       return;
     }
-    if (!availableSources.some((s) => s.id === sourceToAdd)) {
-      setSourceToAdd(availableSources[0].id);
+    if (!config.sources.some((card) => card.id === selectedCardId)) {
+      setSelectedCardId(config.sources[config.sources.length - 1].id);
     }
-  }, [availableSources, sourceToAdd]);
+  }, [config.sources, selectedCardId]);
 
-  const handleAddSource = async () => {
-    if (!sourceToAdd || isAdding) return;
-    const source = availableSources.find((s) => s.id === sourceToAdd);
-    if (!source) {
-      setFormError("Select a tracking source that does not already have a configuration.");
-      return;
-    }
+  const addSourcesById = async (sourceIds: string[]) => {
+    if (sourceIds.length === 0 || isAdding) return;
 
     setIsAdding(true);
     setFormError("");
     try {
-      let attributionWindow = undefined;
-      if (source.engine_tracking_source_id) {
-        try {
-          const engine = await engineTrackingSourceService.getById(
-            source.engine_tracking_source_id,
-          );
-          if (engine?.attributionWindowHours != null) {
-            attributionWindow = hoursToAttributionWindow(
-              engine.attributionWindowHours,
-            );
-          }
-        } catch {
-          // Catalog lookup is optional — operators can still set the window.
-        }
+      const used = new Set(config.sources.map((card) => card.tracking_source_id));
+      const toAdd = sourceIds
+        .map((id) => trackingSources.find((source) => source.id === id))
+        .filter((source): source is OfferTrackingSource => {
+          if (!source || source.enabled === false) return false;
+          if (used.has(source.id)) return false;
+          used.add(source.id);
+          return true;
+        });
+
+      if (toAdd.length === 0) {
+        setFormError(
+          "Selected tracking sources already have a configuration. Each source can only be configured once.",
+        );
+        return;
       }
+
+      const windows = await Promise.all(
+        toAdd.map(async (source) => {
+          if (!source.engine_tracking_source_id) return undefined;
+          try {
+            const engine = await engineTrackingSourceService.getById(
+              source.engine_tracking_source_id,
+            );
+            if (engine?.attributionWindowHours != null) {
+              return hoursToAttributionWindow(engine.attributionWindowHours);
+            }
+          } catch {
+            // Catalog lookup is optional — operators can still set the window.
+          }
+          return undefined;
+        }),
+      );
+
+      const newCards = toAdd.map((source, index) =>
+        createTrackingSourceCampaignConfig({
+          source,
+          attributionWindow: windows[index],
+        }),
+      );
 
       setConfig((prev) => ({
         ...prev,
-        sources: [
-          ...prev.sources,
-          createTrackingSourceCampaignConfig({ source, attributionWindow }),
-        ],
+        sources: [...prev.sources, ...newCards],
       }));
+      setSelectedCardId(newCards[0].id);
+      setShowSourcePicker(false);
     } finally {
       setIsAdding(false);
     }
@@ -305,27 +333,43 @@ export default function ConfigureTrackingRewardsModal({
                   <HeadlessSelect
                     label="Tracking source"
                     options={
-                      sourceOptions.length > 0
-                        ? sourceOptions
-                        : [{ value: "", label: "All sources already configured" }]
+                      configuredSourceOptions.length > 0
+                        ? configuredSourceOptions
+                        : [{ value: "", label: "No source selected" }]
                     }
-                    value={sourceToAdd}
-                    onChange={(value) => setSourceToAdd(String(value))}
+                    value={selectedCard?.tracking_source_id || ""}
+                    onChange={(value) => {
+                      const next = config.sources.find(
+                        (card) => card.tracking_source_id === String(value),
+                      );
+                      if (next) setSelectedCardId(next.id);
+                    }}
                     placeholder="Select a tracking source"
-                    disabled={availableSources.length === 0 || isAdding}
+                    disabled={config.sources.length === 0}
                     zIndex={zIndex.confirm}
                   />
                 </div>
                 <button
                   type="button"
-                  onClick={() => void handleAddSource()}
-                  disabled={availableSources.length === 0 || isAdding || !sourceToAdd}
+                  onClick={() => {
+                    if (availableSources.length === 0) {
+                      setFormError(
+                        trackingSources.length === 0
+                          ? "This offer has no tracking sources. Add them in Offer Management first."
+                          : "Every tracking source on this offer already has a configuration.",
+                      );
+                      return;
+                    }
+                    setFormError("");
+                    setShowSourcePicker(true);
+                  }}
+                  disabled={availableSources.length === 0 || isAdding}
                   className={`shrink-0 self-stretch inline-flex items-center justify-center gap-1.5 px-4 text-sm font-medium leading-none text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ backgroundColor: color.primary.action, minHeight: 0 }}
                   title={
                     availableSources.length === 0
                       ? "Each tracking source can only be configured once"
-                      : "Add configuration for the selected tracking source"
+                      : "Add tracking sources from this offer"
                   }
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -333,8 +377,8 @@ export default function ConfigureTrackingRewardsModal({
                 </button>
               </div>
               <p className={`text-xs ${tw.textSecondary}`}>
-                Each tracking source can have one configuration on this mapping.
-                Saved configurations cannot be created again
+                Click a configuration card to show that tracking source above.
+                Each source can be configured once.
               </p>
 
               {config.sources.length === 0 ? (
@@ -363,12 +407,24 @@ export default function ConfigureTrackingRewardsModal({
                     const noTrackingLimit = card.tracking_limit == null;
                     const noRewardLimit = card.reward_limit == null;
 
+                    const isSelected = selectedCardId === card.id;
+
                     return (
                       <div
                         key={card.id}
-                        className={`border ${tw.rounded} p-4 space-y-4 ${
-                          locked ? "border-gray-200 bg-gray-50" : "border-gray-200 bg-white"
+                        onClick={() => setSelectedCardId(card.id)}
+                        className={`border ${tw.rounded} p-4 space-y-4 cursor-pointer transition-colors ${
+                          isSelected
+                            ? "bg-gray-50 ring-1 ring-gray-300"
+                            : locked
+                              ? "border-gray-200 bg-gray-50 hover:border-gray-300"
+                              : "border-gray-200 bg-white hover:border-gray-300"
                         }`}
+                        style={
+                          isSelected
+                            ? { borderColor: color.primary.accent }
+                            : undefined
+                        }
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -397,7 +453,10 @@ export default function ConfigureTrackingRewardsModal({
                           {!locked ? (
                             <button
                               type="button"
-                              onClick={() => handleRemoveDraft(card.id)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleRemoveDraft(card.id);
+                              }}
                               className="p-1.5 text-red-600 rounded hover:bg-red-50"
                               title="Remove this draft configuration"
                             >
@@ -635,6 +694,18 @@ export default function ConfigureTrackingRewardsModal({
           </button>
         </div>
       </div>
+      <SelectOfferRewardTrackingSourcesModal
+        open={showSourcePicker}
+        sources={availableSources}
+        overlayZIndex={zIndex.confirm}
+        title="Select Tracking Sources"
+        description="Choose tracking sources already attached to this offer. Each source can only have one configuration on this mapping."
+        emptyDescription="No unused tracking sources on this offer. Add sources in Offer Management, or remove an existing configuration to free a source."
+        onClose={() => setShowSourcePicker(false)}
+        onConfirm={(sourceIds) => {
+          void addSourcesById(sourceIds);
+        }}
+      />
     </div>,
     document.body,
   );

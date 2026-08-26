@@ -307,8 +307,10 @@ export type GetSegmentsQuery = {
   search?: string; // Optional
   categoryId?: number; // Optional
   type?: "static" | "dynamic" | "trigger"; // Optional
-  page?: number; // Optional, default 1
-  pageSize?: number; // Optional, default 10
+  limit?: number; // Optional, page size (offset pagination)
+  offset?: number; // Optional, row offset
+  page?: number; // Converted to offset; not sent to the API
+  pageSize?: number; // Alias for limit
   sortBy?: string; // Optional
   sortDirection?: "ASC" | "DESC"; // Optional
   skipCache?: boolean | "true" | "false"; // Optional, can be boolean or string

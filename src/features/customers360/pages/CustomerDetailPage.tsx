@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Calendar, X, Send, Edit, Trash2, Eye, Search } from "lucide-react";
+import { Send, Edit, Trash2, Eye } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -19,8 +19,10 @@ import {
 import { colors, buttons } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
-import Input from "../../../shared/components/ui/Input";
 import SearchInput from "../../../shared/components/ui/SearchInput";
+import CustomerEventsTab from "../components/CustomerEventsTab";
+import CustomerSubscribedListsTab from "../components/CustomerSubscribedListsTab";
+import CustomerAudiencePanel from "../components/CustomerAudiencePanel";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import Radio from "../../../shared/components/ui/Radio";
@@ -43,7 +45,6 @@ import {
   type CustomerRow,
 } from "../utils/customerSubscriptionHelpers";
 import type { CustomerSearchResultsResponse } from "../../reports-analytics/types/ReportsAPI";
-// Note: CustomerWithContact is not imported as it's not used in this file
 import { customerService } from "../services/customerServices";
 import { revenueMetricService } from "../../kpis/services/revenueMetricService";
 import type { RevenueMetric } from "../../kpis/types/revenueMetrics";
@@ -52,10 +53,8 @@ import { Table, useTable, type TableColumn } from "../../../shared/components/Ta
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Extract types from API response
-type CustomerSegment = CustomerSearchResultsResponse["segments"][number];
 type CustomerOffer = CustomerSearchResultsResponse["offers"][number];
 type CustomerEvent = CustomerSearchResultsResponse["events"][number];
-type SubscribedList = CustomerSearchResultsResponse["subscribedLists"][number];
 type OriginSource = "customers" | "reports";
 
 // Custom Tooltip Component
@@ -108,33 +107,6 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     typeof customer.id === "string"
       ? customer.id
       : (customer.id || "0").toString();
-
-  const segmentNames = [
-    customer.segment,
-    "High Value Customers",
-    "Frequent Buyers",
-    "Email Subscribers",
-    "VIP Members",
-  ];
-
-  const segments: CustomerSegment[] = segmentNames.map((name, index) => {
-    const baseDate = new Date(customer.lastInteractionDate || new Date());
-    const addedDate = new Date(baseDate);
-    addedDate.setDate(addedDate.getDate() - index * 15);
-
-    const customerId =
-      typeof customer.id === "string"
-        ? customer.id
-        : (customer.id || "0").toString();
-    return {
-      id: `SEG-${customerId.slice(-3)}-${index + 1}`,
-      name,
-      type: index < 2 ? "Dynamic" : "Static",
-      addedDate: isNaN(addedDate.getTime())
-        ? new Date().toISOString().split("T")[0]
-        : addedDate.toISOString().split("T")[0],
-    };
-  });
 
   const offerNames = [
     "VIP Exclusive Offer",
@@ -276,86 +248,7 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     }
   }
 
-  const listNames = [
-    "Newsletter",
-    "Promotions",
-    "Product Updates",
-    "Special Offers",
-  ];
-
-  const lists: SubscribedList[] = listNames.map((name, index) => {
-    const baseDate = new Date(customer.lastInteractionDate);
-    const subscribedDate = new Date(baseDate);
-    subscribedDate.setDate(subscribedDate.getDate() - index * 30);
-
-    return {
-      id: `LIST-${customerId.slice(-3)}-${index + 1}`,
-      name,
-      subscribedDate: isNaN(subscribedDate.getTime())
-        ? new Date().toISOString().split("T")[0]
-        : subscribedDate.toISOString().split("T")[0],
-      status:
-        index < 3
-          ? "active"
-          : customer.engagementScore > 70
-            ? "active"
-            : "unsubscribed",
-    };
-  });
-
-  // Generate dummy campaigns data
-  const campaignNames = [
-    "Summer Sale Campaign",
-    "Flash Deal 2024",
-    "Customer Loyalty Drive",
-    "New Product Launch",
-    "Seasonal Promotion",
-  ];
-
-  const campaignTypes = ["Multiple Target Group", "Champion Challenger", "A/B Testing", "Round Robin", "Multiple Level"];
-  const campaignStatuses = ["Active", "Completed", "Active", "Completed", "Paused"];
-
-  const campaigns: any[] = campaignNames.map((name, index) => {
-    const baseDate = new Date(customer.lastInteractionDate || new Date());
-    const participationDate = new Date(baseDate);
-    participationDate.setDate(participationDate.getDate() - index * 25);
-
-    return {
-      id: `CAM-${customerId.slice(-3)}-${index + 1}`,
-      name,
-      type: campaignTypes[index],
-      participationDate: isNaN(participationDate.getTime())
-        ? new Date().toISOString().split("T")[0]
-        : participationDate.toISOString().split("T")[0],
-      status: campaignStatuses[index],
-    };
-  });
-
-  // Generate dummy quicklists data
-  const quicklistNames = [
-    "VIP Test Group",
-    "Internal Testing",
-    "Beta Testers",
-    "Premium Customers",
-  ];
-
-  const quicklists: any[] = quicklistNames.map((name, index) => {
-    const baseDate = new Date(customer.lastInteractionDate || new Date());
-    const createdDate = new Date(baseDate);
-    createdDate.setDate(createdDate.getDate() - index * 40);
-
-    return {
-      id: `QL-${customerId.slice(-3)}-${index + 1}`,
-      name,
-      recordCount: Math.floor(Math.random() * 500) + 50,
-      createdDate: isNaN(createdDate.getTime())
-        ? new Date().toISOString().split("T")[0]
-        : createdDate.toISOString().split("T")[0],
-      status: "Completed",
-    };
-  });
-
-  return { segments, offers, events, lists, campaigns, quicklists };
+  return { offers, events };
 };
 
 type TabType =
@@ -364,7 +257,6 @@ type TabType =
   | "engagement"
   | "segments"
   | "offers"
-  | "quicklists"
   | "subscribedLists"
   | "campaigns"
   | "communications"
@@ -500,11 +392,6 @@ export default function CustomerDetailPage() {
   const customer = selectedCustomer;
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
-  const [eventSearchTerm, setEventSearchTerm] = useState<string>("");
-  const [eventTypeFilter, setEventTypeFilter] = useState<string>("all");
-  const [eventDateFrom, setEventDateFrom] = useState<string>("");
-  const [eventDateTo, setEventDateTo] = useState<string>("");
-  const [eventStatusFilter, setEventStatusFilter] = useState<string>("all");
 
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -720,170 +607,49 @@ export default function CustomerDetailPage() {
   );
 
   // Pagination states for the tables
-  const [eventPage, setEventPage] = useState(1);
-  const [segmentPage, setSegmentPage] = useState(1);
   const [offerPage, setOfferPage] = useState(1);
-  const [listPage, setListPage] = useState(1);
-  const [quicklistPage, setQuicklistPage] = useState(1);
   const [kpiPage, setKpiPage] = useState(1);
   const pageSize = 20;
 
   useEffect(() => {
     if (customer) {
       setActiveTab("overview");
-      setEventPage(1);
-      setSegmentPage(1);
       setOfferPage(1);
-      setListPage(1);
-      setQuicklistPage(1);
       setKpiPage(1);
     }
   }, [customer]);
-
-  // Reset pagination when event filters change
-  useEffect(() => {
-    setEventPage(1);
-  }, [
-    eventSearchTerm,
-    eventTypeFilter,
-    eventStatusFilter,
-    eventDateFrom,
-    eventDateTo,
-  ]);
 
   // Reset KPI pagination when search changes
   useEffect(() => {
     setKpiPage(1);
   }, [kpiSearchTerm]);
 
-  const { segments, offers, events, lists, quicklists, campaigns } = useMemo(() => {
+  const { offers, events } = useMemo(() => {
     if (!selectedSubscription)
       return {
-        segments: [],
         offers: [],
         events: [],
-        lists: [],
-        quicklists: [],
-        campaigns: [],
       };
 
-    // Use actual data from API, fallback to dummy data if empty
     const data = selectedSubscription as Record<string, any>;
-
-    // Get generated dummy data if available
-    let dummyData: any = {
-      segments: [],
-      offers: [],
-      events: [],
-      lists: [],
-      quicklists: [],
-      campaigns: [],
-    };
-
-    if (customer) {
-      const result = generateCustomerRelatedData(customer);
-      dummyData = {
-        segments: result.segments,
-        offers: result.offers,
-        events: result.events,
-        lists: result.lists,
-        quicklists: result.quicklists,
-        campaigns: result.campaigns,
-      };
-    }
-
-    // Use API data if available, fallback to dummy data if empty
-    const segmentsData = Array.isArray(data.segments) && data.segments.length > 0
-      ? data.segments
-      : dummyData.segments;
+    const dummyData = customer
+      ? generateCustomerRelatedData(customer)
+      : { offers: [], events: [] };
 
     const offersData = Array.isArray(data.offers) && data.offers.length > 0
       ? data.offers
       : dummyData.offers;
 
-    const quicklistsData = Array.isArray(data.quicklists) && data.quicklists.length > 0
-      ? data.quicklists.map((ql: Record<string, any>) => ({
-          id: `QL-${ql.id}`,
-          name: ql.name,
-          recordCount: ql.rows_imported,
-          createdDate: ql.created_at,
-          status: ql.processing_status,
-        }))
-      : dummyData.quicklists;
-
     return {
-      segments: segmentsData,
       offers: offersData,
       events: dummyData.events,
-      lists: dummyData.lists,
-      quicklists: quicklistsData,
-      campaigns: dummyData.campaigns,
     };
   }, [selectedSubscription, customer]);
-
-  const filteredEvents = useMemo(() => {
-    return events.filter((event) => {
-      const matchesSearch =
-        eventSearchTerm.trim() === "" ||
-        event.title.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
-        (event.description &&
-          event.description
-            .toLowerCase()
-            .includes(eventSearchTerm.toLowerCase()));
-      const matchesType =
-        eventTypeFilter === "all" || event.type === eventTypeFilter;
-      const matchesStatus =
-        eventStatusFilter === "all" || event.status === eventStatusFilter;
-
-      let matchesDate = true;
-      if (eventDateFrom) {
-        const eventDate = new Date(event.date);
-        const fromDate = new Date(eventDateFrom);
-        matchesDate = matchesDate && eventDate >= fromDate;
-      }
-      if (eventDateTo) {
-        const eventDate = new Date(event.date);
-        const toDate = new Date(eventDateTo);
-        toDate.setHours(23, 59, 59, 999);
-        matchesDate = matchesDate && eventDate <= toDate;
-      }
-
-      return matchesSearch && matchesType && matchesStatus && matchesDate;
-    });
-  }, [
-    events,
-    eventSearchTerm,
-    eventTypeFilter,
-    eventStatusFilter,
-    eventDateFrom,
-    eventDateTo,
-  ]);
-
-  // Paginated data slices for all 4 tables
-  const paginatedEvents = useMemo(() => {
-    const startIdx = (eventPage - 1) * pageSize;
-    return filteredEvents.slice(startIdx, startIdx + pageSize);
-  }, [filteredEvents, eventPage]);
-
-  const paginatedSegments = useMemo(() => {
-    const startIdx = (segmentPage - 1) * pageSize;
-    return segments.slice(startIdx, startIdx + pageSize);
-  }, [segments, segmentPage]);
 
   const paginatedOffers = useMemo(() => {
     const startIdx = (offerPage - 1) * pageSize;
     return offers.slice(startIdx, startIdx + pageSize);
   }, [offers, offerPage]);
-
-  const paginatedLists = useMemo(() => {
-    const startIdx = (listPage - 1) * pageSize;
-    return lists.slice(startIdx, startIdx + pageSize);
-  }, [lists, listPage]);
-
-  const paginatedQuicklists = useMemo(() => {
-    const startIdx = (quicklistPage - 1) * pageSize;
-    return quicklists.slice(startIdx, startIdx + pageSize);
-  }, [quicklists, quicklistPage]);
 
   const paginatedKpis = useMemo(() => {
     const startIdx = (kpiPage - 1) * pageSize;
@@ -1173,7 +939,6 @@ export default function CustomerDetailPage() {
             { id: "engagement", label: "Analytics" },
             { id: "segments", label: "Segments" },
             { id: "offers", label: "Offers" },
-            { id: "quicklists", label: "QuickLists" },
             { id: "campaigns", label: "Campaigns" },
             { id: "communications", label: "Communications" },
             { id: "purchases", label: "Purchase History" },
@@ -1300,164 +1065,18 @@ export default function CustomerDetailPage() {
         )}
 
         {activeTab === "activity" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Customer Events
-              </h3>
-              <p className="text-sm text-gray-500">
-                Track all customer interactions including emails, SMS, push
-                notifications, purchases, and more
-              </p>
-            </div>
-
-            {filteredEvents.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No events recorded yet</p>
-              </div>
-            ) : (
-              <>
-                {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      value={eventSearchTerm}
-                      onChange={(value) => setEventSearchTerm(String(value))}
-                      placeholder="Search events..."
-                      className="pl-10 pr-4"
-
-                    />
-                  </div>
-                  <HeadlessSelect
-                    value={eventTypeFilter}
-                    onChange={(value) => setEventTypeFilter(value as string)}
-                    options={[
-                      { label: "All Channels", value: "all" },
-                      { label: "Email", value: "email" },
-                      { label: "SMS", value: "sms" },
-                      { label: "Push", value: "push" },
-                    ]}
-                    placeholder="All Channels"
-                    className="w-auto min-w-[150px]"
-                  />
-                  <HeadlessSelect
-                    value={eventStatusFilter}
-                    onChange={(value) => setEventStatusFilter(value as string)}
-                    options={[
-                      { label: "All Status", value: "all" },
-                      { label: "Sent", value: "Sent" },
-                      { label: "Delivered", value: "Delivered" },
-                      { label: "Opened", value: "Opened" },
-                      { label: "Clicked", value: "Clicked" },
-                      { label: "Read", value: "Read" },
-                    ]}
-                    placeholder="All Status"
-                    className="w-auto min-w-[150px]"
-                  />
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                    <Input
-                      type="date"
-                      value={eventDateFrom}
-                      onChange={(value) => setEventDateFrom(String(value))}
-                      placeholder="From Date"
-                      className="pl-10 pr-10"
-
-                      onClick={(e) =>
-                        (e.currentTarget as HTMLInputElement).showPicker()
-                      }
-                    />
-                    {eventDateFrom && (
-                      <button
-                        onClick={() => setEventDateFrom("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                    <Input
-                      type="date"
-                      value={eventDateTo}
-                      onChange={(value) => setEventDateTo(String(value))}
-                      placeholder="To Date"
-                      className="pl-10 pr-10"
-
-                      onClick={(e) =>
-                        (e.currentTarget as HTMLInputElement).showPicker()
-                      }
-                    />
-                    {eventDateTo && (
-                      <button
-                        onClick={() => setEventDateTo("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Table */}
-                <div className={`${tw.rounded} overflow-hidden`}>
-                  <Table<CustomerEvent>
-                    columns={[
-                      {
-                        id: "title",
-                        label: "Event Type",
-                        visible: true,
-                        },
-                      {
-                        id: "description",
-                        label: "Description",
-                        visible: true,
-                        },
-                      {
-                        id: "type",
-                        label: "Channel",
-                        visible: true,
-                        },
-                      {
-                        id: "status",
-                        label: "Status",
-                        visible: true,
-                        },
-                    ]}
-                    data={paginatedEvents}
-                    totalItems={filteredEvents.length}
-                    currentPage={eventPage}
-                    pageSize={pageSize}
-                    onPageChange={setEventPage}
-                    style={{
-                      headerBackground: color.surface.tableHeader,
-                      headerTextColor: color.surface.tableHeaderText,
-                      rowBackground: color.surface.tablebodybg,
-                      rowSpacing: "0 8px",
-                    }}
-                  />
-                </div>
-                {paginatedEvents.length > 0 && filteredEvents.length > 0 && (
-                  <div className="mt-4">
-                    <Pagination
-                      currentPage={eventPage}
-                      pageSize={pageSize}
-                      totalItems={filteredEvents.length}
-                      onPageChange={setEventPage}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <CustomerEventsTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+          />
         )}
 
         {activeTab === "engagement" && (
           <div>
-            {filteredEvents.length === 0 ? (
+            {events.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-gray-500 text-sm">
                   No engagement data available
@@ -1625,72 +1244,19 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
-        {activeTab === "segments" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Segments
-              </h3>
-              <p className="text-sm text-gray-500">
-                View all segments this customer belongs to
-              </p>
-            </div>
-            {segments.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No segments assigned</p>
-              </div>
-            ) : (
-              <>
-                <div className={`${tw.rounded} overflow-hidden`}>
-                  <Table<CustomerSegment>
-                    columns={[
-                      {
-                        id: "name",
-                        label: "Segment Name",
-                        visible: true,
-                                        },
-                      {
-                        id: "type",
-                        label: "Type",
-                        visible: true,
-                        },
-                      {
-                        id: "addedDate",
-                        label: "Added Date",
-                        visible: true,
-                        render: (_, row) => (
-                          row.addedDate ? (
-                            <DateFormatter date={row.addedDate} useLocale year="numeric" month="short" day="numeric" />
-                          ) : (
-                            <span className="text-sm text-gray-900">—</span>
-                          )
-                        ),
-                      },
-                    ]}
-                    data={paginatedSegments}
-                    totalItems={segments.length}
-                    currentPage={segmentPage}
-                    pageSize={pageSize}
-                    onPageChange={setSegmentPage}
-                    style={{
-                      headerBackground: color.surface.tableHeader,
-                      headerTextColor: color.surface.tableHeaderText,
-                      rowBackground: color.surface.tablebodybg,
-                      rowSpacing: "0 8px",
-                    }}
-                  />
-                </div>
-                <div className="mt-4">
-                  <Pagination
-                    currentPage={segmentPage}
-                    pageSize={pageSize}
-                    totalItems={segments.length}
-                    onPageChange={setSegmentPage}
-                  />
-                </div>
-              </>
-            )}
-          </div>
+        {(activeTab === "segments" || activeTab === "campaigns") && (
+          <CustomerAudiencePanel
+            view={activeTab}
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
         {activeTab === "offers" && (
@@ -1774,213 +1340,18 @@ export default function CustomerDetailPage() {
           </div>
         )}
 
-        {activeTab === "quicklists" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                QuickLists
-              </h3>
-              <p className="text-sm text-gray-500">
-                View all QuickLists this customer is included in
-              </p>
-            </div>
-            {quicklists.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No QuickLists found</p>
-              </div>
-            ) : (
-              <>
-                <div className={`${tw.rounded} overflow-hidden`}>
-                  <Table<any>
-                    columns={[
-                      {
-                        id: "name",
-                        label: "QuickList Name",
-                        visible: true,
-                                        },
-                      {
-                        id: "recordCount",
-                        label: "Total Members",
-                        visible: true,
-                        },
-                      {
-                        id: "createdDate",
-                        label: "Created Date",
-                        visible: true,
-                        render: (_, row) => (
-                          row.createdDate ? (
-                            <DateFormatter date={row.createdDate} useLocale year="numeric" month="short" day="numeric" />
-                          ) : (
-                            <span className="text-sm text-gray-900">—</span>
-                          )
-                        ),
-                      },
-                      {
-                        id: "status",
-                        label: "Status",
-                        visible: true,
-                        },
-                    ]}
-                    data={paginatedQuicklists}
-                    totalItems={quicklists.length}
-                    currentPage={quicklistPage}
-                    pageSize={pageSize}
-                    onPageChange={setQuicklistPage}
-                    style={{
-                      headerBackground: color.surface.tableHeader,
-                      headerTextColor: color.surface.tableHeaderText,
-                      rowBackground: color.surface.tablebodybg,
-                      rowSpacing: "0 8px",
-                    }}
-                  />
-                </div>
-                {paginatedQuicklists.length > 0 && quicklists.length > 0 && (
-                  <div className="mt-4">
-                    <Pagination
-                      currentPage={quicklistPage}
-                      pageSize={pageSize}
-                      totalItems={quicklists.length}
-                      onPageChange={setQuicklistPage}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {activeTab === "campaigns" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Campaigns
-              </h3>
-              <p className="text-sm text-gray-500">
-                View all campaigns this customer has participated in
-              </p>
-            </div>
-            {campaigns.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No campaigns found</p>
-              </div>
-            ) : (
-              <>
-                <div className={`${tw.rounded} overflow-hidden`}>
-                  <Table<any>
-                    columns={[
-                      {
-                        id: "name",
-                        label: "Campaign Name",
-                        visible: true,
-                                        },
-                      {
-                        id: "type",
-                        label: "Type",
-                        visible: true,
-                        },
-                      {
-                        id: "participationDate",
-                        label: "Participation Date",
-                        visible: true,
-                        render: (_, row) => (
-                          row.participationDate ? (
-                            <DateFormatter date={row.participationDate} useLocale year="numeric" month="short" day="numeric" />
-                          ) : (
-                            <span className="text-sm text-gray-900">—</span>
-                          )
-                        ),
-                      },
-                      {
-                        id: "status",
-                        label: "Status",
-                        visible: true,
-                        },
-                    ]}
-                    data={campaigns}
-                    totalItems={campaigns.length}
-                    style={{
-                      headerBackground: color.surface.tableHeader,
-                      headerTextColor: color.surface.tableHeaderText,
-                      rowBackground: color.surface.tablebodybg,
-                      rowSpacing: "0 8px",
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
         {activeTab === "subscribedLists" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Subscribed Lists
-              </h3>
-              <p className="text-sm text-gray-500">
-                View all mailing lists and subscriptions for this customer
-              </p>
-            </div>
-
-            {lists.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No subscriptions found</p>
-              </div>
-            ) : (
-              <>
-                {/* Table */}
-                <div className={`${tw.rounded} overflow-hidden`}>
-                  <Table<any>
-                    columns={[
-                      {
-                        id: "name",
-                        label: "List Name",
-                        visible: true,
-                                        },
-                      {
-                        id: "subscribedDate",
-                        label: "Subscribed Date",
-                        visible: true,
-                        render: (_, row) => (
-                          row.subscribedDate ? (
-                            <DateFormatter date={row.subscribedDate} useLocale year="numeric" month="short" day="numeric" />
-                          ) : (
-                            <span className="text-sm text-gray-900">—</span>
-                          )
-                        ),
-                      },
-                      {
-                        id: "status",
-                        label: "Status",
-                        visible: true,
-                        },
-                    ]}
-                    data={paginatedLists}
-                    totalItems={lists.length}
-                    currentPage={listPage}
-                    pageSize={pageSize}
-                    onPageChange={setListPage}
-                    style={{
-                      headerBackground: color.surface.tableHeader,
-                      headerTextColor: color.surface.tableHeaderText,
-                      rowBackground: color.surface.tablebodybg,
-                      rowSpacing: "0 8px",
-                    }}
-                  />
-                </div>
-                {paginatedLists.length > 0 && lists.length > 0 && (
-                  <div className="mt-4">
-                    <Pagination
-                      currentPage={listPage}
-                      pageSize={pageSize}
-                      totalItems={lists.length}
-                      onPageChange={setListPage}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <CustomerSubscribedListsTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
         {/* Communications Tab */}
