@@ -15,6 +15,11 @@ export interface SelectOfferRewardTrackingSourcesModalProps {
   sources: OfferTrackingSource[];
   onClose: () => void;
   onConfirm: (sourceIds: string[]) => void;
+  title?: string;
+  description?: string;
+  emptyDescription?: string;
+  /** Overlay stacking; raise above a parent modal (e.g. campaign configure). */
+  overlayZIndex?: number;
 }
 
 function trackingTypeLabel(type: string | undefined): string {
@@ -36,6 +41,10 @@ export default function SelectOfferRewardTrackingSourcesModal({
   sources,
   onClose,
   onConfirm,
+  title = "Select Tracking Sources for Rewards",
+  description = "Choose offer tracking sources to bind rewards to. Each source can only have one reward.",
+  emptyDescription = "No unused tracking sources on this offer. Add sources in the Tracking step, or remove an existing reward to free a source.",
+  overlayZIndex,
 }: SelectOfferRewardTrackingSourcesModalProps) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -101,10 +110,12 @@ export default function SelectOfferRewardTrackingSourcesModal({
     setPendingIds([]);
   };
 
+  const layer = overlayZIndex ?? zIndex.modal - 1;
+
   return createPortal(
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{ zIndex: zIndex.modal - 1 }}
+      style={{ zIndex: layer }}
     >
       <div
         className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
@@ -112,11 +123,10 @@ export default function SelectOfferRewardTrackingSourcesModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              Select Tracking Sources for Rewards
+              {title}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Choose offer tracking sources to bind rewards to. Each source can
-              only have one reward.
+              {description}
             </p>
           </div>
           <button
@@ -144,7 +154,7 @@ export default function SelectOfferRewardTrackingSourcesModal({
                   value={typeFilter}
                   onChange={(value) => setTypeFilter(String(value))}
                   placeholder="Filter by type"
-                  zIndex={zIndex.popover}
+                  zIndex={layer + 50}
                 />
               </div>
             </div>
@@ -186,9 +196,7 @@ export default function SelectOfferRewardTrackingSourcesModal({
                 <>
                   <Gift className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500 text-sm max-w-md mx-auto">
-                    No unused tracking sources on this offer. Add sources in the
-                    Tracking step, or remove an existing reward to free a
-                    source.
+                    {emptyDescription}
                   </p>
                 </>
               ) : (

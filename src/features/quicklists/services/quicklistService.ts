@@ -15,6 +15,8 @@ import {
   CreateQuickListResponseUnion,
   UpdateQuickListResponseUnion,
   DeleteQuickListResponseUnion,
+  QuickListWithDetails,
+  PaginationMeta,
 } from "../types/quicklist";
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/quicklists`;
@@ -405,30 +407,79 @@ class QuickListService {
     return data;
   }
 
+  async listAllQuickLists(options?: {
+    pageSize?: number;
+    maxLists?: number;
+    isAborted?: () => boolean;
+  }): Promise<QuickListWithDetails[]> {
+    const pageSize = options?.pageSize ?? 100;
+    const maxLists = options?.maxLists ?? 2000;
+    const all: QuickListWithDetails[] = [];
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      if (options?.isAborted?.()) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      const response = await this.getAllQuickLists({
+        limit: pageSize,
+        offset,
+        skipCache: true,
+      });
+      if (!response.success || !response.data) {
+        break;
+      }
+      all.push(...response.data);
+      if (all.length >= maxLists) {
+        break;
+      }
+      if (response.pagination?.hasMore) {
+        offset += pageSize;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    return all.slice(0, maxLists);
+  }
+
   async getMembers(
     quicklistId: number,
     params?: {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
+      identifier?: string;
+      identifier_type?: "msisdn" | "email" | "id";
+      q?: string;
+      status?: string;
     },
   ): Promise<{
     success: boolean;
     data: Array<{
       id: number;
       identifier: string;
-      identifier_type: "msisdn" | "email";
+      identifier_type: "msisdn" | "email" | "id" | string;
       status: string;
       added_at: string;
+      [key: string]: unknown;
     }>;
     total: number;
     limit: number;
     offset: number;
+    pagination?: PaginationMeta;
   }> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", String(params.limit));
     if (params?.offset) queryParams.append("offset", String(params.offset));
     if (params?.skipCache) queryParams.append("skipCache", String(params.skipCache));
+    if (params?.identifier) queryParams.append("identifier", params.identifier);
+    if (params?.identifier_type) {
+      queryParams.append("identifier_type", params.identifier_type);
+    }
+    if (params?.q) queryParams.append("q", params.q);
+    if (params?.status) queryParams.append("status", params.status);
 
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     return this.request(

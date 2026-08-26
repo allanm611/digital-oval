@@ -485,12 +485,19 @@ class SegmentService {
   async getSegments(
     filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
+    const limit = filters?.limit ?? filters?.pageSize;
+    const offset =
+      filters?.offset ??
+      (typeof filters?.page === "number" && filters.page > 0
+        ? (filters.page - 1) * (limit || 10)
+        : undefined);
+
     const queryString = this.buildQueryParams({
       search: filters?.search,
       categoryId: filters?.categoryId,
       type: filters?.type,
-      page: filters?.page,
-      limit: filters?.pageSize,
+      limit,
+      offset,
       sortBy: filters?.sortBy,
       sortDirection: filters?.sortDirection,
       skipCache: filters?.skipCache,
