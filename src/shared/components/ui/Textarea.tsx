@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useId, useState } from 'react';
 import { tw } from '../../utils/utils';
 
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -30,6 +30,8 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
   ...rest
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
+  const generatedId = useId();
+  const textareaId = rest.id ?? generatedId;
 
   let paddingClass = 'px-3 py-2'; // default (medium)
   if (variant === 'default') paddingClass = 'px-4 py-2';
@@ -73,6 +75,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
     <div className="relative w-full">
       <textarea
         ref={ref}
+        id={textareaId}
         placeholder=""
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -84,12 +87,14 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(({
           ${className}`}
         style={bgStyle}
         {...rest}
+        id={textareaId}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />
 
-      {/* Floating Label */}
+      {/* Floating Label — htmlFor links a11y name so Playwright getByLabel / role name work */}
       <label
+        htmlFor={textareaId}
         className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
             ? 'top-0 -translate-y-1/2 px-1 text-xs'

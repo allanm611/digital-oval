@@ -67,7 +67,7 @@ export function useDeleteUiFlowTestCase() {
   });
 }
 
-/** "Try now" — launches a real headless browser and runs the flow (saved or draft) immediately. */
+/** "Try now" — enqueues a browser run and polls until screenshots/results are ready. */
 export function useTryUiFlowTestCase() {
   return useMutation<UiFlowTestCaseResult, unknown, Partial<UiFlowTestCasePayload> & { id?: string }>({
     mutationFn: (payload) => healthApi.tryUiFlowTestCase(payload),
