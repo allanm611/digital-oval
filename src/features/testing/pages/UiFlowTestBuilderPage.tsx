@@ -103,7 +103,7 @@ export default function UiFlowTestBuilderPage() {
             <h1 className="text-2xl font-bold text-gray-900">UI Flow Test Builder</h1>
             <p className="text-sm text-gray-500 mt-1">
               Compose real browser flows (goto/click/fill/assert) without writing Playwright
-              code — flows run through one shared dynamic runner.
+              code.
             </p>
           </div>
         </div>

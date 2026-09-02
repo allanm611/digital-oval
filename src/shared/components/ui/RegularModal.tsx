@@ -12,6 +12,8 @@ interface RegularModalProps {
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
   showCloseButton?: boolean;
   closeOnOverlayClick?: boolean;
+  /** Override stacking order when this modal opens above another modal. */
+  zIndexValue?: number;
 }
 
 export default function RegularModal({
@@ -22,8 +24,10 @@ export default function RegularModal({
   size = "md",
   showCloseButton = true,
   closeOnOverlayClick = true,
+  zIndexValue,
 }: RegularModalProps) {
   if (!isOpen) return null;
+  const stackZIndex = zIndexValue ?? zIndex.modal;
 
   const sizeClasses = {
     sm: "max-w-sm",
@@ -39,7 +43,7 @@ export default function RegularModal({
       <Dialog
         as="div"
         className="relative"
-        style={{ zIndex: zIndex.modal }}
+        style={{ zIndex: stackZIndex }}
         onClose={closeOnOverlayClick ? onClose : () => {}}
       >
         <Transition.Child
@@ -53,12 +57,12 @@ export default function RegularModal({
         >
           <div
             className="fixed inset-0 bg-black bg-opacity-50"
-            style={{ zIndex: zIndex.modal }}
+            style={{ zIndex: stackZIndex }}
             aria-hidden="true"
           />
         </Transition.Child>
 
-        <div className="fixed inset-0" style={{ zIndex: zIndex.modal }}>
+        <div className="fixed inset-0" style={{ zIndex: stackZIndex }}>
           <div className="flex min-h-full items-center justify-center p-4 overflow-y-auto">
             <Transition.Child
               as={Fragment}
@@ -72,7 +76,7 @@ export default function RegularModal({
               <Dialog.Panel
                 className={`relative transform overflow-hidden flex flex-col ${tw.rounded} ${tw.surfaceBackground} ${tw.textPrimary} text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
                 style={{
-                  zIndex: zIndex.modal + 1,
+                  zIndex: stackZIndex + 1,
                   maxHeight: "calc(100vh - 2rem)",
                 }}
               >

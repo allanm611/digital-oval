@@ -30,6 +30,54 @@ export type EventTimePreset =
   | "all"
   | "custom";
 
+export interface CustomerEventOfferSummary {
+  id: number | null;
+  name: string;
+  code: string;
+  type: string;
+  status: string;
+  description: string;
+}
+
+export interface CustomerEventCampaignSummary {
+  id: number | null;
+  name: string;
+  code: string;
+  status: string;
+  type: string;
+}
+
+export interface CustomerEventCreativeSummary {
+  id: number | null;
+  name: string;
+  channel: string;
+  title: string;
+  locale: string;
+  text_body: string;
+  html_body: string;
+}
+
+export interface CustomerEventMessageSummary {
+  subject: string;
+  content: string;
+  direction: "inbound" | "outbound" | null;
+  received_at: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+}
+
+/** Commercial fields when the event payload includes a real transaction. */
+export interface CustomerEventPurchaseContext {
+  transaction_id: string | null;
+  product_id: number | null;
+  product_name: string;
+  product_code: string;
+  amount: number | null;
+  currency: string | null;
+  quantity: number | null;
+  payment_method: string | null;
+}
+
 export interface CustomerEvent {
   id: string;
   event_type: string;
@@ -41,6 +89,11 @@ export interface CustomerEvent {
   origin: CustomerEventOrigin;
   status: string;
   occurred_at: string;
+  offer: CustomerEventOfferSummary | null;
+  campaign: CustomerEventCampaignSummary | null;
+  creative: CustomerEventCreativeSummary | null;
+  message: CustomerEventMessageSummary | null;
+  purchase: CustomerEventPurchaseContext | null;
 }
 
 export interface CustomerEventCountBucket {
@@ -70,6 +123,7 @@ export interface CustomerEventFacets {
 export interface CustomerEventQuery {
   search?: string;
   event_type?: string;
+  event_types?: string[];
   tracking_source_id?: string;
   origin?: CustomerEventOrigin | "all";
   status?: string;

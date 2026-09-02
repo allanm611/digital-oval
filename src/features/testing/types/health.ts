@@ -326,6 +326,43 @@ export interface TestCatalogNode {
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD';
 
+export type ApiBodyMode = 'none' | 'form-data' | 'urlencoded' | 'raw' | 'binary' | 'graphql';
+export type ApiRawLanguage = 'json' | 'text' | 'xml' | 'html';
+export type ApiAuthType = 'none' | 'bearer' | 'basic' | 'apikey';
+
+export interface ApiKeyValueRow {
+  key: string;
+  value: string;
+  description?: string;
+  enabled?: boolean;
+}
+
+export interface ApiAuthConfig {
+  type: ApiAuthType;
+  bearerToken?: string;
+  username?: string;
+  password?: string;
+  apiKey?: string;
+  apiValue?: string;
+  apiKeyIn?: 'header' | 'query';
+}
+
+export interface ApiBodyConfig {
+  mode: ApiBodyMode;
+  rawLanguage?: ApiRawLanguage;
+  raw?: string;
+  graphqlQuery?: string;
+  graphqlVariables?: string;
+  formRows?: ApiKeyValueRow[];
+}
+
+export interface ApiRequestEditor {
+  queryRows?: ApiKeyValueRow[];
+  headerRows?: ApiKeyValueRow[];
+  auth?: ApiAuthConfig;
+  body?: ApiBodyConfig;
+}
+
 export type ApiAssertionType = 'status' | 'jsonPath' | 'header' | 'bodyContains' | 'responseTimeMs';
 
 export type ApiAssertionOperator =
@@ -354,6 +391,7 @@ export interface ApiTestCase {
   headers?: Record<string, string>;
   queryParams?: Record<string, string>;
   body?: unknown;
+  editor?: ApiRequestEditor;
   expectedStatus: number[];
   assertions: ApiAssertion[];
   timeoutMs: number;
@@ -384,6 +422,8 @@ export interface ApiTestCaseResult {
   ok: boolean;
   assertionResults: ApiAssertionResult[];
   responseBodyPreview?: string;
+  /** Present on current try-runners; older backends may omit this. */
+  responseHeaders?: Record<string, string>;
   error?: string;
 }
 
@@ -472,7 +512,9 @@ export interface UiFlowStepResult {
   skipped: boolean;
   message: string;
   durationMs: number;
+  /** Prefer screenshotUrl (async Try). Base64 only for sync / includeScreenshots. */
   screenshotBase64?: string;
+  screenshotUrl?: string;
 }
 
 export interface UiFlowTestCaseResult {
@@ -482,4 +524,20 @@ export interface UiFlowTestCaseResult {
   durationMs: number;
   steps: UiFlowStepResult[];
   error?: string;
+}
+
+export type UiFlowTryRunStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'error';
+
+export interface UiFlowTryRunView {
+  runId: string;
+  status: UiFlowTryRunStatus;
+  caseId?: string | null;
+  name: string;
+  ok?: boolean | null;
+  durationMs?: number | null;
+  error?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  createdAt?: string;
+  result?: UiFlowTestCaseResult;
 }

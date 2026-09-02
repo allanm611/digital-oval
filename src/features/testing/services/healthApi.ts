@@ -25,6 +25,7 @@ import type {
   UiFlowTestCase,
   UiFlowTestCasePayload,
   UiFlowTestCaseResult,
+  UiFlowTryRunView,
 } from '../types/health';
 
 const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.HEALTH);
@@ -367,7 +368,7 @@ class HealthApiService {
     });
   }
 
-  /** Executes a case immediately without saving — pass an `id` to try a saved case, or a full draft payload. */
+  /** Executes a draft immediately without saving. If `id` is set, draft fields overlay the saved case. */
   async tryApiTestCase(payload: Partial<ApiTestCasePayload> & { id?: string }): Promise<ApiTestCaseResult> {
     return this.request<ApiTestCaseResult>('/v1/api-tests/try', {
       method: 'POST',
@@ -412,14 +413,75 @@ class HealthApiService {
     });
   }
 
-  /** Executes a flow immediately without saving — pass an `id` to try a saved case, or a full draft payload. */
+  /**
+   * Executes a flow via async Try (202 + poll) so Vercel proxies don't time out.
+   * Pass `async: false` (or use sync query) only for short local debugging.
+   */
   async tryUiFlowTestCase(
-    payload: Partial<UiFlowTestCasePayload> & { id?: string },
+    payload: Partial<UiFlowTestCasePayload> & { id?: string; async?: boolean },
   ): Promise<UiFlowTestCaseResult> {
-    return this.request<UiFlowTestCaseResult>('/v1/ui-tests/try', {
+    const useSync = payload.async === false;
+    const { async: _asyncFlag, ...body } = payload;
+
+    if (useSync) {
+      return this.request<UiFlowTestCaseResult>('/v1/ui-tests/try?sync=1', {
+        method: 'POST',
+        body: JSON.stringify({ ...body, async: false }),
+      });
+    }
+
+    const enqueued = await this.request<UiFlowTryRunView>('/v1/ui-tests/try', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
+
+    // Backward compatible: older backends may still return the full result synchronously.
+    if ('ok' in enqueued && Array.isArray((enqueued as unknown as UiFlowTestCaseResult).steps)) {
+      return enqueued as unknown as UiFlowTestCaseResult;
+    }
+
+    if (!enqueued.runId) {
+      throw new HealthApiError('Try enqueue did not return a runId', 500);
+    }
+
+    return this.pollUiFlowTryRun(enqueued.runId);
+  }
+
+  async getUiFlowTryRun(runId: string): Promise<UiFlowTryRunView> {
+    return this.request<UiFlowTryRunView>(
+      `/v1/ui-tests/try/runs/${encodeURIComponent(runId)}`,
+    );
+  }
+
+  private async pollUiFlowTryRun(
+    runId: string,
+    options: { intervalMs?: number; timeoutMs?: number } = {},
+  ): Promise<UiFlowTestCaseResult> {
+    const intervalMs = options.intervalMs ?? 1500;
+    const timeoutMs = options.timeoutMs ?? 10 * 60 * 1000;
+    const started = Date.now();
+
+    while (Date.now() - started < timeoutMs) {
+      const view = await this.getUiFlowTryRun(runId);
+      if (view.status === 'succeeded' || view.status === 'failed' || view.status === 'error') {
+        if (view.result) return view.result;
+        return {
+          caseId: view.caseId ?? undefined,
+          name: view.name,
+          ok: Boolean(view.ok),
+          durationMs: view.durationMs ?? 0,
+          steps: [],
+          error: view.error ?? (view.status === 'error' ? 'Try run failed' : undefined),
+        };
+      }
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    }
+
+    throw new HealthApiError(
+      `Try run ${runId} timed out waiting for completion after ${timeoutMs}ms`,
+      408,
+      { code: 'UI_FLOW_TRY_POLL_TIMEOUT' },
+    );
   }
 
   // ===================================

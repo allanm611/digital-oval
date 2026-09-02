@@ -1,6 +1,10 @@
 /**
  * Global fetch interceptor for handling auth errors
- * Wraps the native fetch to catch 401/403 responses and logout user
+ * Wraps the native fetch to catch 401 responses and logout user.
+ *
+ * IMPORTANT: Do NOT logout on 403. Forbidden means "authenticated but not allowed"
+ * for that resource — Create Campaign and similar pages fire many optional config
+ * APIs; a single 403 must not wipe the whole session and bounce the user to /login.
  */
 
 let authLogoutCallback: (() => void) | null = null;
@@ -13,7 +17,7 @@ export function registerAuthLogoutCallback(callback: () => void) {
 }
 
 /**
- * Wraps fetch to intercept auth errors (401/403)
+ * Wraps fetch to intercept auth errors (401 Unauthorized only)
  */
 export async function fetchWithAuthInterceptor(
   url: string,
@@ -21,21 +25,18 @@ export async function fetchWithAuthInterceptor(
 ): Promise<Response> {
   const response = await fetch(url, options);
 
-  // Check if response is 401 or 403 (auth failure)
-  if (response.status === 401 || response.status === 403) {
-    // Clear auth data from localStorage
+  // 401 = session invalid/expired. 403 = permission denied for this call — keep session.
+  if (response.status === 401) {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("authToken");
     localStorage.removeItem("auth_user");
     localStorage.removeItem("auth_permissions");
     localStorage.removeItem("session_id");
 
-    // Call logout callback if registered
     if (authLogoutCallback) {
       authLogoutCallback();
     } else {
-      // Fallback: reload page to show login
-      console.warn("Auth failed (401/403) but no logout callback registered");
+      console.warn("Auth failed (401) but no logout callback registered");
       window.location.href = "/login";
     }
   }

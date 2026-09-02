@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useId, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { tw } from '../../utils/utils';
 
@@ -39,6 +39,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const generatedId = useId();
+  const inputId = rest.id ?? generatedId;
 
   const isPasswordType = type === 'password';
   const shouldShowToggle = isPasswordType && showPasswordToggle !== false;
@@ -155,6 +157,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     <div className="relative w-full">
       <input
         ref={ref}
+        id={inputId}
         placeholder={shouldFloatLabel ? placeholder : " "}
         value={value}
         onChange={(e) => {
@@ -173,6 +176,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           ...transparentStyle,
         }}
         {...rest}
+        id={inputId}
         type={inputType}
         onFocus={(e) => {
           handleFocus(e);
@@ -184,8 +188,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         onBlur={handleBlur}
       />
 
-      {/* Floating Label */}
+      {/* Floating Label — htmlFor links a11y name so Playwright getByLabel / role name work */}
       <label
+        htmlFor={inputId}
         className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
             ? 'top-0 -translate-y-1/2 px-1 text-xs'

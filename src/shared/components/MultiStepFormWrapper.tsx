@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef } from "react";
 import BackButton from "./ui/BackButton";
 import ProgressStepper, { Step } from "./ui/ProgressStepper";
+import WizardActionButton from "./ui/WizardActionButton";
 import { color, tw } from "../utils/utils";
 
 interface MultiStepFormWrapperProps {
@@ -37,9 +38,6 @@ interface MultiStepFormWrapperProps {
   // Custom loading state messages for different steps
   loadingMessage?: string;
 }
-
-const outlineButtonClass = `inline-flex shrink-0 items-center justify-center px-4 py-2 text-sm font-medium whitespace-nowrap ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed dark:text-white dark:border-white`;
-const primaryButtonClass = `inline-flex shrink-0 items-center justify-center px-4 py-2 text-sm font-medium whitespace-nowrap ${tw.rounded} transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`;
 
 function scrollWizardIntoView(toolbar: HTMLElement | null) {
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -129,80 +127,44 @@ export default function MultiStepFormWrapper({
               aria-label="Wizard actions"
             >
               {showCancelButton && (
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  className={outlineButtonClass}
-                  style={{
-                    background: "transparent",
-                    color: "var(--c-bordered-button-color)",
-                    border: `1px solid var(--c-bordered-button-color)`,
-                  }}
-                >
+                <WizardActionButton onClick={onCancel}>
                   Cancel
-                </button>
+                </WizardActionButton>
               )}
 
               {!isFirstStep && (
-                <button
-                  type="button"
+                <WizardActionButton
+                  nav
                   onClick={handlePrev}
                   disabled={isLoading}
-                  className={outlineButtonClass}
-                  style={{
-                    background: "transparent",
-                    color: "var(--c-bordered-button-color)",
-                    border: `1px solid var(--c-bordered-button-color)`,
-                  }}
                 >
                   Previous
-                </button>
+                </WizardActionButton>
               )}
 
-              <button
-                type="button"
+              <WizardActionButton
+                variant="primary"
+                nav
                 onClick={handlePrimaryAction}
                 disabled={isLoading}
-                className={primaryButtonClass}
-                style={{ backgroundColor: color.primary.action, color: "white" }}
+                loading={isLoading}
+                loadingLabel={
+                  loadingMessage ||
+                  (isLastStep ? "Submitting..." : "Loading...")
+                }
               >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {loadingMessage ||
-                      (isLastStep ? "Submitting..." : "Loading...")}
-                  </>
-                ) : isLastStep ? (
-                  submitButtonText
-                ) : (
-                  nextButtonText
-                )}
-              </button>
+                {isLastStep ? submitButtonText : nextButtonText}
+              </WizardActionButton>
 
               {showSaveDraftButton && (
-                <button
-                  type="button"
+                <WizardActionButton
                   onClick={onSaveDraft}
                   disabled={isSavingDraft || isLoading}
-                  className={outlineButtonClass}
-                  style={{
-                    background: "transparent",
-                    color: "var(--c-bordered-button-color)",
-                    border: `1px solid var(--c-bordered-button-color)`,
-                  }}
+                  loading={isSavingDraft}
+                  loadingLabel="Saving..."
                 >
-                  {isSavingDraft ? (
-                    <>
-                      <div
-                        className="animate-spin rounded-full h-4 w-4 border-b-2 mr-2"
-                        style={{ borderColor: "var(--c-bordered-button-color)" }}
-                      ></div>
-                      Saving...
-                    </>
-                  ) : (
-                    saveDraftText
-                  )}
-                </button>
+                  {saveDraftText}
+                </WizardActionButton>
               )}
             </div>
           </div>

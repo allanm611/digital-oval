@@ -1,16 +1,8 @@
 import React from 'react';
 import { Loader2, Pencil, Trash2, Globe, PlayCircle } from 'lucide-react';
 import { tw } from '../../../shared/utils/utils';
+import { METHOD_BADGE_CLASS } from '../constants/httpStatusCodes';
 import type { ApiTestCase } from '../types/health';
-
-const METHOD_COLOR: Record<string, string> = {
-  GET: 'bg-blue-50 text-blue-700 border-blue-200',
-  POST: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  PUT: 'bg-amber-50 text-amber-700 border-amber-200',
-  PATCH: 'bg-orange-50 text-orange-700 border-orange-200',
-  DELETE: 'bg-rose-50 text-rose-700 border-rose-200',
-  HEAD: 'bg-gray-50 text-gray-700 border-gray-200',
-};
 
 interface ApiTestCaseListProps {
   cases: ApiTestCase[];
@@ -58,7 +50,7 @@ const ApiTestCaseList: React.FC<ApiTestCaseListProps> = ({
             <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
             <th className="text-left px-4 py-3 font-medium text-gray-600">Request</th>
             <th className="text-left px-4 py-3 font-medium text-gray-600">Module</th>
-            <th className="text-left px-4 py-3 font-medium text-gray-600">Assertions</th>
+            <th className="text-left px-4 py-3 font-medium text-gray-600">Expected</th>
             <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
             <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
           </tr>
@@ -82,7 +74,7 @@ const ApiTestCaseList: React.FC<ApiTestCaseListProps> = ({
                 <div className="flex items-center gap-2">
                   <span
                     className={`inline-flex items-center text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded border ${
-                      METHOD_COLOR[testCase.method] ?? METHOD_COLOR.GET
+                      METHOD_BADGE_CLASS[testCase.method] ?? METHOD_BADGE_CLASS.GET
                     }`}
                   >
                     {testCase.method}
@@ -98,7 +90,12 @@ const ApiTestCaseList: React.FC<ApiTestCaseListProps> = ({
                 )}
               </td>
               <td className="px-4 py-3 text-xs text-gray-600">
-                {testCase.assertions.length} assertion{testCase.assertions.length === 1 ? '' : 's'}
+                <div className="font-mono text-[11px] text-gray-700">
+                  {(testCase.expectedStatus ?? []).join(', ') || '—'}
+                </div>
+                <div className="text-[11px] text-gray-400">
+                  {testCase.assertions.length} assertion{testCase.assertions.length === 1 ? '' : 's'}
+                </div>
               </td>
               <td className="px-4 py-3 text-center">
                 <button

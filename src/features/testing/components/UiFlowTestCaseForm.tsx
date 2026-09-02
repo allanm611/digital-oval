@@ -9,9 +9,11 @@ import ImageLightbox from '../../../shared/components/ui/ImageLightbox';
 import { useToast } from '../../../contexts/ToastContext';
 import { tw, button, getButtonStyles } from '../../../shared/utils/utils';
 import { useCreateUiFlowTestCase, useTryUiFlowTestCase, useUpdateUiFlowTestCase } from '../hooks/useUiFlowTestCases';
+import { resolvePlaywrightHealthUrl } from '../services/healthApi';
 import AttachModuleField from './AttachModuleField';
 import type {
   UiFlowStep,
+  UiFlowStepResult,
   UiFlowTestCase,
   UiFlowTestCasePayload,
   UiFlowTestCaseResult,
@@ -155,9 +157,10 @@ const StepEditor: React.FC<{
                   onChange={(value) => update(index, { locator: String(value) })}
                 />
                 <p className="text-xs text-gray-400">
-                  Pick one format: role=&lt;role&gt;[name=&quot;...&quot;] · label=&lt;text&gt; · placeholder=&lt;text&gt; ·
-                  text=&lt;text&gt; · testid=&lt;id&gt; · alt=&lt;text&gt; · title=&lt;text&gt; · css=&lt;selector&gt;.
-                  Don&apos;t combine several of these with commas — that&apos;s not a valid locator.
+                  Pick one format: role=&lt;role&gt;[name=&quot;...&quot;] · label=&lt;text&gt; · label=/Campaign Name/i ·
+                  placeholder=&lt;text&gt; · text=&lt;text&gt; · testid=&lt;id&gt; · css=&lt;selector&gt;.
+                  Prefer label= or role=textbox[name=...] for named inputs; use placeholder= if a floating label is not
+                  associated. Don&apos;t paste several formats joined by commas.
                 </p>
               </>
             )}
@@ -198,14 +201,24 @@ const StepEditor: React.FC<{
   );
 };
 
+function stepScreenshotSrc(step: UiFlowStepResult): string | undefined {
+  if (step.screenshotBase64) {
+    return `data:image/jpeg;base64,${step.screenshotBase64}`;
+  }
+  if (step.screenshotUrl) {
+    return resolvePlaywrightHealthUrl(step.screenshotUrl);
+  }
+  return undefined;
+}
+
 const TryResultPanel: React.FC<{
   result: UiFlowTestCaseResult;
   onScreenshotClick: (screenshotIndex: number) => void;
 }> = ({ result, onScreenshotClick }) => {
-  // Maps each step's own index to its position within the ordered list of steps that actually
-  // have a screenshot, so the lightbox can navigate across just those (skipping steps without one).
   const shotPositionByStepIndex = new Map(
-    result.steps.filter((s) => s.screenshotBase64).map((s, position) => [s.index, position]),
+    result.steps
+      .filter((s) => stepScreenshotSrc(s))
+      .map((s, position) => [s.index, position]),
   );
 
   return (
@@ -256,7 +269,7 @@ const TryResultPanel: React.FC<{
               {stepResult.step.locator ? ` · ${stepResult.step.locator}` : ''}
               {' — '}{stepResult.message}
             </span>
-            {stepResult.screenshotBase64 && (
+            {stepScreenshotSrc(stepResult) && (
               <button
                 type="button"
                 onClick={() => onScreenshotClick(shotPositionByStepIndex.get(stepResult.index) ?? 0)}
@@ -265,7 +278,7 @@ const TryResultPanel: React.FC<{
                 title="Click to view full size"
               >
                 <img
-                  src={`data:image/jpeg;base64,${stepResult.screenshotBase64}`}
+                  src={stepScreenshotSrc(stepResult)}
                   alt={`Screenshot after step ${stepResult.index + 1}`}
                   className="max-h-40 w-auto max-w-full rounded bg-white object-contain"
                 />
@@ -276,9 +289,12 @@ const TryResultPanel: React.FC<{
       ))}
     </ul>
     <p className="text-[11px] text-gray-500">
-      Blank or solid-color screenshots usually mean the page hadn&apos;t finished rendering,
-      or the route requires login (headless browser starts with an empty session). Add login
-      steps first, then assert a visible element before relying on the screenshot.
+      Password values show as <span className="font-medium">[REDACTED]</span> in results only —
+      the browser still types the real password during the run. A login-page screenshot mid-flow
+      means the session was cleared or Create never opened — use Start URL{" "}
+      <code className="text-[10px]">/dashboard/campaigns/create</code>, Assert URL{" "}
+      <code className="text-[10px]">/campaigns/create</code>, then Fill. Avoid Assert{" "}
+      <code className="text-[10px]">text=Campaign Name</code> (list table header false positive).
     </p>
   </div>
   );
@@ -299,7 +315,7 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
   const [startUrl, setStartUrl] = useState(initialCase?.startUrl ?? '');
   const [moduleId, setModuleId] = useState(initialCase?.moduleId ?? '');
   const [steps, setSteps] = useState<UiFlowStep[]>(initialCase?.steps ?? []);
-  const [timeoutMs, setTimeoutMs] = useState(initialCase?.timeoutMs ?? 30000);
+  const [timeoutMs, setTimeoutMs] = useState(initialCase?.timeoutMs ?? 15000);
   const [active, setActive] = useState(initialCase?.active ?? true);
   const [useStoredAuth, setUseStoredAuth] = useState(initialCase?.useStoredAuth ?? true);
   const [tryResult, setTryResult] = useState<UiFlowTestCaseResult | null>(null);
@@ -307,11 +323,15 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const lightboxImages = (tryResult?.steps ?? [])
-    .filter((stepResult) => stepResult.screenshotBase64)
-    .map((stepResult) => ({
-      src: `data:image/jpeg;base64,${stepResult.screenshotBase64}`,
-      alt: `Screenshot after step ${stepResult.index + 1}`,
-    }));
+    .map((stepResult) => {
+      const src = stepScreenshotSrc(stepResult);
+      if (!src) return null;
+      return {
+        src,
+        alt: `Screenshot after step ${stepResult.index + 1}`,
+      };
+    })
+    .filter((item): item is { src: string; alt: string } => Boolean(item));
 
   useEffect(() => {
     setTryResult(null);
@@ -424,8 +444,11 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
           label="Timeout per step (ms)"
           type="number"
           value={timeoutMs}
-          onChange={(v) => setTimeoutMs(Number(v) || 30000)}
+          onChange={(v) => setTimeoutMs(Number(v) || 15000)}
         />
+        <p className="text-xs text-gray-500 -mt-2">
+          Prefer 10–15s for Try/smoke flows. Use higher values only for scheduled suite runs.
+        </p>
 
         <div
           className="inline-flex items-start gap-2 cursor-pointer"
@@ -450,8 +473,8 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
           <div>
             <span className="text-sm font-medium text-gray-800">Use saved login session</span>
             <p className="text-xs text-gray-500">
-              Reuses Playwright storageState from auth setup (TEST_EMAIL / TEST_PASSWORD).
-              Turn off only when this flow should start logged-out and include its own login steps.
+              Reuses the server-stored login for this start URL&apos;s origin
+              .Turn off only when this flow should start logged-out and include its own login steps.
             </p>
           </div>
         </div>
@@ -461,11 +484,8 @@ const UiFlowTestCaseForm: React.FC<UiFlowTestCaseFormProps> = ({
         <h2 className="text-lg font-semibold text-gray-900">Steps</h2>
         <p className="text-sm text-gray-500">
           Executed in order after navigating to the start URL. If a step fails, the rest are
-          skipped — mirrors how a real user flow depends on each prior action. With
-          <span className="font-medium"> Use saved login session</span> enabled, protected
-          routes reuse the shared auth session (no login steps needed). After navigations,
-          add <span className="font-medium">Assert visible</span> so the SPA finishes painting
-          before you rely on screenshots.
+          skipped. With <span className="font-medium">Use saved login session</span>, go
+          straight to the page under test. 
         </p>
         <StepEditor steps={steps} onChange={setSteps} />
       </div>

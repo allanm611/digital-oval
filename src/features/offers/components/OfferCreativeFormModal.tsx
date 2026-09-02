@@ -10,6 +10,11 @@ import TypeSelector from "../../../shared/components/TypeSelector";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import CreativePreviewRenderer from "../components/CreativePreviewRenderer";
+import AiGenerateMessageButton from "./AiGenerateMessageButton";
+import AiGenerateMessageModal from "./AiGenerateMessageModal";
+import MessageContentToolbar, {
+  messageContentActionClass,
+} from "./MessageContentToolbar";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -143,6 +148,7 @@ export default function OfferCreativeFormModal({
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   // Data loading
   const [channels, setChannels] = useState<CommunicationChannel[]>([]);
@@ -637,19 +643,12 @@ export default function OfferCreativeFormModal({
 
 
             {/* Message Content Toolbar */}
-            <div
-              className="flex items-center justify-between p-3 rounded-lg"
-              style={{ backgroundColor: color.surface.cards }}
-            >
-              <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                Message Content
-              </span>
-              <div className="flex items-center gap-2">
+            <MessageContentToolbar>
                 {formData.channel !== "Email" && (
                   <button
                     type="button"
                     onClick={() => setIsRichText((prev) => !prev)}
-                    className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                    className={messageContentActionClass}
                     style={{
                       backgroundColor: isRichText ? `${color.primary.accent}10` : "white",
                       borderColor: isRichText ? color.primary.accent : color.border.default,
@@ -659,13 +658,14 @@ export default function OfferCreativeFormModal({
                     {isRichText ? "Rich Text" : "Plain Text"}
                   </button>
                 )}
-                <div className="relative">
+                <div className="relative shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowVariableSelector(!showVariableSelector)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                    className={messageContentActionClass}
                     style={{
                       backgroundColor: color.primary.accent,
+                      borderColor: color.primary.accent,
                       color: "white",
                     }}
                   >
@@ -683,8 +683,11 @@ export default function OfferCreativeFormModal({
                     />
                   </div>
                 </div>
-              </div>
-            </div>
+                <AiGenerateMessageButton
+                  onClick={() => setIsAiModalOpen(true)}
+                  active={isAiModalOpen}
+                />
+            </MessageContentToolbar>
 
             {/* Message Body */}
             <div>
@@ -885,6 +888,30 @@ export default function OfferCreativeFormModal({
         title={formData.title}
         textBody={formData.text_body}
         htmlBody={formData.html_body}
+      />
+
+      <AiGenerateMessageModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        channel={formData.channel}
+        locale={formData.locale || "en"}
+        brandName={formData.title || undefined}
+        existingTitle={formData.title || ""}
+        existingBody={
+          formData.channel === "Email"
+            ? formData.html_body || formData.text_body || ""
+            : formData.text_body || ""
+        }
+        availableVariables={selectedVariables.map(formatVariablePlaceholder)}
+        onApply={({ title, body }) => {
+          const shouldUseHtml = formData.channel === "Email" || isRichText;
+          setFormData((prev) => ({
+            ...prev,
+            text_body: body,
+            ...(shouldUseHtml ? { html_body: body } : {}),
+            ...(title ? { title } : {}),
+          }));
+        }}
       />
     </>
   );

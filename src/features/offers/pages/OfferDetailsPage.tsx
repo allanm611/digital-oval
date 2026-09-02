@@ -44,6 +44,11 @@ const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
 );
 import OfferCreativeFormModal from "../components/OfferCreativeFormModal";
+import AiGenerateMessageButton from "../components/AiGenerateMessageButton";
+import AiGenerateMessageModal from "../components/AiGenerateMessageModal";
+import MessageContentToolbar, {
+  messageContentActionClass,
+} from "../components/MessageContentToolbar";
 import { Offer, OfferStatusEnum, OfferProductLink } from "../types/offer";
 import { OfferCategoryType } from "../types/offerCategory";
 import { offerService } from "../services/offerService";
@@ -71,7 +76,7 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
@@ -348,6 +353,7 @@ export default function OfferDetailsPage() {
   const titleInputRefAdd = useRef<HTMLInputElement>(null);
   const bodyTextareaRefAdd = useRef<HTMLTextAreaElement>(null);
   const [isRichTextAdd, setIsRichTextAdd] = useState(false);
+  const [isAiModalOpenAdd, setIsAiModalOpenAdd] = useState(false);
   const [newCreativeVariables, setNewCreativeVariables] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
     null,
@@ -3009,14 +3015,7 @@ export default function OfferDetailsPage() {
               )}
 
               {/* Message content toolbar */}
-              <div
-                className="flex items-center justify-between p-3 rounded-lg"
-                style={{ backgroundColor: color.surface.cards }}
-              >
-                <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                  Message Content
-                </span>
-                <div className="flex items-center gap-2">
+              <MessageContentToolbar>
                   {(newCreativeForm.channel === "Email" ||
                     newCreativeForm.channel === "SMS" ||
                     newCreativeForm.channel === "Push" ||
@@ -3024,7 +3023,7 @@ export default function OfferDetailsPage() {
                     <button
                       type="button"
                       onClick={() => setIsRichTextAdd((prev) => !prev)}
-                      className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                      className={messageContentActionClass}
                       style={{
                         backgroundColor: isRichTextAdd
                           ? `${color.primary.accent}10`
@@ -3040,15 +3039,16 @@ export default function OfferDetailsPage() {
                       {isRichTextAdd ? "Rich Text" : "Plain Text"}
                     </button>
                   )}
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <button
                       type="button"
                       onClick={() =>
                         setShowVariableSelectorAdd(!showVariableSelectorAdd)
                       }
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                      className={messageContentActionClass}
                       style={{
                         backgroundColor: color.primary.accent,
+                        borderColor: color.primary.accent,
                         color: "white",
                       }}
                     >
@@ -3065,8 +3065,11 @@ export default function OfferDetailsPage() {
                       />
                     </div>
                   </div>
-                </div>
-              </div>
+                  <AiGenerateMessageButton
+                    onClick={() => setIsAiModalOpenAdd(true)}
+                    active={isAiModalOpenAdd}
+                  />
+              </MessageContentToolbar>
 
               {/* Message Body */}
               <div>
@@ -3285,6 +3288,27 @@ export default function OfferDetailsPage() {
           </div>
         </div>
       )}
+
+      <AiGenerateMessageModal
+        isOpen={isAiModalOpenAdd}
+        onClose={() => setIsAiModalOpenAdd(false)}
+        channel={newCreativeForm.channel}
+        locale={newCreativeForm.locale || "en"}
+        brandName={newCreativeForm.title || undefined}
+        existingTitle={newCreativeForm.title || ""}
+        existingBody={newCreativeForm.text_body || newCreativeForm.html_body || ""}
+        availableVariables={selectedVariablesAdd.map(formatVariablePlaceholder)}
+        onApply={({ title, body }) => {
+          const shouldUseHtml =
+            newCreativeForm.channel === "Email" || isRichTextAdd;
+          setNewCreativeForm((prev) => ({
+            ...prev,
+            text_body: body,
+            ...(shouldUseHtml ? { html_body: body } : {}),
+            ...(title ? { title } : {}),
+          }));
+        }}
+      />
 
       {/* Edit Creative Modal */}
       <OfferCreativeFormModal

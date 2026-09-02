@@ -6,6 +6,7 @@ import FormField from '../../../shared/components/FormField';
 import { useFormValidation } from '../../../shared/hooks/useFormValidation';
 
 import { tw, zIndex } from "../../../shared/utils/utils";
+import WizardActionButton from "../../../shared/components/ui/WizardActionButton";
 import type { UniversalControlGroup } from "../configs/universalControlGroupsConfig";
 import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
 import type { SegmentConditionGroup } from "../../segments/types/segment";
@@ -381,46 +382,26 @@ function CreateControlGroupModal({
         </div>
 
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
-          <button
+          <WizardActionButton
+            nav
             onClick={handlePrev}
             disabled={currentStep === 1}
-            className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             Previous
-          </button>
+          </WizardActionButton>
           {currentStep === 3 ? (
-            <button
-              onClick={handleSave}
-              className={`px-4 py-2 text-white ${tw.rounded}`}
-              style={{ backgroundColor: "#588157" }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#3A5A40";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#588157";
-              }}
-            >
+            <WizardActionButton variant="primary" nav onClick={handleSave}>
               {editingGroup ? "Update" : "Create"}
-            </button>
+            </WizardActionButton>
           ) : (
-            <button
+            <WizardActionButton
+              variant="primary"
+              nav
               onClick={handleNext}
               disabled={!canProceedToNextStep()}
-              className={`px-4 py-2 text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{
-                backgroundColor: !canProceedToNextStep() ? "#ccc" : "#588157",
-              }}
-              onMouseEnter={(e) => {
-                if (!canProceedToNextStep()) return;
-                e.currentTarget.style.backgroundColor = "#3A5A40";
-              }}
-              onMouseLeave={(e) => {
-                if (!canProceedToNextStep()) return;
-                e.currentTarget.style.backgroundColor = "#588157";
-              }}
             >
               Next
-            </button>
+            </WizardActionButton>
           )}
         </div>
       </div>

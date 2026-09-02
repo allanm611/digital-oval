@@ -2,8 +2,9 @@ import { ReactNode } from "react";
 import { Save, X, ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../contexts/ToastContext";
+import { tw } from "../../utils/utils";
+import WizardActionButton from "./WizardActionButton";
 
-import { tw } from "../../../shared/utils/utils";
 interface StepFlowLayoutProps {
   currentStep: number;
   stepTitle: string;
@@ -55,47 +56,33 @@ export default function StepFlowLayout({
   return (
     <div className={`max-w-7xl space-y-6 ${className}`}>
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={handleCancel}
-            className={`inline-flex items-center px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} text-sm font-medium hover:bg-[var(--c-interactive-hover)] transition-all duration-200`}
-          >
-            <X className="w-4 h-4 mr-2" />
+        <div className="flex items-center gap-3">
+          <WizardActionButton onClick={handleCancel}>
+            <X className="w-4 h-4" />
             Cancel
-          </button>
-          <button
-            onClick={handleSaveDraft}
-            className={`inline-flex items-center px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} text-sm font-medium hover:bg-[var(--c-interactive-hover)] transition-all duration-200`}
-          >
-            <Save className="w-4 h-4 mr-2" />
+          </WizardActionButton>
+          <WizardActionButton onClick={handleSaveDraft}>
+            <Save className="w-4 h-4" />
             Save Draft
-          </button>
+          </WizardActionButton>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           {currentStep > 1 && (
-            <button
-              type="button"
-              onClick={onPrev}
-              className={`inline-flex items-center px-4 py-2 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} text-sm font-medium hover:bg-[var(--c-interactive-hover)] transition-all duration-200`}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+            <WizardActionButton nav onClick={onPrev}>
+              <ArrowLeft className="w-4 h-4" />
               Previous
-            </button>
+            </WizardActionButton>
           )}
-          <button
-            type="button"
+          <WizardActionButton
+            variant="primary"
+            nav
             onClick={onNext}
             disabled={isNextDisabled}
-            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-all duration-200 ${
-              isNextDisabled
-                ? "bg-[var(--c-interactive-disabled)] text-[var(--c-text-muted)] cursor-not-allowed"
-                : `${tw.button.primary} hover:shadow-md`
-            }`}
           >
             {nextButtonText}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </button>
+            <ArrowRight className="w-4 h-4" />
+          </WizardActionButton>
         </div>
       </div>
 

@@ -6,8 +6,8 @@ import { zIndex } from "../../../../shared/utils/tokens";
 import Input from "../../../../shared/components/ui/Input";
 import Radio from "../../../../shared/components/ui/Radio";
 import Checkbox from "../../../../shared/components/ui/Checkbox";
-import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
+import WizardActionButton from "../../../../shared/components/ui/WizardActionButton";
 import { offerService } from "../../../offers/services/offerService";
 import { parseOfferWizardMetadata } from "../../../offers/utils/offerWizardPersistence";
 import type { OfferTrackingSource } from "../../../offers/types/offerTrackingSource";
@@ -22,7 +22,6 @@ import {
   commitMappingTrackingRewardConfig,
   createTrackingSourceCampaignConfig,
   enabledRulesForSource,
-  formatLimit,
   hoursToAttributionWindow,
   rewardLabelForSource,
   unassignedTrackingSources,
@@ -35,6 +34,8 @@ interface ConfigureTrackingRewardsModalProps {
   offerName: string;
   offerId: string;
   initialConfig?: MappingTrackingRewardConfig;
+  /** When set, that mapping card is selected on open (edit from the table). */
+  focusSourceId?: string;
   onClose: () => void;
   onSave: (config: MappingTrackingRewardConfig) => void;
 }
@@ -53,6 +54,7 @@ export default function ConfigureTrackingRewardsModal({
   offerName,
   offerId,
   initialConfig,
+  focusSourceId,
   onClose,
   onSave,
 }: ConfigureTrackingRewardsModalProps) {
@@ -76,10 +78,13 @@ export default function ConfigureTrackingRewardsModal({
     setConfig(next);
     setFormError("");
     setFieldErrors({});
-    setSelectedCardId(next.sources[0]?.id ?? null);
+    const focused = focusSourceId
+      ? next.sources.find((card) => card.id === focusSourceId)
+      : undefined;
+    setSelectedCardId(focused?.id ?? next.sources[0]?.id ?? null);
     setShowSourcePicker(false);
     setLoadError("");
-  }, [initialConfig]);
+  }, [initialConfig, focusSourceId]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -127,20 +132,6 @@ export default function ConfigureTrackingRewardsModal({
   const availableSources = useMemo(
     () => unassignedTrackingSources(trackingSources, config),
     [trackingSources, config],
-  );
-
-  const selectedCard = useMemo(
-    () => config.sources.find((card) => card.id === selectedCardId) ?? null,
-    [config.sources, selectedCardId],
-  );
-
-  const configuredSourceOptions = useMemo(
-    () =>
-      config.sources.map((card) => ({
-        value: card.tracking_source_id,
-        label: `${card.tracking_source_name} (${trackingTypeLabel(card.tracking_source_type)})`,
-      })),
-    [config.sources],
   );
 
   useEffect(() => {
@@ -246,10 +237,10 @@ export default function ConfigureTrackingRewardsModal({
     }));
   };
 
-  const handleRemoveDraft = (cardId: string) => {
+  const handleRemoveSource = (cardId: string) => {
     setConfig((prev) => ({
       ...prev,
-      sources: prev.sources.filter((card) => card.id !== cardId || card.committed),
+      sources: prev.sources.filter((card) => card.id !== cardId),
     }));
   };
 
@@ -328,29 +319,13 @@ export default function ConfigureTrackingRewardsModal({
             </div>
           ) : (
             <>
-              <div className="flex items-stretch gap-2">
-                <div className="min-w-0 flex-1">
-                  <HeadlessSelect
-                    label="Tracking source"
-                    options={
-                      configuredSourceOptions.length > 0
-                        ? configuredSourceOptions
-                        : [{ value: "", label: "No source selected" }]
-                    }
-                    value={selectedCard?.tracking_source_id || ""}
-                    onChange={(value) => {
-                      const next = config.sources.find(
-                        (card) => card.tracking_source_id === String(value),
-                      );
-                      if (next) setSelectedCardId(next.id);
-                    }}
-                    placeholder="Select a tracking source"
-                    disabled={config.sources.length === 0}
-                    zIndex={zIndex.confirm}
-                  />
-                </div>
-                <button
-                  type="button"
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className={`text-xs ${tw.textSecondary} max-w-xl`}>
+                  Choose tracking sources already on this offer. Each source can
+                  be configured once.
+                </p>
+                <WizardActionButton
+                  variant="primary"
                   onClick={() => {
                     if (availableSources.length === 0) {
                       setFormError(
@@ -364,22 +339,18 @@ export default function ConfigureTrackingRewardsModal({
                     setShowSourcePicker(true);
                   }}
                   disabled={availableSources.length === 0 || isAdding}
-                  className={`shrink-0 self-stretch inline-flex items-center justify-center gap-1.5 px-4 text-sm font-medium leading-none text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ backgroundColor: color.primary.action, minHeight: 0 }}
+                  loading={isAdding}
+                  loadingLabel="Adding..."
                   title={
                     availableSources.length === 0
                       ? "Each tracking source can only be configured once"
                       : "Add tracking sources from this offer"
                   }
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add
-                </button>
+                  <Plus className="w-4 h-4" />
+                  Add tracking source
+                </WizardActionButton>
               </div>
-              <p className={`text-xs ${tw.textSecondary}`}>
-                Click a configuration card to show that tracking source above.
-                Each source can be configured once.
-              </p>
 
               {config.sources.length === 0 ? (
                 <div className={`border border-gray-200 ${tw.rounded} p-8 text-center bg-gray-50`}>
@@ -388,8 +359,8 @@ export default function ConfigureTrackingRewardsModal({
                     No tracking source configurations yet
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Use Add to attach attribution, filtering, and limits for a
-                    particular tracking source.
+                    Use Add tracking source to attach attribution, filtering, and
+                    limits for a particular tracking source.
                   </p>
                 </div>
               ) : (
@@ -399,7 +370,6 @@ export default function ConfigureTrackingRewardsModal({
                       (s) => s.id === card.tracking_source_id,
                     );
                     const ruleCount = enabledRulesForSource(catalog).length;
-                    const locked = card.committed;
                     const offerReward = rewardLabelForSource(
                       rewards,
                       card.tracking_source_id,
@@ -416,9 +386,7 @@ export default function ConfigureTrackingRewardsModal({
                         className={`border ${tw.rounded} p-4 space-y-4 cursor-pointer transition-colors ${
                           isSelected
                             ? "bg-gray-50 ring-1 ring-gray-300"
-                            : locked
-                              ? "border-gray-200 bg-gray-50 hover:border-gray-300"
-                              : "border-gray-200 bg-white hover:border-gray-300"
+                            : "border-gray-200 bg-white hover:border-gray-300"
                         }`}
                         style={
                           isSelected
@@ -432,8 +400,8 @@ export default function ConfigureTrackingRewardsModal({
                               <h4 className="text-sm font-semibold text-gray-900 truncate">
                                 {card.tracking_source_name}
                               </h4>
-                              {locked ? (
-                                <span className="px-2 py-0.5 text-[11px] font-medium rounded bg-gray-200 text-gray-700">
+                              {card.committed ? (
+                                <span className="px-2 py-0.5 text-[11px] font-medium rounded bg-green-100 text-green-700">
                                   Configured
                                 </span>
                               ) : (
@@ -450,19 +418,17 @@ export default function ConfigureTrackingRewardsModal({
                               {offerReward ? ` · Offer reward: ${offerReward}` : ""}
                             </p>
                           </div>
-                          {!locked ? (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleRemoveDraft(card.id);
-                              }}
-                              className="p-1.5 text-red-600 rounded hover:bg-red-50"
-                              title="Remove this draft configuration"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          ) : null}
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleRemoveSource(card.id);
+                            }}
+                            className="p-1.5 text-red-600 rounded hover:bg-red-50"
+                            title="Remove this tracking source from the mapping"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
 
                         <div>
@@ -480,7 +446,6 @@ export default function ConfigureTrackingRewardsModal({
                               min={0}
                               max={365}
                               value={card.attribution_window.days}
-                              disabled={locked}
                               hasError={Boolean(fieldErrors[`${card.id}.days`])}
                               onChange={(value) => updateWindow(card.id, "days", value)}
                             />
@@ -490,7 +455,6 @@ export default function ConfigureTrackingRewardsModal({
                               min={0}
                               max={23}
                               value={card.attribution_window.hours}
-                              disabled={locked}
                               hasError={Boolean(fieldErrors[`${card.id}.hours`])}
                               onChange={(value) => updateWindow(card.id, "hours", value)}
                             />
@@ -500,7 +464,6 @@ export default function ConfigureTrackingRewardsModal({
                               min={0}
                               max={59}
                               value={card.attribution_window.minutes}
-                              disabled={locked}
                               hasError={Boolean(fieldErrors[`${card.id}.minutes`])}
                               onChange={(value) =>
                                 updateWindow(card.id, "minutes", value)
@@ -519,7 +482,7 @@ export default function ConfigureTrackingRewardsModal({
                                 name={`filtering-${card.id}`}
                                 value="match_any"
                                 checked={card.filtering_criteria === "match_any"}
-                                disabled={locked || ruleCount === 0}
+                                disabled={ruleCount === 0}
                                 onChange={() =>
                                   updateSource(card.id, {
                                     filtering_criteria: "match_any",
@@ -542,7 +505,6 @@ export default function ConfigureTrackingRewardsModal({
                                 name={`filtering-${card.id}`}
                                 value="no_rule"
                                 checked={card.filtering_criteria === "no_rule"}
-                                disabled={locked}
                                 onChange={() =>
                                   updateSource(card.id, {
                                     filtering_criteria: "no_rule",
@@ -580,7 +542,6 @@ export default function ConfigureTrackingRewardsModal({
                                 <Checkbox
                                   id={`${card.id}-no-tracking-limit`}
                                   checked={noTrackingLimit}
-                                  disabled={locked}
                                   onChange={() =>
                                     updateSource(card.id, {
                                       tracking_limit: noTrackingLimit ? 1 : null,
@@ -599,7 +560,7 @@ export default function ConfigureTrackingRewardsModal({
                                 label="Tracking limit"
                                 min={1}
                                 value={card.tracking_limit ?? ""}
-                                disabled={locked || noTrackingLimit}
+                                disabled={noTrackingLimit}
                                 hasError={Boolean(
                                   fieldErrors[`${card.id}.tracking_limit`],
                                 )}
@@ -611,18 +572,12 @@ export default function ConfigureTrackingRewardsModal({
                                   });
                                 }}
                               />
-                              {locked ? (
-                                <p className="text-xs text-gray-500">
-                                  {formatLimit(card.tracking_limit)}
-                                </p>
-                              ) : null}
                             </div>
                             <div className="space-y-2">
                               <div className="flex items-center gap-2">
                                 <Checkbox
                                   id={`${card.id}-no-reward-limit`}
                                   checked={noRewardLimit}
-                                  disabled={locked}
                                   onChange={() =>
                                     updateSource(card.id, {
                                       reward_limit: noRewardLimit ? 1 : null,
@@ -641,7 +596,7 @@ export default function ConfigureTrackingRewardsModal({
                                 label="Reward limit"
                                 min={1}
                                 value={card.reward_limit ?? ""}
-                                disabled={locked || noRewardLimit}
+                                disabled={noRewardLimit}
                                 hasError={Boolean(
                                   fieldErrors[`${card.id}.reward_limit`],
                                 )}
@@ -653,11 +608,6 @@ export default function ConfigureTrackingRewardsModal({
                                   });
                                 }}
                               />
-                              {locked ? (
-                                <p className="text-xs text-gray-500">
-                                  {formatLimit(card.reward_limit)}
-                                </p>
-                              ) : null}
                             </div>
                           </div>
                         </div>
@@ -676,22 +626,15 @@ export default function ConfigureTrackingRewardsModal({
           ) : null}
         </div>
 
-        <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
+        <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+          <WizardActionButton onClick={onClose}>Cancel</WizardActionButton>
+          <WizardActionButton
+            variant="primary"
             onClick={handleSave}
             disabled={isLoading || Boolean(loadError)}
-            className={`${tw.button} disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             Save Configuration
-          </button>
+          </WizardActionButton>
         </div>
       </div>
       <SelectOfferRewardTrackingSourcesModal

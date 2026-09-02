@@ -1,11 +1,16 @@
 import type {
   CustomerEvent,
+  CustomerEventCampaignSummary,
   CustomerEventCatalogItem,
   CustomerEventChannel,
   CustomerEventCountBucket,
   CustomerEventCounts,
+  CustomerEventCreativeSummary,
   CustomerEventFacets,
+  CustomerEventMessageSummary,
+  CustomerEventOfferSummary,
   CustomerEventOrigin,
+  CustomerEventPurchaseContext,
   CustomerEventQuery,
   EventTimePreset,
 } from "../types/customerEvent";
@@ -41,6 +46,19 @@ export const EVENT_COUNT_WINDOWS: Array<{
     hint: "Rolling quarter",
     ms: 90 * 24 * 60 * 60 * 1000,
   },
+];
+
+/** Visible time-filter tabs on Customer 360 Events. Custom replaces Last 90 days. */
+export const EVENT_TIME_TABS: Array<{
+  key: Exclude<EventTimePreset, "all" | "last_90d">;
+  label: string;
+  hint: string;
+}> = [
+  { key: "last_1h", label: "Last 1 hr", hint: "Rolling hour" },
+  { key: "last_24h", label: "Last 24 hrs", hint: "Rolling day" },
+  { key: "last_7d", label: "Last 7 days", hint: "Rolling week" },
+  { key: "last_30d", label: "Last 30 days", hint: "Rolling month" },
+  { key: "custom", label: "Custom range", hint: "Pick a date range" },
 ];
 
 export const EVENT_TIME_PRESET_OPTIONS: Array<{
@@ -252,7 +270,46 @@ export const CUSTOMER_EVENT_CATALOG: CustomerEventCatalogItem[] = [
     tracking_source_name: "API Event",
     statuses: ["Sent", "Delivered"],
   },
+  {
+    code: "received_message",
+    label: "Received Message",
+    description: "Customer received a campaign or offer message",
+    origin: "system",
+    channel: "sms",
+    tracking_source_id: "usage_sms",
+    tracking_source_name: "SMS Usage",
+    statuses: ["Received", "Delivered", "Read"],
+  },
+  {
+    code: "message_received",
+    label: "Message Received",
+    description: "Inbound or delivery confirmation for a customer message",
+    origin: "customer",
+    channel: "sms",
+    tracking_source_id: "usage_sms",
+    tracking_source_name: "SMS Usage",
+    statuses: ["Received", "Delivered"],
+  },
 ];
+
+/** Event types that typically carry offer / campaign / creative / message context. */
+export const COMMUNICATION_EVENT_TYPES = new Set([
+  "offer_redeemed",
+  "offer_accepted",
+  "welcome_email",
+  "promotional_sms",
+  "price_drop_alert",
+  "order_confirmation",
+  "delivery_notification",
+  "new_products",
+  "newsletter",
+  "order_alert",
+  "campaign_executed",
+  "received_message",
+  "message_received",
+  "message_sent",
+  "message_delivered",
+]);
 
 const CHANNELS: CustomerEventChannel[] = [
   "email",
@@ -298,6 +355,487 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return null;
 }
 
+function pickId(raw: Record<string, unknown>, keys: string[]): number | null {
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+    if (typeof value === "string" && /^\d+$/.test(value.trim())) {
+      return Number(value.trim());
+    }
+  }
+  return null;
+}
+
+function pickNumber(raw: Record<string, unknown>, keys: string[]): number | null {
+  for (const key of keys) {
+    const value = raw[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value.replace(/[, ]/g, ""));
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return null;
+}
+
+function parsePurchaseContext(
+  record: Record<string, unknown>,
+): CustomerEventPurchaseContext | null {
+  const commercial =
+    asRecord(record.purchase) ||
+    asRecord(record.transaction) ||
+    asRecord(record.order);
+  const nestedMeta =
+    asRecord(record.properties) ||
+    asRecord(record.payload) ||
+    asRecord(record.metadata) ||
+    asRecord(record.context);
+  const product =
+    asRecord(record.product) ||
+    asRecord(commercial?.product) ||
+    asRecord(nestedMeta?.product) ||
+    asRecord(commercial?.bundle);
+  const amountSources = [record, commercial].filter(
+    Boolean,
+  ) as Record<string, unknown>[];
+  const sources = [record, commercial, nestedMeta].filter(
+    Boolean,
+  ) as Record<string, unknown>[];
+
+  const transactionId =
+    sources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, [
+          "transaction_id",
+          "transactionId",
+          "txn_id",
+          "reference",
+          "order_id",
+          "orderId",
+        ]),
+      "",
+    ) || null;
+  const productId =
+    sources.reduce(
+      (found: number | null, source) =>
+        found ??
+        pickId(source, ["product_id", "productId", "bundle_id", "bundleId"]),
+      null,
+    ) ?? pickId(product || {}, ["id", "product_id", "productId"]);
+  const productName =
+    sources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, [
+          "product_name",
+          "productName",
+          "bundle_name",
+          "bundleName",
+        ]),
+      "",
+    ) || pickString(product || {}, ["name", "product_name", "title"]);
+  const productCode =
+    sources.reduce(
+      (found, source) =>
+        found || pickString(source, ["product_code", "productCode"]),
+      "",
+    ) || pickString(product || {}, ["product_code", "code"]);
+  const amount = amountSources.reduce(
+    (found: number | null, source) =>
+      found ??
+      pickNumber(source, [
+        "amount",
+        "paid_amount",
+        "purchase_amount",
+        "transaction_amount",
+        "total",
+      ]),
+    null,
+  );
+  const currency =
+    sources.reduce(
+      (found, source) => found || pickString(source, ["currency", "currency_code"]),
+      "",
+    ) || pickString(product || {}, ["currency"]) ||
+    null;
+  const quantity = sources.reduce(
+    (found: number | null, source) =>
+      found ?? pickNumber(source, ["quantity", "qty"]),
+    null,
+  );
+  const paymentMethod =
+    sources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, [
+          "payment_method",
+          "paymentMethod",
+          "payment_type",
+          "paymentType",
+        ]),
+      "",
+    ) || null;
+
+  if (
+    !transactionId &&
+    !productId &&
+    !productName &&
+    amount == null &&
+    !paymentMethod
+  ) {
+    return null;
+  }
+
+  return {
+    transaction_id: transactionId,
+    product_id: productId,
+    product_name: productName,
+    product_code: productCode,
+    amount,
+    currency,
+    quantity,
+    payment_method: paymentMethod,
+  };
+}
+
+function parseJsonRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value === "string" && value.trim().startsWith("{")) {
+    try {
+      return asRecord(JSON.parse(value));
+    } catch {
+      return null;
+    }
+  }
+  return asRecord(value);
+}
+
+function firstRecord(
+  ...values: Array<Record<string, unknown> | null | undefined>
+): Record<string, unknown> | null {
+  return values.find((item): item is Record<string, unknown> => Boolean(item)) || null;
+}
+
+function parseNestedContext(record: Record<string, unknown>): Record<string, unknown> {
+  return (
+    parseJsonRecord(record.metadata) ||
+    parseJsonRecord(record.payload) ||
+    parseJsonRecord(record.context) ||
+    parseJsonRecord(record.properties) ||
+    parseJsonRecord(record.details) ||
+    parseJsonRecord(record.data) ||
+    {}
+  );
+}
+
+function parseOfferSummary(
+  record: Record<string, unknown>,
+): CustomerEventOfferSummary | null {
+  const context = parseNestedContext(record);
+  const nested = firstRecord(
+    asRecord(record.offer),
+    asRecord(record.offer_details),
+    asRecord(record.offerDetails),
+    asRecord(context.offer),
+    asRecord(context.offer_details),
+  );
+  const id =
+    (nested ? pickId(nested, ["id", "offer_id", "offerId"]) : null) ||
+    pickId(record, ["offer_id", "offerId"]) ||
+    pickId(context, ["offer_id", "offerId"]);
+  const name =
+    pickString(nested || {}, ["name", "offer_name", "offerName", "title"]) ||
+    pickString(record, ["offer_name", "offerName"]) ||
+    pickString(context, ["offer_name", "offerName"]) ||
+    (typeof record.offer === "string" ? record.offer.trim() : "");
+  const code =
+    pickString(nested || {}, ["code", "offer_code", "offerCode"]) ||
+    pickString(record, ["offer_code", "offerCode"]) ||
+    pickString(context, ["offer_code", "offerCode"]);
+  const type =
+    pickString(nested || {}, ["type", "offer_type", "offerType", "offer_type_label"]) ||
+    pickString(record, ["offer_type", "offerType"]) ||
+    pickString(context, ["offer_type", "offerType"]);
+  const status =
+    pickString(nested || {}, ["status", "lifecycle_status", "lifecycleStatus"]) ||
+    pickString(record, ["offer_status", "offerStatus"]);
+  const description =
+    pickString(nested || {}, ["description", "offer_description"]) ||
+    pickString(record, ["offer_description", "offerDescription"]);
+  if (!id && !name && !code) return null;
+  return { id, name, code, type, status, description };
+}
+
+function parseCampaignSummary(
+  record: Record<string, unknown>,
+): CustomerEventCampaignSummary | null {
+  const context = parseNestedContext(record);
+  const nested = firstRecord(
+    asRecord(record.campaign),
+    asRecord(record.campaign_details),
+    asRecord(record.campaignDetails),
+    asRecord(context.campaign),
+  );
+  const id =
+    (nested ? pickId(nested, ["id", "campaign_id", "campaignId"]) : null) ||
+    pickId(record, ["campaign_id", "campaignId"]) ||
+    pickId(context, ["campaign_id", "campaignId"]);
+  const name =
+    pickString(nested || {}, ["name", "campaign_name", "campaignName", "title"]) ||
+    pickString(record, ["campaign_name", "campaignName"]) ||
+    pickString(context, ["campaign_name", "campaignName"]) ||
+    (typeof record.campaign === "string" ? record.campaign.trim() : "");
+  const code =
+    pickString(nested || {}, ["code", "campaign_code", "campaignCode"]) ||
+    pickString(record, ["campaign_code", "campaignCode"]) ||
+    pickString(context, ["campaign_code", "campaignCode"]);
+  const status =
+    pickString(nested || {}, ["status", "campaign_status", "campaignStatus"]) ||
+    pickString(record, ["campaign_status", "campaignStatus"]);
+  const type =
+    pickString(nested || {}, ["type", "campaign_type", "campaignType"]) ||
+    pickString(record, ["campaign_type", "campaignType"]);
+  if (!id && !name && !code) return null;
+  return { id, name, code, status, type };
+}
+
+function parseCreativeFromRecord(
+  src: Record<string, unknown>,
+  fallback: Record<string, unknown>,
+  nested: boolean,
+): CustomerEventCreativeSummary | null {
+  const context = parseNestedContext(fallback);
+  const id =
+    (nested ? pickId(src, ["id", "creative_id", "creativeId", "offer_creative_id"]) : null) ||
+    pickId(src, ["creative_id", "creativeId", "offer_creative_id"]) ||
+    pickId(fallback, ["creative_id", "creativeId", "offer_creative_id"]) ||
+    pickId(context, ["creative_id", "creativeId"]);
+  const name =
+    pickString(src, nested ? ["name", "creative_name", "creativeName"] : ["creative_name", "creativeName"]) ||
+    pickString(fallback, ["creative_name", "creativeName"]);
+  const channel = nested
+    ? pickString(src, ["channel", "creative_channel"])
+    : pickString(src, ["creative_channel"]) ||
+      pickString(fallback, ["creative_channel", "creativeChannel"]);
+  const title = nested
+    ? pickString(src, ["title", "subject", "headline"])
+    : pickString(src, ["creative_title", "creativeTitle"]);
+  const locale = pickString(src, ["locale", "language"]);
+  const textBody = nested
+    ? pickString(src, ["text_body", "textBody", "body", "content", "message"])
+    : pickString(src, ["creative_text", "creativeText"]) ||
+      pickString(fallback, ["creative_text", "creativeText"]);
+  const htmlBody = pickString(src, ["html_body", "htmlBody", "html"]);
+  if (!id && !name && !title && !textBody && !htmlBody) return null;
+  return {
+    id,
+    name,
+    channel,
+    title,
+    locale,
+    text_body: textBody,
+    html_body: htmlBody,
+  };
+}
+
+function parseCreativeSummary(
+  record: Record<string, unknown>,
+): CustomerEventCreativeSummary | null {
+  const context = parseNestedContext(record);
+  const nested = firstRecord(
+    asRecord(record.creative),
+    asRecord(record.offer_creative),
+    asRecord(record.offerCreative),
+    asRecord(record.creative_details),
+    asRecord(context.creative),
+  );
+  if (nested) return parseCreativeFromRecord(nested, record, true);
+
+  const list =
+    (Array.isArray(record.creatives) && record.creatives[0]) ||
+    (Array.isArray(context.creatives) && context.creatives[0]);
+  const listRecord = asRecord(list);
+  if (listRecord) return parseCreativeFromRecord(listRecord, record, true);
+
+  return parseCreativeFromRecord(record, record, false);
+}
+
+function parseMessageDirection(value: string): "inbound" | "outbound" | null {
+  const normalized = value.trim().toLowerCase();
+  if (
+    ["inbound", "in", "received", "incoming", "mo", "customer"].includes(
+      normalized,
+    )
+  ) {
+    return "inbound";
+  }
+  if (
+    ["outbound", "out", "sent", "outgoing", "mt", "system"].includes(normalized)
+  ) {
+    return "outbound";
+  }
+  return null;
+}
+
+function parseMessageSummary(
+  record: Record<string, unknown>,
+  eventType: string,
+  occurredAt: string,
+): CustomerEventMessageSummary | null {
+  const context = parseNestedContext(record);
+  const nested = firstRecord(
+    asRecord(record.message),
+    asRecord(record.message_details),
+    asRecord(record.messageDetails),
+    asRecord(record.content),
+    asRecord(context.message),
+  );
+  const src = nested || {};
+  const subject =
+    pickString(src, ["subject", "title", "headline"]) ||
+    pickString(record, ["message_subject", "messageSubject"]) ||
+    pickString(context, ["message_subject", "subject"]);
+  const content =
+    pickString(src, [
+      "content",
+      "body",
+      "text",
+      "text_body",
+      "textBody",
+      "message_body",
+      "messageBody",
+      "message_content",
+      "messageContent",
+    ]) ||
+    pickString(record, [
+      "message_body",
+      "messageBody",
+      "message_content",
+      "messageContent",
+    ]) ||
+    (typeof record.message === "string" ? record.message.trim() : "") ||
+    (typeof record.content === "string" ? record.content.trim() : "");
+  const receivedAt =
+    pickString(src, [
+      "received_at",
+      "receivedAt",
+      "inbound_at",
+      "inboundAt",
+      "message_received_at",
+    ]) || pickString(record, ["received_at", "receivedAt", "message_received_at"]);
+  const sentAt =
+    pickString(src, ["sent_at", "sentAt", "message_sent_at"]) ||
+    pickString(record, ["sent_at", "sentAt"]);
+  const deliveredAt =
+    pickString(src, ["delivered_at", "deliveredAt", "message_delivered_at"]) ||
+    pickString(record, ["delivered_at", "deliveredAt"]);
+  const directionRaw =
+    pickString(src, ["direction", "message_direction", "messageDirection"]) ||
+    pickString(record, ["direction"]);
+  const inboundFlag = src.inbound === true || record.inbound === true;
+  let direction = parseMessageDirection(directionRaw);
+  if (!direction && inboundFlag) direction = "inbound";
+  if (
+    !direction &&
+    (eventType === "received_message" || eventType === "message_received")
+  ) {
+    direction = "inbound";
+  }
+
+  if (!subject && !content && !receivedAt && !sentAt && !deliveredAt && !direction) {
+    return null;
+  }
+
+  return {
+    subject,
+    content,
+    direction,
+    received_at:
+      receivedAt ||
+      (direction === "inbound" ||
+      eventType === "received_message" ||
+      eventType === "message_received"
+        ? occurredAt
+        : null),
+    sent_at: sentAt || null,
+    delivered_at: deliveredAt || null,
+  };
+}
+
+export function isCommunicationLinkedEvent(event: {
+  event_type?: string;
+  code?: string;
+}): boolean {
+  const type = (event.event_type || event.code || "").trim().toLowerCase();
+  if (!type) return false;
+  if (COMMUNICATION_EVENT_TYPES.has(type)) return true;
+  return /message|offer|campaign|email|newsletter|creative|promotional/.test(
+    type,
+  );
+}
+
+export function hasEventRelatedContext(event: CustomerEvent): boolean {
+  return Boolean(
+    event.offer?.id ||
+      event.offer?.name ||
+      event.offer?.code ||
+      event.campaign?.id ||
+      event.campaign?.name ||
+      event.campaign?.code ||
+      event.creative?.id ||
+      event.creative?.name ||
+      event.creative?.text_body ||
+      event.message?.content ||
+      event.message?.subject ||
+      event.message?.received_at,
+  );
+}
+
+export function eventMessageReceivedAt(event: CustomerEvent): string | null {
+  return (
+    event.message?.received_at ||
+    event.message?.delivered_at ||
+    (event.message?.direction === "inbound" ? event.occurred_at : null) ||
+    (event.event_type === "received_message" ||
+    event.event_type === "message_received"
+      ? event.occurred_at
+      : null)
+  );
+}
+
+export function stripHtmlPreview(value: string): string {
+  return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function creativeBodyPreview(
+  creative: CustomerEventCreativeSummary | null,
+): string {
+  if (!creative) return "";
+  return creative.text_body || stripHtmlPreview(creative.html_body);
+}
+
+export function toCreativeChannel(
+  channel: CustomerEventChannel | string,
+): "SMS" | "Email" | "Push" | "InApp" | "Web" | "IVR" | "USSD" | "WhatsApp" | null {
+  const normalized = String(channel || "").trim().toLowerCase();
+  if (normalized === "sms" || normalized === "whatsapp" || normalized === "short_code") {
+    return normalized === "whatsapp" ? "WhatsApp" : "SMS";
+  }
+  if (normalized === "email") return "Email";
+  if (normalized === "push") return "Push";
+  if (normalized === "app" || normalized === "inapp" || normalized === "mobile") {
+    return "InApp";
+  }
+  if (normalized === "web") return "Web";
+  if (normalized === "ussd") return "USSD";
+  if (normalized === "voice" || normalized === "ivr" || normalized === "obd") {
+    return "IVR";
+  }
+  return null;
+}
+
 export function normalizeChannel(value: string): CustomerEventChannel {
   const normalized = value.trim().toLowerCase();
   if (CHANNELS.includes(normalized as CustomerEventChannel)) {
@@ -339,13 +877,27 @@ export function getPresetRange(
   if (preset === "custom") {
     const from = parseEventDate(dateFrom);
     const to = parseEventDate(dateTo);
+    if (from) from.setHours(0, 0, 0, 0);
     if (to) to.setHours(23, 59, 59, 999);
+    if (from && to && from > to) return { from: to, to: from };
     return { from, to };
   }
 
   const window = EVENT_COUNT_WINDOWS.find((item) => item.key === preset);
   if (!window) return { from: null, to: null };
   return { from: new Date(now.getTime() - window.ms), to: now };
+}
+
+export function todayDateInputValue(now: Date = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function normalizeDateOrder(from: string, to: string): { from: string; to: string } {
+  if (from && to && from > to) return { from: to, to: from };
+  return { from, to };
 }
 
 export function isEventInRange(
@@ -371,7 +923,15 @@ function matchesSearch(event: CustomerEvent, search: string): boolean {
     event.channel,
     event.status,
     event.origin,
-  ].some((value) => value.toLowerCase().includes(term));
+    event.offer?.name,
+    event.offer?.code,
+    event.campaign?.name,
+    event.campaign?.code,
+    event.creative?.name,
+    event.creative?.title,
+    event.message?.subject,
+    event.message?.content,
+  ].some((value) => (value || "").toLowerCase().includes(term));
 }
 
 export function filterCustomerEvents(
@@ -380,7 +940,13 @@ export function filterCustomerEvents(
   now: Date = new Date(),
 ): CustomerEvent[] {
   const origin = query.origin && query.origin !== "all" ? query.origin : "";
-  const eventType = query.event_type && query.event_type !== "all" ? query.event_type : "";
+  const eventTypes = (query.event_types || []).filter(
+    (item) => item && item !== "all",
+  );
+  const eventType =
+    !eventTypes.length && query.event_type && query.event_type !== "all"
+      ? query.event_type
+      : "";
   const trackingSource =
     query.tracking_source_id && query.tracking_source_id !== "all"
       ? query.tracking_source_id
@@ -396,6 +962,9 @@ export function filterCustomerEvents(
 
   return events.filter((event) => {
     if (!matchesSearch(event, query.search || "")) return false;
+    if (eventTypes.length > 0 && !eventTypes.includes(event.event_type)) {
+      return false;
+    }
     if (eventType && event.event_type !== eventType) return false;
     if (trackingSource && event.tracking_source_id !== trackingSource) return false;
     if (origin && event.origin !== origin) return false;
@@ -542,6 +1111,11 @@ export function normalizeCustomerEvent(raw: unknown, index = 0): CustomerEvent |
     origin: normalizeOrigin(originRaw),
     status: pickString(record, ["status", "event_status", "eventStatus"]) || "Recorded",
     occurred_at: occurredAt,
+    offer: parseOfferSummary(record),
+    campaign: parseCampaignSummary(record),
+    creative: parseCreativeSummary(record),
+    message: parseMessageSummary(record, eventType, occurredAt),
+    purchase: parsePurchaseContext(record),
   };
 }
 
@@ -611,6 +1185,96 @@ function hashSeed(value: string): number {
   return Math.abs(hash) || 1;
 }
 
+function buildFallbackRelatedContext(
+  definition: CustomerEventCatalogItem,
+  occurredAt: string,
+  random: () => number,
+): Pick<CustomerEvent, "offer" | "campaign" | "creative" | "message"> {
+  if (!isCommunicationLinkedEvent(definition)) {
+    return { offer: null, campaign: null, creative: null, message: null };
+  }
+
+  const offerIndex = Math.floor(random() * 3);
+  const offers = [
+    {
+      name: "Welcome Data Bundle",
+      code: "WELCOME-DATA",
+      type: "Bundle",
+      status: "active",
+      description: "Starter data bundle for newly acquired subscribers.",
+    },
+    {
+      name: "Flash Sale Voice Pack",
+      code: "FLASH-VOICE",
+      type: "Voice",
+      status: "active",
+      description: "Limited-time voice minutes with bonus SMS.",
+    },
+    {
+      name: "Loyalty Bonus Offer",
+      code: "LOYALTY-BONUS",
+      type: "Bonus",
+      status: "approved",
+      description: "Reward offer for high-value customers.",
+    },
+  ];
+  const campaigns = [
+    { name: "Onboarding Welcome", code: "CMP-ONBOARD", status: "active", type: "lifecycle" },
+    { name: "Weekend Flash Sale", code: "CMP-FLASH", status: "active", type: "promotional" },
+    { name: "Loyalty Retention", code: "CMP-LOYAL", status: "scheduled", type: "retention" },
+  ];
+  const offer = offers[offerIndex];
+  const campaign = campaigns[offerIndex];
+  const inbound =
+    definition.code === "received_message" || definition.code === "message_received";
+  const occurred = parseEventDate(occurredAt) || new Date();
+  const sentAt = new Date(occurred.getTime() - 90 * 1000).toISOString();
+  const bodyByChannel: Record<string, string> = {
+    email: `Hi, you qualify for ${offer.name}. Open the app to redeem ${offer.code}.`,
+    sms: `${offer.name}: reply YES to redeem ${offer.code}.`,
+    push: `${offer.name} is ready. Tap to view your reward.`,
+    app: `Redeem ${offer.name} (${offer.code}) in the offers tab.`,
+  };
+  const content =
+    bodyByChannel[definition.channel] ||
+    `${offer.name} is available on ${definition.channel}.`;
+
+  return {
+    offer: {
+      id: null,
+      name: offer.name,
+      code: offer.code,
+      type: offer.type,
+      status: offer.status,
+      description: offer.description,
+    },
+    campaign: {
+      id: null,
+      name: campaign.name,
+      code: campaign.code,
+      status: campaign.status,
+      type: campaign.type,
+    },
+    creative: {
+      id: null,
+      name: `${campaign.name} ${definition.channel} creative`,
+      channel: definition.channel,
+      title: offer.name,
+      locale: "en",
+      text_body: content,
+      html_body: "",
+    },
+    message: {
+      subject: definition.channel === "email" ? offer.name : "",
+      content,
+      direction: inbound ? "inbound" : "outbound",
+      received_at: inbound ? occurredAt : null,
+      sent_at: inbound ? sentAt : occurredAt,
+      delivered_at: occurredAt,
+    },
+  };
+}
+
 /**
  * Deterministic fallback stream so the same subscriber always sees the same
  * events when the events API is not yet available.
@@ -640,6 +1304,7 @@ export function generateFallbackCustomerEvents(
       const offset = Math.floor(random() * window.withinMs);
       const occurred = new Date(now.getTime() - offset - windowIndex * 1000);
       sequence += 1;
+      const occurredAt = occurred.toISOString();
       events.push({
         id: `EVT-${subscriberId}-${sequence}`,
         event_type: definition.code,
@@ -650,9 +1315,30 @@ export function generateFallbackCustomerEvents(
         tracking_source_name: definition.tracking_source_name,
         origin: definition.origin,
         status,
-        occurred_at: occurred.toISOString(),
+        occurred_at: occurredAt,
+        purchase: null,
+        ...buildFallbackRelatedContext(definition, occurredAt, random),
       });
     }
+  });
+
+  const receivedDefinition =
+    catalog.find((item) => item.code === "received_message") || catalog[0];
+  sequence += 1;
+  const receivedAt = new Date(now.getTime() - 12 * 60 * 1000).toISOString();
+  events.push({
+    id: `EVT-${subscriberId}-${sequence}`,
+    event_type: receivedDefinition.code,
+    event_type_label: receivedDefinition.label,
+    description: receivedDefinition.description,
+    channel: receivedDefinition.channel,
+    tracking_source_id: receivedDefinition.tracking_source_id,
+    tracking_source_name: receivedDefinition.tracking_source_name,
+    origin: receivedDefinition.origin,
+    status: "Received",
+    occurred_at: receivedAt,
+    purchase: null,
+    ...buildFallbackRelatedContext(receivedDefinition, receivedAt, random),
   });
 
   return events.sort(
@@ -677,6 +1363,7 @@ export function hasActiveEventFilters(
 ): boolean {
   return Boolean(
     query.search?.trim() ||
+      (query.event_types && query.event_types.length > 0) ||
       (query.event_type && query.event_type !== "all") ||
       (query.tracking_source_id && query.tracking_source_id !== "all") ||
       (query.origin && query.origin !== "all") ||
