@@ -2,6 +2,9 @@
   "functions": {
     "api/proxy.js": {
       "maxDuration": 30
+    },
+    "api/ai/generate-creative.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [
@@ -10,7 +13,7 @@
       "destination": "/api/proxy?path=$1"
     },
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/((?!api/|.*\\.).*)",
       "destination": "/index.html"
     }
   ],

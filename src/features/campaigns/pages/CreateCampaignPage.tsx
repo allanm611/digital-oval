@@ -58,6 +58,7 @@ import {
   segmentsExceedingExclusiveOfferLimit,
   stampMutuallyExclusiveOnSegments,
 } from "../utils/mutuallyExclusiveOffers";
+import { findMappingMissingTrackingSource } from "../utils/trackingRewardConfig";
 
 const steps: Step[] = [
   {
@@ -712,6 +713,17 @@ export default function CreateCampaignPage() {
           );
           if (extra.length > 0) {
             errors.flows = exclusiveOfferLimitMessage(extra[0].name);
+          }
+        }
+
+        if (!errors.flows) {
+          const missing = findMappingMissingTrackingSource(
+            campaignFlows,
+            selectedOffers,
+            selectedSegments,
+          );
+          if (missing) {
+            errors.flows = `Add a tracking source for "${missing.offerName}" on segment "${missing.segmentName}" before continuing.`;
           }
         }
 

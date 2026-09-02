@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Calendar, Clock, RotateCcw, X } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import HeadlessMultiSelect from "../../../shared/components/ui/HeadlessMultiSelect";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -11,27 +12,34 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Table, type TableColumn } from "../../../shared/components/Table";
 import { color, tw } from "../../../shared/utils/utils";
 import { useCustomerEvents } from "../hooks/useCustomerEvents";
+import CustomerEventDetailsExpandedRow from "./CustomerEventDetailsExpandedRow";
 import type {
   CustomerEvent,
+  CustomerEventCountBucket,
   CustomerEventOrigin,
   EventTimePreset,
 } from "../types/customerEvent";
 import {
   aggregateEventCounts,
   CHANNEL_FILTER_OPTIONS,
-  EVENT_COUNT_WINDOWS,
-  EVENT_TIME_PRESET_OPTIONS,
+  EMPTY_COUNT_BUCKET,
+  EVENT_TIME_TABS,
   filterCustomerEvents,
   hasActiveEventFilters,
   humanizeChannel,
   humanizeOrigin,
+  normalizeDateOrder,
+  todayDateInputValue,
 } from "../utils/customerEventHelpers";
 
 type CustomerEventsTabProps = {
   subscriberId?: string | number | null;
 };
 
+type TimeTabKey = (typeof EVENT_TIME_TABS)[number]["key"];
+
 const ALL = "all";
+const DEFAULT_PRESET: EventTimePreset = "last_30d";
 
 const originOptions = [
   { value: ALL, label: "All origins" },
@@ -53,21 +61,30 @@ function statusClassName(status: string): string {
   return "bg-gray-100 text-gray-700";
 }
 
+function formatCustomRangeLabel(dateFrom: string, dateTo: string): string {
+  if (!dateFrom && !dateTo) return "Pick dates";
+  if (dateFrom && dateTo) return `${dateFrom} → ${dateTo}`;
+  if (dateFrom) return `From ${dateFrom}`;
+  return `Until ${dateTo}`;
+}
+
 export default function CustomerEventsTab({
   subscriberId,
 }: CustomerEventsTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [eventType, setEventType] = useState(ALL);
+  const [eventTypes, setEventTypes] = useState<string[]>([]);
   const [trackingSourceId, setTrackingSourceId] = useState(ALL);
   const [channel, setChannel] = useState(ALL);
   const [origin, setOrigin] = useState<CustomerEventOrigin | typeof ALL>(ALL);
-  const [status, setStatus] = useState(ALL);
-  const [timePreset, setTimePreset] = useState<EventTimePreset>("last_30d");
+  const [timePreset, setTimePreset] = useState<EventTimePreset>(DEFAULT_PRESET);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [customPickerOpen, setCustomPickerOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const pageSize = DEFAULT_PAGE_SIZE;
+  const today = todayDateInputValue();
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -77,22 +94,20 @@ export default function CustomerEventsTab({
   const query = useMemo(
     () => ({
       search: debouncedSearch,
-      event_type: eventType,
+      event_types: eventTypes,
       tracking_source_id: trackingSourceId,
       channel,
       origin,
-      status,
       time_preset: timePreset,
       date_from: timePreset === "custom" ? dateFrom : undefined,
       date_to: timePreset === "custom" ? dateTo : undefined,
     }),
     [
       debouncedSearch,
-      eventType,
+      eventTypes,
       trackingSourceId,
       channel,
       origin,
-      status,
       timePreset,
       dateFrom,
       dateTo,
@@ -102,51 +117,55 @@ export default function CustomerEventsTab({
   const { result, trackingSources, isLoading, error, refetch } =
     useCustomerEvents(subscriberId ?? undefined);
 
-  const attributeFiltered = useMemo(
-    () =>
-      filterCustomerEvents(result.allEvents, {
-        ...query,
-        time_preset: "all",
-        date_from: undefined,
-        date_to: undefined,
-      }),
-    [result.allEvents, query],
-  );
-
   const filteredEvents = useMemo(
     () => filterCustomerEvents(result.allEvents, query),
     [result.allEvents, query],
   );
 
   const counts = useMemo(
-    () => aggregateEventCounts(attributeFiltered),
-    [attributeFiltered],
+    () => aggregateEventCounts(result.allEvents),
+    [result.allEvents],
   );
+
+  const customCount = useMemo((): CustomerEventCountBucket => {
+    if (!dateFrom && !dateTo) return EMPTY_COUNT_BUCKET;
+    const ranged = filterCustomerEvents(result.allEvents, {
+      time_preset: "custom",
+      date_from: dateFrom,
+      date_to: dateTo,
+    });
+    return ranged.reduce(
+      (bucket, event) => {
+        bucket.total += 1;
+        bucket[event.origin] += 1;
+        return bucket;
+      },
+      { total: 0, customer: 0, system: 0 } as CustomerEventCountBucket,
+    );
+  }, [result.allEvents, dateFrom, dateTo]);
 
   useEffect(() => {
     setPage(1);
+    setExpandedRowId(null);
   }, [
     debouncedSearch,
-    eventType,
+    eventTypes,
     trackingSourceId,
     channel,
     origin,
-    status,
     timePreset,
     dateFrom,
     dateTo,
   ]);
 
-  const filtersActive = hasActiveEventFilters(query);
+  const filtersActive = hasActiveEventFilters(query, DEFAULT_PRESET);
 
   const eventTypeOptions = useMemo(
-    () => [
-      { value: ALL, label: "All event types" },
-      ...result.facets.event_types.map((item) => ({
+    () =>
+      result.facets.event_types.map((item) => ({
         value: item.value,
         label: item.count ? `${item.label} (${item.count})` : item.label,
       })),
-    ],
     [result.facets.event_types],
   );
 
@@ -187,17 +206,6 @@ export default function CustomerEventsTab({
       })),
     ];
   }, [result.facets.channels]);
-
-  const statusOptions = useMemo(
-    () => [
-      { value: ALL, label: "All status" },
-      ...result.facets.statuses.map((item) => ({
-        value: item.value,
-        label: item.label,
-      })),
-    ],
-    [result.facets.statuses],
-  );
 
   const paginatedEvents = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -292,25 +300,40 @@ export default function CustomerEventsTab({
     [],
   );
 
-  const applyTimePreset = (preset: EventTimePreset) => {
+  const applyTimePreset = (preset: TimeTabKey) => {
+    if (preset === "custom") {
+      setTimePreset("custom");
+      setCustomPickerOpen(true);
+      return;
+    }
     setTimePreset(preset);
-    if (preset !== "custom") {
-      setDateFrom("");
-      setDateTo("");
+    setCustomPickerOpen(false);
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  const updateCustomDate = (field: "from" | "to", value: string) => {
+    const nextFrom = field === "from" ? value : dateFrom;
+    const nextTo = field === "to" ? value : dateTo;
+    const ordered = normalizeDateOrder(nextFrom, nextTo);
+    setDateFrom(ordered.from);
+    setDateTo(ordered.to);
+    if (ordered.from && ordered.to) {
+      setCustomPickerOpen(false);
     }
   };
 
   const clearFilters = () => {
     setSearchTerm("");
     setDebouncedSearch("");
-    setEventType(ALL);
+    setEventTypes([]);
     setTrackingSourceId(ALL);
     setChannel(ALL);
     setOrigin(ALL);
-    setStatus(ALL);
-    setTimePreset("last_30d");
+    setTimePreset(DEFAULT_PRESET);
     setDateFrom("");
     setDateTo("");
+    setCustomPickerOpen(false);
   };
 
   if (!subscriberId) {
@@ -329,8 +352,7 @@ export default function CustomerEventsTab({
             Customer Events
           </h3>
           <p className="text-sm text-gray-500">
-            Counts of customer-driven and system events, with filters for event
-            type, tracking source, channel, and preview windows.
+            Counts of customer-driven and system events.
           </p>
         </div>
         {filtersActive && (
@@ -345,58 +367,165 @@ export default function CustomerEventsTab({
         )}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-        {EVENT_COUNT_WINDOWS.map((window) => {
-              const bucket = counts[window.key];
+      <div
+        className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4"
+        role="tablist"
+        aria-label="Event time window"
+      >
+        {EVENT_TIME_TABS.map((window) => {
+          const isCustom = window.key === "custom";
+          const bucket = isCustom ? customCount : counts[window.key];
           const isActive = timePreset === window.key;
+          const showCustomCount = isCustom && Boolean(dateFrom || dateTo);
           return (
             <button
               key={window.key}
               type="button"
               onClick={() => applyTimePreset(window.key)}
-              aria-pressed={isActive}
-              className={`${tw.rounded} border bg-white p-4 text-left transition-shadow hover:shadow-sm cursor-pointer ${
-                isActive ? "ring-2 ring-offset-1" : "border-gray-200"
+              role="tab"
+              aria-selected={timePreset === window.key}
+              title={
+                isCustom && dateFrom && dateTo && !customPickerOpen
+                  ? "Click to edit the date range"
+                  : window.hint
+              }
+              className={`${tw.rounded} border bg-white p-4 text-left transition-all duration-150 cursor-pointer ${
+                isActive
+                  ? "translate-y-1 shadow-inner"
+                  : "border-gray-200 hover:shadow-sm hover:-translate-y-0.5"
               }`}
               style={
                 isActive
                   ? {
                       borderColor: color.primary.accent,
-                      boxShadow: `0 0 0 1px ${color.primary.accent}`,
+                      borderWidth: 2,
+                      backgroundColor: "rgba(0, 187, 204, 0.08)",
+                      boxShadow: `inset 0 2px 4px rgba(0, 187, 204, 0.18)`,
                     }
                   : undefined
               }
             >
               <div className="flex items-center justify-between gap-2 mb-2">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <p
+                  className={`text-xs font-medium uppercase tracking-wide ${
+                    isActive ? "text-gray-800" : "text-gray-500"
+                  }`}
+                >
                   {window.label}
                 </p>
                 {window.key === "last_1h" || window.key === "last_24h" ? (
-                  <Clock className="h-4 w-4 text-gray-400" />
+                  <Clock
+                    className="h-4 w-4"
+                    style={{ color: isActive ? color.primary.accent : undefined }}
+                  />
+                ) : isCustom ? (
+                  <Calendar
+                    className="h-4 w-4"
+                    style={{ color: isActive ? color.primary.accent : undefined }}
+                  />
                 ) : (
-                  <Activity className="h-4 w-4 text-gray-400" />
+                  <Activity
+                    className="h-4 w-4"
+                    style={{ color: isActive ? color.primary.accent : undefined }}
+                  />
                 )}
               </div>
               <p className="text-2xl font-semibold text-gray-900">
-                {isLoading ? "—" : bucket.total.toLocaleString()}
+                {isLoading
+                  ? "—"
+                  : isCustom && !showCustomCount
+                    ? "—"
+                    : bucket.total.toLocaleString()}
               </p>
               <p className="mt-2 text-xs text-gray-500">
-                {bucket.customer.toLocaleString()} customer ·{" "}
-                {bucket.system.toLocaleString()} system
+                {isCustom
+                  ? formatCustomRangeLabel(dateFrom, dateTo)
+                  : `${bucket.customer.toLocaleString()} customer · ${bucket.system.toLocaleString()} system`}
               </p>
             </button>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3 mb-4">
-        <div className="xl:col-span-2">
-          <SearchInput
-            placeholder="Search events..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-          />
+      {timePreset === "custom" && customPickerOpen && (
+        <div
+          className={`${tw.rounded} border bg-white p-4 mb-4 grid grid-cols-1 md:grid-cols-2 gap-3`}
+          style={{ borderColor: color.primary.accent }}
+        >
+          <div>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+              Start date
+            </p>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              <Input
+                type="date"
+                value={dateFrom}
+                max={dateTo || today}
+                onChange={(value) => updateCustomDate("from", String(value))}
+                placeholder="Start date"
+                className="pl-10 pr-10"
+                onClick={(e) =>
+                  (e.currentTarget as HTMLInputElement).showPicker?.()
+                }
+              />
+              {dateFrom && (
+                <button
+                  type="button"
+                  onClick={() => setDateFrom("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear start date"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+              End date
+            </p>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              <Input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                max={today}
+                onChange={(value) => updateCustomDate("to", String(value))}
+                placeholder="End date"
+                className="pl-10 pr-10"
+                onClick={(e) =>
+                  (e.currentTarget as HTMLInputElement).showPicker?.()
+                }
+              />
+              {dateTo && (
+                <button
+                  type="button"
+                  onClick={() => setDateTo("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear end date"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+          {!dateFrom && !dateTo ? (
+            <p className="md:col-span-2 text-xs text-gray-500">
+              Choose a start and end date. The end date is inclusive, and cannot
+              be in the future.
+            </p>
+          ) : null}
         </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3 mb-6">
+        <SearchInput
+          placeholder="Search events..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+        />
         <HeadlessSelect
           value={channel}
           onChange={(value) => setChannel(String(value))}
@@ -404,12 +533,14 @@ export default function CustomerEventsTab({
           placeholder="All Channels"
           className="w-full"
         />
-        <HeadlessSelect
-          value={eventType}
-          onChange={(value) => setEventType(String(value))}
+        <HeadlessMultiSelect
+          value={eventTypes}
+          onChange={(value) => setEventTypes(value.map(String))}
           options={eventTypeOptions}
-          placeholder="Event type"
+          placeholder="All event types"
           searchable
+          showCheckboxes
+          hideSelectedChips
           className="w-full"
         />
         <HeadlessSelect
@@ -429,73 +560,6 @@ export default function CustomerEventsTab({
           placeholder="Origin"
           className="w-full"
         />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
-        <HeadlessSelect
-          value={status}
-          onChange={(value) => setStatus(String(value))}
-          options={statusOptions}
-          placeholder="All Status"
-          className="w-full"
-        />
-        <HeadlessSelect
-          value={timePreset}
-          onChange={(value) => applyTimePreset(value as EventTimePreset)}
-          options={EVENT_TIME_PRESET_OPTIONS}
-          placeholder="Time range"
-          className="w-full"
-        />
-        {timePreset === "custom" && (
-          <>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(value) => setDateFrom(String(value))}
-                placeholder="Start date"
-                className="pl-10 pr-10"
-                onClick={(e) =>
-                  (e.currentTarget as HTMLInputElement).showPicker?.()
-                }
-              />
-              {dateFrom && (
-                <button
-                  type="button"
-                  onClick={() => setDateFrom("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label="Clear start date"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(value) => setDateTo(String(value))}
-                placeholder="End date"
-                className="pl-10 pr-10"
-                onClick={(e) =>
-                  (e.currentTarget as HTMLInputElement).showPicker?.()
-                }
-              />
-              {dateTo && (
-                <button
-                  type="button"
-                  onClick={() => setDateTo("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label="Clear end date"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </>
-        )}
       </div>
 
       {error && (
@@ -542,8 +606,18 @@ export default function CustomerEventsTab({
               totalItems={filteredEvents.length}
               currentPage={page}
               pageSize={pageSize}
-              onPageChange={setPage}
+              onPageChange={(nextPage) => {
+                setPage(nextPage);
+                setExpandedRowId(null);
+              }}
               getRowId={(row) => row.id}
+              expandedRowId={expandedRowId}
+              onExpandChange={(rowId) =>
+                setExpandedRowId(rowId == null ? null : String(rowId))
+              }
+              expandedContent={(row) => (
+                <CustomerEventDetailsExpandedRow event={row} />
+              )}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -558,7 +632,10 @@ export default function CustomerEventsTab({
                 currentPage={page}
                 pageSize={pageSize}
                 totalItems={filteredEvents.length}
-                onPageChange={setPage}
+                onPageChange={(nextPage) => {
+                  setPage(nextPage);
+                  setExpandedRowId(null);
+                }}
               />
             </div>
           )}

@@ -48,6 +48,11 @@ import {
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
 import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
+import AiGenerateMessageButton from "./AiGenerateMessageButton";
+import AiGenerateMessageModal from "./AiGenerateMessageModal";
+import MessageContentToolbar, {
+  messageContentActionClass,
+} from "./MessageContentToolbar";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
   id: string; // Use string for local temp ID
@@ -766,6 +771,7 @@ export default function OfferCreativeStep({
   const [isRichTextMap, setIsRichTextMap] = useState<Record<string, boolean>>(
     {},
   );
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -1528,14 +1534,7 @@ export default function OfferCreativeStep({
 
 
                     {/* Message content toolbar */}
-                    <div
-                      className="flex items-center justify-between p-3 rounded-lg"
-                      style={{ backgroundColor: color.surface.cards }}
-                    >
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {t.offers.messageContent.label}
-                      </span>
-                      <div className="flex items-center gap-2">
+                    <MessageContentToolbar>
                         {editingCreative.channel !== "Email" && (
                           editingCreative.channel === "SMS" ||
                           editingCreative.channel === "WhatsApp" ||
@@ -1550,7 +1549,7 @@ export default function OfferCreativeStep({
                                   !prev[selectedCreativeData.id],
                               }))
                             }
-                            className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                            className={messageContentActionClass}
                             style={{
                               backgroundColor: selectedCreativeData && isRichTextMap[
                                 selectedCreativeData.id
@@ -1572,15 +1571,16 @@ export default function OfferCreativeStep({
                               : t.offers.plainText}
                           </button>
                         )}
-                        <div className="relative">
+                        <div className="relative shrink-0">
                           <button
                             type="button"
                             onClick={() =>
                               setShowVariableSelector(!showVariableSelector)
                             }
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                            className={messageContentActionClass}
                             style={{
                               backgroundColor: color.primary.accent,
+                              borderColor: color.primary.accent,
                               color: "white",
                             }}
                           >
@@ -1597,8 +1597,12 @@ export default function OfferCreativeStep({
                             />
                           </div>
                         </div>
-                      </div>
-                    </div>
+                        <AiGenerateMessageButton
+                          onClick={() => setIsAiModalOpen(true)}
+                          disabled={!selectedCreativeData}
+                          active={isAiModalOpen}
+                        />
+                    </MessageContentToolbar>
 
                     {/* Message Body */}
                     {selectedCreativeData && (selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id]) ? (
@@ -1719,6 +1723,33 @@ export default function OfferCreativeStep({
           )}
         </div>
       )}
+
+      {/* AI message generation */}
+      <AiGenerateMessageModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        channel={editingCreative.channel}
+        locale={editingCreative.locale || "en"}
+        brandName={editingCreative.title || undefined}
+        existingTitle={editingCreative.title || ""}
+        existingBody={
+          editingCreative.channel === "Email"
+            ? editingCreative.html_body || editingCreative.text_body || ""
+            : editingCreative.text_body || ""
+        }
+        availableVariables={selectedVariables.map(formatVariablePlaceholder)}
+        onApply={({ title, body }) => {
+          if (!selectedCreativeData) return;
+          const isEmail = selectedCreativeData.channel === "Email";
+          const isRichText =
+            isEmail || Boolean(isRichTextMap[selectedCreativeData.id]);
+          updateCreative(selectedCreativeData.id, {
+            text_body: body,
+            ...(isRichText ? { html_body: body } : {}),
+            ...(title ? { title } : {}),
+          });
+        }}
+      />
 
       {/* Preview Modal */}
       <RegularModal

@@ -1776,6 +1776,64 @@ export interface Translations {
       insertVariable: string;
       clearTemplate: string;
     };
+    aiGenerate: {
+      buttonLabel: string;
+      buttonAria: string;
+      modalTitle: string;
+      modalSubtitle: string;
+      tone: { label: string };
+      tones: {
+        professional: string;
+        friendly: string;
+        urgent: string;
+        promotional: string;
+        empathetic: string;
+        formal: string;
+        playful: string;
+        concise: string;
+      };
+      objective: { label: string; placeholder: string; hint: string };
+      callToAction: { label: string; placeholder: string };
+      keyFacts: { label: string; placeholder: string };
+      audience: { label: string; placeholder: string };
+      length: { label: string };
+      lengths: {
+        channel_optimized: string;
+        short: string;
+        medium: string;
+      };
+      draftAction: { label: string };
+      draftActions: {
+        generate_new: string;
+        improve_existing: string;
+      };
+      mustInclude: { label: string; placeholder: string };
+      mustAvoid: { label: string; placeholder: string };
+      generate: string;
+      generating: string;
+      regenerate: string;
+      apply: string;
+      applyAndReplace: string;
+      applyTitleToo: string;
+      generatedTitle: string;
+      variantsTitle: string;
+      variantLabel: string;
+      characters: string;
+      smsSegments: string;
+      smsOverLimit: string;
+      appliedTitle: string;
+      appliedMessage: string;
+      errors: {
+        toneRequired: string;
+        objectiveRequired: string;
+        generateFailed: string;
+      };
+      hints: {
+        variables: string;
+        channelLimit: string;
+        overwrite: string;
+      };
+    };
     messageBody: {
       label: string;
       placeholder: string;

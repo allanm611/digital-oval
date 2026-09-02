@@ -1,5 +1,8 @@
 import type { OfferReward } from "../../offers/types/offerReward";
 import type { OfferTrackingSource } from "../../offers/types/offerTrackingSource";
+import { offerTypeExemptFromTrackingRewardMapping } from "../../offers/utils/offerTypeTrackingPolicy";
+import { TRACKING_TYPE_OPTIONS } from "../../offers/utils/trackingSourcesConfig";
+import { engineSourceTypeLabel } from "../../configurations/types/engineTrackingSource";
 import {
   TRACKING_REWARD_CONDITION_KEY,
   TRACKING_REWARD_CONFIG_VERSION,
@@ -44,6 +47,14 @@ export function formatAttributionWindow(window: AttributionWindow | undefined): 
 
 export function formatLimit(limit: number | null | undefined): string {
   return limit == null ? "No limit" : String(limit);
+}
+
+export function trackingSourceTypeLabel(type: string | undefined): string {
+  if (!type) return "—";
+  return (
+    TRACKING_TYPE_OPTIONS.find((option) => option.value === type)?.label ||
+    engineSourceTypeLabel(type)
+  );
 }
 
 function toNonNegativeInt(value: unknown): number {
@@ -159,6 +170,57 @@ export function hasCommittedTrackingReward(
   config: MappingTrackingRewardConfig | undefined | null,
 ): boolean {
   return Boolean(config?.sources?.some((source) => source.committed));
+}
+
+/** Mapping overlays that were saved (committed) — these are what the UI should show. */
+export function committedTrackingSources(
+  config: MappingTrackingRewardConfig | undefined | null,
+): TrackingSourceCampaignConfig[] {
+  return (config?.sources || []).filter((source) => source.committed);
+}
+
+export function removeTrackingSourceFromConfig(
+  config: MappingTrackingRewardConfig | undefined | null,
+  sourceId: string,
+): MappingTrackingRewardConfig {
+  return parseMappingTrackingRewardConfig({
+    version: TRACKING_REWARD_CONFIG_VERSION,
+    sources: (config?.sources || []).filter((source) => source.id !== sourceId),
+  });
+}
+
+export function mappingRequiresTrackingSource(offerType?: string): boolean {
+  return !offerTypeExemptFromTrackingRewardMapping(offerType);
+}
+
+export function findMappingMissingTrackingSource(
+  flows: Array<{
+    segment_id?: string | number;
+    offer_id?: string | number;
+    condition_rule?: Record<string, unknown> | null;
+  }>,
+  offers: Array<{ id: string; name?: string; offer_type?: string }>,
+  segments: Array<{ id: string; name?: string }>,
+): { segmentName: string; offerName: string } | null {
+  for (const flow of flows) {
+    const offer = offers.find((item) => String(item.id) === String(flow.offer_id));
+    if (offer && !mappingRequiresTrackingSource(offer.offer_type)) continue;
+    if (
+      hasCommittedTrackingReward(
+        readTrackingRewardFromConditionRule(flow.condition_rule),
+      )
+    ) {
+      continue;
+    }
+    const segment = segments.find(
+      (item) => String(item.id) === String(flow.segment_id),
+    );
+    return {
+      segmentName: segment?.name || `Segment #${flow.segment_id}`,
+      offerName: offer?.name || `Offer #${flow.offer_id}`,
+    };
+  }
+  return null;
 }
 
 export function configuredSourceIds(

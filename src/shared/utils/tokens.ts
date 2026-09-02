@@ -576,6 +576,21 @@ export const buttons = {
   },
 };
 
+/**
+ * Wizard toolbar actions (Cancel, Previous, Next Step, Save Draft).
+ * Primary and outline variants share one box so Next is never taller/wider
+ * than Previous, and the pair stays the same size on every wizard page.
+ */
+export const wizardActions = {
+  height: "2.25rem", // 36px — h-9; includes 1px border via border-box
+  navMinWidth: "8.5rem", // Previous + Next Step occupy the same slot
+  paddingX: "1rem",
+  fontSize: "0.875rem",
+  lineHeight: "1.25rem",
+  borderWidth: "1px",
+  borderRadius: "0.375rem",
+};
+
 // Cards defines consistent styling for all card components
 export const cards = {
   default: {

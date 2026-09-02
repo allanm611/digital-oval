@@ -23,11 +23,13 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import CustomerEventsTab from "../components/CustomerEventsTab";
 import CustomerSubscribedListsTab from "../components/CustomerSubscribedListsTab";
 import CustomerAudiencePanel from "../components/CustomerAudiencePanel";
+import CustomerOffersTab from "../components/CustomerOffersTab";
+import CustomerCommunicationsTab from "../components/CustomerCommunicationsTab";
+import CustomerPurchasesTab from "../components/CustomerPurchasesTab";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import Radio from "../../../shared/components/ui/Radio";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -46,6 +48,7 @@ import {
 } from "../utils/customerSubscriptionHelpers";
 import type { CustomerSearchResultsResponse } from "../../reports-analytics/types/ReportsAPI";
 import { customerService } from "../services/customerServices";
+import { customerCommunicationService } from "../services/customerCommunicationService";
 import { revenueMetricService } from "../../kpis/services/revenueMetricService";
 import type { RevenueMetric } from "../../kpis/types/revenueMetrics";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
@@ -53,7 +56,6 @@ import { Table, useTable, type TableColumn } from "../../../shared/components/Ta
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
 // Extract types from API response
-type CustomerOffer = CustomerSearchResultsResponse["offers"][number];
 type CustomerEvent = CustomerSearchResultsResponse["events"][number];
 type OriginSource = "customers" | "reports";
 
@@ -107,50 +109,6 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     typeof customer.id === "string"
       ? customer.id
       : (customer.id || "0").toString();
-
-  const offerNames = [
-    "VIP Exclusive Offer",
-    "Loyalty Reward",
-    "Welcome Bonus",
-    "Seasonal Discount",
-    "Referral Bonus",
-  ];
-
-  const offerTypes = [
-    "Discount",
-    "Cashback",
-    "Voucher",
-    "Discount",
-    "Cashback",
-  ];
-  const offerStatuses: Array<CustomerOffer["status"]> = [
-    "Redeemed",
-    "Active",
-    "Redeemed",
-    "Active",
-    "Redeemed",
-  ];
-
-  const offers: CustomerOffer[] = offerNames.map((name, index) => {
-    const baseDate = new Date(customer.lastInteractionDate || new Date());
-    const redeemedDate = new Date(baseDate);
-    redeemedDate.setDate(redeemedDate.getDate() - index * 20);
-
-    const customerId =
-      typeof customer.id === "string"
-        ? customer.id
-        : (customer.id || "0").toString();
-    return {
-      id: `OFF-${customerId.slice(-3)}-${index + 1}`,
-      name,
-      type: offerTypes[index],
-      status: offerStatuses[index],
-      redeemedDate: isNaN(redeemedDate.getTime())
-        ? new Date().toISOString().split("T")[0]
-        : redeemedDate.toISOString().split("T")[0],
-      value: (index + 1) * 50,
-    };
-  });
 
   const events: CustomerEvent[] = [];
   const interactionDate = new Date(customer.lastInteractionDate);
@@ -248,7 +206,7 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     }
   }
 
-  return { offers, events };
+  return { events };
 };
 
 type TabType =
@@ -397,6 +355,7 @@ export default function CustomerDetailPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
+  const [communicationRefreshToken, setCommunicationRefreshToken] = useState(0);
   const [kpiSearchTerm, setKpiSearchTerm] = useState<string>("");
   const [expandedKpi, setExpandedKpi] = useState<string | null>(null);
   const [showKpiColumnPicker, setShowKpiColumnPicker] = useState(false);
@@ -607,14 +566,12 @@ export default function CustomerDetailPage() {
   );
 
   // Pagination states for the tables
-  const [offerPage, setOfferPage] = useState(1);
   const [kpiPage, setKpiPage] = useState(1);
   const pageSize = 20;
 
   useEffect(() => {
     if (customer) {
       setActiveTab("overview");
-      setOfferPage(1);
       setKpiPage(1);
     }
   }, [customer]);
@@ -624,32 +581,20 @@ export default function CustomerDetailPage() {
     setKpiPage(1);
   }, [kpiSearchTerm]);
 
-  const { offers, events } = useMemo(() => {
+  const { events } = useMemo(() => {
     if (!selectedSubscription)
       return {
-        offers: [],
         events: [],
       };
 
-    const data = selectedSubscription as Record<string, any>;
     const dummyData = customer
       ? generateCustomerRelatedData(customer)
-      : { offers: [], events: [] };
-
-    const offersData = Array.isArray(data.offers) && data.offers.length > 0
-      ? data.offers
-      : dummyData.offers;
+      : { events: [] };
 
     return {
-      offers: offersData,
       events: dummyData.events,
     };
   }, [selectedSubscription, customer]);
-
-  const paginatedOffers = useMemo(() => {
-    const startIdx = (offerPage - 1) * pageSize;
-    return offers.slice(startIdx, startIdx + pageSize);
-  }, [offers, offerPage]);
 
   const paginatedKpis = useMemo(() => {
     const startIdx = (kpiPage - 1) * pageSize;
@@ -1260,84 +1205,17 @@ export default function CustomerDetailPage() {
         )}
 
         {activeTab === "offers" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Offers
-              </h3>
-              <p className="text-sm text-gray-500">
-                View all offers available or redeemed by this customer
-              </p>
-            </div>
-            {offers.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">No offers available</p>
-              </div>
-            ) : (
-              <>
-                <div className={`${tw.rounded} overflow-hidden`}>
-                  <Table<CustomerOffer>
-                    columns={[
-                      {
-                        id: "name",
-                        label: "Offer Name",
-                        visible: true,
-                                        },
-                      {
-                        id: "type",
-                        label: "Type",
-                        visible: true,
-                        },
-                      {
-                        id: "status",
-                        label: "Status",
-                        visible: true,
-                        },
-                      {
-                        id: "value",
-                        label: "Value",
-                        visible: true,
-                        render: (_, row) => <CurrencyFormatter amount={row.value} />,
-                      },
-                      {
-                        id: "redeemedDate",
-                        label: "Redeemed Date",
-                        visible: true,
-                        render: (_, row) => (
-                          row.redeemedDate ? (
-                            <DateFormatter date={row.redeemedDate} useLocale year="numeric" month="short" day="numeric" />
-                          ) : (
-                            <span className="text-sm text-gray-900">—</span>
-                          )
-                        ),
-                      },
-                    ]}
-                    data={paginatedOffers}
-                    totalItems={offers.length}
-                    currentPage={offerPage}
-                    pageSize={pageSize}
-                    onPageChange={setOfferPage}
-                    style={{
-                      headerBackground: color.surface.tableHeader,
-                      headerTextColor: color.surface.tableHeaderText,
-                      rowBackground: color.surface.tablebodybg,
-                      rowSpacing: "0 8px",
-                    }}
-                  />
-                </div>
-                {paginatedOffers.length > 0 && offers.length > 0 && (
-                  <div className="mt-4">
-                    <Pagination
-                      currentPage={offerPage}
-                      pageSize={pageSize}
-                      totalItems={offers.length}
-                      onPageChange={setOfferPage}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <CustomerOffersTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
         {activeTab === "subscribedLists" && (
@@ -1354,167 +1232,33 @@ export default function CustomerDetailPage() {
           />
         )}
 
-        {/* Communications Tab */}
         {activeTab === "communications" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Communication History
-              </h3>
-              <p className="text-sm text-gray-500">
-                View all communications sent to this customer across all
-                channels
-              </p>
-            </div>
-
-            <div className={`${tw.rounded} overflow-hidden`}>
-              <Table<any>
-                columns={[
-                  {
-                    id: "subject",
-                    label: "Subject",
-                    visible: true,
-                    },
-                  {
-                    id: "channel",
-                    label: "Channel",
-                    visible: true,
-                    },
-                  {
-                    id: "date",
-                    label: "Sent Date",
-                    visible: true,
-                    render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
-                  },
-                  {
-                    id: "status",
-                    label: "Status",
-                    visible: true,
-                    },
-                ]}
-                data={[
-                  {
-                    id: "comm-1",
-                    subject: "Welcome to our service",
-                    channel: "Email",
-                    date: "2026-04-08",
-                    status: "Delivered",
-                  },
-                  {
-                    id: "comm-2",
-                    subject: "Your account activation",
-                    channel: "SMS",
-                    date: "2026-04-08",
-                    status: "Opened",
-                  },
-                  {
-                    id: "comm-3",
-                    subject: "Special offer just for you",
-                    channel: "Push",
-                    date: "2026-04-07",
-                    status: "Clicked",
-                  },
-                  {
-                    id: "comm-4",
-                    subject: "Weekly newsletter",
-                    channel: "Email",
-                    date: "2026-04-06",
-                    status: "Delivered",
-                  },
-                ]}
-                style={{
-                  headerBackground: color.surface.tableHeader,
-                  headerTextColor: color.surface.tableHeaderText,
-                  rowBackground: color.surface.tablebodybg,
-                  rowSpacing: "0 8px",
-                }}
-              />
-            </div>
-          </div>
+          <CustomerCommunicationsTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+            refreshToken={communicationRefreshToken}
+          />
         )}
 
-        {/* Purchase History Tab */}
         {activeTab === "purchases" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Purchase History
-              </h3>
-              <p className="text-sm text-gray-500">
-                View all transactions and purchase records for this customer
-              </p>
-            </div>
-
-            <div className={`${tw.rounded} overflow-hidden`}>
-              <Table<any>
-                columns={[
-                  {
-                    id: "id",
-                    label: "Transaction ID",
-                    visible: true,
-                    },
-                  {
-                    id: "product",
-                    label: "Product",
-                    visible: true,
-                    },
-                  {
-                    id: "amount",
-                    label: "Amount",
-                    visible: true,
-                    render: (_, row) => <CurrencyFormatter amount={row.amount} />,
-                  },
-                  {
-                    id: "date",
-                    label: "Date",
-                    visible: true,
-                    render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
-                  },
-                  {
-                    id: "status",
-                    label: "Status",
-                    visible: true,
-                    },
-                ]}
-                data={[
-                  {
-                    id: "TXN-001",
-                    product: "Premium Data Bundle",
-                    amount: 50.0,
-                    date: "2026-04-08",
-                    status: "Completed",
-                  },
-                  {
-                    id: "TXN-002",
-                    product: "Voice Minutes",
-                    amount: 25.0,
-                    date: "2026-04-05",
-                    status: "Completed",
-                  },
-                  {
-                    id: "TXN-003",
-                    product: "International Roaming",
-                    amount: 75.0,
-                    date: "2026-03-28",
-                    status: "Completed",
-                  },
-                  {
-                    id: "TXN-004",
-                    product: "Monthly Plan",
-                    amount: 100.0,
-                    date: "2026-03-09",
-                    status: "Completed",
-                  },
-                ]}
-                style={{
-                  headerBackground: color.surface.tableHeader,
-                  headerTextColor: color.surface.tableHeaderText,
-                  rowBackground: color.surface.tablebodybg,
-                  rowSpacing: "0 8px",
-                }}
-              />
-            </div>
-          </div>
+          <CustomerPurchasesTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
         {/* Loyalty & Rewards Tab */}
@@ -1950,6 +1694,12 @@ export default function CustomerDetailPage() {
             onClose={() => setIsCommunicateModalOpen(false)}
             customerRecord={selectedSubscription}
             onSuccess={(result) => {
+              customerCommunicationService.invalidateCache(
+                selectedSubscription?.customerId ??
+                  selectedSubscription?.id ??
+                  customerIdFromParams,
+              );
+              setCommunicationRefreshToken((value) => value + 1);
               showSuccess(
                 "Success",
                 `Communication sent successfully! ${result.total_messages_sent} messages sent.`,

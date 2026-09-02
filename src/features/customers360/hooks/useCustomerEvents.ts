@@ -47,8 +47,8 @@ export function useCustomerEvents(subscriberId: string | number | undefined) {
       ]);
       setResult(eventsResult);
       setTrackingSources(catalog);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load events");
+    } catch {
+      setError("Unable to load customer events. Please try again.");
       setResult(EMPTY_RESULT);
     } finally {
       setIsLoading(false);
