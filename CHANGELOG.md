@@ -1,3 +1,11 @@
+## [1.5.4](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.3...v1.5.4) (2026-09-02)
+
+
+### Bug Fixes
+
+* customer 360 setup ([aa00117](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/aa001174d2462649643cc50961dd0dc05f5a05b2))
+* Merge pull request [#15](https://github.com/YellowBird-UG/Sentra_cvm_front/issues/15) from YellowBird-UG/fplex/master-sz ([84622e3](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/84622e362159e51e14d3902f934ec0b070456b6f))
+
 ## [1.5.3](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.2...v1.5.3) (2026-08-26)
 
 
