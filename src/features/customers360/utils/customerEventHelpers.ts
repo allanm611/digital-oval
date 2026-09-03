@@ -7,6 +7,7 @@ import type {
   CustomerEventCounts,
   CustomerEventCreativeSummary,
   CustomerEventFacets,
+  CustomerEventLoyaltyContext,
   CustomerEventMessageSummary,
   CustomerEventOfferSummary,
   CustomerEventOrigin,
@@ -179,6 +180,66 @@ export const CUSTOMER_EVENT_CATALOG: CustomerEventCatalogItem[] = [
     tracking_source_id: "app_event",
     tracking_source_name: "App Event",
     statuses: ["Clicked", "Completed"],
+  },
+  {
+    code: "points_earned",
+    label: "Points Earned",
+    description: "Customer earned loyalty points",
+    origin: "system",
+    channel: "app",
+    tracking_source_id: "loyalty",
+    tracking_source_name: "Loyalty",
+    statuses: ["Completed"],
+  },
+  {
+    code: "points_redeemed",
+    label: "Points Redeemed",
+    description: "Customer redeemed loyalty points for a reward",
+    origin: "customer",
+    channel: "app",
+    tracking_source_id: "loyalty",
+    tracking_source_name: "Loyalty",
+    statuses: ["Completed", "Failed"],
+  },
+  {
+    code: "loyalty_tier_changed",
+    label: "Loyalty Tier Changed",
+    description: "Customer loyalty program tier changed",
+    origin: "system",
+    channel: "app",
+    tracking_source_id: "loyalty",
+    tracking_source_name: "Loyalty",
+    statuses: ["Completed"],
+  },
+  {
+    code: "reward_granted",
+    label: "Reward Granted",
+    description: "A loyalty or manual reward was granted to the customer",
+    origin: "system",
+    channel: "app",
+    tracking_source_id: "loyalty",
+    tracking_source_name: "Loyalty",
+    statuses: ["Completed", "Failed"],
+  },
+  {
+    code: "opt_out",
+    label: "Opted Out",
+    description: "Customer opted out of a communication channel or DND list",
+    origin: "customer",
+    channel: "sms",
+    tracking_source_id: "consent",
+    tracking_source_name: "Consent",
+    statuses: ["Completed"],
+  },
+  {
+    code: "opt_in",
+    label: "Opted In",
+    description: "Customer opted in to a communication channel",
+    origin: "customer",
+    channel: "app",
+    tracking_source_id: "consent",
+    tracking_source_name: "Consent",
+    statuses: ["Completed"],
   },
   {
     code: "welcome_email",
@@ -498,6 +559,130 @@ function parsePurchaseContext(
     currency,
     quantity,
     payment_method: paymentMethod,
+  };
+}
+
+function parseLoyaltyContext(
+  record: Record<string, unknown>,
+): CustomerEventLoyaltyContext | null {
+  const pointsObject =
+    typeof record.points === "object" ? asRecord(record.points) : null;
+  const nested =
+    asRecord(record.loyalty) ||
+    asRecord(record.loyalty_account) ||
+    pointsObject ||
+    asRecord(record.reward);
+  const sources = [record, nested].filter(Boolean) as Record<string, unknown>[];
+
+  const points = sources.reduce(
+    (found: number | null, source) =>
+      found ??
+      pickNumber(source, [
+        "points",
+        "points_amount",
+        "loyalty_points",
+        "points_earned",
+        "points_redeemed",
+        "points_granted",
+        "points_expired",
+        "points_delta",
+      ]),
+    null,
+  );
+  const pointsBalance = sources.reduce(
+    (found: number | null, source) =>
+      found ??
+      pickNumber(source, [
+        "points_balance",
+        "current_points",
+        "points_balance_after",
+      ]),
+    null,
+  );
+  const kind =
+    sources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, ["loyalty_kind", "points_kind", "ledger_type"]),
+      "",
+    ) || null;
+  const rewardName =
+    sources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, [
+          "reward_name",
+          "rewardName",
+          "loyalty_reward",
+          "benefit_name",
+        ]),
+      "",
+    ) || pickString(asRecord(record.reward) || {}, ["name", "title"]);
+  const rewardType =
+    sources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, ["reward_type", "rewardType", "loyalty_reward_type"]),
+      "",
+    ) || null;
+  const programName =
+    sources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, [
+          "program_name",
+          "programName",
+          "loyalty_program",
+          "program",
+        ]),
+      "",
+    ) || null;
+  const tier =
+    sources.reduce(
+      (found, source) =>
+        found || pickString(source, ["tier", "loyalty_tier", "program_tier"]),
+      "",
+    ) || null;
+  const tierFrom =
+    sources.reduce(
+      (found, source) =>
+        found || pickString(source, ["tier_from", "previous_tier", "from_tier"]),
+      "",
+    ) || null;
+  const tierTo =
+    sources.reduce(
+      (found, source) =>
+        found || pickString(source, ["tier_to", "new_tier", "to_tier"]),
+      "",
+    ) || null;
+
+  const typeLooksLoyalty = /point|loyalty|cashback|voucher/.test(
+    String(rewardType || kind || "").toLowerCase(),
+  );
+
+  if (
+    points == null &&
+    pointsBalance == null &&
+    !rewardName &&
+    !tier &&
+    !tierFrom &&
+    !tierTo &&
+    !programName &&
+    !typeLooksLoyalty
+  ) {
+    return null;
+  }
+
+  return {
+    points,
+    points_balance: pointsBalance,
+    kind,
+    reward_name: rewardName,
+    reward_type: rewardType,
+    program_name: programName,
+    tier,
+    tier_from: tierFrom,
+    tier_to: tierTo,
   };
 }
 
@@ -1116,6 +1301,7 @@ export function normalizeCustomerEvent(raw: unknown, index = 0): CustomerEvent |
     creative: parseCreativeSummary(record),
     message: parseMessageSummary(record, eventType, occurredAt),
     purchase: parsePurchaseContext(record),
+    loyalty: parseLoyaltyContext(record),
   };
 }
 
@@ -1317,6 +1503,7 @@ export function generateFallbackCustomerEvents(
         status,
         occurred_at: occurredAt,
         purchase: null,
+        loyalty: null,
         ...buildFallbackRelatedContext(definition, occurredAt, random),
       });
     }
@@ -1338,6 +1525,7 @@ export function generateFallbackCustomerEvents(
     status: "Received",
     occurred_at: receivedAt,
     purchase: null,
+    loyalty: null,
     ...buildFallbackRelatedContext(receivedDefinition, receivedAt, random),
   });
 

@@ -26,9 +26,9 @@ import CustomerAudiencePanel from "../components/CustomerAudiencePanel";
 import CustomerOffersTab from "../components/CustomerOffersTab";
 import CustomerCommunicationsTab from "../components/CustomerCommunicationsTab";
 import CustomerPurchasesTab from "../components/CustomerPurchasesTab";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CustomerLoyaltyTab from "../components/CustomerLoyaltyTab";
+import CustomerPreferencesTab from "../components/CustomerPreferencesTab";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
-import Radio from "../../../shared/components/ui/Radio";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -1261,211 +1261,32 @@ export default function CustomerDetailPage() {
           />
         )}
 
-        {/* Loyalty & Rewards Tab */}
         {activeTab === "loyalty" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-              >
-                <p className="text-sm font-medium text-gray-600">
-                  Total Points
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">12,450</p>
-              </div>
-
-              <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-              >
-                <p className="text-sm font-medium text-gray-600">
-                  Current Tier
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">Gold</p>
-              </div>
-
-              <div
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-              >
-                <p className="text-sm font-medium text-gray-600">
-                  Points Redeemed
-                </p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">3,200</p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Redemption History
-              </h3>
-              <div className={`${tw.rounded} overflow-hidden`}>
-                <Table<any>
-                  columns={[
-                    {
-                      id: "name",
-                      label: "Reward Name",
-                      visible: true,
-                                    },
-                    {
-                      id: "points",
-                      label: "Points",
-                      visible: true,
-                      },
-                    {
-                      id: "date",
-                      label: "Redeemed Date",
-                      visible: true,
-                      render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
-                    },
-                  ]}
-                  data={[
-                    {
-                      id: "reward-1",
-                      name: "Data Bonus 5GB",
-                      points: 500,
-                      date: "2026-04-05",
-                    },
-                    {
-                      id: "reward-2",
-                      name: "Free Minutes 100",
-                      points: 300,
-                      date: "2026-03-28",
-                    },
-                    {
-                      id: "reward-3",
-                      name: "Discount Voucher",
-                      points: 400,
-                      date: "2026-03-15",
-                    },
-                    {
-                      id: "reward-4",
-                      name: "Cashback 2000",
-                      points: 2000,
-                      date: "2026-03-09",
-                    },
-                  ]}
-                  style={{
-                    headerBackground: color.surface.tableHeader,
-                    headerTextColor: color.surface.tableHeaderText,
-                    rowBackground: color.surface.tablebodybg,
-                    rowSpacing: "0 8px",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+          <CustomerLoyaltyTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
-        {/* Preferences Tab */}
         {activeTab === "preferences" && (
-          <div
-            className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
-          >
-            <div className="p-6 space-y-6">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-4">
-                  Channel Preferences
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* Email Preference */}
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Radio
-                        name="email_preference"
-                        value="enabled"
-                        checked={true}
-                        onChange={() => {}}
-                      />
-                      <label className="flex-1 cursor-pointer">
-                        <p className="text-xs uppercase text-gray-500 mb-1">
-                          Email
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          Enabled
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* SMS Preference */}
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Radio
-                        name="sms_preference"
-                        value="enabled"
-                        checked={true}
-                        onChange={() => {}}
-                      />
-                      <label className="flex-1 cursor-pointer">
-                        <p className="text-xs uppercase text-gray-500 mb-1">
-                          SMS
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          Enabled
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Push Preference */}
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Radio
-                        name="push_preference"
-                        value="enabled"
-                        checked={false}
-                        onChange={() => {}}
-                      />
-                      <label className="flex-1 cursor-pointer">
-                        <p className="text-xs uppercase text-gray-500 mb-1">
-                          Push
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          Disabled
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Language Preference */}
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-4">
-                  Language Preferences
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-md">
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-2">
-                      Preferred Language
-                    </p>
-                    <HeadlessSelect
-                      value="en"
-                      onChange={() => {}}
-                      options={[
-                        { label: "English", value: "en" },
-                        { label: "Spanish", value: "es" },
-                        { label: "French", value: "fr" },
-                      ]}
-                      placeholder="Select language"
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CustomerPreferencesTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
         {/* Interactions Tab */}

@@ -50,6 +50,7 @@ export interface GenerateCreativeResponse {
   variants: GeneratedCreativeVariant[];
   model?: string;
   channelLimit?: number;
+  warnings?: string[];
 }
 
 export interface GenerateCreativeErrorBody {

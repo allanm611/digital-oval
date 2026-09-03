@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle, Receipt, RotateCcw, Wallet } from "lucide-react";
-import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
+import { Award, Medal, RotateCcw, Ticket } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -11,34 +9,43 @@ import Pagination, {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Table, type TableColumn } from "../../../shared/components/Table";
 import { color, tw } from "../../../shared/utils/utils";
-import { useCustomerPurchases } from "../hooks/useCustomerPurchases";
+import { useCustomerLoyalty } from "../hooks/useCustomerLoyalty";
 import type {
-  CustomerPurchaseItem,
-  CustomerPurchaseStatus,
-} from "../types/customerPurchase";
+  CustomerLoyaltyItem,
+  CustomerLoyaltyKind,
+  CustomerLoyaltyStatus,
+} from "../types/customerLoyalty";
 import {
-  filterPurchases,
-  humanizePaymentMethod,
-  humanizePurchaseKind,
-  humanizePurchaseStatus,
-  latestPurchasedAt,
-  uniquePurchaseKinds,
-  uniquePurchaseStatuses,
-} from "../utils/customerPurchaseHelpers";
-import CustomerPurchaseDetailsExpandedRow from "./CustomerPurchaseDetailsExpandedRow";
+  filterActivities,
+  formatPoints,
+  humanizeLoyaltyKind,
+  humanizeLoyaltyStatus,
+  humanizeProgramStatus,
+  latestActivityAt,
+  uniqueLoyaltyKinds,
+  uniqueLoyaltyStatuses,
+} from "../utils/customerLoyaltyHelpers";
+import CustomerLoyaltyDetailsExpandedRow from "./CustomerLoyaltyDetailsExpandedRow";
 
-type CustomerPurchasesTabProps = {
+type CustomerLoyaltyTabProps = {
   subscriberId?: string | number | null;
   customerRecord?: Record<string, unknown> | null;
 };
 
 const ALL = "all";
 
-function statusClassName(status: CustomerPurchaseStatus): string {
+function kindClassName(kind: CustomerLoyaltyKind): string {
+  if (kind === "earn" || kind === "grant") return "bg-green-50 text-green-800";
+  if (kind === "redeem") return "bg-teal-50 text-teal-800";
+  if (kind === "tier_change") return "bg-sky-50 text-sky-800";
+  if (kind === "adjust") return "bg-amber-50 text-amber-800";
+  return "bg-gray-100 text-gray-700";
+}
+
+function statusClassName(status: CustomerLoyaltyStatus): string {
   if (status === "completed") return "bg-green-50 text-green-800";
   if (status === "pending") return "bg-amber-50 text-amber-800";
   if (status === "failed") return "bg-red-50 text-red-800";
-  if (status === "refunded") return "bg-slate-100 text-slate-800";
   return "bg-gray-100 text-gray-700";
 }
 
@@ -47,21 +54,21 @@ function progressLabel(
   checked: number,
   total: number,
 ): string {
-  if (phase === "lookup") return "Checking subscriber purchases...";
-  if (phase === "events") return "Checking live purchase events...";
+  if (phase === "lookup") return "Checking subscriber loyalty account...";
+  if (phase === "events") return "Checking live loyalty events...";
   return total > 0
-    ? `Loading product and offer catalog (${checked.toLocaleString()} of ${total.toLocaleString()})...`
-    : "Loading product and offer catalog...";
+    ? `Loading linked offers (${checked.toLocaleString()} of ${total.toLocaleString()})...`
+    : "Loading linked offers...";
 }
 
-export default function CustomerPurchasesTab({
+export default function CustomerLoyaltyTab({
   subscriberId,
   customerRecord,
-}: CustomerPurchasesTabProps) {
+}: CustomerLoyaltyTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState(ALL);
   const [kind, setKind] = useState(ALL);
+  const [status, setStatus] = useState(ALL);
   const [page, setPage] = useState(1);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const pageSize = DEFAULT_PAGE_SIZE;
@@ -71,49 +78,49 @@ export default function CustomerPurchasesTab({
     return () => window.clearTimeout(timer);
   }, [searchTerm]);
 
-  const { result, progress, isLoading, error, refetch } = useCustomerPurchases(
+  const { result, progress, isLoading, error, refetch } = useCustomerLoyalty(
     subscriberId ?? undefined,
     customerRecord,
   );
 
   const filtered = useMemo(
     () =>
-      filterPurchases(result.purchases, {
+      filterActivities(result.activities, {
         search: debouncedSearch,
-        status,
         kind,
+        status,
       }),
-    [result.purchases, debouncedSearch, status, kind],
+    [result.activities, debouncedSearch, kind, status],
   );
 
   useEffect(() => {
     setPage(1);
     setExpandedRowId(null);
-  }, [debouncedSearch, status, kind, subscriberId]);
+  }, [debouncedSearch, kind, status, subscriberId]);
 
   const filtersActive =
-    Boolean(debouncedSearch.trim()) || status !== ALL || kind !== ALL;
-
-  const statusOptions = useMemo(
-    () => [
-      { value: ALL, label: "All statuses" },
-      ...uniquePurchaseStatuses(result.purchases).map((item) => ({
-        value: item,
-        label: humanizePurchaseStatus(item),
-      })),
-    ],
-    [result.purchases],
-  );
+    Boolean(debouncedSearch.trim()) || kind !== ALL || status !== ALL;
 
   const kindOptions = useMemo(
     () => [
       { value: ALL, label: "All types" },
-      ...uniquePurchaseKinds(result.purchases).map((item) => ({
+      ...uniqueLoyaltyKinds(result.activities).map((item) => ({
         value: item,
-        label: humanizePurchaseKind(item),
+        label: humanizeLoyaltyKind(item),
       })),
     ],
-    [result.purchases],
+    [result.activities],
+  );
+
+  const statusOptions = useMemo(
+    () => [
+      { value: ALL, label: "All statuses" },
+      ...uniqueLoyaltyStatuses(result.activities).map((item) => ({
+        value: item,
+        label: humanizeLoyaltyStatus(item),
+      })),
+    ],
+    [result.activities],
   );
 
   const paginated = useMemo(() => {
@@ -121,68 +128,58 @@ export default function CustomerPurchasesTab({
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
-  const lastPurchased = latestPurchasedAt(result.purchases);
+  const lastActivity = latestActivityAt(result.activities);
+  const account = result.account;
 
-  const columns: TableColumn<CustomerPurchaseItem>[] = useMemo(
+  const columns: TableColumn<CustomerLoyaltyItem>[] = useMemo(
     () => [
       {
-        id: "transactionId",
-        label: "Transaction ID",
-        visible: true,
-        render: (_, row) => (
-          <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
-            {row.transactionId}
-          </p>
-        ),
-      },
-      {
-        id: "product",
-        label: "Product / Bundle",
+        id: "name",
+        label: "Reward Name",
         visible: true,
         render: (_, row) => (
           <div className="min-w-[160px]">
-            {row.productId ? (
-              <Link
-                to={`/dashboard/products/${row.productId}`}
-                className={`text-sm font-medium hover:underline ${tw.tableFirstColumn}`}
-              >
-                {row.productName}
-              </Link>
-            ) : (
-              <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
-                {row.productName}
-              </p>
-            )}
-            {row.productCode ? (
-              <p className="text-xs text-gray-500 mt-0.5">{row.productCode}</p>
-            ) : row.offerName ? (
-              <p className="text-xs text-gray-500 mt-0.5">{row.offerName}</p>
+            <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
+              {row.name}
+            </p>
+            {row.rewardType ? (
+              <p className="text-xs text-gray-500 mt-0.5">{row.rewardType}</p>
             ) : null}
           </div>
         ),
       },
       {
-        id: "amount",
-        label: "Amount",
+        id: "kind",
+        label: "Type",
         visible: true,
-        render: (_, row) =>
-          row.amount != null ? (
-            <CurrencyFormatter
-              amount={row.amount}
-              currencyCode={row.currency || undefined}
-            />
-          ) : (
-            <span className="text-sm text-gray-400">—</span>
-          ),
+        render: (_, row) => (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${kindClassName(
+              row.kind,
+            )}`}
+          >
+            {humanizeLoyaltyKind(row.kind)}
+          </span>
+        ),
+      },
+      {
+        id: "points",
+        label: "Points",
+        visible: true,
+        render: (_, row) => (
+          <span className="text-sm text-gray-900">
+            {formatPoints(row.points)}
+          </span>
+        ),
       },
       {
         id: "date",
-        label: "Date",
+        label: "Redeemed Date",
         visible: true,
         render: (_, row) =>
-          row.purchasedAt ? (
+          row.occurredAt ? (
             <DateFormatter
-              date={row.purchasedAt}
+              date={row.occurredAt}
               includeTime
               useUserTimezone
               className="text-sm text-gray-700"
@@ -201,18 +198,8 @@ export default function CustomerPurchasesTab({
               row.status,
             )}`}
           >
-            {humanizePurchaseStatus(row.status)}
+            {humanizeLoyaltyStatus(row.status)}
             {row.verification === "hint" ? " · Unverified" : ""}
-          </span>
-        ),
-      },
-      {
-        id: "paymentMethod",
-        label: "Payment Method",
-        visible: true,
-        render: (_, row) => (
-          <span className="text-sm text-gray-700">
-            {humanizePaymentMethod(row.paymentMethod)}
           </span>
         ),
       },
@@ -223,8 +210,8 @@ export default function CustomerPurchasesTab({
   const clearFilters = () => {
     setSearchTerm("");
     setDebouncedSearch("");
-    setStatus(ALL);
     setKind(ALL);
+    setStatus(ALL);
   };
 
   if (!subscriberId) {
@@ -240,10 +227,10 @@ export default function CustomerPurchasesTab({
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-            Purchase History
+            Loyalty & Rewards
           </h3>
           <p className="text-sm text-gray-500">
-            Transactions and purchase records for this customer.
+            Loyalty points, program tier, and rewards for this customer.
           </p>
         </div>
         <button
@@ -260,22 +247,66 @@ export default function CustomerPurchasesTab({
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Transactions
+              Total Points
             </p>
-            <Receipt className="h-4 w-4 text-gray-400" />
+            <Award className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.counts.total.toLocaleString()}
+            {isLoading ? "—" : formatPoints(account.pointsBalance)}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             {isLoading
-              ? "From billing, events, and catalog"
-              : lastPurchased
-                ? "Last purchase "
-                : "No purchase date on file"}
-            {!isLoading && lastPurchased ? (
+              ? "Current loyalty balance"
+              : account.balanceEstimated
+                ? "Estimated from earn and redeem activity"
+                : account.pointsEarned != null
+                  ? `${formatPoints(account.pointsEarned)} earned lifetime`
+                  : "Current loyalty balance"}
+          </p>
+        </div>
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Current Tier
+            </p>
+            <Medal className="h-4 w-4 text-gray-400" />
+          </div>
+          <p className="text-2xl font-semibold text-gray-900">
+            {isLoading ? "—" : account.tier || "—"}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            {isLoading
+              ? "Loyalty program membership"
+              : `${humanizeProgramStatus(account.status)}${
+                  account.verification === "hint" && account.tier
+                    ? " · Unverified"
+                    : ""
+                }`}
+          </p>
+        </div>
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Points Redeemed
+            </p>
+            <Ticket className="h-4 w-4 text-gray-400" />
+          </div>
+          <p className="text-2xl font-semibold text-gray-900">
+            {isLoading
+              ? "—"
+              : formatPoints(
+                  account.pointsRedeemed ?? result.counts.pointsRedeemed,
+                )}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            {isLoading
+              ? "Points spent on rewards"
+              : lastActivity
+                ? "Last activity "
+                : "No loyalty activity on file"}
+            {!isLoading && lastActivity ? (
               <DateFormatter
-                date={lastPurchased}
+                date={lastActivity}
                 includeTime
                 useUserTimezone
                 className="text-xs text-gray-500"
@@ -283,62 +314,51 @@ export default function CustomerPurchasesTab({
             ) : null}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Completed spend
-            </p>
-            <Wallet className="h-4 w-4 text-gray-400" />
-          </div>
-          <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? (
-              "—"
-            ) : (
-              <CurrencyFormatter amount={result.counts.totalSpend} />
-            )}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            Completed transactions with a recorded amount
-          </p>
-        </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Completed
-            </p>
-            <CheckCircle className="h-4 w-4 text-gray-400" />
-          </div>
-          <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.counts.completed.toLocaleString()}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            {isLoading
-              ? "Successful purchases for this customer"
-              : `${result.counts.pending.toLocaleString()} pending · ${result.counts.failed.toLocaleString()} failed`}
-          </p>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        <SearchInput
-          placeholder="Search transactions, products, or offers..."
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
-        <HeadlessSelect
-          value={status}
-          onChange={(value) => setStatus(String(value))}
-          options={statusOptions}
-          placeholder="Status"
-          className="w-full"
-        />
-        <HeadlessSelect
-          value={kind}
-          onChange={(value) => setKind(String(value))}
-          options={kindOptions}
-          placeholder="Type"
-          className="w-full"
-        />
+      {account.tierBenefits.length > 0 && !isLoading && (
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 mb-6`}>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+            Tier benefits
+          </p>
+          <ul className="flex flex-wrap gap-2">
+            {account.tierBenefits.map((benefit) => (
+              <li
+                key={benefit}
+                className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800"
+              >
+                {benefit}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mb-4">
+        <h4 className="text-base font-semibold text-gray-900 mb-3">
+          Redemption History
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <SearchInput
+            placeholder="Search rewards, offers, or campaigns..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
+          <HeadlessSelect
+            value={kind}
+            onChange={(value) => setKind(String(value))}
+            options={kindOptions}
+            placeholder="Type"
+            className="w-full"
+          />
+          <HeadlessSelect
+            value={status}
+            onChange={(value) => setStatus(String(value))}
+            options={statusOptions}
+            placeholder="Status"
+            className="w-full"
+          />
+        </div>
       </div>
 
       {filtersActive && (
@@ -386,25 +406,25 @@ export default function CustomerPurchasesTab({
         <div className="py-12 text-center border border-dashed border-gray-200 rounded-md">
           <p className="text-gray-700 text-sm font-medium">
             {filtersActive
-              ? "No purchases match the selected filters"
-              : "No purchase records for this customer"}
+              ? "No rewards match the selected filters"
+              : "No loyalty rewards for this customer"}
           </p>
           <p className="text-gray-500 text-sm mt-1">
             {filtersActive
-              ? "Try a different status, type, or search term."
+              ? "Try a different type, status, or search term."
               : result.eventsLive
-                ? "Live purchase events and billing records will appear here after a transaction is recorded."
-                : "A subscriber purchases API or live purchase events are needed before transactions can be shown."}
+                ? "Points earned, redeemed, and granted rewards will appear here after the loyalty ledger records them."
+                : "A subscriber loyalty API or live points events are needed before rewards can be shown."}
           </p>
         </div>
       ) : (
         <>
           <p className="text-xs text-gray-500 mb-3">
-            Showing {filtered.length.toLocaleString()} transaction
+            Showing {filtered.length.toLocaleString()} reward
             {filtered.length === 1 ? "" : "s"} for this customer
           </p>
           <div className={`${tw.rounded} overflow-hidden`}>
-            <Table<CustomerPurchaseItem>
+            <Table<CustomerLoyaltyItem>
               columns={columns}
               data={paginated}
               totalItems={filtered.length}
@@ -420,7 +440,7 @@ export default function CustomerPurchasesTab({
                 setExpandedRowId(rowId == null ? null : String(rowId))
               }
               expandedContent={(row) => (
-                <CustomerPurchaseDetailsExpandedRow purchase={row} />
+                <CustomerLoyaltyDetailsExpandedRow activity={row} />
               )}
               style={{
                 headerBackground: color.surface.tableHeader,

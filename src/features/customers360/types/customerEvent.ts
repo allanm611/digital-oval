@@ -78,6 +78,19 @@ export interface CustomerEventPurchaseContext {
   payment_method: string | null;
 }
 
+/** Points / program fields when the event payload includes a loyalty ledger. */
+export interface CustomerEventLoyaltyContext {
+  points: number | null;
+  points_balance: number | null;
+  kind: string | null;
+  reward_name: string;
+  reward_type: string | null;
+  program_name: string | null;
+  tier: string | null;
+  tier_from: string | null;
+  tier_to: string | null;
+}
+
 export interface CustomerEvent {
   id: string;
   event_type: string;
@@ -94,6 +107,7 @@ export interface CustomerEvent {
   creative: CustomerEventCreativeSummary | null;
   message: CustomerEventMessageSummary | null;
   purchase: CustomerEventPurchaseContext | null;
+  loyalty: CustomerEventLoyaltyContext | null;
 }
 
 export interface CustomerEventCountBucket {

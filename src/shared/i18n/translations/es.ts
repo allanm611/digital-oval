@@ -2943,6 +2943,7 @@ export const es: Translations = {
       characters: "caracteres",
       smsSegments: "segmentos SMS",
       smsOverLimit: "Esta variante puede costar más de 2 segmentos SMS. Considere acortarla.",
+      reviewWarnings: "Revise antes de enviar",
       appliedTitle: "Mensaje actualizado",
       appliedMessage: "La variante de IA se agregó al cuerpo del mensaje.",
       errors: {
