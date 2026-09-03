@@ -69,6 +69,7 @@ export default function AiGenerateMessageModal({
   const [error, setError] = useState("");
   const [title, setTitle] = useState("");
   const [variants, setVariants] = useState<GeneratedCreativeVariant[]>([]);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [applyTitleToo, setApplyTitleToo] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
@@ -97,6 +98,7 @@ export default function AiGenerateMessageModal({
     setError("");
     setTitle("");
     setVariants([]);
+    setWarnings([]);
     setSelectedIndex(0);
     setApplyTitleToo(canApplyTitle && !existingTitle?.trim());
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -164,6 +166,7 @@ export default function AiGenerateMessageModal({
       );
       setTitle(result.title || "");
       setVariants(result.variants);
+      setWarnings(result.warnings || []);
       setSelectedIndex(0);
     } catch (err) {
       const message = err instanceof Error ? err.message : copy.errors.generateFailed;
@@ -350,6 +353,16 @@ export default function AiGenerateMessageModal({
             })}
             {isSms && smsInfo?.overRecommended && (
               <p className="text-xs text-amber-700">{copy.smsOverLimit}</p>
+            )}
+            {warnings.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-amber-800">{copy.reviewWarnings}</p>
+                {warnings.map((warning) => (
+                  <p key={warning} className="text-xs text-amber-700">
+                    {warning}
+                  </p>
+                ))}
+              </div>
             )}
             {hasExistingBody && (
               <p className="text-xs text-gray-500">{copy.hints.overwrite}</p>

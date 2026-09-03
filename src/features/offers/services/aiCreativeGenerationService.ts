@@ -16,13 +16,9 @@ function getAiGenerateUrl(): string {
     return String(explicitUrl);
   }
 
-  // Same-origin bridge: Vite middleware in local dev, Vercel function in hosted frontend.
-  // Production backends should expose this path and set VITE_AI_GENERATE_URL.
-  if (import.meta.env.VITE_USE_BACKEND_AI === "true") {
-    return `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AI_GENERATE_CREATIVE}`;
-  }
-
-  return "/api/ai/generate-creative";
+  // Real system path: database-service OfferCreativesRouter.
+  // Keep VITE_AI_GENERATE_URL=/api/ai/generate-creative only for the local Vite/Vercel bridge.
+  return `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AI_GENERATE_CREATIVE}`;
 }
 
 function normalizeResponse(payload: unknown): GenerateCreativeResponse {
@@ -53,12 +49,20 @@ function normalizeResponse(payload: unknown): GenerateCreativeResponse {
     variants.push({ body: inner.body.trim() });
   }
 
+  const warnings = Array.isArray(inner.warnings)
+    ? inner.warnings
+        .map((item) => String(item || "").trim())
+        .filter(Boolean)
+        .slice(0, 12)
+    : [];
+
   return {
     title: inner.title ? String(inner.title).trim() : undefined,
     variants,
     model: inner.model ? String(inner.model) : undefined,
     channelLimit:
       typeof inner.channelLimit === "number" ? inner.channelLimit : undefined,
+    warnings,
   };
 }
 
@@ -96,13 +100,24 @@ class AiCreativeGenerationService {
       }
 
       if (!response.ok) {
-        const errorPayload = payload as { error?: string; message?: string; code?: string };
+        const errorPayload = payload as {
+          error?: string | { message?: string; code?: string };
+          message?: string;
+          code?: string;
+        };
+        const nestedError =
+          errorPayload.error && typeof errorPayload.error === "object"
+            ? errorPayload.error.message
+            : errorPayload.error;
         const message =
-          errorPayload.error ||
+          nestedError ||
           errorPayload.message ||
           `AI generation failed (${response.status})`;
-        const error = new Error(message) as Error & { code?: string };
-        error.code = errorPayload.code || String(response.status);
+        const error = new Error(String(message)) as Error & { code?: string };
+        error.code =
+          (typeof errorPayload.error === "object" && errorPayload.error.code) ||
+          errorPayload.code ||
+          String(response.status);
         throw error;
       }
 

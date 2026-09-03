@@ -213,7 +213,7 @@ export default function CustomerCampaignsTab({
           </h3>
           <p className="text-sm text-gray-500">
             Campaigns this customer is in because they belong to a mapped
-            segment — not send or participation history.
+            segment.
           </p>
         </div>
         <button

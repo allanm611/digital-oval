@@ -1821,6 +1821,7 @@ export interface Translations {
       characters: string;
       smsSegments: string;
       smsOverLimit: string;
+      reviewWarnings: string;
       appliedTitle: string;
       appliedMessage: string;
       errors: {

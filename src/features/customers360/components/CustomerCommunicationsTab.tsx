@@ -257,8 +257,7 @@ export default function CustomerCommunicationsTab({
           </h3>
           <p className="text-sm text-gray-500">
             Messages sent to this customer across all channels — campaign
-            broadcasts, manual sends, and system messages. Opt-in preferences
-            stay on the Preferences tab.
+            broadcasts, manual sends, and system messages.
           </p>
         </div>
         <button

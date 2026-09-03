@@ -3221,6 +3221,7 @@ export const fr: Translations = {
       characters: "caractères",
       smsSegments: "segments SMS",
       smsOverLimit: "Cette variante peut coûter plus de 2 segments SMS. Envisagez de la raccourcir.",
+      reviewWarnings: "Vérifiez avant envoi",
       appliedTitle: "Message mis à jour",
       appliedMessage: "La variante IA a été ajoutée au corps du message.",
       errors: {

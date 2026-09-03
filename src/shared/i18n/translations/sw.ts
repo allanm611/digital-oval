@@ -3131,6 +3131,7 @@ export const sw: Translations = {
       characters: "herufi",
       smsSegments: "sehemu za SMS",
       smsOverLimit: "Toleo hili linaweza kugharimu sehemu za SMS zaidi ya 2. Fikiria kulifupisha.",
+      reviewWarnings: "Kagua kabla ya kutuma",
       appliedTitle: "Ujumbe umesasishwa",
       appliedMessage: "Toleo la AI limeongezwa kwenye mwili wa ujumbe.",
       errors: {

@@ -3525,6 +3525,7 @@ export const en: Translations = {
       characters: "characters",
       smsSegments: "SMS segments",
       smsOverLimit: "This variant may cost more than 2 SMS segments. Consider shortening it.",
+      reviewWarnings: "Review before sending",
       appliedTitle: "Message updated",
       appliedMessage: "The AI variant was added to the message body.",
       errors: {
