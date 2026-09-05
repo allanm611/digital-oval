@@ -3161,7 +3161,20 @@ export const fr: Translations = {
       buttonLabel: "IA",
       buttonAria: "Générer le contenu du message avec l'IA",
       modalTitle: "Générer le message avec l'IA",
-      modalSubtitle: "Rédigez un contenu {channel} en {locale}. Le ton et l'objectif sont obligatoires ; le reste aide Gemini à rester dans le brief.",
+      modalSubtitle: "Rédigez un contenu {channel} en {locale}. Le corps du message doit contenir au moins 3 mots. Le ton est obligatoire ; le reste est facultatif.",
+      sourceBody: {
+        label: "Corps du message",
+        placeholder: "Saisissez au moins 3 mots, ou conservez le message actuel...",
+        hint: "Chargé depuis le corps du message de la créative. S'il est vide, rédigez un brouillon d'au moins 3 mots.",
+      },
+      resultTitle: "Message généré",
+      resultSubtitle: "Relisez le texte ci-dessous. Insérer remplace le corps du message actuel de la créative.",
+      generatedMessageLabel: "Message généré",
+      insert: "Insérer",
+      closeResult: "Retour",
+      waitingForServer: "En attente du serveur...",
+      waitingHint: "Laissez cette fenêtre ouverte. Le message généré apparaîtra ici.",
+      words: "mots",
       tone: { label: "Ton" },
       tones: {
         professional: "Professionnel",
@@ -3174,9 +3187,9 @@ export const fr: Translations = {
         concise: "Concis",
       },
       objective: {
-        label: "Objectif",
+        label: "Objectif (facultatif)",
         placeholder: "Que doit accomplir ce message ? ex. Inciter un recharge Equitel de 100 Ksh ou plus",
-        hint: "Précisez l'action client et l'avantage de l'offre.",
+        hint: "Facultatif. Utilisez-le seulement si le corps du message n'exprime pas déjà l'objectif.",
       },
       callToAction: {
         label: "Appel à l'action",
@@ -3223,16 +3236,17 @@ export const fr: Translations = {
       smsOverLimit: "Cette variante peut coûter plus de 2 segments SMS. Envisagez de la raccourcir.",
       reviewWarnings: "Vérifiez avant envoi",
       appliedTitle: "Message mis à jour",
-      appliedMessage: "La variante IA a été ajoutée au corps du message.",
+      appliedMessage: "Le message généré a remplacé le corps du message précédent.",
       errors: {
         toneRequired: "Sélectionnez un ton.",
         objectiveRequired: "Saisissez un objectif clair pour que Gemini rédige un contenu pertinent.",
+        messageBodyMinWords: "Saisissez un corps de message d'au moins 3 mots avant de générer.",
         generateFailed: "Impossible de générer le contenu du message",
       },
       hints: {
         variables: "Variables que Gemini peut conserver",
         channelLimit: "La longueur cible est d'environ {limit} caractères.",
-        overwrite: "L'application d'une variante remplace le corps actuel. Vous pourrez encore le modifier ensuite.",
+        overwrite: "Insérer remplace le corps du message actuel. Vous pourrez encore le modifier ensuite.",
       },
     },
     messageBody: {

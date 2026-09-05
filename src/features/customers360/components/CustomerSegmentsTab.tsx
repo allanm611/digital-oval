@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import { Layers, Megaphone, RotateCcw } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -64,14 +64,14 @@ function CampaignLinks({
     <div className="min-w-[160px]">
       <div className="flex flex-wrap gap-1">
         {preview.map((campaign) => (
-          <Link
+          <CustomerProfileEntityLink
             key={campaign.campaignId}
             to={`/dashboard/campaigns/${campaign.campaignId}`}
             className="inline-flex max-w-[160px] truncate rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-800 hover:underline"
             title={campaign.campaignName}
           >
             {campaign.campaignName}
-          </Link>
+          </CustomerProfileEntityLink>
         ))}
       </div>
       {campaigns.length > 2 ? (
@@ -150,12 +150,12 @@ export default function CustomerSegmentsTab({
         visible: true,
         render: (_, row) => (
           <div className="min-w-[180px]">
-            <Link
+            <CustomerProfileEntityLink
               to={`/dashboard/segments/${row.segmentId}`}
               className={`text-sm font-medium hover:underline ${tw.tableFirstColumn}`}
             >
               {row.name}
-            </Link>
+            </CustomerProfileEntityLink>
             {row.code ? (
               <p className="text-xs text-gray-500 mt-0.5">{row.code}</p>
             ) : row.description ? (
@@ -461,12 +461,12 @@ export default function CustomerSegmentsTab({
                               className="border-t border-gray-100"
                             >
                               <td className="py-2 pr-4">
-                                <Link
+                                <CustomerProfileEntityLink
                                   to={`/dashboard/campaigns/${campaign.campaignId}`}
                                   className="font-medium text-gray-900 hover:underline"
                                 >
                                   {campaign.campaignName}
-                                </Link>
+                                </CustomerProfileEntityLink>
                               </td>
                               <td className="py-2 pr-4">
                                 <span

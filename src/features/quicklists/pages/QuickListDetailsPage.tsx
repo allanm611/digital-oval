@@ -29,7 +29,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { navigateBackOrFallback, getResolvedReturnTo, navigateToReturnTo } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
@@ -397,16 +397,11 @@ export default function QuickListDetailsPage() {
     }
   };
 
-  const returnTo = (
-    location.state as { returnTo?: { pathname: string; state?: unknown } }
-  )?.returnTo;
+  const returnTo = getResolvedReturnTo(location);
 
   const navigateBack = () => {
     if (returnTo) {
-      navigate(returnTo.pathname, {
-        replace: true,
-        state: returnTo.state,
-      });
+      navigateToReturnTo(navigate, returnTo);
       return;
     }
 
@@ -700,6 +695,7 @@ export default function QuickListDetailsPage() {
         <BackButton
           showBreadcrumb={true}
           currentLabel="QuickList Details"
+          onClick={navigateBack}
         />
         <div className="flex flex-wrap items-center gap-2">
           <button

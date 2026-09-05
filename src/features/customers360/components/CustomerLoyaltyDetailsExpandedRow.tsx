@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import type { CustomerLoyaltyItem } from "../types/customerLoyalty";
@@ -111,39 +111,39 @@ export default function CustomerLoyaltyDetailsExpandedRow({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <DetailField label="Offer">
               {activity.offerId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/offers/${activity.offerId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {activity.offerName || `Offer #${activity.offerId}`}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(activity.offerName)
               )}
             </DetailField>
             <DetailField label="Campaign">
               {activity.campaignId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/campaigns/${activity.campaignId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {activity.campaignName || `Campaign #${activity.campaignId}`}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(activity.campaignName)
               )}
             </DetailField>
             <DetailField label="Manual reward">
               {activity.manualRewardId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/manual-rewards/${activity.manualRewardId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   Manual reward #{activity.manualRewardId}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 "—"
               )}

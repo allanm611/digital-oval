@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
@@ -70,13 +70,13 @@ export default function CustomerOfferDetailsExpandedRow({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <DetailField label="Offer">
               {offer.offerId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/offers/${offer.offerId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {offer.name}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(offer.name)
               )}
@@ -147,14 +147,14 @@ export default function CustomerOfferDetailsExpandedRow({
               ) : (
                 <div className="flex flex-wrap gap-1">
                   {offer.viaCampaigns.map((campaign) => (
-                    <Link
+                    <CustomerProfileEntityLink
                       key={campaign.campaignId}
                       to={`/dashboard/campaigns/${campaign.campaignId}`}
                       className="inline-flex max-w-[180px] truncate rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-800 hover:underline"
                       title={campaign.campaignName}
                     >
                       {campaign.campaignName}
-                    </Link>
+                    </CustomerProfileEntityLink>
                   ))}
                 </div>
               )}
@@ -165,14 +165,14 @@ export default function CustomerOfferDetailsExpandedRow({
               ) : (
                 <div className="flex flex-wrap gap-1">
                   {offer.viaSegments.map((segment) => (
-                    <Link
+                    <CustomerProfileEntityLink
                       key={segment.segmentId}
                       to={`/dashboard/segments/${segment.segmentId}`}
                       className="inline-flex max-w-[180px] truncate rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800 hover:underline"
                       title={segment.segmentName}
                     >
                       {segment.segmentName}
-                    </Link>
+                    </CustomerProfileEntityLink>
                   ))}
                 </div>
               )}

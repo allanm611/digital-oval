@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import { Gift, RotateCcw, Sparkles, Ticket } from "lucide-react";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -134,12 +134,12 @@ export default function CustomerOffersTab({
         render: (_, row) => (
           <div className="min-w-[180px]">
             {row.offerId ? (
-              <Link
+              <CustomerProfileEntityLink
                 to={`/dashboard/offers/${row.offerId}`}
                 className={`text-sm font-medium hover:underline ${tw.tableFirstColumn}`}
               >
                 {row.name}
-              </Link>
+              </CustomerProfileEntityLink>
             ) : (
               <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
                 {row.name}
@@ -219,14 +219,14 @@ export default function CustomerOffersTab({
               <span className="text-sm text-gray-400">—</span>
             ) : (
               row.viaCampaigns.slice(0, 2).map((campaign) => (
-                <Link
+                <CustomerProfileEntityLink
                   key={campaign.campaignId}
                   to={`/dashboard/campaigns/${campaign.campaignId}`}
                   className="inline-flex max-w-[160px] truncate rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-800 hover:underline"
                   title={campaign.campaignName}
                 >
                   {campaign.campaignName}
-                </Link>
+                </CustomerProfileEntityLink>
               ))
             )}
             {row.viaCampaigns.length > 2 ? (

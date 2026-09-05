@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import type { CustomerPreferenceItem } from "../types/customerPreference";
@@ -126,7 +126,7 @@ export default function CustomerPreferenceDetailsExpandedRow({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <DetailField label="DND record">
               {href ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={href}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
@@ -134,7 +134,7 @@ export default function CustomerPreferenceDetailsExpandedRow({
                   {item.dndSubscriptionId
                     ? `DND #${item.dndSubscriptionId}`
                     : "DND management"}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 "—"
               )}

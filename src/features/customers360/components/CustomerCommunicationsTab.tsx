@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import { Mail, RotateCcw, Send, XCircle } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -215,13 +215,13 @@ export default function CustomerCommunicationsTab({
         visible: true,
         render: (_, row) =>
           row.campaignId ? (
-            <Link
+            <CustomerProfileEntityLink
               to={`/dashboard/campaigns/${row.campaignId}`}
               className="text-sm font-medium hover:underline"
               style={{ color: color.primary.action }}
             >
               {row.campaignName || `Campaign #${row.campaignId}`}
-            </Link>
+            </CustomerProfileEntityLink>
           ) : (
             <span className="text-sm text-gray-400">
               {row.origin === "manual" ? "Manual send" : "—"}

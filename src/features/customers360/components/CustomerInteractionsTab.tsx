@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
-import { Layers, Megaphone, RotateCcw } from "lucide-react";
+import { CheckCircle, Headset, RotateCcw, Ticket } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -10,55 +9,58 @@ import Pagination, {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Table, type TableColumn } from "../../../shared/components/Table";
 import { color, tw } from "../../../shared/utils/utils";
+import { useCustomerInteractions } from "../hooks/useCustomerInteractions";
 import type {
-  CustomerSegmentCampaign,
-  CustomerSegmentProgress,
-  CustomerSegmentResult,
-} from "../types/customerSegment";
+  CustomerInteractionItem,
+  CustomerInteractionStatus,
+} from "../types/customerInteraction";
 import {
-  filterAudienceCampaigns,
-  humanizeCampaignStatus,
-  humanizeFlowType,
-  uniqueCampaignStatuses,
-} from "../utils/customerSegmentHelpers";
+  filterInteractions,
+  humanizeInteractionKind,
+  humanizeInteractionStatus,
+  latestInteractionAt,
+  uniqueInteractionKinds,
+  uniqueInteractionStatuses,
+} from "../utils/customerInteractionHelpers";
+import CustomerInteractionDetailsExpandedRow from "./CustomerInteractionDetailsExpandedRow";
 
-type CustomerCampaignsTabProps = {
+type CustomerInteractionsTabProps = {
   subscriberId?: string | number | null;
-  result: CustomerSegmentResult;
-  progress: CustomerSegmentProgress;
-  isLoading: boolean;
-  error: string | null;
-  refetch: () => void;
+  customerRecord?: Record<string, unknown> | null;
 };
 
 const ALL = "all";
 
-function statusClassName(status: string | null, isActive: boolean): string {
-  const value = (status || (isActive ? "active" : "inactive")).toLowerCase();
-  if (["active", "live", "running", "scheduled"].includes(value)) {
-    return "bg-green-50 text-green-800";
-  }
-  if (["paused", "pending", "draft"].includes(value)) {
+function statusClassName(status: CustomerInteractionStatus): string {
+  if (status === "resolved") return "bg-green-50 text-green-800";
+  if (status === "in_progress" || status === "pending") {
     return "bg-amber-50 text-amber-800";
   }
-  if (["inactive", "completed", "cancelled", "canceled"].includes(value)) {
-    return "bg-gray-100 text-gray-700";
-  }
-  return "bg-sky-50 text-sky-800";
+  if (status === "open") return "bg-sky-50 text-sky-800";
+  return "bg-gray-100 text-gray-700";
 }
 
-export default function CustomerCampaignsTab({
+function progressLabel(
+  phase: "lookup" | "events",
+  checked: number,
+  total: number,
+): string {
+  if (phase === "lookup") return "Checking subscriber tickets and call logs...";
+  return total > 0
+    ? `Checking live care events (${checked.toLocaleString()} of ${total.toLocaleString()})...`
+    : "Checking live care events...";
+}
+
+export default function CustomerInteractionsTab({
   subscriberId,
-  result,
-  progress,
-  isLoading,
-  error,
-  refetch,
-}: CustomerCampaignsTabProps) {
+  customerRecord,
+}: CustomerInteractionsTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState(ALL);
+  const [kind, setKind] = useState(ALL);
   const [page, setPage] = useState(1);
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const pageSize = DEFAULT_PAGE_SIZE;
 
   useEffect(() => {
@@ -66,30 +68,49 @@ export default function CustomerCampaignsTab({
     return () => window.clearTimeout(timer);
   }, [searchTerm]);
 
+  const { result, progress, isLoading, error, refetch } = useCustomerInteractions(
+    subscriberId ?? undefined,
+    customerRecord,
+  );
+
   const filtered = useMemo(
     () =>
-      filterAudienceCampaigns(result.audienceCampaigns, {
+      filterInteractions(result.interactions, {
         search: debouncedSearch,
         status,
+        kind,
       }),
-    [result.audienceCampaigns, debouncedSearch, status],
+    [result.interactions, debouncedSearch, status, kind],
   );
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, status, subscriberId]);
+    setExpandedRowId(null);
+  }, [debouncedSearch, status, kind, subscriberId]);
 
-  const filtersActive = Boolean(debouncedSearch.trim()) || status !== ALL;
+  const filtersActive =
+    Boolean(debouncedSearch.trim()) || status !== ALL || kind !== ALL;
 
   const statusOptions = useMemo(
     () => [
       { value: ALL, label: "All statuses" },
-      ...uniqueCampaignStatuses(result.audienceCampaigns).map((item) => ({
+      ...uniqueInteractionStatuses(result.interactions).map((item) => ({
         value: item,
-        label: humanizeCampaignStatus(item),
+        label: humanizeInteractionStatus(item),
       })),
     ],
-    [result.audienceCampaigns],
+    [result.interactions],
+  );
+
+  const kindOptions = useMemo(
+    () => [
+      { value: ALL, label: "All types" },
+      ...uniqueInteractionKinds(result.interactions).map((item) => ({
+        value: item,
+        label: humanizeInteractionKind(item),
+      })),
+    ],
+    [result.interactions],
   );
 
   const paginated = useMemo(() => {
@@ -97,87 +118,66 @@ export default function CustomerCampaignsTab({
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
-  const columns: TableColumn<CustomerSegmentCampaign>[] = useMemo(
+  const lastActivity = latestInteractionAt(result.interactions);
+
+  const columns: TableColumn<CustomerInteractionItem>[] = useMemo(
     () => [
       {
-        id: "campaignName",
-        label: "Campaign",
+        id: "ticketId",
+        label: "Ticket ID",
         visible: true,
         render: (_, row) => (
-          <CustomerProfileEntityLink
-            to={`/dashboard/campaigns/${row.campaignId}`}
-            className={`text-sm font-medium hover:underline ${tw.tableFirstColumn}`}
-          >
-            {row.campaignName}
-          </CustomerProfileEntityLink>
+          <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
+            {row.ticketId}
+          </p>
         ),
       },
       {
-        id: "campaignStatus",
+        id: "kind",
+        label: "Type",
+        visible: true,
+        render: (_, row) => (
+          <span className="text-sm text-gray-700">
+            {humanizeInteractionKind(row.kind)}
+          </span>
+        ),
+      },
+      {
+        id: "subject",
+        label: "Subject",
+        visible: true,
+        render: (_, row) => (
+          <div className="min-w-[160px]">
+            <p className="text-sm text-gray-900">{row.subject}</p>
+            {row.agent ? (
+              <p className="text-xs text-gray-500 mt-0.5">{row.agent}</p>
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        id: "status",
         label: "Status",
         visible: true,
         render: (_, row) => (
           <span
             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusClassName(
-              row.campaignStatus,
-              row.isActive ?? true,
+              row.status,
             )}`}
           >
-            {humanizeCampaignStatus(
-              row.campaignStatus || (row.isActive === false ? "inactive" : "active"),
-            )}
+            {humanizeInteractionStatus(row.status)}
+            {row.verification === "hint" ? " · Unverified" : ""}
           </span>
         ),
       },
       {
-        id: "flowType",
-        label: "Flow",
-        visible: true,
-        render: (_, row) => (
-          <span className="text-sm text-gray-900">
-            {humanizeFlowType(row.flowType)}
-          </span>
-        ),
-      },
-      {
-        id: "viaSegments",
-        label: "Audience via",
-        visible: true,
-        render: (_, row) => (
-          <div className="flex flex-wrap gap-1 min-w-[160px]">
-            {row.viaSegments.length === 0 ? (
-              <span className="text-sm text-gray-400">—</span>
-            ) : (
-              row.viaSegments.map((segment) => (
-                <CustomerProfileEntityLink
-                  key={segment.segmentId}
-                  to={`/dashboard/segments/${segment.segmentId}`}
-                  className="inline-flex max-w-[180px] truncate rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-800 hover:underline"
-                  title={segment.segmentName}
-                >
-                  {segment.segmentName}
-                </CustomerProfileEntityLink>
-              ))
-            )}
-          </div>
-        ),
-      },
-      {
-        id: "offerName",
-        label: "Offer",
-        visible: true,
-        render: (_, row) => (
-          <span className="text-sm text-gray-900">{row.offerName || "—"}</span>
-        ),
-      },
-      {
-        id: "lastUsed",
-        label: "Mapped",
+        id: "date",
+        label: "Date",
         visible: true,
         render: (_, row) =>
-          row.lastUsed ? (
+          row.occurredAt ? (
             <DateFormatter
-              date={row.lastUsed}
+              date={row.occurredAt}
               includeTime
               useUserTimezone
               className="text-sm text-gray-700"
@@ -194,6 +194,7 @@ export default function CustomerCampaignsTab({
     setSearchTerm("");
     setDebouncedSearch("");
     setStatus(ALL);
+    setKind(ALL);
   };
 
   if (!subscriberId) {
@@ -209,11 +210,11 @@ export default function CustomerCampaignsTab({
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-            Campaigns
+            Interactions
           </h3>
           <p className="text-sm text-gray-500">
-            Campaigns this customer is in because they belong to a mapped
-            segment.
+            Support tickets, call logs, and other care contacts for this
+            customer.
           </p>
         </div>
         <button
@@ -230,58 +231,73 @@ export default function CustomerCampaignsTab({
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Audience campaigns
+              Interactions
             </p>
-            <Megaphone className="h-4 w-4 text-gray-400" />
+            <Headset className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.audienceCampaigns.length.toLocaleString()}
+            {isLoading ? "—" : result.counts.total.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            Unique campaigns mapped to this member's segments
+            {isLoading
+              ? "From tickets, call logs, and care events"
+              : lastActivity
+                ? "Last activity "
+                : "No interaction date on file"}
+            {!isLoading && lastActivity ? (
+              <DateFormatter
+                date={lastActivity}
+                includeTime
+                useUserTimezone
+                className="text-xs text-gray-500"
+              />
+            ) : null}
           </p>
         </div>
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Source segments
+              Open
             </p>
-            <Layers className="h-4 w-4 text-gray-400" />
+            <Ticket className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.memberships.length.toLocaleString()}
+            {isLoading ? "—" : result.counts.open.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            Segment memberships used to resolve audience
+            {isLoading
+              ? "Tickets still awaiting resolution"
+              : `${result.counts.pending.toLocaleString()} pending`}
           </p>
         </div>
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-            Active mappings
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Resolved
+            </p>
+            <CheckCircle className="h-4 w-4 text-gray-400" />
+          </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading
-              ? "—"
-              : result.audienceCampaigns
-                  .filter(
-                    (item) =>
-                      item.isActive !== false &&
-                      (item.campaignStatus || "active").toLowerCase() ===
-                        "active",
-                  )
-                  .length.toLocaleString()}
+            {isLoading ? "—" : result.counts.resolved.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            Campaigns currently marked active
+            Resolved or closed contacts for this customer
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <SearchInput
-          placeholder="Search campaigns, offers, or segments..."
+          placeholder="Search tickets, subjects, or agents..."
           value={searchTerm}
           onChange={setSearchTerm}
+        />
+        <HeadlessSelect
+          value={kind}
+          onChange={(value) => setKind(String(value))}
+          options={kindOptions}
+          placeholder="Type"
+          className="w-full"
         />
         <HeadlessSelect
           value={status}
@@ -330,44 +346,49 @@ export default function CustomerCampaignsTab({
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner variant="modern" size="lg" color="primary" />
           <p className="mt-3 text-sm text-gray-500">
-            {progress.phase === "campaigns"
-              ? `Resolving campaigns for ${progress.checked.toLocaleString()} of ${progress.total.toLocaleString()} segments...`
-              : progress.total > 0
-                ? `Finding segment memberships (${progress.checked.toLocaleString()} of ${progress.total.toLocaleString()})...`
-                : "Loading audience mappings..."}
+            {progressLabel(progress.phase, progress.checked, progress.total)}
           </p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-12 text-center border border-dashed border-gray-200 rounded-md">
           <p className="text-gray-700 text-sm font-medium">
             {filtersActive
-              ? "No campaigns match the selected filters"
-              : result.memberships.length === 0
-                ? "This customer is not in any segments, so no campaign audience was found"
-                : "This customer's segments are not mapped to any campaigns"}
+              ? "No interactions match the selected filters"
+              : "No support tickets or call logs for this customer"}
           </p>
           <p className="text-gray-500 text-sm mt-1">
             {filtersActive
-              ? "Try a different status or search term."
-              : "Audience is derived from segment membership, then campaign-flow mappings."}
+              ? "Try a different type, status, or search term."
+              : result.eventsLive
+                ? "Care tickets, complaints, and support calls will appear here after they are recorded."
+                : "A subscriber interactions API or live care events are needed before tickets can be shown."}
           </p>
         </div>
       ) : (
         <>
           <p className="text-xs text-gray-500 mb-3">
-            Showing {filtered.length.toLocaleString()} campaign
-            {filtered.length === 1 ? "" : "s"} this customer is in via segment
-            mapping
+            Showing {filtered.length.toLocaleString()} interaction
+            {filtered.length === 1 ? "" : "s"} for this customer
           </p>
           <div className={`${tw.rounded} overflow-hidden`}>
-            <Table<CustomerSegmentCampaign>
+            <Table<CustomerInteractionItem>
               columns={columns}
               data={paginated}
               totalItems={filtered.length}
               currentPage={page}
               pageSize={pageSize}
-              onPageChange={setPage}
-              getRowId={(row) => String(row.campaignId)}
+              onPageChange={(nextPage) => {
+                setPage(nextPage);
+                setExpandedRowId(null);
+              }}
+              getRowId={(row) => row.id}
+              expandedRowId={expandedRowId}
+              onExpandChange={(rowId) =>
+                setExpandedRowId(rowId == null ? null : String(rowId))
+              }
+              expandedContent={(row) => (
+                <CustomerInteractionDetailsExpandedRow interaction={row} />
+              )}
               style={{
                 headerBackground: color.surface.tableHeader,
                 headerTextColor: color.surface.tableHeaderText,
@@ -382,7 +403,10 @@ export default function CustomerCampaignsTab({
                 currentPage={page}
                 pageSize={pageSize}
                 totalItems={filtered.length}
-                onPageChange={setPage}
+                onPageChange={(nextPage) => {
+                  setPage(nextPage);
+                  setExpandedRowId(null);
+                }}
               />
             </div>
           )}

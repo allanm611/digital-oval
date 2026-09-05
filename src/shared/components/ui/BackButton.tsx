@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useLocation, useNavigate, type To } from "react-router-dom";
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import { navigateBackOrFallback } from "../../utils/navigation";
+import { navigateBackOrFallback, getResolvedReturnTo, navigateToReturnTo } from "../../utils/navigation";
 import { useNavigationHistory } from "../../contexts/NavigationHistoryContext";
 
 interface BackButtonProps {
@@ -76,6 +76,12 @@ function getPathLabel(path: string): string {
   const previousSegment = segments[segments.length - 2] || "";
 
   if (isLikelyIdSegment(lastSegment)) {
+    if (previousSegment === "details") {
+      const entity = segments[segments.length - 3];
+      if (entity) {
+        return `${toTitleCaseLabel(toSingular(entity))} Details`;
+      }
+    }
     const baseName = previousSegment
       ? toTitleCaseLabel(toSingular(previousSegment))
       : "Item";
@@ -117,10 +123,15 @@ export default function BackButton({
   const navigate = useNavigate();
   const location = useLocation();
   const { previousPath } = useNavigationHistory();
+  const returnTo = getResolvedReturnTo(location);
 
   const handleClick = onClick
     ? onClick
     : () => {
+        if (returnTo) {
+          navigateToReturnTo(navigate, returnTo);
+          return;
+        }
         if (parentTo != null) {
           navigate(parentTo);
           return;
@@ -132,12 +143,13 @@ export default function BackButton({
   const shouldShowBreadcrumb = showBreadcrumb ?? !iconSize;
 
   const breadcrumbData = useMemo(() => {
-    let fallbackLabel = parentLabel || "Back";
+    let fallbackLabel = parentLabel || returnTo?.parentLabel || "Back";
 
     // If no parentLabel provided, infer from actual previous path or current path structure
-    if (!parentLabel) {
-      // First priority: use the actual previous page the user came from
-      if (previousPath) {
+    if (!parentLabel && !returnTo?.parentLabel) {
+      if (returnTo?.pathname) {
+        fallbackLabel = getPathLabel(returnTo.pathname);
+      } else if (previousPath) {
         fallbackLabel = getPathLabel(previousPath);
       } else {
         // Fallback: infer from current path structure
@@ -158,7 +170,7 @@ export default function BackButton({
       fallbackLabel,
       computedCurrentLabel,
     };
-  }, [currentLabel, location.pathname, parentLabel, previousPath]);
+  }, [currentLabel, location.pathname, parentLabel, previousPath, returnTo]);
 
   if (shouldShowBreadcrumb) {
     return (

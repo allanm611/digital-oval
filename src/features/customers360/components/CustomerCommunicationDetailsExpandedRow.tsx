@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
 import type { CustomerCommunicationItem } from "../types/customerCommunication";
@@ -120,39 +120,39 @@ export default function CustomerCommunicationDetailsExpandedRow({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <DetailField label="Campaign">
               {item.campaignId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/campaigns/${item.campaignId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {item.campaignName || `Campaign #${item.campaignId}`}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(item.campaignName)
               )}
             </DetailField>
             <DetailField label="Offer">
               {item.offerId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/offers/${item.offerId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {item.offerName || `Offer #${item.offerId}`}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(item.offerName)
               )}
             </DetailField>
             <DetailField label="Broadcast">
               {item.broadcastId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/campaign-broadcasts/${item.broadcastId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {item.broadcastName || `Broadcast ${item.broadcastId}`}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(item.broadcastName)
               )}
