@@ -74,6 +74,12 @@ export interface CustomerSubscriptionRecord {
   branch_code?: string | number | null;
   customer_county_id?: number | null;
   created_at?: string | null;
+  last_login?: string | null;
+  is_active?: boolean | null;
+  kyc_verified?: boolean | null;
+  email_verified?: boolean | null;
+  phone_verified?: boolean | null;
+  device_type?: string | null;
   customer_id?: number | null;
   subscription_id?: number | null;
   customer_type?: string | null;

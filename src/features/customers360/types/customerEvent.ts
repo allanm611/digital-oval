@@ -91,6 +91,27 @@ export interface CustomerEventLoyaltyContext {
   tier_to: string | null;
 }
 
+/** Care fields when the event payload includes a ticket, call, or complaint. */
+export interface CustomerEventInteractionContext {
+  ticket_id: string | null;
+  subject: string;
+  notes: string;
+  agent: string | null;
+  kind: string | null;
+  resolution: string | null;
+}
+
+/** Handset / session fields when the event payload includes a real device. */
+export interface CustomerEventDeviceContext {
+  device_id: string | null;
+  device_name: string;
+  device_type: string | null;
+  os: string | null;
+  os_version: string | null;
+  app_version: string | null;
+  imei: string | null;
+}
+
 export interface CustomerEvent {
   id: string;
   event_type: string;
@@ -108,6 +129,8 @@ export interface CustomerEvent {
   message: CustomerEventMessageSummary | null;
   purchase: CustomerEventPurchaseContext | null;
   loyalty: CustomerEventLoyaltyContext | null;
+  interaction: CustomerEventInteractionContext | null;
+  device: CustomerEventDeviceContext | null;
 }
 
 export interface CustomerEventCountBucket {

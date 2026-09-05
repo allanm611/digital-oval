@@ -11,9 +11,9 @@ interface MessageContentToolbarProps {
 }
 
 /**
- * Keeps Message Content actions (Plain Text, Insert Variable, AI) on one row
- * at every breakpoint. The control group never wraps; if the column is too
- * narrow the bar scrolls horizontally instead of stacking buttons.
+ * Message Content actions stay on one row in the expanded editor.
+ * The bar does not use a persistent horizontal scrollbar; on very narrow
+ * viewports the actions wrap under the label instead of clipping.
  */
 export default function MessageContentToolbar({
   label,
@@ -23,15 +23,15 @@ export default function MessageContentToolbar({
 
   return (
     <div
-      className="flex flex-nowrap items-center gap-2 sm:gap-3 p-3 rounded-lg min-w-0 overflow-x-auto overscroll-x-contain [scrollbar-width:thin]"
+      className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg min-w-0"
       style={{ backgroundColor: color.surface.cards }}
     >
       <span
-        className={`text-sm font-medium leading-5 whitespace-nowrap shrink-0 ${tw.textPrimary}`}
+        className={`text-sm font-medium leading-5 whitespace-nowrap ${tw.textPrimary}`}
       >
         {label ?? t.offers.messageContent.label}
       </span>
-      <div className="ml-auto flex items-center gap-2 flex-nowrap shrink-0">
+      <div className="flex items-center gap-2 flex-nowrap">
         {children}
       </div>
     </div>

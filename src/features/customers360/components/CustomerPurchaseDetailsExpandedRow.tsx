@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { color, tw } from "../../../shared/utils/utils";
@@ -123,13 +123,13 @@ export default function CustomerPurchaseDetailsExpandedRow({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <DetailField label="Product">
               {purchase.productId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/products/${purchase.productId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {purchase.productName}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(purchase.productName)
               )}
@@ -142,26 +142,26 @@ export default function CustomerPurchaseDetailsExpandedRow({
             </DetailField>
             <DetailField label="Offer">
               {purchase.offerId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/offers/${purchase.offerId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {purchase.offerName || `Offer #${purchase.offerId}`}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(purchase.offerName)
               )}
             </DetailField>
             <DetailField label="Campaign">
               {purchase.campaignId ? (
-                <Link
+                <CustomerProfileEntityLink
                   to={`/dashboard/campaigns/${purchase.campaignId}`}
                   className="font-medium hover:underline"
                   style={{ color: color.primary.action }}
                 >
                   {purchase.campaignName || `Campaign #${purchase.campaignId}`}
-                </Link>
+                </CustomerProfileEntityLink>
               ) : (
                 displayValue(purchase.campaignName)
               )}

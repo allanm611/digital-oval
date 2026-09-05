@@ -1781,6 +1781,15 @@ export interface Translations {
       buttonAria: string;
       modalTitle: string;
       modalSubtitle: string;
+      sourceBody: { label: string; placeholder: string; hint: string };
+      resultTitle: string;
+      resultSubtitle: string;
+      generatedMessageLabel: string;
+      insert: string;
+      closeResult: string;
+      waitingForServer: string;
+      waitingHint: string;
+      words: string;
       tone: { label: string };
       tones: {
         professional: string;
@@ -1827,6 +1836,7 @@ export interface Translations {
       errors: {
         toneRequired: string;
         objectiveRequired: string;
+        messageBodyMinWords: string;
         generateFailed: string;
       };
       hints: {

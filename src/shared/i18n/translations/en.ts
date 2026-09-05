@@ -3465,7 +3465,20 @@ export const en: Translations = {
       buttonLabel: "AI",
       buttonAria: "Generate message content with AI",
       modalTitle: "Generate message with AI",
-      modalSubtitle: "Create {channel} copy in {locale}. Tone and objective are required; the rest helps Gemini stay on-brief.",
+      modalSubtitle: "Create {channel} copy in {locale}. Message body needs at least 3 words.",
+      sourceBody: {
+        label: "Message Body",
+        placeholder: "Enter at least 3 words, or keep the current creative message...",
+        hint: "If it is empty, write a short draft of at least 3 words.",
+      },
+      resultTitle: "Generated message",
+      resultSubtitle: "Review the copy below. Insert replaces the current Message Body on the creative.",
+      generatedMessageLabel: "Generated message",
+      insert: "Insert",
+      closeResult: "Back",
+      waitingForServer: "Waiting for the server...",
+      waitingHint: "Keep this dialog open. The generated message will appear here.",
+      words: "words",
       tone: { label: "Tone" },
       tones: {
         professional: "Professional",
@@ -3478,9 +3491,9 @@ export const en: Translations = {
         concise: "Concise",
       },
       objective: {
-        label: "Objective",
+        label: "Objective (optional)",
         placeholder: "What should this message achieve? e.g. Drive Equitel airtime top-ups of Ksh 100+",
-        hint: "Be specific about the customer action and the offer benefit.",
+        hint: "Optional. Use this only when the Message Body does not already state the goal.",
       },
       callToAction: {
         label: "Call to action",
@@ -3527,16 +3540,17 @@ export const en: Translations = {
       smsOverLimit: "This variant may cost more than 2 SMS segments. Consider shortening it.",
       reviewWarnings: "Review before sending",
       appliedTitle: "Message updated",
-      appliedMessage: "The AI variant was added to the message body.",
+      appliedMessage: "The generated message replaced the previous Message Body.",
       errors: {
         toneRequired: "Select a tone.",
         objectiveRequired: "Enter a clear objective so Gemini can write on-brief copy.",
+        messageBodyMinWords: "Enter a Message Body of at least 3 words before generating.",
         generateFailed: "Could not generate message content",
       },
       hints: {
         variables: "Variables Gemini may keep",
         channelLimit: "Target length is about {limit} characters.",
-        overwrite: "Applying a variant replaces the current message body. You can still edit it afterwards.",
+        overwrite: "Insert replaces the current Message Body. You can still edit it afterwards.",
       },
     },
     messageBody: {

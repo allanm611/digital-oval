@@ -26,7 +26,7 @@ export interface GenerateCreativeRequest {
   locale?: string;
   brandName?: string;
   tone: AiTone;
-  objective: string;
+  objective?: string;
   callToAction?: string;
   keyFacts?: string;
   audience?: string;

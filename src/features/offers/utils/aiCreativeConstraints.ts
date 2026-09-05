@@ -122,3 +122,11 @@ export function extractTemplateVariables(text: string): string[] {
   const matches = text.match(/\{\{[^{}]+\}\}/g) || [];
   return Array.from(new Set(matches));
 }
+
+export function countMessageWords(text: string): number {
+  const plain = String(text || "")
+    .replace(/<[^>]+>/g, " ")
+    .trim();
+  if (!plain) return 0;
+  return plain.split(/\s+/).filter(Boolean).length;
+}

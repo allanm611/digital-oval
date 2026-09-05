@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -180,12 +180,12 @@ export default function CustomerEventDetailsExpandedRow({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <DetailField label="Offer">
                   {details.offer?.id ? (
-                    <Link
+                    <CustomerProfileEntityLink
                       to={`/dashboard/offers/${details.offer.id}`}
                       className="font-medium hover:underline"
                     >
                       {details.offer.name || `Offer #${details.offer.id}`}
-                    </Link>
+                    </CustomerProfileEntityLink>
                   ) : (
                     displayValue(details.offer?.name)
                   )}
@@ -216,13 +216,13 @@ export default function CustomerEventDetailsExpandedRow({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <DetailField label="Campaign">
                   {details.campaign?.id ? (
-                    <Link
+                    <CustomerProfileEntityLink
                       to={`/dashboard/campaigns/${details.campaign.id}`}
                       className="font-medium hover:underline"
                     >
                       {details.campaign.name ||
                         `Campaign #${details.campaign.id}`}
-                    </Link>
+                    </CustomerProfileEntityLink>
                   ) : (
                     displayValue(details.campaign?.name)
                   )}

@@ -41,7 +41,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { navigateBackOrFallback, getResolvedReturnTo, navigateToReturnTo, navigatePreservingReturn } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SegmentModal from "../components/SegmentModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -65,20 +65,11 @@ export default function SegmentDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Check if we came from a catalog modal
-  const returnTo = (
-    location.state as {
-      returnTo?: {
-        pathname: string;
-        fromModal?: boolean;
-        catalogId?: number | string;
-      };
-    }
-  )?.returnTo;
+  const returnTo = getResolvedReturnTo(location);
 
   const handleBack = () => {
-    if (returnTo?.pathname) {
-      navigate(returnTo.pathname, { replace: true });
+    if (returnTo) {
+      navigateToReturnTo(navigate, returnTo);
       return;
     }
 
@@ -301,7 +292,14 @@ export default function SegmentDetailsPage() {
       accessorKey: "campaign_name",
       cell: (flow) => (
         <button
-          onClick={() => navigate(`/dashboard/campaigns/${flow.campaign_id}`)}
+          onClick={() =>
+            navigatePreservingReturn(
+              navigate,
+              `/dashboard/campaigns/${flow.campaign_id}`,
+              location,
+              "Segment Details",
+            )
+          }
           className="text-sm font-medium hover:underline"
           style={{ color: color.primary.accent }}
         >
@@ -317,7 +315,14 @@ export default function SegmentDetailsPage() {
       accessorKey: "offer_name",
       cell: (flow) => (
         <button
-          onClick={() => navigate(`/dashboard/offers/${flow.offer_id}`)}
+          onClick={() =>
+            navigatePreservingReturn(
+              navigate,
+              `/dashboard/offers/${flow.offer_id}`,
+              location,
+              "Segment Details",
+            )
+          }
           className="text-sm font-medium hover:underline"
           style={{ color: color.primary.accent }}
         >
@@ -363,7 +368,7 @@ export default function SegmentDetailsPage() {
       visible: true,
       sortable: true,
     },
-  ], [navigate]);
+  ], [navigate, location]);
 
   const customerColumns = useMemo<TableColumn<Customer>[]>(() => [
     {
@@ -1207,6 +1212,7 @@ export default function SegmentDetailsPage() {
         <BackButton
           showBreadcrumb={true}
           currentLabel="Segment Details"
+          onClick={handleBack}
         />
         <div className="flex flex-wrap items-center gap-2">
           <PermissionGate permission="segments.update">

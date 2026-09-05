@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import { CheckCircle, Receipt, RotateCcw, Wallet } from "lucide-react";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -142,12 +142,12 @@ export default function CustomerPurchasesTab({
         render: (_, row) => (
           <div className="min-w-[160px]">
             {row.productId ? (
-              <Link
+              <CustomerProfileEntityLink
                 to={`/dashboard/products/${row.productId}`}
                 className={`text-sm font-medium hover:underline ${tw.tableFirstColumn}`}
               >
                 {row.productName}
-              </Link>
+              </CustomerProfileEntityLink>
             ) : (
               <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
                 {row.productName}

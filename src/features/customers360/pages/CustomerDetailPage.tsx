@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Send, Edit, Trash2, Eye } from "lucide-react";
 import {
   BarChart,
@@ -28,12 +28,21 @@ import CustomerCommunicationsTab from "../components/CustomerCommunicationsTab";
 import CustomerPurchasesTab from "../components/CustomerPurchasesTab";
 import CustomerLoyaltyTab from "../components/CustomerLoyaltyTab";
 import CustomerPreferencesTab from "../components/CustomerPreferencesTab";
+import CustomerInteractionsTab from "../components/CustomerInteractionsTab";
+import CustomerAccountDevicesTab from "../components/CustomerAccountDevicesTab";
+import {
+  CUSTOMER_PROFILE_OVERVIEW_TAB,
+  CUSTOMER_PROFILE_TAB_PARAM,
+  CustomerProfileNavigationProvider,
+} from "../navigation/CustomerProfileEntityLink";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
+import OverflowScrollArea from "../../../shared/components/ui/OverflowScrollArea";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { consumePendingCustomerReturn } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
@@ -224,11 +233,39 @@ type TabType =
   | "interactions"
   | "device";
 
+const CUSTOMER_PROFILE_TABS: Array<{ id: TabType; label: string }> = [
+  { id: "overview", label: "Customer Information" },
+  { id: "activity", label: "Events" },
+  { id: "subscribedLists", label: "Subscribed Lists" },
+  { id: "engagement", label: "Analytics" },
+  { id: "segments", label: "Segments" },
+  { id: "offers", label: "Offers" },
+  { id: "campaigns", label: "Campaigns" },
+  { id: "communications", label: "Communications" },
+  { id: "purchases", label: "Purchase History" },
+  { id: "loyalty", label: "Loyalty & Rewards" },
+  { id: "preferences", label: "Preferences" },
+  { id: "interactions", label: "Interactions" },
+  { id: "device", label: "Account & Device" },
+];
+
+const CUSTOMER_PROFILE_TAB_IDS = new Set(
+  CUSTOMER_PROFILE_TABS.map((tab) => tab.id),
+);
+
+function parseCustomerProfileTab(value: string | null): TabType {
+  if (value && CUSTOMER_PROFILE_TAB_IDS.has(value as TabType)) {
+    return value as TabType;
+  }
+  return CUSTOMER_PROFILE_OVERVIEW_TAB;
+}
+
 export default function CustomerDetailPage() {
   const navigate = useNavigate();
   const { customerId: customerIdFromParams } = useParams<{
     customerId: string;
   }>();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [origin, setOrigin] = useState<OriginSource>("customers");
   const [isLoading, setIsLoading] = useState(true);
@@ -326,6 +363,20 @@ export default function CustomerDetailPage() {
               notifications: apiData.notifications,
               id: apiData.id,
               updated_at: apiData.updated_at,
+              created_at: apiData.created_at,
+              last_login: (apiData as { last_login?: string | null }).last_login,
+              is_active: (apiData as { is_active?: boolean | null }).is_active,
+              subscriber_status:
+                (apiData as { subscriber_status?: string | null }).subscriber_status ??
+                apiData.status,
+              kyc_verified: (apiData as { kyc_verified?: boolean | null }).kyc_verified,
+              email_verified: (apiData as { email_verified?: boolean | null })
+                .email_verified,
+              phone_verified: (apiData as { phone_verified?: boolean | null })
+                .phone_verified,
+              device_type:
+                (apiData as { device_type?: string | null }).device_type ??
+                apiData.attributes?.device_type,
             };
 
             setSelectedSubscription(convertedSubscription);
@@ -349,7 +400,44 @@ export default function CustomerDetailPage() {
 
   const customer = selectedCustomer;
 
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const activeTab = parseCustomerProfileTab(
+    searchParams.get(CUSTOMER_PROFILE_TAB_PARAM),
+  );
+
+  const setActiveTab = useCallback(
+    (tab: TabType) => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          if (tab === CUSTOMER_PROFILE_OVERVIEW_TAB) {
+            next.delete(CUSTOMER_PROFILE_TAB_PARAM);
+          } else {
+            next.set(CUSTOMER_PROFILE_TAB_PARAM, tab);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  useEffect(() => {
+    if (!customerIdFromParams) return;
+    const pending = consumePendingCustomerReturn(customerIdFromParams);
+    if (!pending?.tab) return;
+    if (searchParams.get(CUSTOMER_PROFILE_TAB_PARAM)) return;
+    if (CUSTOMER_PROFILE_TAB_IDS.has(pending.tab as TabType)) {
+      setActiveTab(pending.tab as TabType);
+    }
+    // Restore only when landing back on this customer without a tab in the URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerIdFromParams]);
+
+  const profileCustomerId =
+    selectedSubscription?.customerId ??
+    selectedSubscription?.id ??
+    customerIdFromParams;
 
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -570,11 +658,8 @@ export default function CustomerDetailPage() {
   const pageSize = 20;
 
   useEffect(() => {
-    if (customer) {
-      setActiveTab("overview");
-      setKpiPage(1);
-    }
-  }, [customer]);
+    setKpiPage(1);
+  }, [customerIdFromParams]);
 
   // Reset KPI pagination when search changes
   useEffect(() => {
@@ -828,7 +913,11 @@ export default function CustomerDetailPage() {
 
   return (
     <PermissionGate permission="customer.read">
-      <div className="space-y-4">
+      <CustomerProfileNavigationProvider
+        customerId={customerIdFromParams}
+        tab={activeTab}
+      >
+      <div className="space-y-4 min-w-0">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <BackButton
@@ -875,26 +964,24 @@ export default function CustomerDetailPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
-          {[
-            { id: "overview", label: "Customer Information" },
-            { id: "activity", label: "Events" },
-            { id: "subscribedLists", label: "Subscribed Lists" },
-            { id: "engagement", label: "Analytics" },
-            { id: "segments", label: "Segments" },
-            { id: "offers", label: "Offers" },
-            { id: "campaigns", label: "Campaigns" },
-            { id: "communications", label: "Communications" },
-            { id: "purchases", label: "Purchase History" },
-            { id: "loyalty", label: "Loyalty & Rewards" },
-            { id: "preferences", label: "Preferences" },
-            { id: "interactions", label: "Interactions" },
-            { id: "device", label: "Account & Device" },
-          ].map((tab) => (
+        <OverflowScrollArea
+          hint="Scroll horizontally to see more tabs"
+          hideScrollbar
+          scrollMode="page"
+          role="tablist"
+          ariaLabel="Customer profile sections"
+          observeKey={CUSTOMER_PROFILE_TABS.length}
+          activeItemSelector={`[data-tab-id="${activeTab}"]`}
+          contentClassName="flex flex-nowrap gap-1 border-b border-gray-200 pr-10"
+        >
+          {CUSTOMER_PROFILE_TABS.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
+              type="button"
+              role="tab"
+              data-tab-id={tab.id}
+              aria-selected={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab.id
                   ? "text-black"
@@ -910,7 +997,7 @@ export default function CustomerDetailPage() {
               )}
             </button>
           ))}
-        </div>
+        </OverflowScrollArea>
 
         {/* Content */}
         {activeTab === "overview" && (
@@ -1289,223 +1376,32 @@ export default function CustomerDetailPage() {
           />
         )}
 
-        {/* Interactions Tab */}
         {activeTab === "interactions" && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Interactions
-              </h3>
-              <p className="text-sm text-gray-500">
-                View support tickets, call logs, and other customer interactions
-              </p>
-            </div>
-
-            <div className={`${tw.rounded} overflow-hidden`}>
-              <Table<any>
-                columns={[
-                  {
-                    id: "id",
-                    label: "Ticket ID",
-                    visible: true,
-                    },
-                  {
-                    id: "type",
-                    label: "Type",
-                    visible: true,
-                    },
-                  {
-                    id: "subject",
-                    label: "Subject",
-                    visible: true,
-                    },
-                  {
-                    id: "status",
-                    label: "Status",
-                    visible: true,
-                    },
-                  {
-                    id: "date",
-                    label: "Date",
-                    visible: true,
-                    render: (_, row) => <DateFormatter date={row.date} useLocale year="numeric" month="short" day="numeric" />,
-                  },
-                ]}
-                data={[
-                  {
-                    id: "TKT-1001",
-                    type: "Support",
-                    subject: "Billing inquiry",
-                    status: "Resolved",
-                    date: "2026-04-06",
-                  },
-                  {
-                    id: "TKT-1002",
-                    type: "Technical",
-                    subject: "Network connectivity issue",
-                    status: "In Progress",
-                    date: "2026-04-08",
-                  },
-                  {
-                    id: "TKT-1003",
-                    type: "Complaint",
-                    subject: "Service quality",
-                    status: "Resolved",
-                    date: "2026-03-30",
-                  },
-                  {
-                    id: "TKT-1004",
-                    type: "Support",
-                    subject: "Account verification",
-                    status: "Resolved",
-                    date: "2026-03-25",
-                  },
-                ]}
-                style={{
-                  headerBackground: color.surface.tableHeader,
-                  headerTextColor: color.surface.tableHeaderText,
-                  rowBackground: color.surface.tablebodybg,
-                  rowSpacing: "0 8px",
-                }}
-              />
-            </div>
-          </div>
+          <CustomerInteractionsTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
-        {/* Account & Device Tab */}
         {activeTab === "device" && (
-          <div
-            className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
-          >
-            <div className="p-6 space-y-6">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-4">
-                  Account Status
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-1">
-                      Status
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      Active
-                    </p>
-                  </div>
-
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-1">
-                      Account Created
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {selectedSubscription &&
-                      (selectedSubscription as Record<string, any>)?.created_at
-                        ? new Date(
-                            (selectedSubscription as Record<string, any>)
-                              .created_at,
-                          ).toLocaleDateString()
-                        : "—"}
-                    </p>
-                  </div>
-
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-1">
-                      Last Login
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">—</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-4">
-                  Device Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-1">
-                      Primary Device
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">—</p>
-                  </div>
-
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-1">
-                      OS Version
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">—</p>
-                  </div>
-
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-1">
-                      App Version
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900">—</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-base font-semibold text-gray-900 mb-4">
-                  Verification Status
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-2">
-                      Email Verified
-                    </p>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                      ✓ Verified
-                    </span>
-                  </div>
-
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-2">
-                      Phone Verified
-                    </p>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                      Not Verified
-                    </span>
-                  </div>
-
-                  <div
-                    className={`${tw.rounded} border border-gray-100 px-4 py-3`}
-                    style={{ backgroundColor: "var(--c-readonly-field-bg)" }}
-                  >
-                    <p className="text-xs uppercase text-gray-500 mb-2">
-                      KYC Verified
-                    </p>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                      Not Verified
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CustomerAccountDevicesTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
         {/* Send Communication Modal */}
@@ -1568,6 +1464,7 @@ export default function CustomerDetailPage() {
           onResetToDefaults={resetKpiDefaults}
         />
       </div>
+      </CustomerProfileNavigationProvider>
     </PermissionGate>
   );
 }

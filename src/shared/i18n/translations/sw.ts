@@ -3071,7 +3071,20 @@ export const sw: Translations = {
       buttonLabel: "AI",
       buttonAria: "Tengeneza maudhui ya ujumbe kwa AI",
       modalTitle: "Tengeneza ujumbe kwa AI",
-      modalSubtitle: "Andika ujumbe wa {channel} kwa {locale}. Tonality na lengo ni lazima; mengine yanasaidia Gemini kufuata brief.",
+      modalSubtitle: "Andika ujumbe wa {channel} kwa {locale}. Mwili wa ujumbe unahitaji angalau maneno 3. Tonality ni lazima; mengine ni ya hiari.",
+      sourceBody: {
+        label: "Mwili wa ujumbe",
+        placeholder: "Andika angalau maneno 3, au weka ujumbe uliopo...",
+        hint: "Inachukuliwa kutoka mwili wa ujumbe wa creative. Ikiwa ni tupu, andika rasimu ya angalau maneno 3.",
+      },
+      resultTitle: "Ujumbe uliotengenezwa",
+      resultSubtitle: "Kagua ujumbe hapa chini. Ingiza inachukua nafasi ya mwili wa ujumbe wa sasa.",
+      generatedMessageLabel: "Ujumbe uliotengenezwa",
+      insert: "Ingiza",
+      closeResult: "Rudi",
+      waitingForServer: "Inasubiri seva...",
+      waitingHint: "Acha kidirisha hiki wazi. Ujumbe utaonekana hapa.",
+      words: "maneno",
       tone: { label: "Tonality" },
       tones: {
         professional: "Kitaaluma",
@@ -3084,9 +3097,9 @@ export const sw: Translations = {
         concise: "Fupi na wazi",
       },
       objective: {
-        label: "Lengo",
+        label: "Lengo (si lazima)",
         placeholder: "Ujumbe huu unapaswa kufanikisha nini? k.m. Kuhamasisha top-up ya Equitel ya Ksh 100+",
-        hint: "Eleza hatua ya mteja na faida ya ofa.",
+        hint: "Si lazima. Tumia tu kama mwili wa ujumbe haujaeleza lengo.",
       },
       callToAction: {
         label: "Mwito wa hatua",
@@ -3133,16 +3146,17 @@ export const sw: Translations = {
       smsOverLimit: "Toleo hili linaweza kugharimu sehemu za SMS zaidi ya 2. Fikiria kulifupisha.",
       reviewWarnings: "Kagua kabla ya kutuma",
       appliedTitle: "Ujumbe umesasishwa",
-      appliedMessage: "Toleo la AI limeongezwa kwenye mwili wa ujumbe.",
+      appliedMessage: "Ujumbe uliotengenezwa umechukua nafasi ya mwili wa ujumbe uliopita.",
       errors: {
         toneRequired: "Chagua tonality.",
         objectiveRequired: "Andika lengo wazi ili Gemini iandike ujumbe unaofaa.",
+        messageBodyMinWords: "Andika mwili wa ujumbe wa angalau maneno 3 kabla ya kutengeneza.",
         generateFailed: "Imeshindwa kutengeneza maudhui ya ujumbe",
       },
       hints: {
         variables: "Vigezo Gemini inaweza kuhifadhi",
         channelLimit: "Urefu unaolengwa ni kama herufi {limit}.",
-        overwrite: "Kutumia toleo kunachukua nafasi ya mwili wa sasa. Bado unaweza kuhariri baadaye.",
+        overwrite: "Ingiza inachukua nafasi ya mwili wa ujumbe wa sasa. Bado unaweza kuhariri baadaye.",
       },
     },
     messageBody: {

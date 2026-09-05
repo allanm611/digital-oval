@@ -68,7 +68,7 @@ import {
 } from "../types/offerCreative";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { navigateBackOrFallback, getResolvedReturnTo, navigateToReturnTo, navigatePreservingReturn } from "../../../shared/utils/navigation";
 import { getStatusBadgeConfig } from "../../../shared/utils/statusColors";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -206,20 +206,11 @@ export default function OfferDetailsPage() {
   } | null>(null);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
-  // Check if we came from a catalog modal
-  const returnTo = (
-    location.state as {
-      returnTo?: {
-        pathname: string;
-        fromModal?: boolean;
-        catalogId?: number | string;
-      };
-    }
-  )?.returnTo;
+  const returnTo = getResolvedReturnTo(location);
 
   const handleBack = () => {
-    if (returnTo?.pathname) {
-      navigate(returnTo.pathname, { replace: true });
+    if (returnTo) {
+      navigateToReturnTo(navigate, returnTo);
       return;
     }
 
@@ -1676,6 +1667,7 @@ export default function OfferDetailsPage() {
 
   const buildOfferReturnState = (section: "products" | "creatives") => ({
     pathname: offerDetailsPath,
+    search: location.search,
     section,
   });
 
@@ -1783,6 +1775,7 @@ export default function OfferDetailsPage() {
         <BackButton
           showBreadcrumb={true}
           currentLabel="Offer Details"
+          onClick={handleBack}
         />
         <div className="flex flex-wrap items-center gap-2">
           {/* Draft: Submit for Approval */}
@@ -1983,7 +1976,12 @@ export default function OfferDetailsPage() {
                 <button
                   onClick={() => {
                     navigate(`/dashboard/reports/offers/${id}`, {
-                      state: { returnTo: { pathname: location.pathname } },
+                      state: {
+                        returnTo: {
+                          pathname: location.pathname,
+                          search: location.search,
+                        },
+                      },
                     });
                     setShowMoreMenu(false);
                   }}
@@ -2662,7 +2660,15 @@ export default function OfferDetailsPage() {
                       const flow = campaignFlows.find((f) => f.campaign_name === row.campaign);
                       return (
                         <button
-                          onClick={() => navigate(`/dashboard/campaigns/${flow?.campaign_id}`)}
+                          onClick={() =>
+                            flow?.campaign_id != null &&
+                            navigatePreservingReturn(
+                              navigate,
+                              `/dashboard/campaigns/${flow.campaign_id}`,
+                              location,
+                              "Offer Details",
+                            )
+                          }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >
@@ -2681,7 +2687,15 @@ export default function OfferDetailsPage() {
                       const flow = campaignFlows.find((f) => f.segment_name === row.segment);
                       return (
                         <button
-                          onClick={() => navigate(`/dashboard/segments/${flow?.segment_id}`)}
+                          onClick={() =>
+                            flow?.segment_id != null &&
+                            navigatePreservingReturn(
+                              navigate,
+                              `/dashboard/segments/${flow.segment_id}`,
+                              location,
+                              "Offer Details",
+                            )
+                          }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >

@@ -35,7 +35,6 @@ import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { languageService, Language } from "../../configurations/services/languageService";
 import CreativePreviewRenderer from "./CreativePreviewRenderer";
-import SimpleTextPreview from "./SimpleTextPreview";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
@@ -1288,8 +1287,8 @@ export default function OfferCreativeStep({
             </div>
           </div>
 
-          {/* Creative Editor - Center Column (1/3) */}
-          <div className="lg:col-span-1">
+          {/* Creative Editor - remaining columns after creatives list */}
+          <div className="lg:col-span-2 min-w-0">
             <div
               className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
             >
@@ -1689,38 +1688,9 @@ export default function OfferCreativeStep({
                       </button>
                     </div>
                   </div>
-                </div>
               </div>
             </div>
-
-            {/* Preview Panel - Right Column (1/3) */}
-          {creatives.length > 0 && (
-            <div className="lg:col-span-1">
-              <div className="sticky top-4">
-                {(() => {
-                  // Build variables object with default values using same format as manual communications
-                  const previewVars: Record<string, string | number | boolean> = {};
-                  selectedVariables.forEach((v) => {
-                    // Use the same formatVariablePlaceholder logic to extract the key
-                    const placeholder = formatVariablePlaceholder(v);
-                    // Remove {{ and }} to get just the key part
-                    const variableKey = placeholder.slice(2, -2);
-                    previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
-                  });
-
-                  const replacedBody = replaceVariables(editingCreative.text_body || editingCreative.html_body || "", previewVars);
-
-                  return (
-                    <SimpleTextPreview
-                      channel={editingCreative.channel}
-                      title={replaceVariables(editingCreative.title, previewVars)}
-                      body={replacedBody}
-                    />
-                  );
-                })()}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
 

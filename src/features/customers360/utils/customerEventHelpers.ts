@@ -7,6 +7,8 @@ import type {
   CustomerEventCounts,
   CustomerEventCreativeSummary,
   CustomerEventFacets,
+  CustomerEventDeviceContext,
+  CustomerEventInteractionContext,
   CustomerEventLoyaltyContext,
   CustomerEventMessageSummary,
   CustomerEventOfferSummary,
@@ -152,6 +154,36 @@ export const CUSTOMER_EVENT_CATALOG: CustomerEventCatalogItem[] = [
     statuses: ["Completed"],
   },
   {
+    code: "device_registered",
+    label: "Device Registered",
+    description: "Customer registered a device on the account",
+    origin: "customer",
+    channel: "app",
+    tracking_source_id: "app_event",
+    tracking_source_name: "App Event",
+    statuses: ["Completed"],
+  },
+  {
+    code: "sim_swap",
+    label: "SIM Swap",
+    description: "Customer SIM was replaced on the account",
+    origin: "system",
+    channel: "api",
+    tracking_source_id: "customer_profile",
+    tracking_source_name: "Customer Profile",
+    statuses: ["Completed"],
+  },
+  {
+    code: "account_suspended",
+    label: "Account Suspended",
+    description: "Customer account was suspended",
+    origin: "system",
+    channel: "api",
+    tracking_source_id: "customer_profile",
+    tracking_source_name: "Customer Profile",
+    statuses: ["Completed"],
+  },
+  {
     code: "ussd_session",
     label: "USSD Session",
     description: "Customer started a USSD session",
@@ -240,6 +272,36 @@ export const CUSTOMER_EVENT_CATALOG: CustomerEventCatalogItem[] = [
     tracking_source_id: "consent",
     tracking_source_name: "Consent",
     statuses: ["Completed"],
+  },
+  {
+    code: "support_ticket_created",
+    label: "Support Ticket Created",
+    description: "Support ticket created for a customer issue",
+    origin: "customer",
+    channel: "app",
+    tracking_source_id: "customer_care",
+    tracking_source_name: "Customer Care",
+    statuses: ["Open", "In Progress", "Resolved"],
+  },
+  {
+    code: "complaint_logged",
+    label: "Complaint Logged",
+    description: "Customer complaint was logged",
+    origin: "customer",
+    channel: "voice",
+    tracking_source_id: "customer_care",
+    tracking_source_name: "Customer Care",
+    statuses: ["Open", "Resolved"],
+  },
+  {
+    code: "customer_care_contact",
+    label: "Customer Care Contact",
+    description: "Customer contacted customer care",
+    origin: "customer",
+    channel: "voice",
+    tracking_source_id: "customer_care",
+    tracking_source_name: "Customer Care",
+    statuses: ["Completed", "Open"],
   },
   {
     code: "welcome_email",
@@ -683,6 +745,136 @@ function parseLoyaltyContext(
     tier,
     tier_from: tierFrom,
     tier_to: tierTo,
+  };
+}
+
+function parseInteractionContext(
+  record: Record<string, unknown>,
+): CustomerEventInteractionContext | null {
+  const nested =
+    asRecord(record.interaction) ||
+    asRecord(record.ticket) ||
+    asRecord(record.complaint) ||
+    asRecord(record.care);
+  const idSources = [record, nested].filter(Boolean) as Record<string, unknown>[];
+
+  const ticketId =
+    idSources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, [
+          "ticket_id",
+          "ticketId",
+          "ticket_number",
+          "complaint_id",
+          "call_id",
+        ]),
+      "",
+    ) ||
+    pickString(nested || {}, ["id", "reference", "number"]) ||
+    null;
+  const agent =
+    pickString(record, ["agent", "agent_name", "handled_by"]) ||
+    pickString(nested || {}, ["agent", "agent_name", "handled_by", "owner"]) ||
+    null;
+  const kind =
+    idSources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, ["interaction_type", "care_kind", "ticket_type"]),
+      "",
+    ) || null;
+  const resolution =
+    idSources.reduce(
+      (found, source) =>
+        found ||
+        pickString(source, ["resolution", "resolution_status", "ticket_status"]),
+      "",
+    ) || null;
+
+  const hasCareMarker = Boolean(ticketId || agent || kind || resolution || nested);
+  if (!hasCareMarker) return null;
+
+  const textSources = (nested ? [nested, record] : [record]).filter(
+    Boolean,
+  ) as Record<string, unknown>[];
+  const subject = textSources.reduce(
+    (found, source) =>
+      found || pickString(source, ["subject", "title", "summary"]),
+    "",
+  );
+  const notes = textSources.reduce(
+    (found, source) =>
+      found || pickString(source, ["notes", "note", "comment", "resolution_notes"]),
+    "",
+  );
+
+  return {
+    ticket_id: ticketId,
+    subject,
+    notes,
+    agent,
+    kind,
+    resolution,
+  };
+}
+
+function parseDeviceContext(
+  record: Record<string, unknown>,
+): CustomerEventDeviceContext | null {
+  const nested =
+    asRecord(record.device) ||
+    asRecord(record.handset) ||
+    asRecord(record.session);
+  const idSources = [nested, record].filter(Boolean) as Record<string, unknown>[];
+
+  const deviceId =
+    pickString(nested || {}, ["device_id", "deviceId", "id"]) ||
+    pickString(record, ["device_id", "deviceId"]) ||
+    null;
+  const imei =
+    idSources.reduce(
+      (found, source) => found || pickString(source, ["imei", "imei_number"]),
+      "",
+    ) || null;
+  const os =
+    idSources.reduce(
+      (found, source) =>
+        found || pickString(source, ["os", "operating_system", "platform"]),
+      "",
+    ) || null;
+  const osVersion =
+    idSources.reduce(
+      (found, source) =>
+        found || pickString(source, ["os_version", "osVersion", "system_version"]),
+      "",
+    ) || null;
+  const appVersion =
+    idSources.reduce(
+      (found, source) =>
+        found || pickString(source, ["app_version", "appVersion", "client_version"]),
+      "",
+    ) || null;
+  const deviceType =
+    pickString(nested || {}, ["device_type", "deviceType", "type"]) ||
+    pickString(record, ["device_type", "deviceType"]) ||
+    null;
+  const deviceName =
+    pickString(nested || {}, ["device_name", "deviceName", "model", "name"]) ||
+    pickString(record, ["device_name", "deviceName", "device_model"]);
+
+  if (!deviceId && !imei && !os && !osVersion && !appVersion && !deviceType && !deviceName) {
+    return null;
+  }
+
+  return {
+    device_id: deviceId,
+    device_name: deviceName,
+    device_type: deviceType,
+    os,
+    os_version: osVersion,
+    app_version: appVersion,
+    imei,
   };
 }
 
@@ -1302,6 +1494,8 @@ export function normalizeCustomerEvent(raw: unknown, index = 0): CustomerEvent |
     message: parseMessageSummary(record, eventType, occurredAt),
     purchase: parsePurchaseContext(record),
     loyalty: parseLoyaltyContext(record),
+    interaction: parseInteractionContext(record),
+    device: parseDeviceContext(record),
   };
 }
 
@@ -1504,6 +1698,8 @@ export function generateFallbackCustomerEvents(
         occurred_at: occurredAt,
         purchase: null,
         loyalty: null,
+        interaction: null,
+        device: null,
         ...buildFallbackRelatedContext(definition, occurredAt, random),
       });
     }
@@ -1526,6 +1722,8 @@ export function generateFallbackCustomerEvents(
     occurred_at: receivedAt,
     purchase: null,
     loyalty: null,
+    interaction: null,
+    device: null,
     ...buildFallbackRelatedContext(receivedDefinition, receivedAt, random),
   });
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import { ListChecks, RotateCcw, Users } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -117,12 +117,12 @@ export default function CustomerSubscribedListsTab({
         render: (_, row) => (
           <div className="min-w-[180px]">
             {row.listType === "quicklist" ? (
-              <Link
+              <CustomerProfileEntityLink
                 to={`/dashboard/quick-lists/${row.listId}`}
                 className={`text-sm font-medium hover:underline ${tw.tableFirstColumn}`}
               >
                 {row.name}
-              </Link>
+              </CustomerProfileEntityLink>
             ) : (
               <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
                 {row.name}

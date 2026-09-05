@@ -28,7 +28,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw, button } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { navigateBackOrFallback, getResolvedReturnTo, navigateToReturnTo, navigatePreservingReturn } from "../../../shared/utils/navigation";
 import { getUserDisplayName } from "../../../shared/utils/userNameCache";
 import { getSettingsTimezone } from "../../../shared/utils/settingsHelper";
 import { getWorkflowStatusColor, getApprovalStatusColor, getStatusStyle, getStatusBadgeConfig } from "../../../shared/utils/statusColors";
@@ -106,24 +106,19 @@ export default function CampaignDetailsPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
 
-  // Check if we came from a catalog modal
-  const returnTo = (
-    location.state as {
-      returnTo?: {
-        pathname: string;
-        fromModal?: boolean;
-        catalogId?: number | string;
-      };
-    }
-  )?.returnTo;
+  const returnTo = getResolvedReturnTo(location);
 
   const handleBack = () => {
-    if (returnTo?.pathname) {
-      navigate(returnTo.pathname, { replace: true });
+    if (returnTo) {
+      navigateToReturnTo(navigate, returnTo);
       return;
     }
 
     navigateBackOrFallback(navigate, "/dashboard/campaigns");
+  };
+
+  const openRelatedEntity = (path: string) => {
+    navigatePreservingReturn(navigate, path, location, "Campaign Details");
   };
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -999,6 +994,7 @@ export default function CampaignDetailsPage() {
         <BackButton
           showBreadcrumb={true}
           currentLabel="Campaign Details"
+          onClick={handleBack}
         />
         <div className="flex flex-wrap items-center gap-2">
           {/* Scheduled Run Clock Button */}
@@ -2207,15 +2203,8 @@ export default function CampaignDetailsPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          navigate(
+                          openRelatedEntity(
                             `/dashboard/segments/${segment.segment_id}`,
-                            {
-                              state: {
-                                returnTo: {
-                                  pathname: `/dashboard/campaigns/${id}`,
-                                },
-                              },
-                            },
                           )
                         }
                         className={`font-semibold text-sm ${tw.textPrimary} truncate`}
@@ -2358,13 +2347,7 @@ export default function CampaignDetailsPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          navigate(`/dashboard/offers/${offer.id}`, {
-                            state: {
-                              returnTo: {
-                                pathname: `/dashboard/campaigns/${id}`,
-                              },
-                            },
-                          })
+                          openRelatedEntity(`/dashboard/offers/${offer.id}`)
                         }
                         className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                         title={offer.name}
@@ -2599,7 +2582,9 @@ export default function CampaignDetailsPage() {
                       ...col,
                       render: (_, row) => (
                         <button
-                          onClick={() => navigate(`/dashboard/segments/${row.segmentId}`)}
+                          onClick={() =>
+                            openRelatedEntity(`/dashboard/segments/${row.segmentId}`)
+                          }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >
@@ -2613,7 +2598,9 @@ export default function CampaignDetailsPage() {
                       ...col,
                       render: (_, row) => (
                         <button
-                          onClick={() => navigate(`/dashboard/offers/${row.offerId}`)}
+                          onClick={() =>
+                            openRelatedEntity(`/dashboard/offers/${row.offerId}`)
+                          }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >

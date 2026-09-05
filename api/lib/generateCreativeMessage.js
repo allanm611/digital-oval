@@ -15,7 +15,6 @@ const ALLOWED_TONES = new Set([
 ]);
 
 const ALLOWED_LENGTHS = new Set(["channel_optimized", "short", "medium"]);
-const ALLOWED_DRAFT_ACTIONS = new Set(["generate_new", "improve_existing"]);
 const MAX_TEXT = 2000;
 const MAX_DRAFT = 4000;
 const MAX_VARIANTS = 3;
@@ -67,23 +66,28 @@ export function validateGenerateRequest(body) {
     return { error: "Select a valid tone.", code: "INVALID_TONE" };
   }
 
-  const objective = clip(body.objective, MAX_TEXT);
-  if (objective.length < 8) {
+  const existingBody = clip(body.existingBody, MAX_DRAFT);
+  const existingWordCount = existingBody
+    ? existingBody.replace(/<[^>]+>/g, " ").trim().split(/\s+/).filter(Boolean).length
+    : 0;
+  if (existingWordCount < 3) {
     return {
-      error: "Describe the objective in a bit more detail.",
-      code: "INVALID_OBJECTIVE",
+      error: "Enter a message body of at least 3 words before generating.",
+      code: "INVALID_MESSAGE_BODY",
     };
   }
+
+  const objective =
+    clip(body.objective, MAX_TEXT) ||
+    "Rewrite and improve the provided message body for this offer creative.";
 
   const length = String(body.length || "channel_optimized");
   if (!ALLOWED_LENGTHS.has(length)) {
     return { error: "Select a valid length.", code: "INVALID_LENGTH" };
   }
 
-  const draftAction = String(body.draftAction || "generate_new");
-  if (!ALLOWED_DRAFT_ACTIONS.has(draftAction)) {
-    return { error: "Select a valid draft action.", code: "INVALID_DRAFT_ACTION" };
-  }
+  const draftAction =
+    existingWordCount >= 8 ? "improve_existing" : "generate_new";
 
   const availableVariables = Array.isArray(body.availableVariables)
     ? body.availableVariables
@@ -107,7 +111,7 @@ export function validateGenerateRequest(body) {
       mustInclude: clip(body.mustInclude, 500),
       mustAvoid: clip(body.mustAvoid, 500),
       existingTitle: clip(body.existingTitle, 200),
-      existingBody: clip(body.existingBody, MAX_DRAFT),
+      existingBody,
       availableVariables,
       variantCount: Math.min(
         Math.max(Number(body.variantCount) || 3, 1),
@@ -139,7 +143,7 @@ Must include: ${input.mustInclude || "none"}
 Must avoid: ${input.mustAvoid || "none"}
 Draft action: ${input.draftAction}
 Existing title: ${input.existingTitle || "none"}
-Existing body: ${input.existingBody || "none"}
+Source message body (rewrite this; preserve facts and {{variables}}): ${input.existingBody}
 Available merge variables (use exactly as written if useful): ${variables}
 
 Hard constraints:
