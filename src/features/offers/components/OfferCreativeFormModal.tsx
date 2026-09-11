@@ -33,6 +33,7 @@ import {
   type CreativeTemplate,
 } from "../../configurations/services/creativeTemplateService";
 import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
+import { mapCommunicationChannelToCreativeChannel } from "../utils/mapCommunicationChannel";
 import { offerService } from "../services/offerService";
 import {
   OfferCreative,
@@ -76,17 +77,7 @@ const replaceVariables = (
 };
 
 const getBaseChannel = (channelName: string): string => {
-  if (!channelName) return "SMS";
-  const upperName = channelName.toUpperCase();
-
-  // Extract base channel from full channel name (e.g., "SMS Normal" → "SMS")
-  const validChannels = ["EMAIL", "SMS", "USSD", "WHATSAPP", "PUSH"];
-  for (const valid of validChannels) {
-    if (upperName.includes(valid)) {
-      return valid;
-    }
-  }
-  return "SMS";
+  return mapCommunicationChannelToCreativeChannel(channelName);
 };
 
 const getCharacterInfo = (text: string) => {
@@ -894,6 +885,9 @@ export default function OfferCreativeFormModal({
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         channel={formData.channel}
+        communicationChannelId={
+          channels.find((ch) => ch.name === formData.channel || ch.code === formData.channel)?.id
+        }
         locale={formData.locale || "en"}
         brandName={formData.title || undefined}
         existingTitle={formData.title || ""}

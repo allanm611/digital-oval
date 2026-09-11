@@ -42,6 +42,7 @@ import type {
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import { offerService } from "../../offers/services/offerService";
+import { offerReportsService } from "../services/offerReportsService";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Offer } from "../../offers/types/offer";
 import { Table } from "../../../shared/components/Table/Table";
@@ -553,6 +554,9 @@ export default function OfferReportsPage() {
     end: "",
   });
   const [useDummyData, setUseDummyData] = useState(true);
+  const [liveReport, setLiveReport] = useState<OfferReportsResponse | null>(null);
+  const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
+  const [liveReportError, setLiveReportError] = useState<string | null>(null);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
@@ -730,10 +734,67 @@ export default function OfferReportsPage() {
     activeRangeKey,
   ]);
 
+  useEffect(() => {
+    if (useDummyData) {
+      setLiveReport(null);
+      setLiveReportError(null);
+      setIsLoadingLiveReport(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadLiveReport = async () => {
+      try {
+        setIsLoadingLiveReport(true);
+        setLiveReportError(null);
+        const grain =
+          activeRangeKey === "7d"
+            ? "daily"
+            : activeRangeKey === "30d"
+              ? "weekly"
+              : "monthly";
+        const response = await offerReportsService.getPortfolio({
+          range: activeRangeKey,
+          grain,
+          startDate: appliedCustomRange.start || undefined,
+          endDate: appliedCustomRange.end || undefined,
+          page: 1,
+          pageSize: 200,
+        });
+        if (cancelled) return;
+        if (response.success && response.data) {
+          setLiveReport(response.data);
+        } else {
+          setLiveReport(null);
+          setLiveReportError(response.error || response.message || "Failed to load offer report");
+        }
+      } catch (error) {
+        if (cancelled) return;
+        setLiveReport(null);
+        setLiveReportError(
+          extractBackendError(error, "Failed to load Offer Reports."),
+        );
+      } finally {
+        if (!cancelled) setIsLoadingLiveReport(false);
+      }
+    };
+
+    loadLiveReport();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useDummyData,
+    activeRangeKey,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
+  ]);
+
   // Scale summary data based on actual date range
   const baseSummary = combinedSummary[activeRangeKey];
   const summary = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.summary) return liveReport.summary;
       return {
         totalRedemptions: 0,
         redemptionRate: 0,
@@ -756,7 +817,16 @@ export default function OfferReportsPage() {
       redemptionRate: baseSummary.redemptionRate,
       roi: baseSummary.roi,
     };
-  }, [baseSummary, scaleFactor, useDummyData]);
+  }, [baseSummary, scaleFactor, useDummyData, liveReport]);
+
+  const liveTrend = (
+    key: keyof NonNullable<OfferReportsResponse["heroTrends"]>,
+  ) => ({
+    value:
+      liveReport?.heroTrends?.[key]?.label?.replace(" vs last period", "") ||
+      "—",
+    direction: liveReport?.heroTrends?.[key]?.direction || ("up" as const),
+  });
 
   const heroCards = useDummyData
     ? [
@@ -806,51 +876,52 @@ export default function OfferReportsPage() {
     : [
         {
           label: "Total Redemptions",
-          value: "0",
+          value: summary.totalRedemptions.toLocaleString("en-US"),
           subtext: "Total offers used by customers",
           icon: statIcons.users,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("totalRedemptions"),
         },
         {
           label: "Redemption Rate",
-          value: "0.0%",
+          value: `${summary.redemptionRate.toFixed(1)}%`,
           subtext: "Customers who used promotions",
           icon: statIcons.growth,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("redemptionRate"),
         },
         {
           label: "Revenue Generated",
-          value: formatCurrencyAmount(0),
+          value: formatCurrencyAmount(summary.revenueGenerated),
           subtext: "Total sales from promotions",
           icon: statIcons.revenue,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("revenueGenerated"),
         },
         {
           label: "Incremental Revenue",
-          value: formatCurrencyAmount(0),
+          value: formatCurrencyAmount(summary.incrementalRevenue),
           subtext: "New revenue created",
           icon: statIcons.sparkles,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("incrementalRevenue"),
         },
         {
           label: "Total Cost",
-          value: formatCurrencyAmount(0),
+          value: formatCurrencyAmount(summary.totalCost),
           subtext: "Total discount cost",
           icon: statIcons.coins,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("totalCost"),
         },
         {
           label: "ROI",
-          value: "0.0x",
+          value: `${summary.roi.toFixed(1)}x`,
           subtext: "Revenue per dollar spent",
           icon: statIcons.growth,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("roi"),
         },
       ];
 
   // Scale chart data based on actual date range
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.redemptionFunnel?.length) return liveReport.redemptionFunnel;
       return funnelData[activeRangeKey].map((point) => ({
         ...point,
         value: 0,
@@ -862,10 +933,11 @@ export default function OfferReportsPage() {
       ...point,
       value: Math.round(point.value * scaleFactor),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const timelineSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.redemptionTimeline?.length) return liveReport.redemptionTimeline;
       return redemptionTimelineData[activeRangeKey].map((point) => ({
         ...point,
         redemptions: 0,
@@ -881,10 +953,11 @@ export default function OfferReportsPage() {
         point.cumulativeRedemptions * scaleFactor,
       ),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const offerTypeComparison = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.offerTypeComparison?.length) return liveReport.offerTypeComparison;
       return offerTypeData[activeRangeKey].map((point) => ({
         ...point,
         redemptionRate: 0,
@@ -904,15 +977,32 @@ export default function OfferReportsPage() {
       // Scale revenue
       incrementalRevenue: Math.round(point.incrementalRevenue * scaleFactor),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   // Convert real offers to table row format with mixed real and dummy data
   const offerTableRows = useMemo(() => {
+    if (!useDummyData && liveReport?.offers?.length) {
+      return liveReport.offers.map((row) => ({
+        id: `offer-${row.id}`,
+        offerName: row.offerName,
+        status: row.status ?? "Active",
+        targetGroup: row.targetGroup,
+        controlGroup: row.controlGroup,
+        messagesGenerated: row.messagesGenerated,
+        sent: row.sent,
+        delivered: row.delivered,
+        conversions: row.conversions,
+        lastUpdated: row.lastUpdated
+          ? formatDateWithTimezone(row.lastUpdated, getSettingsTimezoneOffset())
+          : "—",
+        lastUpdatedDate: row.lastUpdated ? new Date(row.lastUpdated).getTime() : Date.now(),
+      }));
+    }
+
     return offers.map((offer) => ({
       id: `offer-${offer.id}`,
       offerName: offer.name,
       status: offer.status ?? "Active",
-      // Dummy data for columns without backend data
       targetGroup: Math.floor(Math.random() * 50000) + 10000,
       controlGroup: Math.floor(Math.random() * 10000) + 1000,
       messagesGenerated: Math.floor(Math.random() * 100000) + 50000,
@@ -922,7 +1012,7 @@ export default function OfferReportsPage() {
       lastUpdated: offer.updated_at ? formatDateWithTimezone(offer.updated_at, getSettingsTimezoneOffset()) : "—",
       lastUpdatedDate: offer.updated_at ? new Date(offer.updated_at).getTime() : Date.now(),
     }));
-  }, [offers]);
+  }, [offers, useDummyData, liveReport]);
 
   const handleFilteredCountChange = (count: number) => {
     // Updates when filters applied in the Table component
@@ -1056,7 +1146,11 @@ export default function OfferReportsPage() {
                 />
               </button>
               <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-                {useDummyData ? "Dummy Data" : "Real Data"}
+                {useDummyData
+                  ? "Dummy Data"
+                  : isLoadingLiveReport
+                    ? "Real Data (loading…)"
+                    : "Real Data"}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1128,6 +1222,12 @@ export default function OfferReportsPage() {
           </div>
         </div>
       </div>
+
+      {liveReportError && !useDummyData && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {liveReportError}
+        </div>
+      )}
 
       {/* Hero KPI Cards */}
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -1376,13 +1476,13 @@ export default function OfferReportsPage() {
           </div>
         </div>
 
-        {isLoadingOffers && (
+        {(useDummyData ? isLoadingOffers : isLoadingLiveReport) && (
           <div className="flex justify-center py-16">
             <LoadingSpinner />
           </div>
         )}
 
-        {!isLoadingOffers && offerFetchError && (
+        {useDummyData && !isLoadingOffers && offerFetchError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
             <p className="text-sm text-red-700 font-medium mb-4">{offerFetchError}</p>
             <button
@@ -1394,13 +1494,17 @@ export default function OfferReportsPage() {
           </div>
         )}
 
-        {!isLoadingOffers && !offerFetchError && offers.length === 0 && (
+        {!(useDummyData ? isLoadingOffers : isLoadingLiveReport) &&
+          !(useDummyData && offerFetchError) &&
+          offerTableRows.length === 0 && (
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-sm text-gray-600">No offers found</p>
           </div>
         )}
 
-        {!isLoadingOffers && !offerFetchError && offers.length > 0 && (
+        {!(useDummyData ? isLoadingOffers : isLoadingLiveReport) &&
+          !(useDummyData && offerFetchError) &&
+          offerTableRows.length > 0 && (
           <>
             <Table<OfferTableRow>
               columns={tableColumnsMemo}

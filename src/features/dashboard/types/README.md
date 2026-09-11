@@ -107,7 +107,8 @@ All table data should include:
 ## 🔍 Example API Response
 
 ```typescript
-// GET /api/reports/customer-profiles?range=30d&page=1&pageSize=50
+// GET /monitoring/reporting/subscribers/portfolio?range=30d&page=1&pageSize=50
+// (frontend contract; also exposed as split /kpis /value-matrix /lifecycle /clv-distribution /cohort-retention /customers)
 
 {
   "heroMetrics": {

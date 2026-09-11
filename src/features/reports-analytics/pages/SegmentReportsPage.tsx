@@ -33,7 +33,8 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import { useToast } from "../../../contexts/ToastContext";
-import type { RangeOption } from "../types/ReportsAPI";
+import type { RangeOption, SegmentReportsResponse } from "../types/ReportsAPI";
+import { segmentReportsService } from "../services/segmentReportsService";
 import { segmentService } from "../../segments/services/segmentService";
 import type { SegmentType } from "../../segments/types/segment";
 import { Table } from "../../../shared/components/Table/Table";
@@ -356,6 +357,9 @@ export default function SegmentReportsPage() {
     end: "",
   });
   const [useDummyData, setUseDummyData] = useState(true);
+  const [liveReport, setLiveReport] = useState<SegmentReportsResponse | null>(null);
+  const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
+  const [liveReportError, setLiveReportError] = useState<string | null>(null);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
   const [clearFiltersKey, setClearFiltersKey] = useState(0);
@@ -509,6 +513,8 @@ export default function SegmentReportsPage() {
       setTableQuery(query);
       setTablePage(1);
 
+      if (!useDummyData) return;
+
       if (searchDebounceRef.current) {
         clearTimeout(searchDebounceRef.current);
       }
@@ -517,7 +523,7 @@ export default function SegmentReportsPage() {
         fetchSegments(query);
       }, 150);
     },
-    [fetchSegments],
+    [fetchSegments, useDummyData],
   );
 
   // Load segments on mount
@@ -553,9 +559,70 @@ export default function SegmentReportsPage() {
     activeRangeKey,
   ]);
 
+  useEffect(() => {
+    if (useDummyData) {
+      setLiveReport(null);
+      setLiveReportError(null);
+      setIsLoadingLiveReport(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadLiveReport = async () => {
+      try {
+        setIsLoadingLiveReport(true);
+        setLiveReportError(null);
+        const grain =
+          activeRangeKey === "7d"
+            ? "daily"
+            : activeRangeKey === "30d"
+              ? "weekly"
+              : "monthly";
+        const response = await segmentReportsService.getPortfolio({
+          range: activeRangeKey,
+          grain,
+          startDate: appliedCustomRange.start || undefined,
+          endDate: appliedCustomRange.end || undefined,
+          page: 1,
+          pageSize: 200,
+          sortBy: "memberCount",
+          sortOrder: "desc",
+        });
+        if (cancelled) return;
+        if (response.success && response.data) {
+          setLiveReport(response.data);
+        } else {
+          setLiveReport(null);
+          setLiveReportError(
+            response.error || response.message || "Failed to load segment report",
+          );
+        }
+      } catch (error) {
+        if (cancelled) return;
+        setLiveReport(null);
+        setLiveReportError(
+          extractBackendError(error, "Failed to load Segment Reports."),
+        );
+      } finally {
+        if (!cancelled) setIsLoadingLiveReport(false);
+      }
+    };
+
+    loadLiveReport();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useDummyData,
+    activeRangeKey,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
+  ]);
+
   const baseSummary = segmentSummary[activeRangeKey];
   const summary = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.summary) return liveReport.summary;
       return {
         totalSegments: 0,
         totalMembers: 0,
@@ -575,7 +642,16 @@ export default function SegmentReportsPage() {
       conversionRate: baseSummary.conversionRate,
       totalSegments: baseSummary.totalSegments,
     };
-  }, [baseSummary, scaleFactor, useDummyData]);
+  }, [baseSummary, scaleFactor, useDummyData, liveReport]);
+
+  const liveTrend = (
+    key: keyof NonNullable<SegmentReportsResponse["heroTrends"]>,
+  ) => ({
+    value:
+      liveReport?.heroTrends?.[key]?.label?.replace(" vs last period", "") ||
+      "—",
+    direction: liveReport?.heroTrends?.[key]?.direction || ("up" as const),
+  });
 
   const heroCards = useDummyData
     ? [
@@ -618,43 +694,44 @@ export default function SegmentReportsPage() {
     : [
         {
           label: "Total Segments",
-          value: "0",
+          value: summary.totalSegments.toString(),
           subtext: "Active segments in the system",
           icon: statIcons.segments,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("totalSegments"),
         },
         {
           label: "Total Members",
-          value: "0",
+          value: summary.totalMembers.toLocaleString("en-US"),
           subtext: "Combined members across all segments",
           icon: statIcons.members,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("totalMembers"),
         },
         {
           label: "Avg Member Growth",
-          value: "0.0%",
+          value: `${summary.avgMemberGrowth.toFixed(1)}%`,
           subtext: "Average growth rate",
           icon: statIcons.growth,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("avgMemberGrowth"),
         },
         {
           label: "Active in Campaigns",
-          value: "0",
+          value: summary.activeInCampaigns.toString(),
           subtext: "Segments used in campaigns",
           icon: statIcons.campaigns,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("activeInCampaigns"),
         },
         {
           label: "Engagement Rate",
-          value: "0.0%",
+          value: `${summary.engagementRate.toFixed(1)}%`,
           subtext: "Average engagement",
           icon: statIcons.engagement,
-          trend: { value: "—", direction: "up" as const },
+          trend: liveTrend("engagementRate"),
         },
       ];
 
   const memberGrowthSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.memberGrowth?.length) return liveReport.memberGrowth;
       return memberGrowthData[activeRangeKey].map((point) => ({
         ...point,
         members: 0,
@@ -668,7 +745,7 @@ export default function SegmentReportsPage() {
       members: Math.round(point.members * scaleFactor),
       cumulativeMembers: Math.round(point.cumulativeMembers * scaleFactor),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const segmentColors = [
     colors.reportCharts.segmentReports.sizeDistribution.segment1,
@@ -681,6 +758,13 @@ export default function SegmentReportsPage() {
 
   const sizeDistributionSeries = useMemo(() => {
     if (!useDummyData) {
+      const live = liveReport?.sizeDistribution;
+      if (live?.length) {
+        return live.map((point, idx) => ({
+          ...point,
+          fill: segmentColors[idx % segmentColors.length],
+        }));
+      }
       return segmentSizeDistributionData[activeRangeKey].map((point, idx) => ({
         ...point,
         members: 0,
@@ -699,7 +783,7 @@ export default function SegmentReportsPage() {
       members: Math.round(point.members * scaleFactor),
       fill: segmentColors[idx % segmentColors.length],
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const campaignColors = [
     colors.reportCharts.segmentReports.campaignUsage.bar1,
@@ -712,6 +796,13 @@ export default function SegmentReportsPage() {
 
   const campaignUsageSeries = useMemo(() => {
     if (!useDummyData) {
+      const live = liveReport?.campaignUsage;
+      if (live?.length) {
+        return live.map((point, idx) => ({
+          ...point,
+          fill: campaignColors[idx % campaignColors.length],
+        }));
+      }
       return campaignUsageData[activeRangeKey].map((point, idx) => ({
         ...point,
         campaigns: 0,
@@ -722,10 +813,11 @@ export default function SegmentReportsPage() {
       ...point,
       fill: campaignColors[idx % campaignColors.length],
     }));
-  }, [activeRangeKey, useDummyData]);
+  }, [activeRangeKey, useDummyData, liveReport]);
 
   const performanceComparison = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.performanceComparison?.length) return liveReport.performanceComparison;
       return performanceComparisonData[activeRangeKey].map((point) => ({
         ...point,
         engagement: 0,
@@ -733,20 +825,39 @@ export default function SegmentReportsPage() {
       }));
     }
     return performanceComparisonData[activeRangeKey];
-  }, [activeRangeKey, useDummyData]);
+  }, [activeRangeKey, useDummyData, liveReport]);
 
-  // Convert real segments to table row format with dummy data for other columns
   const segmentTableRows = useMemo(() => {
+    if (!useDummyData && liveReport?.segments?.length) {
+      return liveReport.segments.map((row) => ({
+        id: String(row.id),
+        name: row.name || "Unknown",
+        memberCount: row.memberCount,
+        growthRate: row.growthRate,
+        campaignsUsed: row.campaignsUsed,
+        engagementRate: row.engagementRate,
+        conversionRate: row.conversionRate,
+        avgValue: row.avgValue,
+        status: row.status === "Inactive" ? "Inactive" as const : "Active" as const,
+        lastUpdated: row.lastUpdated
+          ? formatDateWithTimezone(row.lastUpdated, getSettingsTimezoneOffset())
+          : "—",
+        lastUpdatedDate: row.lastUpdated
+          ? new Date(row.lastUpdated).getTime()
+          : Date.now(),
+      }));
+    }
+
     return segments.map((segment, index) => ({
       id: String(segment.id),
       name: segment.name || "Unknown",
-      memberCount: Math.floor(Math.random() * 500000) + 10000, // Dummy data
-      growthRate: -5 + Math.random() * 25, // Dummy data
-      campaignsUsed: Math.floor(Math.random() * 15) + 2, // Dummy data
-      engagementRate: 5 + Math.random() * 50, // Dummy data
-      conversionRate: 1 + Math.random() * 15, // Dummy data
-      avgValue: 50 + Math.random() * 1000, // Dummy data
-      status: index % 3 === 0 ? "Inactive" : "Active", // Dummy data (deterministic for consistency)
+      memberCount: Math.floor(Math.random() * 500000) + 10000,
+      growthRate: -5 + Math.random() * 25,
+      campaignsUsed: Math.floor(Math.random() * 15) + 2,
+      engagementRate: 5 + Math.random() * 50,
+      conversionRate: 1 + Math.random() * 15,
+      avgValue: 50 + Math.random() * 1000,
+      status: (index % 3 === 0 ? "Inactive" : "Active") as "Active" | "Inactive",
       lastUpdated: segment.updated_at
         ? formatDateWithTimezone(segment.updated_at, getSettingsTimezoneOffset())
         : "—",
@@ -754,7 +865,7 @@ export default function SegmentReportsPage() {
         ? new Date(segment.updated_at).getTime()
         : Date.now(),
     }));
-  }, [segments]);
+  }, [segments, useDummyData, liveReport]);
 
   const filteredRows = useMemo(() => {
     const maxDays =
@@ -769,23 +880,28 @@ export default function SegmentReportsPage() {
       : null;
 
     return segmentTableRows.filter((row) => {
+      const matchesQuery = tableQuery.trim()
+        ? row.name.toLowerCase().includes(tableQuery.trim().toLowerCase())
+        : true;
       const matchesStatus =
         statusFilter === "All Statuses" ? true : row.status === statusFilter;
+      if (!useDummyData) return matchesQuery && matchesStatus;
       const rowDate = row.lastUpdatedDate || Date.now();
       const now = Date.now();
       const matchesRange =
         appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
           ? rowDate >= startMs && rowDate <= endMs
           : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
-      return matchesStatus && matchesRange;
+      return matchesQuery && matchesStatus && matchesRange;
     });
   }, [
     statusFilter,
-    customRange,
+    tableQuery,
     customDays,
     selectedRange,
     appliedCustomRange,
     segmentTableRows,
+    useDummyData,
   ]);
 
   useEffect(() => {
@@ -1236,13 +1352,19 @@ export default function SegmentReportsPage() {
           </div>
         </div>
 
-        {isLoadingSegments && (
+        {liveReportError && !useDummyData && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {liveReportError}
+          </div>
+        )}
+
+        {(useDummyData ? isLoadingSegments : isLoadingLiveReport) && (
           <div className="flex justify-center py-16">
             <LoadingSpinner />
           </div>
         )}
 
-        {!isLoadingSegments && segmentFetchError && (
+        {useDummyData && !isLoadingSegments && segmentFetchError && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
             <p className="text-sm text-red-700 font-medium mb-4">{segmentFetchError}</p>
             <button
@@ -1254,13 +1376,17 @@ export default function SegmentReportsPage() {
           </div>
         )}
 
-        {!isLoadingSegments && !segmentFetchError && segments.length === 0 && (
+        {!(useDummyData ? isLoadingSegments : isLoadingLiveReport) &&
+          !(useDummyData && segmentFetchError) &&
+          filteredRows.length === 0 && (
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-sm text-gray-600">No segments found</p>
           </div>
         )}
 
-        {!isLoadingSegments && !segmentFetchError && segments.length > 0 && (
+        {!(useDummyData ? isLoadingSegments : isLoadingLiveReport) &&
+          !(useDummyData && segmentFetchError) &&
+          filteredRows.length > 0 && (
           <>
             <Table<SegmentRow>
               columns={tableColumnsMemo}
