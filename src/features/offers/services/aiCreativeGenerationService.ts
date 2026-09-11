@@ -12,12 +12,11 @@ const REQUEST_TIMEOUT_MS = 28000;
 
 function getAiGenerateUrl(): string {
   const explicitUrl = import.meta.env.VITE_AI_GENERATE_URL;
+  // const explicitUrl = "http://localhost:11008/offer-creatives/ai/generate";
   if (explicitUrl) {
     return String(explicitUrl);
   }
 
-  // Real system path: database-service OfferCreativesRouter.
-  // Keep VITE_AI_GENERATE_URL=/api/ai/generate-creative only for the local Vite/Vercel bridge.
   return `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AI_GENERATE_CREATIVE}`;
 }
 

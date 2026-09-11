@@ -13,38 +13,42 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import {
   Activity,
   ArrowUpRight,
-  Download,
   MousePointerClick,
   Users2,
   Eye,
   FileText,
+  RefreshCw,
 } from "lucide-react";
-import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency } from "../../../shared/services/currencyService";
-import { formatDateWithTimezone } from "../../../shared/services/dateService";
 import type {
   RangeOption,
   CampaignReportsResponse,
   CampaignRow,
 } from "../types/ReportsAPI";
+import {
+  buildCampaignReportParams,
+  formatTrendLabel,
+  settledError,
+  settledValue,
+} from "../utils/campaignReportQuery";
 
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import { campaignService } from "../../campaigns/services/campaignService";
+import { campaignReportsService } from "../services/campaignReportsService";
 import { useToast } from "../../../contexts/ToastContext";
 import type { CampaignDisplay } from "../../campaigns/types/campaign";
 import CampaignOffersModal from "../../campaigns/components/CampaignOffersModal";
 import CampaignSegmentsModal from "../../campaigns/components/CampaignSegmentsModal";
-import DateFormatter from "../../../shared/components/DateFormatter";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
@@ -360,7 +364,7 @@ const generateCampaignRows = (): CampaignRow[] => {
       const cgConversionPercentage = delivered > 0 ? (cgConversions / delivered) * 100 : 0;
 
       rows.push({
-        id: `camp-${String(1000 + baseIdx)}`,
+        id: `dummy-${String(1000 + baseIdx)}`,
         name: campaignNames[baseIdx % campaignNames.length],
         segmentCount: 2,
         offerCount: 2,
@@ -445,16 +449,45 @@ type CampaignTableRow = {
   tgConversionPercentage: number;
   cgConversionPercentage: number;
   lastRunDate: string;
+  lastRunDateMS?: number;
   campaign?: CampaignDisplay;
   segmentCount: number;
   offerCount: number;
 };
 
+function getCampaignRowId(row: CampaignTableRow): string | null {
+  const fromCampaign = row.campaign?.id;
+  if (fromCampaign != null && String(fromCampaign).trim() !== "") {
+    return String(fromCampaign);
+  }
+  const raw = String(row.id || "").replace(/^(campaign-|camp-)/, "");
+  return /^\d+$/.test(raw) ? raw : null;
+}
+
+const EMPTY_SUMMARY: CampaignSummary = {
+  eligibleAudience: 0,
+  recipients: 0,
+  reach: 0,
+  impressions: 0,
+  opens: 0,
+  clicks: 0,
+  clickRate: 0,
+  engagementRate: 0,
+  conversions: 0,
+  conversionRate: 0,
+  revenue: 0,
+  roas: 0,
+  cac: 0,
+  leads: 0,
+  campaignCost: 0,
+};
+
 export default function CampaignReportsPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { error: showError } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
+  const [debouncedTableQuery, setDebouncedTableQuery] = useState("");
   const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({
@@ -558,32 +591,34 @@ export default function CampaignReportsPage() {
       visible: true,
       sortable: false,
       isActionColumn: true,
-      render: (_, row: CampaignTableRow) => (
-        <div className="space-x-2 flex items-center">
-          <button
-            onClick={() => {
-              if (row.campaign?.id) {
-                navigate(`/dashboard/campaigns/${row.campaign.id}`);
-              }
-            }}
-            className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-            title="View campaign details"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => {
-              if (row.campaign?.id) {
-                navigate(`/dashboard/campaigns/${row.campaign.id}/report`);
-              }
-            }}
-            className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-            title="View campaign report"
-          >
-            <FileText className="h-4 w-4" />
-          </button>
-        </div>
-      ),
+      render: (_, row: CampaignTableRow) => {
+        const campaignId = getCampaignRowId(row);
+        const canOpen = Boolean(campaignId);
+        return (
+          <div className="space-x-2 flex items-center">
+            <button
+              onClick={() => {
+                if (campaignId) navigate(`/dashboard/campaigns/${campaignId}`);
+              }}
+              disabled={!canOpen}
+              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              title="View campaign details"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                if (campaignId) navigate(`/dashboard/campaigns/${campaignId}/report`);
+              }}
+              disabled={!canOpen}
+              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              title="View campaign report"
+            >
+              <FileText className="h-4 w-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -602,8 +637,16 @@ export default function CampaignReportsPage() {
   const [showSegmentsModal, setShowSegmentsModal] = useState(false);
   const [selectedCampaignForModal, setSelectedCampaignForModal] = useState<CampaignDisplay | null>(null);
   const [selectedCampaignFilter, setSelectedCampaignFilter] = useState<string>("");
+  const [liveReport, setLiveReport] = useState<Partial<CampaignReportsResponse> | null>(null);
+  const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
+  const [liveReportError, setLiveReportError] = useState<string | null>(null);
+  const [liveTableRows, setLiveTableRows] = useState<CampaignRow[]>([]);
+  const [liveTableTotal, setLiveTableTotal] = useState(0);
+  const [isLoadingLiveTable, setIsLoadingLiveTable] = useState(false);
+  const [liveTableError, setLiveTableError] = useState<string | null>(null);
+  const [isRefreshingSnapshots, setIsRefreshingSnapshots] = useState(false);
+  const [dataEpoch, setDataEpoch] = useState(0);
 
-  // Fetch real campaigns on mount
   const fetchCampaigns = async () => {
     try {
       setIsLoadingCampaigns(true);
@@ -622,11 +665,10 @@ export default function CampaignReportsPage() {
         }));
         setCampaigns(campaignList);
       } else {
-        setCampaignFetchError("No campaigns found");
         setCampaigns([]);
       }
     } catch (err) {
-      setCampaignFetchError("Failed to load campaigns");
+      setCampaignFetchError("Failed to load campaign filter list");
       setCampaigns([]);
     } finally {
       setIsLoadingCampaigns(false);
@@ -638,13 +680,31 @@ export default function CampaignReportsPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedCampaignFilter) {
-      navigate(`/dashboard/campaigns/${selectedCampaignFilter}/report`);
-    }
-  }, [selectedCampaignFilter, navigate]);
+    const timer = setTimeout(() => {
+      setDebouncedTableQuery(tableQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [tableQuery]);
 
   const handleRun = () => {
     setAppliedCustomRange(customRange);
+  };
+
+  const handleRefreshSnapshots = async () => {
+    try {
+      setIsRefreshingSnapshots(true);
+      await campaignReportsService.refreshSnapshots({
+        range: activeRangeKey,
+        startDate: appliedCustomRange.start || undefined,
+        endDate: appliedCustomRange.end || undefined,
+      });
+      showSuccess("Campaign snapshots refreshed. Reloading reports…");
+      setDataEpoch((value) => value + 1);
+    } catch (error) {
+      showError(extractBackendError(error, "Failed to refresh campaign snapshots."));
+    } finally {
+      setIsRefreshingSnapshots(false);
+    }
   };
 
   const customDays = getDaysBetween(
@@ -669,26 +729,148 @@ export default function CampaignReportsPage() {
     activeRangeKey,
   ]);
 
+  useEffect(() => {
+    if (useDummyData) {
+      setLiveReport(null);
+      setLiveReportError(null);
+      setIsLoadingLiveReport(false);
+      setLiveTableRows([]);
+      setLiveTableTotal(0);
+      setLiveTableError(null);
+      setIsLoadingLiveTable(false);
+      return;
+    }
+
+    let cancelled = false;
+    const params = buildCampaignReportParams({
+      range: activeRangeKey,
+      startDate: appliedCustomRange.start,
+      endDate: appliedCustomRange.end,
+      campaignId: selectedCampaignFilter || undefined,
+    });
+
+    const loadLiveWidgets = async () => {
+      setIsLoadingLiveReport(true);
+      setLiveReportError(null);
+      const [kpisResult, reachResult, funnelResult, trendsResult] = await Promise.allSettled([
+        campaignReportsService.getKpis(params),
+        campaignReportsService.getChannelReach(params),
+        campaignReportsService.getFunnel(params),
+        campaignReportsService.getTrends(params),
+      ]);
+      if (cancelled) return;
+
+      const kpis = settledValue(kpisResult);
+      const reach = settledValue(reachResult);
+      const funnel = settledValue(funnelResult);
+      const trends = settledValue(trendsResult);
+      const trendPoints = trends?.data || [];
+
+      setLiveReport({
+        summary: kpis?.data,
+        heroTrends: kpis?.trends,
+        channelReach: reach?.data,
+        conversionFunnel: funnel?.data,
+        performanceTrend: trendPoints,
+        revenueTrend: trendPoints.map((point) => ({
+          period: point.period,
+          date: point.date,
+          revenue: point.revenue,
+          spend: point.spend,
+          target: 0,
+        })),
+        meta: kpis?.meta,
+      });
+
+      const errors = [
+        settledError(kpisResult, "Failed to load campaign KPIs."),
+        settledError(reachResult, "Failed to load channel reach."),
+        settledError(funnelResult, "Failed to load engagement funnel."),
+        settledError(trendsResult, "Failed to load campaign trends."),
+      ].filter(Boolean) as string[];
+
+      if (errors.length === 4) {
+        setLiveReportError(extractBackendError(errors[0], "Failed to load Campaign Reports."));
+      } else if (errors.length) {
+        setLiveReportError(errors.join(" "));
+      }
+      setIsLoadingLiveReport(false);
+    };
+
+    loadLiveWidgets();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useDummyData,
+    activeRangeKey,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
+    selectedCampaignFilter,
+    dataEpoch,
+  ]);
+
+  useEffect(() => {
+    if (useDummyData) return;
+
+    let cancelled = false;
+    const loadLiveTable = async () => {
+      try {
+        setIsLoadingLiveTable(true);
+        setLiveTableError(null);
+        const response = await campaignReportsService.getCampaignsTable(
+          buildCampaignReportParams({
+            range: activeRangeKey,
+            startDate: appliedCustomRange.start,
+            endDate: appliedCustomRange.end,
+            campaignId: selectedCampaignFilter || undefined,
+            page: tablePage,
+            pageSize: tablePageSize,
+            search: debouncedTableQuery.trim() || undefined,
+            sortBy: "conversions",
+            sortOrder: "desc",
+          }),
+        );
+        if (cancelled) return;
+        if (response.success) {
+          setLiveTableRows(response.data || []);
+          setLiveTableTotal(response.total ?? response.pagination?.total ?? response.data?.length ?? 0);
+        } else {
+          setLiveTableRows([]);
+          setLiveTableTotal(0);
+          setLiveTableError(response.error || response.message || "Failed to load campaign table");
+        }
+      } catch (error) {
+        if (cancelled) return;
+        setLiveTableRows([]);
+        setLiveTableTotal(0);
+        setLiveTableError(extractBackendError(error, "Failed to load campaign table."));
+      } finally {
+        if (!cancelled) setIsLoadingLiveTable(false);
+      }
+    };
+
+    loadLiveTable();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useDummyData,
+    activeRangeKey,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
+    selectedCampaignFilter,
+    tablePage,
+    tablePageSize,
+    debouncedTableQuery,
+    dataEpoch,
+  ]);
+
   // Scale summary data based on actual date range
   const baseSummary = campaignSummary[activeRangeKey];
   const summary = useMemo(() => {
     if (!useDummyData) {
-      return {
-        eligibleAudience: 0,
-        recipients: 0,
-        reach: 0,
-        impressions: 0,
-        opens: 0,
-        clickRate: 0,
-        engagementRate: 0,
-        conversions: 0,
-        conversionRate: 0,
-        revenue: 0,
-        roas: 0,
-        cac: 0,
-        leads: 0,
-        campaignCost: 0,
-      };
+      return liveReport?.summary || EMPTY_SUMMARY;
     }
     if (scaleFactor === 1) return baseSummary;
     return {
@@ -709,7 +891,7 @@ export default function CampaignReportsPage() {
       roas: baseSummary.roas,
       cac: baseSummary.cac,
     };
-  }, [baseSummary, scaleFactor, useDummyData]);
+  }, [baseSummary, scaleFactor, useDummyData, liveReport]);
   const heroCards = useDummyData
     ? [
         {
@@ -762,80 +944,115 @@ export default function CampaignReportsPage() {
     : [
         {
           label: "Audience Reached",
-          value: "0",
-          subtext: "0% of 0 eligible",
+          value: summary.reach.toLocaleString("en-US"),
+          subtext: `${summary.eligibleAudience ? Math.round((summary.reach / summary.eligibleAudience) * 100) : 0}% of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
           icon: statIcons.audience,
-          trend: { value: "—", direction: "up" as const },
+          trend: {
+            value: formatTrendLabel(liveReport?.heroTrends?.reach?.label),
+            direction: liveReport?.heroTrends?.reach?.direction || "up",
+          },
         },
         {
           label: "Engagement Rate",
-          value: "0.0%",
+          value: `${summary.engagementRate.toFixed(1)}%`,
           subtext: "Opens, clicks & taps vs reach",
           icon: statIcons.engagement,
-          trend: { value: "—", direction: "up" as const },
+          trend: {
+            value: formatTrendLabel(liveReport?.heroTrends?.engagementRate?.label),
+            direction: liveReport?.heroTrends?.engagementRate?.direction || "up",
+          },
         },
         {
           label: "Conversion Rate",
-          value: "0.0%",
-          subtext: "0 conversions",
+          value: `${summary.conversionRate.toFixed(1)}%`,
+          subtext: `${summary.conversions.toLocaleString("en-US")} conversions`,
           icon: statIcons.outcome,
-          trend: { value: "—", direction: "up" as const },
+          trend: {
+            value: formatTrendLabel(liveReport?.heroTrends?.conversionRate?.label),
+            direction: liveReport?.heroTrends?.conversionRate?.direction || "up",
+          },
         },
         {
           label: "Revenue Generated",
-          value: formatCurrency(0),
-          subtext: `Avg ${formatCurrency(0)} per conversion`,
+          value: formatCurrency(summary.revenue),
+          subtext: `Avg ${formatCurrency(summary.conversions ? Math.round(summary.revenue / summary.conversions) : 0)} per conversion`,
           icon: statIcons.outcome,
-          trend: { value: "—", direction: "up" as const },
+          trend: {
+            value: formatTrendLabel(liveReport?.heroTrends?.revenue?.label),
+            direction: liveReport?.heroTrends?.revenue?.direction || "up",
+          },
         },
         {
           label: "ROI / ROMI",
-          value: "0.0x",
-          subtext: `Spend ${formatCurrency(0)}`,
+          value: `${summary.roas.toFixed(1)}x`,
+          subtext: `Spend ${formatCurrency(summary.campaignCost)}`,
           icon: statIcons.growth,
-          trend: { value: "—", direction: "up" as const },
+          trend: {
+            value: formatTrendLabel(liveReport?.heroTrends?.roas?.label),
+            direction: liveReport?.heroTrends?.roas?.direction || "up",
+          },
         },
         {
           label: "Campaign Cost",
-          value: formatCurrency(0),
-          subtext: `CAC ${formatCurrency(0)}`,
+          value: formatCurrency(summary.campaignCost),
+          subtext: `CAC ${formatCurrency(summary.cac)}`,
           icon: statIcons.outcome,
-          trend: { value: "—", direction: "up" as const },
+          trend: {
+            value: formatTrendLabel(liveReport?.heroTrends?.campaignCost?.label),
+            direction: liveReport?.heroTrends?.campaignCost?.direction || "up",
+          },
         },
       ];
 
-  // Convert real campaigns to table row format with mixed real and dummy data
-  const campaignTableRows = useMemo(() => {
-    return campaigns.map((campaign) => {
-      const delivered = Math.floor(Math.random() * 90000) + 40000;
-      const conversions = Math.floor(delivered * (0.06 + Math.random() * 0.08));
-      const cgConversions = Math.floor(delivered * (0.04 + Math.random() * 0.06));
-      const tgConversionPercentage = delivered > 0 ? (conversions / delivered) * 100 : 0;
-      const cgConversionPercentage = delivered > 0 ? (cgConversions / delivered) * 100 : 0;
+  const mapReportRow = (row: CampaignRow): CampaignTableRow => {
+    const campaign = campaigns.find((c) => String(c.id) === String(row.id));
+    return {
+      id: `campaign-${row.id}`,
+      name: row.name,
+      segmentCount: row.segmentCount ?? 0,
+      offerCount: row.offerCount ?? 0,
+      campaign,
+      targetGroup: row.targetGroup,
+      controlGroup: row.controlGroup,
+      messagesGenerated: row.messagesGenerated,
+      sent: row.sent,
+      delivered: row.delivered,
+      conversions: row.conversions,
+      cgConversions: row.cgConversions,
+      tgConversionPercentage: row.tgConversionPercentage ?? 0,
+      cgConversionPercentage: row.cgConversionPercentage ?? 0,
+      lastRunDate: row.lastRunDate || "—",
+      lastRunDateMS: row.lastRunDate ? new Date(row.lastRunDate).getTime() : Date.now(),
+    };
+  };
 
-      return {
-        id: `campaign-${campaign.id}`,
-        name: campaign.name,
-        segmentCount: Array.isArray(campaign.segments) ? campaign.segments.length : 0,
-        offerCount: Array.isArray(campaign.offers) ? campaign.offers.length : 0,
-        campaign: campaign, // Store full campaign object for modal
-        // Dummy data for columns without backend data
-        targetGroup: Math.floor(Math.random() * 50000) + 10000,
-        controlGroup: Math.floor(Math.random() * 10000) + 1000,
-        messagesGenerated: Math.floor(Math.random() * 100000) + 50000,
-        sent: Math.floor(Math.random() * 95000) + 45000,
-        delivered,
-        conversions,
-        cgConversions,
-        tgConversionPercentage,
-        cgConversionPercentage,
-        lastRunDate: campaign.created_at ? formatDateWithTimezone(campaign.created_at, getSettingsTimezoneOffset()) : "—",
-        lastRunDateMS: campaign.created_at ? new Date(campaign.created_at).getTime() : Date.now(),
-      };
-    });
-  }, [campaigns]);
+  const campaignTableRows = useMemo(() => {
+    if (!useDummyData) {
+      return liveTableRows.map(mapReportRow);
+    }
+    return campaignRows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      segmentCount: row.segmentCount ?? 0,
+      offerCount: row.offerCount ?? 0,
+      campaign: undefined,
+      targetGroup: row.targetGroup,
+      controlGroup: row.controlGroup,
+      messagesGenerated: row.messagesGenerated,
+      sent: row.sent,
+      delivered: row.delivered,
+      conversions: row.conversions,
+      cgConversions: row.cgConversions,
+      tgConversionPercentage: row.tgConversionPercentage ?? 0,
+      cgConversionPercentage: row.cgConversionPercentage ?? 0,
+      lastRunDate: row.lastRunDate || "—",
+      lastRunDateMS: row.lastRunDate ? new Date(row.lastRunDate).getTime() : Date.now(),
+    }));
+  }, [useDummyData, liveTableRows, campaigns]);
 
   const filteredRows = useMemo(() => {
+    if (!useDummyData) return campaignTableRows;
+
     const query = tableQuery.trim().toLowerCase();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
@@ -848,25 +1065,24 @@ export default function CampaignReportsPage() {
       ? new Date(appliedCustomRange.end).getTime()
       : null;
 
-    // Only use real campaign data
-    const rowsToFilter = campaignTableRows;
-
-    return rowsToFilter.filter((row) => {
-      const matchesQuery = query
-        ? row.name.toLowerCase().includes(query)
+    return campaignTableRows.filter((row) => {
+      const matchesQuery = query ? row.name.toLowerCase().includes(query) : true;
+      const matchesCampaign = selectedCampaignFilter
+        ? getCampaignRowId(row) === selectedCampaignFilter
         : true;
-      const rowDate = (row as any).lastRunDateMS || Date.now();
+      const rowDate = row.lastRunDateMS || Date.now();
       const now = Date.now();
       const matchesRange =
         appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
           ? rowDate >= startMs && rowDate <= endMs
           : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
 
-      return matchesQuery && matchesRange;
+      return matchesQuery && matchesCampaign && matchesRange;
     });
   }, [
+    useDummyData,
     tableQuery,
-    customRange,
+    selectedCampaignFilter,
     customDays,
     selectedRange,
     campaignTableRows,
@@ -878,9 +1094,12 @@ export default function CampaignReportsPage() {
   useEffect(() => {
     setTablePage(1);
   }, [
-    tableQuery,
+    debouncedTableQuery,
+    selectedCampaignFilter,
+    selectedRange,
     appliedCustomRange.start,
     appliedCustomRange.end,
+    useDummyData,
   ]);
 
   // Chart colors now use standardized colors from tokens.reportCharts
@@ -888,6 +1107,7 @@ export default function CampaignReportsPage() {
   // Scale chart data based on actual date range
   const channelData = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.channelReach?.length) return liveReport.channelReach;
       return channelReachData[activeRangeKey].map((point) => ({
         ...point,
         reach: 0,
@@ -901,10 +1121,11 @@ export default function CampaignReportsPage() {
       reach: Math.round(point.reach * scaleFactor),
       impressions: Math.round(point.impressions * scaleFactor),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.conversionFunnel?.length) return liveReport.conversionFunnel;
       return funnelData[activeRangeKey].map((point) => ({
         ...point,
         value: 0,
@@ -916,10 +1137,11 @@ export default function CampaignReportsPage() {
       ...point,
       value: Math.round(point.value * scaleFactor),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const trendSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.performanceTrend?.length) return liveReport.performanceTrend;
       return trendData[activeRangeKey].map((point) => ({
         ...point,
         ctr: 0,
@@ -936,10 +1158,19 @@ export default function CampaignReportsPage() {
       ctr: point.ctr,
       engagement: point.engagement,
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const revenueSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.revenueTrend?.length) {
+        return liveReport.revenueTrend.map((point) => ({
+          period: point.period,
+          ctr: 0,
+          engagement: 0,
+          revenue: point.revenue,
+          spend: point.spend ?? 0,
+        }));
+      }
       return revenueData[activeRangeKey].map((point) => ({
         ...point,
         revenue: 0,
@@ -953,7 +1184,7 @@ export default function CampaignReportsPage() {
       revenue: Math.round(point.revenue * scaleFactor),
       spend: Math.round(point.spend * scaleFactor),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData]);
+  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const csvHeaders = [
     "Campaign Name",
@@ -1023,7 +1254,7 @@ export default function CampaignReportsPage() {
                   value: campaign.id?.toString() || "",
                 })),
               ]}
-              placeholder="Select campaign"
+              placeholder="Filter campaign"
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -1051,9 +1282,21 @@ export default function CampaignReportsPage() {
                 />
               </button>
               <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-                {useDummyData ? "Dummy Data" : "Real Data"}
+                {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
               </span>
             </div>
+            {!useDummyData && (
+              <button
+                type="button"
+                onClick={handleRefreshSnapshots}
+                disabled={isRefreshingSnapshots}
+                className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-300 disabled:opacity-60`}
+                title="Rebuild daily performance snapshots from live events"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshingSnapshots ? "animate-spin" : ""}`} />
+                {isRefreshingSnapshots ? "Refreshing…" : "Refresh snapshots"}
+              </button>
+            )}
             <div className="flex items-center gap-2">
               <label
                 htmlFor="campaign-date-start"
@@ -1123,6 +1366,12 @@ export default function CampaignReportsPage() {
           </div>
         </div>
       </header>
+
+      {liveReportError && !useDummyData && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {liveReportError}
+        </div>
+      )}
 
       <section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -1275,7 +1524,7 @@ export default function CampaignReportsPage() {
                   yAxisId="left"
                   orientation="left"
                   tick={{ fill: "#6b7280" }}
-                  domain={[0, 20]}
+                  domain={[0, (max: number) => Math.max(20, Math.ceil(max / 5) * 5 || 20)]}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
@@ -1380,31 +1629,7 @@ export default function CampaignReportsPage() {
           </div>
         </div>
 
-        {isLoadingCampaigns && (
-          <div className="flex justify-center py-16">
-            <LoadingSpinner />
-          </div>
-        )}
-
-        {!isLoadingCampaigns && campaignFetchError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
-            <p className="text-sm text-red-700 font-medium mb-4">{campaignFetchError}</p>
-            <button
-              onClick={fetchCampaigns}
-              className={`${tw.rounded} ${tw.btnSmall} bg-red-600 text-white hover:bg-red-700`}
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {!isLoadingCampaigns && !campaignFetchError && campaigns.length === 0 && (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
-            <p className="text-sm text-gray-600">No campaigns found</p>
-          </div>
-        )}
-
-        {!isLoadingCampaigns && !campaignFetchError && campaigns.length > 0 && (
+        {useDummyData ? (
           <>
             <Table<CampaignTableRow>
               columns={tableColumnsMemo}
@@ -1431,12 +1656,66 @@ export default function CampaignReportsPage() {
                 onPageSizeChange={setTablePageSize}
               />
             )}
+            {filteredRows.length === 0 && (
+              <div className="py-10 text-center text-sm text-gray-500">
+                No campaigns match your filters yet.
+              </div>
+            )}
           </>
-        )}
-        {!isLoadingCampaigns && !campaignFetchError && campaigns.length > 0 && !filteredRows.length && (
-          <div className="py-10 text-center text-sm text-gray-500">
-            No campaigns match your filters yet.
-          </div>
+        ) : (
+          <>
+            {isLoadingLiveTable && liveTableRows.length === 0 && (
+              <div className="flex justify-center py-16">
+                <LoadingSpinner />
+              </div>
+            )}
+            {liveTableError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+                <p className="text-sm text-red-700 font-medium mb-4">{liveTableError}</p>
+                <button
+                  onClick={() => setDataEpoch((value) => value + 1)}
+                  className={`${tw.rounded} ${tw.btnSmall} bg-red-600 text-white hover:bg-red-700`}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            {!liveTableError && (liveTableRows.length > 0 || !isLoadingLiveTable) && (
+              <>
+                <Table<CampaignTableRow>
+                  columns={tableColumnsMemo}
+                  data={filteredRows}
+                  totalItems={liveTableTotal}
+                  currentPage={tablePage}
+                  pageSize={tablePageSize}
+                  isLoading={isLoadingLiveTable}
+                  onPageChange={setTablePage}
+                  onHideColumn={toggleColumn}
+                  onManageColumnsClick={() => setShowColumnPicker(true)}
+                  style={{
+                    headerBackground: colors.surface.tableHeader,
+                    headerTextColor: colors.surface.tableHeaderText,
+                    rowBackground: colors.surface.tablebodybg,
+                    rowSpacing: "0 8px",
+                  }}
+                />
+                {liveTableTotal > 0 && (
+                  <Pagination
+                    currentPage={tablePage}
+                    pageSize={tablePageSize}
+                    totalItems={liveTableTotal}
+                    onPageChange={setTablePage}
+                    onPageSizeChange={setTablePageSize}
+                  />
+                )}
+                {liveTableTotal === 0 && !isLoadingLiveTable && (
+                  <div className="py-10 text-center text-sm text-gray-500">
+                    No data found. Try adjusting your filters or search criteria.
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
       </section>
 

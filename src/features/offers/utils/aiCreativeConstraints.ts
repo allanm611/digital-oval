@@ -1,5 +1,6 @@
 import type { CreativeChannel } from "../types/offerCreative";
 import type { AiLengthPreset } from "../types/aiCreativeGeneration";
+import { mapCommunicationChannelToCreativeChannel } from "./mapCommunicationChannel";
 
 export interface ChannelMessageLimits {
   title: number;
@@ -69,15 +70,8 @@ export const CHANNEL_MESSAGE_LIMITS: Record<string, ChannelMessageLimits> = {
 export function getChannelMessageLimits(
   channel: CreativeChannel | string,
 ): ChannelMessageLimits {
-  const key = String(channel || "")
-    .replace(/\s+/g, "")
-    .replace(/Normal$/i, "");
-  const match =
-    CHANNEL_MESSAGE_LIMITS[channel] ||
-    Object.entries(CHANNEL_MESSAGE_LIMITS).find(([name]) =>
-      key.toUpperCase().includes(name.toUpperCase()),
-    )?.[1];
-  return match || DEFAULT_LIMITS;
+  const profile = mapCommunicationChannelToCreativeChannel(channel);
+  return CHANNEL_MESSAGE_LIMITS[profile] || DEFAULT_LIMITS;
 }
 
 export function resolveTargetBodyLength(

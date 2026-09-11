@@ -55,6 +55,11 @@ import { offerService } from "../services/offerService";
 import { offerCategoryService } from "../services/offerCategoryService";
 import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
+import {
+  communicationChannelService,
+  type CommunicationChannel,
+} from "../../../shared/services/communicationChannelService";
+import { creativeChannelFromCatalogId } from "../utils/mapCommunicationChannel";
 import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
@@ -473,6 +478,21 @@ export default function OfferDetailsPage() {
     fetchSmsRoutes();
   }, []);
 
+  const [communicationChannels, setCommunicationChannels] = useState<CommunicationChannel[]>([]);
+
+  useEffect(() => {
+    const fetchCommunicationChannels = async () => {
+      try {
+        const rows = await communicationChannelService.getAll();
+        setCommunicationChannels(Array.isArray(rows) ? rows : []);
+      } catch (error) {
+        console.error("Failed to fetch communication channels:", error);
+        setCommunicationChannels([]);
+      }
+    };
+    fetchCommunicationChannels();
+  }, []);
+
   // Helper function to calculate SMS segments
   const calculateSMSSegments = (
     messageText: string,
@@ -566,20 +586,7 @@ export default function OfferDetailsPage() {
 
   // Map communication channel ID to creative channel
   const getChannelFromOfferId = (channelId?: number): CreativeChannel => {
-    switch (channelId) {
-      case 2:
-        return "SMS";
-      case 3:
-        return "USSD";
-      case 4:
-        return "Email";
-      case 5:
-        return "Push";
-      case 6:
-        return "WhatsApp";
-      default:
-        return "SMS";
-    }
+    return creativeChannelFromCatalogId(channelId, communicationChannels);
   };
 
   const resetNewCreativeForm = () => {
@@ -3307,6 +3314,7 @@ export default function OfferDetailsPage() {
         isOpen={isAiModalOpenAdd}
         onClose={() => setIsAiModalOpenAdd(false)}
         channel={newCreativeForm.channel}
+        communicationChannelId={offer?.communication_channel_id}
         locale={newCreativeForm.locale || "en"}
         brandName={newCreativeForm.title || undefined}
         existingTitle={newCreativeForm.title || ""}

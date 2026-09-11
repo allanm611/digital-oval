@@ -48,6 +48,7 @@ import {
 } from "../../customers360/utils/customerSubscriptionHelpers";
 import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../../customers360/services/customerServices";
+import { customerProfileReportsService } from "../services/customerProfileReportsService";
 import { useToast } from "../../../contexts/ToastContext";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
@@ -504,7 +505,10 @@ export default function CustomerProfileReportsPage() {
   >([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [isSearchingTable, setIsSearchingTable] = useState(false);
-  const [useDummyData, setUseDummyData] = useState(true); // Charts use dummy data, table uses API data
+  const [useDummyData, setUseDummyData] = useState(true); // Charts use dummy data unless Real Data is selected
+  const [liveReport, setLiveReport] = useState<CustomerProfileReportsResponse | null>(null);
+  const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
+  const [liveReportError, setLiveReportError] = useState<string | null>(null);
 
   const tableColumns: TableColumn<any>[] = [
     {
@@ -697,6 +701,7 @@ export default function CustomerProfileReportsPage() {
             allCustomers = [...allCustomers, ...convertedCustomers];
             hasMore = response.pagination?.hasMore || false;
             offset += 100;
+            if (offset >= 5000) hasMore = false;
           } else {
             hasMore = false;
           }
@@ -704,7 +709,7 @@ export default function CustomerProfileReportsPage() {
 
         setApiCustomers(allCustomers);
       } catch (error) {
-        showError("Failed to Load Customers", extractBackendError(err, "Failed to Load Customers. Please try again."));
+        showError("Failed to Load Customers", extractBackendError(error, "Failed to Load Customers. Please try again."));
       } finally {
         setIsLoadingCustomers(false);
       }
@@ -850,8 +855,7 @@ export default function CustomerProfileReportsPage() {
     setAppliedCustomRange(customRange);
   };
 
-  // Customer search function - searches in existing customer data
-  const handleCustomerSearch = () => {
+  const handleCustomerSearch = async () => {
     if (!customerSearchTerm.trim()) {
       setCustomerError(t.customerProfileReports.enterCustomerInfo);
       return;
@@ -863,7 +867,28 @@ export default function CustomerProfileReportsPage() {
     try {
       const searchLower = customerSearchTerm.toLowerCase().trim();
 
-      // Search in all customerRows (not just filtered) to allow searching any customer
+      if (!useDummyData) {
+        const response = await customerProfileReportsService.searchCustomers(
+          customerSearchTerm.trim(),
+        );
+        const foundCustomer = response.data?.[0];
+        if (!foundCustomer) {
+          setCustomerError(t.customerProfileReports.customerNotFound);
+          return;
+        }
+        navigate(
+          `/dashboard/reports/customer-profiles/search?customerId=${foundCustomer.id}&source=reports`,
+          {
+            state: {
+              customer: foundCustomer,
+              searchTerm: customerSearchTerm,
+              source: "reports" as const,
+            },
+          },
+        );
+        return;
+      }
+
       const foundCustomer = baseCustomerRows.find((customer) => {
         return (
           customer.id.toLowerCase().includes(searchLower) ||
@@ -874,7 +899,6 @@ export default function CustomerProfileReportsPage() {
 
       if (!foundCustomer) {
         setCustomerError(t.customerProfileReports.customerNotFound);
-        setIsSearchingCustomer(false);
         return;
       }
 
@@ -963,8 +987,66 @@ export default function CustomerProfileReportsPage() {
     appliedCustomRange.end,
   ]);
 
+  useEffect(() => {
+    if (useDummyData) {
+      setLiveReport(null);
+      setLiveReportError(null);
+      setIsLoadingLiveReport(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadLiveReport = async () => {
+      try {
+        setIsLoadingLiveReport(true);
+        setLiveReportError(null);
+        const grain =
+          activeRangeKey === "7d"
+            ? "daily"
+            : activeRangeKey === "30d"
+              ? "weekly"
+              : "monthly";
+        const response = await customerProfileReportsService.getPortfolio({
+          range: activeRangeKey,
+          grain,
+          startDate: appliedCustomRange.start || undefined,
+          endDate: appliedCustomRange.end || undefined,
+          page: 1,
+          pageSize: tablePageSize,
+        });
+        if (cancelled) return;
+        if (response.success && response.data) {
+          setLiveReport(response.data);
+        } else {
+          setLiveReport(null);
+          setLiveReportError(response.error || response.message || "Failed to load report");
+        }
+      } catch (error) {
+        if (cancelled) return;
+        setLiveReport(null);
+        setLiveReportError(
+          extractBackendError(error, "Failed to load Customer Profile Reports."),
+        );
+      } finally {
+        if (!cancelled) setIsLoadingLiveReport(false);
+      }
+    };
+
+    loadLiveReport();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useDummyData,
+    activeRangeKey,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
+    tablePageSize,
+  ]);
+
   const valueMatrixSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.valueMatrix?.length) return liveReport.valueMatrix;
       return baseValueMatrixData.map((point) => ({
         ...point,
         customers: 0,
@@ -992,10 +1074,13 @@ export default function CustomerProfileReportsPage() {
         ),
       ),
     }));
-  }, [actualMultiplier, activeRangeKey, useDummyData]);
+  }, [actualMultiplier, activeRangeKey, useDummyData, liveReport]);
 
   const lifecycleSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.lifecycleDistribution?.length) {
+        return liveReport.lifecycleDistribution;
+      }
       return baseLifecycleData.map((point) => ({
         month: point.month,
         new: 0,
@@ -1016,10 +1101,11 @@ export default function CustomerProfileReportsPage() {
       churned: Math.round(point.churned * multiplier),
       reactivated: Math.round(point.reactivated * multiplier),
     }));
-  }, [actualMultiplier, useDummyData]);
+  }, [actualMultiplier, useDummyData, liveReport]);
 
   const clvDistributionSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.clvDistribution?.length) return liveReport.clvDistribution;
       return baseClvDistribution.map((bucket) => ({
         ...bucket,
         customers: 0,
@@ -1031,10 +1117,11 @@ export default function CustomerProfileReportsPage() {
       ...bucket,
       customers: Math.round(bucket.customers * multiplier),
     }));
-  }, [actualMultiplier, useDummyData]);
+  }, [actualMultiplier, useDummyData, liveReport]);
 
   const cohortSeries = useMemo(() => {
     if (!useDummyData) {
+      if (liveReport?.cohortRetention?.length) return liveReport.cohortRetention;
       return baseCohortRetention.map((point) => ({
         ...point,
         retention: 0,
@@ -1046,14 +1133,16 @@ export default function CustomerProfileReportsPage() {
       ...point,
       retention: Math.min(100, point.retention + adjustment),
     }));
-  }, [activeRangeKey, useDummyData]);
+  }, [activeRangeKey, useDummyData, liveReport]);
 
   const cohortComparisonSeries = useMemo(() => {
     const months = Array.from(
       new Set(cohortSeries.map((entry) => entry.month)),
     ).sort((a, b) => a - b);
 
-    const cohorts = ["Jan", "Apr", "Jul"];
+    const cohorts = Array.from(
+      new Set(cohortSeries.map((entry) => entry.cohort)),
+    );
 
     return months.map((month) => {
       const row: Record<string, string | number> = {
@@ -1070,6 +1159,18 @@ export default function CustomerProfileReportsPage() {
       return row;
     });
   }, [cohortSeries]);
+
+  const cohortChartKeys = useMemo(() => {
+    const first = cohortComparisonSeries[0];
+    if (!first) return ["Jan", "Apr", "Jul"];
+    return Object.keys(first).filter((key) => key !== "month");
+  }, [cohortComparisonSeries]);
+
+  const cohortChartColors = [
+    colors.reportCharts.customerProfile.cohortRetention.jan,
+    colors.reportCharts.customerProfile.cohortRetention.apr,
+    colors.reportCharts.customerProfile.cohortRetention.jul,
+  ];
 
   // Fetch customers for table: Use API search when search term provided, otherwise use loaded customers
   useEffect(() => {
@@ -1366,10 +1467,13 @@ export default function CustomerProfileReportsPage() {
               />
             </button>
             <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-              {useDummyData ? "Dummy Data" : "Real Data"}
+              {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
             </span>
           </div>
         </div>
+        {liveReportError && !useDummyData && (
+          <p className="text-sm text-red-600">{liveReportError}</p>
+        )}
       </header>
 
       {selectedSubscription && (
@@ -1503,52 +1607,52 @@ export default function CustomerProfileReportsPage() {
             : [
                 {
                   label: t.customerProfileReports.activeCustomers,
-                  value: "0",
-                  trend: "—",
-                  trendDirection: "up",
+                  value: formatNumber(liveReport?.heroMetrics?.activeCustomers ?? 0),
+                  trend: liveReport?.heroTrends?.activeCustomers?.label ?? "—",
+                  trendDirection: liveReport?.heroTrends?.activeCustomers?.direction ?? "up",
                   description: t.customerProfileReports.activityInPeriod,
                   icon: Users,
                 },
                 {
                   label: t.customerProfileReports.avgCustomerLifetimeValue,
-                  value: formatCurrency(0),
-                  trend: "—",
-                  trendDirection: "up",
+                  value: formatCurrency(liveReport?.heroMetrics?.avgClv ?? 0),
+                  trend: liveReport?.heroTrends?.avgClv?.label ?? "—",
+                  trendDirection: liveReport?.heroTrends?.avgClv?.direction ?? "up",
                   description:
                     t.customerProfileReports.meanRealizedPredictedClv,
                   icon: DollarSign,
                 },
                 {
                   label: t.customerProfileReports.avgTransactionValue,
-                  value: formatCurrency(0),
-                  trend: "—",
-                  trendDirection: "up",
+                  value: formatCurrency(liveReport?.heroMetrics?.avgOrderValue ?? 0),
+                  trend: liveReport?.heroTrends?.avgOrderValue?.label ?? "—",
+                  trendDirection: liveReport?.heroTrends?.avgOrderValue?.direction ?? "up",
                   description: t.customerProfileReports.meanTransactionSize,
                   icon: Crown,
                 },
                 {
                   label: t.customerProfileReports.purchaseFrequency,
-                  value: "0.0 / yr",
-                  trend: "—",
-                  trendDirection: "up",
+                  value: `${(liveReport?.heroMetrics?.purchaseFrequency ?? 0).toFixed(1)} / yr`,
+                  trend: liveReport?.heroTrends?.purchaseFrequency?.label ?? "—",
+                  trendDirection: liveReport?.heroTrends?.purchaseFrequency?.direction ?? "up",
                   description:
                     t.customerProfileReports.transactionsPerCustomerAnnually,
                   icon: Repeat,
                 },
                 {
                   label: t.customerProfileReports.engagementScore,
-                  value: "0 / 100",
-                  trend: "—",
-                  trendDirection: "up",
+                  value: `${liveReport?.heroMetrics?.engagementScore ?? 0} / 100`,
+                  trend: liveReport?.heroTrends?.engagementScore?.label ?? "—",
+                  trendDirection: liveReport?.heroTrends?.engagementScore?.direction ?? "up",
                   description:
                     t.customerProfileReports.multiChannelCompositeScore,
                   icon: Activity,
                 },
                 {
                   label: t.customerProfileReports.churnRate,
-                  value: "0.0%",
-                  trend: "—",
-                  trendDirection: "down",
+                  value: `${(liveReport?.heroMetrics?.churnRate ?? 0).toFixed(1)}%`,
+                  trend: liveReport?.heroTrends?.churnRate?.label ?? "—",
+                  trendDirection: liveReport?.heroTrends?.churnRate?.direction ?? "down",
                   description: t.customerProfileReports.noTransactionInDays,
                   icon: BarChart3,
                 },
@@ -1859,24 +1963,15 @@ export default function CustomerProfileReportsPage() {
                   iconType="circle"
                   wrapperStyle={{ paddingTop: 28, marginTop: 18 }}
                 />
-                <Bar
-                  dataKey="Jan"
-                  name={t.customerProfileReports.janCohort}
-                  fill={colors.reportCharts.customerProfile.cohortRetention.jan}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="Apr"
-                  name={t.customerProfileReports.aprCohort}
-                  fill={colors.reportCharts.customerProfile.cohortRetention.apr}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="Jul"
-                  name={t.customerProfileReports.julCohort}
-                  fill={colors.reportCharts.customerProfile.cohortRetention.jul}
-                  radius={[4, 4, 0, 0]}
-                />
+                {cohortChartKeys.map((cohortKey, index) => (
+                  <Bar
+                    key={cohortKey}
+                    dataKey={cohortKey}
+                    name={cohortKey}
+                    fill={cohortChartColors[index % cohortChartColors.length]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </div>

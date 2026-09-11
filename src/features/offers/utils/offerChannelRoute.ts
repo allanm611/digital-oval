@@ -11,7 +11,7 @@ function classifyChannelToken(value?: string | null): OfferChannelRouteKind | nu
   const name = value?.toUpperCase()?.trim() ?? "";
   if (!name) return null;
   if (name.includes("USSD")) return "ussd";
-  if (name.includes("WHATSAPP")) return "whatsapp";
+  if (name.includes("WHATSAPP") || name.includes("MESSENGER")) return "whatsapp";
   if (name.includes("PUSH")) return "push";
   if (name.includes("SMS")) return "sms";
   if (name.includes("EMAIL") || name.includes("E-MAIL")) return "email";

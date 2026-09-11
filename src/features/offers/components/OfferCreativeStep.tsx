@@ -15,6 +15,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
+import { mapCommunicationChannelToCreativeChannel } from "../utils/mapCommunicationChannel";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
@@ -508,21 +509,8 @@ export default function OfferCreativeStep({
   // Map communication channel ID to creative channel name using actual channel config
   const getDefaultChannelFromId = (channelId?: number): CreativeChannel => {
     if (!channelId || !communicationChannels) return "SMS";
-
-    const channel = communicationChannels.find(ch => ch.id === channelId);
-    if (!channel) return "SMS";
-
-    const channelName = channel.name.toUpperCase();
-    const validChannels: CreativeChannel[] = ["Email", "SMS", "USSD", "WhatsApp", "Push"];
-
-    // Try to match the channel name with valid creative channels
-    for (const validChannel of validChannels) {
-      if (channelName.includes(validChannel.toUpperCase())) {
-        return validChannel;
-      }
-    }
-
-    return "SMS"; // Fallback to SMS if no match
+    const channel = communicationChannels.find((ch) => ch.id === channelId);
+    return mapCommunicationChannelToCreativeChannel(channel || undefined);
   };
 
   // Fetch creative templates from backend
@@ -1699,6 +1687,7 @@ export default function OfferCreativeStep({
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         channel={editingCreative.channel}
+        communicationChannelId={communicationChannelId}
         locale={editingCreative.locale || "en"}
         brandName={editingCreative.title || undefined}
         existingTitle={editingCreative.title || ""}

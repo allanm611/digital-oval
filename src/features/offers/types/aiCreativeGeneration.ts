@@ -23,6 +23,7 @@ export type AiDraftAction = (typeof AI_DRAFT_ACTIONS)[number];
 
 export interface GenerateCreativeRequest {
   channel: CreativeChannel | string;
+  communicationChannelId?: number;
   locale?: string;
   brandName?: string;
   tone: AiTone;

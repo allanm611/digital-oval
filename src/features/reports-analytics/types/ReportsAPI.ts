@@ -9,10 +9,16 @@ export interface ReportQueryParams {
   range?: RangeOption; // Default: "30d"
   startDate?: string;
   endDate?: string;
+  grain?: "daily" | "weekly" | "monthly";
   page?: number;
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  search?: string;
+  segment?: string;
+  campaignId?: string | number;
+  metric?: string;
+  limit?: number;
 }
 
 // ============================================================================
@@ -74,6 +80,34 @@ export interface CustomerProfileReportsResponse {
   // Customer Table Data
   customers: Array<CustomerRow>;
   totalCustomers: number; // Total count for pagination
+
+  // Optional Real Data extras from GET /monitoring/reporting/subscribers/portfolio
+  heroTrends?: {
+    activeCustomers?: CustomerProfileTrend;
+    avgClv?: CustomerProfileTrend;
+    avgOrderValue?: CustomerProfileTrend;
+    purchaseFrequency?: CustomerProfileTrend;
+    engagementScore?: CustomerProfileTrend;
+    churnRate?: CustomerProfileTrend;
+  };
+  meta?: {
+    timezone?: string;
+    currency?: string;
+    country?: string;
+    range?: string;
+    grain?: string;
+    startDate?: string;
+    endDate?: string;
+    computedAt?: string;
+    source?: "live" | "snapshot";
+    churnInactivityDays?: number;
+  };
+}
+
+export interface CustomerProfileTrend {
+  value: number;
+  direction: "up" | "down";
+  label: string;
 }
 
 export interface CustomerRow {
@@ -169,11 +203,17 @@ export interface CustomerSearchResultsResponse {
 // ============================================================================
 
 /**
- * Endpoint: GET /api/reports/offers
+ * Endpoint: GET /monitoring/reporting/offers/portfolio
  *
  * Returns offer performance analytics including redemption funnel,
  * timeline, type comparison, and offer table data.
  */
+
+export interface OfferReportTrend {
+  value: number;
+  direction: "up" | "down";
+  label: string;
+}
 
 export interface OfferReportsResponse {
   // Summary metrics
@@ -183,12 +223,12 @@ export interface OfferReportsResponse {
     revenueGenerated: number; // Total revenue in currency units
     incrementalRevenue: number; // Incremental revenue in currency units
     totalCost: number; // Total cost in currency units
-    roi: number; // Return on investment (e.g., 2.3 for 230%)
+    roi: number; // Return on investment multiplier (e.g., 2.3 for 2.3x)
   };
 
   // Redemption Funnel Chart Data (Bar Chart)
   redemptionFunnel: Array<{
-    stage: string; // e.g., "Eligible", "Sent", "Delivered", "Opened", "Clicked", "Redeemed"
+    stage: string; // e.g., "Exposed", "Viewed", "Engaged", "Redeemed"
     value: number; // Count at this stage
     percentage?: number; // Percentage of total (optional, can be calculated client-side)
   }>;
@@ -198,13 +238,14 @@ export interface OfferReportsResponse {
   // Line: Cumulative redemptions
   redemptionTimeline: Array<{
     period: string; // Period label based on range (daily/weekly/monthly)
+    date?: string;
     redemptions: number; // Redemptions in this period
     cumulativeRedemptions: number; // Cumulative total
   }>;
 
   // Offer Type Comparison Chart Data (Multi-bar Chart)
   offerTypeComparison: Array<{
-    type: string; // Offer type: "Discount", "Cashback", "Free Shipping", etc.
+    type: string; // Offer type: "Data", "Voice", "SMS", "Combo", etc.
     redemptionRate: number; // Percentage
     aov: number; // Average order value
     marginPercent: number; // Margin percentage
@@ -214,6 +255,27 @@ export interface OfferReportsResponse {
   // Offer Table Data
   offers: Array<OfferRow>;
   totalOffers: number; // Total count for pagination
+
+  heroTrends?: {
+    totalRedemptions?: OfferReportTrend;
+    redemptionRate?: OfferReportTrend;
+    revenueGenerated?: OfferReportTrend;
+    incrementalRevenue?: OfferReportTrend;
+    totalCost?: OfferReportTrend;
+    roi?: OfferReportTrend;
+  };
+  meta?: {
+    timezone?: string;
+    currency?: string;
+    country?: string;
+    range?: string;
+    grain?: string;
+    startDate?: string;
+    endDate?: string;
+    computedAt?: string;
+    source?: "live" | "snapshot";
+    offerId?: number | null;
+  };
 }
 
 export interface OfferRow {
@@ -229,6 +291,97 @@ export interface OfferRow {
   delivered: number;
   conversions: number;
   lastUpdated: string; // ISO 8601 format: YYYY-MM-DD
+}
+
+// ============================================================================
+// SEGMENT REPORTS
+// ============================================================================
+
+/**
+ * Endpoint: GET /monitoring/reporting/segments/portfolio
+ *
+ * Returns segment performance analytics including member growth,
+ * size distribution, campaign usage, and segment table data.
+ */
+
+export interface SegmentReportTrend {
+  value: number;
+  direction: "up" | "down";
+  label: string;
+}
+
+export interface SegmentReportsResponse {
+  summary: {
+    totalSegments: number;
+    totalMembers: number;
+    avgMemberGrowth: number;
+    activeInCampaigns: number;
+    engagementRate: number;
+    conversionRate: number;
+  };
+
+  memberGrowth: Array<{
+    period: string;
+    date?: string;
+    members: number;
+    cumulativeMembers: number;
+  }>;
+
+  sizeDistribution: Array<{
+    segmentId?: string;
+    segmentName: string;
+    members: number;
+  }>;
+
+  campaignUsage: Array<{
+    segmentId?: string;
+    segmentName: string;
+    campaigns: number;
+  }>;
+
+  performanceComparison: Array<{
+    segmentId?: string;
+    segmentName: string;
+    engagement: number;
+    conversion: number;
+  }>;
+
+  segments: Array<SegmentReportRow>;
+  totalSegments: number;
+
+  heroTrends?: {
+    totalSegments?: SegmentReportTrend;
+    totalMembers?: SegmentReportTrend;
+    avgMemberGrowth?: SegmentReportTrend;
+    activeInCampaigns?: SegmentReportTrend;
+    engagementRate?: SegmentReportTrend;
+    conversionRate?: SegmentReportTrend;
+  };
+  meta?: {
+    timezone?: string;
+    currency?: string;
+    country?: string;
+    range?: string;
+    grain?: string;
+    startDate?: string;
+    endDate?: string;
+    computedAt?: string;
+    source?: "live" | "snapshot";
+    segmentId?: number | null;
+  };
+}
+
+export interface SegmentReportRow {
+  id: string;
+  name: string;
+  memberCount: number;
+  growthRate: number;
+  campaignsUsed: number;
+  engagementRate: number;
+  conversionRate: number;
+  avgValue: number;
+  status: "Active" | "Inactive";
+  lastUpdated: string;
 }
 
 // ============================================================================
@@ -249,6 +402,7 @@ export interface CampaignReportsResponse {
     reach: number;
     impressions: number;
     opens: number;
+    clicks?: number;
     clickRate: number; // Percentage
     engagementRate: number; // Percentage
     conversions: number;
@@ -262,7 +416,9 @@ export interface CampaignReportsResponse {
 
   // Channel Reach Chart Data (Bar Chart)
   channelReach: Array<{
-    channel: string; // e.g., "Email", "SMS", "Push", "Social"
+    channel: string;
+    channelCode?: string;
+    channelId?: number;
     reach: number;
     impressions: number;
   }>;
@@ -276,6 +432,7 @@ export interface CampaignReportsResponse {
   // Performance Trend Chart Data (Composed Chart: Multiple Lines)
   performanceTrend: Array<{
     period: string; // Period label based on range
+    date?: string;
     ctr: number; // Click-through rate percentage
     engagement: number; // Engagement rate percentage
     revenue: number; // Revenue in currency units
@@ -286,19 +443,53 @@ export interface CampaignReportsResponse {
   revenueTrend: Array<{
     period: string; // Period label based on range
     revenue: number; // Revenue in currency units
+    spend?: number;
     target: number; // Target revenue (optional)
   }>;
 
   // Campaign Table Data
   campaigns: Array<CampaignRow>;
   totalCampaigns: number; // Total count for pagination
+
+  heroTrends?: {
+    reach?: CampaignReportTrend;
+    engagementRate?: CampaignReportTrend;
+    conversionRate?: CampaignReportTrend;
+    revenue?: CampaignReportTrend;
+    roas?: CampaignReportTrend;
+    campaignCost?: CampaignReportTrend;
+  };
+  meta?: {
+    timezone?: string;
+    currency?: string;
+    country?: string;
+    range?: string;
+    grain?: string;
+    startDate?: string;
+    endDate?: string;
+    computedAt?: string;
+    source?: "live" | "snapshot";
+    campaignId?: number | null;
+    sources?: {
+      summary?: boolean;
+      notifications?: boolean;
+      broadcasts?: boolean;
+      channelCatalog?: number;
+    };
+  };
+}
+
+export interface CampaignReportTrend {
+  value: number;
+  direction: "up" | "down";
+  label: string;
 }
 
 export interface CampaignRow {
   id: string;
   name: string;
-  segment: string;
-  offer: string;
+  segment?: string;
+  offer?: string;
   targetGroup: number;
   controlGroup: number;
   sent: number;
@@ -309,6 +500,127 @@ export interface CampaignRow {
   tgConversionPercentage?: number; // Target group conversion rate percentage
   cgConversionPercentage?: number; // Control group conversion rate percentage
   lastRunDate: string; // ISO 8601 format: YYYY-MM-DD
+  status?: string;
+  segmentCount?: number;
+  offerCount?: number;
+  revenue?: number;
+  campaignCost?: number;
+}
+
+export interface CampaignReportEnvelope<T = unknown> {
+  success: boolean;
+  data?: T;
+  trends?: CampaignReportsResponse["heroTrends"];
+  meta?: CampaignReportsResponse["meta"];
+  total?: number;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+  };
+  error?: string;
+  message?: string;
+}
+
+export type CampaignKpiSummary = CampaignReportsResponse["summary"] & {
+  sent?: number;
+  delivered?: number;
+  opened?: number;
+  clicked?: number;
+  failed?: number;
+  converted?: number;
+  uniqueConverters?: number;
+  deliveryRate?: number;
+  openRate?: number;
+};
+
+export interface CampaignRoiReport {
+  totalRevenue: number;
+  incrementalRevenue: number;
+  totalRewardCost: number;
+  campaignCost: number;
+  roiPercent: number;
+  roas: number;
+  revenuePerContact: number;
+  revenuePerConverter: number;
+}
+
+export interface CampaignControlReport {
+  treatmentConversions: number;
+  controlConversions: number;
+  treatmentRevenue: number;
+  controlRevenue: number;
+  uniqueConverters: number;
+  controlGroupCount: number;
+  liftVsControl: number;
+  isStatisticallySignificant: boolean;
+  bestPValue: number | null;
+}
+
+export interface CampaignBudgetReport {
+  name?: string;
+  status?: string;
+  budget_allocated?: number;
+  budget_spent?: number;
+  target_reach?: number;
+  target_revenue?: number;
+  target_conversion_rate?: number;
+  budget_utilization_pct?: number | null;
+  revenue_attainment_pct?: number | null;
+  actual_revenue?: number;
+  roas?: number;
+}
+
+export interface CampaignBroadcastRun {
+  broadcast_id?: string | number;
+  broadcast_name?: string;
+  run_id?: string | number;
+  status?: string;
+  actual_start_time?: string;
+  actual_end_time?: string;
+  messages_queued?: number;
+  messages_sent?: number;
+  messages_delivered?: number;
+  messages_failed?: number;
+  total_batches?: number;
+  processed_count?: number;
+  error_count?: number;
+  retry_count?: number;
+  avg_processing_time_ms?: number;
+  delivery_rate?: number;
+}
+
+export interface CampaignRewardRow {
+  reward_type?: string;
+  status?: string;
+  count?: number;
+  total_reward_amount?: number;
+  total_cost?: number;
+  avg_reward_amount?: number;
+}
+
+export interface CampaignAttributionRow {
+  condition_type?: string;
+  notification_channel?: string;
+  product_code?: string;
+  conversions?: number;
+  incremental_conversions?: number;
+  total_revenue?: number;
+  avg_hours_to_convert?: number;
+  avg_confidence?: number;
+}
+
+export interface CampaignLifecycleRow {
+  previous_status?: string;
+  new_status?: string;
+  created_at?: string;
+  changed_by?: string;
+  comments?: string;
+}
+
+export interface CampaignSnapshotRefreshResult {
+  upserted: number;
+  computedAt: string;
 }
 
 // ============================================================================

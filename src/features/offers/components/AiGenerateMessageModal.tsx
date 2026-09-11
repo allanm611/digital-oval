@@ -29,6 +29,7 @@ interface AiGenerateMessageModalProps {
   isOpen: boolean;
   onClose: () => void;
   channel: CreativeChannel | string;
+  communicationChannelId?: number;
   locale?: string;
   brandName?: string;
   existingTitle?: string;
@@ -52,6 +53,7 @@ export default function AiGenerateMessageModal({
   isOpen,
   onClose,
   channel,
+  communicationChannelId,
   locale = "en",
   brandName,
   existingTitle = "",
@@ -141,6 +143,7 @@ export default function AiGenerateMessageModal({
       const result = await aiCreativeGenerationService.generate(
         {
           channel,
+          communicationChannelId,
           locale,
           brandName,
           tone: form.tone,
