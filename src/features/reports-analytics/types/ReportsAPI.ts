@@ -1,15 +1,47 @@
 export type RangeOption = "7d" | "30d" | "90d";
+export type ReportGrain = "daily" | "weekly" | "monthly";
+export type ReportViewMode = "overview" | "trends";
+
+/**
+ * Calendar sub-presets under Daily / Weekly / Monthly grain tabs.
+ * Grain is chosen by the parent tab; these only resolve inclusive local dates.
+ */
+export type TimeWindowPreset =
+  | "today"
+  | "yesterday"
+  | "last_7_days"
+  | "last_14_days"
+  | "this_week"
+  | "last_week"
+  | "last_4_weeks"
+  | "last_8_weeks"
+  | "this_month"
+  | "last_month"
+  | "last_3_months"
+  | "last_6_months"
+  | "last_12_months"
+  | "custom";
 
 export interface DateRange {
   startDate: string;
   endDate: string;
 }
 
+export interface SavedReportDateRange {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  /** Grain tab this range was created under. Never shown on other tabs. */
+  grain: ReportGrain;
+}
+
 export interface ReportQueryParams {
   range?: RangeOption; // Default: "30d"
   startDate?: string;
   endDate?: string;
-  grain?: "daily" | "weekly" | "monthly";
+  grain?: ReportGrain;
   page?: number;
   pageSize?: number;
   sortBy?: string;

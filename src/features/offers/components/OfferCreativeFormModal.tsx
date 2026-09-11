@@ -12,6 +12,7 @@ import RichTextEditor from "../../communications/components/RichTextEditor";
 import CreativePreviewRenderer from "../components/CreativePreviewRenderer";
 import AiGenerateMessageButton from "./AiGenerateMessageButton";
 import AiGenerateMessageModal from "./AiGenerateMessageModal";
+import AiGeneratedBodyBadge from "./AiGeneratedBodyBadge";
 import MessageContentToolbar, {
   messageContentActionClass,
 } from "./MessageContentToolbar";
@@ -41,6 +42,16 @@ import {
   COMMON_LOCALES,
   VALID_CHANNELS,
 } from "../types/offerCreative";
+import type {
+  AiCreativeSession,
+  AiGenerateModalView,
+} from "../types/aiCreativeGeneration";
+import {
+  persistAiSessionLocally,
+  rememberAiCreativeSession,
+  resolveAiCreativeSession,
+  shouldShowAiGeneratedBadge,
+} from "../utils/aiCreativeSessionPersist";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
@@ -140,6 +151,8 @@ export default function OfferCreativeFormModal({
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiSession, setAiSession] = useState<AiCreativeSession | null>(null);
+  const [aiModalView, setAiModalView] = useState<AiGenerateModalView>("compose");
 
   // Data loading
   const [channels, setChannels] = useState<CommunicationChannel[]>([]);
@@ -273,6 +286,11 @@ export default function OfferCreativeFormModal({
     setSelectedVariables([]);
     setActiveField("body");
     setVariableError("");
+    setAiSession(
+      mode === "edit" ? resolveAiCreativeSession(initialCreative) : null,
+    );
+    setAiModalView("compose");
+    setIsAiModalOpen(false);
   }, [isOpen, initialCreative, mode]);
 
   useEffect(() => {
@@ -437,12 +455,42 @@ export default function OfferCreativeFormModal({
 
     try {
       setIsSaving(true);
+      const hasBody = Boolean(
+        formData.text_body.trim() || formData.html_body.trim(),
+      );
+      const sessionToStore = !hasBody
+        ? null
+        : aiSession ||
+          resolveAiCreativeSession({
+            id: initialCreative?.id,
+            offer_id: initialCreative?.offer_id,
+            channel: formData.channel,
+            locale: formData.locale,
+            text_body: formData.text_body,
+            html_body: formData.html_body,
+            variables: initialCreative?.variables,
+          });
+      const variables = rememberAiCreativeSession(
+        {
+          id: initialCreative?.id,
+          offer_id: initialCreative?.offer_id,
+          channel: formData.channel,
+          locale: formData.locale,
+          text_body: formData.text_body,
+          html_body: formData.html_body,
+          variables: initialCreative?.variables,
+        },
+        sessionToStore,
+        { body: formData.text_body || formData.html_body },
+      );
+
       const creativeData: any = {
         channel: formData.channel,
         locale: formData.locale,
         title: formData.title,
         text_body: formData.text_body,
         is_active: formData.is_active,
+        variables,
       };
 
       if (mode === "create") {
@@ -675,13 +723,32 @@ export default function OfferCreativeFormModal({
                   </div>
                 </div>
                 <AiGenerateMessageButton
-                  onClick={() => setIsAiModalOpen(true)}
+                  onClick={() => {
+                    setAiModalView("compose");
+                    setIsAiModalOpen(true);
+                  }}
                   active={isAiModalOpen}
                 />
             </MessageContentToolbar>
 
             {/* Message Body */}
             <div>
+              <AiGeneratedBodyBadge
+                visible={
+                  Boolean(aiSession && (formData.text_body || formData.html_body)) ||
+                  shouldShowAiGeneratedBadge({
+                    ...formData,
+                    id: initialCreative?.id,
+                    offer_id: initialCreative?.offer_id,
+                    variables: initialCreative?.variables,
+                  })
+                }
+                onClick={() => {
+                  setAiModalView("result");
+                  setIsAiModalOpen(true);
+                }}
+                label={t.offers.aiGenerate.aiBadgeLabel}
+              >
               {formData.channel === "Email" || isRichText ? (
                 <div
                   onClick={() => setActiveField("body")}
@@ -690,6 +757,19 @@ export default function OfferCreativeFormModal({
                   <RichTextEditor
                     value={formData.channel === "Email" ? (formData.html_body || "") : (formData.text_body || "")}
                     onChange={(value) => {
+                      if (!value.trim()) {
+                        setAiSession(null);
+                        persistAiSessionLocally(
+                          {
+                            creativeId: initialCreative?.id,
+                            offerId: initialCreative?.offer_id,
+                            channel: formData.channel,
+                            locale: formData.locale,
+                            body: "",
+                          },
+                          null,
+                        );
+                      }
                       setFormData((prev) => ({
                         ...prev,
                         ...(formData.channel === "Email" ? { html_body: value, text_body: value } : { text_body: value }),
@@ -707,6 +787,19 @@ export default function OfferCreativeFormModal({
                   value={formData.text_body || ""}
                   onChange={(value) => {
                     setActiveField("body");
+                    if (!value.trim()) {
+                      setAiSession(null);
+                      persistAiSessionLocally(
+                        {
+                          creativeId: initialCreative?.id,
+                          offerId: initialCreative?.offer_id,
+                          channel: formData.channel,
+                          locale: formData.locale,
+                          body: "",
+                        },
+                        null,
+                      );
+                    }
                     if (bodyTextareaRef.current) {
                       setCursorPosition(bodyTextareaRef.current.selectionStart || 0);
                     }
@@ -734,6 +827,7 @@ export default function OfferCreativeFormModal({
                   rows={8}
                 />
               )}
+              </AiGeneratedBodyBadge>
               {variableError && <div className="mt-2 text-sm text-red-700">{variableError}</div>}
               {errors.text_body && <div className="mt-2 text-xs text-red-600">{errors.text_body}</div>}
 
@@ -897,8 +991,32 @@ export default function OfferCreativeFormModal({
             : formData.text_body || ""
         }
         availableVariables={selectedVariables.map(formatVariablePlaceholder)}
-        onApply={({ title, body }) => {
+        initialSession={
+          aiSession ||
+          resolveAiCreativeSession({
+            id: initialCreative?.id,
+            offer_id: initialCreative?.offer_id,
+            channel: formData.channel,
+            locale: formData.locale,
+            text_body: formData.text_body,
+            html_body: formData.html_body,
+            variables: initialCreative?.variables,
+          })
+        }
+        initialView={aiModalView}
+        onApply={({ title, body, session }) => {
           const shouldUseHtml = formData.channel === "Email" || isRichText;
+          setAiSession(session);
+          persistAiSessionLocally(
+            {
+              creativeId: initialCreative?.id,
+              offerId: initialCreative?.offer_id,
+              channel: formData.channel,
+              locale: formData.locale,
+              body,
+            },
+            session,
+          );
           setFormData((prev) => ({
             ...prev,
             text_body: body,

@@ -40,6 +40,9 @@ import {
   settledError,
   settledValue,
 } from "../utils/campaignReportQuery";
+import { parseISODate } from "../utils/reportTimeWindow";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
@@ -58,73 +61,6 @@ type CampaignSummary = CampaignReportsResponse["summary"];
 type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
 type FunnelPoint = CampaignReportsResponse["conversionFunnel"][number];
 type TrendPoint = CampaignReportsResponse["performanceTrend"][number];
-
-const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
-const rangeDays: Record<RangeOption, number> = {
-  "7d": 7,
-  "30d": 30,
-  "90d": 90,
-};
-
-const getDaysBetween = (start: string, end: string) => {
-  const startDate = start ? new Date(start) : null;
-  const endDate = end ? new Date(end) : null;
-  if (
-    !startDate ||
-    !endDate ||
-    Number.isNaN(startDate.getTime()) ||
-    Number.isNaN(endDate.getTime())
-  ) {
-    return null;
-  }
-  const diff = Math.abs(endDate.getTime() - startDate.getTime());
-  return Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-};
-
-const mapDaysToRange = (days: number | null): RangeOption => {
-  if (days === null) return "7d";
-  if (days <= 7) return "7d";
-  if (days <= 30) return "30d";
-  return "90d";
-};
-
-const getRangeLabel = (option: RangeOption): string => {
-  const labels: Record<RangeOption, string> = {
-    "7d": "Daily",
-    "30d": "Weekly",
-    "90d": "Monthly",
-  };
-  return labels[option];
-};
-
-// Scale data based on actual number of days vs base range
-const getScaleFactor = (
-  customDays: number | null,
-  baseRange: RangeOption,
-): number => {
-  if (!customDays) return 1;
-  const baseDays = rangeDays[baseRange];
-  return customDays / baseDays;
-};
-
-// Get date constraints for date inputs
-const getDateConstraints = () => {
-  const today = new Date();
-  // Use local date to avoid timezone issues
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const maxDate = `${year}-${month}-${day}`; // Today (no future dates)
-
-  const minDate = new Date(today);
-  minDate.setFullYear(today.getFullYear() - 2); // 2 years ago max
-  const minYear = minDate.getFullYear();
-  const minMonth = String(minDate.getMonth() + 1).padStart(2, "0");
-  const minDay = String(minDate.getDate()).padStart(2, "0");
-  const minDateStr = `${minYear}-${minMonth}-${minDay}`;
-
-  return { minDate: minDateStr, maxDate };
-};
 
 // Types are now imported from ReportsAPI.ts above
 
@@ -488,12 +424,18 @@ export default function CampaignReportsPage() {
   const { success: showSuccess, error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
   const [debouncedTableQuery, setDebouncedTableQuery] = useState("");
-  const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "weekly",
+    defaultTrendsPreset: "daily",
   });
+  const {
+    isTrendsView,
+    rangeKey: activeRangeKey,
+    scaleFactor,
+    queryParams,
+    overviewQueryParams,
+    overviewWindow,
+  } = timeWindow;
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
@@ -686,17 +628,13 @@ export default function CampaignReportsPage() {
     return () => clearTimeout(timer);
   }, [tableQuery]);
 
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
-
   const handleRefreshSnapshots = async () => {
     try {
       setIsRefreshingSnapshots(true);
       await campaignReportsService.refreshSnapshots({
-        range: activeRangeKey,
-        startDate: appliedCustomRange.start || undefined,
-        endDate: appliedCustomRange.end || undefined,
+        range: queryParams.range,
+        startDate: queryParams.startDate,
+        endDate: queryParams.endDate,
       });
       showSuccess("Campaign snapshots refreshed. Reloading reports…");
       setDataEpoch((value) => value + 1);
@@ -706,28 +644,6 @@ export default function CampaignReportsPage() {
       setIsRefreshingSnapshots(false);
     }
   };
-
-  const customDays = getDaysBetween(
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-  );
-  const activeRangeKey: RangeOption =
-    appliedCustomRange.start && appliedCustomRange.end
-      ? mapDaysToRange(customDays)
-      : selectedRange;
-
-  // Calculate scale factor for custom date ranges
-  const scaleFactor = useMemo(() => {
-    if (appliedCustomRange.start && appliedCustomRange.end && customDays) {
-      return getScaleFactor(customDays, activeRangeKey);
-    }
-    return 1;
-  }, [
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-    customDays,
-    activeRangeKey,
-  ]);
 
   useEffect(() => {
     if (useDummyData) {
@@ -743,9 +659,10 @@ export default function CampaignReportsPage() {
 
     let cancelled = false;
     const params = buildCampaignReportParams({
-      range: activeRangeKey,
-      startDate: appliedCustomRange.start,
-      endDate: appliedCustomRange.end,
+      range: queryParams.range || activeRangeKey,
+      grain: queryParams.grain,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
       campaignId: selectedCampaignFilter || undefined,
     });
 
@@ -803,9 +720,10 @@ export default function CampaignReportsPage() {
     };
   }, [
     useDummyData,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
     selectedCampaignFilter,
     dataEpoch,
   ]);
@@ -820,9 +738,10 @@ export default function CampaignReportsPage() {
         setLiveTableError(null);
         const response = await campaignReportsService.getCampaignsTable(
           buildCampaignReportParams({
-            range: activeRangeKey,
-            startDate: appliedCustomRange.start,
-            endDate: appliedCustomRange.end,
+            range: overviewQueryParams.range || "30d",
+            grain: overviewQueryParams.grain,
+            startDate: overviewQueryParams.startDate,
+            endDate: overviewQueryParams.endDate,
             campaignId: selectedCampaignFilter || undefined,
             page: tablePage,
             pageSize: tablePageSize,
@@ -856,9 +775,10 @@ export default function CampaignReportsPage() {
     };
   }, [
     useDummyData,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    overviewQueryParams.range,
+    overviewQueryParams.grain,
+    overviewQueryParams.startDate,
+    overviewQueryParams.endDate,
     selectedCampaignFilter,
     tablePage,
     tablePageSize,
@@ -1054,16 +974,10 @@ export default function CampaignReportsPage() {
     if (!useDummyData) return campaignTableRows;
 
     const query = tableQuery.trim().toLowerCase();
-    const maxDays =
-      appliedCustomRange.start && appliedCustomRange.end
-        ? (customDays ?? rangeDays[selectedRange])
-        : rangeDays[selectedRange];
-    const startMs = appliedCustomRange.start
-      ? new Date(appliedCustomRange.start).getTime()
-      : null;
-    const endMs = appliedCustomRange.end
-      ? new Date(appliedCustomRange.end).getTime()
-      : null;
+    const startDate = parseISODate(overviewWindow.bounds.start);
+    const endDate = parseISODate(overviewWindow.bounds.end);
+    const startMs = startDate?.getTime() ?? 0;
+    const endMs = endDate ? endDate.getTime() + 24 * 60 * 60 * 1000 - 1 : Date.now();
 
     return campaignTableRows.filter((row) => {
       const matchesQuery = query ? row.name.toLowerCase().includes(query) : true;
@@ -1071,11 +985,7 @@ export default function CampaignReportsPage() {
         ? getCampaignRowId(row) === selectedCampaignFilter
         : true;
       const rowDate = row.lastRunDateMS || Date.now();
-      const now = Date.now();
-      const matchesRange =
-        appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
-          ? rowDate >= startMs && rowDate <= endMs
-          : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
+      const matchesRange = rowDate >= startMs && rowDate <= endMs;
 
       return matchesQuery && matchesCampaign && matchesRange;
     });
@@ -1083,11 +993,9 @@ export default function CampaignReportsPage() {
     useDummyData,
     tableQuery,
     selectedCampaignFilter,
-    customDays,
-    selectedRange,
     campaignTableRows,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    overviewWindow.bounds.start,
+    overviewWindow.bounds.end,
   ]);
 
   // Reset pagination when filters change
@@ -1096,9 +1004,8 @@ export default function CampaignReportsPage() {
   }, [
     debouncedTableQuery,
     selectedCampaignFilter,
-    selectedRange,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    overviewWindow.bounds.start,
+    overviewWindow.bounds.end,
     useDummyData,
   ]);
 
@@ -1221,29 +1128,9 @@ export default function CampaignReportsPage() {
             Monitor end-to-end campaign reach, engagement, and revenue impact
           </p>
         </div>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  selectedRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {getRangeLabel(option)}
-              </button>
-            ))}
-            <div className="border-l border-gray-300 h-6" />
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          entityFilter={
             <HeadlessSelect
               value={selectedCampaignFilter}
               onChange={setSelectedCampaignFilter}
@@ -1256,115 +1143,51 @@ export default function CampaignReportsPage() {
               ]}
               placeholder="Filter campaign"
             />
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
-            >
-              <label
-                htmlFor="campaign-data-toggle"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
+          }
+          extraActions={
+            <>
+              <div
+                className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
               >
-                Data Mode:
-              </label>
-              <button
-                id="campaign-data-toggle"
-                type="button"
-                onClick={() => setUseDummyData(!useDummyData)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
-                  useDummyData ? "bg-[#252829]" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useDummyData ? "translate-x-6" : "translate-x-1"
+                <label
+                  htmlFor="campaign-data-toggle"
+                  className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
+                >
+                  Data Mode:
+                </label>
+                <button
+                  id="campaign-data-toggle"
+                  type="button"
+                  onClick={() => setUseDummyData(!useDummyData)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
+                    useDummyData ? "bg-[#252829]" : "bg-gray-300"
                   }`}
-                />
-              </button>
-              <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-                {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
-              </span>
-            </div>
-            {!useDummyData && (
-              <button
-                type="button"
-                onClick={handleRefreshSnapshots}
-                disabled={isRefreshingSnapshots}
-                className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-300 disabled:opacity-60`}
-                title="Rebuild daily performance snapshots from live events"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshingSnapshots ? "animate-spin" : ""}`} />
-                {isRefreshingSnapshots ? "Refreshing…" : "Refresh snapshots"}
-              </button>
-            )}
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="campaign-date-start"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                From:
-              </label>
-              <Input
-                id="campaign-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="campaign-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                To:
-              </label>
-              <Input
-                id="campaign-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
-              <button
-                type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: colors.primary.accent }}
-              >
-                Run
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      useDummyData ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
+                  {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
+                </span>
+              </div>
+              {!useDummyData && (
+                <button
+                  type="button"
+                  onClick={handleRefreshSnapshots}
+                  disabled={isRefreshingSnapshots}
+                  className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-300 disabled:opacity-60`}
+                  title="Rebuild daily performance snapshots from live events"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshingSnapshots ? "animate-spin" : ""}`} />
+                  {isRefreshingSnapshots ? "Refreshing…" : "Refresh snapshots"}
+                </button>
+              )}
+            </>
+          }
+        />
       </header>
 
       {liveReportError && !useDummyData && (
@@ -1416,6 +1239,7 @@ export default function CampaignReportsPage() {
         </div>
       </section>
 
+      {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -1500,7 +1324,9 @@ export default function CampaignReportsPage() {
           </div>
         </div>
       </section>
+      )}
 
+      {isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -1602,7 +1428,9 @@ export default function CampaignReportsPage() {
           </div>
         </div>
       </section>
+      )}
 
+      {!isTrendsView && (
       <section className="space-y-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -1718,6 +1546,7 @@ export default function CampaignReportsPage() {
           </>
         )}
       </section>
+      )}
 
       {/* Campaign Offers Modal */}
       {selectedCampaignForModal && (

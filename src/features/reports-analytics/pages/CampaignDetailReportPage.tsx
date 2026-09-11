@@ -23,7 +23,6 @@ import {
 import BackButton from "../../../shared/components/ui/BackButton";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { colors } from "../../../shared/utils/tokens";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency } from "../../../shared/services/currencyService";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
@@ -44,9 +43,10 @@ import {
   settledError,
   settledValue,
 } from "../utils/campaignReportQuery";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 import { campaignReportsService } from "../services/campaignReportsService";
 import { tw } from "../../../shared/utils/utils";
-import Input from "../../../shared/components/ui/Input";
 import { campaignService } from "../../campaigns/services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Campaign } from "../../campaigns/types/campaign";
@@ -102,7 +102,6 @@ type LiveCampaignDetail = {
   lifecycle?: CampaignLifecycleRow[];
 };
 
-const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
 const rangeDays: Record<RangeOption, number> = {
   "7d": 7,
   "30d": 30,
@@ -131,15 +130,6 @@ const mapDaysToRange = (days: number | null): RangeOption => {
   return "90d";
 };
 
-const getRangeLabel = (option: RangeOption): string => {
-  const labels: Record<RangeOption, string> = {
-    "7d": "Daily",
-    "30d": "Weekly",
-    "90d": "Monthly",
-  };
-  return labels[option];
-};
-
 const getScaleFactor = (
   customDays: number | null,
   baseRange: RangeOption,
@@ -147,23 +137,6 @@ const getScaleFactor = (
   if (!customDays) return 1;
   const baseDays = rangeDays[baseRange];
   return customDays / baseDays;
-};
-
-const getDateConstraints = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const maxDate = `${year}-${month}-${day}`;
-
-  const minDate = new Date(today);
-  minDate.setFullYear(today.getFullYear() - 2);
-  const minYear = minDate.getFullYear();
-  const minMonth = String(minDate.getMonth() + 1).padStart(2, "0");
-  const minDay = String(minDate.getDate()).padStart(2, "0");
-  const minDateStr = `${minYear}-${minMonth}-${minDay}`;
-
-  return { minDate: minDateStr, maxDate };
 };
 
 // Dummy data for single campaign report
@@ -401,12 +374,13 @@ export default function CampaignDetailReportPage() {
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "weekly",
+    defaultTrendsPreset: "daily",
   });
+  const { isTrendsView, queryParams } = timeWindow;
+  const selectedRange = timeWindow.rangeKey;
+  const appliedCustomRange = timeWindow.activeWindow.bounds;
   const [useDummyData, setUseDummyData] = useState(true);
   const [liveDetail, setLiveDetail] = useState<LiveCampaignDetail | null>(null);
   const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
@@ -437,10 +411,6 @@ export default function CampaignDetailReportPage() {
       fetchCampaign();
     }
   }, [id]);
-
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
@@ -473,9 +443,10 @@ export default function CampaignDetailReportPage() {
 
     let cancelled = false;
     const params = buildCampaignReportParams({
-      range: activeRangeKey,
-      startDate: appliedCustomRange.start,
-      endDate: appliedCustomRange.end,
+      range: queryParams.range || selectedRange,
+      grain: queryParams.grain,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
       campaignId: id,
     });
 
@@ -569,9 +540,10 @@ export default function CampaignDetailReportPage() {
   }, [
     useDummyData,
     id,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
     showError,
   ]);
 
@@ -767,32 +739,9 @@ export default function CampaignDetailReportPage() {
           </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  selectedRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {getRangeLabel(option)}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Data Mode Toggle */}
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          extraActions={
             <div
               className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
             >
@@ -808,7 +757,7 @@ export default function CampaignDetailReportPage() {
                 onClick={() => setUseDummyData(!useDummyData)}
                 className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: useDummyData ? 'var(--c-toggle-active)' : '#d1d5db',
+                  backgroundColor: useDummyData ? "var(--c-toggle-active)" : "#d1d5db",
                 }}
               >
                 <span
@@ -821,74 +770,8 @@ export default function CampaignDetailReportPage() {
                 {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="report-date-start"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                From:
-              </label>
-              <Input
-                id="report-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="report-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                To:
-              </label>
-              <Input
-                id="report-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
-              <button
-                type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: colors.primary.accent }}
-              >
-                Run
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
+          }
+        />
       </header>
 
       {liveReportError && !useDummyData && (
@@ -941,7 +824,7 @@ export default function CampaignDetailReportPage() {
         </div>
       </section>
 
-      {/* Charts */}
+      {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
         {/* Channel Reach */}
         <div
@@ -1024,8 +907,9 @@ export default function CampaignDetailReportPage() {
           </div>
         </div>
       </section>
+      )}
 
-      {/* Trend Charts */}
+      {isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
         {/* CTR & Engagement Trends */}
         <div
@@ -1125,8 +1009,9 @@ export default function CampaignDetailReportPage() {
           </div>
         </div>
       </section>
+      )}
 
-      {!useDummyData && (
+      {!isTrendsView && !useDummyData && (
         <>
           <section className="grid gap-6 lg:grid-cols-3">
             <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>

@@ -3135,6 +3135,23 @@ export const sw: Translations = {
       generate: "Tengeneza",
       generating: "Inatengenezwa...",
       regenerate: "Tengeneza tena",
+      previewPrompt: "Hakiki",
+      previewPromptAria: "Hakiki na hariri prompt ya kuzalisha",
+      promptPreviewTitle: "Hakiki ya prompt",
+      promptPreviewSubtitle:
+        "Kagua brief itakayotumwa. Hariri sehemu, kisha tengeneza au tengeneza tena.",
+      promptPreviewMeta: "{channel} · {locale}",
+      promptPreviewCardLabel: "Brief ya kuzalisha",
+      promptPreviewFormHint:
+        "Hariri prompt hapa, kisha tengeneza. Funga inarudisha fomu ya AI bila kupoteza mabadiliko.",
+      editPrompt: "Hariri prompt",
+      promptUsedTitle: "Prompt",
+      promptUsedHint:
+        "Brief hii inabaki baada ya kuzalisha. Ihariri hapa, kisha tengeneza tena.",
+      notSpecified: "Haijaainishwa",
+      objectiveFallback:
+        "Haijaainishwa — mwili wa ujumbe unatumika kama brief.",
+      aiBadgeLabel: "Imetengenezwa na AI. Bofya kuona ujumbe, matoleo, na prompt.",
       apply: "Ingiza kwenye ujumbe",
       applyAndReplace: "Badilisha mwili wa ujumbe",
       applyTitleToo: "Tumia pia kichwa kilichotengenezwa",

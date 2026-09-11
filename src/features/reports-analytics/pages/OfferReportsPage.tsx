@@ -43,6 +43,8 @@ import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
 import { offerService } from "../../offers/services/offerService";
 import { offerReportsService } from "../services/offerReportsService";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Offer } from "../../offers/types/offer";
 import { Table } from "../../../shared/components/Table/Table";
@@ -547,12 +549,14 @@ export default function OfferReportsPage() {
   const navigate = useNavigate();
   const [tableQuery, setTableQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
-  const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "weekly",
+    defaultTrendsPreset: "daily",
   });
+  const { isTrendsView, queryParams } = timeWindow;
+  const selectedRange = timeWindow.rangeKey;
+  const appliedCustomRange = timeWindow.activeWindow.bounds;
+  const customRange = appliedCustomRange;
   const [useDummyData, setUseDummyData] = useState(true);
   const [liveReport, setLiveReport] = useState<OfferReportsResponse | null>(null);
   const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
@@ -708,10 +712,6 @@ export default function OfferReportsPage() {
     fetchOffers();
   }, []);
 
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
-
   const customDays = getDaysBetween(
     appliedCustomRange.start,
     appliedCustomRange.end,
@@ -747,17 +747,11 @@ export default function OfferReportsPage() {
       try {
         setIsLoadingLiveReport(true);
         setLiveReportError(null);
-        const grain =
-          activeRangeKey === "7d"
-            ? "daily"
-            : activeRangeKey === "30d"
-              ? "weekly"
-              : "monthly";
         const response = await offerReportsService.getPortfolio({
-          range: activeRangeKey,
-          grain,
-          startDate: appliedCustomRange.start || undefined,
-          endDate: appliedCustomRange.end || undefined,
+          range: queryParams.range || activeRangeKey,
+          grain: queryParams.grain,
+          startDate: queryParams.startDate,
+          endDate: queryParams.endDate,
           page: 1,
           pageSize: 200,
         });
@@ -785,9 +779,10 @@ export default function OfferReportsPage() {
     };
   }, [
     useDummyData,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
   ]);
 
   // Scale summary data based on actual date range
@@ -1100,28 +1095,9 @@ export default function OfferReportsPage() {
             promotional campaigns
           </p>
         </div>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${tw.rounded} border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  selectedRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {getRangeLabel(option)}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          extraActions={
             <div
               className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
             >
@@ -1153,74 +1129,8 @@ export default function OfferReportsPage() {
                     : "Real Data"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="offer-date-start"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                From:
-              </label>
-              <Input
-                id="offer-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="offer-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                To:
-              </label>
-              <Input
-                id="offer-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
-              <button
-                type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: colors.primary.accent }}
-              >
-                Run
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
+          }
+        />
       </div>
 
       {liveReportError && !useDummyData && (
@@ -1268,7 +1178,7 @@ export default function OfferReportsPage() {
         })}
       </section>
 
-      {/* Visualizations Grid */}
+      {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
         {/* Offer Performance Stages */}
         <div
@@ -1308,10 +1218,13 @@ export default function OfferReportsPage() {
             </ResponsiveContainer>
           </div>
         </div>
+      </section>
+      )}
 
-        {/* Redemption Timeline */}
+      {isTrendsView && (
+      <section className="grid gap-6 lg:grid-cols-2">
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2`}
         >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -1358,7 +1271,10 @@ export default function OfferReportsPage() {
           </div>
         </div>
       </section>
+      )}
 
+      {!isTrendsView && (
+      <>
       {/* Offer Type Comparison */}
       <section>
         <div
@@ -1536,6 +1452,8 @@ export default function OfferReportsPage() {
           </>
         )}
       </section>
+      </>
+      )}
 
       {/* Column Picker Modal */}
       <ColumnPickerModal

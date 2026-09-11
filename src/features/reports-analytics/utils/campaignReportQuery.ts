@@ -1,6 +1,6 @@
-import type { RangeOption, ReportQueryParams } from "../types/ReportsAPI";
+import type { RangeOption, ReportGrain, ReportQueryParams } from "../types/ReportsAPI";
 
-export function grainFromRange(range: RangeOption): ReportQueryParams["grain"] {
+export function grainFromRange(range: RangeOption): ReportGrain {
   if (range === "7d") return "daily";
   if (range === "30d") return "weekly";
   return "monthly";
@@ -8,6 +8,7 @@ export function grainFromRange(range: RangeOption): ReportQueryParams["grain"] {
 
 export function buildCampaignReportParams(options: {
   range: RangeOption;
+  grain?: ReportGrain;
   startDate?: string;
   endDate?: string;
   campaignId?: string | number;
@@ -21,7 +22,7 @@ export function buildCampaignReportParams(options: {
   const hasCustomDates = Boolean(options.startDate && options.endDate);
   return {
     range: options.range,
-    grain: grainFromRange(options.range),
+    grain: options.grain || grainFromRange(options.range),
     startDate: hasCustomDates ? options.startDate : undefined,
     endDate: hasCustomDates ? options.endDate : undefined,
     campaignId: options.campaignId || undefined,

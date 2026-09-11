@@ -35,6 +35,8 @@ import type {
   DeliverySMSReportsResponse,
   SMSLogEntry,
 } from "../types/ReportsAPI";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 
 // Extract types from API response type
 type SMSSummary = DeliverySMSReportsResponse["summary"];
@@ -347,12 +349,14 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 
 export default function DeliverySMSReportsPage() {
   const { t } = useLanguage();
-  const [deliveryRange, setDeliveryRange] = useState<RangeOption>("90d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "monthly",
+    defaultTrendsPreset: "daily",
   });
+  const { isTrendsView } = timeWindow;
+  const deliveryRange = timeWindow.rangeKey;
+  const appliedCustomRange = timeWindow.activeWindow.bounds;
+  const customRange = appliedCustomRange;
   const [statusFilter, setStatusFilter] = useState<MessageStatus | "All">(
     "All",
   );
@@ -360,10 +364,6 @@ export default function DeliverySMSReportsPage() {
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(DEFAULT_PAGE_SIZE);
-
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
@@ -641,30 +641,9 @@ export default function DeliverySMSReportsPage() {
             Deep dive into SMS delivery health and outcomes
           </p>
         </div>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setDeliveryRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  deliveryRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {getRangeLabel(option)}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          extraActions={
             <div
               className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
             >
@@ -680,7 +659,7 @@ export default function DeliverySMSReportsPage() {
                 onClick={() => setUseDummyData(!useDummyData)}
                 className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: useDummyData ? 'var(--c-toggle-active)' : '#d1d5db',
+                  backgroundColor: useDummyData ? "var(--c-toggle-active)" : "#d1d5db",
                 }}
               >
                 <span
@@ -693,74 +672,8 @@ export default function DeliverySMSReportsPage() {
                 {useDummyData ? "Dummy Data" : "Real Data"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="sms-date-start"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                From:
-              </label>
-              <Input
-                id="sms-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="sms-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                To:
-              </label>
-              <Input
-                id="sms-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
-              <button
-                type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: colors.primary.accent }}
-              >
-                Run
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
+          }
+        />
       </header>
 
       <section>
@@ -788,6 +701,7 @@ export default function DeliverySMSReportsPage() {
         </div>
       </section>
 
+      {isTrendsView && (
       <section
         className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
       >
@@ -859,7 +773,9 @@ export default function DeliverySMSReportsPage() {
           </ResponsiveContainer>
         </div>
       </section>
+      )}
 
+      {!isTrendsView && (
       <section className="space-y-6">
         <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -939,6 +855,7 @@ export default function DeliverySMSReportsPage() {
           </div>
         )}
       </section>
+      )}
     </div>
   );
 }

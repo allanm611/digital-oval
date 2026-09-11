@@ -11,8 +11,8 @@ import type {
 const REQUEST_TIMEOUT_MS = 28000;
 
 function getAiGenerateUrl(): string {
-  const explicitUrl = import.meta.env.VITE_AI_GENERATE_URL;
-  // const explicitUrl = "http://localhost:11008/offer-creatives/ai/generate";
+  // const explicitUrl = import.meta.env.VITE_AI_GENERATE_URL;
+  const explicitUrl = "http://localhost:11008/offer-creatives/ai/generate";
   if (explicitUrl) {
     return String(explicitUrl);
   }

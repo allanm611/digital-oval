@@ -49,6 +49,8 @@ import {
 import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../../customers360/services/customerServices";
 import { customerProfileReportsService } from "../services/customerProfileReportsService";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 import { useToast } from "../../../contexts/ToastContext";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
@@ -485,12 +487,14 @@ export default function CustomerProfileReportsPage() {
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { success: showSuccess, error: showError } = useToast();
-  const [selectedRange, setSelectedRange] = useState<RangeOption>("90d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "monthly",
+    defaultTrendsPreset: "daily",
   });
+  const { isTrendsView, queryParams } = timeWindow;
+  const selectedRange = timeWindow.rangeKey;
+  const appliedCustomRange = timeWindow.activeWindow.bounds;
+  const customRange = appliedCustomRange;
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
@@ -851,10 +855,6 @@ export default function CustomerProfileReportsPage() {
     ];
   }, [selectedSubscription]);
 
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
-
   const handleCustomerSearch = async () => {
     if (!customerSearchTerm.trim()) {
       setCustomerError(t.customerProfileReports.enterCustomerInfo);
@@ -1000,17 +1000,11 @@ export default function CustomerProfileReportsPage() {
       try {
         setIsLoadingLiveReport(true);
         setLiveReportError(null);
-        const grain =
-          activeRangeKey === "7d"
-            ? "daily"
-            : activeRangeKey === "30d"
-              ? "weekly"
-              : "monthly";
         const response = await customerProfileReportsService.getPortfolio({
-          range: activeRangeKey,
-          grain,
-          startDate: appliedCustomRange.start || undefined,
-          endDate: appliedCustomRange.end || undefined,
+          range: queryParams.range || activeRangeKey,
+          grain: queryParams.grain,
+          startDate: queryParams.startDate,
+          endDate: queryParams.endDate,
           page: 1,
           pageSize: tablePageSize,
         });
@@ -1038,9 +1032,10 @@ export default function CustomerProfileReportsPage() {
     };
   }, [
     useDummyData,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
     tablePageSize,
   ]);
 
@@ -1350,127 +1345,36 @@ export default function CustomerProfileReportsPage() {
           <p className="text-sm text-red-600">{customerError}</p>
         )}
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  selectedRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {option === "7d"
-                  ? t.customerProfileReports.daily
-                  : option === "30d"
-                    ? t.customerProfileReports.weekly
-                    : t.customerProfileReports.monthly}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          extraActions={
             <div className="flex items-center gap-2">
               <label
-                htmlFor="customer-date-start"
+                htmlFor="customer-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap"
               >
-                {t.customerProfileReports.from}
+                Data Mode:
               </label>
-              <Input
-                id="customer-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="customer-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                {t.customerProfileReports.to}
-              </label>
-              <Input
-                id="customer-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
               <button
+                id="customer-data-toggle"
                 type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {t.customerProfileReports.run}
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                {t.customerProfileReports.clear}
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="customer-data-toggle"
-              className="text-sm font-medium text-gray-700 whitespace-nowrap"
-            >
-              Data Mode:
-            </label>
-            <button
-              id="customer-data-toggle"
-              type="button"
-              onClick={() => setUseDummyData(!useDummyData)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
-                useDummyData ? "bg-[#252829]" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  useDummyData ? "translate-x-6" : "translate-x-1"
+                onClick={() => setUseDummyData(!useDummyData)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
+                  useDummyData ? "bg-[#252829]" : "bg-gray-300"
                 }`}
-              />
-            </button>
-            <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-              {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
-            </span>
-          </div>
-        </div>
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useDummyData ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+              <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
+                {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
+              </span>
+            </div>
+          }
+        />
         {liveReportError && !useDummyData && (
           <p className="text-sm text-red-600">{liveReportError}</p>
         )}
@@ -1700,6 +1604,7 @@ export default function CustomerProfileReportsPage() {
         })()}
       </section>
 
+      {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -1819,7 +1724,9 @@ export default function CustomerProfileReportsPage() {
           </div>
         </div>
       </section>
+      )}
 
+      {isTrendsView && (
       <section className="space-y-6">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -1977,7 +1884,9 @@ export default function CustomerProfileReportsPage() {
           </div>
         </div>
       </section>
+      )}
 
+      {!isTrendsView && (
       <section className="space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -2055,6 +1964,7 @@ export default function CustomerProfileReportsPage() {
           </>
         )}
       </section>
+      )}
 
       {/* Column Picker Modal */}
       <ColumnPickerModal

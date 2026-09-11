@@ -2947,6 +2947,23 @@ export const es: Translations = {
       generate: "Generar",
       generating: "Generando...",
       regenerate: "Volver a generar",
+      previewPrompt: "Vista previa",
+      previewPromptAria: "Ver y editar el prompt de generación",
+      promptPreviewTitle: "Vista previa del prompt",
+      promptPreviewSubtitle:
+        "Revise el brief que se enviará. Edite cualquier campo y luego genere o regenere.",
+      promptPreviewMeta: "{channel} · {locale}",
+      promptPreviewCardLabel: "Brief de generación",
+      promptPreviewFormHint:
+        "Edite el prompt aquí y luego genere. Cerrar vuelve al formulario de IA sin perder los cambios.",
+      editPrompt: "Editar prompt",
+      promptUsedTitle: "Prompt",
+      promptUsedHint:
+        "Este brief sigue disponible después de generar. Edítelo aquí y vuelva a generar.",
+      notSpecified: "No especificado",
+      objectiveFallback:
+        "No especificado: se usa el cuerpo del mensaje como brief.",
+      aiBadgeLabel: "Generado por IA. Haga clic para revisar el mensaje, las variantes y el prompt.",
       apply: "Insertar en el mensaje",
       applyAndReplace: "Reemplazar el cuerpo del mensaje",
       applyTitleToo: "Aplicar también el título generado",
