@@ -111,6 +111,10 @@ export default function ReportTrendsToolbar({
         ) : null}
       </div>
 
+      {!isTrendsView && windowLabel ? (
+        <p className="text-xs text-gray-500">Overview window: {windowLabel}</p>
+      ) : null}
+
       {isTrendsView && (
         <div className="space-y-2">
           <div

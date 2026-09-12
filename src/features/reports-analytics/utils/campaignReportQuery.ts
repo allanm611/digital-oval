@@ -39,6 +39,17 @@ export function formatTrendLabel(label?: string): string {
   return label?.replace(" vs prior period", "") || "—";
 }
 
+export function resolveHeroTrend(trend?: {
+  label?: string;
+  direction?: "up" | "down";
+}): { value: string; direction: "up" | "down" } {
+  const value = formatTrendLabel(trend?.label);
+  const trimmed = value.trim();
+  if (trimmed.startsWith("-")) return { value, direction: "down" };
+  if (trimmed.startsWith("+")) return { value, direction: "up" };
+  return { value, direction: trend?.direction || "up" };
+}
+
 export function settledValue<T>(result: PromiseSettledResult<T>): T | null {
   return result.status === "fulfilled" ? result.value : null;
 }

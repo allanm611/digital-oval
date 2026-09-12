@@ -36,10 +36,18 @@ import type {
 } from "../types/ReportsAPI";
 import {
   buildCampaignReportParams,
-  formatTrendLabel,
+  resolveHeroTrend,
   settledError,
   settledValue,
 } from "../utils/campaignReportQuery";
+import {
+  campaignPortfolioHasWidgets,
+  formatAudienceShare,
+  mergeSplitCampaignWidgets,
+  normalizeCampaignPortfolio,
+  sortChannelReachForChart,
+  unwrapCampaignTable,
+} from "../utils/normalizeCampaignReport";
 import { parseISODate } from "../utils/reportTimeWindow";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
@@ -425,7 +433,7 @@ export default function CampaignReportsPage() {
   const [tableQuery, setTableQuery] = useState("");
   const [debouncedTableQuery, setDebouncedTableQuery] = useState("");
   const timeWindow = useReportTimeWindow({
-    overviewPreset: "weekly",
+    overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
   const {
@@ -669,6 +677,19 @@ export default function CampaignReportsPage() {
     const loadLiveWidgets = async () => {
       setIsLoadingLiveReport(true);
       setLiveReportError(null);
+
+      const portfolioResult = await Promise.allSettled([
+        campaignReportsService.getPortfolio(params),
+      ]).then((results) => results[0]);
+      if (cancelled) return;
+
+      const portfolio = normalizeCampaignPortfolio(settledValue(portfolioResult));
+      if (campaignPortfolioHasWidgets(portfolio)) {
+        setLiveReport(portfolio);
+        setIsLoadingLiveReport(false);
+        return;
+      }
+
       const [kpisResult, reachResult, funnelResult, trendsResult] = await Promise.allSettled([
         campaignReportsService.getKpis(params),
         campaignReportsService.getChannelReach(params),
@@ -677,39 +698,27 @@ export default function CampaignReportsPage() {
       ]);
       if (cancelled) return;
 
-      const kpis = settledValue(kpisResult);
-      const reach = settledValue(reachResult);
-      const funnel = settledValue(funnelResult);
-      const trends = settledValue(trendsResult);
-      const trendPoints = trends?.data || [];
-
-      setLiveReport({
-        summary: kpis?.data,
-        heroTrends: kpis?.trends,
-        channelReach: reach?.data,
-        conversionFunnel: funnel?.data,
-        performanceTrend: trendPoints,
-        revenueTrend: trendPoints.map((point) => ({
-          period: point.period,
-          date: point.date,
-          revenue: point.revenue,
-          spend: point.spend,
-          target: 0,
-        })),
-        meta: kpis?.meta,
+      const merged = mergeSplitCampaignWidgets({
+        kpis: settledValue(kpisResult),
+        reach: settledValue(reachResult),
+        funnel: settledValue(funnelResult),
+        trends: settledValue(trendsResult),
       });
+      setLiveReport(merged);
 
-      const errors = [
-        settledError(kpisResult, "Failed to load campaign KPIs."),
-        settledError(reachResult, "Failed to load channel reach."),
-        settledError(funnelResult, "Failed to load engagement funnel."),
-        settledError(trendsResult, "Failed to load campaign trends."),
-      ].filter(Boolean) as string[];
-
-      if (errors.length === 4) {
-        setLiveReportError(extractBackendError(errors[0], "Failed to load Campaign Reports."));
-      } else if (errors.length) {
-        setLiveReportError(errors.join(" "));
+      if (!campaignPortfolioHasWidgets(merged)) {
+        const errors = [
+          settledError(portfolioResult, "Failed to load campaign portfolio."),
+          settledError(kpisResult, "Failed to load campaign KPIs."),
+          settledError(reachResult, "Failed to load channel reach."),
+          settledError(funnelResult, "Failed to load engagement funnel."),
+          settledError(trendsResult, "Failed to load campaign trends."),
+        ].filter(Boolean) as string[];
+        if (errors.length) {
+          setLiveReportError(
+            extractBackendError(errors[0], "Failed to load Campaign Reports."),
+          );
+        }
       }
       setIsLoadingLiveReport(false);
     };
@@ -752,8 +761,9 @@ export default function CampaignReportsPage() {
         );
         if (cancelled) return;
         if (response.success) {
-          setLiveTableRows(response.data || []);
-          setLiveTableTotal(response.total ?? response.pagination?.total ?? response.data?.length ?? 0);
+          const table = unwrapCampaignTable(response);
+          setLiveTableRows(table.rows);
+          setLiveTableTotal(table.total);
         } else {
           setLiveTableRows([]);
           setLiveTableTotal(0);
@@ -790,7 +800,10 @@ export default function CampaignReportsPage() {
   const baseSummary = campaignSummary[activeRangeKey];
   const summary = useMemo(() => {
     if (!useDummyData) {
-      return liveReport?.summary || EMPTY_SUMMARY;
+      return {
+        ...EMPTY_SUMMARY,
+        ...liveReport?.summary,
+      };
     }
     if (scaleFactor === 1) return baseSummary;
     return {
@@ -865,62 +878,44 @@ export default function CampaignReportsPage() {
         {
           label: "Audience Reached",
           value: summary.reach.toLocaleString("en-US"),
-          subtext: `${summary.eligibleAudience ? Math.round((summary.reach / summary.eligibleAudience) * 100) : 0}% of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
+          subtext: `${formatAudienceShare(summary.reach, summary.eligibleAudience)} of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
           icon: statIcons.audience,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.reach?.label),
-            direction: liveReport?.heroTrends?.reach?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.reach),
         },
         {
           label: "Engagement Rate",
           value: `${summary.engagementRate.toFixed(1)}%`,
           subtext: "Opens, clicks & taps vs reach",
           icon: statIcons.engagement,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.engagementRate?.label),
-            direction: liveReport?.heroTrends?.engagementRate?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.engagementRate),
         },
         {
           label: "Conversion Rate",
           value: `${summary.conversionRate.toFixed(1)}%`,
           subtext: `${summary.conversions.toLocaleString("en-US")} conversions`,
           icon: statIcons.outcome,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.conversionRate?.label),
-            direction: liveReport?.heroTrends?.conversionRate?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.conversionRate),
         },
         {
           label: "Revenue Generated",
           value: formatCurrency(summary.revenue),
           subtext: `Avg ${formatCurrency(summary.conversions ? Math.round(summary.revenue / summary.conversions) : 0)} per conversion`,
           icon: statIcons.outcome,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.revenue?.label),
-            direction: liveReport?.heroTrends?.revenue?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.revenue),
         },
         {
           label: "ROI / ROMI",
           value: `${summary.roas.toFixed(1)}x`,
           subtext: `Spend ${formatCurrency(summary.campaignCost)}`,
           icon: statIcons.growth,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.roas?.label),
-            direction: liveReport?.heroTrends?.roas?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.roas),
         },
         {
           label: "Campaign Cost",
           value: formatCurrency(summary.campaignCost),
           subtext: `CAC ${formatCurrency(summary.cac)}`,
           icon: statIcons.outcome,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.campaignCost?.label),
-            direction: liveReport?.heroTrends?.campaignCost?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.campaignCost),
         },
       ];
 
@@ -1014,12 +1009,7 @@ export default function CampaignReportsPage() {
   // Scale chart data based on actual date range
   const channelData = useMemo(() => {
     if (!useDummyData) {
-      if (liveReport?.channelReach?.length) return liveReport.channelReach;
-      return channelReachData[activeRangeKey].map((point) => ({
-        ...point,
-        reach: 0,
-        impressions: 0,
-      }));
+      return sortChannelReachForChart(liveReport?.channelReach || []);
     }
     const base = channelReachData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -1032,11 +1022,7 @@ export default function CampaignReportsPage() {
 
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
-      if (liveReport?.conversionFunnel?.length) return liveReport.conversionFunnel;
-      return funnelData[activeRangeKey].map((point) => ({
-        ...point,
-        value: 0,
-      }));
+      return liveReport?.conversionFunnel || [];
     }
     const base = funnelData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -1048,14 +1034,7 @@ export default function CampaignReportsPage() {
 
   const trendSeries = useMemo(() => {
     if (!useDummyData) {
-      if (liveReport?.performanceTrend?.length) return liveReport.performanceTrend;
-      return trendData[activeRangeKey].map((point) => ({
-        ...point,
-        ctr: 0,
-        engagement: 0,
-        revenue: 0,
-        spend: 0,
-      }));
+      return liveReport?.performanceTrend || [];
     }
     const base = trendData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -1069,19 +1048,12 @@ export default function CampaignReportsPage() {
 
   const revenueSeries = useMemo(() => {
     if (!useDummyData) {
-      if (liveReport?.revenueTrend?.length) {
-        return liveReport.revenueTrend.map((point) => ({
-          period: point.period,
-          ctr: 0,
-          engagement: 0,
-          revenue: point.revenue,
-          spend: point.spend ?? 0,
-        }));
-      }
-      return revenueData[activeRangeKey].map((point) => ({
-        ...point,
-        revenue: 0,
-        spend: 0,
+      return (liveReport?.revenueTrend || []).map((point) => ({
+        period: point.period,
+        ctr: 0,
+        engagement: 0,
+        revenue: point.revenue,
+        spend: point.spend ?? 0,
       }));
     }
     const base = revenueData[activeRangeKey];
@@ -1255,11 +1227,28 @@ export default function CampaignReportsPage() {
             </div>
           </div>
           <div className="mt-6 h-80">
+            {!useDummyData && !isLoadingLiveReport && channelData.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                No channel activity in this window.
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={channelData} barCategoryGap="20%" barGap={8}>
+              <BarChart
+                data={channelData}
+                barCategoryGap="20%"
+                barGap={8}
+                margin={{ top: 8, right: 16, left: 0, bottom: 28 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="channel" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
+                <XAxis
+                  dataKey="channel"
+                  interval={0}
+                  angle={-28}
+                  textAnchor="end"
+                  height={64}
+                  tick={{ fill: "#6b7280", fontSize: 11 }}
+                />
+                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
                 <Tooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
@@ -1281,6 +1270,7 @@ export default function CampaignReportsPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -1298,14 +1288,19 @@ export default function CampaignReportsPage() {
             </div>
           </div>
           <div className="mt-6 h-80">
+            {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                No engagement stages in this window.
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={funnelSeries}
                 margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="stage" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
+                <XAxis dataKey="stage" interval={0} tick={{ fill: "#6b7280" }} />
+                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
                 <Tooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
@@ -1321,6 +1316,7 @@ export default function CampaignReportsPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
       </section>
@@ -1342,6 +1338,11 @@ export default function CampaignReportsPage() {
             </div>
           </div>
           <div className="mt-6 h-80">
+            {!useDummyData && !isLoadingLiveReport && trendSeries.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                No CTR or engagement points in this window.
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -1379,6 +1380,7 @@ export default function CampaignReportsPage() {
                 />
               </LineChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -1396,6 +1398,11 @@ export default function CampaignReportsPage() {
             </div>
           </div>
           <div className="mt-6 h-80">
+            {!useDummyData && !isLoadingLiveReport && revenueSeries.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                No revenue or spend points in this window.
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={revenueSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -1425,6 +1432,7 @@ export default function CampaignReportsPage() {
                 />
               </LineChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
       </section>

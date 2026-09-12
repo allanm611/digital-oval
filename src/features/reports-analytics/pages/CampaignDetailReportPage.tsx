@@ -39,10 +39,18 @@ import type {
 } from "../types/ReportsAPI";
 import {
   buildCampaignReportParams,
-  formatTrendLabel,
+  resolveHeroTrend,
   settledError,
   settledValue,
 } from "../utils/campaignReportQuery";
+import {
+  asFiniteNumber,
+  normalizeCampaignPortfolio,
+  pickNamedArray,
+  sortChannelReachForChart,
+  unwrapCampaignSummary,
+  unwrapHeroTrends,
+} from "../utils/normalizeCampaignReport";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 import { campaignReportsService } from "../services/campaignReportsService";
@@ -375,7 +383,7 @@ export default function CampaignDetailReportPage() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const timeWindow = useReportTimeWindow({
-    overviewPreset: "weekly",
+    overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
   const { isTrendsView, queryParams } = timeWindow;
@@ -454,6 +462,7 @@ export default function CampaignDetailReportPage() {
       setIsLoadingLiveReport(true);
       setLiveReportError(null);
       const results = await Promise.allSettled([
+        campaignReportsService.getPortfolio(params),
         campaignReportsService.getCampaignSummary(id, params),
         campaignReportsService.getChannelReach(params),
         campaignReportsService.getFunnel(params),
@@ -469,6 +478,7 @@ export default function CampaignDetailReportPage() {
       if (cancelled) return;
 
       const [
+        portfolioResult,
         summaryResult,
         reachResult,
         funnelResult,
@@ -482,31 +492,62 @@ export default function CampaignDetailReportPage() {
         lifecycleResult,
       ] = results;
 
+      const portfolio = normalizeCampaignPortfolio(settledValue(portfolioResult));
       const summaryPayload = settledValue(summaryResult);
-      const trendPoints = settledValue(trendsResult)?.data || [];
-      const kpi = summaryPayload?.data;
+      const kpi = unwrapCampaignSummary(summaryPayload?.data) || portfolio.summary;
+      const trendPoints = pickNamedArray<TrendPoint>(
+        settledValue(trendsResult)?.data,
+        ["performanceTrend", "trends"],
+      );
+      const reachRows = pickNamedArray<ChannelReachPoint>(
+        settledValue(reachResult)?.data,
+        ["channelReach"],
+      );
+      const funnelRows = pickNamedArray<FunnelPoint>(
+        settledValue(funnelResult)?.data,
+        ["conversionFunnel", "funnel"],
+      );
+      const portfolioReach = portfolio.channelReach || [];
+      const portfolioFunnel = portfolio.conversionFunnel || [];
+      const reachScore = (rows: ChannelReachPoint[]) =>
+        rows.reduce(
+          (sum, row) => sum + asFiniteNumber(row.reach) + asFiniteNumber(row.impressions),
+          0,
+        );
+      const funnelScore = (rows: FunnelPoint[]) =>
+        rows.reduce((sum, row) => sum + asFiniteNumber(row.value), 0);
 
       setLiveDetail({
         summary: kpi
           ? {
-              reach: kpi.reach || kpi.delivered || 0,
-              impressions: kpi.impressions || kpi.reach || 0,
-              opens: kpi.opens || kpi.opened || 0,
-              clicks: kpi.clicks || kpi.clicked || 0,
-              clickRate: kpi.clickRate || 0,
-              engagementRate: kpi.engagementRate || kpi.openRate || 0,
-              conversions: kpi.conversions || kpi.converted || 0,
-              conversionRate: kpi.conversionRate || 0,
-              revenue: kpi.revenue || 0,
-              roas: kpi.roas || 0,
-              cac: kpi.cac || 0,
-              campaignCost: kpi.campaignCost || 0,
+              reach: asFiniteNumber(kpi.reach),
+              impressions: asFiniteNumber(kpi.impressions),
+              opens: asFiniteNumber(kpi.opens),
+              clicks: asFiniteNumber(kpi.clicks),
+              clickRate: asFiniteNumber(kpi.clickRate),
+              engagementRate: asFiniteNumber(kpi.engagementRate),
+              conversions: asFiniteNumber(kpi.conversions),
+              conversionRate: asFiniteNumber(kpi.conversionRate),
+              revenue: asFiniteNumber(kpi.revenue),
+              roas: asFiniteNumber(kpi.roas),
+              cac: asFiniteNumber(kpi.cac),
+              campaignCost: asFiniteNumber(kpi.campaignCost),
             }
           : undefined,
-        heroTrends: summaryPayload?.trends,
-        channelReach: settledValue(reachResult)?.data,
-        funnel: settledValue(funnelResult)?.data,
-        trends: trendPoints,
+        heroTrends: unwrapHeroTrends(summaryPayload) || portfolio.heroTrends,
+        channelReach:
+          reachScore(portfolioReach) >= reachScore(reachRows) && portfolioReach.length
+            ? portfolioReach
+            : reachRows.length
+              ? reachRows
+              : portfolioReach,
+        funnel:
+          funnelScore(portfolioFunnel) >= funnelScore(funnelRows) && portfolioFunnel.length
+            ? portfolioFunnel
+            : funnelRows.length
+              ? funnelRows
+              : portfolioFunnel,
+        trends: trendPoints.length ? trendPoints : portfolio.performanceTrend,
         roi: settledValue(roiResult)?.data ?? null,
         control: settledValue(controlResult)?.data ?? null,
         budget: settledValue(budgetResult)?.data ?? null,
@@ -516,19 +557,26 @@ export default function CampaignDetailReportPage() {
         lifecycle: settledValue(lifecycleResult)?.data || [],
       });
 
-      const errors = [
-        settledError(summaryResult, "Failed to load campaign summary."),
-        settledError(reachResult, "Failed to load channel performance."),
-        settledError(funnelResult, "Failed to load engagement funnel."),
-        settledError(trendsResult, "Failed to load campaign trends."),
-      ].filter(Boolean) as string[];
+      const hasWidgets = Boolean(
+        kpi ||
+          portfolio.channelReach?.length ||
+          portfolio.conversionFunnel?.length ||
+          portfolio.performanceTrend?.length,
+      );
+      const errors = hasWidgets
+        ? []
+        : ([
+            settledError(portfolioResult, "Failed to load campaign portfolio."),
+            settledError(summaryResult, "Failed to load campaign summary."),
+            settledError(reachResult, "Failed to load channel performance."),
+            settledError(funnelResult, "Failed to load engagement funnel."),
+            settledError(trendsResult, "Failed to load campaign trends."),
+          ].filter(Boolean) as string[]);
 
       if (errors.length) {
         const message = errors.join(" ");
         setLiveReportError(message);
-        if (errors.length === 4) {
-          showError(extractBackendError(message, "Failed to load campaign report."));
-        }
+        showError(extractBackendError(message, "Failed to load campaign report."));
       }
       setIsLoadingLiveReport(false);
     };
@@ -591,10 +639,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.audience,
       trend: useDummyData
         ? { value: "+8.4%", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.reach?.label),
-            direction: liveDetail?.heroTrends?.reach?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.reach),
     },
     {
       label: "Engagement Rate",
@@ -603,10 +648,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.engagement,
       trend: useDummyData
         ? { value: "+2.1 pts", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.engagementRate?.label),
-            direction: liveDetail?.heroTrends?.engagementRate?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.engagementRate),
     },
     {
       label: "Click-Through Rate",
@@ -615,10 +657,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.outcome,
       trend: useDummyData
         ? { value: "+0.6 pts", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.engagementRate?.label),
-            direction: liveDetail?.heroTrends?.engagementRate?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.engagementRate),
     },
     {
       label: "Conversion Rate",
@@ -627,10 +666,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.outcome,
       trend: useDummyData
         ? { value: "-0.4 pts", direction: "down" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.conversionRate?.label),
-            direction: liveDetail?.heroTrends?.conversionRate?.direction || "down",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.conversionRate),
     },
     {
       label: "Revenue Generated",
@@ -639,10 +675,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.growth,
       trend: useDummyData
         ? { value: "+84K", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.revenue?.label),
-            direction: liveDetail?.heroTrends?.revenue?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.revenue),
     },
     {
       label: "Customer Acquisition Cost",
@@ -651,21 +684,13 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.outcome,
       trend: useDummyData
         ? { value: "-2.3%", direction: "down" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.campaignCost?.label),
-            direction: liveDetail?.heroTrends?.campaignCost?.direction || "down",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.campaignCost),
     },
   ];
 
   const channelData = useMemo(() => {
     if (!useDummyData) {
-      if (liveDetail?.channelReach?.length) return liveDetail.channelReach;
-      return channelReachData[activeRangeKey].map((point) => ({
-        ...point,
-        reach: 0,
-        impressions: 0,
-      }));
+      return sortChannelReachForChart(liveDetail?.channelReach || []);
     }
     const base = channelReachData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -678,11 +703,7 @@ export default function CampaignDetailReportPage() {
 
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
-      if (liveDetail?.funnel?.length) return liveDetail.funnel;
-      return funnelData[activeRangeKey].map((point) => ({
-        ...point,
-        value: 0,
-      }));
+      return liveDetail?.funnel || [];
     }
     const base = funnelData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -694,14 +715,7 @@ export default function CampaignDetailReportPage() {
 
   const trendSeries = useMemo(() => {
     if (!useDummyData) {
-      if (liveDetail?.trends?.length) return liveDetail.trends;
-      return trendData[activeRangeKey].map((point) => ({
-        ...point,
-        ctr: 0,
-        engagement: 0,
-        revenue: 0,
-        spend: 0,
-      }));
+      return liveDetail?.trends || [];
     }
     const base = trendData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -839,11 +853,28 @@ export default function CampaignDetailReportPage() {
             </p>
           </div>
           <div className="mt-6 h-80">
+            {!useDummyData && !isLoadingLiveReport && channelData.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                No channel activity in this window.
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={channelData} barCategoryGap="20%" barGap={8}>
+              <BarChart
+                data={channelData}
+                barCategoryGap="20%"
+                barGap={8}
+                margin={{ top: 8, right: 16, left: 0, bottom: 28 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="channel" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
+                <XAxis
+                  dataKey="channel"
+                  interval={0}
+                  angle={-28}
+                  textAnchor="end"
+                  height={64}
+                  tick={{ fill: "#6b7280", fontSize: 11 }}
+                />
+                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
                 <Tooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
@@ -865,6 +896,7 @@ export default function CampaignDetailReportPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -881,14 +913,19 @@ export default function CampaignDetailReportPage() {
             </p>
           </div>
           <div className="mt-6 h-80">
+            {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                No engagement stages in this window.
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={funnelSeries}
                 margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="stage" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
+                <XAxis dataKey="stage" interval={0} tick={{ fill: "#6b7280" }} />
+                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
                 <Tooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
@@ -904,6 +941,7 @@ export default function CampaignDetailReportPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
       </section>
