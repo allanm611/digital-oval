@@ -3259,11 +3259,19 @@ export const fr: Translations = {
         objectiveRequired: "Saisissez un objectif clair pour que Gemini rédige un contenu pertinent.",
         messageBodyMinWords: "Saisissez un corps de message d'au moins 3 mots avant de générer.",
         generateFailed: "Impossible de générer le contenu du message",
+        modelRequired: "Sélectionnez un modèle d'IA avant de générer.",
       },
       hints: {
         variables: "Variables que Gemini peut conserver",
         channelLimit: "La longueur cible est d'environ {limit} caractères.",
         overwrite: "Insérer remplace le corps du message actuel. Vous pourrez encore le modifier ensuite.",
+      },
+      aiModel: {
+        label: "Modèle d'IA",
+        placeholder: "Sélectionnez un modèle d'IA configuré",
+        hint: "Utilise le fournisseur enregistré dans Administration → AI Model Configuration.",
+        noneConfigured:
+          "Aucun modèle d'IA actif. Configurez-en un dans Administration, ou la génération utilisera le modèle par défaut du serveur.",
       },
     },
     messageBody: {

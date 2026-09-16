@@ -2,15 +2,23 @@ import { BookmarkPlus, CalendarRange, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import Input from "../../../shared/components/ui/Input";
 import RegularModal from "../../../shared/components/ui/RegularModal";
+import SegmentedTabs from "../../../shared/components/ui/SegmentedTabs";
 import { colors } from "../../../shared/utils/tokens";
 import { tw } from "../../../shared/utils/utils";
+import type { ReportViewMode, SavedReportDateRange } from "../types/ReportsAPI";
 import type { ReportTimeWindowState } from "../hooks/useReportTimeWindow";
 import {
   TREND_GRAIN_TABS,
-  TREND_SUB_PRESETS,
+  allNamedRangePresets,
+  namedRangePresets,
   getDateConstraints,
+  type TrendSubPreset,
 } from "../utils/reportTimeWindow";
-import { filterSavedRangesForGrain } from "../utils/savedReportDateRanges";
+
+const REPORT_VIEW_TABS: Array<{ id: ReportViewMode; label: string }> = [
+  { id: "overview", label: "Overview" },
+  { id: "trends", label: "Trends" },
+];
 
 interface ReportTrendsToolbarProps {
   timeWindow: ReportTimeWindowState;
@@ -21,9 +29,59 @@ interface ReportTrendsToolbarProps {
 function chipClass(active: boolean) {
   return `${tw.rounded} border px-3 py-1.5 text-sm font-medium transition-colors ${
     active
-      ? "border-[#252829] bg-[#252829] text-white"
+      ? "border-[var(--c-bg-tab-active)] bg-[var(--c-bg-tab-active)] text-white"
       : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
   }`;
+}
+
+function RangeChips({
+  presets,
+  savedRanges,
+  activePreset,
+  savedRangeId,
+  onSelectPreset,
+  onSelectSavedRange,
+}: {
+  presets: TrendSubPreset[];
+  savedRanges: SavedReportDateRange[];
+  activePreset: string;
+  savedRangeId: string | null;
+  onSelectPreset: (id: TrendSubPreset["id"]) => void;
+  onSelectSavedRange: (range: SavedReportDateRange) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {presets.map((preset) => (
+        <button
+          key={preset.id}
+          type="button"
+          title={preset.hint}
+          onClick={() => onSelectPreset(preset.id)}
+          className={chipClass(!savedRangeId && activePreset === preset.id)}
+        >
+          {preset.id === "custom" ? (
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarRange className="h-3.5 w-3.5" />
+              {preset.label}
+            </span>
+          ) : (
+            preset.label
+          )}
+        </button>
+      ))}
+      {savedRanges.map((range) => (
+        <button
+          key={range.id}
+          type="button"
+          onClick={() => onSelectSavedRange(range)}
+          title={`${range.startDate} to ${range.endDate} · ${range.grain}`}
+          className={chipClass(savedRangeId === range.id)}
+        >
+          {range.name}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function ReportTrendsToolbar({
@@ -36,6 +94,10 @@ export default function ReportTrendsToolbar({
     view,
     setView,
     isTrendsView,
+    overviewPreset,
+    overviewSavedRangeId,
+    selectOverviewPreset,
+    selectOverviewSavedRange,
     grainTab,
     selectGrainTab,
     trendsPreset,
@@ -44,6 +106,7 @@ export default function ReportTrendsToolbar({
     selectSavedRange,
     windowLabel,
     savedRanges,
+    overviewSavedRanges,
     isPickerOpen,
     closePicker,
     draftRange,
@@ -56,16 +119,20 @@ export default function ReportTrendsToolbar({
     pickerError,
     pickerWarning,
     saveMessage,
+    pickerGrain,
+    pickerTarget,
   } = timeWindow;
 
-  const subPresets = TREND_SUB_PRESETS[grainTab];
-  const scopedSavedRanges = filterSavedRangesForGrain(savedRanges, grainTab);
+  const overviewPresets = allNamedRangePresets();
+  const trendPresets = namedRangePresets(grainTab);
   const pickerTitle =
-    grainTab === "weekly"
-      ? "Custom weekly range"
-      : grainTab === "monthly"
-        ? "Custom monthly range"
-        : "Custom daily range";
+    pickerTarget === "overview"
+      ? "Custom date range"
+      : pickerGrain === "weekly"
+        ? "Custom weekly range"
+        : pickerGrain === "monthly"
+          ? "Custom monthly range"
+          : "Custom daily range";
 
   return (
     <div className="space-y-3">
@@ -73,107 +140,55 @@ export default function ReportTrendsToolbar({
         <div className="flex flex-wrap items-center gap-2">
           {entityFilter}
           {entityFilter ? <div className="h-6 border-l border-gray-300" /> : null}
-          <div
-            className={`${tw.rounded} inline-flex border border-gray-200 bg-white p-0.5`}
-            role="tablist"
-            aria-label="Report view"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === "overview"}
-              onClick={() => setView("overview")}
-              className={`${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
-                view === "overview"
-                  ? "bg-[#252829] text-white"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isTrendsView}
-              onClick={() => setView("trends")}
-              className={`${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
-                isTrendsView
-                  ? "bg-[#252829] text-white"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              Trends
-            </button>
-          </div>
+          <SegmentedTabs
+            items={REPORT_VIEW_TABS}
+            value={view}
+            onChange={setView}
+            ariaLabel="Report view"
+          />
         </div>
         {extraActions ? (
           <div className="flex flex-wrap items-center gap-3">{extraActions}</div>
         ) : null}
       </div>
 
-      {!isTrendsView && windowLabel ? (
-        <p className="text-xs text-gray-500">Overview window: {windowLabel}</p>
-      ) : null}
+      {!isTrendsView && (
+        <div className="space-y-2">
+          <RangeChips
+            presets={overviewPresets}
+            savedRanges={overviewSavedRanges}
+            activePreset={overviewPreset}
+            savedRangeId={overviewSavedRangeId}
+            onSelectPreset={selectOverviewPreset}
+            onSelectSavedRange={selectOverviewSavedRange}
+          />
+          {windowLabel ? (
+            <p className="text-xs text-gray-500">
+              Overview window: {windowLabel}
+            </p>
+          ) : null}
+        </div>
+      )}
 
       {isTrendsView && (
         <div className="space-y-2">
-          <div
-            className={`${tw.rounded} inline-flex border border-gray-200 bg-white p-0.5`}
-            role="tablist"
-            aria-label="Trend grain"
-          >
-            {TREND_GRAIN_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={grainTab === tab.id}
-                onClick={() => selectGrainTab(tab.id)}
-                className={`${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
-                  grainTab === tab.id
-                    ? "bg-[#252829] text-white"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {subPresets.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                title={preset.hint}
-                onClick={() => selectPreset(preset.id)}
-                className={chipClass(
-                  !savedRangeId && trendsPreset === preset.id,
-                )}
-              >
-                {preset.id === "custom" ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarRange className="h-3.5 w-3.5" />
-                    {preset.label}
-                  </span>
-                ) : (
-                  preset.label
-                )}
-              </button>
-            ))}
-            {scopedSavedRanges.map((range) => (
-              <button
-                key={range.id}
-                type="button"
-                onClick={() => selectSavedRange(range)}
-                title={`${range.startDate} to ${range.endDate} · ${range.grain}`}
-                className={chipClass(savedRangeId === range.id)}
-              >
-                {range.name}
-              </button>
-            ))}
-          </div>
+          <SegmentedTabs
+            items={TREND_GRAIN_TABS}
+            value={grainTab}
+            onChange={selectGrainTab}
+            ariaLabel="Trend grain"
+          />
+          <RangeChips
+            presets={trendPresets}
+            savedRanges={savedRanges}
+            activePreset={trendsPreset}
+            savedRangeId={savedRangeId}
+            onSelectPreset={selectPreset}
+            onSelectSavedRange={selectSavedRange}
+          />
           <p className="text-xs text-gray-500">
-            Showing {windowLabel}. Saved custom ranges stay under {grainTab} only.
+            Showing {windowLabel}. Saved custom ranges stay under {grainTab}{" "}
+            only.
           </p>
         </div>
       )}
@@ -186,12 +201,16 @@ export default function ReportTrendsToolbar({
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Inclusive From / To for {grainTab}. Saved ranges stay on this tab
-            only — they will not appear under the other grain tabs.
+            {pickerTarget === "overview"
+              ? "Inclusive From / To. Grain is inferred from the span so KPIs and tables stay aligned."
+              : `Inclusive From / To for ${pickerGrain}. Saved ranges stay on this tab only — they will not appear under the other grain tabs.`}
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="report-trend-from" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="report-trend-from"
+                className="text-sm font-medium text-gray-700"
+              >
                 From
               </label>
               <Input
@@ -206,7 +225,10 @@ export default function ReportTrendsToolbar({
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="report-trend-to" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="report-trend-to"
+                className="text-sm font-medium text-gray-700"
+              >
                 To
               </label>
               <Input
@@ -222,7 +244,10 @@ export default function ReportTrendsToolbar({
             </div>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="report-trend-range-name" className="text-sm font-medium text-gray-700">
+            <label
+              htmlFor="report-trend-range-name"
+              className="text-sm font-medium text-gray-700"
+            >
               Save as (optional)
             </label>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -250,13 +275,19 @@ export default function ReportTrendsToolbar({
           {saveMessage && !pickerError && (
             <p className="text-sm text-emerald-700">{saveMessage}</p>
           )}
-          {scopedSavedRanges.length > 0 && (
+          {(pickerTarget === "overview"
+            ? overviewSavedRanges
+            : savedRanges
+          ).length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-700">
-                Saved {grainTab} ranges
+                Saved {pickerGrain} ranges
               </p>
               <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
-                {scopedSavedRanges.map((range) => (
+                {(pickerTarget === "overview"
+                  ? overviewSavedRanges
+                  : savedRanges
+                ).map((range) => (
                   <li
                     key={range.id}
                     className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
@@ -264,7 +295,11 @@ export default function ReportTrendsToolbar({
                     <button
                       type="button"
                       className="min-w-0 flex-1 text-left"
-                      onClick={() => selectSavedRange(range)}
+                      onClick={() =>
+                        pickerTarget === "overview"
+                          ? selectOverviewSavedRange(range)
+                          : selectSavedRange(range)
+                      }
                     >
                       <span className="block truncate font-medium text-gray-900">
                         {range.name}

@@ -3,8 +3,8 @@ export type ReportGrain = "daily" | "weekly" | "monthly";
 export type ReportViewMode = "overview" | "trends";
 
 /**
- * Calendar sub-presets under Daily / Weekly / Monthly grain tabs.
- * Grain is chosen by the parent tab; these only resolve inclusive local dates.
+ * Named calendar windows shown on Overview (Today, Last 7 days, This month, …).
+ * Trends uses Daily / Weekly / Monthly grain plus custom/saved ranges.
  */
 export type TimeWindowPreset =
   | "today"
@@ -38,10 +38,12 @@ export interface SavedReportDateRange {
 }
 
 export interface ReportQueryParams {
-  range?: RangeOption; // Default: "30d"
+  range?: RangeOption; // Legacy alias derived from day count
   startDate?: string;
   endDate?: string;
   grain?: ReportGrain;
+  /** Calendar preset from Daily/Weekly/Monthly tabs. Optional when startDate+endDate are sent. */
+  preset?: TimeWindowPreset;
   page?: number;
   pageSize?: number;
   sortBy?: string;
@@ -49,6 +51,8 @@ export interface ReportQueryParams {
   search?: string;
   segment?: string;
   campaignId?: string | number;
+  offerId?: string | number;
+  status?: string;
   metric?: string;
   limit?: number;
 }
@@ -128,6 +132,12 @@ export interface CustomerProfileReportsResponse {
     country?: string;
     range?: string;
     grain?: string;
+    preset?: TimeWindowPreset;
+    isCustom?: boolean;
+    warning?: string;
+    previousStartDate?: string;
+    previousEndDate?: string;
+    days?: number;
     startDate?: string;
     endDate?: string;
     computedAt?: string;
@@ -277,7 +287,10 @@ export interface OfferReportsResponse {
 
   // Offer Type Comparison Chart Data (Multi-bar Chart)
   offerTypeComparison: Array<{
-    type: string; // Offer type: "Data", "Voice", "SMS", "Combo", etc.
+    type: string; // Catalog name from system.offer_types, e.g. "Data", "SEEDING"
+    typeId?: number;
+    isActive?: boolean;
+    isSeedingReward?: boolean;
     redemptionRate: number; // Percentage
     aov: number; // Average order value
     marginPercent: number; // Margin percentage
@@ -302,6 +315,12 @@ export interface OfferReportsResponse {
     country?: string;
     range?: string;
     grain?: string;
+    preset?: TimeWindowPreset;
+    isCustom?: boolean;
+    warning?: string;
+    previousStartDate?: string;
+    previousEndDate?: string;
+    days?: number;
     startDate?: string;
     endDate?: string;
     computedAt?: string;
@@ -315,7 +334,7 @@ export interface OfferRow {
   offerName: string;
   campaignName: string;
   segment: string;
-  status: "Active" | "Expired" | "Scheduled" | "Paused";
+  status: "Active" | "Expired" | "Scheduled" | "Paused" | string;
   targetGroup: number; // Size of target group
   controlGroup: number; // Size of control group
   messagesGenerated: number;
@@ -323,6 +342,129 @@ export interface OfferRow {
   delivered: number;
   conversions: number;
   lastUpdated: string; // ISO 8601 format: YYYY-MM-DD
+  revenue?: number;
+  cost?: number;
+}
+
+export interface OfferReportEnvelope<T = unknown> {
+  success: boolean;
+  data?: T;
+  trends?: OfferReportsResponse["heroTrends"];
+  meta?: OfferReportsResponse["meta"];
+  total?: number;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+  };
+  error?: string;
+  message?: string;
+}
+
+export type OfferKpiSummary = OfferReportsResponse["summary"] & {
+  sent?: number;
+  delivered?: number;
+  opened?: number;
+  clicked?: number;
+  converted?: number;
+  uniqueConverters?: number;
+  revenue?: number;
+  deliveryRate?: number;
+  openRate?: number;
+  clickRate?: number;
+  conversionRate?: number;
+};
+
+export interface OfferRevenueReport {
+  totalRevenue: number;
+  incrementalRevenue: number;
+  totalRewardCost: number;
+  deliveryCost: number;
+  totalCost: number;
+  roi: number;
+  roiPercent: number;
+  revenuePerContact: number;
+  revenuePerConverter: number;
+  sent?: number;
+  delivered?: number;
+  opened?: number;
+  clicked?: number;
+  converted?: number;
+  uniqueConverters?: number;
+  deliveryRate?: number;
+  openRate?: number;
+  clickRate?: number;
+  conversionRate?: number;
+}
+
+export interface OfferRedemptionRow {
+  status?: string;
+  rewardType?: string;
+  count?: number;
+  totalRewardAmount?: number;
+  totalCost?: number;
+  avgAmount?: number;
+}
+
+export interface OfferABTestRow {
+  test_id?: string | number;
+  test_name?: string;
+  status?: string;
+  variant_id?: string | number;
+  variant_name?: string;
+  traffic_percentage?: number;
+  metric_name?: string;
+  metric_value?: number;
+  sample_size?: number;
+}
+
+export interface OfferEligibility {
+  id?: number;
+  name?: string;
+  code?: string;
+  offerType?: string;
+  maxUsagePerCustomer?: number | null;
+  isReusable?: boolean;
+  validFrom?: string | null;
+  validTo?: string | null;
+  status?: string;
+  totalRedemptions?: number;
+  uniqueRedeemers?: number;
+  totalCost?: number;
+}
+
+export interface OfferLifecycleRow {
+  previous_status?: string;
+  new_status?: string;
+  created_at?: string;
+  changed_by?: string;
+  comments?: string;
+}
+
+export interface OfferCategoryRow {
+  category_id?: string | number;
+  category_name?: string;
+  offer_count?: number;
+  total_conversions?: number;
+  total_revenue?: number;
+  avg_conversion_rate?: number;
+}
+
+export interface OfferSnapshotRefreshResult {
+  upserted: number;
+  computedAt: string;
+}
+
+export interface OfferLegacyPerformance {
+  sent?: number;
+  delivered?: number;
+  opened?: number;
+  clicked?: number;
+  converted?: number;
+  revenue?: number;
+  conversionRate?: number;
+  openRate?: number;
+  clickRate?: number;
 }
 
 // ============================================================================
@@ -395,6 +537,12 @@ export interface SegmentReportsResponse {
     country?: string;
     range?: string;
     grain?: string;
+    preset?: TimeWindowPreset;
+    isCustom?: boolean;
+    warning?: string;
+    previousStartDate?: string;
+    previousEndDate?: string;
+    days?: number;
     startDate?: string;
     endDate?: string;
     computedAt?: string;
@@ -430,6 +578,7 @@ export interface CampaignReportsResponse {
   // Summary metrics
   summary: {
     eligibleAudience: number;
+    executedAudience?: number;
     recipients: number;
     reach: number;
     impressions: number;
@@ -497,6 +646,12 @@ export interface CampaignReportsResponse {
     country?: string;
     range?: string;
     grain?: string;
+    preset?: TimeWindowPreset;
+    isCustom?: boolean;
+    warning?: string;
+    previousStartDate?: string;
+    previousEndDate?: string;
+    days?: number;
     startDate?: string;
     endDate?: string;
     computedAt?: string;
@@ -524,6 +679,8 @@ export interface CampaignRow {
   offer?: string;
   targetGroup: number;
   controlGroup: number;
+  controlGroupPercentage?: number;
+  controlGroupEnabled?: boolean;
   sent: number;
   delivered: number;
   conversions: number; // TG conversions (treatment group)
@@ -532,11 +689,16 @@ export interface CampaignRow {
   tgConversionPercentage?: number; // Target group conversion rate percentage
   cgConversionPercentage?: number; // Control group conversion rate percentage
   lastRunDate: string; // ISO 8601 format: YYYY-MM-DD
+  startDate?: string;
+  endDate?: string;
   status?: string;
   segmentCount?: number;
   offerCount?: number;
   revenue?: number;
   campaignCost?: number;
+  budgetAllocated?: number;
+  currentParticipants?: number;
+  maxParticipants?: number;
 }
 
 export interface CampaignReportEnvelope<T = unknown> {

@@ -11,6 +11,7 @@ export function buildCampaignReportParams(options: {
   grain?: ReportGrain;
   startDate?: string;
   endDate?: string;
+  preset?: ReportQueryParams["preset"];
   campaignId?: string | number;
   page?: number;
   pageSize?: number;
@@ -23,6 +24,7 @@ export function buildCampaignReportParams(options: {
   return {
     range: options.range,
     grain: options.grain || grainFromRange(options.range),
+    preset: options.preset,
     startDate: hasCustomDates ? options.startDate : undefined,
     endDate: hasCustomDates ? options.endDate : undefined,
     campaignId: options.campaignId || undefined,
@@ -36,7 +38,12 @@ export function buildCampaignReportParams(options: {
 }
 
 export function formatTrendLabel(label?: string): string {
-  return label?.replace(" vs prior period", "") || "—";
+  if (!label) return "—";
+  const cleaned = label
+    .replace(/\s*vs last period/gi, "")
+    .replace(/\s*vs prior period/gi, "")
+    .trim();
+  return cleaned || "—";
 }
 
 export function resolveHeroTrend(trend?: {

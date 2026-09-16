@@ -3169,11 +3169,19 @@ export const sw: Translations = {
         objectiveRequired: "Andika lengo wazi ili Gemini iandike ujumbe unaofaa.",
         messageBodyMinWords: "Andika mwili wa ujumbe wa angalau maneno 3 kabla ya kutengeneza.",
         generateFailed: "Imeshindwa kutengeneza maudhui ya ujumbe",
+        modelRequired: "Chagua modeli ya AI kabla ya kutengeneza.",
       },
       hints: {
         variables: "Vigezo Gemini inaweza kuhifadhi",
         channelLimit: "Urefu unaolengwa ni kama herufi {limit}.",
         overwrite: "Ingiza inachukua nafasi ya mwili wa ujumbe wa sasa. Bado unaweza kuhariri baadaye.",
+      },
+      aiModel: {
+        label: "Modeli ya AI",
+        placeholder: "Chagua modeli ya AI iliyosanidiwa",
+        hint: "Inatumia mtoa huduma aliyehifadhiwa kwenye Administration → AI Model Configuration.",
+        noneConfigured:
+          "Hakuna modeli za AI zinazotumika. Sanidi moja kwenye Administration, au uzalishaji utatumia chaguo-msingi la seva.",
       },
     },
     messageBody: {

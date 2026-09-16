@@ -389,6 +389,16 @@ const allConfigurations = [
     navigationPath: "/dashboard/dynamic-message-variables",
   },
   {
+    id: "ai-model-configuration",
+    name: "AI Model Configuration",
+    description:
+      "Configure Gemini, ChatGPT, Anthropic, DeepSeek, Grok and other AI models for message generation",
+    type: "configuration",
+    category: "System Configuration",
+    status: "active",
+    navigationPath: "/dashboard/ai-models",
+  },
+  {
     id: "utilities",
     name: "Utilities",
     description: "Manage utility types like water, electricity, and food",

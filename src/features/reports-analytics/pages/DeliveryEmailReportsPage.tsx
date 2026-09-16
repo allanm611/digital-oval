@@ -1,19 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   AlertTriangle,
   CheckCircle2,
-  Download,
   Inbox,
   Mail,
   MailCheck,
@@ -26,7 +15,7 @@ import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
-import { color, tw } from "../../../shared/utils/utils";
+import { tw } from "../../../shared/utils/utils";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
@@ -36,7 +25,10 @@ import type {
   EmailLogEntry,
 } from "../types/ReportsAPI";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { alignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import ReportChartCard from "../components/ReportChartCard";
+import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
 
 // Extract types from API response type
 type EmailSummary = DeliveryEmailReportsResponse["summary"];
@@ -224,50 +216,8 @@ const emailMessageLogs: EmailLogEntry[] = generateEmailMessageLogs();
 
 const formatNumber = (value: number) => value.toLocaleString("en-US");
 
-type ChartTooltipEntry = {
-  color?: string;
-  name?: string;
-  value?: number | string;
-};
-
-type ChartTooltipProps = {
-  active?: boolean;
-  label?: string;
-  payload?: ChartTooltipEntry[];
-};
-
-const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between gap-4 text-sm"
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-gray-600">{entry.name}</span>
-          </span>
-          <span className="font-semibold text-gray-900">
-            {typeof entry.value === "number"
-              ? formatNumber(entry.value)
-              : entry.value}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
+const toRate = (numerator: number, denominator: number) =>
+  denominator ? Number(((numerator / denominator) * 100).toFixed(2)) : 0;
 
 const rangeDays: Record<RangeOption, number> = {
   "7d": 7,
@@ -341,7 +291,8 @@ export default function DeliveryEmailReportsPage() {
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView } = timeWindow;
+  const { isTrendsView, queryParams, activeWindow } = timeWindow;
+  const chartAudit = toChartAudit(activeWindow);
   const deliveryRange = timeWindow.rangeKey;
   const appliedCustomRange = timeWindow.activeWindow.bounds;
   const customRange = appliedCustomRange;
@@ -412,28 +363,54 @@ export default function DeliveryEmailReportsPage() {
   }, [baseSnapshot, scaleFactor, useDummyData]);
 
   const deliverySnapshot = useMemo(() => {
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
+    };
+    const template =
+      emailMockData[dummyTemplateRange(queryParams.grain || "daily")].deliverySeries;
     if (!useDummyData) {
       return {
         ...baseSnapshot,
-        deliverySeries: baseSnapshot.deliverySeries.map((point) => ({
-          ...point,
-          sent: 0,
-          delivered: 0,
-          converted: 0,
-        })),
+        deliverySeries: alignTrendSeries(
+          template.map((point) => ({ ...point, sent: 0, delivered: 0, converted: 0 })),
+          window,
+        ),
       };
     }
-    if (scaleFactor === 1) return baseSnapshot;
     return {
       ...baseSnapshot,
-      deliverySeries: baseSnapshot.deliverySeries.map((point) => ({
-        ...point,
-        sent: Math.round(point.sent * scaleFactor),
-        delivered: Math.round(point.delivered * scaleFactor),
-        converted: Math.round(point.converted * scaleFactor),
-      })),
+      deliverySeries: alignTrendSeries(template, window),
     };
-  }, [baseSnapshot, scaleFactor, useDummyData]);
+  }, [
+    baseSnapshot,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.grain,
+    useDummyData,
+  ]);
+
+  const deliveryRateSeries = useMemo(
+    () =>
+      deliverySnapshot.deliverySeries.map((point) => ({
+        period: point.period,
+        date: point.date,
+        deliveryRate: toRate(point.delivered, point.sent),
+        conversionRate: toRate(point.converted, point.delivered),
+      })),
+    [deliverySnapshot.deliverySeries],
+  );
+
+  const deliveryComparison = useMemo(
+    () =>
+      useDummyData ? dummyPreviousPeriod(deliverySnapshot.deliverySeries) : undefined,
+    [deliverySnapshot.deliverySeries, useDummyData],
+  );
+  const deliveryRateComparison = useMemo(
+    () => (useDummyData ? dummyPreviousPeriod(deliveryRateSeries) : undefined),
+    [deliveryRateSeries, useDummyData],
+  );
 
   const filteredLogs = useMemo(() => {
     const now = Date.now();
@@ -658,6 +635,7 @@ export default function DeliveryEmailReportsPage() {
         />
       </header>
 
+      {!isTrendsView && (
       <section>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {summaryStats.map((stat) => (
@@ -682,78 +660,82 @@ export default function DeliveryEmailReportsPage() {
           ))}
         </div>
       </section>
+      )}
 
       {isTrendsView && (
-      <section
-        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-      >
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Email Delivery Funnel
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Track sent, delivered, and conversions across timelines
-            </p>
-          </div>
-        </div>
-        <div className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={deliverySnapshot.deliverySeries}
-              margin={{ top: 20, right: 30, left: 24, bottom: 0 }}
-              barCategoryGap="25%"
-              barGap={8}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="period"
-                tick={{ fill: "#6b7280" }}
-                axisLine={{ stroke: "#e5e7eb" }}
-              />
-              <YAxis
-                tick={{ fill: "#6b7280" }}
-                axisLine={{ stroke: "#e5e7eb" }}
-                label={{
-                  value: "Email Count",
-                  angle: -90,
-                  position: "insideLeft",
-                }}
-                width={90}
-                tickFormatter={(value) => formatNumber(value)}
-              />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "transparent" }}
-              />
-              <Legend
-                wrapperStyle={{ paddingTop: "20px", gap: "20px" }}
-                iconType="circle"
-              />
-              <Bar
-                dataKey="sent"
-                name="Sent"
-                fill={colors.reportCharts.deliveryEmail.emailDelivery.sent}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={50}
-              />
-              <Bar
-                dataKey="delivered"
-                name="Delivered"
-                fill={colors.reportCharts.deliveryEmail.emailDelivery.delivered}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={50}
-              />
-              <Bar
-                dataKey="converted"
-                name="Converted"
-                fill={colors.reportCharts.deliveryEmail.emailDelivery.converted}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={50}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <section className="grid gap-6 lg:grid-cols-2">
+        <ReportChartCard
+          title="Email Delivery Funnel"
+          subtitle="Track sent, delivered, and conversions across timelines"
+          filename="email-delivery-funnel.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "sent", label: "Sent" },
+            { key: "delivered", label: "Delivered" },
+            { key: "converted", label: "Converted" },
+          ]}
+          rows={deliverySnapshot.deliverySeries}
+        >
+          <ReportGroupedBarChart
+            data={deliverySnapshot.deliverySeries}
+            xKey="period"
+            yLabel="Email Count"
+            yTickFormatter={formatNumber}
+            comparisonData={deliveryComparison}
+            series={[
+              {
+                dataKey: "sent",
+                name: "Sent",
+                color: colors.reportCharts.deliveryEmail.emailDelivery.sent,
+              },
+              {
+                dataKey: "delivered",
+                name: "Delivered",
+                color: colors.reportCharts.deliveryEmail.emailDelivery.delivered,
+              },
+              {
+                dataKey: "converted",
+                name: "Converted",
+                color: colors.reportCharts.deliveryEmail.emailDelivery.converted,
+              },
+            ]}
+          />
+        </ReportChartCard>
+        <ReportChartCard
+          title="Inbox Placement & Conversion"
+          subtitle="Rates derived from the funnel series for the selected window"
+          filename="email-delivery-rates.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "deliveryRate", label: "Inbox Placement %" },
+            { key: "conversionRate", label: "Conversion Rate %" },
+          ]}
+          rows={deliveryRateSeries}
+        >
+          <ReportGroupedBarChart
+            data={deliveryRateSeries}
+            xKey="period"
+            yLabel="Rate (%)"
+            valueFormatter={(value) => `${value}%`}
+            comparisonData={deliveryRateComparison}
+            series={[
+              {
+                dataKey: "deliveryRate",
+                name: "Inbox Placement %",
+                color: colors.reportCharts.deliveryEmail.emailDelivery.delivered,
+              },
+              {
+                dataKey: "conversionRate",
+                name: "Conversion Rate %",
+                color: colors.reportCharts.deliveryEmail.emailDelivery.converted,
+              },
+            ]}
+          />
+        </ReportChartCard>
       </section>
       )}
 

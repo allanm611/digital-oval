@@ -23,6 +23,8 @@ type OverflowScrollAreaProps = {
   role?: string;
   ariaLabel?: string;
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+  /** Fade overlay color when content overflows. Defaults to the page background. */
+  fadeColor?: string;
 };
 
 function prefersReducedMotion(): boolean {
@@ -36,7 +38,7 @@ function scrollActiveItemHorizontally(
 ) {
   const scrollerRect = scroller.getBoundingClientRect();
   const activeRect = active.getBoundingClientRect();
-  const edgePadding = 12;
+  const edgePadding = 48;
 
   if (activeRect.left < scrollerRect.left + edgePadding) {
     scroller.scrollBy({
@@ -70,6 +72,7 @@ export default function OverflowScrollArea({
   role,
   ariaLabel,
   onKeyDown,
+  fadeColor = "var(--c-primary-background, #e5e7eb)",
 }: OverflowScrollAreaProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { hasOverflow, isAtStart, isAtEnd } = useHorizontalOverflow(
@@ -112,6 +115,7 @@ export default function OverflowScrollArea({
         <HorizontalScrollHint
           direction="start"
           align="center"
+          size="lg"
           hint={hint}
           onClick={() => scrollByDirection("start")}
         />
@@ -120,6 +124,7 @@ export default function OverflowScrollArea({
         <HorizontalScrollHint
           direction="end"
           align="center"
+          size="lg"
           hint={hint}
           onClick={() => scrollByDirection("end")}
         />
@@ -127,20 +132,18 @@ export default function OverflowScrollArea({
       {hasOverflow && !isAtStart ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 w-8 z-10"
+          className="pointer-events-none absolute inset-y-0 left-0 w-14 z-10"
           style={{
-            background:
-              "linear-gradient(to right, var(--c-primary-background, #e5e7eb), transparent)",
+            background: `linear-gradient(to right, ${fadeColor}, transparent)`,
           }}
         />
       ) : null}
       {hasOverflow && !isAtEnd ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-8 z-10"
+          className="pointer-events-none absolute inset-y-0 right-0 w-14 z-10"
           style={{
-            background:
-              "linear-gradient(to left, var(--c-primary-background, #e5e7eb), transparent)",
+            background: `linear-gradient(to left, ${fadeColor}, transparent)`,
           }}
         />
       ) : null}
@@ -155,14 +158,16 @@ export default function OverflowScrollArea({
             ? "[&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]"
             : ""
         } ${contentClassName}`}
-        style={
-          hideScrollbar
+        style={{
+          ...(hideScrollbar
             ? {
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
+                scrollbarWidth: "none" as const,
+                msOverflowStyle: "none" as const,
               }
-            : undefined
-        }
+            : undefined),
+          paddingLeft: hasOverflow && !isAtStart ? 44 : undefined,
+          paddingRight: hasOverflow && !isAtEnd ? 44 : undefined,
+        }}
       >
         {children}
       </div>

@@ -3563,11 +3563,19 @@ export const en: Translations = {
         objectiveRequired: "Enter a clear objective so Gemini can write on-brief copy.",
         messageBodyMinWords: "Enter a Message Body of at least 3 words before generating.",
         generateFailed: "Could not generate message content",
+        modelRequired: "Select an AI model before generating.",
       },
       hints: {
         variables: "Variables Gemini may keep",
         channelLimit: "Target length is about {limit} characters.",
         overwrite: "Insert replaces the current Message Body. You can still edit it afterwards.",
+      },
+      aiModel: {
+        label: "AI model",
+        placeholder: "Select a configured AI model",
+        hint: "Uses the provider saved under Administration → AI Model Configuration.",
+        noneConfigured:
+          "No active AI models yet. Configure one under Administration, or generation will use the server default.",
       },
     },
     messageBody: {

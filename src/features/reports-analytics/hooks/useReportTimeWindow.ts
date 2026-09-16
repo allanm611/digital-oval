@@ -9,6 +9,7 @@ import {
   DEFAULT_SUB_PRESET,
   OVERVIEW_SUB_PRESET,
   formatWindowLabel,
+  grainForPreset,
   getScaleFactor,
   presetBelongsToGrain,
   resolveTimeWindow,
@@ -16,23 +17,70 @@ import {
   toReportQueryParams,
   validateDateRange,
   type LocalDateBounds,
+  type ResolvedTimeWindow,
 } from "../utils/reportTimeWindow";
 import {
   createSavedReportDateRange,
   filterSavedRangesForGrain,
+  inferSavedRangeGrain,
   loadSavedReportDateRanges,
   MAX_SAVED_REPORT_RANGES_PER_GRAIN,
   persistSavedReportDateRanges,
 } from "../utils/savedReportDateRanges";
 
+type PickerTarget = "overview" | "trends";
+
+function resolveSelection(options: {
+  grain: ReportGrain;
+  preset: TimeWindowPreset;
+  customBounds: LocalDateBounds;
+  savedRangeId: string | null;
+  savedRanges: SavedReportDateRange[];
+}): ResolvedTimeWindow {
+  if (options.savedRangeId) {
+    const saved = options.savedRanges.find(
+      (item) =>
+        item.id === options.savedRangeId && item.grain === options.grain,
+    );
+    if (saved) {
+      return resolveTimeWindow("custom", {
+        custom: { start: saved.startDate, end: saved.endDate },
+        grain: saved.grain,
+      });
+    }
+  }
+  return resolveTimeWindow(options.preset, {
+    custom: options.preset === "custom" ? options.customBounds : undefined,
+    grain: options.grain,
+  });
+}
+
+/**
+ * Overview owns named calendar windows (Today, Last 7 days, This month, …).
+ * Trends owns Daily/Weekly/Monthly grain plus custom/saved ranges.
+ * The two windows stay independent so tables can keep the Overview snapshot
+ * while Trends explores a different series grain.
+ */
 export function useReportTimeWindow(options?: {
   overviewPreset?: ReportGrain;
   defaultTrendsPreset?: ReportGrain;
 }) {
-  const overviewGrain = options?.overviewPreset ?? "weekly";
+  const initialOverviewGrain = options?.overviewPreset ?? "weekly";
   const defaultTrendsGrain = options?.defaultTrendsPreset ?? "daily";
 
   const [view, setView] = useState<ReportViewMode>("overview");
+
+  const [overviewGrain, setOverviewGrain] =
+    useState<ReportGrain>(initialOverviewGrain);
+  const [overviewPreset, setOverviewPreset] = useState<TimeWindowPreset>(
+    OVERVIEW_SUB_PRESET[initialOverviewGrain],
+  );
+  const [overviewCustomBounds, setOverviewCustomBounds] =
+    useState<LocalDateBounds>({ start: "", end: "" });
+  const [overviewSavedRangeId, setOverviewSavedRangeId] = useState<
+    string | null
+  >(null);
+
   const [grainTab, setGrainTab] = useState<ReportGrain>(defaultTrendsGrain);
   const [trendsPreset, setTrendsPreset] = useState<TimeWindowPreset>(
     DEFAULT_SUB_PRESET[defaultTrendsGrain],
@@ -45,6 +93,8 @@ export function useReportTimeWindow(options?: {
   const [savedRanges, setSavedRanges] = useState<SavedReportDateRange[]>(
     loadSavedReportDateRanges,
   );
+
+  const [pickerTarget, setPickerTarget] = useState<PickerTarget>("overview");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [draftRange, setDraftRange] = useState<LocalDateBounds>({
     start: "",
@@ -55,40 +105,49 @@ export function useReportTimeWindow(options?: {
   const [pickerWarning, setPickerWarning] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
+  const pickerGrain =
+    pickerTarget === "overview" ? overviewGrain : grainTab;
+
   const overviewWindow = useMemo(
     () =>
-      resolveTimeWindow(OVERVIEW_SUB_PRESET[overviewGrain], {
+      resolveSelection({
         grain: overviewGrain,
+        preset: overviewPreset,
+        customBounds: overviewCustomBounds,
+        savedRangeId: overviewSavedRangeId,
+        savedRanges,
       }),
-    [overviewGrain],
+    [
+      overviewCustomBounds,
+      overviewGrain,
+      overviewPreset,
+      overviewSavedRangeId,
+      savedRanges,
+    ],
   );
 
-  const trendsWindow = useMemo(() => {
-    if (savedRangeId) {
-      const saved = savedRanges.find(
-        (item) => item.id === savedRangeId && item.grain === grainTab,
-      );
-      if (saved) {
-        return resolveTimeWindow("custom", {
-          custom: { start: saved.startDate, end: saved.endDate },
-          grain: saved.grain,
-        });
-      }
-    }
-    return resolveTimeWindow(trendsPreset, {
-      custom: trendsPreset === "custom" ? customBounds : undefined,
-      grain: grainTab,
-    });
-  }, [customBounds, grainTab, savedRangeId, savedRanges, trendsPreset]);
+  const trendsWindow = useMemo(
+    () =>
+      resolveSelection({
+        grain: grainTab,
+        preset: trendsPreset,
+        customBounds,
+        savedRangeId,
+        savedRanges,
+      }),
+    [customBounds, grainTab, savedRangeId, savedRanges, trendsPreset],
+  );
 
   const activeWindow = view === "trends" ? trendsWindow : overviewWindow;
 
   const openPicker = useCallback(
-    (grain: ReportGrain) => {
+    (target: PickerTarget) => {
+      const grain = target === "overview" ? overviewGrain : grainTab;
+      const bounds =
+        target === "overview" ? overviewCustomBounds : customBounds;
       const seed =
-        customBounds.start && customBounds.end && grainTab === grain
-          ? customBounds
-          : seedCustomBounds(grain);
+        bounds.start && bounds.end ? bounds : seedCustomBounds(grain);
+      setPickerTarget(target);
       setDraftRange(seed);
       setDraftName("");
       setPickerError(null);
@@ -96,14 +155,62 @@ export function useReportTimeWindow(options?: {
       setSaveMessage(null);
       setIsPickerOpen(true);
     },
-    [customBounds, grainTab],
+    [customBounds, grainTab, overviewCustomBounds, overviewGrain],
+  );
+
+  const selectOverviewGrain = useCallback(
+    (grain: ReportGrain) => {
+      setOverviewGrain(grain);
+      setOverviewSavedRangeId(null);
+      if (
+        !presetBelongsToGrain(overviewPreset, grain) ||
+        overviewPreset === "custom"
+      ) {
+        setOverviewPreset(OVERVIEW_SUB_PRESET[grain]);
+        setOverviewCustomBounds({ start: "", end: "" });
+      }
+    },
+    [overviewPreset],
+  );
+
+  const selectOverviewPreset = useCallback(
+    (preset: TimeWindowPreset) => {
+      setOverviewSavedRangeId(null);
+      if (preset !== "custom") {
+        setOverviewGrain(grainForPreset(preset));
+      }
+      setOverviewPreset(preset);
+      if (preset === "custom") {
+        openPicker("overview");
+        return;
+      }
+      setOverviewCustomBounds({ start: "", end: "" });
+    },
+    [openPicker],
+  );
+
+  const selectOverviewSavedRange = useCallback(
+    (range: SavedReportDateRange) => {
+      setOverviewGrain(range.grain);
+      setOverviewSavedRangeId(range.id);
+      setOverviewPreset("custom");
+      setOverviewCustomBounds({
+        start: range.startDate,
+        end: range.endDate,
+      });
+      setIsPickerOpen(false);
+    },
+    [],
   );
 
   const selectGrainTab = useCallback(
     (grain: ReportGrain) => {
       setGrainTab(grain);
       setSavedRangeId(null);
-      if (!presetBelongsToGrain(trendsPreset, grain) || trendsPreset === "custom") {
+      if (
+        !presetBelongsToGrain(trendsPreset, grain) ||
+        trendsPreset === "custom"
+      ) {
         setTrendsPreset(DEFAULT_SUB_PRESET[grain]);
         setCustomBounds({ start: "", end: "" });
       }
@@ -116,25 +223,32 @@ export function useReportTimeWindow(options?: {
       setSavedRangeId(null);
       setTrendsPreset(preset);
       if (preset === "custom") {
-        openPicker(grainTab);
+        openPicker("trends");
         return;
       }
       setCustomBounds({ start: "", end: "" });
     },
-    [grainTab, openPicker],
+    [openPicker],
   );
 
-  const selectSavedRange = useCallback((range: SavedReportDateRange) => {
-    if (range.grain !== grainTab) return;
-    setSavedRangeId(range.id);
-    setTrendsPreset("custom");
-    setCustomBounds({ start: range.startDate, end: range.endDate });
-    setIsPickerOpen(false);
-  }, [grainTab]);
+  const selectSavedRange = useCallback(
+    (range: SavedReportDateRange) => {
+      if (range.grain !== grainTab) return;
+      setSavedRangeId(range.id);
+      setTrendsPreset("custom");
+      setCustomBounds({ start: range.startDate, end: range.endDate });
+      setIsPickerOpen(false);
+    },
+    [grainTab],
+  );
 
   const applyDraftRange = useCallback(() => {
+    const grain =
+      pickerTarget === "overview"
+        ? inferSavedRangeGrain(draftRange.start, draftRange.end)
+        : pickerGrain;
     const result = validateDateRange(draftRange.start, draftRange.end, {
-      grain: grainTab,
+      grain,
     });
     if (!result.ok) {
       setPickerError(result.error || "Invalid date range.");
@@ -143,16 +257,27 @@ export function useReportTimeWindow(options?: {
     }
     setPickerError(null);
     setPickerWarning(result.warning || null);
-    setCustomBounds(draftRange);
-    setSavedRangeId(null);
-    setTrendsPreset("custom");
+    if (pickerTarget === "overview") {
+      setOverviewGrain(grain);
+      setOverviewCustomBounds(draftRange);
+      setOverviewSavedRangeId(null);
+      setOverviewPreset("custom");
+    } else {
+      setCustomBounds(draftRange);
+      setSavedRangeId(null);
+      setTrendsPreset("custom");
+    }
     setIsPickerOpen(false);
     return true;
-  }, [draftRange, grainTab]);
+  }, [draftRange, pickerGrain, pickerTarget]);
 
   const saveDraftRange = useCallback(() => {
+    const savedGrain =
+      pickerTarget === "overview"
+        ? inferSavedRangeGrain(draftRange.start, draftRange.end)
+        : pickerGrain;
     const result = validateDateRange(draftRange.start, draftRange.end, {
-      grain: grainTab,
+      grain: savedGrain,
     });
     if (!result.ok) {
       setPickerError(result.error || "Invalid date range.");
@@ -163,44 +288,48 @@ export function useReportTimeWindow(options?: {
       setPickerError("Name this range before saving.");
       return false;
     }
-    const rangesForGrain = filterSavedRangesForGrain(savedRanges, grainTab);
+    const rangesForGrain = filterSavedRangesForGrain(savedRanges, savedGrain);
     if (
       rangesForGrain.some(
         (item) => item.name.toLowerCase() === name.toLowerCase(),
       )
     ) {
       setPickerError(
-        `A saved ${grainTab} range with this name already exists.`,
+        `A saved ${savedGrain} range with this name already exists.`,
       );
       return false;
     }
     if (rangesForGrain.length >= MAX_SAVED_REPORT_RANGES_PER_GRAIN) {
       setPickerError(
-        `You can save up to ${MAX_SAVED_REPORT_RANGES_PER_GRAIN} custom ranges under ${grainTab}.`,
+        `You can save up to ${MAX_SAVED_REPORT_RANGES_PER_GRAIN} custom ranges under ${savedGrain}.`,
       );
       return false;
     }
-    const next = [
-      createSavedReportDateRange({
-        name,
-        startDate: draftRange.start,
-        endDate: draftRange.end,
-        grain: grainTab,
-      }),
-      ...savedRanges,
-    ];
+    const created = createSavedReportDateRange({
+      name,
+      startDate: draftRange.start,
+      endDate: draftRange.end,
+      grain: savedGrain,
+    });
+    const next = [created, ...savedRanges];
     persistSavedReportDateRanges(next);
     setSavedRanges(next);
-    setSavedRangeId(next[0].id);
-    setGrainTab(grainTab);
-    setTrendsPreset("custom");
-    setCustomBounds(draftRange);
+    if (pickerTarget === "overview") {
+      setOverviewGrain(savedGrain);
+      setOverviewSavedRangeId(created.id);
+      setOverviewPreset("custom");
+      setOverviewCustomBounds(draftRange);
+    } else {
+      setSavedRangeId(created.id);
+      setTrendsPreset("custom");
+      setCustomBounds(draftRange);
+    }
     setDraftName("");
     setPickerError(null);
     setPickerWarning(result.warning || null);
     setSaveMessage(`Saved “${name}”.`);
     return true;
-  }, [draftName, draftRange, grainTab, savedRanges]);
+  }, [draftName, draftRange, pickerGrain, pickerTarget, savedRanges]);
 
   const deleteSavedRange = useCallback(
     (id: string) => {
@@ -212,8 +341,19 @@ export function useReportTimeWindow(options?: {
         setTrendsPreset(DEFAULT_SUB_PRESET[grainTab]);
         setCustomBounds({ start: "", end: "" });
       }
+      if (overviewSavedRangeId === id) {
+        setOverviewSavedRangeId(null);
+        setOverviewPreset(OVERVIEW_SUB_PRESET[overviewGrain]);
+        setOverviewCustomBounds({ start: "", end: "" });
+      }
     },
-    [grainTab, savedRangeId, savedRanges],
+    [
+      grainTab,
+      overviewGrain,
+      overviewSavedRangeId,
+      savedRangeId,
+      savedRanges,
+    ],
   );
 
   const setViewMode = useCallback((next: ReportViewMode) => {
@@ -225,6 +365,8 @@ export function useReportTimeWindow(options?: {
     [activeWindow.dayCount, activeWindow.rangeKey],
   );
 
+  const overviewSavedRanges = savedRanges;
+
   const grainSavedRanges = useMemo(
     () => filterSavedRangesForGrain(savedRanges, grainTab),
     [grainTab, savedRanges],
@@ -234,6 +376,12 @@ export function useReportTimeWindow(options?: {
     view,
     setView: setViewMode,
     isTrendsView: view === "trends",
+    overviewGrain,
+    selectOverviewGrain,
+    overviewPreset,
+    overviewSavedRangeId,
+    selectOverviewPreset,
+    selectOverviewSavedRange,
     grainTab,
     selectGrainTab,
     trendsPreset,
@@ -252,8 +400,9 @@ export function useReportTimeWindow(options?: {
     overviewQueryParams: toReportQueryParams(overviewWindow),
     trendsQueryParams: toReportQueryParams(trendsWindow),
     savedRanges: grainSavedRanges,
+    overviewSavedRanges,
     isPickerOpen,
-    openPicker: () => openPicker(grainTab),
+    openPicker: () => openPicker(view === "trends" ? "trends" : "overview"),
     closePicker: () => setIsPickerOpen(false),
     draftRange,
     setDraftRange,
@@ -265,6 +414,8 @@ export function useReportTimeWindow(options?: {
     pickerError,
     pickerWarning,
     saveMessage,
+    pickerGrain,
+    pickerTarget,
   };
 }
 

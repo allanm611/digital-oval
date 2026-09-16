@@ -30,6 +30,8 @@ import {
   snapshotAiSession,
 } from "../utils/aiPromptPreview";
 import type { CreativeChannel } from "../types/offerCreative";
+import { aiModelConfigurationService } from "../../administration/services/aiModelConfigurationService";
+import type { AiModelGenerateOption } from "../../administration/types/aiModelConfiguration";
 import AiGeneratedMessageResultModal, {
   AiPromptAccordion,
 } from "./AiGeneratedMessageResultModal";
@@ -81,6 +83,8 @@ export default function AiGenerateMessageModal({
   const [generatedBody, setGeneratedBody] = useState("");
   const [view, setView] = useState<"compose" | "result">("compose");
   const [showPromptPreview, setShowPromptPreview] = useState(false);
+  const [aiModels, setAiModels] = useState<AiModelGenerateOption[]>([]);
+  const [selectedAiModelId, setSelectedAiModelId] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const wasOpenRef = useRef(false);
 
@@ -160,6 +164,27 @@ export default function AiGenerateMessageModal({
   }, [isOpen, existingBody, initialSession, initialView]);
 
   useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    aiModelConfigurationService
+      .listForGenerate()
+      .then((items) => {
+        if (cancelled) return;
+        setAiModels(items);
+        setSelectedAiModelId((prev) => {
+          if (prev && items.some((item) => item.id === prev)) return prev;
+          return items.find((item) => item.is_default)?.id || items[0]?.id || "";
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setAiModels([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     return () => abortRef.current?.abort("cancelled");
   }, []);
 
@@ -183,6 +208,11 @@ export default function AiGenerateMessageModal({
       setView("compose");
       return;
     }
+    if (aiModels.length > 0 && !selectedAiModelId) {
+      setFormError(copy.errors.modelRequired);
+      setView("compose");
+      return;
+    }
 
     abortRef.current?.abort("cancelled");
     const controller = new AbortController();
@@ -198,6 +228,7 @@ export default function AiGenerateMessageModal({
     setIsGenerating(true);
 
     try {
+      const selectedModel = aiModels.find((item) => item.id === selectedAiModelId);
       const result = await aiCreativeGenerationService.generate(
         {
           channel,
@@ -217,6 +248,9 @@ export default function AiGenerateMessageModal({
           existingBody: messageBody.trim(),
           availableVariables: mergedVariables,
           variantCount: 3,
+          aiModelConfigurationId: selectedModel?.id,
+          provider: selectedModel?.provider_id,
+          model: selectedModel?.model,
         },
         { signal: controller.signal },
       );
@@ -285,8 +319,31 @@ export default function AiGenerateMessageModal({
 
   const modalTitle = view === "result" ? copy.resultTitle : copy.modalTitle;
 
+  const aiModelOptions = aiModels.map((item) => ({
+    value: item.id,
+    label: `${item.name} · ${item.model}${item.is_default ? " (default)" : ""}`,
+  }));
+
   const promptFields = (
     <>
+      {aiModels.length > 0 ? (
+        <div>
+          <HeadlessSelect
+            label={copy.aiModel.label}
+            value={selectedAiModelId}
+            onChange={(value) => {
+              setSelectedAiModelId(String(value));
+              if (formError === copy.errors.modelRequired) setFormError("");
+            }}
+            options={aiModelOptions}
+            placeholder={copy.aiModel.placeholder}
+            zIndex={zIndex.popover}
+          />
+          <p className="text-xs text-gray-500 mt-1">{copy.aiModel.hint}</p>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-500">{copy.aiModel.noneConfigured}</p>
+      )}
       <Textarea
         label={copy.sourceBody.label}
         value={messageBody}

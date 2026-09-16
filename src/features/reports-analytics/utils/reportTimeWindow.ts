@@ -63,16 +63,57 @@ export const TREND_SUB_PRESETS: Record<ReportGrain, TrendSubPreset[]> = {
 
 export const DEFAULT_SUB_PRESET: Record<ReportGrain, TimeWindowPreset> = {
   daily: "last_7_days",
-  weekly: "this_week",
-  monthly: "this_month",
+  weekly: "last_8_weeks",
+  monthly: "last_6_months",
 };
 
-/** Stable overview windows: enough points for charts without tying to Trends exploration. */
+/** Dummy templates still keyed 7d/30d/90d: map grain to the matching shape. */
+export function dummyTemplateRange(grain: ReportGrain): RangeOption {
+  if (grain === "weekly") return "30d";
+  if (grain === "monthly") return "90d";
+  return "7d";
+}
+
+/**
+ * Default Overview chips when a report page first loads.
+ * Kept separate from Trends so snapshot KPIs/tables do not jump to "today".
+ */
 export const OVERVIEW_SUB_PRESET: Record<ReportGrain, TimeWindowPreset> = {
   daily: "last_7_days",
   weekly: "last_4_weeks",
   monthly: "last_3_months",
 };
+
+export function namedRangePresets(grain: ReportGrain): TrendSubPreset[] {
+  return TREND_SUB_PRESETS[grain];
+}
+
+/** Daily + weekly + monthly snapshot chips, with a single Custom at the end. */
+export function allNamedRangePresets(): TrendSubPreset[] {
+  const presets: TrendSubPreset[] = [];
+  for (const grain of TREND_GRAIN_TABS) {
+    for (const preset of TREND_SUB_PRESETS[grain.id]) {
+      if (preset.id === "custom") continue;
+      presets.push(preset);
+    }
+  }
+  presets.push({
+    id: "custom",
+    label: "Custom",
+    hint: "Pick From / To",
+  });
+  return presets;
+}
+
+export function customRangePreset(grain: ReportGrain): TrendSubPreset {
+  return (
+    TREND_SUB_PRESETS[grain].find((item) => item.id === "custom") || {
+      id: "custom",
+      label: "Custom",
+      hint: "Pick From / To",
+    }
+  );
+}
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MAX_LOOKBACK_YEARS = 2;
@@ -290,12 +331,13 @@ export function resolveTimeWindow(
 
 export function toReportQueryParams(
   window: ResolvedTimeWindow,
-): Pick<ReportQueryParams, "range" | "grain" | "startDate" | "endDate"> {
+): Pick<ReportQueryParams, "range" | "grain" | "startDate" | "endDate" | "preset"> {
   return {
     range: window.rangeKey,
     grain: window.grain,
     startDate: window.bounds.start,
     endDate: window.bounds.end,
+    preset: window.preset,
   };
 }
 
@@ -378,4 +420,232 @@ export function seedCustomBounds(grain: ReportGrain, now = new Date()): LocalDat
   if (grain === "weekly") return boundsForPreset("last_4_weeks", undefined, now);
   if (grain === "monthly") return boundsForPreset("last_3_months", undefined, now);
   return boundsForPreset("last_7_days", undefined, now);
+}
+
+const MAX_TREND_BUCKETS: Record<ReportGrain, number> = {
+  daily: 92,
+  weekly: 53,
+  monthly: 24,
+};
+
+export function enumerateTrendBuckets(
+  startDate: string,
+  endDate: string,
+  grain: ReportGrain,
+): string[] {
+  const start = parseISODate(startDate);
+  const end = parseISODate(endDate);
+  const dates: string[] = [];
+  if (!start || !end || start > end) return dates;
+  const max = MAX_TREND_BUCKETS[grain];
+
+  if (grain === "daily") {
+    for (let cursor = start; cursor <= end && dates.length < max; cursor = addLocalDays(cursor, 1)) {
+      dates.push(formatISODate(cursor));
+    }
+    return dates;
+  }
+
+  if (grain === "weekly") {
+    for (
+      let cursor = startOfIsoWeek(start);
+      cursor <= end && dates.length < max;
+      cursor = addLocalDays(cursor, 7)
+    ) {
+      dates.push(formatISODate(cursor));
+    }
+    return dates;
+  }
+
+  for (
+    let cursor = startOfMonth(start);
+    cursor <= end && dates.length < max;
+    cursor = addLocalMonths(cursor, 1)
+  ) {
+    dates.push(formatISODate(cursor));
+  }
+  return dates;
+}
+
+export function labelTrendBucket(
+  isoDate: string,
+  grain: ReportGrain,
+  spanDays: number,
+): string {
+  const date = parseISODate(isoDate);
+  if (!date) return isoDate;
+  if (grain === "daily") {
+    if (spanDays <= 7) return date.toLocaleDateString("en-US", { weekday: "short" });
+    return date.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+  }
+  if (grain === "weekly") {
+    return `Week of ${date.toLocaleDateString("en-US", { day: "numeric", month: "short" })}`;
+  }
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    ...(spanDays > 366 ? { year: "numeric" as const } : {}),
+  });
+}
+
+/** Compact tick text. Tooltip/table still use the full period string when provided. */
+export function shortenAxisLabel(label: string): string {
+  const weekOf = /^Week of\s+(.+)$/i.exec(label.trim());
+  if (weekOf) return weekOf[1];
+  if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i.test(label)) {
+    const date = new Date(`${label} 1, 2000`);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString("en-US", { month: "short" });
+    }
+  }
+  return label;
+}
+
+export function shouldChartUseFullRow(
+  pointCount: number,
+  labels: Array<string | number> = [],
+): boolean {
+  if (pointCount >= 7) return true;
+  const longest = labels.reduce((max, label) => Math.max(max, String(label).length), 0);
+  return pointCount >= 6 && longest >= 10;
+}
+
+export interface CampaignTrendPoint {
+  period: string;
+  date?: string;
+  ctr: number;
+  engagement: number;
+  revenue?: number;
+  spend?: number;
+  target?: number;
+}
+
+const RUNNING_TOTAL_PAIRS: Array<[string, string]> = [
+  ["redemptions", "cumulativeRedemptions"],
+  ["members", "cumulativeMembers"],
+];
+
+function recomputeRunningTotals<T extends Record<string, unknown>>(rows: T[]): T[] {
+  for (const [from, to] of RUNNING_TOTAL_PAIRS) {
+    if (!rows.some((row) => typeof row[from] === "number")) continue;
+    let running = 0;
+    for (const row of rows) {
+      running += Number(row[from] || 0);
+      (row as Record<string, unknown>)[to] = running;
+    }
+  }
+  return rows;
+}
+
+export type TrendSeriesPoint = Record<string, string | number | null | undefined> & {
+  period?: string;
+  date?: string;
+};
+
+/**
+ * Align a time series to the selected window + grain.
+ * Live rows with ISO `date` values are matched to buckets (missing buckets = 0).
+ * Dummy templates without dates are projected by index onto those buckets so
+ * Daily/Weekly/Monthly never reuse the wrong 7d/30d/90d shape.
+ */
+export function alignTrendSeries<T extends TrendSeriesPoint>(
+  points: T[] = [],
+  options: { startDate?: string; endDate?: string; grain?: ReportGrain } = {},
+): Array<T & { period: string; date: string }> {
+  const { startDate, endDate, grain } = options;
+  if (!startDate || !endDate || !grain) {
+    return points as Array<T & { period: string; date: string }>;
+  }
+  const buckets = enumerateTrendBuckets(startDate, endDate, grain);
+  if (!buckets.length) {
+    return points as Array<T & { period: string; date: string }>;
+  }
+
+  const spanDays = getInclusiveDayCount(startDate, endDate) ?? buckets.length;
+  const byDate = new Map<string, T>();
+  for (const point of points) {
+    const key = String(point.date || "").slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(key)) byDate.set(key, point);
+  }
+  const matchByDate = byDate.size > 0;
+  const numericKeys = new Set<string>();
+  for (const point of points) {
+    for (const [key, value] of Object.entries(point)) {
+      if (typeof value === "number") numericKeys.add(key);
+    }
+  }
+
+  const rows = buckets.map((iso, index) => {
+    const period = labelTrendBucket(iso, grain, spanDays);
+    if (matchByDate) {
+      const existing = byDate.get(iso);
+      if (existing) return { ...existing, period, date: iso };
+      const empty: Record<string, unknown> = { period, date: iso };
+      for (const key of numericKeys) empty[key] = 0;
+      return empty as T & { period: string; date: string };
+    }
+    if (points.length) {
+      return { ...points[index % points.length], period, date: iso };
+    }
+    const empty: Record<string, unknown> = { period, date: iso };
+    for (const key of numericKeys) empty[key] = 0;
+    return empty as T & { period: string; date: string };
+  });
+
+  return recomputeRunningTotals(rows);
+}
+
+export function fillCampaignTrendSeries<T extends CampaignTrendPoint>(
+  points: T[] = [],
+  options: { startDate?: string; endDate?: string; grain?: ReportGrain } = {},
+): Array<T & CampaignTrendPoint> {
+  return alignTrendSeries(points, options).map((point) => ({
+    ...point,
+    ctr: Number(point.ctr || 0),
+    engagement: Number(point.engagement || 0),
+    revenue: Number(point.revenue || 0),
+    spend: Number(point.spend || 0),
+  })) as Array<T & CampaignTrendPoint>;
+}
+
+export function previousWindowFrom(window: ResolvedTimeWindow): ResolvedTimeWindow {
+  const start = parseISODate(window.bounds.start);
+  if (!start) return window;
+  const prevEnd = addLocalDays(start, -1);
+  const prevStart = addLocalDays(prevEnd, -(window.dayCount - 1));
+  const bounds = {
+    start: formatISODate(prevStart),
+    end: formatISODate(prevEnd),
+  };
+  return {
+    ...window,
+    preset: "custom",
+    bounds,
+    dayCount: getInclusiveDayCount(bounds.start, bounds.end) ?? window.dayCount,
+    rangeKey: mapDaysToRange(getInclusiveDayCount(bounds.start, bounds.end)),
+  };
+}
+
+/** Dummy-only previous-period overlay. Live data should come from a second API window. */
+export function dummyPreviousPeriod<T extends TrendSeriesPoint>(
+  rows: T[],
+  factor = 0.9,
+): T[] {
+  return rows.map((row) => {
+    const next: TrendSeriesPoint = { ...row };
+    for (const [key, value] of Object.entries(row)) {
+      if (typeof value !== "number") continue;
+      if (key === "roi") continue;
+      next[key] = Number((value * factor).toFixed(2));
+    }
+    return next as T;
+  });
+}
+
+export function toChartAudit(window: ResolvedTimeWindow) {
+  return {
+    grain: window.grain,
+    startDate: window.bounds.start,
+    endDate: window.bounds.end,
+    windowLabel: formatWindowLabel(window),
+  };
 }

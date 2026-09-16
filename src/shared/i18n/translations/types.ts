@@ -1851,11 +1851,18 @@ export interface Translations {
         objectiveRequired: string;
         messageBodyMinWords: string;
         generateFailed: string;
+        modelRequired: string;
       };
       hints: {
         variables: string;
         channelLimit: string;
         overwrite: string;
+      };
+      aiModel: {
+        label: string;
+        placeholder: string;
+        hint: string;
+        noneConfigured: string;
       };
     };
     messageBody: {

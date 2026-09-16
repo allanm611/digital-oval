@@ -4,8 +4,6 @@ import {
   BarChart,
   CartesianGrid,
   Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -36,7 +34,10 @@ import { useToast } from "../../../contexts/ToastContext";
 import type { RangeOption, SegmentReportsResponse } from "../types/ReportsAPI";
 import { segmentReportsService } from "../services/segmentReportsService";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { alignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import ReportChartCard from "../components/ReportChartCard";
+import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
 import { segmentService } from "../../segments/services/segmentService";
 import type { SegmentType } from "../../segments/types/segment";
 import { Table } from "../../../shared/components/Table/Table";
@@ -356,7 +357,9 @@ export default function SegmentReportsPage() {
     overviewPreset: "weekly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams } = timeWindow;
+  const { isTrendsView, queryParams, overviewWindow, activeWindow } = timeWindow;
+  const chartAudit = toChartAudit(activeWindow);
+  const overviewAudit = toChartAudit(overviewWindow);
   const selectedRange = timeWindow.rangeKey;
   const appliedCustomRange = timeWindow.activeWindow.bounds;
   const customRange = appliedCustomRange;
@@ -581,6 +584,7 @@ export default function SegmentReportsPage() {
           grain: queryParams.grain,
           startDate: queryParams.startDate,
           endDate: queryParams.endDate,
+          preset: queryParams.preset,
           page: 1,
           pageSize: 200,
           sortBy: "memberCount",
@@ -729,22 +733,30 @@ export default function SegmentReportsPage() {
       ];
 
   const memberGrowthSeries = useMemo(() => {
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
+    };
     if (!useDummyData) {
-      if (liveReport?.memberGrowth?.length) return liveReport.memberGrowth;
-      return memberGrowthData[activeRangeKey].map((point) => ({
-        ...point,
-        members: 0,
-        cumulativeMembers: 0,
-      }));
+      return alignTrendSeries(liveReport?.memberGrowth || [], window);
     }
-    const base = memberGrowthData[activeRangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({
-      ...point,
-      members: Math.round(point.members * scaleFactor),
-      cumulativeMembers: Math.round(point.cumulativeMembers * scaleFactor),
-    }));
-  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
+    return alignTrendSeries(
+      memberGrowthData[dummyTemplateRange(queryParams.grain || "daily")],
+      window,
+    );
+  }, [
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.grain,
+    useDummyData,
+    liveReport,
+  ]);
+
+  const memberGrowthComparison = useMemo(
+    () => (useDummyData ? dummyPreviousPeriod(memberGrowthSeries) : undefined),
+    [memberGrowthSeries, useDummyData],
+  );
 
   const segmentColors = [
     colors.reportCharts.segmentReports.sizeDistribution.segment1,
@@ -978,6 +990,7 @@ export default function SegmentReportsPage() {
       </div>
 
       {/* Hero KPI Cards */}
+      {!isTrendsView && (
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {heroCards.map((card, idx) => {
           const Icon = card.icon;
@@ -1015,209 +1028,185 @@ export default function SegmentReportsPage() {
           );
         })}
       </section>
+      )}
 
       {isTrendsView && (
-      <section className="grid gap-6 lg:grid-cols-2">
-        {/* Member Growth Timeline */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2`}
+      <section>
+        <ReportChartCard
+          title="Member Growth Timeline"
+          subtitle="Cumulative member growth over the selected period"
+          filename="segment-member-growth.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "members", label: "Period Members" },
+            { key: "cumulativeMembers", label: "Cumulative" },
+          ]}
+          rows={memberGrowthSeries}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Member Growth Timeline
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Cumulative member growth over the selected period
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={memberGrowthSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="period" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Line
-                  type="monotone"
-                  dataKey="members"
-                  name="Period Members"
-                  stroke={colors.reportCharts.segmentReports.memberGrowth.members}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cumulativeMembers"
-                  name="Cumulative"
-                  stroke={colors.reportCharts.segmentReports.memberGrowth.cumulative}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ReportGroupedBarChart
+            data={memberGrowthSeries}
+            xKey="period"
+            yLabel="Members"
+            yTickFormatter={(value) => value.toLocaleString("en-US")}
+            comparisonData={memberGrowthComparison}
+            series={[
+              {
+                dataKey: "members",
+                name: "Period Members",
+                color: colors.reportCharts.segmentReports.memberGrowth.members,
+              },
+              {
+                dataKey: "cumulativeMembers",
+                name: "Cumulative",
+                color: colors.reportCharts.segmentReports.memberGrowth.cumulative,
+              },
+            ]}
+          />
+        </ReportChartCard>
       </section>
       )}
 
       {!isTrendsView && (
       <>
       <section className="grid gap-6 lg:grid-cols-2">
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Segment Size Distribution"
+          subtitle="Top segments by member count"
+          filename="segment-size-distribution.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "segmentName", label: "Segment" },
+            { key: "members", label: "Members" },
+          ]}
+          rows={sizeDistributionSeries}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Segment Size Distribution
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Top segments by member count
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={sizeDistributionSeries}
-                margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={sizeDistributionSeries}
+              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="segmentName"
+                angle={-45}
+                textAnchor="end"
+                height={100}
+                tick={{ fill: "#6b7280" }}
+              />
+              <YAxis tick={{ fill: "#6b7280" }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
+              <Bar
+                dataKey="members"
+                name="Members"
+                maxBarSize={60}
+                radius={[4, 4, 0, 0]}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="segmentName"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fill: "#6b7280" }}
-                />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Bar
-                  dataKey="members"
-                  name="Members"
-                  maxBarSize={60}
-                  radius={[4, 4, 0, 0]}
-                >
-                  {sizeDistributionSeries.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+                {sizeDistributionSeries.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ReportChartCard>
 
-        {/* Campaign Usage */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Campaign Usage"
+          subtitle="Number of active campaigns per segment"
+          filename="segment-campaign-usage.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "segmentName", label: "Segment" },
+            { key: "campaigns", label: "Campaigns" },
+          ]}
+          rows={campaignUsageSeries}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Campaign Usage
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Number of active campaigns per segment
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={campaignUsageSeries}
-                margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={campaignUsageSeries}
+              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="segmentName"
+                angle={-45}
+                textAnchor="end"
+                height={100}
+                tick={{ fill: "#6b7280" }}
+              />
+              <YAxis tick={{ fill: "#6b7280" }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
+              <Bar
+                dataKey="campaigns"
+                name="Campaigns"
+                maxBarSize={60}
+                radius={[4, 4, 0, 0]}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="segmentName"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fill: "#6b7280" }}
-                />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Bar
-                  dataKey="campaigns"
-                  name="Campaigns"
-                  maxBarSize={60}
-                  radius={[4, 4, 0, 0]}
-                >
-                  {campaignUsageSeries.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+                {campaignUsageSeries.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ReportChartCard>
 
-        {/* Performance Comparison */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Performance Comparison"
+          subtitle="Engagement and conversion rates by segment"
+          filename="segment-performance-comparison.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "segmentName", label: "Segment" },
+            { key: "engagement", label: "Engagement %" },
+            { key: "conversion", label: "Conversion %" },
+          ]}
+          rows={performanceComparison}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Performance Comparison
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Engagement and conversion rates by segment
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={performanceComparison}
-                margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-                barCategoryGap="20%"
-                barGap={4}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="segmentName"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fill: "#6b7280" }}
-                />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Bar
-                  dataKey="engagement"
-                  name="Engagement %"
-                  fill={colors.reportCharts.segmentReports.performanceComparison.engagement}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={25}
-                />
-                <Bar
-                  dataKey="conversion"
-                  name="Conversion %"
-                  fill={colors.reportCharts.segmentReports.performanceComparison.conversion}
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={25}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={performanceComparison}
+              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
+              barCategoryGap="20%"
+              barGap={4}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="segmentName"
+                angle={-45}
+                textAnchor="end"
+                height={100}
+                tick={{ fill: "#6b7280" }}
+              />
+              <YAxis tick={{ fill: "#6b7280" }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
+              <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
+              <Bar
+                dataKey="engagement"
+                name="Engagement %"
+                fill={colors.reportCharts.segmentReports.performanceComparison.engagement}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={25}
+              />
+              <Bar
+                dataKey="conversion"
+                name="Conversion %"
+                fill={colors.reportCharts.segmentReports.performanceComparison.conversion}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={25}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ReportChartCard>
       </section>
 
       {/* Segment Data Table */}

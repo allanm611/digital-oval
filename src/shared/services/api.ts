@@ -38,6 +38,7 @@ export const API_CONFIG = {
     OFFER_PRODUCTS: "/offer-products",
     OFFER_CREATIVES: "/offer-creatives",
     AI_GENERATE_CREATIVE: "/offer-creatives/ai/generate",
+    AI_MODEL_CONFIGURATIONS: "/ai-model-configurations",
     OFFER_TRACKING_SOURCES: "/offer-tracking-sources",
     TRACKING_SOURCES: "/tracking-sources",
     NOTIFICATIONS: "/notifications",

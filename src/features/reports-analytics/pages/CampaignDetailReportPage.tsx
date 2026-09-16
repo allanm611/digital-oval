@@ -3,9 +3,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -47,12 +44,15 @@ import {
   asFiniteNumber,
   normalizeCampaignPortfolio,
   pickNamedArray,
-  sortChannelReachForChart,
   unwrapCampaignSummary,
   unwrapHeroTrends,
 } from "../utils/normalizeCampaignReport";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { fillCampaignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import ChannelReachContributionChart from "../components/ChannelReachContributionChart";
+import ReportChartCard from "../components/ReportChartCard";
+import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
 import { campaignReportsService } from "../services/campaignReportsService";
 import { tw } from "../../../shared/utils/utils";
 import { campaignService } from "../../campaigns/services/campaignService";
@@ -386,7 +386,9 @@ export default function CampaignDetailReportPage() {
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams } = timeWindow;
+  const { isTrendsView, queryParams, overviewWindow, activeWindow } = timeWindow;
+  const chartAudit = toChartAudit(activeWindow);
+  const overviewAudit = toChartAudit(overviewWindow);
   const selectedRange = timeWindow.rangeKey;
   const appliedCustomRange = timeWindow.activeWindow.bounds;
   const [useDummyData, setUseDummyData] = useState(true);
@@ -455,6 +457,7 @@ export default function CampaignDetailReportPage() {
       grain: queryParams.grain,
       startDate: queryParams.startDate,
       endDate: queryParams.endDate,
+      preset: queryParams.preset,
       campaignId: id,
     });
 
@@ -690,7 +693,7 @@ export default function CampaignDetailReportPage() {
 
   const channelData = useMemo(() => {
     if (!useDummyData) {
-      return sortChannelReachForChart(liveDetail?.channelReach || []);
+      return liveDetail?.channelReach || [];
     }
     const base = channelReachData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -714,17 +717,56 @@ export default function CampaignDetailReportPage() {
   }, [activeRangeKey, scaleFactor, useDummyData, liveDetail]);
 
   const trendSeries = useMemo(() => {
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
+    };
     if (!useDummyData) {
-      return liveDetail?.trends || [];
+      return fillCampaignTrendSeries(liveDetail?.trends || [], window);
     }
-    const base = trendData[activeRangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({
-      ...point,
-      revenue: point.revenue ? Math.round(point.revenue * scaleFactor) : undefined,
-      spend: point.spend ? Math.round(point.spend * scaleFactor) : undefined,
-    }));
-  }, [activeRangeKey, scaleFactor, useDummyData, liveDetail]);
+    return fillCampaignTrendSeries(
+      trendData[dummyTemplateRange(queryParams.grain || "daily")],
+      window,
+    );
+  }, [
+    useDummyData,
+    liveDetail,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.grain,
+  ]);
+
+  const roiSeries = useMemo(
+    () =>
+      trendSeries.map((point) => ({
+        period: point.period,
+        date: point.date ?? "",
+        revenue: point.revenue ?? 0,
+        spend: point.spend ?? 0,
+        roi: point.spend
+          ? Number(((point.revenue ?? 0) / point.spend).toFixed(2))
+          : 0,
+      })),
+    [trendSeries],
+  );
+
+  const trendComparison = useMemo(
+    () => (useDummyData ? dummyPreviousPeriod(trendSeries) : undefined),
+    [trendSeries, useDummyData],
+  );
+  const roiComparison = useMemo(
+    () =>
+      useDummyData
+        ? dummyPreviousPeriod(roiSeries).map((point) => ({
+            ...point,
+            roi: point.spend
+              ? Number((Number(point.revenue) / Number(point.spend)).toFixed(2))
+              : 0,
+          }))
+        : undefined,
+    [roiSeries, useDummyData],
+  );
 
   if (isLoading) {
     return (
@@ -795,6 +837,7 @@ export default function CampaignDetailReportPage() {
       )}
 
       {/* KPI Cards */}
+      {!isTrendsView && (
       <section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {heroCards.map((card) => {
@@ -837,87 +880,45 @@ export default function CampaignDetailReportPage() {
           })}
         </div>
       </section>
+      )}
 
       {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* Channel Reach */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Channel Performance"
+          subtitle="All configured channels, including those with no traffic yet"
+          filename="campaign-detail-channel-reach.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "channel", label: "Channel" },
+            { key: "reach", label: "Reach" },
+            { key: "impressions", label: "Impressions" },
+          ]}
+          rows={channelData}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Channel Performance
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Reach and impressions by communication channel
-            </p>
-          </div>
-          <div className="mt-6 h-80">
-            {!useDummyData && !isLoadingLiveReport && channelData.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                No channel activity in this window.
-              </div>
-            ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={channelData}
-                barCategoryGap="20%"
-                barGap={8}
-                margin={{ top: 8, right: 16, left: 0, bottom: 28 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="channel"
-                  interval={0}
-                  angle={-28}
-                  textAnchor="end"
-                  height={64}
-                  tick={{ fill: "#6b7280", fontSize: 11 }}
-                />
-                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Bar
-                  dataKey="reach"
-                  name="Reach"
-                  fill={colors.reportCharts.campaignReports.channelReach.reach}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="impressions"
-                  name="Impressions"
-                  fill={
-                    colors.reportCharts.campaignReports.channelReach.impressions
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-            )}
-          </div>
-        </div>
+          <ChannelReachContributionChart
+            data={channelData}
+            ensureCatalog={!useDummyData}
+            emptyMessage="No channel activity in this window."
+          />
+        </ReportChartCard>
 
-        {/* Funnel */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Engagement Funnel"
+          subtitle="Track audience journey from send to conversion"
+          filename="campaign-detail-engagement-funnel.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "stage", label: "Stage" },
+            { key: "value", label: "Volume" },
+          ]}
+          rows={funnelSeries}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Engagement Funnel
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Track audience journey from send to conversion
-            </p>
-          </div>
-          <div className="mt-6 h-80">
-            {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                No engagement stages in this window.
-              </div>
-            ) : (
+          {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-gray-500">
+              No engagement stages in this window.
+            </div>
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={funnelSeries}
@@ -941,111 +942,118 @@ export default function CampaignDetailReportPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
-            )}
-          </div>
-        </div>
+          )}
+        </ReportChartCard>
       </section>
       )}
 
       {isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* CTR & Engagement Trends */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="CTR & Engagement Trends"
+          subtitle="Monitor interaction quality across the selected period"
+          filename="campaign-detail-ctr-engagement-trends.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "ctr", label: "CTR %" },
+            { key: "engagement", label: "Engagement %" },
+          ]}
+          rows={trendSeries}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              CTR & Engagement Trends
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Monitor interaction quality across the selected period
-            </p>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="period" tick={{ fill: "#6b7280" }} />
-                <YAxis
-                  yAxisId="left"
-                  orientation="left"
-                  tick={{ fill: "#6b7280" }}
-                  domain={[0, (max: number) => Math.max(20, Math.ceil(max / 5) * 5 || 20)]}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="ctr"
-                  name="CTR %"
-                  stroke={
-                    colors.reportCharts.campaignReports.ctrEngagementTrends.ctr
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="engagement"
-                  name="Engagement %"
-                  stroke={
-                    colors.reportCharts.campaignReports.ctrEngagementTrends
-                      .engagement
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ReportGroupedBarChart
+            data={trendSeries.map((point) => ({
+              period: point.period,
+              ctr: point.ctr,
+              engagement: point.engagement,
+            }))}
+            xKey="period"
+            yLabel="Rate (%)"
+            valueFormatter={(value) => `${value}%`}
+            comparisonData={trendComparison}
+            series={[
+              {
+                dataKey: "ctr",
+                name: "CTR %",
+                color: colors.reportCharts.campaignReports.ctrEngagementTrends.ctr,
+              },
+              {
+                dataKey: "engagement",
+                name: "Engagement %",
+                color:
+                  colors.reportCharts.campaignReports.ctrEngagementTrends
+                    .engagement,
+              },
+            ]}
+          />
+        </ReportChartCard>
 
-        {/* Revenue Trends */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Revenue vs Spend"
+          subtitle="Generated revenue against campaign spend"
+          filename="campaign-detail-revenue-vs-spend.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "revenue", label: "Revenue" },
+            { key: "spend", label: "Spend" },
+          ]}
+          rows={roiSeries}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Revenue vs Spend
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Generated revenue against campaign spend
-            </p>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="period" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke={
-                    colors.reportCharts.campaignReports.revenueVsSpend.revenue
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="spend"
-                  name="Spend"
-                  stroke={
-                    colors.reportCharts.campaignReports.revenueVsSpend.spend
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ReportGroupedBarChart
+            data={roiSeries}
+            xKey="period"
+            yLabel="Amount"
+            yTickFormatter={(value) => value.toLocaleString("en-US")}
+            comparisonData={trendComparison}
+            series={[
+              {
+                dataKey: "revenue",
+                name: "Revenue",
+                color: colors.reportCharts.campaignReports.revenueVsSpend.revenue,
+              },
+              {
+                dataKey: "spend",
+                name: "Spend",
+                color: colors.reportCharts.campaignReports.revenueVsSpend.spend,
+              },
+            ]}
+          />
+        </ReportChartCard>
+
+        <ReportChartCard
+          className="lg:col-span-2"
+          title="ROI / ROMI"
+          subtitle="Return on spend for each period (revenue ÷ spend)"
+          filename="campaign-detail-roi-trends.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "revenue", label: "Revenue" },
+            { key: "spend", label: "Spend" },
+            { key: "roi", label: "ROI" },
+          ]}
+          rows={roiSeries}
+        >
+          <ReportGroupedBarChart
+            data={roiSeries}
+            xKey="period"
+            yLabel="ROI"
+            yTickFormatter={(value) => `${value}x`}
+            valueFormatter={(value) => `${value}x`}
+            comparisonData={roiComparison}
+            series={[
+              {
+                dataKey: "roi",
+                name: "ROI",
+                color: colors.reportCharts.palette.color1,
+              },
+            ]}
+          />
+        </ReportChartCard>
       </section>
       )}
 

@@ -2981,11 +2981,19 @@ export const es: Translations = {
         objectiveRequired: "Ingrese un objetivo claro para que Gemini redacte un mensaje alineado.",
         messageBodyMinWords: "Escriba un cuerpo de mensaje de al menos 3 palabras antes de generar.",
         generateFailed: "No se pudo generar el contenido del mensaje",
+        modelRequired: "Seleccione un modelo de IA antes de generar.",
       },
       hints: {
         variables: "Variables que Gemini puede conservar",
         channelLimit: "La longitud objetivo es de unos {limit} caracteres.",
         overwrite: "Insertar reemplaza el cuerpo del mensaje actual. Luego podrá seguir editándolo.",
+      },
+      aiModel: {
+        label: "Modelo de IA",
+        placeholder: "Seleccione un modelo de IA configurado",
+        hint: "Usa el proveedor guardado en Administration → AI Model Configuration.",
+        noneConfigured:
+          "Aún no hay modelos de IA activos. Configure uno en Administration, o la generación usará el valor predeterminado del servidor.",
       },
     },
     messageBody: {

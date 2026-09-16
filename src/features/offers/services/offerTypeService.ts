@@ -59,9 +59,17 @@ class OfferTypeService {
     return response.json();
   }
 
-  // Get all offer types (fresh data)
-  async getAllOfferTypes(): Promise<ApiResponse<OfferType[]>> {
-    return this.request<ApiResponse<OfferType[]>>("");
+  // Get offer types from system.offer_types (same catalog as create-offer).
+  async getAllOfferTypes(options?: {
+    isActive?: boolean;
+  }): Promise<ApiResponse<OfferType[]>> {
+    const query =
+      options?.isActive === true
+        ? "?is_active=true"
+        : options?.isActive === false
+          ? "?is_active=false"
+          : "";
+    return this.request<ApiResponse<OfferType[]>>(query);
   }
 
   // Create new offer type

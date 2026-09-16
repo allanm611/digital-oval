@@ -1763,7 +1763,9 @@ export default function CreateOfferPage({
 
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData();
+  const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData({
+    activeOnly: true,
+  });
   const requiresTrackingRewardMapping = useMemo(
     () =>
       offerRequiresTrackingAndRewardMapping(

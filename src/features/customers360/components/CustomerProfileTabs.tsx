@@ -1,13 +1,10 @@
 import {
-  useCallback,
   useEffect,
   useRef,
   useState,
   type CSSProperties,
-  type KeyboardEvent,
 } from "react";
-import OverflowScrollArea from "../../../shared/components/ui/OverflowScrollArea";
-import { color } from "../../../shared/utils/utils";
+import SegmentedTabs from "../../../shared/components/ui/SegmentedTabs";
 import {
   CUSTOMER_PROFILE_TAB_PANEL_ID,
   CUSTOMER_PROFILE_TABS,
@@ -84,47 +81,6 @@ export default function CustomerProfileTabs({
     }
   }, [activeTab]);
 
-  const focusTab = useCallback((tabId: CustomerProfileTabId) => {
-    barRef.current
-      ?.querySelector<HTMLElement>(`[data-tab-id="${tabId}"]`)
-      ?.focus();
-  }, []);
-
-  const handleTabListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (
-      event.key !== "ArrowLeft" &&
-      event.key !== "ArrowRight" &&
-      event.key !== "Home" &&
-      event.key !== "End"
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-    const currentIndex = CUSTOMER_PROFILE_TABS.findIndex(
-      (tab) => tab.id === activeTab,
-    );
-    if (currentIndex < 0) return;
-
-    let nextIndex = currentIndex;
-    if (event.key === "ArrowRight") {
-      nextIndex = (currentIndex + 1) % CUSTOMER_PROFILE_TABS.length;
-    } else if (event.key === "ArrowLeft") {
-      nextIndex =
-        (currentIndex - 1 + CUSTOMER_PROFILE_TABS.length) %
-        CUSTOMER_PROFILE_TABS.length;
-    } else if (event.key === "Home") {
-      nextIndex = 0;
-    } else {
-      nextIndex = CUSTOMER_PROFILE_TABS.length - 1;
-    }
-
-    const nextTab = CUSTOMER_PROFILE_TABS[nextIndex];
-    if (!nextTab || nextTab.id === activeTab) return;
-    onChange(nextTab.id);
-    requestAnimationFrame(() => focusTab(nextTab.id));
-  };
-
   const barStyle: CSSProperties = {
     position: "sticky",
     top: STICKY_TOP,
@@ -146,50 +102,18 @@ export default function CustomerProfileTabs({
         ref={barRef}
         data-customer-profile-tabs
         data-pinned={isPinned ? "true" : "false"}
-        className="min-w-0"
+        className="min-w-0 py-2"
         style={barStyle}
       >
-        <OverflowScrollArea
-          hint="Scroll horizontally to see more tabs"
-          hideScrollbar
-          scrollMode="page"
-          role="tablist"
+        <SegmentedTabs
+          layout="scroll"
+          items={CUSTOMER_PROFILE_TABS}
+          value={activeTab}
+          onChange={onChange}
           ariaLabel="Customer profile sections"
-          observeKey={CUSTOMER_PROFILE_TABS.length}
-          activeItemSelector={`[data-tab-id="${activeTab}"]`}
-          contentClassName="flex flex-nowrap gap-1 border-b border-gray-200 pr-10"
-          onKeyDown={handleTabListKeyDown}
-        >
-          {CUSTOMER_PROFILE_TABS.map((tab) => {
-            const selected = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                id={`customer-profile-tab-${tab.id}`}
-                data-tab-id={tab.id}
-                aria-selected={selected}
-                aria-controls={CUSTOMER_PROFILE_TAB_PANEL_ID}
-                tabIndex={selected ? 0 : -1}
-                onClick={() => onChange(tab.id)}
-                className={`px-4 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-primary-accent)] focus-visible:ring-offset-1 ${
-                  selected
-                    ? "text-black"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                {tab.label}
-                {selected && (
-                  <div
-                    className="absolute bottom-0 left-0 right-0 h-0.5"
-                    style={{ backgroundColor: color.primary.accent }}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </OverflowScrollArea>
+          getButtonId={(id) => `customer-profile-tab-${id}`}
+          getAriaControls={() => CUSTOMER_PROFILE_TAB_PANEL_ID}
+        />
       </div>
     </>
   );

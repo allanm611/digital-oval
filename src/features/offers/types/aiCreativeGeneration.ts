@@ -39,6 +39,10 @@ export interface GenerateCreativeRequest {
   existingBody?: string;
   availableVariables?: string[];
   variantCount?: number;
+  /** Server looks up credentials by this id. Never send api_key from the browser. */
+  aiModelConfigurationId?: string;
+  provider?: string;
+  model?: string;
 }
 
 export interface GeneratedCreativeVariant {

@@ -213,7 +213,10 @@ export async function generateCreativeMessage({ apiKey, model, body, fetchImpl }
 
   const input = parsed.value;
   const limits = getLimits(input.channel, input.length);
-  const usedModel = model || "gemini-2.5-flash";
+  const requestedModel = String(body?.model || "").trim();
+  const usedModel = /^gemini[-/]/i.test(requestedModel)
+    ? requestedModel
+    : model || "gemini-2.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     usedModel,
   )}:generateContent`;
