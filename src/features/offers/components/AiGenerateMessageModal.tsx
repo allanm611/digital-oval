@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Info, Loader2, Sparkles } from "lucide-react";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import ModalFooter from "../../../shared/components/ui/ModalFooter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -71,7 +72,9 @@ export default function AiGenerateMessageModal({
 }: AiGenerateMessageModalProps) {
   const { t } = useLanguage();
   const copy = t.offers.aiGenerate;
-  const { success } = useToast();
+  const { success, error: showError } = useToast();
+  const navigate = useNavigate();
+  const aiModelsPath = "/dashboard/ai-models";
   const [form, setForm] = useState<AiCreativePromptForm>(EMPTY_AI_PROMPT_FORM);
   const [messageBody, setMessageBody] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -85,6 +88,7 @@ export default function AiGenerateMessageModal({
   const [showPromptPreview, setShowPromptPreview] = useState(false);
   const [aiModels, setAiModels] = useState<AiModelGenerateOption[]>([]);
   const [selectedAiModelId, setSelectedAiModelId] = useState("");
+  const [modelsLoading, setModelsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const wasOpenRef = useRef(false);
 
@@ -166,6 +170,7 @@ export default function AiGenerateMessageModal({
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
+    setModelsLoading(true);
     aiModelConfigurationService
       .listForGenerate()
       .then((items) => {
@@ -177,7 +182,12 @@ export default function AiGenerateMessageModal({
         });
       })
       .catch(() => {
-        if (!cancelled) setAiModels([]);
+        if (cancelled) return;
+        setAiModels([]);
+        setSelectedAiModelId("");
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -197,7 +207,22 @@ export default function AiGenerateMessageModal({
     label: copy.lengths[length],
   }));
 
+  const goToAiModelConfig = () => {
+    abortRef.current?.abort("cancelled");
+    abortRef.current = null;
+    setIsGenerating(false);
+    setShowPromptPreview(false);
+    onClose();
+    navigate(aiModelsPath);
+  };
+
   const handleGenerate = async () => {
+    if (modelsLoading) return;
+    if (aiModels.length === 0) {
+      showError(copy.aiModel.label, copy.aiModel.noneConfigured);
+      goToAiModelConfig();
+      return;
+    }
     if (!form.tone) {
       setFormError(copy.errors.toneRequired);
       setView("compose");
@@ -208,9 +233,16 @@ export default function AiGenerateMessageModal({
       setView("compose");
       return;
     }
-    if (aiModels.length > 0 && !selectedAiModelId) {
+    if (!selectedAiModelId) {
       setFormError(copy.errors.modelRequired);
       setView("compose");
+      return;
+    }
+
+    const selectedModel = aiModels.find((item) => item.id === selectedAiModelId);
+    if (!selectedModel) {
+      showError(copy.aiModel.label, copy.aiModel.noneConfigured);
+      goToAiModelConfig();
       return;
     }
 
@@ -228,7 +260,6 @@ export default function AiGenerateMessageModal({
     setIsGenerating(true);
 
     try {
-      const selectedModel = aiModels.find((item) => item.id === selectedAiModelId);
       const result = await aiCreativeGenerationService.generate(
         {
           channel,
@@ -248,9 +279,9 @@ export default function AiGenerateMessageModal({
           existingBody: messageBody.trim(),
           availableVariables: mergedVariables,
           variantCount: 3,
-          aiModelConfigurationId: selectedModel?.id,
-          provider: selectedModel?.provider_id,
-          model: selectedModel?.model,
+          aiModelConfigurationId: selectedModel.id,
+          provider: selectedModel.provider_id,
+          model: selectedModel.model,
         },
         { signal: controller.signal },
       );
@@ -321,12 +352,20 @@ export default function AiGenerateMessageModal({
 
   const aiModelOptions = aiModels.map((item) => ({
     value: item.id,
-    label: `${item.name} · ${item.model}${item.is_default ? " (default)" : ""}`,
+    label: `${item.name} · ${item.model}${
+      item.source === "environment"
+        ? " (server default)"
+        : item.is_default
+          ? " (default)"
+          : ""
+    }`,
   }));
 
   const promptFields = (
     <>
-      {aiModels.length > 0 ? (
+      {modelsLoading ? (
+        <p className={`text-sm ${tw.textPrimary}`}>{copy.aiModel.placeholder}</p>
+      ) : aiModels.length > 0 ? (
         <div>
           <HeadlessSelect
             label={copy.aiModel.label}
@@ -339,10 +378,27 @@ export default function AiGenerateMessageModal({
             placeholder={copy.aiModel.placeholder}
             zIndex={zIndex.popover}
           />
-          <p className="text-xs text-gray-500 mt-1">{copy.aiModel.hint}</p>
+          <p className={`text-sm mt-1 ${tw.textPrimary}`}>{copy.aiModel.hint}</p>
         </div>
       ) : (
-        <p className="text-xs text-gray-500">{copy.aiModel.noneConfigured}</p>
+        <p
+          role="status"
+          className="flex items-start gap-2 text-sm font-semibold leading-5"
+          style={{ color: "var(--c-primary-accent)" }}
+        >
+          <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span>
+            {copy.aiModel.noneConfigured}{" "}
+            <button
+              type="button"
+              onClick={goToAiModelConfig}
+              className="underline underline-offset-2 font-semibold"
+              style={{ color: "var(--c-primary-accent)" }}
+            >
+              {copy.aiModel.configureCta}
+            </button>
+          </span>
+        </p>
       )}
       <Textarea
         label={copy.sourceBody.label}
@@ -534,7 +590,7 @@ export default function AiGenerateMessageModal({
             onConfirm={handleGenerate}
             cancelText={t.common.cancel}
             confirmText={isGenerating ? copy.generating : copy.generate}
-            disabled={isGenerating}
+            disabled={isGenerating || modelsLoading}
             confirmStyle={confirmStyle}
             leftContent={
               <PreviewPromptButton

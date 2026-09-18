@@ -3575,7 +3575,8 @@ export const en: Translations = {
         placeholder: "Select a configured AI model",
         hint: "Uses the provider saved under Administration → AI Model Configuration.",
         noneConfigured:
-          "No active AI models yet. Configure one under Administration, or generation will use the server default.",
+          "No active AI models yet. Configure one under Administration → AI Model Configuration before generating.",
+        configureCta: "Open AI Model Configuration",
       },
     },
     messageBody: {

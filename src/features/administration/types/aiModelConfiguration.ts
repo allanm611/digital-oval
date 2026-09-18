@@ -19,6 +19,7 @@ export interface AiModelProviderDefinition {
   docsUrl: string;
   defaultModel: string;
   defaultBaseUrl?: string;
+  defaultTimeoutMs?: number;
   models: AiModelOption[];
   supportsBaseUrl: boolean;
   supportsOrganization: boolean;
@@ -27,6 +28,8 @@ export interface AiModelProviderDefinition {
   keyPlaceholder: string;
   keyHint: string;
 }
+
+export type AiModelConfigSource = "database" | "environment";
 
 export interface AiModelConfiguration {
   id: string;
@@ -44,11 +47,13 @@ export interface AiModelConfiguration {
   timeout_ms: number;
   is_active: boolean;
   is_default: boolean;
+  source?: AiModelConfigSource;
+  /** Server process flag (GEMINI_FORCE_IPV4). Display-only. */
+  force_ipv4?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
-/** Stored locally only. Never returned from listForGenerate(). */
 export interface AiModelConfigurationRecord extends AiModelConfiguration {
   api_key?: string;
 }
@@ -74,4 +79,5 @@ export interface AiModelGenerateOption {
   name: string;
   model: string;
   is_default: boolean;
+  source?: AiModelConfigSource;
 }

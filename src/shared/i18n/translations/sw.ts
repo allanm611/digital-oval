@@ -3181,7 +3181,8 @@ export const sw: Translations = {
         placeholder: "Chagua modeli ya AI iliyosanidiwa",
         hint: "Inatumia mtoa huduma aliyehifadhiwa kwenye Administration → AI Model Configuration.",
         noneConfigured:
-          "Hakuna modeli za AI zinazotumika. Sanidi moja kwenye Administration, au uzalishaji utatumia chaguo-msingi la seva.",
+          "Hakuna modeli za AI zinazotumika. Sanidi moja kwenye Administration → AI Model Configuration kabla ya kutengeneza.",
+        configureCta: "Fungua usanidi wa modeli za AI",
       },
     },
     messageBody: {

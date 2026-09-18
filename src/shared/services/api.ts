@@ -54,9 +54,6 @@ export const buildApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}${endpoint}`;
 };
 
-// Helper function to build URLs for file uploads
-// Uses the regular API endpoint (which routes through proxy on Vercel)
-// The proxy has been optimized to handle multipart/form-data correctly
 export const buildDirectBackendUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}${endpoint}`;
 };

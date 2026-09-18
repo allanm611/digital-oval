@@ -5,6 +5,8 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Checkbox from "../../../shared/components/ui/Checkbox";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { Info } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { color, tw } from "../../../shared/utils/utils";
@@ -15,6 +17,8 @@ import {
   DEFAULT_AI_TIMEOUT_MS,
   getAiModelProvider,
 } from "../constants/aiModelProviders";
+import ProviderDocsLink from "../components/ProviderDocsLink";
+import type { AiModelConfigSource } from "../types/aiModelConfiguration";
 import { aiModelConfigurationService } from "../services/aiModelConfigurationService";
 
 interface FormState {
@@ -33,9 +37,15 @@ interface FormState {
   timeoutMs: string;
   isActive: boolean;
   isDefault: boolean;
+  forceIpv4?: boolean;
 }
 
-function emptyForm(providerName: string, defaultModel: string, defaultBaseUrl?: string): FormState {
+function emptyForm(
+  providerName: string,
+  defaultModel: string,
+  defaultBaseUrl?: string,
+  defaultTimeoutMs?: number,
+): FormState {
   return {
     name: providerName,
     apiKey: "",
@@ -48,7 +58,7 @@ function emptyForm(providerName: string, defaultModel: string, defaultBaseUrl?: 
     projectId: "",
     temperature: String(DEFAULT_AI_TEMPERATURE),
     maxOutputTokens: String(DEFAULT_AI_MAX_OUTPUT_TOKENS),
-    timeoutMs: String(DEFAULT_AI_TIMEOUT_MS),
+    timeoutMs: String(defaultTimeoutMs ?? DEFAULT_AI_TIMEOUT_MS),
     isActive: true,
     isDefault: false,
   };
@@ -63,8 +73,17 @@ export default function AiModelConfigurationFormPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [configSource, setConfigSource] = useState<AiModelConfigSource | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState<FormState>(() =>
-    emptyForm(provider?.name || "", provider?.defaultModel || "", provider?.defaultBaseUrl),
+    emptyForm(
+      provider?.name || "",
+      provider?.defaultModel || "",
+      provider?.defaultBaseUrl,
+      provider?.defaultTimeoutMs,
+    ),
   );
 
   const modelOptions = useMemo(() => {
@@ -89,10 +108,21 @@ export default function AiModelConfigurationFormPage() {
       setLoading(true);
       const existing = await aiModelConfigurationService.getByProvider(provider.id);
       if (!existing) {
-        setForm(emptyForm(provider.name, provider.defaultModel, provider.defaultBaseUrl));
+        setIsConfigured(false);
+        setConfigSource(null);
+        setForm(
+          emptyForm(
+            provider.name,
+            provider.defaultModel,
+            provider.defaultBaseUrl,
+            provider.defaultTimeoutMs,
+          ),
+        );
         return;
       }
       const knownModel = provider.models.some((model) => model.value === existing.model);
+      setIsConfigured(true);
+      setConfigSource(existing.source === "environment" ? "environment" : "database");
       setForm({
         name: existing.name || provider.name,
         apiKey: "",
@@ -106,9 +136,10 @@ export default function AiModelConfigurationFormPage() {
         projectId: existing.project_id || "",
         temperature: String(existing.temperature ?? DEFAULT_AI_TEMPERATURE),
         maxOutputTokens: String(existing.max_output_tokens ?? DEFAULT_AI_MAX_OUTPUT_TOKENS),
-        timeoutMs: String(existing.timeout_ms ?? DEFAULT_AI_TIMEOUT_MS),
+        timeoutMs: String(existing.timeout_ms ?? provider.defaultTimeoutMs ?? DEFAULT_AI_TIMEOUT_MS),
         isActive: existing.is_active !== false,
         isDefault: Boolean(existing.is_default),
+        forceIpv4: existing.force_ipv4,
       });
     } catch (err) {
       showError(
@@ -177,7 +208,12 @@ export default function AiModelConfigurationFormPage() {
         is_active: form.isActive,
         is_default: form.isDefault,
       });
-      success("Saved", `${provider.name} is ready for message generation`);
+      success(
+        "Saved",
+        configSource === "environment"
+          ? `${provider.name} is now stored as an admin configuration and ready for generation`
+          : `${provider.name} is ready for message generation`,
+      );
       navigate(hubPath);
     } catch (err) {
       showError(
@@ -186,6 +222,24 @@ export default function AiModelConfigurationFormPage() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!provider) return;
+    setDeleting(true);
+    try {
+      await aiModelConfigurationService.delete(provider.id);
+      success("Deleted", `${provider.name} configuration was removed`);
+      setConfirmDelete(false);
+      navigate(hubPath);
+    } catch (err) {
+      showError(
+        "Error",
+        extractBackendError(err, "Failed to delete AI model configuration"),
+      );
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -206,12 +260,27 @@ export default function AiModelConfigurationFormPage() {
         parentTo={hubPath}
       />
 
-      <p className={`text-sm ${tw.textSecondary}`}>{provider.description}</p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <p className={`text-sm ${tw.textPrimary}`}>{provider.description}</p>
+        <ProviderDocsLink name={provider.name} href={provider.docsUrl} className="shrink-0" />
+      </div>
+
+      {configSource === "environment" && (
+        <div className={`${tw.rounded} border border-blue-200 bg-blue-50 px-4 py-3`}>
+          <p className="text-sm text-blue-900 font-medium">Using the server Gemini default</p>
+          <p className={`text-sm mt-1 ${tw.textPrimary}`}>
+            No database row exists yet. Fields below come from the API host environment
+            (GEMINI_MODEL, GEMINI_API_BASE, GEMINI_TIMEOUT_MS, GEMINI_API_REVISION, and a
+            masked GEMINI_API_KEY). Save to persist this as an admin configuration. IPv4
+            routing (GEMINI_FORCE_IPV4) stays a process setting on the server.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Credentials</h2>
-          <p className={`text-xs ${tw.textSecondary} mb-6`}>
+        <div className={`${tw.rounded} border p-6 shadow-sm ${tw.borderDefault} bg-[var(--c-surface-card-bg)]`}>
+          <h2 className={`${tw.cardHeading} ${tw.textPrimary} mb-4`}>Credentials</h2>
+          <p className={`text-sm ${tw.textPrimary} mb-6`}>
             API keys stay on the server in production. Generation requests send only this
             configuration id — never the secret. Rotate a key by entering a new value.
           </p>
@@ -227,22 +296,38 @@ export default function AiModelConfigurationFormPage() {
 
             <div>
               <Input
+                id="ai-model-api-key"
+                name="ai-model-secret"
                 label="API key"
                 type="password"
+                autoComplete="new-password"
+                floatLabel={form.hasApiKey}
                 value={form.apiKey}
                 onChange={(value) => setForm((prev) => ({ ...prev, apiKey: String(value) }))}
                 placeholder={
-                  form.hasApiKey
-                    ? form.apiKeyMasked || "••••••••"
-                    : provider.keyPlaceholder
+                  form.hasApiKey ? "Paste a new key to rotate" : provider.keyPlaceholder
                 }
                 required={!form.hasApiKey}
                 disabled={saving}
+                aria-describedby="ai-model-api-key-hint"
               />
-              <p className={`text-xs mt-2 ${tw.textSecondary}`}>
-                {form.hasApiKey
-                  ? "A key is already saved. Leave this blank to keep it, or paste a new key to rotate."
-                  : provider.keyHint}
+              <p
+                id="ai-model-api-key-hint"
+                role="status"
+                className="mt-2 flex items-start gap-2 text-sm font-semibold leading-5"
+                style={{ color: "var(--c-primary-accent)" }}
+              >
+                <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                <span>
+                  {form.hasApiKey ? (
+                    <>
+                      A key is already saved{form.apiKeyMasked ? ` (${form.apiKeyMasked})` : ""}.
+                      Leave this blank to keep it, or paste a new key to rotate.
+                    </>
+                  ) : (
+                    provider.keyHint
+                  )}
+                </span>
               </p>
             </div>
 
@@ -288,7 +373,13 @@ export default function AiModelConfigurationFormPage() {
                   onChange={(value) =>
                     setForm((prev) => ({ ...prev, apiVersion: String(value) }))
                   }
-                  placeholder={provider.id === "anthropic" ? "2023-06-01" : "v1"}
+                  placeholder={
+                    provider.id === "gemini"
+                      ? "2026-05-20"
+                      : provider.id === "anthropic"
+                        ? "2023-06-01"
+                        : "v1"
+                  }
                   disabled={saving}
                 />
               )}
@@ -296,8 +387,8 @@ export default function AiModelConfigurationFormPage() {
           </div>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Generation defaults</h2>
+        <div className={`${tw.rounded} border p-6 shadow-sm ${tw.borderDefault} bg-[var(--c-surface-card-bg)]`}>
+          <h2 className={`${tw.cardHeading} ${tw.textPrimary} mb-4`}>Generation defaults</h2>
           <div className="space-y-6">
             {provider.models.length > 0 ? (
               <HeadlessSelect
@@ -362,11 +453,31 @@ export default function AiModelConfigurationFormPage() {
                 step={1000}
               />
             </div>
-            <p className={`text-xs ${tw.textSecondary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               Temperature 0–2 controls variation. Lower values stay closer to the brief.
               Max tokens caps the model reply, not the SMS length. Timeout should cover
-              the provider round-trip (25–30s is typical).
+              the provider round-trip (35s is typical for Gemini).
             </p>
+
+            {provider.id === "gemini" && form.forceIpv4 !== undefined && (
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="ai-model-force-ipv4"
+                  checked={Boolean(form.forceIpv4)}
+                  onChange={() => undefined}
+                  disabled
+                />
+                <div>
+                  <label htmlFor="ai-model-force-ipv4" className={`block text-sm font-medium ${tw.textPrimary}`}>
+                    Force IPv4 (server)
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary}`}>
+                    Read from GEMINI_FORCE_IPV4 on the API process. Changing it requires a
+                    server env update and restart, not this form.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-start gap-3">
               <Checkbox
@@ -381,7 +492,7 @@ export default function AiModelConfigurationFormPage() {
                 <label htmlFor="ai-model-active" className={`block text-sm font-medium ${tw.textPrimary}`}>
                   Active
                 </label>
-                <p className={`text-xs ${tw.textSecondary}`}>
+                <p className={`text-sm ${tw.textPrimary}`}>
                   Only active models appear in the generate-message picker.
                 </p>
               </div>
@@ -400,7 +511,7 @@ export default function AiModelConfigurationFormPage() {
                 <label htmlFor="ai-model-default" className={`block text-sm font-medium ${tw.textPrimary}`}>
                   Default for message generation
                 </label>
-                <p className={`text-xs ${tw.textSecondary}`}>
+                <p className={`text-sm ${tw.textPrimary}`}>
                   Pre-selected when a marketer opens Generate. Only one provider can be default.
                 </p>
               </div>
@@ -408,43 +519,68 @@ export default function AiModelConfigurationFormPage() {
           </div>
         </div>
 
-        <p className={`text-xs ${tw.textSecondary}`}>
-          Docs:{" "}
-          <a
-            href={provider.docsUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="underline"
-            style={{ color: color.primary.action }}
-          >
-            {provider.docsUrl}
-          </a>
-        </p>
+        <div
+          className={`${tw.rounded} border px-4 py-3 ${tw.borderDefault} bg-[var(--c-surface-card-bg)]`}
+        >
+          <p className={`text-sm font-medium ${tw.textPrimary}`}>Provider documentation</p>
+          <p className={`text-sm mt-1 ${tw.textPrimary}`}>
+            Use the official docs for model ids, regions, and key creation.
+          </p>
+          <ProviderDocsLink name={provider.name} href={provider.docsUrl} className="mt-2" />
+        </div>
 
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={() => navigate(hubPath)}
-            disabled={saving}
-            className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-60"
-            style={{
-              background: "transparent",
-              color: color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            {saving ? "Saving..." : "Save configuration"}
-          </button>
+        <div className="flex items-center justify-between gap-3 pt-6 border-t" style={{ borderColor: "var(--c-border-default)" }}>
+          {isConfigured && configSource !== "environment" ? (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              disabled={saving || deleting}
+              className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-60 text-red-700 border border-red-200 hover:bg-red-50"
+            >
+              Delete configuration
+            </button>
+          ) : (
+            <span className={`text-sm ${tw.textPrimary}`}>
+              {configSource === "environment"
+                ? "Server defaults cannot be deleted from this screen."
+                : ""}
+            </span>
+          )}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(hubPath)}
+              disabled={saving || deleting}
+              className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-60"
+              style={{
+                background: "transparent",
+                color: "var(--c-text-primary)",
+                border: "1px solid var(--c-border-accent)",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving || deleting}
+              className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {saving ? "Saving..." : "Save configuration"}
+            </button>
+          </div>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => void handleDelete()}
+        title="Remove AI model"
+        description="This provider will no longer appear when generating message content. You can configure it again later."
+        itemName={provider.name}
+        isLoading={deleting}
+      />
     </div>
   );
 }

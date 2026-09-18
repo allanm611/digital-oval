@@ -2993,7 +2993,8 @@ export const es: Translations = {
         placeholder: "Seleccione un modelo de IA configurado",
         hint: "Usa el proveedor guardado en Administration → AI Model Configuration.",
         noneConfigured:
-          "Aún no hay modelos de IA activos. Configure uno en Administration, o la generación usará el valor predeterminado del servidor.",
+          "Aún no hay modelos de IA activos. Configure uno en Administration → AI Model Configuration antes de generar.",
+        configureCta: "Abrir configuración de modelos de IA",
       },
     },
     messageBody: {

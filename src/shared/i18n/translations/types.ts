@@ -1863,6 +1863,7 @@ export interface Translations {
         placeholder: string;
         hint: string;
         noneConfigured: string;
+        configureCta: string;
       };
     };
     messageBody: {
