@@ -3,9 +3,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -36,10 +33,24 @@ import type {
 } from "../types/ReportsAPI";
 import {
   buildCampaignReportParams,
-  formatTrendLabel,
+  resolveHeroTrend,
   settledError,
   settledValue,
 } from "../utils/campaignReportQuery";
+import {
+  campaignPortfolioHasWidgets,
+  formatAudienceShare,
+  mergeSplitCampaignWidgets,
+  normalizeCampaignPortfolio,
+  pickNamedArray,
+  unwrapCampaignTable,
+} from "../utils/normalizeCampaignReport";
+import { parseISODate, fillCampaignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import ChannelReachContributionChart from "../components/ChannelReachContributionChart";
+import ReportChartCard from "../components/ReportChartCard";
+import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
 
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
@@ -58,73 +69,6 @@ type CampaignSummary = CampaignReportsResponse["summary"];
 type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
 type FunnelPoint = CampaignReportsResponse["conversionFunnel"][number];
 type TrendPoint = CampaignReportsResponse["performanceTrend"][number];
-
-const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
-const rangeDays: Record<RangeOption, number> = {
-  "7d": 7,
-  "30d": 30,
-  "90d": 90,
-};
-
-const getDaysBetween = (start: string, end: string) => {
-  const startDate = start ? new Date(start) : null;
-  const endDate = end ? new Date(end) : null;
-  if (
-    !startDate ||
-    !endDate ||
-    Number.isNaN(startDate.getTime()) ||
-    Number.isNaN(endDate.getTime())
-  ) {
-    return null;
-  }
-  const diff = Math.abs(endDate.getTime() - startDate.getTime());
-  return Math.max(1, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-};
-
-const mapDaysToRange = (days: number | null): RangeOption => {
-  if (days === null) return "7d";
-  if (days <= 7) return "7d";
-  if (days <= 30) return "30d";
-  return "90d";
-};
-
-const getRangeLabel = (option: RangeOption): string => {
-  const labels: Record<RangeOption, string> = {
-    "7d": "Daily",
-    "30d": "Weekly",
-    "90d": "Monthly",
-  };
-  return labels[option];
-};
-
-// Scale data based on actual number of days vs base range
-const getScaleFactor = (
-  customDays: number | null,
-  baseRange: RangeOption,
-): number => {
-  if (!customDays) return 1;
-  const baseDays = rangeDays[baseRange];
-  return customDays / baseDays;
-};
-
-// Get date constraints for date inputs
-const getDateConstraints = () => {
-  const today = new Date();
-  // Use local date to avoid timezone issues
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const maxDate = `${year}-${month}-${day}`; // Today (no future dates)
-
-  const minDate = new Date(today);
-  minDate.setFullYear(today.getFullYear() - 2); // 2 years ago max
-  const minYear = minDate.getFullYear();
-  const minMonth = String(minDate.getMonth() + 1).padStart(2, "0");
-  const minDay = String(minDate.getDate()).padStart(2, "0");
-  const minDateStr = `${minYear}-${minMonth}-${minDay}`;
-
-  return { minDate: minDateStr, maxDate };
-};
 
 // Types are now imported from ReportsAPI.ts above
 
@@ -488,12 +432,21 @@ export default function CampaignReportsPage() {
   const { success: showSuccess, error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
   const [debouncedTableQuery, setDebouncedTableQuery] = useState("");
-  const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "monthly",
+    defaultTrendsPreset: "daily",
   });
+  const {
+    isTrendsView,
+    rangeKey: activeRangeKey,
+    scaleFactor,
+    queryParams,
+    overviewQueryParams,
+    overviewWindow,
+    activeWindow,
+  } = timeWindow;
+  const chartAudit = toChartAudit(activeWindow);
+  const overviewAudit = toChartAudit(overviewWindow);
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
@@ -686,17 +639,15 @@ export default function CampaignReportsPage() {
     return () => clearTimeout(timer);
   }, [tableQuery]);
 
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
-
   const handleRefreshSnapshots = async () => {
     try {
       setIsRefreshingSnapshots(true);
       await campaignReportsService.refreshSnapshots({
-        range: activeRangeKey,
-        startDate: appliedCustomRange.start || undefined,
-        endDate: appliedCustomRange.end || undefined,
+        range: queryParams.range,
+        startDate: queryParams.startDate,
+        endDate: queryParams.endDate,
+        grain: queryParams.grain,
+        preset: queryParams.preset,
       });
       showSuccess("Campaign snapshots refreshed. Reloading reports…");
       setDataEpoch((value) => value + 1);
@@ -706,28 +657,6 @@ export default function CampaignReportsPage() {
       setIsRefreshingSnapshots(false);
     }
   };
-
-  const customDays = getDaysBetween(
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-  );
-  const activeRangeKey: RangeOption =
-    appliedCustomRange.start && appliedCustomRange.end
-      ? mapDaysToRange(customDays)
-      : selectedRange;
-
-  // Calculate scale factor for custom date ranges
-  const scaleFactor = useMemo(() => {
-    if (appliedCustomRange.start && appliedCustomRange.end && customDays) {
-      return getScaleFactor(customDays, activeRangeKey);
-    }
-    return 1;
-  }, [
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-    customDays,
-    activeRangeKey,
-  ]);
 
   useEffect(() => {
     if (useDummyData) {
@@ -743,56 +672,107 @@ export default function CampaignReportsPage() {
 
     let cancelled = false;
     const params = buildCampaignReportParams({
-      range: activeRangeKey,
-      startDate: appliedCustomRange.start,
-      endDate: appliedCustomRange.end,
+      range: queryParams.range || activeRangeKey,
+      grain: queryParams.grain,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      preset: queryParams.preset,
       campaignId: selectedCampaignFilter || undefined,
     });
 
     const loadLiveWidgets = async () => {
       setIsLoadingLiveReport(true);
       setLiveReportError(null);
-      const [kpisResult, reachResult, funnelResult, trendsResult] = await Promise.allSettled([
-        campaignReportsService.getKpis(params),
-        campaignReportsService.getChannelReach(params),
-        campaignReportsService.getFunnel(params),
+
+      const [portfolioResult, trendsResult] = await Promise.allSettled([
+        campaignReportsService.getPortfolio(params),
         campaignReportsService.getTrends(params),
       ]);
       if (cancelled) return;
 
-      const kpis = settledValue(kpisResult);
-      const reach = settledValue(reachResult);
-      const funnel = settledValue(funnelResult);
-      const trends = settledValue(trendsResult);
-      const trendPoints = trends?.data || [];
-
-      setLiveReport({
-        summary: kpis?.data,
-        heroTrends: kpis?.trends,
-        channelReach: reach?.data,
-        conversionFunnel: funnel?.data,
-        performanceTrend: trendPoints,
-        revenueTrend: trendPoints.map((point) => ({
+      const portfolio = normalizeCampaignPortfolio(settledValue(portfolioResult));
+      const liveTrends = pickNamedArray<TrendPoint>(
+        settledValue(trendsResult)?.data,
+        ["performanceTrend", "trends"],
+      );
+      const overlayTrends = (liveTrends.length ? liveTrends : portfolio.performanceTrend || []).map(
+        (point) => ({
+          ...point,
+          date: point.date,
+          ctr: point.ctr ?? 0,
+          engagement: point.engagement ?? 0,
+          revenue: point.revenue ?? 0,
+          spend: point.spend ?? 0,
+        }),
+      );
+      const withTrends = {
+        ...portfolio,
+        performanceTrend: overlayTrends,
+        revenueTrend: overlayTrends.map((point) => ({
           period: point.period,
           date: point.date,
-          revenue: point.revenue,
-          spend: point.spend,
+          revenue: point.revenue ?? 0,
+          spend: point.spend ?? 0,
           target: 0,
         })),
-        meta: kpis?.meta,
+      };
+
+      if (campaignPortfolioHasWidgets(portfolio)) {
+        setLiveReport(withTrends);
+        if (!liveTrends.length && settledError(trendsResult, "")) {
+          setLiveReportError(
+            extractBackendError(
+              settledError(trendsResult, "Failed to load campaign trends."),
+              "Failed to load campaign trends.",
+            ),
+          );
+        }
+        setIsLoadingLiveReport(false);
+        return;
+      }
+
+      const [kpisResult, reachResult, funnelResult] = await Promise.allSettled([
+        campaignReportsService.getKpis(params),
+        campaignReportsService.getChannelReach(params),
+        campaignReportsService.getFunnel(params),
+      ]);
+      if (cancelled) return;
+
+      const merged = mergeSplitCampaignWidgets({
+        kpis: settledValue(kpisResult),
+        reach: settledValue(reachResult),
+        funnel: settledValue(funnelResult),
+        trends: settledValue(trendsResult),
+      });
+      setLiveReport({
+        ...merged,
+        performanceTrend: overlayTrends.length
+          ? overlayTrends
+          : merged.performanceTrend || [],
+        revenueTrend: overlayTrends.length
+          ? overlayTrends.map((point) => ({
+              period: point.period,
+              date: point.date,
+              revenue: point.revenue ?? 0,
+              spend: point.spend ?? 0,
+              target: 0,
+            }))
+          : merged.revenueTrend || [],
       });
 
-      const errors = [
-        settledError(kpisResult, "Failed to load campaign KPIs."),
-        settledError(reachResult, "Failed to load channel reach."),
-        settledError(funnelResult, "Failed to load engagement funnel."),
-        settledError(trendsResult, "Failed to load campaign trends."),
-      ].filter(Boolean) as string[];
-
-      if (errors.length === 4) {
-        setLiveReportError(extractBackendError(errors[0], "Failed to load Campaign Reports."));
-      } else if (errors.length) {
-        setLiveReportError(errors.join(" "));
+      if (!campaignPortfolioHasWidgets(merged)) {
+        const errors = [
+          settledError(portfolioResult, "Failed to load campaign portfolio."),
+          settledError(kpisResult, "Failed to load campaign KPIs."),
+          settledError(reachResult, "Failed to load channel reach."),
+          settledError(funnelResult, "Failed to load engagement funnel."),
+          settledError(trendsResult, "Failed to load campaign trends."),
+        ].filter(Boolean) as string[];
+        if (errors.length) {
+          setLiveReportError(
+            extractBackendError(errors[0], "Failed to load Campaign Reports."),
+          );
+        }
       }
       setIsLoadingLiveReport(false);
     };
@@ -803,9 +783,10 @@ export default function CampaignReportsPage() {
     };
   }, [
     useDummyData,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
     selectedCampaignFilter,
     dataEpoch,
   ]);
@@ -820,9 +801,11 @@ export default function CampaignReportsPage() {
         setLiveTableError(null);
         const response = await campaignReportsService.getCampaignsTable(
           buildCampaignReportParams({
-            range: activeRangeKey,
-            startDate: appliedCustomRange.start,
-            endDate: appliedCustomRange.end,
+            range: overviewQueryParams.range || "30d",
+            grain: overviewQueryParams.grain,
+            startDate: overviewQueryParams.startDate,
+            endDate: overviewQueryParams.endDate,
+            preset: overviewQueryParams.preset,
             campaignId: selectedCampaignFilter || undefined,
             page: tablePage,
             pageSize: tablePageSize,
@@ -833,8 +816,9 @@ export default function CampaignReportsPage() {
         );
         if (cancelled) return;
         if (response.success) {
-          setLiveTableRows(response.data || []);
-          setLiveTableTotal(response.total ?? response.pagination?.total ?? response.data?.length ?? 0);
+          const table = unwrapCampaignTable(response);
+          setLiveTableRows(table.rows);
+          setLiveTableTotal(table.total);
         } else {
           setLiveTableRows([]);
           setLiveTableTotal(0);
@@ -856,9 +840,10 @@ export default function CampaignReportsPage() {
     };
   }, [
     useDummyData,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    overviewQueryParams.range,
+    overviewQueryParams.grain,
+    overviewQueryParams.startDate,
+    overviewQueryParams.endDate,
     selectedCampaignFilter,
     tablePage,
     tablePageSize,
@@ -870,7 +855,10 @@ export default function CampaignReportsPage() {
   const baseSummary = campaignSummary[activeRangeKey];
   const summary = useMemo(() => {
     if (!useDummyData) {
-      return liveReport?.summary || EMPTY_SUMMARY;
+      return {
+        ...EMPTY_SUMMARY,
+        ...liveReport?.summary,
+      };
     }
     if (scaleFactor === 1) return baseSummary;
     return {
@@ -945,67 +933,52 @@ export default function CampaignReportsPage() {
         {
           label: "Audience Reached",
           value: summary.reach.toLocaleString("en-US"),
-          subtext: `${summary.eligibleAudience ? Math.round((summary.reach / summary.eligibleAudience) * 100) : 0}% of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
+          subtext: `${formatAudienceShare(summary.reach, summary.eligibleAudience)} of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
           icon: statIcons.audience,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.reach?.label),
-            direction: liveReport?.heroTrends?.reach?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.reach),
         },
         {
           label: "Engagement Rate",
           value: `${summary.engagementRate.toFixed(1)}%`,
           subtext: "Opens, clicks & taps vs reach",
           icon: statIcons.engagement,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.engagementRate?.label),
-            direction: liveReport?.heroTrends?.engagementRate?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.engagementRate),
         },
         {
           label: "Conversion Rate",
           value: `${summary.conversionRate.toFixed(1)}%`,
           subtext: `${summary.conversions.toLocaleString("en-US")} conversions`,
           icon: statIcons.outcome,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.conversionRate?.label),
-            direction: liveReport?.heroTrends?.conversionRate?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.conversionRate),
         },
         {
           label: "Revenue Generated",
           value: formatCurrency(summary.revenue),
           subtext: `Avg ${formatCurrency(summary.conversions ? Math.round(summary.revenue / summary.conversions) : 0)} per conversion`,
           icon: statIcons.outcome,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.revenue?.label),
-            direction: liveReport?.heroTrends?.revenue?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.revenue),
         },
         {
           label: "ROI / ROMI",
           value: `${summary.roas.toFixed(1)}x`,
           subtext: `Spend ${formatCurrency(summary.campaignCost)}`,
           icon: statIcons.growth,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.roas?.label),
-            direction: liveReport?.heroTrends?.roas?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.roas),
         },
         {
           label: "Campaign Cost",
           value: formatCurrency(summary.campaignCost),
           subtext: `CAC ${formatCurrency(summary.cac)}`,
           icon: statIcons.outcome,
-          trend: {
-            value: formatTrendLabel(liveReport?.heroTrends?.campaignCost?.label),
-            direction: liveReport?.heroTrends?.campaignCost?.direction || "up",
-          },
+          trend: resolveHeroTrend(liveReport?.heroTrends?.campaignCost),
         },
       ];
 
   const mapReportRow = (row: CampaignRow): CampaignTableRow => {
     const campaign = campaigns.find((c) => String(c.id) === String(row.id));
+    const isoRun = /^\d{4}-\d{2}-\d{2}/.test(row.lastRunDate || "")
+      ? String(row.lastRunDate).slice(0, 10)
+      : "";
     return {
       id: `campaign-${row.id}`,
       name: row.name,
@@ -1021,8 +994,8 @@ export default function CampaignReportsPage() {
       cgConversions: row.cgConversions,
       tgConversionPercentage: row.tgConversionPercentage ?? 0,
       cgConversionPercentage: row.cgConversionPercentage ?? 0,
-      lastRunDate: row.lastRunDate || "—",
-      lastRunDateMS: row.lastRunDate ? new Date(row.lastRunDate).getTime() : Date.now(),
+      lastRunDate: isoRun || "—",
+      lastRunDateMS: isoRun ? new Date(`${isoRun}T00:00:00`).getTime() : 0,
     };
   };
 
@@ -1054,16 +1027,10 @@ export default function CampaignReportsPage() {
     if (!useDummyData) return campaignTableRows;
 
     const query = tableQuery.trim().toLowerCase();
-    const maxDays =
-      appliedCustomRange.start && appliedCustomRange.end
-        ? (customDays ?? rangeDays[selectedRange])
-        : rangeDays[selectedRange];
-    const startMs = appliedCustomRange.start
-      ? new Date(appliedCustomRange.start).getTime()
-      : null;
-    const endMs = appliedCustomRange.end
-      ? new Date(appliedCustomRange.end).getTime()
-      : null;
+    const startDate = parseISODate(overviewWindow.bounds.start);
+    const endDate = parseISODate(overviewWindow.bounds.end);
+    const startMs = startDate?.getTime() ?? 0;
+    const endMs = endDate ? endDate.getTime() + 24 * 60 * 60 * 1000 - 1 : Date.now();
 
     return campaignTableRows.filter((row) => {
       const matchesQuery = query ? row.name.toLowerCase().includes(query) : true;
@@ -1071,11 +1038,7 @@ export default function CampaignReportsPage() {
         ? getCampaignRowId(row) === selectedCampaignFilter
         : true;
       const rowDate = row.lastRunDateMS || Date.now();
-      const now = Date.now();
-      const matchesRange =
-        appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
-          ? rowDate >= startMs && rowDate <= endMs
-          : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
+      const matchesRange = rowDate >= startMs && rowDate <= endMs;
 
       return matchesQuery && matchesCampaign && matchesRange;
     });
@@ -1083,11 +1046,9 @@ export default function CampaignReportsPage() {
     useDummyData,
     tableQuery,
     selectedCampaignFilter,
-    customDays,
-    selectedRange,
     campaignTableRows,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    overviewWindow.bounds.start,
+    overviewWindow.bounds.end,
   ]);
 
   // Reset pagination when filters change
@@ -1096,9 +1057,8 @@ export default function CampaignReportsPage() {
   }, [
     debouncedTableQuery,
     selectedCampaignFilter,
-    selectedRange,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    overviewWindow.bounds.start,
+    overviewWindow.bounds.end,
     useDummyData,
   ]);
 
@@ -1107,12 +1067,7 @@ export default function CampaignReportsPage() {
   // Scale chart data based on actual date range
   const channelData = useMemo(() => {
     if (!useDummyData) {
-      if (liveReport?.channelReach?.length) return liveReport.channelReach;
-      return channelReachData[activeRangeKey].map((point) => ({
-        ...point,
-        reach: 0,
-        impressions: 0,
-      }));
+      return liveReport?.channelReach || [];
     }
     const base = channelReachData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -1125,11 +1080,7 @@ export default function CampaignReportsPage() {
 
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
-      if (liveReport?.conversionFunnel?.length) return liveReport.conversionFunnel;
-      return funnelData[activeRangeKey].map((point) => ({
-        ...point,
-        value: 0,
-      }));
+      return liveReport?.conversionFunnel || [];
     }
     const base = funnelData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -1140,51 +1091,91 @@ export default function CampaignReportsPage() {
   }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const trendSeries = useMemo(() => {
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
+    };
     if (!useDummyData) {
-      if (liveReport?.performanceTrend?.length) return liveReport.performanceTrend;
-      return trendData[activeRangeKey].map((point) => ({
-        ...point,
-        ctr: 0,
-        engagement: 0,
-        revenue: 0,
-        spend: 0,
-      }));
+      return fillCampaignTrendSeries(liveReport?.performanceTrend || [], window);
     }
-    const base = trendData[activeRangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({
-      ...point,
-      // Rates stay the same
-      ctr: point.ctr,
-      engagement: point.engagement,
-    }));
-  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
+    return fillCampaignTrendSeries(
+      trendData[dummyTemplateRange(queryParams.grain || "daily")],
+      window,
+    );
+  }, [
+    useDummyData,
+    liveReport,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.grain,
+  ]);
 
   const revenueSeries = useMemo(() => {
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
+    };
     if (!useDummyData) {
-      if (liveReport?.revenueTrend?.length) {
-        return liveReport.revenueTrend.map((point) => ({
+      return fillCampaignTrendSeries(
+        (liveReport?.revenueTrend || liveReport?.performanceTrend || []).map((point) => ({
           period: point.period,
+          date: point.date,
           ctr: 0,
           engagement: 0,
-          revenue: point.revenue,
+          revenue: point.revenue ?? 0,
           spend: point.spend ?? 0,
-        }));
-      }
-      return revenueData[activeRangeKey].map((point) => ({
-        ...point,
-        revenue: 0,
-        spend: 0,
-      }));
+        })),
+        window,
+      );
     }
-    const base = revenueData[activeRangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({
-      ...point,
-      revenue: Math.round(point.revenue * scaleFactor),
-      spend: Math.round(point.spend * scaleFactor),
-    }));
-  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
+    return fillCampaignTrendSeries(
+      revenueData[dummyTemplateRange(queryParams.grain || "daily")],
+      window,
+    );
+  }, [
+    useDummyData,
+    liveReport,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.grain,
+  ]);
+
+  const roiSeries = useMemo(
+    () =>
+      revenueSeries.map((point) => ({
+        period: point.period,
+        date: point.date ?? "",
+        revenue: point.revenue ?? 0,
+        spend: point.spend ?? 0,
+        roi: point.spend
+          ? Number(((point.revenue ?? 0) / point.spend).toFixed(2))
+          : 0,
+      })),
+    [revenueSeries],
+  );
+
+  const trendComparison = useMemo(
+    () => (useDummyData ? dummyPreviousPeriod(trendSeries) : undefined),
+    [trendSeries, useDummyData],
+  );
+  const revenueComparison = useMemo(
+    () => (useDummyData ? dummyPreviousPeriod(revenueSeries) : undefined),
+    [revenueSeries, useDummyData],
+  );
+  const roiComparison = useMemo(
+    () =>
+      useDummyData
+        ? dummyPreviousPeriod(roiSeries).map((point) => ({
+            ...point,
+            roi: point.spend
+              ? Number((Number(point.revenue) / Number(point.spend)).toFixed(2))
+              : 0,
+          }))
+        : undefined,
+    [roiSeries, useDummyData],
+  );
 
   const csvHeaders = [
     "Campaign Name",
@@ -1221,29 +1212,9 @@ export default function CampaignReportsPage() {
             Monitor end-to-end campaign reach, engagement, and revenue impact
           </p>
         </div>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  selectedRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {getRangeLabel(option)}
-              </button>
-            ))}
-            <div className="border-l border-gray-300 h-6" />
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          entityFilter={
             <HeadlessSelect
               value={selectedCampaignFilter}
               onChange={setSelectedCampaignFilter}
@@ -1256,115 +1227,51 @@ export default function CampaignReportsPage() {
               ]}
               placeholder="Filter campaign"
             />
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div
-              className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
-            >
-              <label
-                htmlFor="campaign-data-toggle"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
+          }
+          extraActions={
+            <>
+              <div
+                className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
               >
-                Data Mode:
-              </label>
-              <button
-                id="campaign-data-toggle"
-                type="button"
-                onClick={() => setUseDummyData(!useDummyData)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
-                  useDummyData ? "bg-[#252829]" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useDummyData ? "translate-x-6" : "translate-x-1"
+                <label
+                  htmlFor="campaign-data-toggle"
+                  className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
+                >
+                  Data Mode:
+                </label>
+                <button
+                  id="campaign-data-toggle"
+                  type="button"
+                  onClick={() => setUseDummyData(!useDummyData)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
+                    useDummyData ? "bg-[#252829]" : "bg-gray-300"
                   }`}
-                />
-              </button>
-              <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-                {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
-              </span>
-            </div>
-            {!useDummyData && (
-              <button
-                type="button"
-                onClick={handleRefreshSnapshots}
-                disabled={isRefreshingSnapshots}
-                className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-300 disabled:opacity-60`}
-                title="Rebuild daily performance snapshots from live events"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshingSnapshots ? "animate-spin" : ""}`} />
-                {isRefreshingSnapshots ? "Refreshing…" : "Refresh snapshots"}
-              </button>
-            )}
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="campaign-date-start"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                From:
-              </label>
-              <Input
-                id="campaign-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="campaign-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                To:
-              </label>
-              <Input
-                id="campaign-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
-              <button
-                type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: colors.primary.accent }}
-              >
-                Run
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      useDummyData ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
+                  {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
+                </span>
+              </div>
+              {!useDummyData && (
+                <button
+                  type="button"
+                  onClick={handleRefreshSnapshots}
+                  disabled={isRefreshingSnapshots}
+                  className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-300 disabled:opacity-60`}
+                  title="Rebuild daily performance snapshots from live events"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshingSnapshots ? "animate-spin" : ""}`} />
+                  {isRefreshingSnapshots ? "Refreshing…" : "Refresh snapshots"}
+                </button>
+              )}
+            </>
+          }
+        />
       </header>
 
       {liveReportError && !useDummyData && (
@@ -1373,6 +1280,7 @@ export default function CampaignReportsPage() {
         </div>
       )}
 
+      {!isTrendsView && (
       <section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {heroCards.map((card) => {
@@ -1415,73 +1323,53 @@ export default function CampaignReportsPage() {
           })}
         </div>
       </section>
+      )}
 
+      {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Channel Reach Contribution"
+          subtitle="All configured channels, including those with no traffic yet"
+          filename="campaign-channel-reach.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "channel", label: "Channel" },
+            { key: "reach", label: "Reach" },
+            { key: "impressions", label: "Impressions" },
+          ]}
+          rows={channelData}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Channel Reach Contribution
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Breakdown of reach and impressions by channel
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={channelData} barCategoryGap="20%" barGap={8}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="channel" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Bar
-                  dataKey="reach"
-                  name="Reach"
-                  fill={colors.reportCharts.campaignReports.channelReach.reach}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="impressions"
-                  name="Impressions"
-                  fill={
-                    colors.reportCharts.campaignReports.channelReach.impressions
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ChannelReachContributionChart
+            data={channelData}
+            ensureCatalog={!useDummyData}
+            emptyMessage="No channel activity in this window."
+          />
+        </ReportChartCard>
 
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Engagement Stages"
+          subtitle="Track drop-off from sent to conversion"
+          filename="campaign-engagement-stages.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "stage", label: "Stage" },
+            { key: "value", label: "Volume" },
+          ]}
+          rows={funnelSeries}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Engagement Stages
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Track drop-off from sent to conversion
-              </p>
+          {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-gray-500">
+              No engagement stages in this window.
             </div>
-          </div>
-          <div className="mt-6 h-80">
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={funnelSeries}
                 margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="stage" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
+                <XAxis dataKey="stage" interval={0} tick={{ fill: "#6b7280" }} />
+                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
                 <Tooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
@@ -1497,112 +1385,119 @@ export default function CampaignReportsPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
+          )}
+        </ReportChartCard>
       </section>
+      )}
 
+      {isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="CTR & Engagement Trends"
+          subtitle="Monitor interaction quality across the selected period"
+          filename="campaign-ctr-engagement-trends.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "ctr", label: "CTR %" },
+            { key: "engagement", label: "Engagement %" },
+          ]}
+          rows={trendSeries}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                CTR & Engagement Trends
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Monitor interaction quality across the selected period
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="period" tick={{ fill: "#6b7280" }} />
-                <YAxis
-                  yAxisId="left"
-                  orientation="left"
-                  tick={{ fill: "#6b7280" }}
-                  domain={[0, (max: number) => Math.max(20, Math.ceil(max / 5) * 5 || 20)]}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="ctr"
-                  name="CTR %"
-                  stroke={
-                    colors.reportCharts.campaignReports.ctrEngagementTrends.ctr
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="engagement"
-                  name="Engagement %"
-                  stroke={
-                    colors.reportCharts.campaignReports.ctrEngagementTrends
-                      .engagement
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ReportGroupedBarChart
+            data={trendSeries}
+            xKey="period"
+            yLabel="Rate (%)"
+            yTickFormatter={(value) => `${value}`}
+            valueFormatter={(value) => `${value}%`}
+            comparisonData={trendComparison}
+            series={[
+              {
+                dataKey: "ctr",
+                name: "CTR %",
+                color: colors.reportCharts.campaignReports.ctrEngagementTrends.ctr,
+              },
+              {
+                dataKey: "engagement",
+                name: "Engagement %",
+                color:
+                  colors.reportCharts.campaignReports.ctrEngagementTrends
+                    .engagement,
+              },
+            ]}
+          />
+        </ReportChartCard>
 
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Revenue vs Spend"
+          subtitle="Compare generated revenue against campaign spend"
+          filename="campaign-revenue-vs-spend.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "revenue", label: "Revenue" },
+            { key: "spend", label: "Spend" },
+          ]}
+          rows={revenueSeries}
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Revenue vs Spend
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Compare generated revenue against campaign spend
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="period" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke={
-                    colors.reportCharts.campaignReports.revenueVsSpend.revenue
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="spend"
-                  name="Spend"
-                  stroke={
-                    colors.reportCharts.campaignReports.revenueVsSpend.spend
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ReportGroupedBarChart
+            data={revenueSeries}
+            xKey="period"
+            yLabel="Amount"
+            yTickFormatter={(value) => value.toLocaleString("en-US")}
+            comparisonData={revenueComparison}
+            series={[
+              {
+                dataKey: "revenue",
+                name: "Revenue",
+                color: colors.reportCharts.campaignReports.revenueVsSpend.revenue,
+              },
+              {
+                dataKey: "spend",
+                name: "Spend",
+                color: colors.reportCharts.campaignReports.revenueVsSpend.spend,
+              },
+            ]}
+          />
+        </ReportChartCard>
+
+        <ReportChartCard
+          className="lg:col-span-2"
+          title="ROI / ROMI"
+          subtitle="Return on spend for each period (revenue ÷ spend)"
+          filename="campaign-roi-trends.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "revenue", label: "Revenue" },
+            { key: "spend", label: "Spend" },
+            { key: "roi", label: "ROI" },
+          ]}
+          rows={roiSeries}
+        >
+          <ReportGroupedBarChart
+            data={roiSeries}
+            xKey="period"
+            yLabel="ROI"
+            yTickFormatter={(value) => `${value}x`}
+            valueFormatter={(value) => `${value}x`}
+            comparisonData={roiComparison}
+            series={[
+              {
+                dataKey: "roi",
+                name: "ROI",
+                color: colors.reportCharts.palette.color1,
+              },
+            ]}
+          />
+        </ReportChartCard>
       </section>
+      )}
 
+      {!isTrendsView && (
       <section className="space-y-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -1718,6 +1613,7 @@ export default function CampaignReportsPage() {
           </>
         )}
       </section>
+      )}
 
       {/* Campaign Offers Modal */}
       {selectedCampaignForModal && (

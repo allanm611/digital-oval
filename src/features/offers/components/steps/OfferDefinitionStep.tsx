@@ -30,7 +30,9 @@ export default function OfferDefinitionStep({
 }: OfferDefinitionStepProps) {
   const [typeSearchTerm, setTypeSearchTerm] = useState("");
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
-  const { data: offerTypes, loading: offerTypesLoading } = useBackendOfferTypeData();
+  const { data: offerTypes, loading: offerTypesLoading } = useBackendOfferTypeData({
+    activeOnly: true,
+  });
 
   const isFormValid =
     formData.name?.trim() && formData.type && formData.description?.trim();

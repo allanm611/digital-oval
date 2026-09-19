@@ -3,9 +3,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -23,7 +20,6 @@ import {
 import BackButton from "../../../shared/components/ui/BackButton";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { colors } from "../../../shared/utils/tokens";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency } from "../../../shared/services/currencyService";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
@@ -40,13 +36,25 @@ import type {
 } from "../types/ReportsAPI";
 import {
   buildCampaignReportParams,
-  formatTrendLabel,
+  resolveHeroTrend,
   settledError,
   settledValue,
 } from "../utils/campaignReportQuery";
+import {
+  asFiniteNumber,
+  normalizeCampaignPortfolio,
+  pickNamedArray,
+  unwrapCampaignSummary,
+  unwrapHeroTrends,
+} from "../utils/normalizeCampaignReport";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { fillCampaignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import ChannelReachContributionChart from "../components/ChannelReachContributionChart";
+import ReportChartCard from "../components/ReportChartCard";
+import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
 import { campaignReportsService } from "../services/campaignReportsService";
 import { tw } from "../../../shared/utils/utils";
-import Input from "../../../shared/components/ui/Input";
 import { campaignService } from "../../campaigns/services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Campaign } from "../../campaigns/types/campaign";
@@ -102,7 +110,6 @@ type LiveCampaignDetail = {
   lifecycle?: CampaignLifecycleRow[];
 };
 
-const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
 const rangeDays: Record<RangeOption, number> = {
   "7d": 7,
   "30d": 30,
@@ -131,15 +138,6 @@ const mapDaysToRange = (days: number | null): RangeOption => {
   return "90d";
 };
 
-const getRangeLabel = (option: RangeOption): string => {
-  const labels: Record<RangeOption, string> = {
-    "7d": "Daily",
-    "30d": "Weekly",
-    "90d": "Monthly",
-  };
-  return labels[option];
-};
-
 const getScaleFactor = (
   customDays: number | null,
   baseRange: RangeOption,
@@ -147,23 +145,6 @@ const getScaleFactor = (
   if (!customDays) return 1;
   const baseDays = rangeDays[baseRange];
   return customDays / baseDays;
-};
-
-const getDateConstraints = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const maxDate = `${year}-${month}-${day}`;
-
-  const minDate = new Date(today);
-  minDate.setFullYear(today.getFullYear() - 2);
-  const minYear = minDate.getFullYear();
-  const minMonth = String(minDate.getMonth() + 1).padStart(2, "0");
-  const minDay = String(minDate.getDate()).padStart(2, "0");
-  const minDateStr = `${minYear}-${minMonth}-${minDay}`;
-
-  return { minDate: minDateStr, maxDate };
 };
 
 // Dummy data for single campaign report
@@ -401,12 +382,15 @@ export default function CampaignDetailReportPage() {
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "monthly",
+    defaultTrendsPreset: "daily",
   });
+  const { isTrendsView, queryParams, overviewWindow, activeWindow } = timeWindow;
+  const chartAudit = toChartAudit(activeWindow);
+  const overviewAudit = toChartAudit(overviewWindow);
+  const selectedRange = timeWindow.rangeKey;
+  const appliedCustomRange = timeWindow.activeWindow.bounds;
   const [useDummyData, setUseDummyData] = useState(true);
   const [liveDetail, setLiveDetail] = useState<LiveCampaignDetail | null>(null);
   const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
@@ -437,10 +421,6 @@ export default function CampaignDetailReportPage() {
       fetchCampaign();
     }
   }, [id]);
-
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
@@ -473,9 +453,11 @@ export default function CampaignDetailReportPage() {
 
     let cancelled = false;
     const params = buildCampaignReportParams({
-      range: activeRangeKey,
-      startDate: appliedCustomRange.start,
-      endDate: appliedCustomRange.end,
+      range: queryParams.range || selectedRange,
+      grain: queryParams.grain,
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      preset: queryParams.preset,
       campaignId: id,
     });
 
@@ -483,6 +465,7 @@ export default function CampaignDetailReportPage() {
       setIsLoadingLiveReport(true);
       setLiveReportError(null);
       const results = await Promise.allSettled([
+        campaignReportsService.getPortfolio(params),
         campaignReportsService.getCampaignSummary(id, params),
         campaignReportsService.getChannelReach(params),
         campaignReportsService.getFunnel(params),
@@ -498,6 +481,7 @@ export default function CampaignDetailReportPage() {
       if (cancelled) return;
 
       const [
+        portfolioResult,
         summaryResult,
         reachResult,
         funnelResult,
@@ -511,31 +495,62 @@ export default function CampaignDetailReportPage() {
         lifecycleResult,
       ] = results;
 
+      const portfolio = normalizeCampaignPortfolio(settledValue(portfolioResult));
       const summaryPayload = settledValue(summaryResult);
-      const trendPoints = settledValue(trendsResult)?.data || [];
-      const kpi = summaryPayload?.data;
+      const kpi = unwrapCampaignSummary(summaryPayload?.data) || portfolio.summary;
+      const trendPoints = pickNamedArray<TrendPoint>(
+        settledValue(trendsResult)?.data,
+        ["performanceTrend", "trends"],
+      );
+      const reachRows = pickNamedArray<ChannelReachPoint>(
+        settledValue(reachResult)?.data,
+        ["channelReach"],
+      );
+      const funnelRows = pickNamedArray<FunnelPoint>(
+        settledValue(funnelResult)?.data,
+        ["conversionFunnel", "funnel"],
+      );
+      const portfolioReach = portfolio.channelReach || [];
+      const portfolioFunnel = portfolio.conversionFunnel || [];
+      const reachScore = (rows: ChannelReachPoint[]) =>
+        rows.reduce(
+          (sum, row) => sum + asFiniteNumber(row.reach) + asFiniteNumber(row.impressions),
+          0,
+        );
+      const funnelScore = (rows: FunnelPoint[]) =>
+        rows.reduce((sum, row) => sum + asFiniteNumber(row.value), 0);
 
       setLiveDetail({
         summary: kpi
           ? {
-              reach: kpi.reach || kpi.delivered || 0,
-              impressions: kpi.impressions || kpi.reach || 0,
-              opens: kpi.opens || kpi.opened || 0,
-              clicks: kpi.clicks || kpi.clicked || 0,
-              clickRate: kpi.clickRate || 0,
-              engagementRate: kpi.engagementRate || kpi.openRate || 0,
-              conversions: kpi.conversions || kpi.converted || 0,
-              conversionRate: kpi.conversionRate || 0,
-              revenue: kpi.revenue || 0,
-              roas: kpi.roas || 0,
-              cac: kpi.cac || 0,
-              campaignCost: kpi.campaignCost || 0,
+              reach: asFiniteNumber(kpi.reach),
+              impressions: asFiniteNumber(kpi.impressions),
+              opens: asFiniteNumber(kpi.opens),
+              clicks: asFiniteNumber(kpi.clicks),
+              clickRate: asFiniteNumber(kpi.clickRate),
+              engagementRate: asFiniteNumber(kpi.engagementRate),
+              conversions: asFiniteNumber(kpi.conversions),
+              conversionRate: asFiniteNumber(kpi.conversionRate),
+              revenue: asFiniteNumber(kpi.revenue),
+              roas: asFiniteNumber(kpi.roas),
+              cac: asFiniteNumber(kpi.cac),
+              campaignCost: asFiniteNumber(kpi.campaignCost),
             }
           : undefined,
-        heroTrends: summaryPayload?.trends,
-        channelReach: settledValue(reachResult)?.data,
-        funnel: settledValue(funnelResult)?.data,
-        trends: trendPoints,
+        heroTrends: unwrapHeroTrends(summaryPayload) || portfolio.heroTrends,
+        channelReach:
+          reachScore(portfolioReach) >= reachScore(reachRows) && portfolioReach.length
+            ? portfolioReach
+            : reachRows.length
+              ? reachRows
+              : portfolioReach,
+        funnel:
+          funnelScore(portfolioFunnel) >= funnelScore(funnelRows) && portfolioFunnel.length
+            ? portfolioFunnel
+            : funnelRows.length
+              ? funnelRows
+              : portfolioFunnel,
+        trends: trendPoints.length ? trendPoints : portfolio.performanceTrend,
         roi: settledValue(roiResult)?.data ?? null,
         control: settledValue(controlResult)?.data ?? null,
         budget: settledValue(budgetResult)?.data ?? null,
@@ -545,19 +560,26 @@ export default function CampaignDetailReportPage() {
         lifecycle: settledValue(lifecycleResult)?.data || [],
       });
 
-      const errors = [
-        settledError(summaryResult, "Failed to load campaign summary."),
-        settledError(reachResult, "Failed to load channel performance."),
-        settledError(funnelResult, "Failed to load engagement funnel."),
-        settledError(trendsResult, "Failed to load campaign trends."),
-      ].filter(Boolean) as string[];
+      const hasWidgets = Boolean(
+        kpi ||
+          portfolio.channelReach?.length ||
+          portfolio.conversionFunnel?.length ||
+          portfolio.performanceTrend?.length,
+      );
+      const errors = hasWidgets
+        ? []
+        : ([
+            settledError(portfolioResult, "Failed to load campaign portfolio."),
+            settledError(summaryResult, "Failed to load campaign summary."),
+            settledError(reachResult, "Failed to load channel performance."),
+            settledError(funnelResult, "Failed to load engagement funnel."),
+            settledError(trendsResult, "Failed to load campaign trends."),
+          ].filter(Boolean) as string[]);
 
       if (errors.length) {
         const message = errors.join(" ");
         setLiveReportError(message);
-        if (errors.length === 4) {
-          showError(extractBackendError(message, "Failed to load campaign report."));
-        }
+        showError(extractBackendError(message, "Failed to load campaign report."));
       }
       setIsLoadingLiveReport(false);
     };
@@ -569,9 +591,10 @@ export default function CampaignDetailReportPage() {
   }, [
     useDummyData,
     id,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
     showError,
   ]);
 
@@ -619,10 +642,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.audience,
       trend: useDummyData
         ? { value: "+8.4%", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.reach?.label),
-            direction: liveDetail?.heroTrends?.reach?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.reach),
     },
     {
       label: "Engagement Rate",
@@ -631,10 +651,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.engagement,
       trend: useDummyData
         ? { value: "+2.1 pts", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.engagementRate?.label),
-            direction: liveDetail?.heroTrends?.engagementRate?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.engagementRate),
     },
     {
       label: "Click-Through Rate",
@@ -643,10 +660,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.outcome,
       trend: useDummyData
         ? { value: "+0.6 pts", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.engagementRate?.label),
-            direction: liveDetail?.heroTrends?.engagementRate?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.engagementRate),
     },
     {
       label: "Conversion Rate",
@@ -655,10 +669,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.outcome,
       trend: useDummyData
         ? { value: "-0.4 pts", direction: "down" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.conversionRate?.label),
-            direction: liveDetail?.heroTrends?.conversionRate?.direction || "down",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.conversionRate),
     },
     {
       label: "Revenue Generated",
@@ -667,10 +678,7 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.growth,
       trend: useDummyData
         ? { value: "+84K", direction: "up" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.revenue?.label),
-            direction: liveDetail?.heroTrends?.revenue?.direction || "up",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.revenue),
     },
     {
       label: "Customer Acquisition Cost",
@@ -679,21 +687,13 @@ export default function CampaignDetailReportPage() {
       icon: statIcons.outcome,
       trend: useDummyData
         ? { value: "-2.3%", direction: "down" as const }
-        : {
-            value: formatTrendLabel(liveDetail?.heroTrends?.campaignCost?.label),
-            direction: liveDetail?.heroTrends?.campaignCost?.direction || "down",
-          },
+        : resolveHeroTrend(liveDetail?.heroTrends?.campaignCost),
     },
   ];
 
   const channelData = useMemo(() => {
     if (!useDummyData) {
-      if (liveDetail?.channelReach?.length) return liveDetail.channelReach;
-      return channelReachData[activeRangeKey].map((point) => ({
-        ...point,
-        reach: 0,
-        impressions: 0,
-      }));
+      return liveDetail?.channelReach || [];
     }
     const base = channelReachData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -706,11 +706,7 @@ export default function CampaignDetailReportPage() {
 
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
-      if (liveDetail?.funnel?.length) return liveDetail.funnel;
-      return funnelData[activeRangeKey].map((point) => ({
-        ...point,
-        value: 0,
-      }));
+      return liveDetail?.funnel || [];
     }
     const base = funnelData[activeRangeKey];
     if (scaleFactor === 1) return base;
@@ -721,24 +717,56 @@ export default function CampaignDetailReportPage() {
   }, [activeRangeKey, scaleFactor, useDummyData, liveDetail]);
 
   const trendSeries = useMemo(() => {
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
+    };
     if (!useDummyData) {
-      if (liveDetail?.trends?.length) return liveDetail.trends;
-      return trendData[activeRangeKey].map((point) => ({
-        ...point,
-        ctr: 0,
-        engagement: 0,
-        revenue: 0,
-        spend: 0,
-      }));
+      return fillCampaignTrendSeries(liveDetail?.trends || [], window);
     }
-    const base = trendData[activeRangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({
-      ...point,
-      revenue: point.revenue ? Math.round(point.revenue * scaleFactor) : undefined,
-      spend: point.spend ? Math.round(point.spend * scaleFactor) : undefined,
-    }));
-  }, [activeRangeKey, scaleFactor, useDummyData, liveDetail]);
+    return fillCampaignTrendSeries(
+      trendData[dummyTemplateRange(queryParams.grain || "daily")],
+      window,
+    );
+  }, [
+    useDummyData,
+    liveDetail,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.grain,
+  ]);
+
+  const roiSeries = useMemo(
+    () =>
+      trendSeries.map((point) => ({
+        period: point.period,
+        date: point.date ?? "",
+        revenue: point.revenue ?? 0,
+        spend: point.spend ?? 0,
+        roi: point.spend
+          ? Number(((point.revenue ?? 0) / point.spend).toFixed(2))
+          : 0,
+      })),
+    [trendSeries],
+  );
+
+  const trendComparison = useMemo(
+    () => (useDummyData ? dummyPreviousPeriod(trendSeries) : undefined),
+    [trendSeries, useDummyData],
+  );
+  const roiComparison = useMemo(
+    () =>
+      useDummyData
+        ? dummyPreviousPeriod(roiSeries).map((point) => ({
+            ...point,
+            roi: point.spend
+              ? Number((Number(point.revenue) / Number(point.spend)).toFixed(2))
+              : 0,
+          }))
+        : undefined,
+    [roiSeries, useDummyData],
+  );
 
   if (isLoading) {
     return (
@@ -767,32 +795,9 @@ export default function CampaignDetailReportPage() {
           </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  selectedRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {getRangeLabel(option)}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Data Mode Toggle */}
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          extraActions={
             <div
               className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
             >
@@ -808,7 +813,7 @@ export default function CampaignDetailReportPage() {
                 onClick={() => setUseDummyData(!useDummyData)}
                 className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: useDummyData ? 'var(--c-toggle-active)' : '#d1d5db',
+                  backgroundColor: useDummyData ? "var(--c-toggle-active)" : "#d1d5db",
                 }}
               >
                 <span
@@ -821,74 +826,8 @@ export default function CampaignDetailReportPage() {
                 {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="report-date-start"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                From:
-              </label>
-              <Input
-                id="report-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="report-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                To:
-              </label>
-              <Input
-                id="report-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
-              <button
-                type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: colors.primary.accent }}
-              >
-                Run
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
+          }
+        />
       </header>
 
       {liveReportError && !useDummyData && (
@@ -898,6 +837,7 @@ export default function CampaignDetailReportPage() {
       )}
 
       {/* KPI Cards */}
+      {!isTrendsView && (
       <section>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {heroCards.map((card) => {
@@ -940,72 +880,53 @@ export default function CampaignDetailReportPage() {
           })}
         </div>
       </section>
+      )}
 
-      {/* Charts */}
+      {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* Channel Reach */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Channel Performance"
+          subtitle="All configured channels, including those with no traffic yet"
+          filename="campaign-detail-channel-reach.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "channel", label: "Channel" },
+            { key: "reach", label: "Reach" },
+            { key: "impressions", label: "Impressions" },
+          ]}
+          rows={channelData}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Channel Performance
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Reach and impressions by communication channel
-            </p>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={channelData} barCategoryGap="20%" barGap={8}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="channel" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Bar
-                  dataKey="reach"
-                  name="Reach"
-                  fill={colors.reportCharts.campaignReports.channelReach.reach}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="impressions"
-                  name="Impressions"
-                  fill={
-                    colors.reportCharts.campaignReports.channelReach.impressions
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ChannelReachContributionChart
+            data={channelData}
+            ensureCatalog={!useDummyData}
+            emptyMessage="No channel activity in this window."
+          />
+        </ReportChartCard>
 
-        {/* Funnel */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Engagement Funnel"
+          subtitle="Track audience journey from send to conversion"
+          filename="campaign-detail-engagement-funnel.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "stage", label: "Stage" },
+            { key: "value", label: "Volume" },
+          ]}
+          rows={funnelSeries}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Engagement Funnel
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Track audience journey from send to conversion
-            </p>
-          </div>
-          <div className="mt-6 h-80">
+          {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-sm text-gray-500">
+              No engagement stages in this window.
+            </div>
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={funnelSeries}
                 margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="stage" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
+                <XAxis dataKey="stage" interval={0} tick={{ fill: "#6b7280" }} />
+                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
                 <Tooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
@@ -1021,112 +942,122 @@ export default function CampaignDetailReportPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
+          )}
+        </ReportChartCard>
       </section>
+      )}
 
-      {/* Trend Charts */}
+      {isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* CTR & Engagement Trends */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="CTR & Engagement Trends"
+          subtitle="Monitor interaction quality across the selected period"
+          filename="campaign-detail-ctr-engagement-trends.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "ctr", label: "CTR %" },
+            { key: "engagement", label: "Engagement %" },
+          ]}
+          rows={trendSeries}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              CTR & Engagement Trends
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Monitor interaction quality across the selected period
-            </p>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="period" tick={{ fill: "#6b7280" }} />
-                <YAxis
-                  yAxisId="left"
-                  orientation="left"
-                  tick={{ fill: "#6b7280" }}
-                  domain={[0, (max: number) => Math.max(20, Math.ceil(max / 5) * 5 || 20)]}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="ctr"
-                  name="CTR %"
-                  stroke={
-                    colors.reportCharts.campaignReports.ctrEngagementTrends.ctr
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="engagement"
-                  name="Engagement %"
-                  stroke={
-                    colors.reportCharts.campaignReports.ctrEngagementTrends
-                      .engagement
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ReportGroupedBarChart
+            data={trendSeries.map((point) => ({
+              period: point.period,
+              ctr: point.ctr,
+              engagement: point.engagement,
+            }))}
+            xKey="period"
+            yLabel="Rate (%)"
+            valueFormatter={(value) => `${value}%`}
+            comparisonData={trendComparison}
+            series={[
+              {
+                dataKey: "ctr",
+                name: "CTR %",
+                color: colors.reportCharts.campaignReports.ctrEngagementTrends.ctr,
+              },
+              {
+                dataKey: "engagement",
+                name: "Engagement %",
+                color:
+                  colors.reportCharts.campaignReports.ctrEngagementTrends
+                    .engagement,
+              },
+            ]}
+          />
+        </ReportChartCard>
 
-        {/* Revenue Trends */}
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title="Revenue vs Spend"
+          subtitle="Generated revenue against campaign spend"
+          filename="campaign-detail-revenue-vs-spend.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "revenue", label: "Revenue" },
+            { key: "spend", label: "Spend" },
+          ]}
+          rows={roiSeries}
         >
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Revenue vs Spend
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Generated revenue against campaign spend
-            </p>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="period" tick={{ fill: "#6b7280" }} />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  name="Revenue"
-                  stroke={
-                    colors.reportCharts.campaignReports.revenueVsSpend.revenue
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="spend"
-                  name="Spend"
-                  stroke={
-                    colors.reportCharts.campaignReports.revenueVsSpend.spend
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ReportGroupedBarChart
+            data={roiSeries}
+            xKey="period"
+            yLabel="Amount"
+            yTickFormatter={(value) => value.toLocaleString("en-US")}
+            comparisonData={trendComparison}
+            series={[
+              {
+                dataKey: "revenue",
+                name: "Revenue",
+                color: colors.reportCharts.campaignReports.revenueVsSpend.revenue,
+              },
+              {
+                dataKey: "spend",
+                name: "Spend",
+                color: colors.reportCharts.campaignReports.revenueVsSpend.spend,
+              },
+            ]}
+          />
+        </ReportChartCard>
+
+        <ReportChartCard
+          className="lg:col-span-2"
+          title="ROI / ROMI"
+          subtitle="Return on spend for each period (revenue ÷ spend)"
+          filename="campaign-detail-roi-trends.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "revenue", label: "Revenue" },
+            { key: "spend", label: "Spend" },
+            { key: "roi", label: "ROI" },
+          ]}
+          rows={roiSeries}
+        >
+          <ReportGroupedBarChart
+            data={roiSeries}
+            xKey="period"
+            yLabel="ROI"
+            yTickFormatter={(value) => `${value}x`}
+            valueFormatter={(value) => `${value}x`}
+            comparisonData={roiComparison}
+            series={[
+              {
+                dataKey: "roi",
+                name: "ROI",
+                color: colors.reportCharts.palette.color1,
+              },
+            ]}
+          />
+        </ReportChartCard>
       </section>
+      )}
 
-      {!useDummyData && (
+      {!isTrendsView && !useDummyData && (
         <>
           <section className="grid gap-6 lg:grid-cols-3">
             <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>

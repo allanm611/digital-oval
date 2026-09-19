@@ -1,4 +1,9 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  type KeyboardEventHandler,
+  type ReactNode,
+} from "react";
 import { useHorizontalOverflow } from "../../hooks/useHorizontalOverflow";
 import HorizontalScrollHint, {
   DEFAULT_HORIZONTAL_SCROLL_HINT,
@@ -17,7 +22,39 @@ type OverflowScrollAreaProps = {
   scrollMode?: "end" | "page";
   role?: string;
   ariaLabel?: string;
+  onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+  /** Fade overlay color when content overflows. Defaults to the page background. */
+  fadeColor?: string;
 };
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function scrollActiveItemHorizontally(
+  scroller: HTMLElement,
+  active: HTMLElement,
+  behavior: ScrollBehavior,
+) {
+  const scrollerRect = scroller.getBoundingClientRect();
+  const activeRect = active.getBoundingClientRect();
+  const edgePadding = 48;
+
+  if (activeRect.left < scrollerRect.left + edgePadding) {
+    scroller.scrollBy({
+      left: activeRect.left - scrollerRect.left - edgePadding,
+      behavior,
+    });
+    return;
+  }
+
+  if (activeRect.right > scrollerRect.right - edgePadding) {
+    scroller.scrollBy({
+      left: activeRect.right - scrollerRect.right + edgePadding,
+      behavior,
+    });
+  }
+}
 
 /**
  * Horizontal scroller with the campaigns-table overflow chevron.
@@ -34,6 +71,8 @@ export default function OverflowScrollArea({
   scrollMode = "end",
   role,
   ariaLabel,
+  onKeyDown,
+  fadeColor = "var(--c-primary-background, #e5e7eb)",
 }: OverflowScrollAreaProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { hasOverflow, isAtStart, isAtEnd } = useHorizontalOverflow(
@@ -45,27 +84,28 @@ export default function OverflowScrollArea({
     if (!activeItemSelector || !scrollerRef.current) return;
     const active = scrollerRef.current.querySelector(activeItemSelector);
     if (!(active instanceof HTMLElement)) return;
-    active.scrollIntoView({
-      inline: "nearest",
-      block: "nearest",
-      behavior: "smooth",
-    });
+    scrollActiveItemHorizontally(
+      scrollerRef.current,
+      active,
+      prefersReducedMotion() ? "auto" : "smooth",
+    );
   }, [activeItemSelector]);
 
   const scrollByDirection = (direction: "start" | "end") => {
     const el = scrollerRef.current;
     if (!el) return;
+    const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
     if (scrollMode === "end") {
       el.scrollTo({
         left: direction === "end" ? el.scrollWidth : 0,
-        behavior: "smooth",
+        behavior,
       });
       return;
     }
     const delta = Math.max(el.clientWidth * 0.7, 160);
     el.scrollBy({
       left: direction === "end" ? delta : -delta,
-      behavior: "smooth",
+      behavior,
     });
   };
 
@@ -75,6 +115,7 @@ export default function OverflowScrollArea({
         <HorizontalScrollHint
           direction="start"
           align="center"
+          size="lg"
           hint={hint}
           onClick={() => scrollByDirection("start")}
         />
@@ -83,6 +124,7 @@ export default function OverflowScrollArea({
         <HorizontalScrollHint
           direction="end"
           align="center"
+          size="lg"
           hint={hint}
           onClick={() => scrollByDirection("end")}
         />
@@ -90,20 +132,18 @@ export default function OverflowScrollArea({
       {hasOverflow && !isAtStart ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-0 w-8 z-10"
+          className="pointer-events-none absolute inset-y-0 left-0 w-14 z-10"
           style={{
-            background:
-              "linear-gradient(to right, var(--c-surface-page, #fff), transparent)",
+            background: `linear-gradient(to right, ${fadeColor}, transparent)`,
           }}
         />
       ) : null}
       {hasOverflow && !isAtEnd ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 w-8 z-10"
+          className="pointer-events-none absolute inset-y-0 right-0 w-14 z-10"
           style={{
-            background:
-              "linear-gradient(to left, var(--c-surface-page, #fff), transparent)",
+            background: `linear-gradient(to left, ${fadeColor}, transparent)`,
           }}
         />
       ) : null}
@@ -111,19 +151,23 @@ export default function OverflowScrollArea({
         ref={scrollerRef}
         role={role}
         aria-label={ariaLabel}
-        className={`overflow-x-auto min-w-0 ${
+        aria-orientation={role === "tablist" ? "horizontal" : undefined}
+        onKeyDown={onKeyDown}
+        className={`overflow-x-auto min-w-0 overscroll-x-contain ${
           hideScrollbar
             ? "[&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]"
             : ""
         } ${contentClassName}`}
-        style={
-          hideScrollbar
+        style={{
+          ...(hideScrollbar
             ? {
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
+                scrollbarWidth: "none" as const,
+                msOverflowStyle: "none" as const,
               }
-            : undefined
-        }
+            : undefined),
+          paddingLeft: hasOverflow && !isAtStart ? 44 : undefined,
+          paddingRight: hasOverflow && !isAtEnd ? 44 : undefined,
+        }}
       >
         {children}
       </div>

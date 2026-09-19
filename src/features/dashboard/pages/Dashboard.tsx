@@ -750,6 +750,12 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/OfferReportsPage"
       ),
   ),
+  OfferDetailReportPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/OfferDetailReportPage"
+      ),
+  ),
   SegmentReportsPage: lazy(
     () =>
       import(
@@ -776,6 +782,18 @@ const AdministrationPages = {
     () =>
       import(
         /* webpackPrefetch: true */ "../../monitoring/pages/ExecutionDetailsPage"
+      ),
+  ),
+  AiModelConfigurationHubPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationHubPage"
+      ),
+  ),
+  AiModelConfigurationFormPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationFormPage"
       ),
   ),
 };
@@ -923,6 +941,14 @@ export default function Dashboard() {
           <Route
             path="/administration"
             element={<AdministrationPages.AdminHubPage />}
+          />
+          <Route
+            path="/ai-models"
+            element={<AdministrationPages.AiModelConfigurationHubPage />}
+          />
+          <Route
+            path="/ai-models/:providerId"
+            element={<AdministrationPages.AiModelConfigurationFormPage />}
           />
           <Route
             path="/monitoring"
@@ -1389,6 +1415,10 @@ export default function Dashboard() {
           <Route
             path="/reports/offers"
             element={<AnalyticsPages.OfferReportsPage />}
+          />
+          <Route
+            path="/reports/offers/:id"
+            element={<AnalyticsPages.OfferDetailReportPage />}
           />
           <Route
             path="/reports/segments"

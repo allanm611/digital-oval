@@ -1821,6 +1821,19 @@ export interface Translations {
       generate: string;
       generating: string;
       regenerate: string;
+      previewPrompt: string;
+      previewPromptAria: string;
+      promptPreviewTitle: string;
+      promptPreviewSubtitle: string;
+      promptPreviewMeta: string;
+      promptPreviewCardLabel: string;
+      promptPreviewFormHint: string;
+      editPrompt: string;
+      promptUsedTitle: string;
+      promptUsedHint: string;
+      notSpecified: string;
+      objectiveFallback: string;
+      aiBadgeLabel: string;
       apply: string;
       applyAndReplace: string;
       applyTitleToo: string;
@@ -1838,11 +1851,19 @@ export interface Translations {
         objectiveRequired: string;
         messageBodyMinWords: string;
         generateFailed: string;
+        modelRequired: string;
       };
       hints: {
         variables: string;
         channelLimit: string;
         overwrite: string;
+      };
+      aiModel: {
+        label: string;
+        placeholder: string;
+        hint: string;
+        noneConfigured: string;
+        configureCta: string;
       };
     };
     messageBody: {

@@ -50,9 +50,17 @@ import CreateLanguageModal from "./CreateLanguageModal";
 import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
 import AiGenerateMessageButton from "./AiGenerateMessageButton";
 import AiGenerateMessageModal from "./AiGenerateMessageModal";
+import AiGeneratedBodyBadge from "./AiGeneratedBodyBadge";
 import MessageContentToolbar, {
   messageContentActionClass,
 } from "./MessageContentToolbar";
+import type { AiGenerateModalView } from "../types/aiCreativeGeneration";
+import {
+  persistAiSessionLocally,
+  rememberAiCreativeSession,
+  resolveAiCreativeSession,
+  shouldShowAiGeneratedBadge,
+} from "../utils/aiCreativeSessionPersist";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
   id: string; // Use string for local temp ID
@@ -759,6 +767,7 @@ export default function OfferCreativeStep({
     {},
   );
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiModalView, setAiModalView] = useState<AiGenerateModalView>("compose");
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -789,6 +798,19 @@ export default function OfferCreativeStep({
   };
 
   const removeCreative = (id: string) => {
+    const removed = creatives.find((c) => c.id === id);
+    if (removed) {
+      persistAiSessionLocally(
+        {
+          creativeId: removed.id,
+          offerId: removed.offer_id,
+          channel: removed.channel,
+          locale: removed.locale,
+          body: removed.text_body || removed.html_body,
+        },
+        null,
+      );
+    }
     const updatedCreatives = creatives.filter((c) => c.id !== id);
     onCreativesChange(updatedCreatives);
 
@@ -1585,13 +1607,24 @@ export default function OfferCreativeStep({
                           </div>
                         </div>
                         <AiGenerateMessageButton
-                          onClick={() => setIsAiModalOpen(true)}
+                          onClick={() => {
+                            setAiModalView("compose");
+                            setIsAiModalOpen(true);
+                          }}
                           disabled={!selectedCreativeData}
                           active={isAiModalOpen}
                         />
                     </MessageContentToolbar>
 
                     {/* Message Body */}
+                    <AiGeneratedBodyBadge
+                      visible={shouldShowAiGeneratedBadge(editingCreative)}
+                      onClick={() => {
+                        setAiModalView("result");
+                        setIsAiModalOpen(true);
+                      }}
+                      label={t.offers.aiGenerate.aiBadgeLabel}
+                    >
                     {selectedCreativeData && (selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id]) ? (
                         <div
                           onClick={() => setActiveField("body")}
@@ -1600,8 +1633,21 @@ export default function OfferCreativeStep({
                           <RichTextEditor
                             value={selectedCreativeData.channel === "Email" ? (editingCreative.html_body || "") : (editingCreative.text_body || "")}
                             onChange={(value) => {
-                              selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                                ...(selectedCreativeData.channel === "Email" ? { html_body: value, text_body: value } : { text_body: value }),
+                              if (!selectedCreativeData) return;
+                              const cleared = !value.trim();
+                              updateCreative(selectedCreativeData.id, {
+                                ...(selectedCreativeData.channel === "Email"
+                                  ? { html_body: value, text_body: value }
+                                  : { text_body: value }),
+                                ...(cleared
+                                  ? {
+                                      variables: rememberAiCreativeSession(
+                                        selectedCreativeData,
+                                        null,
+                                        { body: "" },
+                                      ),
+                                    }
+                                  : {}),
                               });
                             }}
                             placeholder={t.offers.messageBody.placeholder}
@@ -1625,9 +1671,20 @@ export default function OfferCreativeStep({
                             } else {
                               setVariableError("");
                             }
+                            if (!selectedCreativeData) return;
+                            const cleared = !value.trim();
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               text_body: value,
                               ...(selectedCreativeData.channel === "Email" && { html_body: value }),
+                              ...(cleared
+                                ? {
+                                    variables: rememberAiCreativeSession(
+                                      selectedCreativeData,
+                                      null,
+                                      { body: "" },
+                                    ),
+                                  }
+                                : {}),
                             });
                           }}
                           onKeyDown={(e) => {
@@ -1657,6 +1714,7 @@ export default function OfferCreativeStep({
                           disabled={!selectedCreativeData}
                         />
                       )}
+                    </AiGeneratedBodyBadge>
 
                     {variableError && (
                       <div className="mt-3 text-sm text-red-700">
@@ -1697,13 +1755,25 @@ export default function OfferCreativeStep({
             : editingCreative.text_body || ""
         }
         availableVariables={selectedVariables.map(formatVariablePlaceholder)}
-        onApply={({ title, body }) => {
+        initialSession={
+          selectedCreativeData
+            ? resolveAiCreativeSession(selectedCreativeData)
+            : null
+        }
+        initialView={aiModalView}
+        onApply={({ title, body, session }) => {
           if (!selectedCreativeData) return;
           const isEmail = selectedCreativeData.channel === "Email";
           const isRichText =
             isEmail || Boolean(isRichTextMap[selectedCreativeData.id]);
+          const variables = rememberAiCreativeSession(
+            selectedCreativeData,
+            session,
+            { body },
+          );
           updateCreative(selectedCreativeData.id, {
             text_body: body,
+            variables,
             ...(isRichText ? { html_body: body } : {}),
             ...(title ? { title } : {}),
           });

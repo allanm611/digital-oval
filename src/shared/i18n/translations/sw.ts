@@ -3135,6 +3135,23 @@ export const sw: Translations = {
       generate: "Tengeneza",
       generating: "Inatengenezwa...",
       regenerate: "Tengeneza tena",
+      previewPrompt: "Hakiki",
+      previewPromptAria: "Hakiki na hariri prompt ya kuzalisha",
+      promptPreviewTitle: "Hakiki ya prompt",
+      promptPreviewSubtitle:
+        "Kagua brief itakayotumwa. Hariri sehemu, kisha tengeneza au tengeneza tena.",
+      promptPreviewMeta: "{channel} · {locale}",
+      promptPreviewCardLabel: "Brief ya kuzalisha",
+      promptPreviewFormHint:
+        "Hariri prompt hapa, kisha tengeneza. Funga inarudisha fomu ya AI bila kupoteza mabadiliko.",
+      editPrompt: "Hariri prompt",
+      promptUsedTitle: "Prompt",
+      promptUsedHint:
+        "Brief hii inabaki baada ya kuzalisha. Ihariri hapa, kisha tengeneza tena.",
+      notSpecified: "Haijaainishwa",
+      objectiveFallback:
+        "Haijaainishwa — mwili wa ujumbe unatumika kama brief.",
+      aiBadgeLabel: "Imetengenezwa na AI. Bofya kuona ujumbe, matoleo, na prompt.",
       apply: "Ingiza kwenye ujumbe",
       applyAndReplace: "Badilisha mwili wa ujumbe",
       applyTitleToo: "Tumia pia kichwa kilichotengenezwa",
@@ -3152,11 +3169,20 @@ export const sw: Translations = {
         objectiveRequired: "Andika lengo wazi ili Gemini iandike ujumbe unaofaa.",
         messageBodyMinWords: "Andika mwili wa ujumbe wa angalau maneno 3 kabla ya kutengeneza.",
         generateFailed: "Imeshindwa kutengeneza maudhui ya ujumbe",
+        modelRequired: "Chagua modeli ya AI kabla ya kutengeneza.",
       },
       hints: {
         variables: "Vigezo Gemini inaweza kuhifadhi",
         channelLimit: "Urefu unaolengwa ni kama herufi {limit}.",
         overwrite: "Ingiza inachukua nafasi ya mwili wa ujumbe wa sasa. Bado unaweza kuhariri baadaye.",
+      },
+      aiModel: {
+        label: "Modeli ya AI",
+        placeholder: "Chagua modeli ya AI iliyosanidiwa",
+        hint: "Inatumia mtoa huduma aliyehifadhiwa kwenye Administration → AI Model Configuration.",
+        noneConfigured:
+          "Hakuna modeli za AI zinazotumika. Sanidi moja kwenye Administration → AI Model Configuration kabla ya kutengeneza.",
+        configureCta: "Fungua usanidi wa modeli za AI",
       },
     },
     messageBody: {

@@ -49,6 +49,10 @@ import {
 import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../../customers360/services/customerServices";
 import { customerProfileReportsService } from "../services/customerProfileReportsService";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { alignTrendSeries, toChartAudit } from "../utils/reportTimeWindow";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import ReportChartCard from "../components/ReportChartCard";
 import { useToast } from "../../../contexts/ToastContext";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
@@ -485,12 +489,16 @@ export default function CustomerProfileReportsPage() {
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { success: showSuccess, error: showError } = useToast();
-  const [selectedRange, setSelectedRange] = useState<RangeOption>("90d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "monthly",
+    defaultTrendsPreset: "daily",
   });
+  const { isTrendsView, queryParams, overviewWindow, activeWindow } = timeWindow;
+  const chartAudit = toChartAudit(activeWindow);
+  const overviewAudit = toChartAudit(overviewWindow);
+  const selectedRange = timeWindow.rangeKey;
+  const appliedCustomRange = timeWindow.activeWindow.bounds;
+  const customRange = appliedCustomRange;
   const [tableSearchTerm, setTableSearchTerm] = useState("");
   const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
@@ -851,10 +859,6 @@ export default function CustomerProfileReportsPage() {
     ];
   }, [selectedSubscription]);
 
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
-
   const handleCustomerSearch = async () => {
     if (!customerSearchTerm.trim()) {
       setCustomerError(t.customerProfileReports.enterCustomerInfo);
@@ -1000,17 +1004,12 @@ export default function CustomerProfileReportsPage() {
       try {
         setIsLoadingLiveReport(true);
         setLiveReportError(null);
-        const grain =
-          activeRangeKey === "7d"
-            ? "daily"
-            : activeRangeKey === "30d"
-              ? "weekly"
-              : "monthly";
         const response = await customerProfileReportsService.getPortfolio({
-          range: activeRangeKey,
-          grain,
-          startDate: appliedCustomRange.start || undefined,
-          endDate: appliedCustomRange.end || undefined,
+          range: queryParams.range || activeRangeKey,
+          grain: queryParams.grain,
+          startDate: queryParams.startDate,
+          endDate: queryParams.endDate,
+          preset: queryParams.preset,
           page: 1,
           pageSize: tablePageSize,
         });
@@ -1038,9 +1037,10 @@ export default function CustomerProfileReportsPage() {
     };
   }, [
     useDummyData,
-    activeRangeKey,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
     tablePageSize,
   ]);
 
@@ -1077,31 +1077,46 @@ export default function CustomerProfileReportsPage() {
   }, [actualMultiplier, activeRangeKey, useDummyData, liveReport]);
 
   const lifecycleSeries = useMemo(() => {
-    if (!useDummyData) {
-      if (liveReport?.lifecycleDistribution?.length) {
-        return liveReport.lifecycleDistribution;
-      }
-      return baseLifecycleData.map((point) => ({
-        month: point.month,
-        new: 0,
-        active: 0,
-        atRisk: 0,
-        dormant: 0,
-        churned: 0,
-        reactivated: 0,
-      }));
-    }
-    const multiplier = actualMultiplier;
-    return baseLifecycleData.map((point) => ({
-      month: point.month,
-      new: Math.round(point.new * multiplier),
-      active: Math.round(point.active * multiplier),
-      atRisk: Math.round(point.atRisk * multiplier),
-      dormant: Math.round(point.dormant * multiplier),
-      churned: Math.round(point.churned * multiplier),
-      reactivated: Math.round(point.reactivated * multiplier),
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
+    };
+    const template = (
+      !useDummyData && liveReport?.lifecycleDistribution?.length
+        ? liveReport.lifecycleDistribution
+        : !useDummyData
+          ? baseLifecycleData.map((point) => ({
+              ...point,
+              new: 0,
+              active: 0,
+              atRisk: 0,
+              dormant: 0,
+              churned: 0,
+              reactivated: 0,
+            }))
+          : baseLifecycleData.map((point) => ({
+              ...point,
+              new: Math.round(point.new * actualMultiplier),
+              active: Math.round(point.active * actualMultiplier),
+              atRisk: Math.round(point.atRisk * actualMultiplier),
+              dormant: Math.round(point.dormant * actualMultiplier),
+              churned: Math.round(point.churned * actualMultiplier),
+              reactivated: Math.round(point.reactivated * actualMultiplier),
+            }))
+    ).map((point) => ({ ...point, period: point.month }));
+    return alignTrendSeries(template, window).map((point) => ({
+      ...point,
+      month: point.period,
     }));
-  }, [actualMultiplier, useDummyData, liveReport]);
+  }, [
+    actualMultiplier,
+    useDummyData,
+    liveReport,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.grain,
+  ]);
 
   const clvDistributionSeries = useMemo(() => {
     if (!useDummyData) {
@@ -1350,127 +1365,36 @@ export default function CustomerProfileReportsPage() {
           <p className="text-sm text-red-600">{customerError}</p>
         )}
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  selectedRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {option === "7d"
-                  ? t.customerProfileReports.daily
-                  : option === "30d"
-                    ? t.customerProfileReports.weekly
-                    : t.customerProfileReports.monthly}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          extraActions={
             <div className="flex items-center gap-2">
               <label
-                htmlFor="customer-date-start"
+                htmlFor="customer-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap"
               >
-                {t.customerProfileReports.from}
+                Data Mode:
               </label>
-              <Input
-                id="customer-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="customer-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                {t.customerProfileReports.to}
-              </label>
-              <Input
-                id="customer-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
               <button
+                id="customer-data-toggle"
                 type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {t.customerProfileReports.run}
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                {t.customerProfileReports.clear}
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="customer-data-toggle"
-              className="text-sm font-medium text-gray-700 whitespace-nowrap"
-            >
-              Data Mode:
-            </label>
-            <button
-              id="customer-data-toggle"
-              type="button"
-              onClick={() => setUseDummyData(!useDummyData)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
-                useDummyData ? "bg-[#252829]" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  useDummyData ? "translate-x-6" : "translate-x-1"
+                onClick={() => setUseDummyData(!useDummyData)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
+                  useDummyData ? "bg-[#252829]" : "bg-gray-300"
                 }`}
-              />
-            </button>
-            <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-              {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
-            </span>
-          </div>
-        </div>
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    useDummyData ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+              <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
+                {useDummyData ? "Dummy Data" : isLoadingLiveReport ? "Real Data (loading…)" : "Real Data"}
+              </span>
+            </div>
+          }
+        />
         {liveReportError && !useDummyData && (
           <p className="text-sm text-red-600">{liveReportError}</p>
         )}
@@ -1517,6 +1441,7 @@ export default function CustomerProfileReportsPage() {
         </section>
       )}
 
+      {!isTrendsView && (
       <section>
         {(() => {
           // Use actual multiplier for custom dates, otherwise use preset scale
@@ -1699,142 +1624,142 @@ export default function CustomerProfileReportsPage() {
           );
         })()}
       </section>
+      )}
 
+      {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title={t.customerProfileReports.customerValueMatrix}
+          subtitle={t.customerProfileReports.valueMatrixDescription}
+          filename="customer-value-matrix.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "segment", label: "Segment" },
+            { key: "customers", label: t.customerProfileReports.customers },
+          ]}
+          rows={valueMatrixSeries}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {t.customerProfileReports.customerValueMatrix}
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                {t.customerProfileReports.valueMatrixDescription}
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={valueMatrixSeries}
-                margin={{ top: 20, right: 24, left: 0, bottom: 50 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="segment"
-                  tick={{ fill: "#6b7280", fontSize: 11 }}
-                  interval={0}
-                />
-                <YAxis tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Bar
-                  dataKey="customers"
-                  name={t.customerProfileReports.customers}
-                  fill={
-                    colors.reportCharts.customerProfile.valueMatrix.customers
-                  }
-                  maxBarSize={60}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={valueMatrixSeries}
+              margin={{ top: 20, right: 24, left: 0, bottom: 50 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis
+                dataKey="segment"
+                tick={{ fill: "#6b7280", fontSize: 11 }}
+                interval={0}
+              />
+              <YAxis tick={{ fill: "#6b7280" }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
+              <Bar
+                dataKey="customers"
+                name={t.customerProfileReports.customers}
+                fill={
+                  colors.reportCharts.customerProfile.valueMatrix.customers
+                }
+                maxBarSize={60}
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ReportChartCard>
 
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title={t.customerProfileReports.customerLifetimeValueDistribution}
+          subtitle={t.customerProfileReports.clvDistributionDescription}
+          filename="customer-clv-distribution.csv"
+          audit={overviewAudit}
+          columns={[
+            { key: "range", label: "Range" },
+            { key: "customers", label: t.customerProfileReports.customers },
+            { key: "revenueShare", label: t.customerProfileReports.revenueShare },
+          ]}
+          rows={clvDistributionSeries}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {t.customerProfileReports.customerLifetimeValueDistribution}
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                {t.customerProfileReports.clvDistributionDescription}
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={clvDistributionSeries}
-                margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="range" tick={{ fill: "#6b7280" }} />
-                <YAxis
-                  yAxisId="left"
-                  tick={{ fill: "#6b7280" }}
-                  tickFormatter={(value) => `${value / 1000}k`}
-                  label={{
-                    value: t.customerProfileReports.customers,
-                    angle: -90,
-                    position: "insideLeft",
-                  }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fill: "#6b7280" }}
-                  tickFormatter={(value) => `${value}%`}
-                  label={{
-                    value: t.customerProfileReports.revenueShare,
-                    angle: 90,
-                    position: "insideRight",
-                  }}
-                />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Bar
-                  yAxisId="left"
-                  dataKey="customers"
-                  name={t.customerProfileReports.customers}
-                  fill={
-                    colors.reportCharts.customerProfile.clvDistribution
-                      .customers
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="revenueShare"
-                  name={t.customerProfileReports.revenueShare}
-                  stroke={
-                    colors.reportCharts.customerProfile.clvDistribution
-                      .revenueShare
-                  }
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={clvDistributionSeries}
+              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="range" tick={{ fill: "#6b7280" }} />
+              <YAxis
+                yAxisId="left"
+                tick={{ fill: "#6b7280" }}
+                tickFormatter={(value) => `${value / 1000}k`}
+                label={{
+                  value: t.customerProfileReports.customers,
+                  angle: -90,
+                  position: "insideLeft",
+                }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tick={{ fill: "#6b7280" }}
+                tickFormatter={(value) => `${value}%`}
+                label={{
+                  value: t.customerProfileReports.revenueShare,
+                  angle: 90,
+                  position: "insideRight",
+                }}
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
+              <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
+              <Bar
+                yAxisId="left"
+                dataKey="customers"
+                name={t.customerProfileReports.customers}
+                fill={
+                  colors.reportCharts.customerProfile.clvDistribution
+                    .customers
+                }
+                radius={[4, 4, 0, 0]}
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="revenueShare"
+                name={t.customerProfileReports.revenueShare}
+                stroke={
+                  colors.reportCharts.customerProfile.clvDistribution
+                    .revenueShare
+                }
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ReportChartCard>
       </section>
+      )}
 
+      {isTrendsView && (
       <section className="space-y-6">
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        <ReportChartCard
+          title={t.customerProfileReports.lifecycleDistribution}
+          subtitle={t.customerProfileReports.lifecycleDescription}
+          filename="customer-lifecycle-distribution.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "month", label: "Month" },
+            { key: "date", label: "Date" },
+            { key: "active", label: t.customerProfileReports.active },
+            { key: "new", label: t.customerProfileReports.new },
+            { key: "reactivated", label: t.customerProfileReports.reactivated },
+            { key: "atRisk", label: t.customerProfileReports.atRisk },
+            { key: "dormant", label: t.customerProfileReports.dormant },
+            { key: "churned", label: t.customerProfileReports.churned },
+          ]}
+          rows={lifecycleSeries}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {t.customerProfileReports.lifecycleDistribution}
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                {t.customerProfileReports.lifecycleDescription}
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={lifecycleSeries}
@@ -1912,22 +1837,19 @@ export default function CustomerProfileReportsPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        </ReportChartCard>
+        <ReportChartCard
+          title={t.customerProfileReports.cohortRetentionComparison}
+          subtitle={t.customerProfileReports.cohortDescription}
+          filename="customer-cohort-retention.csv"
+          audit={chartAudit}
+          chartClassName="h-96"
+          columns={[
+            { key: "month", label: t.customerProfileReports.monthsSinceAcquisition },
+            ...cohortChartKeys.map((key) => ({ key, label: key })),
+          ]}
+          rows={cohortComparisonSeries}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {t.customerProfileReports.cohortRetentionComparison}
-              </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                {t.customerProfileReports.cohortDescription}
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-96">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={cohortComparisonSeries}
@@ -1974,10 +1896,11 @@ export default function CustomerProfileReportsPage() {
                 ))}
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
+        </ReportChartCard>
       </section>
+      )}
 
+      {!isTrendsView && (
       <section className="space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -2055,6 +1978,7 @@ export default function CustomerProfileReportsPage() {
           </>
         )}
       </section>
+      )}
 
       {/* Column Picker Modal */}
       <ColumnPickerModal

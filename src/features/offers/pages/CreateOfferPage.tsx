@@ -111,6 +111,12 @@ import {
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative, collectPlaceholderVariables } from "../types/offerCreative";
+import {
+  AI_GENERATED_FLAG_KEY,
+  extractAiSessionFromVariables,
+  omitAiSessionVariables,
+  persistAiSessionLocally,
+} from "../utils/aiCreativeSessionPersist";
 
 // Local creative for form (uses string ID until saved)
 type LocalOfferCreative = Omit<OfferCreative, "id" | "offer_id"> & {
@@ -1757,7 +1763,9 @@ export default function CreateOfferPage({
 
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData();
+  const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData({
+    activeOnly: true,
+  });
   const requiresTrackingRewardMapping = useMemo(
     () =>
       offerRequiresTrackingAndRewardMapping(
@@ -2978,12 +2986,11 @@ export default function CreateOfferPage({
                 creative.text_body,
                 creative.html_body,
               );
+              const mergedVariables = { ...extracted, ...existingVars };
               const variables =
-                Object.keys(existingVars).length > 0
-                  ? existingVars
-                  : Object.keys(extracted).length > 0
-                    ? extracted
-                    : undefined;
+                Object.keys(mergedVariables).length > 0
+                  ? mergedVariables
+                  : undefined;
 
               const creativePayload = {
                 offer_id: offerId,
@@ -2998,7 +3005,57 @@ export default function CreateOfferPage({
                 created_by: user.user_id,
               };
 
-              return await offerCreativeService.create(creativePayload);
+              const session = extractAiSessionFromVariables(creative.variables);
+              const persistCreated = (created: { data?: { id?: number }; insertId?: number }) => {
+                const createdId = created.data?.id ?? created.insertId;
+                if (session) {
+                  persistAiSessionLocally(
+                    {
+                      creativeId: createdId,
+                      offerId,
+                      channel: creative.channel,
+                      locale: creative.locale,
+                      body: creative.text_body || creative.html_body,
+                    },
+                    session,
+                  );
+                }
+                return created;
+              };
+
+              try {
+                return persistCreated(
+                  await offerCreativeService.create(creativePayload),
+                );
+              } catch (createError) {
+                if (!variables || !session) throw createError;
+                const fallbackVariables = omitAiSessionVariables(variables);
+                fallbackVariables[AI_GENERATED_FLAG_KEY] = "1";
+                try {
+                  return persistCreated(
+                    await offerCreativeService.create({
+                      ...creativePayload,
+                      variables: fallbackVariables,
+                    }),
+                  );
+                } catch {
+                  persistAiSessionLocally(
+                    {
+                      offerId,
+                      channel: creative.channel,
+                      locale: creative.locale,
+                      body: creative.text_body || creative.html_body,
+                    },
+                    session,
+                  );
+                  return persistCreated(
+                    await offerCreativeService.create({
+                      ...creativePayload,
+                      variables: omitAiSessionVariables(variables),
+                    }),
+                  );
+                }
+              }
             } catch (err) {
               throw err;
             }

@@ -60,6 +60,7 @@ class SegmentReportsService {
       startDate: params.startDate,
       endDate: params.endDate,
       grain: params.grain,
+      preset: params.preset,
       page: params.page,
       pageSize: params.pageSize,
       sortBy: params.sortBy,

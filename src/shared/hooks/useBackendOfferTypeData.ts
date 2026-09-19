@@ -21,17 +21,22 @@ export type UseBackendOfferTypeResult = UseBackendOfferTypeState & UseBackendOff
  * Always fetches fresh data - no caching
  * Supports CRUD operations
  */
-export function useBackendOfferTypeData(): UseBackendOfferTypeResult {
+export function useBackendOfferTypeData(options?: {
+  activeOnly?: boolean;
+}): UseBackendOfferTypeResult {
   const [data, setData] = useState<OfferType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const activeOnly = options?.activeOnly === true;
 
   // Fetch fresh data from backend
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await offerTypeService.getAllOfferTypes();
+      const response = await offerTypeService.getAllOfferTypes(
+        activeOnly ? { isActive: true } : undefined,
+      );
 
       if (typeof response === "object" && response !== null) {
         if (response.success && response.data) {
@@ -43,12 +48,12 @@ export function useBackendOfferTypeData(): UseBackendOfferTypeResult {
         throw new Error("Invalid response format from server");
       }
     } catch (err) {
-      // Silently fail - endpoint may not be ready yet
-      setError(null);
+      const errorMsg = err instanceof Error ? err.message : "Failed to fetch offer types";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeOnly]);
 
   // Create new offer type
   const create = useCallback(

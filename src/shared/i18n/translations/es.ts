@@ -2947,6 +2947,23 @@ export const es: Translations = {
       generate: "Generar",
       generating: "Generando...",
       regenerate: "Volver a generar",
+      previewPrompt: "Vista previa",
+      previewPromptAria: "Ver y editar el prompt de generación",
+      promptPreviewTitle: "Vista previa del prompt",
+      promptPreviewSubtitle:
+        "Revise el brief que se enviará. Edite cualquier campo y luego genere o regenere.",
+      promptPreviewMeta: "{channel} · {locale}",
+      promptPreviewCardLabel: "Brief de generación",
+      promptPreviewFormHint:
+        "Edite el prompt aquí y luego genere. Cerrar vuelve al formulario de IA sin perder los cambios.",
+      editPrompt: "Editar prompt",
+      promptUsedTitle: "Prompt",
+      promptUsedHint:
+        "Este brief sigue disponible después de generar. Edítelo aquí y vuelva a generar.",
+      notSpecified: "No especificado",
+      objectiveFallback:
+        "No especificado: se usa el cuerpo del mensaje como brief.",
+      aiBadgeLabel: "Generado por IA. Haga clic para revisar el mensaje, las variantes y el prompt.",
       apply: "Insertar en el mensaje",
       applyAndReplace: "Reemplazar el cuerpo del mensaje",
       applyTitleToo: "Aplicar también el título generado",
@@ -2964,11 +2981,20 @@ export const es: Translations = {
         objectiveRequired: "Ingrese un objetivo claro para que Gemini redacte un mensaje alineado.",
         messageBodyMinWords: "Escriba un cuerpo de mensaje de al menos 3 palabras antes de generar.",
         generateFailed: "No se pudo generar el contenido del mensaje",
+        modelRequired: "Seleccione un modelo de IA antes de generar.",
       },
       hints: {
         variables: "Variables que Gemini puede conservar",
         channelLimit: "La longitud objetivo es de unos {limit} caracteres.",
         overwrite: "Insertar reemplaza el cuerpo del mensaje actual. Luego podrá seguir editándolo.",
+      },
+      aiModel: {
+        label: "Modelo de IA",
+        placeholder: "Seleccione un modelo de IA configurado",
+        hint: "Usa el proveedor guardado en Administration → AI Model Configuration.",
+        noneConfigured:
+          "Aún no hay modelos de IA activos. Configure uno en Administration → AI Model Configuration antes de generar.",
+        configureCta: "Abrir configuración de modelos de IA",
       },
     },
     messageBody: {

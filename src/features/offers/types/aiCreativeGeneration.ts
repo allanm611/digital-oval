@@ -39,6 +39,10 @@ export interface GenerateCreativeRequest {
   existingBody?: string;
   availableVariables?: string[];
   variantCount?: number;
+  /** Server looks up credentials by this id. Never send api_key from the browser. */
+  aiModelConfigurationId?: string;
+  provider?: string;
+  model?: string;
 }
 
 export interface GeneratedCreativeVariant {
@@ -59,3 +63,41 @@ export interface GenerateCreativeErrorBody {
   error: string;
   code?: string;
 }
+
+/** Prompt fields the marketer fills before (and after) generation. */
+export interface AiCreativePromptForm {
+  tone: AiTone;
+  objective: string;
+  callToAction: string;
+  keyFacts: string;
+  audience: string;
+  length: AiLengthPreset;
+  mustInclude: string;
+  mustAvoid: string;
+}
+
+export const EMPTY_AI_PROMPT_FORM: AiCreativePromptForm = {
+  tone: "professional",
+  objective: "",
+  callToAction: "",
+  keyFacts: "",
+  audience: "",
+  length: "channel_optimized",
+  mustInclude: "",
+  mustAvoid: "",
+};
+
+/**
+ * In-session AI generation state. Kept on the client so Insert can restore
+ * variants and the prompt without requiring backend creative metadata.
+ */
+export interface AiCreativeSession {
+  prompt: AiCreativePromptForm;
+  sourceBody: string;
+  generatedBody: string;
+  variants: GeneratedCreativeVariant[];
+  selectedIndex: number;
+  warnings: string[];
+}
+
+export type AiGenerateModalView = "compose" | "preview" | "result";

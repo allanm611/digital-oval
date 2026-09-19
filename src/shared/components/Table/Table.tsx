@@ -120,10 +120,15 @@ export function Table<T extends { id?: number | string } = any>({
     setColumnFilters({});
   }, [clearFiltersKey]);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 only when column filters change. Do not depend on
+  // onPageChange identity — parents often pass an inline callback that also
+  // collapses expanded rows, which would immediately undo Expand.
   useEffect(() => {
-    onPageChange?.(1);
-  }, [columnFilters, onPageChange]);
+    if (currentPage !== 1) {
+      onPageChange?.(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columnFilters]);
 
   const handleResizeStart = (e: React.MouseEvent, columnId: string) => {
     e.preventDefault();
@@ -437,9 +442,17 @@ export function Table<T extends { id?: number | string } = any>({
     }
   };
 
+  const isSameRowId = (
+    left: number | string | null | undefined,
+    right: number | string | null | undefined,
+  ) => {
+    if (left == null || right == null) return left === right;
+    return String(left) === String(right);
+  };
+
   const handleRowExpand = (rowId: number | string) => {
     if (onExpandChange) {
-      onExpandChange(expandedRowId === rowId ? null : rowId);
+      onExpandChange(isSameRowId(expandedRowId, rowId) ? null : rowId);
     }
   };
 
@@ -807,7 +820,7 @@ export function Table<T extends { id?: number | string } = any>({
             <tbody>
               {pageData.map((row, rowIndex) => {
                 const rowId = getRowId(row, rowIndex);
-                const isExpanded = expandedRowId === rowId;
+                const isExpanded = isSameRowId(expandedRowId, rowId);
                 const bgColor = rowBackground || color.surface.tablebodybg;
 
                 return (
@@ -857,7 +870,14 @@ export function Table<T extends { id?: number | string } = any>({
                             {/* Expand button after first column content */}
                             {colIdx === 0 && expandedContent && (
                               <button
-                                onClick={() => handleRowExpand(rowId)}
+                                type="button"
+                                aria-expanded={isExpanded}
+                                aria-label={isExpanded ? "Collapse row details" : "Expand row details"}
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  handleRowExpand(rowId);
+                                }}
                                 className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors flex-shrink-0`}
                                 title={isExpanded ? "Collapse" : "Expand"}
                               >

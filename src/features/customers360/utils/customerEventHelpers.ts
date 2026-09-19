@@ -1166,7 +1166,16 @@ export function hasEventRelatedContext(event: CustomerEvent): boolean {
       event.creative?.text_body ||
       event.message?.content ||
       event.message?.subject ||
-      event.message?.received_at,
+      event.message?.received_at ||
+      event.purchase?.transaction_id ||
+      event.purchase?.product_name ||
+      event.loyalty?.points != null ||
+      event.loyalty?.reward_name ||
+      event.loyalty?.program_name ||
+      event.interaction?.ticket_id ||
+      event.interaction?.subject ||
+      event.device?.device_id ||
+      event.device?.device_name,
   );
 }
 

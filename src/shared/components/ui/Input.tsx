@@ -14,6 +14,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local'; // default: text
   label?: string; // Floating label
   labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
+  /** Keep the floating label raised even when the value is empty. */
+  floatLabel?: boolean;
   style?: React.CSSProperties;
   /** Show eye toggle for password fields. Defaults to true when type is password. */
   showPasswordToggle?: boolean;
@@ -31,6 +33,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   type = 'text',
   label,
   labelBgColor,
+  floatLabel = false,
   style = {},
   showPasswordToggle,
   onFocus,
@@ -81,7 +84,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   }
 
   const hasValue = value !== '' && value !== null && value !== undefined;
-  const shouldFloatLabel = isFocused || hasValue;
+  const shouldFloatLabel = isFocused || hasValue || floatLabel;
 
   const passwordToggleButton = shouldShowToggle ? (
     <button

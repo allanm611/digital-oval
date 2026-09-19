@@ -37,6 +37,7 @@ function windowQuery(params: ReportQueryParams & { metric?: string; limit?: numb
     startDate: params.startDate,
     endDate: params.endDate,
     grain: params.grain,
+    preset: params.preset,
     page: params.page,
     pageSize: params.pageSize,
     sortBy: params.sortBy,
@@ -122,7 +123,7 @@ class CampaignReportsService {
 
   /** POST /monitoring/reporting/campaigns/snapshots/refresh */
   async refreshSnapshots(
-    params: Pick<ReportQueryParams, "startDate" | "endDate" | "range"> = {},
+    params: Pick<ReportQueryParams, "startDate" | "endDate" | "range" | "grain" | "preset"> = {},
   ): Promise<CampaignReportEnvelope<CampaignSnapshotRefreshResult>> {
     return this.request(`/snapshots/refresh`, {
       method: "POST",
@@ -130,6 +131,8 @@ class CampaignReportsService {
         startDate: params.startDate,
         endDate: params.endDate,
         range: params.range,
+        grain: params.grain,
+        preset: params.preset,
       }),
     });
   }

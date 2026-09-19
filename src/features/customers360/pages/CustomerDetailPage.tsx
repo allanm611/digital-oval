@@ -30,13 +30,19 @@ import CustomerLoyaltyTab from "../components/CustomerLoyaltyTab";
 import CustomerPreferencesTab from "../components/CustomerPreferencesTab";
 import CustomerInteractionsTab from "../components/CustomerInteractionsTab";
 import CustomerAccountDevicesTab from "../components/CustomerAccountDevicesTab";
+import CustomerProfileTabs from "../components/CustomerProfileTabs";
+import {
+  CUSTOMER_PROFILE_TAB_IDS,
+  CUSTOMER_PROFILE_TAB_PANEL_ID,
+  parseCustomerProfileTab,
+  type CustomerProfileTabId,
+} from "../constants/customerProfileTabs";
 import {
   CUSTOMER_PROFILE_OVERVIEW_TAB,
   CUSTOMER_PROFILE_TAB_PARAM,
   CustomerProfileNavigationProvider,
 } from "../navigation/CustomerProfileEntityLink";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
-import OverflowScrollArea from "../../../shared/components/ui/OverflowScrollArea";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -218,48 +224,6 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
   return { events };
 };
 
-type TabType =
-  | "overview"
-  | "activity"
-  | "engagement"
-  | "segments"
-  | "offers"
-  | "subscribedLists"
-  | "campaigns"
-  | "communications"
-  | "purchases"
-  | "loyalty"
-  | "preferences"
-  | "interactions"
-  | "device";
-
-const CUSTOMER_PROFILE_TABS: Array<{ id: TabType; label: string }> = [
-  { id: "overview", label: "Customer Information" },
-  { id: "activity", label: "Events" },
-  { id: "subscribedLists", label: "Subscribed Lists" },
-  { id: "engagement", label: "Analytics" },
-  { id: "segments", label: "Segments" },
-  { id: "offers", label: "Offers" },
-  { id: "campaigns", label: "Campaigns" },
-  { id: "communications", label: "Communications" },
-  { id: "purchases", label: "Purchase History" },
-  { id: "loyalty", label: "Loyalty & Rewards" },
-  { id: "preferences", label: "Preferences" },
-  { id: "interactions", label: "Interactions" },
-  { id: "device", label: "Account & Device" },
-];
-
-const CUSTOMER_PROFILE_TAB_IDS = new Set(
-  CUSTOMER_PROFILE_TABS.map((tab) => tab.id),
-);
-
-function parseCustomerProfileTab(value: string | null): TabType {
-  if (value && CUSTOMER_PROFILE_TAB_IDS.has(value as TabType)) {
-    return value as TabType;
-  }
-  return CUSTOMER_PROFILE_OVERVIEW_TAB;
-}
-
 export default function CustomerDetailPage() {
   const navigate = useNavigate();
   const { customerId: customerIdFromParams } = useParams<{
@@ -405,7 +369,7 @@ export default function CustomerDetailPage() {
   );
 
   const setActiveTab = useCallback(
-    (tab: TabType) => {
+    (tab: CustomerProfileTabId) => {
       setSearchParams(
         (current) => {
           const next = new URLSearchParams(current);
@@ -427,8 +391,8 @@ export default function CustomerDetailPage() {
     const pending = consumePendingCustomerReturn(customerIdFromParams);
     if (!pending?.tab) return;
     if (searchParams.get(CUSTOMER_PROFILE_TAB_PARAM)) return;
-    if (CUSTOMER_PROFILE_TAB_IDS.has(pending.tab as TabType)) {
-      setActiveTab(pending.tab as TabType);
+    if (CUSTOMER_PROFILE_TAB_IDS.has(pending.tab as CustomerProfileTabId)) {
+      setActiveTab(pending.tab as CustomerProfileTabId);
     }
     // Restore only when landing back on this customer without a tab in the URL.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -917,7 +881,7 @@ export default function CustomerDetailPage() {
         customerId={customerIdFromParams}
         tab={activeTab}
       >
-      <div className="space-y-4 min-w-0">
+      <div className="flex min-w-0 flex-col gap-4">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <BackButton
@@ -964,42 +928,15 @@ export default function CustomerDetailPage() {
           </div>
         </div>
 
-        <OverflowScrollArea
-          hint="Scroll horizontally to see more tabs"
-          hideScrollbar
-          scrollMode="page"
-          role="tablist"
-          ariaLabel="Customer profile sections"
-          observeKey={CUSTOMER_PROFILE_TABS.length}
-          activeItemSelector={`[data-tab-id="${activeTab}"]`}
-          contentClassName="flex flex-nowrap gap-1 border-b border-gray-200 pr-10"
-        >
-          {CUSTOMER_PROFILE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              data-tab-id={tab.id}
-              aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap flex-shrink-0 ${
-                activeTab === tab.id
-                  ? "text-black"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.id && (
-                <div
-                  className="absolute bottom-0 left-0 right-0 h-0.5"
-                  style={{ backgroundColor: color.primary.accent }}
-                />
-              )}
-            </button>
-          ))}
-        </OverflowScrollArea>
+        <div className="min-w-0 overflow-visible">
+        <CustomerProfileTabs activeTab={activeTab} onChange={setActiveTab} />
 
-        {/* Content */}
+        <div
+          id={CUSTOMER_PROFILE_TAB_PANEL_ID}
+          role="tabpanel"
+          aria-labelledby={`customer-profile-tab-${activeTab}`}
+          className="mt-4 min-w-0"
+        >
         {activeTab === "overview" && (
           <div className="space-y-6">
             {/* Customer Information Section */}
@@ -1094,6 +1031,20 @@ export default function CustomerDetailPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === "device" && (
+          <CustomerAccountDevicesTab
+            subscriberId={
+              selectedSubscription?.customerId ??
+              selectedSubscription?.id ??
+              customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
+            }
+          />
         )}
 
         {activeTab === "activity" && (
@@ -1390,19 +1341,8 @@ export default function CustomerDetailPage() {
           />
         )}
 
-        {activeTab === "device" && (
-          <CustomerAccountDevicesTab
-            subscriberId={
-              selectedSubscription?.customerId ??
-              selectedSubscription?.id ??
-              customerIdFromParams
-            }
-            customerRecord={
-              (selectedSubscription as Record<string, unknown> | undefined) ??
-              null
-            }
-          />
-        )}
+        </div>
+        </div>
 
         {/* Send Communication Modal */}
         {isCommunicateModalOpen && selectedSubscription && (

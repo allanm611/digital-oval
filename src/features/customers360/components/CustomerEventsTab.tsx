@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, Calendar, Clock, RotateCcw, X } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessMultiSelect from "../../../shared/components/ui/HeadlessMultiSelect";
@@ -157,6 +157,21 @@ export default function CustomerEventsTab({
     dateFrom,
     dateTo,
   ]);
+
+  const handlePageChange = useCallback((nextPage: number) => {
+    setPage(nextPage);
+  }, []);
+
+  const handleExpandChange = useCallback(
+    (rowId: number | string | null) => {
+      setExpandedRowId(rowId == null ? null : String(rowId));
+    },
+    [],
+  );
+
+  useEffect(() => {
+    setExpandedRowId(null);
+  }, [page]);
 
   const filtersActive = hasActiveEventFilters(query, DEFAULT_PRESET);
 
@@ -606,15 +621,10 @@ export default function CustomerEventsTab({
               totalItems={filteredEvents.length}
               currentPage={page}
               pageSize={pageSize}
-              onPageChange={(nextPage) => {
-                setPage(nextPage);
-                setExpandedRowId(null);
-              }}
-              getRowId={(row) => row.id}
+              onPageChange={handlePageChange}
+              getRowId={(row, index) => row.id || `customer-event-${index}`}
               expandedRowId={expandedRowId}
-              onExpandChange={(rowId) =>
-                setExpandedRowId(rowId == null ? null : String(rowId))
-              }
+              onExpandChange={handleExpandChange}
               expandedContent={(row) => (
                 <CustomerEventDetailsExpandedRow event={row} />
               )}
@@ -632,10 +642,7 @@ export default function CustomerEventsTab({
                 currentPage={page}
                 pageSize={pageSize}
                 totalItems={filteredEvents.length}
-                onPageChange={(nextPage) => {
-                  setPage(nextPage);
-                  setExpandedRowId(null);
-                }}
+                onPageChange={handlePageChange}
               />
             </div>
           )}
