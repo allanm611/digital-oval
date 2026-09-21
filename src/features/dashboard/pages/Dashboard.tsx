@@ -784,6 +784,12 @@ const AdministrationPages = {
         /* webpackPrefetch: true */ "../../monitoring/pages/ExecutionDetailsPage"
       ),
   ),
+  AiModelsHubPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelsHubPage"
+      ),
+  ),
   AiModelConfigurationHubPage: lazy(
     () =>
       import(
@@ -944,11 +950,19 @@ export default function Dashboard() {
           />
           <Route
             path="/ai-models"
+            element={<AdministrationPages.AiModelsHubPage />}
+          />
+          <Route
+            path="/ai-models/configuration"
             element={<AdministrationPages.AiModelConfigurationHubPage />}
           />
           <Route
-            path="/ai-models/:providerId"
-            element={<AdministrationPages.AiModelConfigurationFormPage />}
+            path="/ai-models/configuration/:providerId"
+            element={<AdministrationPages.AiModelConfigurationFormPage mode="view" />}
+          />
+          <Route
+            path="/ai-models/configuration/:providerId/edit"
+            element={<AdministrationPages.AiModelConfigurationFormPage mode="edit" />}
           />
           <Route
             path="/monitoring"

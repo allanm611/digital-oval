@@ -74,7 +74,7 @@ export default function AiGenerateMessageModal({
   const copy = t.offers.aiGenerate;
   const { success, error: showError } = useToast();
   const navigate = useNavigate();
-  const aiModelsPath = "/dashboard/ai-models";
+  const aiModelsPath = "/dashboard/ai-models/configuration";
   const [form, setForm] = useState<AiCreativePromptForm>(EMPTY_AI_PROMPT_FORM);
   const [messageBody, setMessageBody] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);

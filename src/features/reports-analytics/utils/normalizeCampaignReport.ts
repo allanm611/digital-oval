@@ -33,29 +33,74 @@ function isSummaryLike(value: unknown): value is Record<string, unknown> {
     ("eligibleAudience" in value ||
       "engagementRate" in value ||
       "conversionRate" in value ||
+      "deliveryRate" in value ||
       "campaignCost" in value ||
       ("reach" in value &&
         !("channelReach" in value) &&
         !("campaigns" in value) &&
-        !("conversionFunnel" in value)))
+        !("conversionFunnel" in value)) ||
+      ("sent" in value && "delivered" in value))
   );
+}
+
+function rateFrom(numerator: unknown, denominator: unknown): number {
+  const n = asFiniteNumber(numerator);
+  const d = asFiniteNumber(denominator);
+  if (!d) return 0;
+  return Number(((n / d) * 100).toFixed(1));
 }
 
 function normalizeSummary(
   value: Record<string, unknown>,
 ): CampaignReportsResponse["summary"] {
+  const sent = asFiniteNumber(value.sent ?? value.impressions ?? value.recipients);
+  const delivered = asFiniteNumber(value.delivered ?? value.reach);
+  const uniqueAudience = asFiniteNumber(
+    value.uniqueAudience ?? value.uniqueReach ?? value.reach ?? delivered,
+  );
+  const converted = asFiniteNumber(value.converted ?? value.conversions);
+  const deliveryRate = asFiniteNumber(
+    value.deliveryRate,
+    rateFrom(delivered, sent),
+  );
+  const conversionRate = asFiniteNumber(
+    value.conversionRate,
+    rateFrom(converted, delivered || uniqueAudience),
+  );
+  const targetGroup = asFiniteNumber(value.targetGroup);
+  const controlGroup = asFiniteNumber(value.controlGroup);
+  const pool = targetGroup + controlGroup;
+  const targetGroupReached = asFiniteNumber(
+    value.targetGroupReached,
+    pool ? Math.round(uniqueAudience * (targetGroup / pool)) : uniqueAudience,
+  );
+  const controlGroupReached = asFiniteNumber(
+    value.controlGroupReached,
+    Math.max(0, uniqueAudience - targetGroupReached),
+  );
+
   return {
     eligibleAudience: asFiniteNumber(value.eligibleAudience),
-    executedAudience: asFiniteNumber(value.executedAudience),
-    recipients: asFiniteNumber(value.recipients),
-    reach: asFiniteNumber(value.reach ?? value.delivered),
-    impressions: asFiniteNumber(value.impressions ?? value.recipients),
+    executedAudience: asFiniteNumber(value.executedAudience, targetGroup + controlGroup),
+    recipients: asFiniteNumber(value.recipients, sent),
+    uniqueAudience,
+    reach: uniqueAudience,
+    sent,
+    impressions: sent,
+    delivered,
+    deliveryRate,
     opens: asFiniteNumber(value.opens ?? value.opened),
     clicks: asFiniteNumber(value.clicks ?? value.clicked),
     clickRate: asFiniteNumber(value.clickRate),
     engagementRate: asFiniteNumber(value.engagementRate ?? value.openRate),
-    conversions: asFiniteNumber(value.conversions ?? value.converted),
-    conversionRate: asFiniteNumber(value.conversionRate),
+    conversions: converted,
+    converted,
+    conversionRate,
+    uniqueConverters: asFiniteNumber(value.uniqueConverters, converted),
+    targetGroup,
+    controlGroup,
+    targetGroupReached,
+    controlGroupReached,
     revenue: asFiniteNumber(value.revenue),
     roas: asFiniteNumber(value.roas),
     cac: asFiniteNumber(value.cac),
@@ -118,12 +163,17 @@ export function normalizeCampaignPortfolio(
     }));
   }
   const campaigns = pickNamedArray<CampaignRow>(data, ["campaigns"]);
+  const channelReach = pickNamedArray<
+    CampaignReportsResponse["channelReach"][number]
+  >(data, ["channelReach"]).map(normalizeChannelReachPoint);
 
   return {
     summary: unwrapCampaignSummary(data),
     heroTrends: unwrapHeroTrends(envelope),
-    channelReach: pickNamedArray(data, ["channelReach"]),
-    conversionFunnel: pickNamedArray(data, ["conversionFunnel", "funnel"]),
+    channelReach,
+    conversionFunnel: normalizeCvmFunnel(
+      pickNamedArray(data, ["conversionFunnel", "funnel"]),
+    ),
     performanceTrend,
     revenueTrend,
     campaigns,
@@ -159,8 +209,9 @@ export function mergeSplitCampaignWidgets(parts: {
     fromKpis.performanceTrend || [],
     trends,
     (point) =>
-      asFiniteNumber(point.ctr) +
-      asFiniteNumber(point.engagement) +
+      asFiniteNumber(point.sent) +
+      asFiniteNumber(point.delivered) +
+      asFiniteNumber(point.converted ?? point.conversions) +
       asFiniteNumber(point.revenue),
   );
   const revenueTrend =
@@ -178,12 +229,15 @@ export function mergeSplitCampaignWidgets(parts: {
     ...fromKpis,
     channelReach: preferSeries(
       fromKpis.channelReach || [],
-      reach,
-      (point) => asFiniteNumber(point.reach) + asFiniteNumber(point.impressions),
+      reach.map(normalizeChannelReachPoint),
+      (point) =>
+        asFiniteNumber(point.sent ?? point.impressions) +
+        asFiniteNumber(point.delivered ?? point.reach) +
+        asFiniteNumber(point.uniqueAudience ?? point.reach),
     ),
     conversionFunnel: preferSeries(
       fromKpis.conversionFunnel || [],
-      funnel,
+      normalizeCvmFunnel(funnel),
       (point) => asFiniteNumber(point.value),
     ),
     performanceTrend,
@@ -218,6 +272,43 @@ export const CAMPAIGN_CHANNEL_CATALOG = [
   "Digital channels",
 ] as const;
 
+const CVM_FUNNEL_ALIASES: Record<string, "Sent" | "Delivered" | "Converted"> = {
+  sent: "Sent",
+  dispatched: "Sent",
+  delivered: "Delivered",
+  delivery: "Delivered",
+  converted: "Converted",
+  conversions: "Converted",
+  conversion: "Converted",
+};
+
+export function normalizeCvmFunnel(
+  rows: CampaignReportsResponse["conversionFunnel"] = [],
+): CampaignReportsResponse["conversionFunnel"] {
+  const totals: Record<"Sent" | "Delivered" | "Converted", number> = {
+    Sent: 0,
+    Delivered: 0,
+    Converted: 0,
+  };
+  let matched = false;
+  for (const row of rows) {
+    const key = String(row.stage || "")
+      .toLowerCase()
+      .replace(/[_-]+/g, " ")
+      .trim();
+    const stage = CVM_FUNNEL_ALIASES[key];
+    if (!stage) continue;
+    matched = true;
+    totals[stage] += asFiniteNumber(row.value);
+  }
+  if (!matched) return rows;
+  return [
+    { stage: "Sent", value: totals.Sent },
+    { stage: "Delivered", value: totals.Delivered },
+    { stage: "Converted", value: totals.Converted },
+  ];
+}
+
 function channelKey(value: unknown): string {
   return String(value || "")
     .toLowerCase()
@@ -226,25 +317,63 @@ function channelKey(value: unknown): string {
     .trim();
 }
 
+export function normalizeChannelReachPoint(
+  point: CampaignReportsResponse["channelReach"][number],
+): CampaignReportsResponse["channelReach"][number] {
+  const sent = asFiniteNumber(point.sent ?? point.impressions);
+  const delivered = asFiniteNumber(point.delivered ?? point.reach);
+  const uniqueAudience = asFiniteNumber(point.uniqueAudience ?? point.reach);
+  const converted = asFiniteNumber(point.converted ?? point.conversions);
+  const deliveryRate = asFiniteNumber(
+    point.deliveryRate,
+    sent ? Number(((delivered / sent) * 100).toFixed(1)) : 0,
+  );
+  const conversionRate = asFiniteNumber(
+    point.conversionRate,
+    delivered ? Number(((converted / delivered) * 100).toFixed(1)) : 0,
+  );
+  return {
+    ...point,
+    sent,
+    impressions: sent,
+    delivered,
+    uniqueAudience,
+    reach: uniqueAudience,
+    conversions: converted,
+    converted,
+    deliveryRate,
+    conversionRate,
+  };
+}
+
 export function ensureChannelReachCatalog(
   points: CampaignReportsResponse["channelReach"] = [],
 ): CampaignReportsResponse["channelReach"] {
   const byKey = new Map<string, CampaignReportsResponse["channelReach"][number]>();
-  for (const point of points) {
+  for (const raw of points) {
+    const point = normalizeChannelReachPoint(raw);
     const key = channelKey(point.channel || point.channelCode);
     if (!key) continue;
     const current = byKey.get(key);
     if (!current) {
-      byKey.set(key, {
-        ...point,
-        reach: asFiniteNumber(point.reach),
-        impressions: asFiniteNumber(point.impressions),
-      });
+      byKey.set(key, { ...point });
       continue;
     }
-    current.reach = asFiniteNumber(current.reach) + asFiniteNumber(point.reach);
-    current.impressions =
-      asFiniteNumber(current.impressions) + asFiniteNumber(point.impressions);
+    current.sent = asFiniteNumber(current.sent) + asFiniteNumber(point.sent);
+    current.impressions = current.sent;
+    current.delivered = asFiniteNumber(current.delivered) + asFiniteNumber(point.delivered);
+    current.uniqueAudience =
+      asFiniteNumber(current.uniqueAudience) + asFiniteNumber(point.uniqueAudience);
+    current.reach = current.uniqueAudience;
+    current.conversions =
+      asFiniteNumber(current.conversions) + asFiniteNumber(point.conversions);
+    current.converted = current.conversions;
+    current.deliveryRate = current.sent
+      ? Number(((asFiniteNumber(current.delivered) / current.sent) * 100).toFixed(1))
+      : 0;
+    current.conversionRate = asFiniteNumber(current.delivered)
+      ? Number(((asFiniteNumber(current.conversions) / asFiniteNumber(current.delivered)) * 100).toFixed(1))
+      : 0;
   }
 
   const ordered = CAMPAIGN_CHANNEL_CATALOG.map((label) => {
@@ -254,7 +383,18 @@ export function ensureChannelReachCatalog(
       byKey.delete(key);
       return { ...existing, channel: existing.channel || label };
     }
-    return { channel: label, reach: 0, impressions: 0 };
+    return {
+      channel: label,
+      sent: 0,
+      impressions: 0,
+      delivered: 0,
+      uniqueAudience: 0,
+      reach: 0,
+      conversions: 0,
+      converted: 0,
+      deliveryRate: 0,
+      conversionRate: 0,
+    };
   });
 
   return [...ordered, ...byKey.values()];
@@ -271,9 +411,9 @@ export function formatChartCount(value: unknown): string {
   return n.toLocaleString("en-US");
 }
 
-export function uniqueReachRate(reach: unknown, impressions: unknown): string {
-  const unique = asFiniteNumber(reach);
-  const total = asFiniteNumber(impressions);
+export function uniqueReachRate(uniqueAudience: unknown, sent: unknown): string {
+  const unique = asFiniteNumber(uniqueAudience);
+  const total = asFiniteNumber(sent);
   if (!total) return unique > 0 ? "—" : "0%";
   const pct = (unique / total) * 100;
   if (pct <= 0) return "0%";
@@ -287,6 +427,9 @@ export function prepareChannelReachChartData(
   options: { ensureCatalog?: boolean } = {},
 ): Array<
   CampaignReportsResponse["channelReach"][number] & {
+    sent: number;
+    delivered: number;
+    uniqueAudience: number;
     reach: number;
     impressions: number;
     uniqueRate: string;
@@ -294,13 +437,14 @@ export function prepareChannelReachChartData(
 > {
   const source = options.ensureCatalog
     ? ensureChannelReachCatalog(points)
-    : points;
-  return source.map((point) => ({
-    ...point,
-    reach: asFiniteNumber(point.reach),
-    impressions: asFiniteNumber(point.impressions),
-    uniqueRate: uniqueReachRate(point.reach, point.impressions),
-  }));
+    : points.map(normalizeChannelReachPoint);
+  return source.map((point) => {
+    const normalized = normalizeChannelReachPoint(point);
+    return {
+      ...normalized,
+      uniqueRate: uniqueReachRate(normalized.uniqueAudience, normalized.sent),
+    };
+  });
 }
 
 export function formatAudienceShare(reach: number, eligible: number): string {

@@ -389,6 +389,16 @@ const allConfigurations = [
     navigationPath: "/dashboard/dynamic-message-variables",
   },
   {
+    id: "ai-models",
+    name: "AI Models",
+    description:
+      "AI administration hub. Open AI Model Configuration to manage providers used for message generation",
+    type: "configuration",
+    category: "System Configuration",
+    status: "active",
+    navigationPath: "/dashboard/ai-models",
+  },
+  {
     id: "ai-model-configuration",
     name: "AI Model Configuration",
     description:
@@ -396,7 +406,7 @@ const allConfigurations = [
     type: "configuration",
     category: "System Configuration",
     status: "active",
-    navigationPath: "/dashboard/ai-models",
+    navigationPath: "/dashboard/ai-models/configuration",
   },
   {
     id: "utilities",

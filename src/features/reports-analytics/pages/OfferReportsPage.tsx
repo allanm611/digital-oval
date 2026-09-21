@@ -549,6 +549,7 @@ export default function OfferReportsPage() {
     overviewQueryParams,
     overviewWindow,
     activeWindow,
+    comparePreviousPeriod,
   } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
@@ -1030,8 +1031,11 @@ export default function OfferReportsPage() {
   ]);
 
   const timelineComparison = useMemo(
-    () => (useDummyData ? dummyPreviousPeriod(timelineSeries) : undefined),
-    [timelineSeries, useDummyData],
+    () =>
+      comparePreviousPeriod && useDummyData
+        ? dummyPreviousPeriod(timelineSeries)
+        : undefined,
+    [comparePreviousPeriod, timelineSeries, useDummyData],
   );
 
   const offerTypeComparison = useMemo(() => {

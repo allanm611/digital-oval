@@ -203,7 +203,7 @@ export default function OfferDetailReportPage() {
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams, rangeKey, scaleFactor, overviewWindow, activeWindow } = timeWindow;
+  const { isTrendsView, queryParams, rangeKey, scaleFactor, overviewWindow, activeWindow, comparePreviousPeriod } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
   const [useDummyData, setUseDummyData] = useState(true);
@@ -438,8 +438,11 @@ export default function OfferDetailReportPage() {
   }, [useDummyData, liveDetail, queryParams.startDate, queryParams.endDate, queryParams.grain]);
 
   const timelineComparison = useMemo(
-    () => (useDummyData ? dummyPreviousPeriod(timelineSeries) : undefined),
-    [timelineSeries, useDummyData],
+    () =>
+      comparePreviousPeriod && useDummyData
+        ? dummyPreviousPeriod(timelineSeries)
+        : undefined,
+    [comparePreviousPeriod, timelineSeries, useDummyData],
   );
 
   const typeSeries = useMemo(

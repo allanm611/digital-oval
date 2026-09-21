@@ -338,9 +338,9 @@ export default function AdminHubPage() {
           category: "System Configuration",
         },
         {
-          title: "AI Model Configuration",
+          title: "AI Models",
           description:
-            "Configure Gemini, ChatGPT, Anthropic, DeepSeek, Grok and other models.",
+            "Open AI administration. Configure providers used to generate message content.",
           icon: Sparkles,
           href: "/dashboard/ai-models",
           category: "System Configuration",

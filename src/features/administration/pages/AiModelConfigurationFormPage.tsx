@@ -20,6 +20,11 @@ import {
 import ProviderDocsLink from "../components/ProviderDocsLink";
 import type { AiModelConfigSource } from "../types/aiModelConfiguration";
 import { aiModelConfigurationService } from "../services/aiModelConfigurationService";
+import { AI_MODEL_CONFIGURATION_PATH, aiModelEditPath } from "../utils/aiModelNavigation";
+
+interface AiModelConfigurationFormPageProps {
+  mode?: "view" | "edit";
+}
 
 interface FormState {
   name: string;
@@ -64,12 +69,15 @@ function emptyForm(
   };
 }
 
-export default function AiModelConfigurationFormPage() {
+export default function AiModelConfigurationFormPage({
+  mode = "edit",
+}: AiModelConfigurationFormPageProps) {
   const { providerId } = useParams<{ providerId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const provider = getAiModelProvider(providerId);
-  const hubPath = "/dashboard/ai-models";
+  const hubPath = AI_MODEL_CONFIGURATION_PATH;
+  const isView = mode === "view";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -85,6 +93,7 @@ export default function AiModelConfigurationFormPage() {
       provider?.defaultTimeoutMs,
     ),
   );
+  const fieldsLocked = isView || saving;
 
   const modelOptions = useMemo(() => {
     const catalog = (provider?.models || []).map((model) => ({
@@ -108,6 +117,10 @@ export default function AiModelConfigurationFormPage() {
       setLoading(true);
       const existing = await aiModelConfigurationService.getByProvider(provider.id);
       if (!existing) {
+        if (isView && provider) {
+          navigate(aiModelEditPath(provider.id), { replace: true });
+          return;
+        }
         setIsConfigured(false);
         setConfigSource(null);
         setForm(
@@ -159,6 +172,7 @@ export default function AiModelConfigurationFormPage() {
     e.preventDefault();
     if (!provider) return;
 
+    if (isView) return;
     if (!form.name.trim()) {
       showError("Validation Error", "Display name is required");
       return;
@@ -256,7 +270,8 @@ export default function AiModelConfigurationFormPage() {
     <div className="space-y-6">
       <BackButton
         showBreadcrumb={true}
-        currentLabel={provider.name}
+        currentLabel={isView ? `${provider.name} (view)` : provider.name}
+        parentLabel="AI Model Configuration"
         parentTo={hubPath}
       />
 
@@ -291,7 +306,7 @@ export default function AiModelConfigurationFormPage() {
               onChange={(value) => setForm((prev) => ({ ...prev, name: String(value) }))}
               placeholder={provider.name}
               required
-              disabled={saving}
+              disabled={fieldsLocked}
             />
 
             <div>
@@ -308,7 +323,7 @@ export default function AiModelConfigurationFormPage() {
                   form.hasApiKey ? "Paste a new key to rotate" : provider.keyPlaceholder
                 }
                 required={!form.hasApiKey}
-                disabled={saving}
+                disabled={fieldsLocked}
                 aria-describedby="ai-model-api-key-hint"
               />
               <p
@@ -320,10 +335,17 @@ export default function AiModelConfigurationFormPage() {
                 <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 <span>
                   {form.hasApiKey ? (
-                    <>
-                      A key is already saved{form.apiKeyMasked ? ` (${form.apiKeyMasked})` : ""}.
-                      Leave this blank to keep it, or paste a new key to rotate.
-                    </>
+                    isView ? (
+                      <>
+                        A key is already saved{form.apiKeyMasked ? ` (${form.apiKeyMasked})` : ""}.
+                        Open Edit to rotate it.
+                      </>
+                    ) : (
+                      <>
+                        A key is already saved{form.apiKeyMasked ? ` (${form.apiKeyMasked})` : ""}.
+                        Leave this blank to keep it, or paste a new key to rotate.
+                      </>
+                    )
                   ) : (
                     provider.keyHint
                   )}
@@ -339,7 +361,7 @@ export default function AiModelConfigurationFormPage() {
                 onChange={(value) => setForm((prev) => ({ ...prev, baseUrl: String(value) }))}
                 placeholder={provider.defaultBaseUrl || "https://api.example.com/v1"}
                 required={provider.id === "custom"}
-                disabled={saving}
+                disabled={fieldsLocked}
               />
             )}
 
@@ -352,7 +374,7 @@ export default function AiModelConfigurationFormPage() {
                     setForm((prev) => ({ ...prev, organization: String(value) }))
                   }
                   placeholder="org_..."
-                  disabled={saving}
+                  disabled={fieldsLocked}
                 />
               )}
               {provider.supportsProjectId && (
@@ -363,7 +385,7 @@ export default function AiModelConfigurationFormPage() {
                     setForm((prev) => ({ ...prev, projectId: String(value) }))
                   }
                   placeholder={provider.id === "gemini" ? "Google Cloud project" : "proj_..."}
-                  disabled={saving}
+                  disabled={fieldsLocked}
                 />
               )}
               {provider.supportsApiVersion && (
@@ -380,7 +402,7 @@ export default function AiModelConfigurationFormPage() {
                         ? "2023-06-01"
                         : "v1"
                   }
-                  disabled={saving}
+                  disabled={fieldsLocked}
                 />
               )}
             </div>
@@ -398,7 +420,7 @@ export default function AiModelConfigurationFormPage() {
                 onChange={(value) =>
                   setForm((prev) => ({ ...prev, modelSelect: String(value) }))
                 }
-                disabled={saving}
+                disabled={fieldsLocked}
               />
             ) : null}
 
@@ -411,7 +433,7 @@ export default function AiModelConfigurationFormPage() {
                 }
                 placeholder="Exact model id from the provider"
                 required={form.modelSelect === CUSTOM_MODEL_VALUE || provider.models.length === 0}
-                disabled={saving}
+                disabled={fieldsLocked}
               />
             )}
 
@@ -423,7 +445,7 @@ export default function AiModelConfigurationFormPage() {
                 onChange={(value) =>
                   setForm((prev) => ({ ...prev, temperature: String(value) }))
                 }
-                disabled={saving}
+                disabled={fieldsLocked}
                 min={0}
                 max={2}
                 step={0.1}
@@ -435,7 +457,7 @@ export default function AiModelConfigurationFormPage() {
                 onChange={(value) =>
                   setForm((prev) => ({ ...prev, maxOutputTokens: String(value) }))
                 }
-                disabled={saving}
+                disabled={fieldsLocked}
                 min={64}
                 max={8192}
                 step={1}
@@ -447,7 +469,7 @@ export default function AiModelConfigurationFormPage() {
                 onChange={(value) =>
                   setForm((prev) => ({ ...prev, timeoutMs: String(value) }))
                 }
-                disabled={saving}
+                disabled={fieldsLocked}
                 min={5000}
                 max={120000}
                 step={1000}
@@ -486,7 +508,7 @@ export default function AiModelConfigurationFormPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, isActive: e.target.checked }))
                 }
-                disabled={saving}
+                disabled={fieldsLocked}
               />
               <div>
                 <label htmlFor="ai-model-active" className={`block text-sm font-medium ${tw.textPrimary}`}>
@@ -505,7 +527,7 @@ export default function AiModelConfigurationFormPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, isDefault: e.target.checked }))
                 }
-                disabled={saving}
+                disabled={fieldsLocked}
               />
               <div>
                 <label htmlFor="ai-model-default" className={`block text-sm font-medium ${tw.textPrimary}`}>
@@ -542,7 +564,7 @@ export default function AiModelConfigurationFormPage() {
           ) : (
             <span className={`text-sm ${tw.textPrimary}`}>
               {configSource === "environment"
-                ? "Server defaults cannot be deleted from this screen."
+                ? "Server defaults cannot be deleted from this screen. Save first to create an admin-owned copy, or remove GEMINI_API_KEY on the API host."
                 : ""}
             </span>
           )}
@@ -558,16 +580,27 @@ export default function AiModelConfigurationFormPage() {
                 border: "1px solid var(--c-border-accent)",
               }}
             >
-              Cancel
+              {isView ? "Back" : "Cancel"}
             </button>
-            <button
-              type="submit"
-              disabled={saving || deleting}
-              className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {saving ? "Saving..." : "Save configuration"}
-            </button>
+            {isView && provider ? (
+              <button
+                type="button"
+                onClick={() => navigate(aiModelEditPath(provider.id))}
+                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md"
+                style={{ backgroundColor: color.primary.action }}
+              >
+                Edit configuration
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={saving || deleting}
+                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {saving ? "Saving..." : "Save configuration"}
+              </button>
+            )}
           </div>
         </div>
       </form>

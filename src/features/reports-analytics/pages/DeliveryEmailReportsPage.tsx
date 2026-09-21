@@ -291,7 +291,7 @@ export default function DeliveryEmailReportsPage() {
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams, activeWindow } = timeWindow;
+  const { isTrendsView, queryParams, activeWindow, comparePreviousPeriod } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const deliveryRange = timeWindow.rangeKey;
   const appliedCustomRange = timeWindow.activeWindow.bounds;
@@ -404,12 +404,17 @@ export default function DeliveryEmailReportsPage() {
 
   const deliveryComparison = useMemo(
     () =>
-      useDummyData ? dummyPreviousPeriod(deliverySnapshot.deliverySeries) : undefined,
-    [deliverySnapshot.deliverySeries, useDummyData],
+      comparePreviousPeriod && useDummyData
+        ? dummyPreviousPeriod(deliverySnapshot.deliverySeries)
+        : undefined,
+    [comparePreviousPeriod, deliverySnapshot.deliverySeries, useDummyData],
   );
   const deliveryRateComparison = useMemo(
-    () => (useDummyData ? dummyPreviousPeriod(deliveryRateSeries) : undefined),
-    [deliveryRateSeries, useDummyData],
+    () =>
+      comparePreviousPeriod && useDummyData
+        ? dummyPreviousPeriod(deliveryRateSeries)
+        : undefined,
+    [comparePreviousPeriod, deliveryRateSeries, useDummyData],
   );
 
   const filteredLogs = useMemo(() => {

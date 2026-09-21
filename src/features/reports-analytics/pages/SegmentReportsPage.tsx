@@ -357,7 +357,7 @@ export default function SegmentReportsPage() {
     overviewPreset: "weekly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams, overviewWindow, activeWindow } = timeWindow;
+  const { isTrendsView, queryParams, overviewWindow, activeWindow, comparePreviousPeriod } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
   const selectedRange = timeWindow.rangeKey;
@@ -754,8 +754,11 @@ export default function SegmentReportsPage() {
   ]);
 
   const memberGrowthComparison = useMemo(
-    () => (useDummyData ? dummyPreviousPeriod(memberGrowthSeries) : undefined),
-    [memberGrowthSeries, useDummyData],
+    () =>
+      comparePreviousPeriod && useDummyData
+        ? dummyPreviousPeriod(memberGrowthSeries)
+        : undefined,
+    [comparePreviousPeriod, memberGrowthSeries, useDummyData],
   );
 
   const segmentColors = [

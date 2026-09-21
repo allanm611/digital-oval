@@ -70,12 +70,44 @@ function ensureSvgSize(svg: SVGElement) {
   }
 }
 
-export async function downloadChartPng(
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function chartSvg(container: HTMLElement): SVGElement | null {
+  return container.querySelector("svg");
+}
+
+export function downloadChartSvg(
   container: HTMLElement,
   filename: string,
-): Promise<boolean> {
-  const svg = container.querySelector("svg");
+): boolean {
+  const svg = chartSvg(container);
   if (!svg) return false;
+  ensureSvgSize(svg);
+  const source = new XMLSerializer().serializeToString(svg);
+  const href = URL.createObjectURL(
+    new Blob([source], { type: "image/svg+xml;charset=utf-8" }),
+  );
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = filename.endsWith(".svg") ? filename : `${filename}.svg`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(href);
+  return true;
+}
+
+async function rasterizeChart(
+  container: HTMLElement,
+): Promise<{ canvas: HTMLCanvasElement } | null> {
+  const svg = chartSvg(container);
+  if (!svg) return null;
   ensureSvgSize(svg);
   const source = new XMLSerializer().serializeToString(svg);
   const svgUrl = URL.createObjectURL(
@@ -94,31 +126,92 @@ export async function downloadChartPng(
     canvas.width = Math.max(1, Math.round(width * 2));
     canvas.height = Math.max(1, Math.round(height * 2));
     const context = canvas.getContext("2d");
-    if (!context) return false;
+    if (!context) return null;
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    await new Promise<void>((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error("PNG export failed"));
-          return;
-        }
-        const href = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = href;
-        link.download = filename.endsWith(".png") ? filename : `${filename}.png`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(href);
-        resolve();
-      }, "image/png");
-    });
-    return true;
+    return { canvas };
   } catch {
-    return false;
+    return null;
   } finally {
     URL.revokeObjectURL(svgUrl);
   }
+}
+
+export async function downloadChartPng(
+  container: HTMLElement,
+  filename: string,
+): Promise<boolean> {
+  const raster = await rasterizeChart(container);
+  if (!raster) return false;
+  await new Promise<void>((resolve, reject) => {
+    raster.canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("PNG export failed"));
+        return;
+      }
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = filename.endsWith(".png") ? filename : `${filename}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(href);
+      resolve();
+    }, "image/png");
+  });
+  return true;
+}
+
+export async function copyChartPng(container: HTMLElement): Promise<boolean> {
+  if (!navigator.clipboard || typeof ClipboardItem === "undefined") return false;
+  const raster = await rasterizeChart(container);
+  if (!raster) return false;
+  const blob = await new Promise<Blob | null>((resolve) => {
+    raster.canvas.toBlob((next) => resolve(next), "image/png");
+  });
+  if (!blob) return false;
+  await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+  return true;
+}
+
+export function printChart(container: HTMLElement, title: string): boolean {
+  const svg = chartSvg(container);
+  if (!svg) return false;
+  ensureSvgSize(svg);
+  const markup = new XMLSerializer().serializeToString(svg);
+  const frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.position = "fixed";
+  frame.style.right = "0";
+  frame.style.bottom = "0";
+  frame.style.width = "0";
+  frame.style.height = "0";
+  frame.style.border = "0";
+  document.body.appendChild(frame);
+  const doc = frame.contentDocument;
+  if (!doc) {
+    frame.remove();
+    return false;
+  }
+  doc.open();
+  doc.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 24px; color: #111827; }
+      h1 { font-size: 18px; margin: 0 0 16px; }
+      svg { max-width: 100%; height: auto; }
+    </style>
+  </head><body><h1>${escapeHtml(title)}</h1>${markup}</body></html>`);
+  doc.close();
+  const cleanup = () => {
+    frame.remove();
+  };
+  frame.contentWindow?.addEventListener("afterprint", cleanup);
+  setTimeout(() => {
+    frame.contentWindow?.focus();
+    frame.contentWindow?.print();
+    setTimeout(cleanup, 1500);
+  }, 50);
+  return true;
 }
