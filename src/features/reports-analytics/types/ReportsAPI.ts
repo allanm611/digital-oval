@@ -3,8 +3,10 @@ export type ReportGrain = "daily" | "weekly" | "monthly";
 export type ReportViewMode = "overview" | "trends";
 
 /**
- * Named calendar windows shown on Overview (Today, Last 7 days, This month, …).
- * Trends uses Daily / Weekly / Monthly grain plus custom/saved ranges.
+ * Named calendar windows.
+ * Overview keeps snapshot presets (Today, This week, Last month, …).
+ * Trends keeps trailing windows plus MTD / LMD; Today / Yesterday / This week /
+ * Last week / This month / Last month are overview-only.
  */
 export type TimeWindowPreset =
   | "today"
@@ -17,6 +19,7 @@ export type TimeWindowPreset =
   | "last_8_weeks"
   | "this_month"
   | "last_month"
+  | "last_month_to_date"
   | "last_3_months"
   | "last_6_months"
   | "last_12_months"
@@ -575,21 +578,37 @@ export interface SegmentReportRow {
  */
 
 export interface CampaignReportsResponse {
-  // Summary metrics
+  // Summary metrics — CVM core KPIs are sent, delivered, converted.
   summary: {
     eligibleAudience: number;
     executedAudience?: number;
     recipients: number;
+    /** Unique customers reached (de-duplicated by customer identifier). */
+    uniqueAudience: number;
+    /** @deprecated Use uniqueAudience. Kept for live payload compatibility. */
     reach: number;
+    /** Total messages dispatched across channels. */
+    sent: number;
+    /** @deprecated Use sent. Kept for live payload compatibility. */
     impressions: number;
+    /** Customers the message was delivered to. */
+    delivered: number;
+    deliveryRate: number; // Percentage
     opens: number;
     clicks?: number;
     clickRate: number; // Percentage
-    engagementRate: number; // Percentage
+    /** @deprecated Not a core CVM KPI. Kept for live payload compatibility. */
+    engagementRate: number;
     conversions: number;
+    converted: number;
     conversionRate: number; // Percentage
+    uniqueConverters?: number;
+    targetGroup: number;
+    controlGroup: number;
+    targetGroupReached?: number;
+    controlGroupReached?: number;
     revenue: number; // Total revenue in currency units
-    roas: number; // Return on ad spend
+    roas: number; // Return on marketing investment multiplier
     cac: number; // Customer acquisition cost
     leads: number;
     campaignCost: number; // Total campaign cost
@@ -600,13 +619,24 @@ export interface CampaignReportsResponse {
     channel: string;
     channelCode?: string;
     channelId?: number;
+    /** Unique customers reached on this channel. */
+    uniqueAudience: number;
+    /** @deprecated Use uniqueAudience. */
     reach: number;
+    /** Messages sent on this channel. */
+    sent: number;
+    /** @deprecated Use sent. */
     impressions: number;
+    delivered: number;
+    conversions?: number;
+    converted?: number;
+    deliveryRate?: number;
+    conversionRate?: number;
   }>;
 
   // Conversion Funnel Chart Data (Bar Chart)
   conversionFunnel: Array<{
-    stage: string; // e.g., "Sent", "Delivered", "Opened", "Clicked", "Converted"
+    stage: string; // e.g., "Sent", "Delivered", "Converted"
     value: number; // Count at this stage
   }>;
 
@@ -614,8 +644,14 @@ export interface CampaignReportsResponse {
   performanceTrend: Array<{
     period: string; // Period label based on range
     date?: string;
-    ctr: number; // Click-through rate percentage
-    engagement: number; // Engagement rate percentage
+    sent?: number;
+    delivered?: number;
+    converted?: number;
+    conversions?: number;
+    deliveryRate?: number;
+    conversionRate?: number;
+    ctr: number; // Legacy click-through rate percentage
+    engagement: number; // Legacy engagement rate percentage
     revenue: number; // Revenue in currency units
     spend: number; // Spend in currency units
   }>;
@@ -633,9 +669,15 @@ export interface CampaignReportsResponse {
   totalCampaigns: number; // Total count for pagination
 
   heroTrends?: {
+    uniqueAudience?: CampaignReportTrend;
     reach?: CampaignReportTrend;
-    engagementRate?: CampaignReportTrend;
+    sent?: CampaignReportTrend;
+    delivered?: CampaignReportTrend;
+    deliveryRate?: CampaignReportTrend;
+    converted?: CampaignReportTrend;
+    conversions?: CampaignReportTrend;
     conversionRate?: CampaignReportTrend;
+    engagementRate?: CampaignReportTrend;
     revenue?: CampaignReportTrend;
     roas?: CampaignReportTrend;
     campaignCost?: CampaignReportTrend;
@@ -717,14 +759,9 @@ export interface CampaignReportEnvelope<T = unknown> {
 }
 
 export type CampaignKpiSummary = CampaignReportsResponse["summary"] & {
-  sent?: number;
-  delivered?: number;
   opened?: number;
   clicked?: number;
   failed?: number;
-  converted?: number;
-  uniqueConverters?: number;
-  deliveryRate?: number;
   openRate?: number;
 };
 

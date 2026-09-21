@@ -1,16 +1,23 @@
 import { BookmarkPlus, CalendarRange, Trash2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import Checkbox from "../../../shared/components/ui/Checkbox";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import SegmentedTabs from "../../../shared/components/ui/SegmentedTabs";
 import { colors } from "../../../shared/utils/tokens";
 import { tw } from "../../../shared/utils/utils";
-import type { ReportViewMode, SavedReportDateRange } from "../types/ReportsAPI";
+import type {
+  ReportViewMode,
+  SavedReportDateRange,
+  TimeWindowPreset,
+} from "../types/ReportsAPI";
 import type { ReportTimeWindowState } from "../hooks/useReportTimeWindow";
 import {
   TREND_GRAIN_TABS,
-  allNamedRangePresets,
+  OVERVIEW_RANGE_PRESETS,
   namedRangePresets,
+  formatPeriodRange,
   getDateConstraints,
   type TrendSubPreset,
 } from "../utils/reportTimeWindow";
@@ -19,6 +26,8 @@ const REPORT_VIEW_TABS: Array<{ id: ReportViewMode; label: string }> = [
   { id: "overview", label: "Overview" },
   { id: "trends", label: "Trends" },
 ];
+
+const SAVED_RANGE_PREFIX = "saved:";
 
 interface ReportTrendsToolbarProps {
   timeWindow: ReportTimeWindowState;
@@ -105,8 +114,17 @@ export default function ReportTrendsToolbar({
     selectPreset,
     selectSavedRange,
     windowLabel,
+    periodLabel,
+    previousPeriodLabel,
     savedRanges,
     overviewSavedRanges,
+    comparePreviousPeriod,
+    setComparePreviousPeriod,
+    applyInlineTrendRange,
+    selectTrendYear,
+    trendYear,
+    availableTrendYears,
+    inlineRangeError,
     isPickerOpen,
     closePicker,
     draftRange,
@@ -121,10 +139,66 @@ export default function ReportTrendsToolbar({
     saveMessage,
     pickerGrain,
     pickerTarget,
+    trendsWindow,
+    overviewWindow,
   } = timeWindow;
 
-  const overviewPresets = allNamedRangePresets();
   const trendPresets = namedRangePresets(grainTab);
+  const [fromDate, setFromDate] = useState(trendsWindow.bounds.start);
+  const [toDate, setToDate] = useState(trendsWindow.bounds.end);
+
+  useEffect(() => {
+    setFromDate(trendsWindow.bounds.start);
+    setToDate(trendsWindow.bounds.end);
+  }, [trendsWindow.bounds.start, trendsWindow.bounds.end]);
+
+  const overviewSelectValue = overviewSavedRangeId
+    ? `${SAVED_RANGE_PREFIX}${overviewSavedRangeId}`
+    : overviewPreset;
+
+  const overviewOptions = useMemo(() => {
+    const named = OVERVIEW_RANGE_PRESETS.map((preset) => ({
+      value: preset.id,
+      label: preset.label,
+    }));
+    const saved = overviewSavedRanges.map((range) => ({
+      value: `${SAVED_RANGE_PREFIX}${range.id}`,
+      label: range.name,
+    }));
+    if (overviewPreset === "custom" && !overviewSavedRangeId) {
+      return [
+        { value: "custom", label: "Custom range" },
+        ...named,
+        ...saved,
+      ];
+    }
+    return [...named, ...saved];
+  }, [overviewPreset, overviewSavedRangeId, overviewSavedRanges]);
+
+  const handleOverviewPeriodChange = (value: string | number) => {
+    const key = String(value);
+    if (key.startsWith(SAVED_RANGE_PREFIX)) {
+      const range = overviewSavedRanges.find(
+        (item) => item.id === key.slice(SAVED_RANGE_PREFIX.length),
+      );
+      if (range) selectOverviewSavedRange(range);
+      return;
+    }
+    if (key === "custom") {
+      selectOverviewPreset("custom");
+      return;
+    }
+    selectOverviewPreset(key as TimeWindowPreset);
+  };
+
+  const handleInlineDateChange = (next: { start?: string; end?: string }) => {
+    const start = next.start ?? fromDate;
+    const end = next.end ?? toDate;
+    if (next.start !== undefined) setFromDate(next.start);
+    if (next.end !== undefined) setToDate(next.end);
+    if (start && end) applyInlineTrendRange({ start, end });
+  };
+
   const pickerTitle =
     pickerTarget === "overview"
       ? "Custom date range"
@@ -154,30 +228,65 @@ export default function ReportTrendsToolbar({
 
       {!isTrendsView && (
         <div className="space-y-2">
-          <RangeChips
-            presets={overviewPresets}
-            savedRanges={overviewSavedRanges}
-            activePreset={overviewPreset}
-            savedRangeId={overviewSavedRangeId}
-            onSelectPreset={selectOverviewPreset}
-            onSelectSavedRange={selectOverviewSavedRange}
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="flex w-full min-w-[16rem] flex-col gap-1.5 sm:max-w-xs sm:flex-1">
+              <span className="text-xs font-medium text-gray-600">Period</span>
+              <HeadlessSelect
+                searchable
+                value={overviewSelectValue}
+                onChange={handleOverviewPeriodChange}
+                options={overviewOptions}
+                placeholder="Select period"
+              />
+            </div>
+            <button
+              type="button"
+              title="Pick a custom From / To range"
+              onClick={() => selectOverviewPreset("custom")}
+              className={`${chipClass(overviewPreset === "custom" && !overviewSavedRangeId)} inline-flex items-center gap-1.5 whitespace-nowrap`}
+            >
+              <CalendarRange className="h-3.5 w-3.5" />
+              Custom date range
+            </button>
+          </div>
           {windowLabel ? (
             <p className="text-xs text-gray-500">
-              Overview window: {windowLabel}
+              Overview window: {formatPeriodRange(overviewWindow)}
+              {overviewPreset !== "custom"
+                ? ` · ${OVERVIEW_RANGE_PRESETS.find((item) => item.id === overviewPreset)?.label || ""}`
+                : " · Custom"}
             </p>
           ) : null}
         </div>
       )}
 
       {isTrendsView && (
-        <div className="space-y-2">
-          <SegmentedTabs
-            items={TREND_GRAIN_TABS}
-            value={grainTab}
-            onChange={selectGrainTab}
-            ariaLabel="Trend grain"
-          />
+        <div className="space-y-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <SegmentedTabs
+              items={TREND_GRAIN_TABS}
+              value={grainTab}
+              onChange={selectGrainTab}
+              ariaLabel="Trend grain"
+            />
+            <div
+              className={`${tw.rounded} inline-flex items-center gap-2 border border-gray-200 bg-white px-3 py-1.5`}
+            >
+              <Checkbox
+                id="compare-previous-period"
+                checked={comparePreviousPeriod}
+                onChange={(event) =>
+                  setComparePreviousPeriod(event.target.checked)
+                }
+              />
+              <label
+                htmlFor="compare-previous-period"
+                className="cursor-pointer text-sm font-medium text-gray-700"
+              >
+                Compare vs previous period
+              </label>
+            </div>
+          </div>
           <RangeChips
             presets={trendPresets}
             savedRanges={savedRanges}
@@ -186,9 +295,70 @@ export default function ReportTrendsToolbar({
             onSelectPreset={selectPreset}
             onSelectSavedRange={selectSavedRange}
           />
+          <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+            <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:max-w-[14rem]">
+              <label
+                htmlFor="report-trend-inline-from"
+                className="text-xs font-medium text-gray-600"
+              >
+                From
+              </label>
+              <Input
+                id="report-trend-inline-from"
+                type="date"
+                variant="compact"
+                value={fromDate}
+                min={constraints.minDate}
+                max={constraints.maxDate}
+                onChange={(value) =>
+                  handleInlineDateChange({ start: String(value) })
+                }
+              />
+            </div>
+            <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:max-w-[14rem]">
+              <label
+                htmlFor="report-trend-inline-to"
+                className="text-xs font-medium text-gray-600"
+              >
+                To
+              </label>
+              <Input
+                id="report-trend-inline-to"
+                type="date"
+                variant="compact"
+                value={toDate}
+                min={fromDate || constraints.minDate}
+                max={constraints.maxDate}
+                onChange={(value) =>
+                  handleInlineDateChange({ end: String(value) })
+                }
+              />
+            </div>
+            {grainTab === "monthly" ? (
+              <div className="flex min-w-[8rem] flex-col gap-1.5 sm:max-w-[10rem]">
+                <span className="text-xs font-medium text-gray-600">Year</span>
+                <HeadlessSelect
+                  value={trendYear ?? availableTrendYears[0]}
+                  onChange={(value) => selectTrendYear(Number(value))}
+                  options={availableTrendYears.map((year) => ({
+                    value: year,
+                    label: String(year),
+                  }))}
+                  placeholder="Year"
+                />
+              </div>
+            ) : null}
+          </div>
+          {inlineRangeError ? (
+            <p className="text-sm text-red-600">{inlineRangeError}</p>
+          ) : null}
           <p className="text-xs text-gray-500">
-            Showing {windowLabel}. Saved custom ranges stay under {grainTab}{" "}
-            only.
+            Period: {periodLabel}
+            {grainTab === "monthly" && trendYear ? ` · Year ${trendYear}` : ""}
+            {comparePreviousPeriod
+              ? ` · vs previous ${previousPeriodLabel}`
+              : ""}
+            . Saved custom ranges stay under {grainTab} only.
           </p>
         </div>
       )}

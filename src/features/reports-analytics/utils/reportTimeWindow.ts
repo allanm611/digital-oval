@@ -36,30 +36,75 @@ export const TREND_GRAIN_TABS: Array<{ id: ReportGrain; label: string }> = [
   { id: "monthly", label: "Monthly" },
 ];
 
+const MTD_PRESET: TrendSubPreset = {
+  id: "this_month",
+  label: "MTD",
+  hint: "Month to date — 1st through today",
+};
+
+const LMD_PRESET: TrendSubPreset = {
+  id: "last_month_to_date",
+  label: "LMD",
+  hint: "Last month to date — 1st through the same day last month",
+};
+
+/** Period windows that keep the current Daily / Weekly / Monthly grain. */
+export const GRAIN_INDEPENDENT_PRESETS: TimeWindowPreset[] = [
+  "this_month",
+  "last_month_to_date",
+];
+
+/**
+ * Trends chips. Today / Yesterday / This week / Last week / This month /
+ * Last month were removed from Trends — those stay on Overview.
+ * MTD and LMD are available on every grain so the period can be daily or weekly.
+ */
 export const TREND_SUB_PRESETS: Record<ReportGrain, TrendSubPreset[]> = {
   daily: [
-    { id: "today", label: "Today", hint: "Current calendar day" },
-    { id: "yesterday", label: "Yesterday", hint: "Previous calendar day" },
     { id: "last_7_days", label: "Last 7 days", hint: "Trailing 7 inclusive days" },
     { id: "last_14_days", label: "Last 14 days", hint: "Trailing 14 inclusive days" },
+    MTD_PRESET,
+    LMD_PRESET,
     { id: "custom", label: "Custom", hint: "Pick From / To, keep daily grain" },
   ],
   weekly: [
-    { id: "this_week", label: "This week", hint: "Monday through today" },
-    { id: "last_week", label: "Last week", hint: "Previous Monday–Sunday" },
     { id: "last_4_weeks", label: "Last 4 weeks", hint: "This week plus 3 prior weeks" },
     { id: "last_8_weeks", label: "Last 8 weeks", hint: "This week plus 7 prior weeks" },
+    MTD_PRESET,
+    LMD_PRESET,
     { id: "custom", label: "Custom", hint: "Pick From / To, keep weekly grain" },
   ],
   monthly: [
-    { id: "this_month", label: "This month", hint: "1st through today" },
-    { id: "last_month", label: "Last month", hint: "Previous full calendar month" },
+    MTD_PRESET,
+    LMD_PRESET,
     { id: "last_3_months", label: "Last 3 months", hint: "From month start two months ago" },
     { id: "last_6_months", label: "Last 6 months", hint: "From month start five months ago" },
     { id: "last_12_months", label: "Last 12 months", hint: "From month start eleven months ago" },
     { id: "custom", label: "Custom", hint: "Pick From / To, keep monthly grain" },
   ],
 };
+
+/** Overview period dropdown: named snapshot windows, Custom sits beside the select. */
+export const OVERVIEW_RANGE_PRESETS: TrendSubPreset[] = [
+  { id: "today", label: "Today", hint: "Current calendar day" },
+  { id: "yesterday", label: "Yesterday", hint: "Previous calendar day" },
+  { id: "last_7_days", label: "Last 7 days", hint: "Trailing 7 inclusive days" },
+  { id: "last_14_days", label: "Last 14 days", hint: "Trailing 14 inclusive days" },
+  { id: "this_week", label: "This week", hint: "Monday through today" },
+  { id: "last_week", label: "Last week", hint: "Previous Monday–Sunday" },
+  { id: "last_4_weeks", label: "Last 4 weeks", hint: "This week plus 3 prior weeks" },
+  { id: "last_8_weeks", label: "Last 8 weeks", hint: "This week plus 7 prior weeks" },
+  { id: "this_month", label: "This month (MTD)", hint: "1st through today" },
+  {
+    id: "last_month_to_date",
+    label: "Last month to date (LMD)",
+    hint: "1st through the same day last month",
+  },
+  { id: "last_month", label: "Last month", hint: "Previous full calendar month" },
+  { id: "last_3_months", label: "Last 3 months", hint: "From month start two months ago" },
+  { id: "last_6_months", label: "Last 6 months", hint: "From month start five months ago" },
+  { id: "last_12_months", label: "Last 12 months", hint: "From month start eleven months ago" },
+];
 
 export const DEFAULT_SUB_PRESET: Record<ReportGrain, TimeWindowPreset> = {
   daily: "last_7_days",
@@ -88,21 +133,9 @@ export function namedRangePresets(grain: ReportGrain): TrendSubPreset[] {
   return TREND_SUB_PRESETS[grain];
 }
 
-/** Daily + weekly + monthly snapshot chips, with a single Custom at the end. */
+/** Overview dropdown options. Custom is a sibling control, not an option. */
 export function allNamedRangePresets(): TrendSubPreset[] {
-  const presets: TrendSubPreset[] = [];
-  for (const grain of TREND_GRAIN_TABS) {
-    for (const preset of TREND_SUB_PRESETS[grain.id]) {
-      if (preset.id === "custom") continue;
-      presets.push(preset);
-    }
-  }
-  presets.push({
-    id: "custom",
-    label: "Custom",
-    hint: "Pick From / To",
-  });
-  return presets;
+  return OVERVIEW_RANGE_PRESETS;
 }
 
 export function customRangePreset(grain: ReportGrain): TrendSubPreset {
@@ -207,6 +240,7 @@ export function grainForPreset(preset: TimeWindowPreset): ReportGrain {
   if (
     preset === "this_month" ||
     preset === "last_month" ||
+    preset === "last_month_to_date" ||
     preset === "last_3_months" ||
     preset === "last_6_months" ||
     preset === "last_12_months"
@@ -221,6 +255,7 @@ export function presetBelongsToGrain(
   grain: ReportGrain,
 ): boolean {
   if (preset === "custom") return true;
+  if (GRAIN_INDEPENDENT_PRESETS.includes(preset)) return true;
   return grainForPreset(preset) === grain;
 }
 
@@ -264,6 +299,46 @@ function lastCompleteMonth(now = new Date()): LocalDateBounds {
   return { start: formatISODate(lastMonthStart), end: formatISODate(lastMonthEnd) };
 }
 
+/** Last month to date: 1st of previous month through the same day last month. */
+function lastMonthToDate(now = new Date()): LocalDateBounds {
+  const today = startOfLocalDay(now);
+  const thisMonthStart = startOfMonth(today);
+  const lastMonthEnd = addLocalDays(thisMonthStart, -1);
+  const lastMonthStart = startOfMonth(lastMonthEnd);
+  const day = Math.min(today.getDate(), lastMonthEnd.getDate());
+  const end = new Date(
+    lastMonthStart.getFullYear(),
+    lastMonthStart.getMonth(),
+    day,
+  );
+  return { start: formatISODate(lastMonthStart), end: formatISODate(end) };
+}
+
+export function yearsForLookback(now = new Date()): number[] {
+  const current = now.getFullYear();
+  const years: number[] = [];
+  for (let offset = 0; offset <= MAX_LOOKBACK_YEARS; offset += 1) {
+    years.push(current - offset);
+  }
+  return years;
+}
+
+export function boundsForCalendarYear(
+  year: number,
+  now = new Date(),
+): LocalDateBounds {
+  const today = startOfLocalDay(now);
+  const start = new Date(year, 0, 1);
+  const lastDay = new Date(year, 11, 31);
+  const end = lastDay.getTime() > today.getTime() ? today : lastDay;
+  return { start: formatISODate(start), end: formatISODate(end) };
+}
+
+export function yearFromBounds(bounds: LocalDateBounds): number | null {
+  const end = parseISODate(bounds.end);
+  return end ? end.getFullYear() : null;
+}
+
 export function boundsForPreset(
   preset: TimeWindowPreset,
   custom?: LocalDateBounds,
@@ -299,6 +374,8 @@ export function boundsForPreset(
       };
     case "last_month":
       return lastCompleteMonth(now);
+    case "last_month_to_date":
+      return lastMonthToDate(now);
     case "last_3_months":
       return trailingCalendarMonths(3, now);
     case "last_6_months":
@@ -342,6 +419,8 @@ export function toReportQueryParams(
 }
 
 export function formatPresetLabel(preset: TimeWindowPreset): string {
+  const overview = OVERVIEW_RANGE_PRESETS.find((item) => item.id === preset);
+  if (overview) return overview.label;
   for (const grain of TREND_GRAIN_TABS) {
     const match = TREND_SUB_PRESETS[grain.id].find((item) => item.id === preset);
     if (match) return match.label;
@@ -349,7 +428,7 @@ export function formatPresetLabel(preset: TimeWindowPreset): string {
   return preset;
 }
 
-export function formatWindowLabel(window: ResolvedTimeWindow): string {
+export function formatPeriodRange(window: ResolvedTimeWindow): string {
   const start = parseISODate(window.bounds.start);
   const end = parseISODate(window.bounds.end);
   if (!start || !end) return "";
@@ -358,10 +437,13 @@ export function formatWindowLabel(window: ResolvedTimeWindow): string {
     month: "short",
     year: "numeric",
   });
-  const rangeLabel =
-    window.bounds.start === window.bounds.end
-      ? formatter.format(start)
-      : `${formatter.format(start)} – ${formatter.format(end)}`;
+  if (window.bounds.start === window.bounds.end) return formatter.format(start);
+  return `${formatter.format(start)} – ${formatter.format(end)}`;
+}
+
+export function formatWindowLabel(window: ResolvedTimeWindow): string {
+  const rangeLabel = formatPeriodRange(window);
+  if (!rangeLabel) return "";
   const presetLabel =
     window.preset === "custom" ? "custom" : formatPresetLabel(window.preset);
   return `${presetLabel} · ${rangeLabel} · ${window.grain} grain`;
@@ -483,7 +565,7 @@ export function labelTrendBucket(
   }
   return date.toLocaleDateString("en-US", {
     month: "long",
-    ...(spanDays > 366 ? { year: "numeric" as const } : {}),
+    year: "numeric",
   });
 }
 
@@ -491,7 +573,17 @@ export function labelTrendBucket(
 export function shortenAxisLabel(label: string): string {
   const weekOf = /^Week of\s+(.+)$/i.exec(label.trim());
   if (weekOf) return weekOf[1];
-  if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\b/i.test(label)) {
+  const monthYear =
+    /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i.exec(
+      label.trim(),
+    );
+  if (monthYear) {
+    const date = new Date(`${monthYear[1]} 1, ${monthYear[2]}`);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    }
+  }
+  if (/^(January|February|March|April|May|June|July|August|September|October|November|December)$/i.test(label.trim())) {
     const date = new Date(`${label} 1, 2000`);
     if (!Number.isNaN(date.getTime())) {
       return date.toLocaleDateString("en-US", { month: "short" });
@@ -512,6 +604,12 @@ export function shouldChartUseFullRow(
 export interface CampaignTrendPoint {
   period: string;
   date?: string;
+  sent?: number;
+  delivered?: number;
+  converted?: number;
+  conversions?: number;
+  deliveryRate?: number;
+  conversionRate?: number;
   ctr: number;
   engagement: number;
   revenue?: number;
@@ -600,6 +698,11 @@ export function fillCampaignTrendSeries<T extends CampaignTrendPoint>(
 ): Array<T & CampaignTrendPoint> {
   return alignTrendSeries(points, options).map((point) => ({
     ...point,
+    sent: Number(point.sent || 0),
+    delivered: Number(point.delivered || 0),
+    converted: Number(point.converted ?? point.conversions ?? 0),
+    deliveryRate: Number(point.deliveryRate || 0),
+    conversionRate: Number(point.conversionRate || 0),
     ctr: Number(point.ctr || 0),
     engagement: Number(point.engagement || 0),
     revenue: Number(point.revenue || 0),
@@ -634,11 +737,19 @@ export function dummyPreviousPeriod<T extends TrendSeriesPoint>(
     const next: TrendSeriesPoint = { ...row };
     for (const [key, value] of Object.entries(row)) {
       if (typeof value !== "number") continue;
-      if (key === "roi") continue;
+      if (key === "roi" || key.endsWith("Rate") || key === "ctr" || key === "engagement") continue;
       next[key] = Number((value * factor).toFixed(2));
     }
     return next as T;
   });
+}
+
+export function comparisonOverlay<T extends TrendSeriesPoint>(
+  rows: T[],
+  enabled: boolean,
+): T[] | undefined {
+  if (!enabled || !rows.length) return undefined;
+  return dummyPreviousPeriod(rows);
 }
 
 export function toChartAudit(window: ResolvedTimeWindow) {

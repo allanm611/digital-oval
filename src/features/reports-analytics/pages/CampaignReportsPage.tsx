@@ -1,21 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import {
-  Activity,
-  ArrowUpRight,
-  MousePointerClick,
-  Users2,
   Eye,
   FileText,
   RefreshCw,
@@ -25,21 +11,17 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { formatCurrency } from "../../../shared/services/currencyService";
 import type {
-  RangeOption,
   CampaignReportsResponse,
   CampaignRow,
 } from "../types/ReportsAPI";
 import {
   buildCampaignReportParams,
-  resolveHeroTrend,
   settledError,
   settledValue,
 } from "../utils/campaignReportQuery";
 import {
   campaignPortfolioHasWidgets,
-  formatAudienceShare,
   mergeSplitCampaignWidgets,
   normalizeCampaignPortfolio,
   pickNamedArray,
@@ -50,7 +32,18 @@ import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 import ChannelReachContributionChart from "../components/ChannelReachContributionChart";
 import ReportChartCard from "../components/ReportChartCard";
-import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
+import SwitchableReportChart from "../components/SwitchableReportChart";
+import CampaignKpiGrid from "../components/CampaignKpiGrid";
+import CampaignChannelSections from "../components/CampaignChannelSections";
+import ReportChartTypeToggle, {
+  type ReportChartView,
+} from "../components/ReportChartTypeToggle";
+import {
+  campaignReportDummy,
+  scaleCampaignSummary,
+  scaleChannelReach,
+} from "../utils/campaignReportDummy";
+import { emptyCampaignSummary } from "../utils/campaignCvmMetrics";
 
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
@@ -64,191 +57,7 @@ import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
 
-// Extract types from API response type
-type CampaignSummary = CampaignReportsResponse["summary"];
-type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
-type FunnelPoint = CampaignReportsResponse["conversionFunnel"][number];
 type TrendPoint = CampaignReportsResponse["performanceTrend"][number];
-
-// Types are now imported from ReportsAPI.ts above
-
-const campaignSummary: Record<RangeOption, CampaignSummary> = {
-  "7d": {
-    eligibleAudience: 210_000,
-    recipients: 145_000,
-    reach: 132_400,
-    impressions: 280_000,
-    opens: 56_000,
-    clickRate: 8.4,
-    engagementRate: 12.1,
-    conversions: 9_300,
-    conversionRate: 6.4,
-    revenue: 415_000,
-    roas: 4.6,
-    cac: 18.4,
-    leads: 3_950,
-    campaignCost: 90_000,
-  },
-  "30d": {
-    eligibleAudience: 720_000,
-    recipients: 540_000,
-    reach: 497_000,
-    impressions: 1_180_000,
-    opens: 210_000,
-    clickRate: 9.2,
-    engagementRate: 13.3,
-    conversions: 34_400,
-    conversionRate: 7.1,
-    revenue: 1_620_000,
-    roas: 4.9,
-    cac: 17.2,
-    leads: 15_200,
-    campaignCost: 330_000,
-  },
-  "90d": {
-    eligibleAudience: 2_050_000,
-    recipients: 1_580_000,
-    reach: 1_420_000,
-    impressions: 3_420_000,
-    opens: 620_000,
-    clickRate: 9.8,
-    engagementRate: 14.2,
-    conversions: 102_000,
-    conversionRate: 7.6,
-    revenue: 4_950_000,
-    roas: 5.1,
-    cac: 16.5,
-    leads: 45_800,
-    campaignCost: 970_000,
-  },
-};
-
-const channelReachData: Record<RangeOption, ChannelReachPoint[]> = {
-  "7d": [
-    { channel: "Email", reach: 52_000, impressions: 110_000 },
-    { channel: "SMS", reach: 38_000, impressions: 60_000 },
-    { channel: "Push", reach: 28_000, impressions: 55_000 },
-    { channel: "Social", reach: 14_400, impressions: 55_000 },
-  ],
-  "30d": [
-    { channel: "Email", reach: 185_000, impressions: 420_000 },
-    { channel: "SMS", reach: 140_000, impressions: 210_000 },
-    { channel: "Push", reach: 110_000, impressions: 190_000 },
-    { channel: "Social", reach: 62_000, impressions: 160_000 },
-  ],
-  "90d": [
-    { channel: "Email", reach: 520_000, impressions: 1_200_000 },
-    { channel: "SMS", reach: 380_000, impressions: 560_000 },
-    { channel: "Push", reach: 320_000, impressions: 540_000 },
-    { channel: "Social", reach: 200_000, impressions: 500_000 },
-  ],
-};
-
-const funnelData: Record<RangeOption, FunnelPoint[]> = {
-  "7d": [
-    { stage: "Sent", value: 145_000 },
-    { stage: "Opens", value: 56_000 },
-    { stage: "Clicks", value: 42_000 },
-    { stage: "Engagements", value: 33_500 },
-    { stage: "Conversions", value: 18_600 },
-  ],
-  "30d": [
-    { stage: "Sent", value: 540_000 },
-    { stage: "Opens", value: 210_000 },
-    { stage: "Clicks", value: 148_000 },
-    { stage: "Engagements", value: 126_000 },
-    { stage: "Conversions", value: 65_500 },
-  ],
-  "90d": [
-    { stage: "Sent", value: 1_580_000 },
-    { stage: "Opens", value: 620_000 },
-    { stage: "Clicks", value: 438_000 },
-    { stage: "Engagements", value: 360_000 },
-    { stage: "Conversions", value: 198_000 },
-  ],
-};
-
-const trendData: Record<RangeOption, TrendPoint[]> = {
-  "7d": [
-    { period: "Mon", ctr: 8.1, engagement: 11.6, revenue: 52, spend: 11 },
-    { period: "Tue", ctr: 8.6, engagement: 12.3, revenue: 58, spend: 12 },
-    { period: "Wed", ctr: 8.9, engagement: 12.8, revenue: 62, spend: 12.4 },
-    { period: "Thu", ctr: 8.4, engagement: 12.1, revenue: 55, spend: 11.5 },
-    { period: "Fri", ctr: 8.7, engagement: 12.4, revenue: 60, spend: 11.8 },
-    { period: "Sat", ctr: 7.8, engagement: 10.9, revenue: 48, spend: 10.7 },
-    { period: "Sun", ctr: 7.4, engagement: 10.2, revenue: 40, spend: 10 },
-  ],
-  "30d": [
-    { period: "Week 1", ctr: 8.5, engagement: 12.1, revenue: 410, spend: 92 },
-    { period: "Week 2", ctr: 8.8, engagement: 12.6, revenue: 430, spend: 88 },
-    { period: "Week 3", ctr: 9.3, engagement: 13.2, revenue: 450, spend: 87 },
-    { period: "Week 4", ctr: 9.1, engagement: 13.4, revenue: 455, spend: 85 },
-  ],
-  "90d": [
-    {
-      period: "September",
-      ctr: 9.0,
-      engagement: 13.2,
-      revenue: 1_520,
-      spend: 320,
-    },
-    {
-      period: "October",
-      ctr: 9.5,
-      engagement: 14.1,
-      revenue: 1_640,
-      spend: 325,
-    },
-    {
-      period: "November",
-      ctr: 10.1,
-      engagement: 15.1,
-      revenue: 1_790,
-      spend: 330,
-    },
-  ],
-};
-
-const revenueData: Record<RangeOption, TrendPoint[]> = {
-  "7d": [
-    { period: "Mon", ctr: 8.1, engagement: 11.6, revenue: 52, spend: 11 },
-    { period: "Tue", ctr: 8.6, engagement: 12.3, revenue: 58, spend: 12 },
-    { period: "Wed", ctr: 8.9, engagement: 12.8, revenue: 62, spend: 12.4 },
-    { period: "Thu", ctr: 8.4, engagement: 12.1, revenue: 55, spend: 11.5 },
-    { period: "Fri", ctr: 8.7, engagement: 12.4, revenue: 60, spend: 11.8 },
-    { period: "Sat", ctr: 7.8, engagement: 10.9, revenue: 48, spend: 10.7 },
-    { period: "Sun", ctr: 7.4, engagement: 10.2, revenue: 40, spend: 10 },
-  ],
-  "30d": [
-    { period: "Week 1", ctr: 8.5, engagement: 12.1, revenue: 410, spend: 92 },
-    { period: "Week 2", ctr: 8.8, engagement: 12.6, revenue: 430, spend: 88 },
-    { period: "Week 3", ctr: 9.3, engagement: 13.2, revenue: 450, spend: 87 },
-    { period: "Week 4", ctr: 9.1, engagement: 13.4, revenue: 455, spend: 85 },
-  ],
-  "90d": [
-    {
-      period: "September",
-      ctr: 9.0,
-      engagement: 13.2,
-      revenue: 1_520,
-      spend: 320,
-    },
-    {
-      period: "October",
-      ctr: 9.5,
-      engagement: 14.1,
-      revenue: 1_640,
-      spend: 325,
-    },
-    {
-      period: "November",
-      ctr: 10.1,
-      engagement: 15.1,
-      revenue: 1_790,
-      spend: 330,
-    },
-  ],
-};
 
 // Generate comprehensive dummy data for campaigns
 const generateCampaignRows = (): CampaignRow[] => {
@@ -332,54 +141,6 @@ const generateCampaignRows = (): CampaignRow[] => {
 
 const campaignRows: CampaignRow[] = generateCampaignRows();
 
-type ChartTooltipEntry = {
-  color?: string;
-  name?: string;
-  value?: number | string;
-};
-
-type ChartTooltipProps = {
-  active?: boolean;
-  label?: string;
-  payload?: ChartTooltipEntry[];
-};
-
-const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            {entry.name}
-          </span>
-          <span className="font-semibold text-gray-900">{entry.value}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const statIcons = {
-  audience: Users2,
-  engagement: MousePointerClick,
-  outcome: Activity,
-  growth: ArrowUpRight,
-};
-
 type CampaignTableRow = {
   id: string;
   name: string;
@@ -408,27 +169,10 @@ function getCampaignRowId(row: CampaignTableRow): string | null {
   return /^\d+$/.test(raw) ? raw : null;
 }
 
-const EMPTY_SUMMARY: CampaignSummary = {
-  eligibleAudience: 0,
-  recipients: 0,
-  reach: 0,
-  impressions: 0,
-  opens: 0,
-  clicks: 0,
-  clickRate: 0,
-  engagementRate: 0,
-  conversions: 0,
-  conversionRate: 0,
-  revenue: 0,
-  roas: 0,
-  cac: 0,
-  leads: 0,
-  campaignCost: 0,
-};
+const EMPTY_SUMMARY = emptyCampaignSummary();
 
 export default function CampaignReportsPage() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const { success: showSuccess, error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
   const [debouncedTableQuery, setDebouncedTableQuery] = useState("");
@@ -444,10 +188,14 @@ export default function CampaignReportsPage() {
     overviewQueryParams,
     overviewWindow,
     activeWindow,
+    comparePreviousPeriod,
+    previousQueryParams,
+    previousPeriodLabel,
   } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
   const [useDummyData, setUseDummyData] = useState(true);
+  const [channelChartView, setChannelChartView] = useState<ReportChartView>("bar");
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(getInitialPageSize());
 
@@ -498,6 +246,18 @@ export default function CampaignReportsPage() {
       sortable: true,
       filterConfig: { type: "number" },
       render: (value: number) => (value ?? 0).toLocaleString("en-US"),
+    },
+    {
+      id: "deliveryRate",
+      label: "Delivery Rate",
+      visible: true,
+      sortable: false,
+      render: (_: unknown, row: CampaignTableRow) => {
+        const sent = row.sent || 0;
+        const delivered = row.delivered || 0;
+        const rate = sent ? (delivered / sent) * 100 : 0;
+        return `${rate.toFixed(1)}%`;
+      },
     },
     {
       id: "conversions",
@@ -591,6 +351,7 @@ export default function CampaignReportsPage() {
   const [selectedCampaignForModal, setSelectedCampaignForModal] = useState<CampaignDisplay | null>(null);
   const [selectedCampaignFilter, setSelectedCampaignFilter] = useState<string>("");
   const [liveReport, setLiveReport] = useState<Partial<CampaignReportsResponse> | null>(null);
+  const [livePreviousTrend, setLivePreviousTrend] = useState<TrendPoint[]>([]);
   const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
   const [liveReportError, setLiveReportError] = useState<string | null>(null);
   const [liveTableRows, setLiveTableRows] = useState<CampaignRow[]>([]);
@@ -661,6 +422,7 @@ export default function CampaignReportsPage() {
   useEffect(() => {
     if (useDummyData) {
       setLiveReport(null);
+      setLivePreviousTrend([]);
       setLiveReportError(null);
       setIsLoadingLiveReport(false);
       setLiveTableRows([]);
@@ -765,7 +527,7 @@ export default function CampaignReportsPage() {
           settledError(portfolioResult, "Failed to load campaign portfolio."),
           settledError(kpisResult, "Failed to load campaign KPIs."),
           settledError(reachResult, "Failed to load channel reach."),
-          settledError(funnelResult, "Failed to load engagement funnel."),
+          settledError(funnelResult, "Failed to load delivery funnel."),
           settledError(trendsResult, "Failed to load campaign trends."),
         ].filter(Boolean) as string[];
         if (errors.length) {
@@ -788,6 +550,51 @@ export default function CampaignReportsPage() {
     queryParams.startDate,
     queryParams.endDate,
     selectedCampaignFilter,
+    dataEpoch,
+  ]);
+
+  useEffect(() => {
+    if (useDummyData || !comparePreviousPeriod) {
+      setLivePreviousTrend([]);
+      return;
+    }
+
+    let cancelled = false;
+    const loadPrevious = async () => {
+      const prevParams = buildCampaignReportParams({
+        range: previousQueryParams.range || activeRangeKey,
+        grain: previousQueryParams.grain,
+        startDate: previousQueryParams.startDate,
+        endDate: previousQueryParams.endDate,
+        preset: previousQueryParams.preset,
+        campaignId: selectedCampaignFilter || undefined,
+      });
+      const previousResult = await Promise.allSettled([
+        campaignReportsService.getTrends(prevParams),
+      ]);
+      if (cancelled) return;
+      setLivePreviousTrend(
+        pickNamedArray<TrendPoint>(settledValue(previousResult[0])?.data, [
+          "performanceTrend",
+          "trends",
+        ]),
+      );
+    };
+
+    loadPrevious();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useDummyData,
+    comparePreviousPeriod,
+    previousQueryParams.range,
+    previousQueryParams.grain,
+    previousQueryParams.startDate,
+    previousQueryParams.endDate,
+    previousQueryParams.preset,
+    selectedCampaignFilter,
+    activeRangeKey,
     dataEpoch,
   ]);
 
@@ -851,8 +658,8 @@ export default function CampaignReportsPage() {
     dataEpoch,
   ]);
 
-  // Scale summary data based on actual date range
-  const baseSummary = campaignSummary[activeRangeKey];
+  const dummyRange = dummyTemplateRange(queryParams.grain || "daily");
+  const dummySnapshot = campaignReportDummy[dummyRange];
   const summary = useMemo(() => {
     if (!useDummyData) {
       return {
@@ -860,119 +667,8 @@ export default function CampaignReportsPage() {
         ...liveReport?.summary,
       };
     }
-    if (scaleFactor === 1) return baseSummary;
-    return {
-      ...baseSummary,
-      eligibleAudience: Math.round(baseSummary.eligibleAudience * scaleFactor),
-      recipients: Math.round(baseSummary.recipients * scaleFactor),
-      reach: Math.round(baseSummary.reach * scaleFactor),
-      impressions: Math.round(baseSummary.impressions * scaleFactor),
-      opens: Math.round(baseSummary.opens * scaleFactor),
-      conversions: Math.round(baseSummary.conversions * scaleFactor),
-      revenue: Math.round(baseSummary.revenue * scaleFactor),
-      leads: Math.round(baseSummary.leads * scaleFactor),
-      campaignCost: Math.round(baseSummary.campaignCost * scaleFactor),
-      // Rates stay the same (percentages don't scale)
-      clickRate: baseSummary.clickRate,
-      engagementRate: baseSummary.engagementRate,
-      conversionRate: baseSummary.conversionRate,
-      roas: baseSummary.roas,
-      cac: baseSummary.cac,
-    };
-  }, [baseSummary, scaleFactor, useDummyData, liveReport]);
-  const heroCards = useDummyData
-    ? [
-        {
-          label: "Audience Reached",
-          value: summary.reach.toLocaleString("en-US"),
-          subtext: `${Math.round(
-            (summary.reach / summary.eligibleAudience) * 100,
-          )}% of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
-          icon: statIcons.audience,
-          trend: { value: "+8.4%", direction: "up" as const },
-        },
-        {
-          label: "Engagement Rate",
-          value: `${summary.engagementRate.toFixed(1)}%`,
-          subtext: "Opens, clicks & taps vs reach",
-          icon: statIcons.engagement,
-          trend: { value: "+2.1 pts", direction: "up" as const },
-        },
-        {
-          label: "Conversion Rate",
-          value: `${summary.conversionRate.toFixed(1)}%`,
-          subtext: `${summary.conversions.toLocaleString("en-US")} conversions`,
-          icon: statIcons.outcome,
-          trend: { value: "-0.4 pts", direction: "down" as const },
-        },
-        {
-          label: "Revenue Generated",
-          value: formatCurrency(summary.revenue),
-          subtext: `Avg ${formatCurrency(
-            Math.round(summary.revenue / summary.conversions),
-          )} per conversion`,
-          icon: statIcons.outcome,
-          trend: { value: "+84K", direction: "up" as const },
-        },
-        {
-          label: "ROI / ROMI",
-          value: `${summary.roas.toFixed(1)}x`,
-          subtext: `Spend ${formatCurrency(summary.campaignCost)}`,
-          icon: statIcons.growth,
-          trend: { value: "+0.3x", direction: "up" as const },
-        },
-        {
-          label: "Campaign Cost",
-          value: formatCurrency(summary.campaignCost),
-          subtext: `CAC ${formatCurrency(summary.cac)}`,
-          icon: statIcons.outcome,
-          trend: { value: "+12K", direction: "up" as const },
-        },
-      ]
-    : [
-        {
-          label: "Audience Reached",
-          value: summary.reach.toLocaleString("en-US"),
-          subtext: `${formatAudienceShare(summary.reach, summary.eligibleAudience)} of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
-          icon: statIcons.audience,
-          trend: resolveHeroTrend(liveReport?.heroTrends?.reach),
-        },
-        {
-          label: "Engagement Rate",
-          value: `${summary.engagementRate.toFixed(1)}%`,
-          subtext: "Opens, clicks & taps vs reach",
-          icon: statIcons.engagement,
-          trend: resolveHeroTrend(liveReport?.heroTrends?.engagementRate),
-        },
-        {
-          label: "Conversion Rate",
-          value: `${summary.conversionRate.toFixed(1)}%`,
-          subtext: `${summary.conversions.toLocaleString("en-US")} conversions`,
-          icon: statIcons.outcome,
-          trend: resolveHeroTrend(liveReport?.heroTrends?.conversionRate),
-        },
-        {
-          label: "Revenue Generated",
-          value: formatCurrency(summary.revenue),
-          subtext: `Avg ${formatCurrency(summary.conversions ? Math.round(summary.revenue / summary.conversions) : 0)} per conversion`,
-          icon: statIcons.outcome,
-          trend: resolveHeroTrend(liveReport?.heroTrends?.revenue),
-        },
-        {
-          label: "ROI / ROMI",
-          value: `${summary.roas.toFixed(1)}x`,
-          subtext: `Spend ${formatCurrency(summary.campaignCost)}`,
-          icon: statIcons.growth,
-          trend: resolveHeroTrend(liveReport?.heroTrends?.roas),
-        },
-        {
-          label: "Campaign Cost",
-          value: formatCurrency(summary.campaignCost),
-          subtext: `CAC ${formatCurrency(summary.cac)}`,
-          icon: statIcons.outcome,
-          trend: resolveHeroTrend(liveReport?.heroTrends?.campaignCost),
-        },
-      ];
+    return scaleCampaignSummary(dummySnapshot.summary, scaleFactor);
+  }, [dummySnapshot.summary, scaleFactor, useDummyData, liveReport]);
 
   const mapReportRow = (row: CampaignRow): CampaignTableRow => {
     const campaign = campaigns.find((c) => String(c.id) === String(row.id));
@@ -1069,26 +765,20 @@ export default function CampaignReportsPage() {
     if (!useDummyData) {
       return liveReport?.channelReach || [];
     }
-    const base = channelReachData[activeRangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({
-      ...point,
-      reach: Math.round(point.reach * scaleFactor),
-      impressions: Math.round(point.impressions * scaleFactor),
-    }));
-  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
+    return scaleChannelReach(dummySnapshot.channelReach, scaleFactor);
+  }, [dummySnapshot.channelReach, scaleFactor, useDummyData, liveReport]);
 
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
       return liveReport?.conversionFunnel || [];
     }
-    const base = funnelData[activeRangeKey];
+    const base = dummySnapshot.conversionFunnel;
     if (scaleFactor === 1) return base;
     return base.map((point) => ({
       ...point,
       value: Math.round(point.value * scaleFactor),
     }));
-  }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
+  }, [dummySnapshot.conversionFunnel, scaleFactor, useDummyData, liveReport]);
 
   const trendSeries = useMemo(() => {
     const window = {
@@ -1099,13 +789,11 @@ export default function CampaignReportsPage() {
     if (!useDummyData) {
       return fillCampaignTrendSeries(liveReport?.performanceTrend || [], window);
     }
-    return fillCampaignTrendSeries(
-      trendData[dummyTemplateRange(queryParams.grain || "daily")],
-      window,
-    );
+    return fillCampaignTrendSeries(dummySnapshot.performanceTrend, window);
   }, [
     useDummyData,
     liveReport,
+    dummySnapshot.performanceTrend,
     queryParams.startDate,
     queryParams.endDate,
     queryParams.grain,
@@ -1130,13 +818,11 @@ export default function CampaignReportsPage() {
         window,
       );
     }
-    return fillCampaignTrendSeries(
-      revenueData[dummyTemplateRange(queryParams.grain || "daily")],
-      window,
-    );
+    return fillCampaignTrendSeries(dummySnapshot.performanceTrend, window);
   }, [
     useDummyData,
     liveReport,
+    dummySnapshot.performanceTrend,
     queryParams.startDate,
     queryParams.endDate,
     queryParams.grain,
@@ -1156,26 +842,55 @@ export default function CampaignReportsPage() {
     [revenueSeries],
   );
 
-  const trendComparison = useMemo(
-    () => (useDummyData ? dummyPreviousPeriod(trendSeries) : undefined),
-    [trendSeries, useDummyData],
-  );
-  const revenueComparison = useMemo(
-    () => (useDummyData ? dummyPreviousPeriod(revenueSeries) : undefined),
-    [revenueSeries, useDummyData],
-  );
-  const roiComparison = useMemo(
-    () =>
-      useDummyData
-        ? dummyPreviousPeriod(roiSeries).map((point) => ({
-            ...point,
-            roi: point.spend
-              ? Number((Number(point.revenue) / Number(point.spend)).toFixed(2))
-              : 0,
-          }))
-        : undefined,
-    [roiSeries, useDummyData],
-  );
+  const trendComparison = useMemo(() => {
+    if (!comparePreviousPeriod) return undefined;
+    if (useDummyData) return dummyPreviousPeriod(trendSeries);
+    if (!livePreviousTrend.length) return undefined;
+    return fillCampaignTrendSeries(livePreviousTrend, {
+      startDate: previousQueryParams.startDate,
+      endDate: previousQueryParams.endDate,
+      grain: previousQueryParams.grain,
+    });
+  }, [
+    comparePreviousPeriod,
+    livePreviousTrend,
+    previousQueryParams.endDate,
+    previousQueryParams.grain,
+    previousQueryParams.startDate,
+    trendSeries,
+    useDummyData,
+  ]);
+  const revenueComparison = useMemo(() => {
+    if (!comparePreviousPeriod) return undefined;
+    if (useDummyData) return dummyPreviousPeriod(revenueSeries);
+    if (!trendComparison?.length) return undefined;
+    return trendComparison.map((point) => ({
+      ...point,
+      revenue: point.revenue ?? 0,
+      spend: point.spend ?? 0,
+    }));
+  }, [comparePreviousPeriod, revenueSeries, trendComparison, useDummyData]);
+  const roiComparison = useMemo(() => {
+    if (!comparePreviousPeriod) return undefined;
+    const source = useDummyData
+      ? dummyPreviousPeriod(roiSeries)
+      : (trendComparison || []).map((point) => ({
+          period: point.period,
+          date: point.date ?? "",
+          revenue: point.revenue ?? 0,
+          spend: point.spend ?? 0,
+          roi: 0,
+        }));
+    return source.map((point) => ({
+      ...point,
+      roi: point.spend
+        ? Number((Number(point.revenue) / Number(point.spend)).toFixed(2))
+        : 0,
+    }));
+  }, [comparePreviousPeriod, roiSeries, trendComparison, useDummyData]);
+  const previousComparisonLabel = comparePreviousPeriod
+    ? `Previous (${previousPeriodLabel})`
+    : "Previous period";
 
   const csvHeaders = [
     "Campaign Name",
@@ -1209,7 +924,7 @@ export default function CampaignReportsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Campaign Reports</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Monitor end-to-end campaign reach, engagement, and revenue impact
+            Track unique customers reached, delivery, and conversion across every communication channel
           </p>
         </div>
         <ReportTrendsToolbar
@@ -1281,219 +996,211 @@ export default function CampaignReportsPage() {
       )}
 
       {!isTrendsView && (
-      <section>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {heroCards.map((card) => {
-            const trendColor =
-              card.trend.direction === "up"
-                ? "text-emerald-600"
-                : card.trend.direction === "down"
-                  ? "text-red-600"
-                  : "text-gray-500";
-            return (
-              <div
-                key={card.label}
-                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <card.icon
-                      className="h-5 w-5"
-                      style={{ color: colors.primary.accent }}
-                    />
-                    <p className="text-sm font-medium text-gray-600">
-                      {card.label}
-                    </p>
-                  </div>
-                  <span className={`text-xs font-semibold ${trendColor}`}>
-                    {card.trend.direction === "up"
-                      ? "↑"
-                      : card.trend.direction === "down"
-                        ? "↓"
-                        : "•"}{" "}
-                    {card.trend.value}
-                  </span>
-                </div>
-                <p className="mt-3 text-3xl font-bold text-gray-900">
-                  {card.value}
-                </p>
-                <p className="mt-1 text-sm text-gray-500">{card.subtext}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+        <CampaignKpiGrid
+          summary={summary}
+          channelReach={channelData}
+          heroTrends={liveReport?.heroTrends}
+          useDummyData={useDummyData}
+        />
       )}
 
       {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
         <ReportChartCard
-          title="Channel Reach Contribution"
-          subtitle="All configured channels, including those with no traffic yet"
+          title="Channel Reach Distribution"
+          subtitle="Sent volume, delivered customers, and unique audience by channel"
           filename="campaign-channel-reach.csv"
           audit={overviewAudit}
           columns={[
             { key: "channel", label: "Channel" },
-            { key: "reach", label: "Reach" },
-            { key: "impressions", label: "Impressions" },
+            { key: "sent", label: "Sent" },
+            { key: "delivered", label: "Delivered" },
+            { key: "uniqueAudience", label: "Unique Audience" },
           ]}
           rows={channelData}
+          headerExtra={
+            <ReportChartTypeToggle
+              value={channelChartView}
+              onChange={setChannelChartView}
+            />
+          }
         >
           <ChannelReachContributionChart
             data={channelData}
             ensureCatalog={!useDummyData}
+            chartType={channelChartView}
             emptyMessage="No channel activity in this window."
           />
         </ReportChartCard>
 
-        <ReportChartCard
-          title="Engagement Stages"
-          subtitle="Track drop-off from sent to conversion"
-          filename="campaign-engagement-stages.csv"
+        <SwitchableReportChart
+          title="Delivery Funnel"
+          subtitle="Core CVM stages: sent, delivered, converted"
+          filename="campaign-delivery-funnel.csv"
           audit={overviewAudit}
           columns={[
             { key: "stage", label: "Stage" },
             { key: "value", label: "Volume" },
           ]}
           rows={funnelSeries}
-        >
-          {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
-              No engagement stages in this window.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={funnelSeries}
-                margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="stage" interval={0} tick={{ fill: "#6b7280" }} />
-                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Bar
-                  dataKey="value"
-                  name="Volume"
-                  fill={
-                    colors.reportCharts.campaignReports.engagementStages.value
-                  }
-                  maxBarSize={60}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ReportChartCard>
+          xKey="stage"
+          yLabel="Volume"
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          emptyMessage="No delivery funnel in this window."
+          defaultView="bar"
+          views={["bar", "line", "area"]}
+          series={[
+            {
+              dataKey: "value",
+              name: "Volume",
+              color: colors.reportCharts.campaignReports.deliveryFunnel.value,
+            },
+          ]}
+        />
       </section>
+      )}
+
+      {!isTrendsView && (
+        <CampaignChannelSections
+          channelReach={channelData}
+          ensureCatalog={!useDummyData}
+        />
       )}
 
       {isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        <ReportChartCard
-          title="CTR & Engagement Trends"
-          subtitle="Monitor interaction quality across the selected period"
-          filename="campaign-ctr-engagement-trends.csv"
+        <SwitchableReportChart
+          title="Sent, Delivered & Converted"
+          subtitle="Message volume versus unique outcomes across the selected period"
+          filename="campaign-volume-trends.csv"
           audit={chartAudit}
           columns={[
             { key: "period", label: "Period" },
             { key: "date", label: "Date" },
-            { key: "ctr", label: "CTR %" },
-            { key: "engagement", label: "Engagement %" },
+            { key: "sent", label: "Sent" },
+            { key: "delivered", label: "Delivered" },
+            { key: "converted", label: "Converted" },
           ]}
           rows={trendSeries}
-        >
-          <ReportGroupedBarChart
-            data={trendSeries}
-            xKey="period"
-            yLabel="Rate (%)"
-            yTickFormatter={(value) => `${value}`}
-            valueFormatter={(value) => `${value}%`}
-            comparisonData={trendComparison}
-            series={[
-              {
-                dataKey: "ctr",
-                name: "CTR %",
-                color: colors.reportCharts.campaignReports.ctrEngagementTrends.ctr,
-              },
-              {
-                dataKey: "engagement",
-                name: "Engagement %",
-                color:
-                  colors.reportCharts.campaignReports.ctrEngagementTrends
-                    .engagement,
-              },
-            ]}
-          />
-        </ReportChartCard>
+          xKey="period"
+          yLabel="Volume"
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          comparisonData={trendComparison}
+          comparisonLabel={previousComparisonLabel}
+          defaultView="line"
+          series={[
+            {
+              dataKey: "sent",
+              name: "Sent",
+              color: colors.reportCharts.campaignReports.volumeTrends.sent,
+            },
+            {
+              dataKey: "delivered",
+              name: "Delivered",
+              color: colors.reportCharts.campaignReports.volumeTrends.delivered,
+            },
+            {
+              dataKey: "converted",
+              name: "Converted",
+              color: colors.reportCharts.campaignReports.volumeTrends.converted,
+            },
+          ]}
+        />
 
-        <ReportChartCard
-          title="Revenue vs Spend"
-          subtitle="Compare generated revenue against campaign spend"
+        <SwitchableReportChart
+          title="Delivery & Conversion Rates"
+          subtitle="Delivery rate and conversion rate for the selected window"
+          filename="campaign-rate-trends.csv"
+          audit={chartAudit}
+          columns={[
+            { key: "period", label: "Period" },
+            { key: "date", label: "Date" },
+            { key: "deliveryRate", label: "Delivery Rate %" },
+            { key: "conversionRate", label: "Conversion Rate %" },
+          ]}
+          rows={trendSeries}
+          xKey="period"
+          yLabel="Rate (%)"
+          valueFormatter={(value) => `${value}%`}
+          comparisonData={trendComparison}
+          comparisonLabel={previousComparisonLabel}
+          defaultView="line"
+          views={["bar", "line", "area"]}
+          series={[
+            {
+              dataKey: "deliveryRate",
+              name: "Delivery Rate %",
+              color: colors.reportCharts.campaignReports.rateTrends.deliveryRate,
+            },
+            {
+              dataKey: "conversionRate",
+              name: "Conversion Rate %",
+              color: colors.reportCharts.campaignReports.rateTrends.conversionRate,
+            },
+          ]}
+        />
+
+        <SwitchableReportChart
+          title="Incremental Value vs Cost"
+          subtitle="Campaign value generated against campaign cost"
           filename="campaign-revenue-vs-spend.csv"
           audit={chartAudit}
           columns={[
             { key: "period", label: "Period" },
             { key: "date", label: "Date" },
-            { key: "revenue", label: "Revenue" },
-            { key: "spend", label: "Spend" },
+            { key: "revenue", label: "Value" },
+            { key: "spend", label: "Cost" },
           ]}
           rows={revenueSeries}
-        >
-          <ReportGroupedBarChart
-            data={revenueSeries}
-            xKey="period"
-            yLabel="Amount"
-            yTickFormatter={(value) => value.toLocaleString("en-US")}
-            comparisonData={revenueComparison}
-            series={[
-              {
-                dataKey: "revenue",
-                name: "Revenue",
-                color: colors.reportCharts.campaignReports.revenueVsSpend.revenue,
-              },
-              {
-                dataKey: "spend",
-                name: "Spend",
-                color: colors.reportCharts.campaignReports.revenueVsSpend.spend,
-              },
-            ]}
-          />
-        </ReportChartCard>
+          xKey="period"
+          yLabel="Amount"
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          comparisonData={revenueComparison}
+          comparisonLabel={previousComparisonLabel}
+          defaultView="bar"
+          series={[
+            {
+              dataKey: "revenue",
+              name: "Value",
+              color: colors.reportCharts.campaignReports.revenueVsSpend.revenue,
+            },
+            {
+              dataKey: "spend",
+              name: "Cost",
+              color: colors.reportCharts.campaignReports.revenueVsSpend.spend,
+            },
+          ]}
+        />
 
-        <ReportChartCard
-          className="lg:col-span-2"
-          title="ROI / ROMI"
-          subtitle="Return on spend for each period (revenue ÷ spend)"
+        <SwitchableReportChart
+          title="ROMI"
+          subtitle="Return on marketing investment for each period (value ÷ cost)"
           filename="campaign-roi-trends.csv"
           audit={chartAudit}
           columns={[
             { key: "period", label: "Period" },
             { key: "date", label: "Date" },
-            { key: "revenue", label: "Revenue" },
-            { key: "spend", label: "Spend" },
-            { key: "roi", label: "ROI" },
+            { key: "revenue", label: "Value" },
+            { key: "spend", label: "Cost" },
+            { key: "roi", label: "ROMI" },
           ]}
           rows={roiSeries}
-        >
-          <ReportGroupedBarChart
-            data={roiSeries}
-            xKey="period"
-            yLabel="ROI"
-            yTickFormatter={(value) => `${value}x`}
-            valueFormatter={(value) => `${value}x`}
-            comparisonData={roiComparison}
-            series={[
-              {
-                dataKey: "roi",
-                name: "ROI",
-                color: colors.reportCharts.palette.color1,
-              },
-            ]}
-          />
-        </ReportChartCard>
+          xKey="period"
+          yLabel="ROMI"
+          yTickFormatter={(value) => `${value}x`}
+          valueFormatter={(value) => `${value}x`}
+          comparisonData={roiComparison}
+          comparisonLabel={previousComparisonLabel}
+          defaultView="line"
+          views={["bar", "line", "area"]}
+          series={[
+            {
+              dataKey: "roi",
+              name: "ROMI",
+              color: colors.reportCharts.palette.color1,
+            },
+          ]}
+        />
       </section>
       )}
 

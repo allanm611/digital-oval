@@ -199,15 +199,31 @@ export const colors = {
     // Campaign Reports
     campaignReports: {
       channelReach: {
-        reach: "#4FDFF3", // color4 - lighter for multi-bar
-        impressions: "#92A6B0", // color3 - lighter
+        sent: "#92A6B0",
+        delivered: "#4FDFF3",
+        uniqueAudience: "#00505C",
+        converted: "#C38BFB",
+        reach: "#4FDFF3",
+        impressions: "#92A6B0",
+      },
+      deliveryFunnel: {
+        value: "#4FDFF3",
       },
       engagementStages: {
-        value: "#4FDFF3", // color4 - lighter for single bar
+        value: "#4FDFF3",
+      },
+      volumeTrends: {
+        sent: "#92A6B0",
+        delivered: "#4FDFF3",
+        converted: "#00505C",
+      },
+      rateTrends: {
+        deliveryRate: "#4FDFF3",
+        conversionRate: "#C38BFB",
       },
       ctrEngagementTrends: {
-        ctr: "#4FDFF3", // color4 - lighter
-        engagement: "#92A6B0", // color3
+        ctr: "#4FDFF3",
+        engagement: "#92A6B0",
       },
       revenueVsSpend: {
         revenue: "#4FDFF3", // color4 - lighter

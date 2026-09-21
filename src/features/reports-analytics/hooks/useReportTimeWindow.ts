@@ -8,14 +8,19 @@ import type {
 import {
   DEFAULT_SUB_PRESET,
   OVERVIEW_SUB_PRESET,
+  boundsForCalendarYear,
+  formatPeriodRange,
   formatWindowLabel,
   grainForPreset,
   getScaleFactor,
   presetBelongsToGrain,
+  previousWindowFrom,
   resolveTimeWindow,
   seedCustomBounds,
   toReportQueryParams,
   validateDateRange,
+  yearFromBounds,
+  yearsForLookback,
   type LocalDateBounds,
   type ResolvedTimeWindow,
 } from "../utils/reportTimeWindow";
@@ -56,8 +61,9 @@ function resolveSelection(options: {
 }
 
 /**
- * Overview owns named calendar windows (Today, Last 7 days, This month, …).
- * Trends owns Daily/Weekly/Monthly grain plus custom/saved ranges.
+ * Overview owns a period dropdown (Today, Last 7 days, MTD, LMD, …) plus a
+ * sibling Custom range control. Trends owns Daily/Weekly/Monthly grain, MTD/LMD
+ * chips, always-visible From/To, a monthly year control, and compare-previous.
  * The two windows stay independent so tables can keep the Overview snapshot
  * while Trends explores a different series grain.
  */
@@ -93,6 +99,8 @@ export function useReportTimeWindow(options?: {
   const [savedRanges, setSavedRanges] = useState<SavedReportDateRange[]>(
     loadSavedReportDateRanges,
   );
+  const [comparePreviousPeriod, setComparePreviousPeriod] = useState(false);
+  const [inlineRangeError, setInlineRangeError] = useState<string | null>(null);
 
   const [pickerTarget, setPickerTarget] = useState<PickerTarget>("overview");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -139,6 +147,10 @@ export function useReportTimeWindow(options?: {
   );
 
   const activeWindow = view === "trends" ? trendsWindow : overviewWindow;
+  const previousWindow = useMemo(
+    () => previousWindowFrom(activeWindow),
+    [activeWindow],
+  );
 
   const openPicker = useCallback(
     (target: PickerTarget) => {
@@ -221,6 +233,7 @@ export function useReportTimeWindow(options?: {
   const selectPreset = useCallback(
     (preset: TimeWindowPreset) => {
       setSavedRangeId(null);
+      setInlineRangeError(null);
       setTrendsPreset(preset);
       if (preset === "custom") {
         openPicker("trends");
@@ -230,6 +243,32 @@ export function useReportTimeWindow(options?: {
     },
     [openPicker],
   );
+
+  const applyInlineTrendRange = useCallback(
+    (bounds: LocalDateBounds) => {
+      const result = validateDateRange(bounds.start, bounds.end, {
+        grain: grainTab,
+      });
+      if (!result.ok) {
+        setInlineRangeError(result.error || "Invalid date range.");
+        return false;
+      }
+      setInlineRangeError(null);
+      setCustomBounds(bounds);
+      setSavedRangeId(null);
+      setTrendsPreset("custom");
+      return true;
+    },
+    [grainTab],
+  );
+
+  const selectTrendYear = useCallback((year: number) => {
+    const bounds = boundsForCalendarYear(year);
+    setInlineRangeError(null);
+    setCustomBounds(bounds);
+    setSavedRangeId(null);
+    setTrendsPreset("custom");
+  }, []);
 
   const selectSavedRange = useCallback(
     (range: SavedReportDateRange) => {
@@ -391,16 +430,27 @@ export function useReportTimeWindow(options?: {
     overviewWindow,
     trendsWindow,
     activeWindow,
+    previousWindow,
     rangeKey: activeWindow.rangeKey,
     grain: activeWindow.grain,
     customDays: activeWindow.dayCount,
     scaleFactor,
     windowLabel: formatWindowLabel(activeWindow),
+    periodLabel: formatPeriodRange(activeWindow),
+    previousPeriodLabel: formatPeriodRange(previousWindow),
     queryParams: toReportQueryParams(activeWindow),
     overviewQueryParams: toReportQueryParams(overviewWindow),
     trendsQueryParams: toReportQueryParams(trendsWindow),
+    previousQueryParams: toReportQueryParams(previousWindow),
     savedRanges: grainSavedRanges,
     overviewSavedRanges,
+    comparePreviousPeriod,
+    setComparePreviousPeriod,
+    applyInlineTrendRange,
+    selectTrendYear,
+    trendYear: yearFromBounds(trendsWindow.bounds),
+    availableTrendYears: yearsForLookback(),
+    inlineRangeError,
     isPickerOpen,
     openPicker: () => openPicker(view === "trends" ? "trends" : "overview"),
     closePicker: () => setIsPickerOpen(false),
