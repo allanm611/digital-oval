@@ -29,11 +29,13 @@ import {
   humanizeChannel,
   humanizeOrigin,
   normalizeDateOrder,
+  resolveEventChannelLabel,
   todayDateInputValue,
 } from "../utils/customerEventHelpers";
 
 type CustomerEventsTabProps = {
   subscriberId?: string | number | null;
+  customerRecord?: Record<string, unknown> | null;
 };
 
 type TimeTabKey = (typeof EVENT_TIME_TABS)[number]["key"];
@@ -70,6 +72,7 @@ function formatCustomRangeLabel(dateFrom: string, dateTo: string): string {
 
 export default function CustomerEventsTab({
   subscriberId,
+  customerRecord,
 }: CustomerEventsTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -114,12 +117,26 @@ export default function CustomerEventsTab({
     ],
   );
 
-  const { result, trackingSources, isLoading, error, refetch } =
-    useCustomerEvents(subscriberId ?? undefined);
+  const {
+    result,
+    trackingSources,
+    communicationChannels,
+    isLoading,
+    error,
+    refetch,
+  } = useCustomerEvents(subscriberId ?? undefined, customerRecord);
+
+  const filterCatalogs = useMemo(
+    () => ({
+      trackingSources,
+      communicationChannels,
+    }),
+    [trackingSources, communicationChannels],
+  );
 
   const filteredEvents = useMemo(
-    () => filterCustomerEvents(result.allEvents, query),
-    [result.allEvents, query],
+    () => filterCustomerEvents(result.allEvents, query, new Date(), filterCatalogs),
+    [result.allEvents, query, filterCatalogs],
   );
 
   const counts = useMemo(
@@ -185,42 +202,69 @@ export default function CustomerEventsTab({
   );
 
   const trackingSourceOptions = useMemo(() => {
-    const labels = new Map<string, string>();
-    result.facets.tracking_sources.forEach((item) => {
-      labels.set(item.value, item.label);
-    });
-    trackingSources.forEach((source) => {
-      const key = source.sourceType || source.id;
-      if (!labels.has(source.id) && !labels.has(key)) {
-        labels.set(key, source.name);
-      }
-    });
-    return [
+    const seen = new Set<string>();
+    const options: Array<{ value: string; label: string }> = [
       { value: ALL, label: "All tracking sources" },
-      ...Array.from(labels.entries())
-        .sort((a, b) => a[1].localeCompare(b[1]))
-        .map(([value, label]) => ({ value, label })),
     ];
+
+    trackingSources
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((source) => {
+        const value = source.code || source.id;
+        const key = value.trim().toLowerCase();
+        if (!key || seen.has(key)) return;
+        seen.add(key);
+        options.push({ value, label: source.name });
+      });
+
+    result.facets.tracking_sources.forEach((item) => {
+      const key = String(item.value || "").trim().toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      options.push({
+        value: item.value,
+        label: item.label || item.value,
+      });
+    });
+
+    return options;
   }, [result.facets.tracking_sources, trackingSources]);
 
   const channelOptions = useMemo(() => {
-    const labels = new Map<string, string>();
-    CHANNEL_FILTER_OPTIONS.forEach((item) => {
-      labels.set(item.value, item.label);
-    });
-    result.facets.channels.forEach((item) => {
-      if (!labels.has(item.value)) {
-        labels.set(item.value, humanizeChannel(item.label || item.value));
-      }
-    });
-    return [
+    const seen = new Set<string>();
+    const options: Array<{ value: string; label: string }> = [
       { value: ALL, label: "All Channels" },
-      ...Array.from(labels.entries()).map(([value, label]) => ({
-        value,
-        label,
-      })),
     ];
-  }, [result.facets.channels]);
+
+    const catalog = communicationChannels.length
+      ? communicationChannels
+      : CHANNEL_FILTER_OPTIONS.map((item) => ({
+          id: item.value,
+          name: item.label,
+          code: item.value,
+        }));
+
+    catalog.forEach((channel) => {
+      const value = channel.code || channel.id;
+      const key = value.trim().toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      options.push({ value, label: channel.name });
+    });
+
+    result.facets.channels.forEach((item) => {
+      const key = String(item.value || "").trim().toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      options.push({
+        value: item.value,
+        label: humanizeChannel(item.label || item.value),
+      });
+    });
+
+    return options;
+  }, [communicationChannels, result.facets.channels]);
 
   const paginatedEvents = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -266,7 +310,7 @@ export default function CustomerEventsTab({
         visible: true,
         render: (_, row) => (
           <span className="text-sm text-gray-900">
-            {humanizeChannel(row.channel)}
+            {resolveEventChannelLabel(row, communicationChannels)}
           </span>
         ),
       },
@@ -312,7 +356,7 @@ export default function CustomerEventsTab({
         ),
       },
     ],
-    [],
+    [communicationChannels],
   );
 
   const applyTimePreset = (preset: TimeTabKey) => {
@@ -546,6 +590,7 @@ export default function CustomerEventsTab({
           onChange={(value) => setChannel(String(value))}
           options={channelOptions}
           placeholder="All Channels"
+          searchable
           className="w-full"
         />
         <HeadlessMultiSelect

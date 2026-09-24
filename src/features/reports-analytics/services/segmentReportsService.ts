@@ -71,6 +71,21 @@ class SegmentReportsService {
     });
     return this.request<SegmentReportsEnvelope>(`/portfolio${query}`);
   }
+
+  /** GET /monitoring/reporting/segments/member-growth */
+  async getMemberGrowth(
+    params: ReportQueryParams = {},
+  ): Promise<SegmentReportsEnvelope> {
+    const query = toQuery({
+      range: params.range,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      grain: params.grain,
+      preset: params.preset,
+      segmentId: params.segment,
+    });
+    return this.request<SegmentReportsEnvelope>(`/member-growth${query}`);
+  }
 }
 
 export const segmentReportsService = new SegmentReportsService();

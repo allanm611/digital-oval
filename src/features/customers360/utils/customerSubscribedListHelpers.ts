@@ -330,25 +330,117 @@ export function parsePayloadSubscriptions(
   if (!Array.isArray(raw)) return [];
 
   return raw
-    .map((item, index) => {
-      if (!item || typeof item !== "object") return null;
-      const row = item as Record<string, unknown>;
-      const name = String(row.name ?? row.list_name ?? "").trim();
-      if (!name) return null;
-      const listId = (row.id ?? row.list_id ?? `sub-${index}`) as number | string;
-      return {
-        id: `subscription-${listId}`,
-        listId,
-        name,
-        description: String(row.description ?? ""),
-        listType: "subscription" as const,
-        addedAt: extractAddedAt(row),
-        status: extractMemberStatus(row),
-        matchedIdentifier: null,
-        matchedIdentifierType: null,
-        totalMembers: typeof row.total === "number" ? row.total : null,
-        verification: "hint" as const,
-      };
-    })
+    .map((item, index) => parseSubscriberListMembership(item, index, "hint"))
+    .filter((item): item is CustomerSubscribedList => Boolean(item));
+}
+
+function unwrapMembershipRows(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object") return [];
+  const record = payload as Record<string, unknown>;
+  const nested =
+    record.data && typeof record.data === "object" && !Array.isArray(record.data)
+      ? (record.data as Record<string, unknown>)
+      : null;
+  const candidates = [
+    record.data,
+    record.quicklists,
+    record.memberships,
+    record.lists,
+    record.subscribed_lists,
+    record.subscribedLists,
+    nested?.data,
+    nested?.quicklists,
+    nested?.memberships,
+    nested?.lists,
+  ];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+  return [];
+}
+
+export function parseSubscriberListMembership(
+  item: unknown,
+  index = 0,
+  verification: CustomerSubscribedList["verification"] = "verified",
+): CustomerSubscribedList | null {
+  if (!item || typeof item !== "object") return null;
+  const row = item as Record<string, unknown>;
+  const nested =
+    row.quicklist && typeof row.quicklist === "object"
+      ? (row.quicklist as Record<string, unknown>)
+      : row.list && typeof row.list === "object"
+        ? (row.list as Record<string, unknown>)
+        : {};
+  const listId = (row.list_id ??
+    row.quicklist_id ??
+    row.id ??
+    nested.id ??
+    `list-${index}`) as number | string;
+  const name = String(
+    row.name ?? row.list_name ?? nested.name ?? "",
+  ).trim();
+  if (!name && (listId === undefined || listId === null || listId === "")) {
+    return null;
+  }
+
+  const listTypeRaw = String(
+    row.list_type ?? row.type ?? nested.list_type ?? "quicklist",
+  ).toLowerCase();
+  const identifier =
+    typeof row.identifier === "string"
+      ? row.identifier
+      : typeof row.subscriber_msisdn === "string"
+        ? row.subscriber_msisdn
+        : typeof row.msisdn === "string"
+          ? row.msisdn
+          : typeof row.subscriber_email === "string"
+            ? row.subscriber_email
+            : null;
+  const identifierTypeRaw = String(
+    row.identifier_type ?? row.matched_identifier_type ?? "",
+  ).toLowerCase();
+  const identifierType: CustomerIdentifierKind | null =
+    identifierTypeRaw === "msisdn" ||
+    identifierTypeRaw === "email" ||
+    identifierTypeRaw === "id"
+      ? identifierTypeRaw
+      : identifier?.includes("@")
+        ? "email"
+        : identifier
+          ? "msisdn"
+          : null;
+  const totalMembers =
+    typeof row.total === "number"
+      ? row.total
+      : typeof row.total_members === "number"
+        ? row.total_members
+        : typeof row.rows_imported === "number"
+          ? row.rows_imported
+          : typeof nested.rows_imported === "number"
+            ? nested.rows_imported
+            : null;
+
+  return {
+    id: `${listTypeRaw === "subscription" ? "subscription" : "quicklist"}-${listId}`,
+    listId,
+    name: name || `List ${listId}`,
+    description: String(row.description ?? nested.description ?? ""),
+    listType: listTypeRaw === "subscription" ? "subscription" : "quicklist",
+    addedAt: extractAddedAt(row) ?? extractAddedAt(nested),
+    status: extractMemberStatus(row),
+    matchedIdentifier: identifier,
+    matchedIdentifierType: identifierType,
+    totalMembers,
+    verification,
+  };
+}
+
+export function parseSubscriberListMemberships(
+  payload: unknown,
+): CustomerSubscribedList[] {
+  return unwrapMembershipRows(payload)
+    .map((item, index) => parseSubscriberListMembership(item, index, "verified"))
     .filter((item): item is CustomerSubscribedList => Boolean(item));
 }

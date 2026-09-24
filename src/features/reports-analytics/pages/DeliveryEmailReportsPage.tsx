@@ -1,229 +1,160 @@
-import { useMemo, useState, useEffect } from "react";
-import { useLanguage } from "../../../contexts/LanguageContext";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Inbox,
-  Mail,
-  MailCheck,
-  MousePointerClick,
-  TrendingUp,
-  UserMinus,
-} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { colors } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
+import { tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
-import { tw } from "../../../shared/utils/utils";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { Table } from "../../../shared/components/Table/Table";
-import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
 import type {
-  RangeOption,
   DeliveryEmailReportsResponse,
-  EmailLogEntry,
+  EmailDeliveryStatus,
+  EmailDispatchRow,
+  RangeOption,
 } from "../types/ReportsAPI";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
-import { alignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
+import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import { alignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
+import {
+  previousComparisonLabel as formatPreviousComparisonLabel,
+  resolveComparisonSeries,
+} from "../utils/reportComparison";
+import { pickNamedArray } from "../utils/normalizeCampaignReport";
+import { ratePercent } from "../utils/campaignCvmMetrics";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
-import ReportChartCard from "../components/ReportChartCard";
-import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
+import SwitchableReportChart from "../components/SwitchableReportChart";
+import EmailDeliveryKpiGrid from "../components/EmailDeliveryKpiGrid";
+import { emailDeliveryReportsService } from "../services/emailDeliveryReportsService";
+import { normalizeEmailDeliveryReport } from "../utils/normalizeEmailDeliveryReport";
+import {
+  EMAIL_CVM_LABELS,
+  emailCvmSnapshot,
+  emptyEmailSnapshot,
+  formatCount,
+  formatRate,
+  toEmailSummary,
+  type EmailCvmSnapshot,
+} from "../utils/emailCvmMetrics";
 
-// Extract types from API response type
-type EmailSummary = DeliveryEmailReportsResponse["summary"];
 type DeliveryPoint = DeliveryEmailReportsResponse["deliveryTimeline"][number];
-type EmailStatus = EmailLogEntry["status"];
 
-// Mock data structure (combines summary and timeline)
 type EmailRangeData = {
-  summary: EmailSummary;
+  summary: EmailCvmSnapshot;
   deliverySeries: DeliveryPoint[];
 };
-
-// Table row type
-type EmailTableRow = {
-  id: string;
-  campaignName: string;
-  status: EmailStatus;
-  sent: number;
-  delivered: number;
-  conversions: number;
-  conversionRate: number;
-};
-
-const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
-const statusOptions: (EmailStatus | "All")[] = [
-  "All",
-  "Delivered",
-  "Bounced",
-  "Deferred",
-  "Spam",
-];
-
-// Chart colors now use standardized colors from tokens.reportCharts
-
-const emailMockData: Record<RangeOption, EmailRangeData> = {
-  "7d": {
-    summary: {
-      sent: 255_000,
-      delivered: 234_500,
-      deliveryRate: 92,
-      conversionRate: 3.8,
-      conversions: 8_900,
-      bounceRate: 5.6,
-      openRate: 48.2,
-      ctr: 12.4,
-      unsubscribeRate: 0.4,
-    },
-    deliverySeries: [
-      { period: "Mon", sent: 36_500, delivered: 33_800, converted: 1_320 },
-      { period: "Tue", sent: 35_000, delivered: 32_400, converted: 1_250 },
-      { period: "Wed", sent: 37_200, delivered: 34_300, converted: 1_310 },
-      { period: "Thu", sent: 36_100, delivered: 33_900, converted: 1_305 },
-      { period: "Fri", sent: 36_800, delivered: 34_200, converted: 1_315 },
-      { period: "Sat", sent: 36_400, delivered: 33_700, converted: 1_230 },
-      { period: "Sun", sent: 37_000, delivered: 32_200, converted: 1_170 },
-    ],
-  },
-  "30d": {
-    summary: {
-      sent: 1_020_000,
-      delivered: 945_000,
-      deliveryRate: 92.6,
-      conversionRate: 4.2,
-      conversions: 40_000,
-      bounceRate: 5.1,
-      openRate: 49.7,
-      ctr: 12.9,
-      unsubscribeRate: 0.45,
-    },
-    deliverySeries: [
-      { period: "Week 1", sent: 255_000, delivered: 235_000, converted: 9_600 },
-      { period: "Week 2", sent: 255_000, delivered: 240_000, converted: 9_900 },
-      {
-        period: "Week 3",
-        sent: 255_000,
-        delivered: 235_000,
-        converted: 10_200,
-      },
-      {
-        period: "Week 4",
-        sent: 255_000,
-        delivered: 235_000,
-        converted: 10_300,
-      },
-    ],
-  },
-  "90d": {
-    summary: {
-      sent: 3_150_000,
-      delivered: 2_920_000,
-      deliveryRate: 92.7,
-      conversionRate: 4.4,
-      conversions: 138_000,
-      bounceRate: 4.9,
-      openRate: 50.1,
-      ctr: 13.1,
-      unsubscribeRate: 0.5,
-    },
-    deliverySeries: [
-      {
-        period: "September",
-        sent: 1_050_000,
-        delivered: 975_000,
-        converted: 46_000,
-      },
-      {
-        period: "October",
-        sent: 1_050_000,
-        delivered: 973_000,
-        converted: 46_200,
-      },
-      {
-        period: "November",
-        sent: 1_050_000,
-        delivered: 972_000,
-        converted: 45_800,
-      },
-    ],
-  },
-};
-
-// Generate comprehensive dummy data with dates relative to today
-const generateEmailMessageLogs = (): EmailLogEntry[] => {
-  const campaigns = [
-    { id: "CAMP-2201", name: "Reactivation Blast" },
-    { id: "CAMP-2202", name: "Upsell Journey" },
-    { id: "CAMP-2203", name: "Rewards Digest" },
-    { id: "CAMP-2204", name: "VIP Launch" },
-    { id: "CAMP-2205", name: "Churn Recovery" },
-    { id: "CAMP-2206", name: "Welcome Series" },
-    { id: "CAMP-2207", name: "Flash Sale" },
-    { id: "CAMP-2208", name: "Newsletter" },
-  ];
-  const statuses: EmailStatus[] = ["Delivered", "Bounced", "Deferred", "Spam"];
-
-  const rows: EmailLogEntry[] = [];
-  const today = new Date();
-  let globalCounter = 0;
-
-  // Generate emails across the last 90 days with various statuses
-  campaigns.forEach((campaign, campIdx) => {
-    for (let i = 0; i < 6; i++) {
-      globalCounter++;
-      const daysAgo = Math.floor(Math.random() * 90); // Spread across last 90 days
-      const sentDate = new Date(today);
-      sentDate.setDate(today.getDate() - daysAgo);
-
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const sent = 10000 + Math.floor(Math.random() * 20000);
-      const deliveryRate =
-        status === "Delivered"
-          ? 0.92 + Math.random() * 0.06
-          : status === "Bounced"
-            ? 0.85 + Math.random() * 0.05
-            : status === "Spam"
-              ? 0.8 + Math.random() * 0.08
-              : 0.9 + Math.random() * 0.05;
-      const delivered = Math.floor(sent * deliveryRate);
-      const conversionRate =
-        status === "Delivered"
-          ? 2.0 + Math.random() * 5.0
-          : status === "Spam"
-            ? 0.5 + Math.random() * 1.5
-            : 1.0 + Math.random() * 3.0;
-      const conversions = Math.floor(delivered * (conversionRate / 100));
-
-      rows.push({
-        id: `EMAIL-${globalCounter}`,
-        campaignId: campaign.id,
-        campaignName: campaign.name,
-        status,
-        sent,
-        delivered,
-        conversions,
-        conversionRate: Math.round(conversionRate * 10) / 10,
-        sentDate: sentDate.toISOString().split("T")[0],
-      });
-    }
-  });
-
-  return rows;
-};
-
-const emailMessageLogs: EmailLogEntry[] = generateEmailMessageLogs();
-
-const formatNumber = (value: number) => value.toLocaleString("en-US");
-
-const toRate = (numerator: number, denominator: number) =>
-  denominator ? Number(((numerator / denominator) * 100).toFixed(2)) : 0;
 
 const rangeDays: Record<RangeOption, number> = {
   "7d": 7,
   "30d": 30,
   "90d": 90,
 };
+
+const statusOptions: (EmailDeliveryStatus | "All")[] = [
+  "All",
+  "Delivered",
+  "Bounced",
+  "Deferred",
+  "Rejected",
+];
+
+const RELATED_REPORTS = [
+  { label: "Campaign Reports", to: "/dashboard/reports/campaigns" },
+  { label: "Offer Reports", to: "/dashboard/reports/offers" },
+  { label: "Delivery & SMS Reports", to: "/dashboard/reports/delivery" },
+  { label: "Segment Reports", to: "/dashboard/reports/segments" },
+  { label: "Customer Profile Reports", to: "/dashboard/reports/customer-profiles" },
+];
+
+function snapshot(
+  sent: number,
+  delivered: number,
+  takenUp: number,
+  optOutRate: number,
+  subscribersReached: number,
+  bounced?: number,
+): EmailCvmSnapshot {
+  const bouncedCount = bounced ?? Math.max(0, sent - delivered);
+  return {
+    sent,
+    delivered,
+    bounced: bouncedCount,
+    deliveryRate: ratePercent(delivered, sent),
+    bounceRate: ratePercent(bouncedCount, sent),
+    subscribersReached,
+    takenUp,
+    takeUpRate: ratePercent(takenUp, delivered),
+    optOutRate,
+  };
+}
+
+const emailMockData: Record<RangeOption, EmailRangeData> = {
+  "7d": {
+    summary: snapshot(64_200, 59_100, 2_240, 0.35, 54_800, 3_400),
+    deliverySeries: [
+      { period: "Mon", sent: 9_200, delivered: 8_480, takenUp: 320, converted: 320 },
+      { period: "Tue", sent: 9_050, delivered: 8_340, takenUp: 310, converted: 310 },
+      { period: "Wed", sent: 9_400, delivered: 8_680, takenUp: 335, converted: 335 },
+      { period: "Thu", sent: 9_100, delivered: 8_390, takenUp: 318, converted: 318 },
+      { period: "Fri", sent: 9_250, delivered: 8_520, takenUp: 328, converted: 328 },
+      { period: "Sat", sent: 8_900, delivered: 8_160, takenUp: 305, converted: 305 },
+      { period: "Sun", sent: 9_300, delivered: 8_530, takenUp: 324, converted: 324 },
+    ],
+  },
+  "30d": {
+    summary: snapshot(258_000, 238_000, 9_050, 0.4, 214_000, 13_200),
+    deliverySeries: [
+      { period: "Oct 1-7", sent: 64_200, delivered: 59_100, takenUp: 2_240, converted: 2_240 },
+      { period: "Oct 8-14", sent: 64_800, delivered: 59_700, takenUp: 2_280, converted: 2_280 },
+      { period: "Oct 15-21", sent: 63_400, delivered: 58_400, takenUp: 2_210, converted: 2_210 },
+      { period: "Oct 22-28", sent: 65_600, delivered: 60_800, takenUp: 2_320, converted: 2_320 },
+    ],
+  },
+  "90d": {
+    summary: snapshot(780_000, 720_000, 27_400, 0.42, 648_000, 39_000),
+    deliverySeries: [
+      { period: "September", sent: 258_000, delivered: 238_000, takenUp: 9_050, converted: 9_050 },
+      { period: "October", sent: 262_000, delivered: 242_000, takenUp: 9_180, converted: 9_180 },
+      { period: "November", sent: 260_000, delivered: 240_000, takenUp: 9_170, converted: 9_170 },
+    ],
+  },
+};
+
+const DISPATCH_SEEDS: Array<
+  Omit<EmailDispatchRow, "sentDate" | "takeUpRate"> & { daysAgo: number }
+> = [
+  { id: "E-201", campaignId: "", campaignName: "Loyalty Reactivation", offerId: "", offerName: "Data Bonus 1GB", segmentId: "", segmentName: "At Risk", status: "Delivered", sent: 8200, delivered: 7680, subscribersReached: 7410, takenUp: 290, daysAgo: 1 },
+  { id: "E-202", campaignId: "", campaignName: "Loyalty Reactivation", offerId: "", offerName: "Data Bonus 1GB", segmentId: "", segmentName: "Core", status: "Deferred", sent: 4100, delivered: 0, subscribersReached: 0, takenUp: 0, daysAgo: 0 },
+  { id: "E-203", campaignId: "", campaignName: "VIP Retention", offerId: "", offerName: "Voice Bundle", segmentId: "", segmentName: "High Value", status: "Delivered", sent: 2600, delivered: 2480, subscribersReached: 2410, takenUp: 180, daysAgo: 3 },
+  { id: "E-204", campaignId: "", campaignName: "Churn Win-back", offerId: "", offerName: "Win-back Credit", segmentId: "", segmentName: "Win-back", status: "Bounced", sent: 5400, delivered: 1200, subscribersReached: 1140, takenUp: 18, errorCode: "HARD_BOUNCE", daysAgo: 4 },
+  { id: "E-205", campaignId: "", campaignName: "Welcome Onboarding", offerId: "", offerName: "Starter Pack", segmentId: "", segmentName: "New", status: "Delivered", sent: 9800, delivered: 9410, subscribersReached: 9020, takenUp: 640, daysAgo: 6 },
+  { id: "E-206", campaignId: "", campaignName: "Recharge Nudge", offerId: "", offerName: "Airtime Bonus", segmentId: "", segmentName: "Dormant", status: "Rejected", sent: 3100, delivered: 0, subscribersReached: 0, takenUp: 0, errorCode: "SUPPRESSED", daysAgo: 8 },
+  { id: "E-207", campaignId: "", campaignName: "Recharge Nudge", offerId: "", offerName: "Airtime Bonus", segmentId: "", segmentName: "Growth", status: "Delivered", sent: 11200, delivered: 10440, subscribersReached: 9980, takenUp: 410, daysAgo: 12 },
+  { id: "E-208", campaignId: "", campaignName: "Birthday Offer", offerId: "", offerName: "Birthday Data", segmentId: "", segmentName: "Core", status: "Delivered", sent: 1800, delivered: 1740, subscribersReached: 1710, takenUp: 260, daysAgo: 15 },
+  { id: "E-209", campaignId: "", campaignName: "Data Upsell", offerId: "", offerName: "Night Bundle", segmentId: "", segmentName: "High Value", status: "Bounced", sent: 3600, delivered: 640, subscribersReached: 610, takenUp: 12, errorCode: "MAILBOX_FULL", daysAgo: 21 },
+  { id: "E-210", campaignId: "", campaignName: "Data Upsell", offerId: "", offerName: "Night Bundle", segmentId: "", segmentName: "Growth", status: "Delivered", sent: 14600, delivered: 13680, subscribersReached: 13110, takenUp: 520, daysAgo: 28 },
+  { id: "E-211", campaignId: "", campaignName: "Roaming Alert", offerId: "", offerName: "Roaming Pass", segmentId: "", segmentName: "Core", status: "Deferred", sent: 900, delivered: 0, subscribersReached: 0, takenUp: 0, daysAgo: 2 },
+  { id: "E-212", campaignId: "", campaignName: "Churn Win-back", offerId: "", offerName: "Win-back Credit", segmentId: "", segmentName: "At Risk", status: "Delivered", sent: 7200, delivered: 6610, subscribersReached: 6400, takenUp: 240, daysAgo: 45 },
+];
+
+function daysAgoIso(daysAgo: number): string {
+  const date = new Date();
+  date.setHours(10, 0, 0, 0);
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString();
+}
+
+const dummyDispatches: EmailDispatchRow[] = DISPATCH_SEEDS.map((seed) => {
+  const { daysAgo, ...row } = seed;
+  return {
+    ...row,
+    sentDate: daysAgoIso(daysAgo),
+    takeUpRate: ratePercent(row.takenUp, row.delivered),
+  };
+});
 
 const getDaysBetween = (start: string, end: string) => {
   const startDate = start ? new Date(start) : null;
@@ -247,365 +178,399 @@ const mapDaysToRange = (days: number | null): RangeOption => {
   return "90d";
 };
 
-const getRangeLabel = (option: RangeOption): string => {
-  const labels: Record<RangeOption, string> = {
-    "7d": "Daily",
-    "30d": "Weekly",
-    "90d": "Monthly",
-  };
-  return labels[option];
-};
-
-// Scale data based on actual number of days vs base range
-const getScaleFactor = (
-  customDays: number | null,
-  baseRange: RangeOption,
-): number => {
+const getScaleFactor = (customDays: number | null, baseRange: RangeOption): number => {
   if (!customDays) return 1;
-  const baseDays = rangeDays[baseRange];
-  return customDays / baseDays;
+  return customDays / rangeDays[baseRange];
 };
 
-// Get date constraints for date inputs
-const getDateConstraints = () => {
-  const today = new Date();
-  // Use local date to avoid timezone issues
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const maxDate = `${year}-${month}-${day}`; // Today (no future dates)
+function scaleSnapshot(base: EmailCvmSnapshot, factor: number): EmailCvmSnapshot {
+  if (factor === 1) return base;
+  return snapshot(
+    Math.round(base.sent * factor),
+    Math.round(base.delivered * factor),
+    Math.round(base.takenUp * factor),
+    base.optOutRate,
+    Math.round(base.subscribersReached * factor),
+    Math.round(base.bounced * factor),
+  );
+}
 
-  const minDate = new Date(today);
-  minDate.setFullYear(today.getFullYear() - 2); // 2 years ago max
-  const minYear = minDate.getFullYear();
-  const minMonth = String(minDate.getMonth() + 1).padStart(2, "0");
-  const minDay = String(minDate.getDate()).padStart(2, "0");
-  const minDateStr = `${minYear}-${minMonth}-${minDay}`;
+function entityPath(
+  kind: "campaign" | "offer" | "segment",
+  id: string | undefined,
+  label: string,
+): string | null {
+  if (!label || label === "—") return null;
+  if (kind === "segment") return "/dashboard/reports/segments";
+  if (!id || !/^\d+$/.test(id)) return null;
+  if (kind === "campaign") return `/dashboard/campaigns/${id}/report`;
+  return `/dashboard/reports/offers/${id}`;
+}
 
-  return { minDate: minDateStr, maxDate };
-};
+function EntityLink({
+  label,
+  to,
+}: {
+  label: string;
+  to: string | null;
+}) {
+  if (!to || !label || label === "—") {
+    return <span>{label || "—"}</span>;
+  }
+  return (
+    <Link to={to} className="font-medium text-gray-900 underline-offset-2 hover:underline">
+      {label}
+    </Link>
+  );
+}
 
 export default function DeliveryEmailReportsPage() {
-  const { t } = useLanguage();
   const timeWindow = useReportTimeWindow({
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams, activeWindow, comparePreviousPeriod } = timeWindow;
+  const {
+    isTrendsView,
+    queryParams,
+    activeWindow,
+    comparePreviousPeriod,
+    previousQueryParams,
+    previousPeriodLabel,
+  } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const deliveryRange = timeWindow.rangeKey;
-  const appliedCustomRange = timeWindow.activeWindow.bounds;
-  const customRange = appliedCustomRange;
-  const [statusFilter, setStatusFilter] = useState<EmailStatus | "All">("All");
+  const appliedCustomRange = activeWindow.bounds;
+
+  const [statusFilter, setStatusFilter] = useState<EmailDeliveryStatus | "All">("All");
   const [campaignQuery, setCampaignQuery] = useState("");
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [liveReport, setLiveReport] = useState<DeliveryEmailReportsResponse | null>(null);
+  const [liveReportError, setLiveReportError] = useState<string | null>(null);
+  const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
 
-  const customDays = getDaysBetween(
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-  );
+  const customDays = getDaysBetween(appliedCustomRange.start, appliedCustomRange.end);
   const activeRangeKey: RangeOption =
     appliedCustomRange.start && appliedCustomRange.end
       ? mapDaysToRange(customDays)
       : deliveryRange;
+  const scaleFactor =
+    appliedCustomRange.start && appliedCustomRange.end && customDays
+      ? getScaleFactor(customDays, activeRangeKey)
+      : 1;
 
-  // Calculate scale factor for custom date ranges
-  const scaleFactor = useMemo(() => {
-    if (appliedCustomRange.start && appliedCustomRange.end && customDays) {
-      return getScaleFactor(customDays, activeRangeKey);
+  useEffect(() => {
+    if (useDummyData) {
+      setLiveReport(null);
+      setLiveReportError(null);
+      setIsLoadingLiveReport(false);
+      return;
     }
-    return 1;
+
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      const load = async () => {
+        try {
+          setIsLoadingLiveReport(true);
+          setLiveReportError(null);
+          const response = await emailDeliveryReportsService.getPortfolio({
+            range: queryParams.range || activeRangeKey,
+            grain: queryParams.grain,
+            startDate: queryParams.startDate,
+            endDate: queryParams.endDate,
+            preset: queryParams.preset,
+            page: 1,
+            pageSize: 200,
+            search: campaignQuery.trim() || undefined,
+            status: statusFilter === "All" ? undefined : statusFilter,
+            sortBy: "sent",
+            sortOrder: "desc",
+          });
+          if (cancelled) return;
+          const normalized = normalizeEmailDeliveryReport(response);
+          if (response.success && normalized) {
+            setLiveReport(normalized);
+          } else {
+            setLiveReport(null);
+            setLiveReportError(
+              response.error || response.message || "Failed to load email delivery report",
+            );
+          }
+        } catch (error) {
+          if (cancelled) return;
+          setLiveReport(null);
+          setLiveReportError(
+            extractBackendError(error, "Failed to load Delivery & Email Reports."),
+          );
+        } finally {
+          if (!cancelled) setIsLoadingLiveReport(false);
+        }
+      };
+      void load();
+    }, campaignQuery ? 250 : 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
   }, [
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-    customDays,
+    useDummyData,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.preset,
+    campaignQuery,
+    statusFilter,
     activeRangeKey,
   ]);
 
-  // Scale snapshot data based on actual date range
-  const baseSnapshot = emailMockData[activeRangeKey];
-  const summarySnapshot = useMemo(() => {
+  const summary = useMemo(() => {
     if (!useDummyData) {
-      return {
-        ...baseSnapshot,
-        summary: {
-          sent: 0,
-          delivered: 0,
-          conversions: 0,
-          deliveryRate: 0,
-          bounceRate: 0,
-          conversionRate: 0,
-          openRate: 0,
-          ctr: 0,
-          unsubscribeRate: 0,
-        },
-      };
+      return liveReport?.summary ? emailCvmSnapshot(liveReport.summary) : emptyEmailSnapshot();
     }
-    if (scaleFactor === 1) return baseSnapshot;
-    return {
-      ...baseSnapshot,
-      summary: {
-        ...baseSnapshot.summary,
-        sent: Math.round(baseSnapshot.summary.sent * scaleFactor),
-        delivered: Math.round(baseSnapshot.summary.delivered * scaleFactor),
-        conversions: Math.round(baseSnapshot.summary.conversions * scaleFactor),
-        // Rates stay the same
-        deliveryRate: baseSnapshot.summary.deliveryRate,
-        bounceRate: baseSnapshot.summary.bounceRate,
-        conversionRate: baseSnapshot.summary.conversionRate,
-        openRate: baseSnapshot.summary.openRate,
-        ctr: baseSnapshot.summary.ctr,
-        unsubscribeRate: baseSnapshot.summary.unsubscribeRate,
-      },
-    };
-  }, [baseSnapshot, scaleFactor, useDummyData]);
+    return scaleSnapshot(emailMockData[activeRangeKey].summary, scaleFactor);
+  }, [activeRangeKey, liveReport, scaleFactor, useDummyData]);
 
-  const deliverySnapshot = useMemo(() => {
+  const deliverySeries = useMemo(() => {
     const window = {
       startDate: queryParams.startDate,
       endDate: queryParams.endDate,
       grain: queryParams.grain,
     };
+    if (!useDummyData) {
+      return alignTrendSeries(liveReport?.deliveryTimeline || [], window);
+    }
     const template =
       emailMockData[dummyTemplateRange(queryParams.grain || "daily")].deliverySeries;
-    if (!useDummyData) {
-      return {
-        ...baseSnapshot,
-        deliverySeries: alignTrendSeries(
-          template.map((point) => ({ ...point, sent: 0, delivered: 0, converted: 0 })),
-          window,
-        ),
-      };
-    }
-    return {
-      ...baseSnapshot,
-      deliverySeries: alignTrendSeries(template, window),
-    };
+    return alignTrendSeries(template, window);
   }, [
-    baseSnapshot,
-    queryParams.startDate,
+    liveReport,
     queryParams.endDate,
     queryParams.grain,
+    queryParams.startDate,
     useDummyData,
   ]);
 
   const deliveryRateSeries = useMemo(
     () =>
-      deliverySnapshot.deliverySeries.map((point) => ({
+      deliverySeries.map((point) => ({
         period: point.period,
         date: point.date,
-        deliveryRate: toRate(point.delivered, point.sent),
-        conversionRate: toRate(point.converted, point.delivered),
+        deliveryRate: ratePercent(point.delivered, point.sent),
+        takeUpRate: ratePercent(point.takenUp ?? point.converted, point.delivered),
       })),
-    [deliverySnapshot.deliverySeries],
+    [deliverySeries],
   );
+
+  const fetchPreviousTimeline = useCallback(async (params: typeof previousQueryParams) => {
+    const envelope = await emailDeliveryReportsService.getTimeline({
+      range: params.range || deliveryRange,
+      grain: params.grain,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      preset: params.preset,
+    });
+    const normalized = normalizeEmailDeliveryReport(envelope);
+    return (
+      normalized?.deliveryTimeline ||
+      pickNamedArray<DeliveryPoint>(envelope.data, ["deliveryTimeline", "delivery_timeline", "timeline"])
+    );
+  }, [deliveryRange]);
+
+  const livePreviousTimeline = usePreviousPeriodSeries<DeliveryPoint>({
+    enabled: comparePreviousPeriod && !useDummyData,
+    previousQueryParams,
+    fetchSeries: fetchPreviousTimeline,
+  });
 
   const deliveryComparison = useMemo(
     () =>
-      comparePreviousPeriod && useDummyData
-        ? dummyPreviousPeriod(deliverySnapshot.deliverySeries)
-        : undefined,
-    [comparePreviousPeriod, deliverySnapshot.deliverySeries, useDummyData],
-  );
-  const deliveryRateComparison = useMemo(
-    () =>
-      comparePreviousPeriod && useDummyData
-        ? dummyPreviousPeriod(deliveryRateSeries)
-        : undefined,
-    [comparePreviousPeriod, deliveryRateSeries, useDummyData],
+      resolveComparisonSeries({
+        compare: comparePreviousPeriod,
+        useDummyData,
+        current: deliverySeries,
+        livePrevious: livePreviousTimeline,
+        previousQueryParams,
+        align: alignTrendSeries,
+      }),
+    [comparePreviousPeriod, deliverySeries, livePreviousTimeline, previousQueryParams, useDummyData],
   );
 
-  const filteredLogs = useMemo(() => {
+  const previousRateSeries = useMemo(
+    () =>
+      (deliveryComparison || []).map((point) => ({
+        period: point.period,
+        date: point.date,
+        deliveryRate: ratePercent(point.delivered, point.sent),
+        takeUpRate: ratePercent(point.takenUp ?? point.converted, point.delivered),
+      })),
+    [deliveryComparison],
+  );
+
+  const previousComparisonLabel = formatPreviousComparisonLabel(
+    comparePreviousPeriod,
+    previousPeriodLabel,
+  );
+
+  const filteredDispatches = useMemo(() => {
+    const source = useDummyData ? dummyDispatches : liveReport?.dispatches || [];
     const now = Date.now();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
         ? (customDays ?? rangeDays[deliveryRange])
         : rangeDays[deliveryRange];
-
-    const startMs = appliedCustomRange.start
-      ? new Date(appliedCustomRange.start).getTime()
-      : null;
-    const endMs = appliedCustomRange.end
-      ? new Date(appliedCustomRange.end).getTime()
-      : null;
-
+    const startMs = appliedCustomRange.start ? new Date(appliedCustomRange.start).getTime() : null;
+    const endMs = appliedCustomRange.end ? new Date(appliedCustomRange.end).getTime() : null;
     const query = campaignQuery.trim().toLowerCase();
-    return emailMessageLogs.filter((entry) => {
-      const matchesStatus =
-        statusFilter === "All" ? true : entry.status === statusFilter;
+
+    return source.filter((entry) => {
+      const matchesStatus = statusFilter === "All" || entry.status === statusFilter;
       const matchesQuery = query
-        ? entry.campaignId.toLowerCase().includes(query) ||
-          entry.campaignName.toLowerCase().includes(query)
+        ? [entry.campaignName, entry.campaignId, entry.offerName, entry.segmentName]
+            .join(" ")
+            .toLowerCase()
+            .includes(query)
         : true;
+      if (!useDummyData) return matchesStatus && matchesQuery;
       const entryDate = new Date(entry.sentDate).getTime();
       const matchesRange =
-        appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
+        startMs && endMs
           ? entryDate >= startMs && entryDate <= endMs
           : now - entryDate <= maxDays * 24 * 60 * 60 * 1000;
       return matchesStatus && matchesQuery && matchesRange;
     });
   }, [
+    appliedCustomRange.end,
+    appliedCustomRange.start,
     campaignQuery,
-    statusFilter,
-    customRange,
-    deliveryRange,
     customDays,
+    deliveryRange,
+    liveReport,
+    statusFilter,
     useDummyData,
   ]);
 
-  // Reset pagination when filters change
   useEffect(() => {
     setTablePage(1);
-  }, [
-    campaignQuery,
-    statusFilter,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-  ]);
+  }, [campaignQuery, statusFilter, appliedCustomRange.start, appliedCustomRange.end, useDummyData]);
 
-  // Paginated logs for table display
-  const paginatedLogs = useMemo(() => {
-    const startIdx = (tablePage - 1) * tablePageSize;
-    return filteredLogs.slice(startIdx, startIdx + tablePageSize);
-  }, [filteredLogs, tablePage]);
+  const tableColumns = useMemo<TableColumn<EmailDispatchRow>[]>(
+    () => [
+      {
+        id: "campaignName",
+        label: EMAIL_CVM_LABELS.campaign,
+        width: "180px",
+        visible: true,
+        render: (_, row) => (
+          <EntityLink
+            label={row.campaignName}
+            to={entityPath("campaign", row.campaignId, row.campaignName)}
+          />
+        ),
+      },
+      {
+        id: "offerName",
+        label: EMAIL_CVM_LABELS.offer,
+        width: "160px",
+        visible: true,
+        render: (_, row) => (
+          <EntityLink
+            label={row.offerName}
+            to={entityPath("offer", row.offerId, row.offerName)}
+          />
+        ),
+      },
+      {
+        id: "segmentName",
+        label: EMAIL_CVM_LABELS.segment,
+        width: "140px",
+        visible: true,
+        render: (_, row) => (
+          <EntityLink
+            label={row.segmentName}
+            to={entityPath("segment", row.segmentId, row.segmentName)}
+          />
+        ),
+      },
+      { id: "status", label: "Delivery Status", width: "140px", visible: true },
+      {
+        id: "sent",
+        label: "Dispatched",
+        width: "110px",
+        visible: true,
+        render: (value) => formatCount(value),
+      },
+      {
+        id: "delivered",
+        label: EMAIL_CVM_LABELS.delivered,
+        width: "110px",
+        visible: true,
+        render: (value) => formatCount(value),
+      },
+      {
+        id: "takenUp",
+        label: EMAIL_CVM_LABELS.takenUp,
+        width: "110px",
+        visible: true,
+        render: (value) => formatCount(value),
+      },
+      {
+        id: "takeUpRate",
+        label: EMAIL_CVM_LABELS.takeUpRate,
+        width: "130px",
+        visible: true,
+        render: (value) => formatRate(value),
+      },
+    ],
+    [],
+  );
 
   const csvHeaders = [
-    "Campaign ID",
-    "Campaign Name",
-    "Status",
-    "Sent",
+    "Campaign",
+    "Offer",
+    "Segment",
+    "Delivery Status",
+    "Dispatched",
     "Delivered",
-    "Conversions",
-    "Conversion Rate",
+    "Subscribers Reached",
+    "Taken Up",
+    "Take-up Rate",
   ];
-
-  const csvRows = filteredLogs.map((row, index) => [
-    index + 1,
+  const csvRows = filteredDispatches.map((row) => [
     row.campaignName,
+    row.offerName,
+    row.segmentName,
     row.status,
     row.sent,
     row.delivered,
-    row.conversions,
-    `${row.conversionRate}%`,
+    row.subscribersReached,
+    row.takenUp,
+    `${row.takeUpRate}%`,
   ]);
-
-  const summaryStats = [
-    {
-      label: "Emails Sent",
-      value: formatNumber(summarySnapshot.summary.sent),
-      description: "Total emails dispatched last 30 days",
-      icon: Mail,
-    },
-    {
-      label: "Delivered Emails",
-      value: formatNumber(summarySnapshot.summary.delivered),
-      description: "Reached inboxes successfully",
-      icon: MailCheck,
-    },
-    {
-      label: "Inbox Placement",
-      value: `${summarySnapshot.summary.deliveryRate.toFixed(1)}%`,
-      description: "Delivered vs total sent",
-      icon: Inbox,
-    },
-    {
-      label: "Bounce Rate",
-      value: `${summarySnapshot.summary.bounceRate.toFixed(1)}%`,
-      description: "Rejected or invalid addresses",
-      icon: AlertTriangle,
-    },
-    {
-      label: "Open Rate",
-      value: `${summarySnapshot.summary.openRate.toFixed(1)}%`,
-      description: "Recipients opening emails",
-      icon: CheckCircle2,
-    },
-    {
-      label: "Click-Through Rate",
-      value: `${summarySnapshot.summary.ctr.toFixed(1)}%`,
-      description: "Recipients clicking tracked links",
-      icon: MousePointerClick,
-    },
-    {
-      label: "Conversion Rate",
-      value: `${summarySnapshot.summary.conversionRate.toFixed(1)}%`,
-      description: "Emails leading to outcomes",
-      icon: TrendingUp,
-    },
-    {
-      label: "Unsubscribe Rate",
-      value: `${summarySnapshot.summary.unsubscribeRate.toFixed(2)}%`,
-      description: "Recipients opting out",
-      icon: UserMinus,
-    },
-  ];
-
-  const statusStyles: Record<EmailStatus, string> = {
-    Delivered: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    Bounced: "border-red-200 bg-red-50 text-red-700",
-    Deferred: "border-amber-200 bg-amber-50 text-amber-700",
-    Spam: "border-slate-200 bg-slate-50 text-slate-700",
-  };
-
-  const tableColumnsMemo = useMemo<TableColumn<EmailTableRow>[]>(() => [
-    {
-      id: "campaignName",
-      label: "Campaign Name",
-      visible: true,
-      width: "200px",
-    },
-    {
-      id: "status",
-      label: "Status",
-      visible: true,
-      width: "150px",
-      render: (_, row) => (
-        <span className="text-sm">
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      id: "sent",
-      label: "Sent",
-      visible: true,
-      width: "100px",
-    },
-    {
-      id: "delivered",
-      label: "Delivered",
-      visible: true,
-      width: "100px",
-    },
-    {
-      id: "conversions",
-      label: "Conversions",
-      visible: true,
-      width: "120px",
-    },
-    {
-      id: "conversionRate",
-      label: "Conversion Rate",
-      visible: true,
-      width: "150px",
-      render: (value) => `${value}%`,
-    },
-  ], []);
 
   return (
     <div className="space-y-6">
       <header className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Delivery & Email Reports
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Delivery & Email Reports</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Track inbox placement, engagement, and conversion impact for every
-            send
+            Email dispatch, mailbox delivery, subscriber reach, offer take-up, bounce, and channel
+            opt-out for the selected window
           </p>
         </div>
+        <nav className="flex flex-wrap gap-2" aria-label="Related reports">
+          {RELATED_REPORTS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`${tw.rounded} border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-300 hover:text-gray-900`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         <ReportTrendsToolbar
           timeWindow={timeWindow}
           extraActions={
@@ -614,7 +579,7 @@ export default function DeliveryEmailReportsPage() {
             >
               <label
                 htmlFor="email-data-toggle"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
+                className="mr-2 whitespace-nowrap text-sm font-medium text-gray-700"
               >
                 Data Mode:
               </label>
@@ -632,7 +597,7 @@ export default function DeliveryEmailReportsPage() {
                   }`}
                 />
               </button>
-              <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
+              <span className="ml-2 whitespace-nowrap text-xs text-gray-600">
                 {useDummyData ? "Dummy Data" : "Real Data"}
               </span>
             </div>
@@ -641,58 +606,39 @@ export default function DeliveryEmailReportsPage() {
       </header>
 
       {!isTrendsView && (
-      <section>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {summaryStats.map((stat) => (
-            <div
-              key={stat.label}
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center gap-2">
-                <stat.icon
-                  className="h-5 w-5"
-                  style={{ color: colors.primary.accent }}
-                />
-                <p className="text-sm font-medium text-gray-600">
-                  {stat.label}
-                </p>
-              </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-sm text-gray-500">{stat.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <section>
+          <EmailDeliveryKpiGrid
+            summary={toEmailSummary(summary)}
+            heroTrends={liveReport?.heroTrends}
+            useDummyData={useDummyData}
+          />
+        </section>
       )}
 
       {isTrendsView && (
-      <section className="grid gap-6 lg:grid-cols-2">
-        <ReportChartCard
-          title="Email Delivery Funnel"
-          subtitle="Track sent, delivered, and conversions across timelines"
-          filename="email-delivery-funnel.csv"
-          audit={chartAudit}
-          columns={[
-            { key: "period", label: "Period" },
-            { key: "date", label: "Date" },
-            { key: "sent", label: "Sent" },
-            { key: "delivered", label: "Delivered" },
-            { key: "converted", label: "Converted" },
-          ]}
-          rows={deliverySnapshot.deliverySeries}
-        >
-          <ReportGroupedBarChart
-            data={deliverySnapshot.deliverySeries}
+        <section className="grid gap-6 lg:grid-cols-2">
+          <SwitchableReportChart
+            title="Email Delivery"
+            subtitle="Dispatched, delivered, and offer take-up across the window"
+            filename="email-delivery.csv"
+            audit={chartAudit}
+            columns={[
+              { key: "period", label: "Period" },
+              { key: "date", label: "Date" },
+              { key: "sent", label: "Dispatched" },
+              { key: "delivered", label: "Delivered" },
+              { key: "takenUp", label: "Taken Up" },
+            ]}
+            rows={deliverySeries}
             xKey="period"
-            yLabel="Email Count"
-            yTickFormatter={formatNumber}
+            yLabel="Messages"
+            yTickFormatter={(value) => formatCount(value)}
             comparisonData={deliveryComparison}
+            comparisonLabel={previousComparisonLabel}
             series={[
               {
                 dataKey: "sent",
-                name: "Sent",
+                name: "Dispatched",
                 color: colors.reportCharts.deliveryEmail.emailDelivery.sent,
               },
               {
@@ -701,129 +647,128 @@ export default function DeliveryEmailReportsPage() {
                 color: colors.reportCharts.deliveryEmail.emailDelivery.delivered,
               },
               {
-                dataKey: "converted",
-                name: "Converted",
+                dataKey: "takenUp",
+                name: "Taken Up",
                 color: colors.reportCharts.deliveryEmail.emailDelivery.converted,
               },
             ]}
           />
-        </ReportChartCard>
-        <ReportChartCard
-          title="Inbox Placement & Conversion"
-          subtitle="Rates derived from the funnel series for the selected window"
-          filename="email-delivery-rates.csv"
-          audit={chartAudit}
-          columns={[
-            { key: "period", label: "Period" },
-            { key: "date", label: "Date" },
-            { key: "deliveryRate", label: "Inbox Placement %" },
-            { key: "conversionRate", label: "Conversion Rate %" },
-          ]}
-          rows={deliveryRateSeries}
-        >
-          <ReportGroupedBarChart
-            data={deliveryRateSeries}
+          <SwitchableReportChart
+            title="Delivery & Take-up Rates"
+            subtitle="Delivery rate and offer take-up rate for the same window"
+            filename="email-delivery-rates.csv"
+            audit={chartAudit}
+            columns={[
+              { key: "period", label: "Period" },
+              { key: "date", label: "Date" },
+              { key: "deliveryRate", label: "Delivery Rate %" },
+              { key: "takeUpRate", label: "Take-up Rate %" },
+            ]}
+            rows={deliveryRateSeries}
             xKey="period"
             yLabel="Rate (%)"
             valueFormatter={(value) => `${value}%`}
-            comparisonData={deliveryRateComparison}
+            comparisonData={comparePreviousPeriod ? previousRateSeries : undefined}
+            comparisonLabel={previousComparisonLabel}
             series={[
               {
                 dataKey: "deliveryRate",
-                name: "Inbox Placement %",
+                name: "Delivery Rate %",
                 color: colors.reportCharts.deliveryEmail.emailDelivery.delivered,
               },
               {
-                dataKey: "conversionRate",
-                name: "Conversion Rate %",
+                dataKey: "takeUpRate",
+                name: "Take-up Rate %",
                 color: colors.reportCharts.deliveryEmail.emailDelivery.converted,
               },
             ]}
           />
-        </ReportChartCard>
-      </section>
+        </section>
       )}
 
       {!isTrendsView && (
-      <section className="space-y-6">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Email Delivery Log
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Inspect campaign-level sends, diagnose issues, and export data
-            </p>
+        <section className="space-y-6">
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                {EMAIL_CVM_LABELS.dispatchLog}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Each row is an email dispatch, with the campaign, offer, and segment it ran against
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <Input
+                placeholder="Search campaign, offer, or segment"
+                value={campaignQuery}
+                onChange={(value) => setCampaignQuery(String(value))}
+                className="w-full md:w-80"
+              />
+              <HeadlessSelect
+                value={statusFilter}
+                onChange={(value) => setStatusFilter(value as EmailDeliveryStatus | "All")}
+                options={statusOptions.map((option) => ({
+                  label: option === "All" ? "All Statuses" : option,
+                  value: option,
+                }))}
+                placeholder="All Statuses"
+                className="w-full md:w-40"
+              />
+              <CsvDownloadButton
+                headers={csvHeaders}
+                rows={csvRows}
+                filename="email_dispatch_delivery.csv"
+                style={{ backgroundColor: colors.primary.action }}
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
-              placeholder="Search campaign"
-              value={campaignQuery}
-              onChange={setCampaignQuery}
-              className="w-full md:w-80"
-            />
-            <HeadlessSelect
-              value={statusFilter}
-              onChange={(value) =>
-                setStatusFilter(value as EmailStatus | "All")
-              }
-              options={statusOptions.map((option) => ({
-                label: option === "All" ? "All Statuses" : option,
-                value: option,
-              }))}
-              placeholder="All Statuses"
-              className="w-full md:w-40"
-            />
-            <CsvDownloadButton
-              headers={csvHeaders}
-              rows={csvRows}
-              filename="email_delivery_logs.csv"
-              style={{ backgroundColor: colors.primary.action }}
-            />
-          </div>
-        </div>
-        <>
-          <Table<EmailTableRow>
-            columns={tableColumnsMemo}
-            data={filteredLogs.map((entry) => ({
-              id: entry.id,
-              campaignName: entry.campaignName,
-              status: entry.status,
-              sent: entry.sent,
-              delivered: entry.delivered,
-              conversions: entry.conversions,
-              conversionRate: entry.conversionRate,
-            }))}
-            totalItems={filteredLogs.length}
-            currentPage={tablePage}
-            pageSize={tablePageSize}
-            onPageChange={setTablePage}
-            style={{
-              headerBackground: colors.surface.tableHeader,
-              headerTextColor: colors.surface.tableHeaderText,
-              rowBackground: colors.surface.tablebodybg,
-              rowSpacing: "0 8px",
-            }}
-          />
-          {filteredLogs.length > 0 && (
-            <Pagination
-              currentPage={tablePage}
-              pageSize={tablePageSize}
-              totalItems={filteredLogs.length}
-              onPageChange={setTablePage}
-              onPageSizeChange={(size) => {
-                setTablePageSize(size);
-                setTablePage(1);
-              }}
-            />
+
+          {liveReportError && !useDummyData && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {liveReportError}
+            </div>
           )}
-        </>
-        {filteredLogs.length === 0 && (
-          <div className="py-10 text-center text-sm text-gray-500">
-            No campaigns match your filters yet.
-          </div>
-        )}
-      </section>
+
+          {isLoadingLiveReport && !useDummyData ? (
+            <div className="flex justify-center py-16">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <>
+              <Table<EmailDispatchRow>
+                columns={tableColumns}
+                data={filteredDispatches}
+                totalItems={filteredDispatches.length}
+                currentPage={tablePage}
+                pageSize={tablePageSize}
+                onPageChange={setTablePage}
+                style={{
+                  headerBackground: colors.surface.tableHeader,
+                  headerTextColor: colors.surface.tableHeaderText,
+                  rowBackground: colors.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
+              {filteredDispatches.length > 0 && (
+                <Pagination
+                  currentPage={tablePage}
+                  pageSize={tablePageSize}
+                  totalItems={filteredDispatches.length}
+                  onPageChange={setTablePage}
+                  onPageSizeChange={(size) => {
+                    setTablePageSize(size);
+                    setTablePage(1);
+                  }}
+                />
+              )}
+              {filteredDispatches.length === 0 && (
+                <div className="py-10 text-center text-sm text-gray-500">
+                  No email dispatches match this window and filter.
+                </div>
+              )}
+            </>
+          )}
+        </section>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { customerEventService } from "../services/customerEventService";
 import type {
+  CommunicationChannelOption,
   CustomerEventListResult,
   TrackingSourceOption,
 } from "../types/customerEvent";
@@ -20,13 +21,28 @@ const EMPTY_RESULT: CustomerEventListResult = {
   source: "fallback",
 };
 
-export function useCustomerEvents(subscriberId: string | number | undefined) {
+export function useCustomerEvents(
+  subscriberId: string | number | undefined,
+  customerRecord?: Record<string, unknown> | null,
+) {
   const [result, setResult] = useState<CustomerEventListResult>(EMPTY_RESULT);
   const [trackingSources, setTrackingSources] = useState<TrackingSourceOption[]>(
     [],
   );
+  const [communicationChannels, setCommunicationChannels] = useState<
+    CommunicationChannelOption[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const loadCatalogs = useCallback(async () => {
+    const [sources, channels] = await Promise.all([
+      customerEventService.getTrackingSourceOptions().catch(() => []),
+      customerEventService.getCommunicationChannelOptions().catch(() => []),
+    ]);
+    setTrackingSources(sources);
+    setCommunicationChannels(channels);
+  }, []);
 
   const load = useCallback(async () => {
     if (!subscriberId) {
@@ -38,26 +54,42 @@ export function useCustomerEvents(subscriberId: string | number | undefined) {
     setIsLoading(true);
     setError(null);
     try {
-      const [eventsResult, catalog] = await Promise.all([
-        customerEventService.getSubscriberEvents(subscriberId, {
-          time_preset: "all",
-          limit: 500,
-        }),
-        customerEventService.getTrackingSourceOptions().catch(() => []),
-      ]);
+      const eventsResult = await customerEventService.getSubscriberEvents(
+        subscriberId,
+        {},
+        { customerRecord },
+      );
       setResult(eventsResult);
-      setTrackingSources(catalog);
-    } catch {
-      setError("Unable to load customer events. Please try again.");
+    } catch (err) {
+      const message =
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : "Unable to load customer events. Please try again.";
+      setError(message);
       setResult(EMPTY_RESULT);
     } finally {
       setIsLoading(false);
     }
-  }, [subscriberId]);
+  }, [subscriberId, customerRecord]);
+
+  const refetch = useCallback(async () => {
+    await Promise.all([loadCatalogs(), load()]);
+  }, [loadCatalogs, load]);
+
+  useEffect(() => {
+    void loadCatalogs();
+  }, [loadCatalogs]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  return { result, trackingSources, isLoading, error, refetch: load };
+  return {
+    result,
+    trackingSources,
+    communicationChannels,
+    isLoading,
+    error,
+    refetch,
+  };
 }

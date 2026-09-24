@@ -58,9 +58,17 @@ export class SafeRoute extends React.Component<SafeRouteProps, SafeRouteState> {
             <div className="text-center space-y-4">
               <h1 className={`text-lg font-bold ${tw.textPrimary}`}>{title}</h1>
               <p className={`text-sm ${tw.textSecondary}`}>{message}</p>
+              {this.state.error?.message ? (
+                <p className={`text-xs ${tw.textSecondary} break-words font-mono`}>
+                  {this.state.error.message}
+                </p>
+              ) : null}
               <div className="flex gap-3 justify-center">
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={() => {
+                    this.setState({ hasError: false, error: null });
+                    window.location.reload();
+                  }}
                   className={`${tw.button}`}
                   style={{
                     backgroundColor: button.action.background,

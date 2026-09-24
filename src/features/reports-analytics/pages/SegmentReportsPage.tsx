@@ -1,28 +1,10 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  ComposedChart,
-  Cell,
-} from "recharts";
-import { useLanguage } from "../../../contexts/LanguageContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
-import {
-  Users2,
-  TrendingUp,
-  Target,
-  Activity,
-  Eye,
-} from "lucide-react";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { formatDateWithTimezone } from "../../../shared/services/dateService";
+import { formatCurrency } from "../../../shared/services/currencyService";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shared/components/ui/Pagination";
@@ -30,20 +12,30 @@ import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
-import { useToast } from "../../../contexts/ToastContext";
 import type { RangeOption, SegmentReportsResponse } from "../types/ReportsAPI";
 import { segmentReportsService } from "../services/segmentReportsService";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
-import { alignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
+import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import { alignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
+import {
+  previousComparisonLabel as formatPreviousComparisonLabel,
+  resolveComparisonSeries,
+} from "../utils/reportComparison";
+import { pickNamedArray } from "../utils/normalizeCampaignReport";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
-import ReportChartCard from "../components/ReportChartCard";
-import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
+import SwitchableReportChart from "../components/SwitchableReportChart";
 import { segmentService } from "../../segments/services/segmentService";
 import type { SegmentType } from "../../segments/types/segment";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
+import SegmentKpiGrid from "../components/SegmentKpiGrid";
+import { normalizeSegmentReport } from "../utils/normalizeSegmentReport";
+import {
+  dummySegmentMeasures,
+  SEGMENT_CVM_LABELS,
+} from "../utils/segmentCvmMetrics";
 
 // Types
 type SegmentSummary = {
@@ -53,6 +45,11 @@ type SegmentSummary = {
   activeInCampaigns: number;
   engagementRate: number;
   conversionRate: number;
+  activityScore: number;
+  takeUpRate: number;
+  arpu: number;
+  activeSubscribers: number;
+  dormantSubscribers: number;
 };
 
 type MemberGrowthPoint = {
@@ -164,24 +161,39 @@ const segmentSummary: Record<RangeOption, SegmentSummary> = {
     totalMembers: 145_000,
     avgMemberGrowth: 3.2,
     activeInCampaigns: 18,
-    engagementRate: 18.5,
+    engagementRate: 64,
     conversionRate: 4.2,
+    activityScore: 64,
+    takeUpRate: 4.2,
+    arpu: 118,
+    activeSubscribers: 112_000,
+    dormantSubscribers: 33_000,
   },
   "30d": {
     totalSegments: 24,
     totalMembers: 415_000,
     avgMemberGrowth: 8.7,
     activeInCampaigns: 22,
-    engagementRate: 21.3,
+    engagementRate: 71,
     conversionRate: 5.8,
+    activityScore: 71,
+    takeUpRate: 5.8,
+    arpu: 128,
+    activeSubscribers: 332_000,
+    dormantSubscribers: 83_000,
   },
   "90d": {
     totalSegments: 24,
     totalMembers: 980_000,
     avgMemberGrowth: 15.4,
     activeInCampaigns: 24,
-    engagementRate: 24.1,
+    engagementRate: 74,
     conversionRate: 6.9,
+    activityScore: 74,
+    takeUpRate: 6.9,
+    arpu: 142,
+    activeSubscribers: 760_000,
+    dormantSubscribers: 220_000,
   },
 };
 
@@ -210,146 +222,88 @@ const memberGrowthData: Record<RangeOption, MemberGrowthPoint[]> = {
 
 const segmentSizeDistributionData: Record<RangeOption, SegmentSizePoint[]> = {
   "7d": [
-    { segmentName: "New Customers", members: 28_500 },
-    { segmentName: "Active Shoppers", members: 35_200 },
+    { segmentName: "New", members: 28_500 },
+    { segmentName: "Core", members: 35_200 },
     { segmentName: "High Value", members: 22_100 },
-    { segmentName: "Cart Abandoners", members: 18_800 },
-    { segmentName: "VIP Customers", members: 12_500 },
-    { segmentName: "Regular Customers", members: 27_900 },
+    { segmentName: "At Risk", members: 18_800 },
+    { segmentName: "Win-back", members: 12_500 },
+    { segmentName: "Growth", members: 27_900 },
   ],
   "30d": [
-    { segmentName: "New Customers", members: 82_500 },
-    { segmentName: "Active Shoppers", members: 105_200 },
+    { segmentName: "New", members: 82_500 },
+    { segmentName: "Core", members: 105_200 },
     { segmentName: "High Value", members: 64_100 },
-    { segmentName: "Cart Abandoners", members: 52_800 },
-    { segmentName: "VIP Customers", members: 38_500 },
-    { segmentName: "Regular Customers", members: 71_900 },
+    { segmentName: "At Risk", members: 52_800 },
+    { segmentName: "Win-back", members: 38_500 },
+    { segmentName: "Growth", members: 71_900 },
   ],
   "90d": [
-    { segmentName: "New Customers", members: 215_000 },
-    { segmentName: "Active Shoppers", members: 268_000 },
+    { segmentName: "New", members: 215_000 },
+    { segmentName: "Core", members: 268_000 },
     { segmentName: "High Value", members: 168_000 },
-    { segmentName: "Cart Abandoners", members: 142_000 },
-    { segmentName: "VIP Customers", members: 105_000 },
-    { segmentName: "Regular Customers", members: 182_000 },
+    { segmentName: "At Risk", members: 142_000 },
+    { segmentName: "Win-back", members: 105_000 },
+    { segmentName: "Growth", members: 182_000 },
   ],
 };
 
 const campaignUsageData: Record<RangeOption, CampaignUsagePoint[]> = {
   "7d": [
-    { segmentName: "New Customers", campaigns: 8 },
-    { segmentName: "Active Shoppers", campaigns: 12 },
+    { segmentName: "New", campaigns: 8 },
+    { segmentName: "Core", campaigns: 12 },
     { segmentName: "High Value", campaigns: 10 },
-    { segmentName: "Cart Abandoners", campaigns: 7 },
-    { segmentName: "VIP Customers", campaigns: 9 },
-    { segmentName: "Regular Customers", campaigns: 6 },
+    { segmentName: "At Risk", campaigns: 7 },
+    { segmentName: "Win-back", campaigns: 9 },
+    { segmentName: "Growth", campaigns: 6 },
   ],
   "30d": [
-    { segmentName: "New Customers", campaigns: 24 },
-    { segmentName: "Active Shoppers", campaigns: 32 },
+    { segmentName: "New", campaigns: 24 },
+    { segmentName: "Core", campaigns: 32 },
     { segmentName: "High Value", campaigns: 28 },
-    { segmentName: "Cart Abandoners", campaigns: 19 },
-    { segmentName: "VIP Customers", campaigns: 26 },
-    { segmentName: "Regular Customers", campaigns: 18 },
+    { segmentName: "At Risk", campaigns: 19 },
+    { segmentName: "Win-back", campaigns: 26 },
+    { segmentName: "Growth", campaigns: 18 },
   ],
   "90d": [
-    { segmentName: "New Customers", campaigns: 68 },
-    { segmentName: "Active Shoppers", campaigns: 89 },
+    { segmentName: "New", campaigns: 68 },
+    { segmentName: "Core", campaigns: 89 },
     { segmentName: "High Value", campaigns: 76 },
-    { segmentName: "Cart Abandoners", campaigns: 54 },
-    { segmentName: "VIP Customers", campaigns: 71 },
-    { segmentName: "Regular Customers", campaigns: 52 },
+    { segmentName: "At Risk", campaigns: 54 },
+    { segmentName: "Win-back", campaigns: 71 },
+    { segmentName: "Growth", campaigns: 52 },
   ],
 };
 
 const performanceComparisonData: Record<RangeOption, PerformanceComparisonPoint[]> = {
   "7d": [
-    { segmentName: "New Customers", engagement: 15.2, conversion: 3.1 },
-    { segmentName: "Active Shoppers", engagement: 28.5, conversion: 6.4 },
-    { segmentName: "High Value", engagement: 35.2, conversion: 8.2 },
-    { segmentName: "Cart Abandoners", engagement: 22.1, conversion: 4.8 },
-    { segmentName: "VIP Customers", engagement: 42.8, conversion: 10.1 },
-    { segmentName: "Regular Customers", engagement: 18.5, conversion: 3.9 },
+    { segmentName: "New", engagement: 58, conversion: 3.1 },
+    { segmentName: "Core", engagement: 72, conversion: 6.4 },
+    { segmentName: "High Value", engagement: 84, conversion: 8.2 },
+    { segmentName: "At Risk", engagement: 41, conversion: 4.8 },
+    { segmentName: "Win-back", engagement: 63, conversion: 10.1 },
+    { segmentName: "Growth", engagement: 69, conversion: 3.9 },
   ],
   "30d": [
-    { segmentName: "New Customers", engagement: 18.2, conversion: 3.8 },
-    { segmentName: "Active Shoppers", engagement: 31.5, conversion: 7.2 },
-    { segmentName: "High Value", engagement: 38.2, conversion: 9.1 },
-    { segmentName: "Cart Abandoners", engagement: 24.1, conversion: 5.3 },
-    { segmentName: "VIP Customers", engagement: 45.8, conversion: 11.2 },
-    { segmentName: "Regular Customers", engagement: 21.5, conversion: 4.6 },
+    { segmentName: "New", engagement: 61, conversion: 3.8 },
+    { segmentName: "Core", engagement: 74, conversion: 7.2 },
+    { segmentName: "High Value", engagement: 86, conversion: 9.1 },
+    { segmentName: "At Risk", engagement: 44, conversion: 5.3 },
+    { segmentName: "Win-back", engagement: 66, conversion: 11.2 },
+    { segmentName: "Growth", engagement: 71, conversion: 4.6 },
   ],
   "90d": [
-    { segmentName: "New Customers", engagement: 21.2, conversion: 4.5 },
-    { segmentName: "Active Shoppers", engagement: 34.5, conversion: 8.1 },
-    { segmentName: "High Value", engagement: 41.2, conversion: 10.2 },
-    { segmentName: "Cart Abandoners", engagement: 26.1, conversion: 5.9 },
-    { segmentName: "VIP Customers", engagement: 48.8, conversion: 12.4 },
-    { segmentName: "Regular Customers", engagement: 24.5, conversion: 5.3 },
+    { segmentName: "New", engagement: 64, conversion: 4.5 },
+    { segmentName: "Core", engagement: 76, conversion: 8.1 },
+    { segmentName: "High Value", engagement: 88, conversion: 10.2 },
+    { segmentName: "At Risk", engagement: 47, conversion: 5.9 },
+    { segmentName: "Win-back", engagement: 68, conversion: 12.4 },
+    { segmentName: "Growth", engagement: 73, conversion: 5.3 },
   ],
 };
 
 const statusOptions = ["All Statuses", "Active", "Inactive"];
 
-interface ChartTooltipEntry {
-  name?: string;
-  value?: number | string;
-  color?: string;
-  dataKey?: string;
-  payload?: Record<string, unknown>;
-}
-
-interface ChartTooltipProps {
-  active?: boolean;
-  payload?: ChartTooltipEntry[];
-  label?: string;
-}
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString("en-US");
-};
-
-const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between gap-4 text-sm"
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-gray-600">{entry.name}</span>
-          </span>
-          <span className="font-semibold text-gray-900">
-            {typeof entry.value === "number"
-              ? formatNumber(entry.value)
-              : entry.value}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const statIcons = {
-  segments: Users2,
-  members: Users2,
-  growth: TrendingUp,
-  campaigns: Target,
-  engagement: Activity,
-};
-
 export default function SegmentReportsPage() {
-  const { t } = useLanguage();
-  const { error: showError } = useToast();
   const navigate = useNavigate();
   const [tableQuery, setTableQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
@@ -357,7 +311,7 @@ export default function SegmentReportsPage() {
     overviewPreset: "weekly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams, overviewWindow, activeWindow, comparePreviousPeriod } = timeWindow;
+  const { isTrendsView, queryParams, overviewWindow, activeWindow, comparePreviousPeriod, previousQueryParams, previousPeriodLabel } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
   const selectedRange = timeWindow.rangeKey;
@@ -382,7 +336,7 @@ export default function SegmentReportsPage() {
     },
     {
       id: "memberCount",
-      label: "Members",
+      label: SEGMENT_CVM_LABELS.subscribers,
       visible: true,
       sortable: true,
       filterConfig: { type: "number" },
@@ -390,7 +344,7 @@ export default function SegmentReportsPage() {
     },
     {
       id: "growthRate",
-      label: "Growth Rate",
+      label: SEGMENT_CVM_LABELS.baseGrowth,
       visible: true,
       sortable: true,
       filterConfig: { type: "number" },
@@ -398,22 +352,22 @@ export default function SegmentReportsPage() {
     },
     {
       id: "campaignsUsed",
-      label: "Campaigns Used",
+      label: SEGMENT_CVM_LABELS.campaignsTargeting,
       visible: true,
       sortable: true,
       filterConfig: { type: "number" },
     },
     {
       id: "engagementRate",
-      label: "Engagement Rate",
+      label: SEGMENT_CVM_LABELS.activityScore,
       visible: true,
       sortable: true,
       filterConfig: { type: "number" },
-      render: (value: number) => `${value.toFixed(1)}%`,
+      render: (value: number) => `${Math.round(value)} / 100`,
     },
     {
       id: "conversionRate",
-      label: "Conversion Rate",
+      label: SEGMENT_CVM_LABELS.takeUpRate,
       visible: true,
       sortable: true,
       filterConfig: { type: "number" },
@@ -421,11 +375,11 @@ export default function SegmentReportsPage() {
     },
     {
       id: "avgValue",
-      label: "Avg Value",
+      label: SEGMENT_CVM_LABELS.arpu,
       visible: true,
       sortable: true,
       filterConfig: { type: "number" },
-      render: (value: number) => `${value.toFixed(2)}`,
+      render: (value: number) => formatCurrency(value),
     },
     {
       id: "status",
@@ -591,8 +545,9 @@ export default function SegmentReportsPage() {
           sortOrder: "desc",
         });
         if (cancelled) return;
-        if (response.success && response.data) {
-          setLiveReport(response.data);
+        const normalized = normalizeSegmentReport(response);
+        if (response.success && normalized) {
+          setLiveReport(normalized);
         } else {
           setLiveReport(null);
           setLiveReportError(
@@ -620,6 +575,7 @@ export default function SegmentReportsPage() {
     queryParams.grain,
     queryParams.startDate,
     queryParams.endDate,
+    queryParams.preset,
   ]);
 
   const baseSummary = segmentSummary[activeRangeKey];
@@ -633,6 +589,11 @@ export default function SegmentReportsPage() {
         activeInCampaigns: 0,
         engagementRate: 0,
         conversionRate: 0,
+        activityScore: 0,
+        takeUpRate: 0,
+        arpu: 0,
+        activeSubscribers: 0,
+        dormantSubscribers: 0,
       };
     }
     if (scaleFactor === 1) return baseSummary;
@@ -640,97 +601,14 @@ export default function SegmentReportsPage() {
       ...baseSummary,
       totalMembers: Math.round(baseSummary.totalMembers * scaleFactor),
       activeInCampaigns: Math.round(baseSummary.activeInCampaigns * scaleFactor),
+      activeSubscribers: Math.round(baseSummary.activeSubscribers * scaleFactor),
+      dormantSubscribers: Math.round(baseSummary.dormantSubscribers * scaleFactor),
       avgMemberGrowth: baseSummary.avgMemberGrowth,
       engagementRate: baseSummary.engagementRate,
       conversionRate: baseSummary.conversionRate,
       totalSegments: baseSummary.totalSegments,
     };
   }, [baseSummary, scaleFactor, useDummyData, liveReport]);
-
-  const liveTrend = (
-    key: keyof NonNullable<SegmentReportsResponse["heroTrends"]>,
-  ) => ({
-    value:
-      liveReport?.heroTrends?.[key]?.label?.replace(" vs last period", "") ||
-      "—",
-    direction: liveReport?.heroTrends?.[key]?.direction || ("up" as const),
-  });
-
-  const heroCards = useDummyData
-    ? [
-        {
-          label: "Total Segments",
-          value: summary.totalSegments.toString(),
-          subtext: "Active segments in the system",
-          icon: statIcons.segments,
-          trend: { value: "+2", direction: "up" as const },
-        },
-        {
-          label: "Total Members",
-          value: summary.totalMembers.toLocaleString("en-US"),
-          subtext: "Combined members across all segments",
-          icon: statIcons.members,
-          trend: { value: "+28K", direction: "up" as const },
-        },
-        {
-          label: "Avg Member Growth",
-          value: `${summary.avgMemberGrowth.toFixed(1)}%`,
-          subtext: "Average growth rate",
-          icon: statIcons.growth,
-          trend: { value: "+2.1 pts", direction: "up" as const },
-        },
-        {
-          label: "Active in Campaigns",
-          value: summary.activeInCampaigns.toString(),
-          subtext: "Segments used in campaigns",
-          icon: statIcons.campaigns,
-          trend: { value: "+4", direction: "up" as const },
-        },
-        {
-          label: "Engagement Rate",
-          value: `${summary.engagementRate.toFixed(1)}%`,
-          subtext: "Average engagement",
-          icon: statIcons.engagement,
-          trend: { value: "+3.2 pts", direction: "up" as const },
-        },
-      ]
-    : [
-        {
-          label: "Total Segments",
-          value: summary.totalSegments.toString(),
-          subtext: "Active segments in the system",
-          icon: statIcons.segments,
-          trend: liveTrend("totalSegments"),
-        },
-        {
-          label: "Total Members",
-          value: summary.totalMembers.toLocaleString("en-US"),
-          subtext: "Combined members across all segments",
-          icon: statIcons.members,
-          trend: liveTrend("totalMembers"),
-        },
-        {
-          label: "Avg Member Growth",
-          value: `${summary.avgMemberGrowth.toFixed(1)}%`,
-          subtext: "Average growth rate",
-          icon: statIcons.growth,
-          trend: liveTrend("avgMemberGrowth"),
-        },
-        {
-          label: "Active in Campaigns",
-          value: summary.activeInCampaigns.toString(),
-          subtext: "Segments used in campaigns",
-          icon: statIcons.campaigns,
-          trend: liveTrend("activeInCampaigns"),
-        },
-        {
-          label: "Engagement Rate",
-          value: `${summary.engagementRate.toFixed(1)}%`,
-          subtext: "Average engagement",
-          icon: statIcons.engagement,
-          trend: liveTrend("engagementRate"),
-        },
-      ];
 
   const memberGrowthSeries = useMemo(() => {
     const window = {
@@ -753,12 +631,45 @@ export default function SegmentReportsPage() {
     liveReport,
   ]);
 
+  const livePreviousGrowth = usePreviousPeriodSeries<MemberGrowthPoint>({
+    enabled: comparePreviousPeriod && !useDummyData,
+    previousQueryParams,
+    fetchSeries: async (params) => {
+      const envelope = await segmentReportsService.getMemberGrowth({
+        range: params.range || timeWindow.rangeKey,
+        grain: params.grain,
+        startDate: params.startDate,
+        endDate: params.endDate,
+        preset: params.preset,
+      });
+      return pickNamedArray<MemberGrowthPoint>(envelope.data, [
+        "memberGrowth",
+        "growth",
+      ]);
+    },
+  });
+
   const memberGrowthComparison = useMemo(
     () =>
-      comparePreviousPeriod && useDummyData
-        ? dummyPreviousPeriod(memberGrowthSeries)
-        : undefined,
-    [comparePreviousPeriod, memberGrowthSeries, useDummyData],
+      resolveComparisonSeries({
+        compare: comparePreviousPeriod,
+        useDummyData,
+        current: memberGrowthSeries,
+        livePrevious: livePreviousGrowth,
+        previousQueryParams,
+        align: alignTrendSeries,
+      }),
+    [
+      comparePreviousPeriod,
+      livePreviousGrowth,
+      memberGrowthSeries,
+      previousQueryParams,
+      useDummyData,
+    ],
+  );
+  const previousComparisonLabel = formatPreviousComparisonLabel(
+    comparePreviousPeriod,
+    previousPeriodLabel,
   );
 
   const segmentColors = [
@@ -849,9 +760,9 @@ export default function SegmentReportsPage() {
         memberCount: row.memberCount,
         growthRate: row.growthRate,
         campaignsUsed: row.campaignsUsed,
-        engagementRate: row.engagementRate,
-        conversionRate: row.conversionRate,
-        avgValue: row.avgValue,
+        engagementRate: row.activityScore ?? row.engagementRate,
+        conversionRate: row.takeUpRate ?? row.conversionRate,
+        avgValue: row.arpu ?? row.avgValue,
         status: row.status === "Inactive" ? "Inactive" as const : "Active" as const,
         lastUpdated: row.lastUpdated
           ? formatDateWithTimezone(row.lastUpdated, getSettingsTimezoneOffset())
@@ -862,23 +773,26 @@ export default function SegmentReportsPage() {
       }));
     }
 
-    return segments.map((segment, index) => ({
-      id: String(segment.id),
-      name: segment.name || "Unknown",
-      memberCount: Math.floor(Math.random() * 500000) + 10000,
-      growthRate: -5 + Math.random() * 25,
-      campaignsUsed: Math.floor(Math.random() * 15) + 2,
-      engagementRate: 5 + Math.random() * 50,
-      conversionRate: 1 + Math.random() * 15,
-      avgValue: 50 + Math.random() * 1000,
-      status: (index % 3 === 0 ? "Inactive" : "Active") as "Active" | "Inactive",
-      lastUpdated: segment.updated_at
-        ? formatDateWithTimezone(segment.updated_at, getSettingsTimezoneOffset())
-        : "—",
-      lastUpdatedDate: segment.updated_at
-        ? new Date(segment.updated_at).getTime()
-        : Date.now(),
-    }));
+    return segments.map((segment) => {
+      const measures = dummySegmentMeasures(segment.id, segment.size_estimate);
+      return {
+        id: String(segment.id),
+        name: segment.name || "Unknown",
+        memberCount: measures.subscribers,
+        growthRate: measures.baseGrowth,
+        campaignsUsed: measures.campaignsTargeting,
+        engagementRate: measures.activityScore,
+        conversionRate: measures.takeUpRate,
+        avgValue: measures.arpu,
+        status: measures.status,
+        lastUpdated: segment.updated_at
+          ? formatDateWithTimezone(segment.updated_at, getSettingsTimezoneOffset())
+          : "—",
+        lastUpdatedDate: segment.updated_at
+          ? new Date(segment.updated_at).getTime()
+          : Date.now(),
+      };
+    });
   }, [segments, useDummyData, liveReport]);
 
   const filteredRows = useMemo(() => {
@@ -924,12 +838,12 @@ export default function SegmentReportsPage() {
 
   const csvHeaders = [
     "Segment Name",
-    "Members",
-    "Growth Rate",
-    "Campaigns Used",
-    "Engagement Rate",
-    "Conversion Rate",
-    "Avg Value",
+    SEGMENT_CVM_LABELS.subscribers,
+    SEGMENT_CVM_LABELS.baseGrowth,
+    SEGMENT_CVM_LABELS.campaignsTargeting,
+    SEGMENT_CVM_LABELS.activityScore,
+    SEGMENT_CVM_LABELS.takeUpRate,
+    SEGMENT_CVM_LABELS.arpu,
     "Status",
     "Last Updated",
   ];
@@ -939,9 +853,9 @@ export default function SegmentReportsPage() {
     row.memberCount.toString(),
     `${row.growthRate.toFixed(1)}%`,
     row.campaignsUsed.toString(),
-    `${row.engagementRate.toFixed(1)}%`,
+    `${Math.round(row.engagementRate)}`,
     `${row.conversionRate.toFixed(1)}%`,
-    `$${row.avgValue.toFixed(2)}`,
+    formatCurrency(row.avgValue),
     row.status,
     row.lastUpdated,
   ]);
@@ -953,8 +867,8 @@ export default function SegmentReportsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Segment Reports</h1>
           <p className="mt-2 text-base text-gray-600">
-            Track segment performance, member growth, and engagement metrics
-            across all audience segments
+            Track subscriber base, base growth, campaign targeting, activity
+            score, take-up, and ARPU across the segment portfolio
           </p>
         </div>
 
@@ -992,224 +906,123 @@ export default function SegmentReportsPage() {
         />
       </div>
 
-      {/* Hero KPI Cards */}
       {!isTrendsView && (
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        {heroCards.map((card, idx) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={idx}
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center gap-2">
-                <Icon
-                  className="h-5 w-5"
-                  style={{ color: colors.primary.accent }}
-                />
-                <p className="text-sm font-medium text-gray-600">
-                  {card.label}
-                </p>
-              </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {card.value}
-              </p>
-              <p className="mt-1 text-sm text-gray-500">{card.subtext}</p>
-              <div className="mt-3 flex items-center gap-1 text-xs">
-                <span
-                  className={`font-semibold ${
-                    card.trend.direction === "up"
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {card.trend.value}
-                </span>
-                <span className="text-gray-500">vs last period</span>
-              </div>
-            </div>
-          );
-        })}
-      </section>
+        <SegmentKpiGrid
+          summary={summary}
+          heroTrends={liveReport?.heroTrends}
+          useDummyData={useDummyData}
+        />
       )}
 
       {isTrendsView && (
       <section>
-        <ReportChartCard
-          title="Member Growth Timeline"
-          subtitle="Cumulative member growth over the selected period"
+        <SwitchableReportChart
+          title="Subscriber Base Growth"
+          subtitle="New subscribers and cumulative base over the selected period"
           filename="segment-member-growth.csv"
           audit={chartAudit}
           columns={[
             { key: "period", label: "Period" },
             { key: "date", label: "Date" },
-            { key: "members", label: "Period Members" },
-            { key: "cumulativeMembers", label: "Cumulative" },
+            { key: "members", label: SEGMENT_CVM_LABELS.newSubscribers },
+            { key: "cumulativeMembers", label: SEGMENT_CVM_LABELS.cumulativeBase },
           ]}
           rows={memberGrowthSeries}
-        >
-          <ReportGroupedBarChart
-            data={memberGrowthSeries}
-            xKey="period"
-            yLabel="Members"
-            yTickFormatter={(value) => value.toLocaleString("en-US")}
-            comparisonData={memberGrowthComparison}
-            series={[
-              {
-                dataKey: "members",
-                name: "Period Members",
-                color: colors.reportCharts.segmentReports.memberGrowth.members,
-              },
-              {
-                dataKey: "cumulativeMembers",
-                name: "Cumulative",
-                color: colors.reportCharts.segmentReports.memberGrowth.cumulative,
-              },
-            ]}
-          />
-        </ReportChartCard>
+          xKey="period"
+          yLabel={SEGMENT_CVM_LABELS.subscribers}
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          comparisonData={memberGrowthComparison}
+          comparisonLabel={previousComparisonLabel}
+          series={[
+            {
+              dataKey: "members",
+              name: SEGMENT_CVM_LABELS.newSubscribers,
+              color: colors.reportCharts.segmentReports.memberGrowth.members,
+            },
+            {
+              dataKey: "cumulativeMembers",
+              name: SEGMENT_CVM_LABELS.cumulativeBase,
+              color: colors.reportCharts.segmentReports.memberGrowth.cumulative,
+            },
+          ]}
+        />
       </section>
       )}
 
       {!isTrendsView && (
       <>
       <section className="grid gap-6 lg:grid-cols-2">
-        <ReportChartCard
-          title="Segment Size Distribution"
-          subtitle="Top segments by member count"
+        <SwitchableReportChart
+          title="Segment Size"
+          subtitle="Top segments by subscriber base"
           filename="segment-size-distribution.csv"
           audit={overviewAudit}
           columns={[
             { key: "segmentName", label: "Segment" },
-            { key: "members", label: "Members" },
+            { key: "members", label: SEGMENT_CVM_LABELS.subscribers },
           ]}
           rows={sizeDistributionSeries}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={sizeDistributionSeries}
-              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="segmentName"
-                angle={-45}
-                textAnchor="end"
-                height={100}
-                tick={{ fill: "#6b7280" }}
-              />
-              <YAxis tick={{ fill: "#6b7280" }} />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "transparent" }}
-              />
-              <Bar
-                dataKey="members"
-                name="Members"
-                maxBarSize={60}
-                radius={[4, 4, 0, 0]}
-              >
-                {sizeDistributionSeries.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ReportChartCard>
+          xKey="segmentName"
+          yLabel={SEGMENT_CVM_LABELS.subscribers}
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          emptyMessage="No segment sizes in this window."
+          series={[
+            {
+              dataKey: "members",
+              name: SEGMENT_CVM_LABELS.subscribers,
+              color: colors.reportCharts.segmentReports.sizeDistribution.segment1,
+            },
+          ]}
+        />
 
-        <ReportChartCard
-          title="Campaign Usage"
-          subtitle="Number of active campaigns per segment"
+        <SwitchableReportChart
+          title="Campaign Targeting"
+          subtitle="Campaigns using each segment as a target group"
           filename="segment-campaign-usage.csv"
           audit={overviewAudit}
           columns={[
             { key: "segmentName", label: "Segment" },
-            { key: "campaigns", label: "Campaigns" },
+            { key: "campaigns", label: SEGMENT_CVM_LABELS.campaignsTargeting },
           ]}
           rows={campaignUsageSeries}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={campaignUsageSeries}
-              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="segmentName"
-                angle={-45}
-                textAnchor="end"
-                height={100}
-                tick={{ fill: "#6b7280" }}
-              />
-              <YAxis tick={{ fill: "#6b7280" }} />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "transparent" }}
-              />
-              <Bar
-                dataKey="campaigns"
-                name="Campaigns"
-                maxBarSize={60}
-                radius={[4, 4, 0, 0]}
-              >
-                {campaignUsageSeries.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ReportChartCard>
+          xKey="segmentName"
+          yLabel={SEGMENT_CVM_LABELS.campaignsTargeting}
+          emptyMessage="No campaign usage in this window."
+          series={[
+            {
+              dataKey: "campaigns",
+              name: SEGMENT_CVM_LABELS.campaignsTargeting,
+              color: colors.reportCharts.segmentReports.campaignUsage.bar1,
+            },
+          ]}
+        />
 
-        <ReportChartCard
-          title="Performance Comparison"
-          subtitle="Engagement and conversion rates by segment"
+        <SwitchableReportChart
+          title="Segment Outcomes"
+          subtitle="Activity score and take-up rate by segment"
           filename="segment-performance-comparison.csv"
           audit={overviewAudit}
           columns={[
             { key: "segmentName", label: "Segment" },
-            { key: "engagement", label: "Engagement %" },
-            { key: "conversion", label: "Conversion %" },
+            { key: "engagement", label: SEGMENT_CVM_LABELS.activityScore },
+            { key: "conversion", label: SEGMENT_CVM_LABELS.takeUpRate },
           ]}
           rows={performanceComparison}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={performanceComparison}
-              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-              barCategoryGap="20%"
-              barGap={4}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="segmentName"
-                angle={-45}
-                textAnchor="end"
-                height={100}
-                tick={{ fill: "#6b7280" }}
-              />
-              <YAxis tick={{ fill: "#6b7280" }} />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "transparent" }}
-              />
-              <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-              <Bar
-                dataKey="engagement"
-                name="Engagement %"
-                fill={colors.reportCharts.segmentReports.performanceComparison.engagement}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={25}
-              />
-              <Bar
-                dataKey="conversion"
-                name="Conversion %"
-                fill={colors.reportCharts.segmentReports.performanceComparison.conversion}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={25}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ReportChartCard>
+          xKey="segmentName"
+          yLabel="Score / rate"
+          series={[
+            {
+              dataKey: "engagement",
+              name: SEGMENT_CVM_LABELS.activityScore,
+              color: colors.reportCharts.segmentReports.performanceComparison.engagement,
+            },
+            {
+              dataKey: "conversion",
+              name: SEGMENT_CVM_LABELS.takeUpRate,
+              color: colors.reportCharts.segmentReports.performanceComparison.conversion,
+            },
+          ]}
+        />
       </section>
 
       {/* Segment Data Table */}
@@ -1220,7 +1033,7 @@ export default function SegmentReportsPage() {
               Segment Performance Table
             </h2>
             <p className="mt-1 text-sm text-gray-600">
-              Detailed view of all segments with member and engagement metrics
+              Subscriber base, activity score, take-up, and ARPU for each segment
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">

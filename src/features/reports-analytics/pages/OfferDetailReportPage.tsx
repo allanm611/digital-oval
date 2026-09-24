@@ -1,16 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { useParams } from "react-router-dom";
-import { Coins, DollarSign, Gift, Sparkles, TrendingUp, Users2 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 import { colors } from "../../../shared/utils/tokens";
@@ -30,12 +19,12 @@ import type {
 } from "../types/ReportsAPI";
 import {
   buildOfferReportParams,
-  resolveHeroTrend,
   settledError,
   settledValue,
 } from "../utils/offerReportQuery";
+import { cvmOfferFunnel } from "../utils/offerCvmMetrics";
+import OfferKpiGrid from "../components/OfferKpiGrid";
 import {
-  asFiniteNumber,
   normalizeOfferPortfolio,
   offerPortfolioHasWidgets,
   pickNamedArray,
@@ -46,10 +35,14 @@ import {
   unwrapRevenueReport,
 } from "../utils/normalizeOfferReport";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
-import { alignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
+import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import { alignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
+import {
+  previousComparisonLabel as formatPreviousComparisonLabel,
+  resolveComparisonSeries,
+} from "../utils/reportComparison";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
-import ReportChartCard from "../components/ReportChartCard";
-import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
+import SwitchableReportChart from "../components/SwitchableReportChart";
 import { offerReportsService } from "../services/offerReportsService";
 import { offerService } from "../../offers/services/offerService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -111,22 +104,22 @@ const dummySummary: Record<RangeOption, OfferKpiSummary> = {
 
 const dummyFunnel: Record<RangeOption, FunnelPoint[]> = {
   "7d": [
-    { stage: "Exposed", value: 140_000 },
-    { stage: "Viewed", value: 68_000 },
-    { stage: "Engaged", value: 16_200 },
-    { stage: "Redeemed", value: 5_450 },
+    { stage: "Eligible", value: 140_000 },
+    { stage: "Offered", value: 68_000 },
+    { stage: "Taken Up", value: 16_200 },
+    { stage: "Fulfilled", value: 5_450 },
   ],
   "30d": [
-    { stage: "Exposed", value: 620_000 },
-    { stage: "Viewed", value: 298_000 },
-    { stage: "Engaged", value: 86_400 },
-    { stage: "Redeemed", value: 34_200 },
+    { stage: "Eligible", value: 620_000 },
+    { stage: "Offered", value: 298_000 },
+    { stage: "Taken Up", value: 86_400 },
+    { stage: "Fulfilled", value: 34_200 },
   ],
   "90d": [
-    { stage: "Exposed", value: 1_980_000 },
-    { stage: "Viewed", value: 965_000 },
-    { stage: "Engaged", value: 312_000 },
-    { stage: "Redeemed", value: 142_500 },
+    { stage: "Eligible", value: 1_980_000 },
+    { stage: "Offered", value: 965_000 },
+    { stage: "Taken Up", value: 312_000 },
+    { stage: "Fulfilled", value: 142_500 },
   ],
 };
 
@@ -153,47 +146,6 @@ const dummyTimeline: Record<RangeOption, TimelinePoint[]> = {
   ],
 };
 
-type ChartTooltipEntry = {
-  color?: string;
-  name?: string;
-  value?: number | string;
-};
-
-const CustomTooltip = ({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  label?: string;
-  payload?: ChartTooltipEntry[];
-}) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div key={idx} className="flex items-center justify-between gap-4 text-sm text-gray-600">
-          <span className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
-            {entry.name}
-          </span>
-          <span className="font-semibold text-gray-900">{entry.value}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const statIcons = {
-  users: Users2,
-  growth: TrendingUp,
-  revenue: DollarSign,
-  sparkles: Sparkles,
-  coins: Coins,
-  gift: Gift,
-};
-
 export default function OfferDetailReportPage() {
   const { id } = useParams<{ id: string }>();
   const { error: showError } = useToast();
@@ -203,7 +155,7 @@ export default function OfferDetailReportPage() {
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams, rangeKey, scaleFactor, overviewWindow, activeWindow, comparePreviousPeriod } = timeWindow;
+  const { isTrendsView, queryParams, rangeKey, scaleFactor, overviewWindow, activeWindow, comparePreviousPeriod, previousQueryParams, previousPeriodLabel } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
   const [useDummyData, setUseDummyData] = useState(true);
@@ -360,68 +312,14 @@ export default function OfferDetailReportPage() {
     };
   }, [baseSummary, scaleFactor, useDummyData, liveDetail]);
 
-  const heroCards = [
-    {
-      label: "Total Redemptions",
-      value: summary.totalRedemptions.toLocaleString("en-US"),
-      subtext: `${asFiniteNumber(summary.converted || summary.totalRedemptions).toLocaleString("en-US")} conversions`,
-      icon: statIcons.users,
-      trend: useDummyData
-        ? { value: "+12.8%", direction: "up" as const }
-        : resolveHeroTrend(liveDetail?.heroTrends?.totalRedemptions),
-    },
-    {
-      label: "Redemption Rate",
-      value: `${summary.redemptionRate.toFixed(1)}%`,
-      subtext: "Customers who used this offer",
-      icon: statIcons.growth,
-      trend: useDummyData
-        ? { value: "+0.6 pts", direction: "up" as const }
-        : resolveHeroTrend(liveDetail?.heroTrends?.redemptionRate),
-    },
-    {
-      label: "Revenue Generated",
-      value: formatCurrency(summary.revenueGenerated),
-      subtext: "Attributed sales from this offer",
-      icon: statIcons.revenue,
-      trend: useDummyData
-        ? { value: "+156K", direction: "up" as const }
-        : resolveHeroTrend(liveDetail?.heroTrends?.revenueGenerated),
-    },
-    {
-      label: "Incremental Revenue",
-      value: formatCurrency(summary.incrementalRevenue),
-      subtext: "Lift versus organic demand",
-      icon: statIcons.sparkles,
-      trend: useDummyData
-        ? { value: "+42K", direction: "up" as const }
-        : resolveHeroTrend(liveDetail?.heroTrends?.incrementalRevenue),
-    },
-    {
-      label: "Total Cost",
-      value: formatCurrency(summary.totalCost),
-      subtext: "Reward and delivery cost",
-      icon: statIcons.coins,
-      trend: useDummyData
-        ? { value: "+18K", direction: "up" as const }
-        : resolveHeroTrend(liveDetail?.heroTrends?.totalCost),
-    },
-    {
-      label: "ROI",
-      value: `${summary.roi.toFixed(1)}x`,
-      subtext: "Revenue per unit spent",
-      icon: statIcons.gift,
-      trend: useDummyData
-        ? { value: "+0.2x", direction: "up" as const }
-        : resolveHeroTrend(liveDetail?.heroTrends?.roi),
-    },
-  ];
-
   const funnelSeries = useMemo(() => {
-    if (!useDummyData) return liveDetail?.funnel || [];
+    if (!useDummyData) return cvmOfferFunnel(liveDetail?.funnel || []);
     const base = dummyFunnel[rangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({ ...point, value: Math.round(point.value * scaleFactor) }));
+    const scaled =
+      scaleFactor === 1
+        ? base
+        : base.map((point) => ({ ...point, value: Math.round(point.value * scaleFactor) }));
+    return cvmOfferFunnel(scaled);
   }, [useDummyData, liveDetail, rangeKey, scaleFactor]);
 
   const timelineSeries = useMemo(() => {
@@ -437,12 +335,51 @@ export default function OfferDetailReportPage() {
     );
   }, [useDummyData, liveDetail, queryParams.startDate, queryParams.endDate, queryParams.grain]);
 
+  const livePreviousTimeline = usePreviousPeriodSeries<TimelinePoint>({
+    enabled: comparePreviousPeriod && !useDummyData && Boolean(id),
+    previousQueryParams: {
+      ...previousQueryParams,
+      offerId: id,
+    },
+    fetchSeries: async (params) => {
+      const envelope = await offerReportsService.getTimeline(
+        buildOfferReportParams({
+          range: params.range || rangeKey,
+          grain: params.grain,
+          startDate: params.startDate,
+          endDate: params.endDate,
+          preset: params.preset,
+          offerId: id,
+        }),
+      );
+      return pickNamedArray<TimelinePoint>(envelope.data, [
+        "redemptionTimeline",
+        "timeline",
+      ]);
+    },
+  });
+
   const timelineComparison = useMemo(
     () =>
-      comparePreviousPeriod && useDummyData
-        ? dummyPreviousPeriod(timelineSeries)
-        : undefined,
-    [comparePreviousPeriod, timelineSeries, useDummyData],
+      resolveComparisonSeries({
+        compare: comparePreviousPeriod,
+        useDummyData,
+        current: timelineSeries,
+        livePrevious: livePreviousTimeline,
+        previousQueryParams,
+        align: alignTrendSeries,
+      }),
+    [
+      comparePreviousPeriod,
+      livePreviousTimeline,
+      previousQueryParams,
+      timelineSeries,
+      useDummyData,
+    ],
+  );
+  const previousComparisonLabel = formatPreviousComparisonLabel(
+    comparePreviousPeriod,
+    previousPeriodLabel,
   );
 
   const typeSeries = useMemo(
@@ -471,7 +408,7 @@ export default function OfferDetailReportPage() {
             {offer?.name || liveDetail?.eligibility?.name || "Offer Report"}
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Redemption, revenue, eligibility, and lifecycle for this offer
+            Eligibility, take-up, fulfilment, and incremental value for this offer
           </p>
         </div>
         <ReportTrendsToolbar
@@ -510,72 +447,41 @@ export default function OfferDetailReportPage() {
       )}
 
       {!isTrendsView && (
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {heroCards.map((card) => {
-          const Icon = card.icon;
-          const trendColor =
-            card.trend.direction === "up"
-              ? "text-emerald-600"
-              : card.trend.direction === "down"
-                ? "text-red-600"
-                : "text-gray-500";
-          return (
-            <div key={card.label} className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Icon className="h-5 w-5" style={{ color: colors.primary.accent }} />
-                  <p className="text-sm font-medium text-gray-600">{card.label}</p>
-                </div>
-                <span className={`text-xs font-semibold ${trendColor}`}>
-                  {card.trend.direction === "up" ? "↑" : card.trend.direction === "down" ? "↓" : "•"} {card.trend.value}
-                </span>
-              </div>
-              <p className="mt-3 text-3xl font-bold text-gray-900">{card.value}</p>
-              <p className="mt-1 text-sm text-gray-500">{card.subtext}</p>
-            </div>
-          );
-        })}
-      </section>
+        <OfferKpiGrid
+          summary={summary}
+          funnel={funnelSeries}
+          heroTrends={liveDetail?.heroTrends}
+          useDummyData={useDummyData}
+        />
       )}
 
       {!isTrendsView && (
         <section className="grid gap-6 lg:grid-cols-2">
-          <ReportChartCard
-            title="Redemption Funnel"
-            subtitle="Exposure through redemption for this offer"
-            filename="offer-detail-redemption-funnel.csv"
+          <SwitchableReportChart
+            title="Offer Outcome Stages"
+            subtitle="Eligible, offered, taken up, and fulfilled"
+            filename="offer-detail-outcome-stages.csv"
             audit={overviewAudit}
             columns={[
               { key: "stage", label: "Stage" },
-              { key: "value", label: "Users" },
+              { key: "value", label: "Customers" },
             ]}
             rows={funnelSeries}
-          >
-            {!useDummyData && !isLoadingLiveReport && funnelSeries.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                No redemption stages in this window.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={funnelSeries} margin={{ top: 20, right: 24, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="stage" tick={{ fill: "#6b7280" }} />
-                  <YAxis tick={{ fill: "#6b7280" }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
-                  <Bar
-                    dataKey="value"
-                    name="Users"
-                    fill={colors.reportCharts.offerReports.redemptionFunnel.value}
-                    maxBarSize={60}
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </ReportChartCard>
+            xKey="stage"
+            yLabel="Customers"
+            yTickFormatter={(value) => value.toLocaleString("en-US")}
+            emptyMessage="No offer outcome stages in this window."
+            series={[
+              {
+                dataKey: "value",
+                name: "Customers",
+                color: colors.reportCharts.offerReports.redemptionFunnel.value,
+              },
+            ]}
+          />
           <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <h2 className="text-xl font-semibold text-gray-900">Eligibility</h2>
-            <p className="mt-1 text-sm text-gray-600">Offer rules and lifetime redemption</p>
+            <p className="mt-1 text-sm text-gray-600">Offer rules and lifetime take-up</p>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between gap-4">
                 <dt className="text-gray-600">Code</dt>
@@ -598,7 +504,7 @@ export default function OfferDetailReportPage() {
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-gray-600">Unique redeemers</dt>
+                <dt className="text-gray-600">Unique customers taken up</dt>
                 <dd className="font-semibold text-gray-900">
                   {Number(liveDetail?.eligibility?.uniqueRedeemers || 0).toLocaleString("en-US")}
                 </dd>
@@ -609,81 +515,71 @@ export default function OfferDetailReportPage() {
       )}
 
       {!isTrendsView && typeSeries.length > 0 && (
-        <ReportChartCard
+        <SwitchableReportChart
           title="Offer Type Context"
-          subtitle="How this offer’s type compares on redemption and AOV"
+          subtitle="How this offer type compares on take-up and value per take-up"
           filename="offer-detail-type-context.csv"
           audit={overviewAudit}
-          chartClassName="h-72"
           columns={[
             { key: "type", label: "Type" },
-            { key: "redemptionRate", label: "Redemption Rate %" },
-            { key: "aov", label: "Avg Transaction Value" },
+            { key: "redemptionRate", label: "Take-up Rate %" },
+            { key: "aov", label: "Value per Take-up" },
           ]}
           rows={typeSeries}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={typeSeries} margin={{ top: 20, right: 24, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="type" tick={{ fill: "#6b7280" }} />
-              <YAxis tick={{ fill: "#6b7280" }} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
-              <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-              <Bar
-                dataKey="redemptionRate"
-                name="Redemption Rate %"
-                fill={colors.reportCharts.offerReports.offerTypeComparison.redemptionRate}
-                maxBarSize={40}
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                dataKey="aov"
-                name="Avg Transaction Value"
-                fill={colors.reportCharts.offerReports.offerTypeComparison.avgTransactionValue}
-                maxBarSize={40}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ReportChartCard>
+          xKey="type"
+          yLabel="Take-up Rate (%)"
+          yTickFormatter={(value) => `${value}%`}
+          rightYLabel="Value per Take-up"
+          series={[
+            {
+              dataKey: "redemptionRate",
+              name: "Take-up Rate %",
+              color: colors.reportCharts.offerReports.offerTypeComparison.redemptionRate,
+              valueFormatter: (value) => `${value}%`,
+            },
+            {
+              dataKey: "aov",
+              name: "Value per Take-up",
+              color: colors.reportCharts.offerReports.offerTypeComparison.avgTransactionValue,
+              axis: "right",
+            },
+          ]}
+        />
       )}
 
       {isTrendsView && (
         <section>
-          <ReportChartCard
-            title="Redemption Timeline"
-            subtitle="Redemption volume over the selected period"
-            filename="offer-detail-redemption-timeline.csv"
+          <SwitchableReportChart
+            title="Take-up Timeline"
+            subtitle="Take-up volume over the selected period"
+            filename="offer-detail-take-up-timeline.csv"
             audit={chartAudit}
             columns={[
               { key: "period", label: "Period" },
               { key: "date", label: "Date" },
-              { key: "redemptions", label: "Redemptions" },
-              { key: "cumulativeRedemptions", label: "Cumulative" },
+              { key: "redemptions", label: "Take-ups" },
+              { key: "cumulativeRedemptions", label: "Cumulative Take-ups" },
             ]}
             rows={timelineSeries}
-          >
-            <ReportGroupedBarChart
-              data={timelineSeries}
-              xKey="period"
-              yLabel="Redemptions"
-              yTickFormatter={(value) => value.toLocaleString("en-US")}
-              emptyMessage="No redemption activity in this window."
-              comparisonData={timelineComparison}
-              series={[
-                {
-                  dataKey: "redemptions",
-                  name: "Redemptions",
-                  color: colors.reportCharts.offerReports.redemptionTimeline.redemptions,
-                },
-                {
-                  dataKey: "cumulativeRedemptions",
-                  name: "Cumulative",
-                  color: colors.reportCharts.offerReports.redemptionTimeline.cumulative,
-                },
-              ]}
-            />
-          </ReportChartCard>
+            xKey="period"
+            yLabel="Take-ups"
+            yTickFormatter={(value) => value.toLocaleString("en-US")}
+            emptyMessage="No take-up activity in this window."
+            comparisonData={timelineComparison}
+            comparisonLabel={previousComparisonLabel}
+            series={[
+              {
+                dataKey: "redemptions",
+                name: "Take-ups",
+                color: colors.reportCharts.offerReports.redemptionTimeline.redemptions,
+              },
+              {
+                dataKey: "cumulativeRedemptions",
+                name: "Cumulative",
+                color: colors.reportCharts.offerReports.redemptionTimeline.cumulative,
+              },
+            ]}
+          />
         </section>
       )}
 
@@ -691,15 +587,15 @@ export default function OfferDetailReportPage() {
         <>
           <section className="grid gap-6 lg:grid-cols-2">
             <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-              <h2 className="text-xl font-semibold text-gray-900">Revenue</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Value</h2>
               <p className="mt-1 text-sm text-gray-600">Efficiency versus reward and delivery cost</p>
               <dl className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Total revenue</dt>
+                  <dt className="text-gray-600">Value generated</dt>
                   <dd className="font-semibold text-gray-900">{formatCurrency(liveDetail?.revenue?.totalRevenue || 0)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Incremental revenue</dt>
+                  <dt className="text-gray-600">Incremental value</dt>
                   <dd className="font-semibold text-gray-900">{formatCurrency(liveDetail?.revenue?.incrementalRevenue || 0)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
@@ -711,17 +607,17 @@ export default function OfferDetailReportPage() {
                   <dd className="font-semibold text-gray-900">{formatCurrency(liveDetail?.revenue?.deliveryCost || 0)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">ROI</dt>
+                  <dt className="text-gray-600">ROMI</dt>
                   <dd className="font-semibold text-gray-900">{(liveDetail?.revenue?.roi || 0).toFixed(1)}x</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Revenue / converter</dt>
+                  <dt className="text-gray-600">Value per take-up</dt>
                   <dd className="font-semibold text-gray-900">{formatCurrency(liveDetail?.revenue?.revenuePerConverter || 0)}</dd>
                 </div>
               </dl>
             </div>
             <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-              <h2 className="text-xl font-semibold text-gray-900">Redemptions</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Reward Fulfilment</h2>
               <p className="mt-1 text-sm text-gray-600">Reward volume and cost by status</p>
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -736,7 +632,7 @@ export default function OfferDetailReportPage() {
                   <tbody>
                     {(liveDetail?.redemption || []).length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-6 text-center text-gray-500">No redemptions in this period.</td>
+                        <td colSpan={4} className="py-6 text-center text-gray-500">No reward fulfilments in this period.</td>
                       </tr>
                     )}
                     {(liveDetail?.redemption || []).map((row, index) => (

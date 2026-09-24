@@ -21,6 +21,10 @@ export type HintSegment = {
   description?: string;
   addedAt?: string | null;
   isActive?: boolean;
+  matchedIdentifier?: string | null;
+  matchedIdentifierType?: CustomerIdentifierKind | null;
+  memberCount?: number | null;
+  campaigns?: unknown[];
 };
 
 export function asRecord(value: unknown): Record<string, unknown> | null {
@@ -81,6 +85,12 @@ export function parseHintSegment(
   const id = numericId(row.id ?? row.segment_id ?? row.segmentId);
   const name = stringOrNull(row.name ?? row.segment_name ?? row.segmentName);
   if (!id && !name) return null;
+  const identifierTypeRaw = stringOrNull(
+    row.identifier_type ?? row.matched_identifier_type,
+  )?.toLowerCase();
+  const matchedIdentifier =
+    stringOrNull(row.identifier ?? row.msisdn ?? row.email ?? row.subscriber_id);
+  const nestedCampaigns = row.campaigns;
   return {
     id: id ?? index + 1,
     name: name || `Segment ${id ?? index + 1}`,
@@ -94,6 +104,24 @@ export function parseHintSegment(
         : typeof row.isActive === "boolean"
           ? row.isActive
           : undefined,
+    matchedIdentifier,
+    matchedIdentifierType:
+      identifierTypeRaw === "msisdn" ||
+      identifierTypeRaw === "email" ||
+      identifierTypeRaw === "id"
+        ? identifierTypeRaw
+        : matchedIdentifier?.includes("@")
+          ? "email"
+          : matchedIdentifier
+            ? "msisdn"
+            : null,
+    memberCount:
+      typeof row.member_count === "number"
+        ? row.member_count
+        : typeof row.size_estimate === "number"
+          ? row.size_estimate
+          : null,
+    campaigns: Array.isArray(nestedCampaigns) ? nestedCampaigns : undefined,
   };
 }
 
@@ -176,7 +204,9 @@ export function membershipFromSegment(
 
 export function membershipFromHint(
   hint: HintSegment,
+  verification: CustomerSegmentMembership["verification"] = "hint",
 ): CustomerSegmentMembership {
+  const via = { segmentId: hint.id, segmentName: hint.name };
   return {
     id: `segment-${hint.id}`,
     segmentId: hint.id,
@@ -186,11 +216,13 @@ export function membershipFromHint(
     type: String(hint.type || "static"),
     isActive: hint.isActive ?? true,
     addedAt: hint.addedAt ?? null,
-    matchedIdentifier: null,
-    matchedIdentifierType: null,
-    memberCount: null,
-    verification: "hint",
-    campaigns: [],
+    matchedIdentifier: hint.matchedIdentifier ?? null,
+    matchedIdentifierType: hint.matchedIdentifierType ?? null,
+    memberCount: hint.memberCount ?? null,
+    verification,
+    campaigns: (hint.campaigns ?? [])
+      .map((item) => parseCampaignFromUnknown(item, via))
+      .filter((item): item is CustomerSegmentCampaign => Boolean(item)),
   };
 }
 

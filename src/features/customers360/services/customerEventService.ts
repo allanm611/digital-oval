@@ -2,8 +2,13 @@ import { campaignService } from "../../campaigns/services/campaignService";
 import { offerService } from "../../offers/services/offerService";
 import { offerCreativeService } from "../../offers/services/offerCreativeService";
 import type { CreativeChannel } from "../../offers/types/offerCreative";
-import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
 import { engineTrackingSourceService } from "../../configurations/services/engineTrackingSourceService";
+import { communicationChannelService } from "../../../shared/services/communicationChannelService";
+import { asRecord } from "../utils/customerSegmentHelpers";
+import {
+  fetchSubscriberResource,
+  SubscriberResourceError,
+} from "./subscriberResourceClient";
 import type {
   CustomerEvent,
   CustomerEventCampaignSummary,
@@ -11,6 +16,7 @@ import type {
   CustomerEventListResult,
   CustomerEventOfferSummary,
   CustomerEventQuery,
+  CommunicationChannelOption,
   TrackingSourceOption,
 } from "../types/customerEvent";
 import {
@@ -18,7 +24,6 @@ import {
   buildEventFacets,
   EMPTY_EVENT_COUNTS,
   filterCustomerEvents,
-  generateFallbackCustomerEvents,
   isCommunicationLinkedEvent,
   normalizeCustomerEvent,
   parseApiCounts,
@@ -75,7 +80,6 @@ const offerCache = new Map<number, CustomerEventOfferSummary>();
 const campaignCache = new Map<number, CustomerEventCampaignSummary>();
 const creativeCache = new Map<number, CustomerEventCreativeSummary>();
 const latestCreativeCache = new Map<string, CustomerEventCreativeSummary>();
-const FALLBACK_CACHE = new Map<string, CustomerEvent[]>();
 
 function emptyEventResult(
   source: CustomerEventListResult["source"] = "fallback",
@@ -225,6 +229,16 @@ async function loadEventRelatedDetails(
   };
 }
 
+const EVENT_PAGE_SIZE = 50;
+const EVENT_MAX_PAGES = 10;
+const SERVER_PRESETS = new Set([
+  "last_1h",
+  "last_24h",
+  "last_7d",
+  "last_30d",
+  "last_90d",
+]);
+
 function queryToSearchParams(query: CustomerEventQuery): URLSearchParams {
   const params = new URLSearchParams();
   if (query.search?.trim()) params.set("search", query.search.trim());
@@ -242,12 +256,37 @@ function queryToSearchParams(query: CustomerEventQuery): URLSearchParams {
   if (query.origin && query.origin !== "all") params.set("origin", query.origin);
   if (query.status && query.status !== "all") params.set("status", query.status);
   if (query.channel && query.channel !== "all") params.set("channel", query.channel);
-  if (query.time_preset) params.set("preset", query.time_preset);
-  if (query.date_from) params.set("from", query.date_from);
-  if (query.date_to) params.set("to", query.date_to);
-  params.set("limit", String(query.limit ?? 500));
-  params.set("offset", String(query.offset ?? 0));
+  if (query.time_preset && SERVER_PRESETS.has(query.time_preset)) {
+    params.set("preset", query.time_preset);
+  }
+  if (query.time_preset === "custom") {
+    if (query.date_from) params.set("from", query.date_from);
+    if (query.date_to) params.set("to", query.date_to);
+  }
+  if (query.limit != null) {
+    params.set(
+      "limit",
+      String(Math.min(Math.max(query.limit, 1), EVENT_PAGE_SIZE)),
+    );
+  }
+  if ((query.offset ?? 0) > 0) {
+    params.set("offset", String(query.offset));
+  }
   return params;
+}
+
+function paginationHasMore(payload: unknown, pageSize: number): boolean {
+  const record = asRecord(payload);
+  const pagination = asRecord(record?.pagination) || asRecord(record?.meta);
+  if (!pagination) return false;
+  if (pagination.hasMore === true || pagination.has_more === true) return true;
+  const total = Number(pagination.total ?? pagination.count);
+  const offset = Number(pagination.offset ?? 0);
+  const limit = Number(pagination.limit ?? pageSize);
+  if (Number.isFinite(total) && Number.isFinite(offset) && Number.isFinite(limit)) {
+    return offset + limit < total;
+  }
+  return false;
 }
 
 function buildResult(
@@ -274,96 +313,147 @@ function buildResult(
   };
 }
 
+async function fetchEventsPage(
+  subscriberId: string,
+  query: URLSearchParams | undefined,
+): Promise<unknown> {
+  const { payload } = await fetchSubscriberResource(
+    subscriberId,
+    ["/events"],
+    query,
+  );
+  return payload;
+}
+
 async function fetchFromApi(
   subscriberId: string,
   query: CustomerEventQuery,
 ): Promise<CustomerEventListResult> {
-  const params = queryToSearchParams(query);
-  const url = `${API_CONFIG.BASE_URL}/subscribers/${encodeURIComponent(subscriberId)}/events?${params.toString()}`;
-  const response = await fetch(url, {
-    headers: getAuthHeaders(),
-  });
+  const collected: CustomerEvent[] = [];
+  let apiCounts: CustomerEventListResult["counts"] | null = null;
+  let useBareQuery = false;
 
-  if (!response.ok) {
-    throw new Error(`Events API returned ${response.status}`);
+  for (let page = 0; page < EVENT_MAX_PAGES; page += 1) {
+    const offset = collected.length;
+    const pageQuery = queryToSearchParams({
+      ...query,
+      limit: offset > 0 ? EVENT_PAGE_SIZE : query.limit,
+      offset,
+    });
+    const requestQuery = pageQuery.toString() ? pageQuery : undefined;
+    let payload: unknown;
+    try {
+      payload = await fetchEventsPage(
+        subscriberId,
+        useBareQuery ? undefined : requestQuery,
+      );
+    } catch (error) {
+      const isBadRequest =
+        error instanceof SubscriberResourceError && error.status === 400;
+      if (isBadRequest && !useBareQuery && page === 0 && requestQuery) {
+        useBareQuery = true;
+        payload = await fetchEventsPage(subscriberId, undefined);
+      } else {
+        throw error;
+      }
+    }
+
+    const record = asRecord(payload) ?? {};
+    const pageEvents = unwrapEventList(payload)
+      .map((item, index) =>
+        normalizeCustomerEvent(item, collected.length + index),
+      )
+      .filter((item): item is CustomerEvent => Boolean(item));
+
+    if (!apiCounts) apiCounts = parseApiCounts(record.counts);
+    collected.push(...pageEvents);
+
+    if (useBareQuery) break;
+    if (pageEvents.length === 0) break;
+    if (!paginationHasMore(payload, EVENT_PAGE_SIZE)) break;
   }
 
-  const payload = await response.json();
-  const record =
-    payload && typeof payload === "object"
-      ? (payload as Record<string, unknown>)
-      : {};
-
-  if (record.success === false) {
-    throw new Error(
-      typeof record.message === "string"
-        ? record.message
-        : "Events API returned an unsuccessful response",
-    );
-  }
-
-  const rawEvents = unwrapEventList(payload);
-  const allEvents = rawEvents
-    .map((item, index) => normalizeCustomerEvent(item, index))
-    .filter((item): item is CustomerEvent => Boolean(item));
-
-  const apiCounts = parseApiCounts(record.counts);
-
-  return buildResult(allEvents, query, "api", apiCounts);
+  return buildResult(collected, query, "api", apiCounts);
 }
 
-function getFallbackEvents(subscriberId: string): CustomerEvent[] {
-  const cached = FALLBACK_CACHE.get(subscriberId);
-  if (cached) return cached;
-  const generated = generateFallbackCustomerEvents(subscriberId);
-  FALLBACK_CACHE.set(subscriberId, generated);
-  return generated;
-}
-
-function getFallbackResult(
-  subscriberId: string,
-  query: CustomerEventQuery,
-): CustomerEventListResult {
-  try {
-    return buildResult(getFallbackEvents(subscriberId), query, "fallback");
-  } catch {
-    return emptyEventResult("fallback");
-  }
-}
+export type GetSubscriberEventsOptions = {
+  throwOnError?: boolean;
+  customerRecord?: Record<string, unknown> | null;
+};
 
 export const customerEventService = {
   async getSubscriberEvents(
     subscriberId: string | number,
     query: CustomerEventQuery = {},
+    options?: GetSubscriberEventsOptions,
   ): Promise<CustomerEventListResult> {
-    const id = String(subscriberId);
-    if (!id) return emptyEventResult("fallback");
+    const id = String(subscriberId ?? "").trim();
+    if (!id) return emptyEventResult("api");
 
     try {
       return await fetchFromApi(id, query);
-    } catch {
-      // Events API is not always deployed yet; keep the profile usable.
-      return getFallbackResult(id, query);
+    } catch (error) {
+      if (options?.throwOnError === false) {
+        return emptyEventResult("fallback");
+      }
+      throw error;
     }
   },
 
   async getTrackingSourceOptions(): Promise<TrackingSourceOption[]> {
-    try {
-      const sources = await engineTrackingSourceService.getAll({
-        is_active: true,
-        limit: 200,
-      });
-      if (sources.length > 0) {
-        return sources.map((source) => ({
+    const toOptions = (
+      sources: Array<{
+        id: number;
+        name: string;
+        code: string;
+        sourceType?: string;
+        isActive?: boolean;
+      }>,
+    ): TrackingSourceOption[] =>
+      sources
+        .filter((source) => source.isActive !== false)
+        .map((source) => ({
           id: String(source.id),
-          name: source.name || source.code,
+          name: source.name || source.code || String(source.id),
+          code: source.code || String(source.id),
           sourceType: String(source.sourceType || ""),
         }));
-      }
+
+    try {
+      const active = await engineTrackingSourceService.getAll({
+        is_active: true,
+        limit: 500,
+      });
+      if (active.length > 0) return toOptions(active);
     } catch {
-      // Catalog may be empty or unreachable; event facets still populate the filter.
+      // Retry without the active filter — some environments ignore or reject it.
     }
-    return [];
+
+    try {
+      return toOptions(
+        await engineTrackingSourceService.getAll({ limit: 500 }),
+      );
+    } catch {
+      return [];
+    }
+  },
+
+  async getCommunicationChannelOptions(): Promise<CommunicationChannelOption[]> {
+    try {
+      const channels = await communicationChannelService.getAll();
+      return channels
+        .filter((channel) => {
+          const record = channel as { is_active?: boolean; isActive?: boolean };
+          return record.is_active !== false && record.isActive !== false;
+        })
+        .map((channel) => ({
+          id: String(channel.id),
+          name: channel.name || channel.code || String(channel.id),
+          code: String(channel.code || channel.id).trim(),
+        }));
+    } catch {
+      return [];
+    }
   },
 
   loadEventRelatedDetails,

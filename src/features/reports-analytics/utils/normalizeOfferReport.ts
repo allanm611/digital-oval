@@ -39,7 +39,10 @@ function isSummaryLike(value: unknown): value is Record<string, unknown> {
       "redemptionRate" in value ||
       "revenueGenerated" in value ||
       "incrementalRevenue" in value ||
-      "roi" in value)
+      "roi" in value ||
+      "eligible" in value ||
+      "takenUp" in value ||
+      "taken_up" in value)
   );
 }
 
@@ -66,6 +69,20 @@ function normalizeSummary(value: Record<string, unknown>): OfferKpiSummary {
     openRate: asFiniteNumber(value.openRate ?? value.open_rate),
     clickRate: asFiniteNumber(value.clickRate ?? value.click_rate),
     conversionRate: asFiniteNumber(value.conversionRate ?? value.conversion_rate ?? value.redemptionRate),
+    eligible: asFiniteNumber(value.eligible ?? value.eligibleAudience ?? value.eligible_audience),
+    offered: asFiniteNumber(value.offered ?? value.presented ?? value.sent),
+    takenUp: asFiniteNumber(
+      value.takenUp ?? value.taken_up ?? value.totalRedemptions ?? value.converted,
+    ),
+    fulfilled: asFiniteNumber(value.fulfilled ?? value.provisioned ?? value.uniqueConverters),
+    targetGroup: asFiniteNumber(value.targetGroup ?? value.target_group),
+    controlGroup: asFiniteNumber(value.controlGroup ?? value.control_group),
+    targetGroupTakenUp: asFiniteNumber(
+      value.targetGroupTakenUp ?? value.target_group_taken_up,
+    ),
+    controlGroupTakenUp: asFiniteNumber(
+      value.controlGroupTakenUp ?? value.control_group_taken_up,
+    ),
   };
 }
 
@@ -86,6 +103,14 @@ export function unwrapOfferSummary(value: unknown): OfferKpiSummary | undefined 
       openRate: extras.openRate || nested.openRate,
       clickRate: extras.clickRate || nested.clickRate,
       conversionRate: extras.conversionRate || nested.conversionRate,
+      eligible: extras.eligible || nested.eligible,
+      offered: extras.offered || nested.offered,
+      takenUp: extras.takenUp || nested.takenUp,
+      fulfilled: extras.fulfilled || nested.fulfilled,
+      targetGroup: extras.targetGroup || nested.targetGroup,
+      controlGroup: extras.controlGroup || nested.controlGroup,
+      targetGroupTakenUp: extras.targetGroupTakenUp || nested.targetGroupTakenUp,
+      controlGroupTakenUp: extras.controlGroupTakenUp || nested.controlGroupTakenUp,
     };
   }
   if (isSummaryLike(value)) return normalizeSummary(value);

@@ -31,7 +31,12 @@ import {
   unwrapHeroTrends,
 } from "../utils/normalizeCampaignReport";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
-import { fillCampaignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
+import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import { fillCampaignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
+import {
+  previousComparisonLabel as formatPreviousComparisonLabel,
+  resolveComparisonSeries,
+} from "../utils/reportComparison";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
 import ChannelReachContributionChart from "../components/ChannelReachContributionChart";
 import ReportChartCard from "../components/ReportChartCard";
@@ -51,7 +56,7 @@ import {
   scaleCampaignSummary,
   scaleChannelReach,
 } from "../utils/campaignReportDummy";
-import { emptyCampaignSummary } from "../utils/campaignCvmMetrics";
+import { cvmDeliveryFunnel, emptyCampaignSummary } from "../utils/campaignCvmMetrics";
 
 type CampaignSummary = CampaignReportsResponse["summary"];
 type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
@@ -96,6 +101,7 @@ export default function CampaignDetailReportPage() {
     scaleFactor,
     comparePreviousPeriod,
     previousPeriodLabel,
+    previousQueryParams,
   } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
@@ -292,15 +298,11 @@ export default function CampaignDetailReportPage() {
     return scaleChannelReach(dummySnapshot.channelReach, dummyScale);
   }, [dummySnapshot.channelReach, dummyScale, useDummyData, liveDetail]);
 
-  const funnelSeries = useMemo(() => {
-    if (!useDummyData) {
-      return liveDetail?.funnel || [];
-    }
-    return dummySnapshot.conversionFunnel.map((point) => ({
-      ...point,
-      value: Math.round(point.value * dummyScale),
-    }));
-  }, [dummySnapshot.conversionFunnel, dummyScale, useDummyData, liveDetail]);
+  const funnelSeries = useMemo(
+    () =>
+      cvmDeliveryFunnel(summary, useDummyData ? [] : liveDetail?.funnel || []),
+    [liveDetail?.funnel, summary, useDummyData],
+  );
 
   const trendSeries = useMemo(() => {
     const window = {
@@ -335,28 +337,60 @@ export default function CampaignDetailReportPage() {
     [trendSeries],
   );
 
+  const livePreviousTrend = usePreviousPeriodSeries<TrendPoint>({
+    enabled: comparePreviousPeriod && !useDummyData && Boolean(id),
+    previousQueryParams: {
+      ...previousQueryParams,
+      campaignId: id,
+    },
+    fetchSeries: async (params) => {
+      if (!id) return [];
+      const envelope = await campaignReportsService.getCampaignTrends(
+        id,
+        buildCampaignReportParams({
+          range: params.range || selectedRange,
+          grain: params.grain,
+          startDate: params.startDate,
+          endDate: params.endDate,
+          preset: params.preset,
+          campaignId: id,
+        }),
+      );
+      return pickNamedArray<TrendPoint>(envelope.data, ["performanceTrend", "trends"]);
+    },
+  });
+
   const trendComparison = useMemo(
     () =>
-      comparePreviousPeriod && useDummyData
-        ? dummyPreviousPeriod(trendSeries)
-        : undefined,
-    [comparePreviousPeriod, trendSeries, useDummyData],
+      resolveComparisonSeries({
+        compare: comparePreviousPeriod,
+        useDummyData,
+        current: trendSeries,
+        livePrevious: livePreviousTrend,
+        previousQueryParams,
+        align: fillCampaignTrendSeries,
+      }),
+    [
+      comparePreviousPeriod,
+      livePreviousTrend,
+      previousQueryParams,
+      trendSeries,
+      useDummyData,
+    ],
   );
-  const roiComparison = useMemo(
-    () =>
-      comparePreviousPeriod && useDummyData
-        ? dummyPreviousPeriod(roiSeries).map((point) => ({
-            ...point,
-            roi: point.spend
-              ? Number((Number(point.revenue) / Number(point.spend)).toFixed(2))
-              : 0,
-          }))
-        : undefined,
-    [comparePreviousPeriod, roiSeries, useDummyData],
+  const roiComparison = useMemo(() => {
+    if (!comparePreviousPeriod || !trendComparison?.length) return undefined;
+    return trendComparison.map((point) => ({
+      ...point,
+      roi: point.spend
+        ? Number((Number(point.revenue) / Number(point.spend)).toFixed(2))
+        : 0,
+    }));
+  }, [comparePreviousPeriod, trendComparison]);
+  const previousComparisonLabel = formatPreviousComparisonLabel(
+    comparePreviousPeriod,
+    previousPeriodLabel,
   );
-  const previousComparisonLabel = comparePreviousPeriod
-    ? `Previous (${previousPeriodLabel})`
-    : "Previous period";
 
   if (isLoading) {
     return (
@@ -466,7 +500,7 @@ export default function CampaignDetailReportPage() {
 
         <SwitchableReportChart
           title="Delivery Funnel"
-          subtitle="Core CVM stages: sent, delivered, converted"
+          subtitle="Same CVM counts as the overview cards: sent, delivered, converted"
           filename="campaign-detail-delivery-funnel.csv"
           audit={overviewAudit}
           columns={[
@@ -479,7 +513,6 @@ export default function CampaignDetailReportPage() {
           yTickFormatter={(value) => value.toLocaleString("en-US")}
           emptyMessage="No delivery funnel in this window."
           defaultView="bar"
-          views={["bar", "line", "area"]}
           series={[
             {
               dataKey: "value",
@@ -556,7 +589,6 @@ export default function CampaignDetailReportPage() {
           comparisonData={trendComparison}
           comparisonLabel={previousComparisonLabel}
           defaultView="line"
-          views={["bar", "line", "area"]}
           series={[
             {
               dataKey: "deliveryRate",
@@ -622,7 +654,6 @@ export default function CampaignDetailReportPage() {
           comparisonData={roiComparison}
           comparisonLabel={previousComparisonLabel}
           defaultView="line"
-          views={["bar", "line", "area"]}
           series={[
             {
               dataKey: "roi",
@@ -642,11 +673,11 @@ export default function CampaignDetailReportPage() {
               <p className="mt-1 text-sm text-gray-600">Incremental value versus campaign cost</p>
               <dl className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Total revenue</dt>
+                  <dt className="text-gray-600">Value generated</dt>
                   <dd className="font-semibold text-gray-900">{formatCurrency(liveDetail?.roi?.totalRevenue || 0)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Incremental revenue</dt>
+                  <dt className="text-gray-600">Incremental value</dt>
                   <dd className="font-semibold text-gray-900">{formatCurrency(liveDetail?.roi?.incrementalRevenue || 0)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
@@ -708,7 +739,7 @@ export default function CampaignDetailReportPage() {
                   <dd className="font-semibold text-gray-900">{Number(liveDetail?.budget?.budget_utilization_pct || 0).toFixed(1)}%</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-gray-600">Actual revenue</dt>
+                  <dt className="text-gray-600">Actual value</dt>
                   <dd className="font-semibold text-gray-900">{formatCurrency(Number(liveDetail?.budget?.actual_revenue || 0))}</dd>
                 </div>
                 <div className="flex justify-between gap-4">

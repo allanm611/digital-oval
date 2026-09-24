@@ -23,6 +23,8 @@ type SwitchableReportChartProps = {
   views?: ReportChartView[];
   yLabel?: string;
   yTickFormatter?: (value: number) => string;
+  rightYLabel?: string;
+  rightTickFormatter?: (value: number) => string;
   valueFormatter?: (value: number) => string;
   emptyMessage?: string;
   comparisonData?: Array<Record<string, string | number | null | undefined>>;
@@ -30,6 +32,7 @@ type SwitchableReportChartProps = {
   className?: string;
   audit?: ReportChartAudit;
   fullRow?: boolean;
+  chartClassName?: string;
   headerNote?: ReactNode;
 };
 
@@ -45,6 +48,8 @@ export default function SwitchableReportChart({
   views,
   yLabel,
   yTickFormatter,
+  rightYLabel,
+  rightTickFormatter,
   valueFormatter,
   emptyMessage,
   comparisonData,
@@ -52,6 +57,7 @@ export default function SwitchableReportChart({
   className,
   audit,
   fullRow,
+  chartClassName,
   headerNote,
 }: SwitchableReportChartProps) {
   const [chartType, setChartType] = useState<ReportChartView>(defaultView);
@@ -66,6 +72,7 @@ export default function SwitchableReportChart({
       className={className}
       audit={audit}
       fullRow={fullRow}
+      chartClassName={chartClassName}
       headerExtra={
         <div className="flex flex-wrap items-center gap-3">
           {headerNote}
@@ -84,6 +91,8 @@ export default function SwitchableReportChart({
         chartType={chartType}
         yLabel={yLabel}
         yTickFormatter={yTickFormatter}
+        rightYLabel={rightYLabel}
+        rightTickFormatter={rightTickFormatter}
         valueFormatter={valueFormatter}
         emptyMessage={emptyMessage}
         comparisonData={comparisonData}

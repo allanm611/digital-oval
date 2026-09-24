@@ -1,11 +1,9 @@
 /**
- * Customer 360 segments — segments this member belongs to, plus the
- * campaigns those segments are mapped to.
+ * Customer 360 segments — segments this subscriber belongs to.
  *
- * Resolution:
- *   1. Reverse-lookup memberships for the subscriber when the API exists
- *   2. Otherwise check each system segment's members against customer identifiers
- *   3. For every membership, load campaign-flow / usage mappings
+ * Source of truth:
+ *   GET /subscribers/:id/segments
+ *   GET /subscribers/:id/segment-membership
  */
 
 import type { CustomerIdentifierKind } from "./customerSubscribedList";

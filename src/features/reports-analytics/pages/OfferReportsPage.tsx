@@ -1,24 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
 import {
-  Gift,
-  Percent,
-  TrendingUp,
-  DollarSign,
-  Users2,
-  Coins,
-  Sparkles,
   Eye,
   FileText,
   RefreshCw,
@@ -40,21 +23,28 @@ import type {
 } from "../types/ReportsAPI";
 import {
   buildOfferReportParams,
-  resolveHeroTrend,
   settledError,
   settledValue,
 } from "../utils/offerReportQuery";
+import { cvmOfferFunnel } from "../utils/offerCvmMetrics";
+import OfferKpiGrid from "../components/OfferKpiGrid";
 import {
   formatOfferReportDate,
   mergeSplitOfferWidgets,
   normalizeOfferPortfolio,
   offerPortfolioHasWidgets,
+  pickNamedArray,
   seriesHasActivity,
   typeComparisonHasRows,
   unwrapOfferCategories,
   unwrapOfferTable,
 } from "../utils/normalizeOfferReport";
-import { parseISODate, alignTrendSeries, dummyTemplateRange, dummyPreviousPeriod, toChartAudit } from "../utils/reportTimeWindow";
+import { parseISODate, alignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
+import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import {
+  previousComparisonLabel as formatPreviousComparisonLabel,
+  resolveComparisonSeries,
+} from "../utils/reportComparison";
 
 import { tw } from "../../../shared/utils/utils";
 import Input from "../../../shared/components/ui/Input";
@@ -62,8 +52,7 @@ import { offerService } from "../../offers/services/offerService";
 import { offerReportsService } from "../services/offerReportsService";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
-import ReportChartCard from "../components/ReportChartCard";
-import ReportGroupedBarChart from "../components/ReportGroupedBarChart";
+import SwitchableReportChart from "../components/SwitchableReportChart";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Offer } from "../../offers/types/offer";
 import { Table } from "../../../shared/components/Table/Table";
@@ -136,22 +125,22 @@ const combinedSummary: Record<RangeOption, CombinedSummary> = {
 // Offer stage data
 const funnelData: Record<RangeOption, FunnelStage[]> = {
   "7d": [
-    { stage: "Exposed", value: 140_000 },
-    { stage: "Viewed", value: 68_000 },
-    { stage: "Engaged", value: 16_200 },
-    { stage: "Redeemed", value: 5_450 },
+    { stage: "Eligible", value: 140_000 },
+    { stage: "Offered", value: 68_000 },
+    { stage: "Taken Up", value: 16_200 },
+    { stage: "Fulfilled", value: 5_450 },
   ],
   "30d": [
-    { stage: "Exposed", value: 620_000 },
-    { stage: "Viewed", value: 298_000 },
-    { stage: "Engaged", value: 86_400 },
-    { stage: "Redeemed", value: 34_200 },
+    { stage: "Eligible", value: 620_000 },
+    { stage: "Offered", value: 298_000 },
+    { stage: "Taken Up", value: 86_400 },
+    { stage: "Fulfilled", value: 34_200 },
   ],
   "90d": [
-    { stage: "Exposed", value: 1_980_000 },
-    { stage: "Viewed", value: 965_000 },
-    { stage: "Engaged", value: 312_000 },
-    { stage: "Redeemed", value: 142_500 },
+    { stage: "Eligible", value: 1_980_000 },
+    { stage: "Offered", value: 965_000 },
+    { stage: "Taken Up", value: 312_000 },
+    { stage: "Fulfilled", value: 142_500 },
   ],
 };
 
@@ -449,66 +438,6 @@ const segmentOptions = [
 
 // Chart colors now use standardized colors from tokens.reportCharts
 
-interface ChartTooltipEntry {
-  name?: string;
-  value?: number | string;
-  color?: string;
-  dataKey?: string;
-  payload?: Record<string, unknown>;
-}
-
-interface ChartTooltipProps {
-  active?: boolean;
-  payload?: ChartTooltipEntry[];
-  label?: string;
-}
-
-// Using formatCurrencyAmount from currencyService instead
-
-const formatNumber = (value: number): string => {
-  return value.toLocaleString("en-US");
-};
-
-const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between gap-4 text-sm"
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-gray-600">{entry.name}</span>
-          </span>
-          <span className="font-semibold text-gray-900">
-            {typeof entry.value === "number"
-              ? formatNumber(entry.value)
-              : entry.value}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const statIcons = {
-  redemption: Gift,
-  revenue: DollarSign,
-  margin: Percent,
-  growth: TrendingUp,
-  users: Users2,
-  coins: Coins,
-  sparkles: Sparkles,
-};
-
 type OfferTableRow = {
   id: string;
   offerName: string;
@@ -550,6 +479,8 @@ export default function OfferReportsPage() {
     overviewWindow,
     activeWindow,
     comparePreviousPeriod,
+    previousQueryParams,
+    previousPeriodLabel,
   } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
@@ -627,7 +558,7 @@ export default function OfferReportsPage() {
     },
     {
       id: "conversions",
-      label: "Conversions",
+      label: "Taken Up",
       visible: true,
       sortable: true,
       filterConfig: { type: "number" },
@@ -939,74 +870,21 @@ export default function OfferReportsPage() {
     };
   }, [baseSummary, scaleFactor, useDummyData, liveReport]);
 
-  const heroCards = [
-    {
-      label: "Total Redemptions",
-      value: summary.totalRedemptions.toLocaleString("en-US"),
-      subtext: "Total offers used by customers",
-      icon: statIcons.users,
-      trend: useDummyData
-        ? { value: "+12.8%", direction: "up" as const }
-        : resolveHeroTrend(liveReport?.heroTrends?.totalRedemptions),
-    },
-    {
-      label: "Redemption Rate",
-      value: `${summary.redemptionRate.toFixed(1)}%`,
-      subtext: "Customers who used promotions",
-      icon: statIcons.growth,
-      trend: useDummyData
-        ? { value: "+0.6 pts", direction: "up" as const }
-        : resolveHeroTrend(liveReport?.heroTrends?.redemptionRate),
-    },
-    {
-      label: "Revenue Generated",
-      value: formatCurrencyAmount(summary.revenueGenerated),
-      subtext: "Total sales from promotions",
-      icon: statIcons.revenue,
-      trend: useDummyData
-        ? { value: "+156K", direction: "up" as const }
-        : resolveHeroTrend(liveReport?.heroTrends?.revenueGenerated),
-    },
-    {
-      label: "Incremental Revenue",
-      value: formatCurrencyAmount(summary.incrementalRevenue),
-      subtext: "New revenue created",
-      icon: statIcons.sparkles,
-      trend: useDummyData
-        ? { value: "+42K", direction: "up" as const }
-        : resolveHeroTrend(liveReport?.heroTrends?.incrementalRevenue),
-    },
-    {
-      label: "Total Cost",
-      value: formatCurrencyAmount(summary.totalCost),
-      subtext: "Total discount cost",
-      icon: statIcons.coins,
-      trend: useDummyData
-        ? { value: "+18K", direction: "up" as const }
-        : resolveHeroTrend(liveReport?.heroTrends?.totalCost),
-    },
-    {
-      label: "ROI",
-      value: `${summary.roi.toFixed(1)}x`,
-      subtext: "Revenue per dollar spent",
-      icon: statIcons.growth,
-      trend: useDummyData
-        ? { value: "+0.2x", direction: "up" as const }
-        : resolveHeroTrend(liveReport?.heroTrends?.roi),
-    },
-  ];
-
-  // Scale chart data based on actual date range
+  // Scale chart data based on actual date range. Live stages are mapped onto
+  // Eligible → Offered → Taken Up → Fulfilled, including legacy marketing names.
   const funnelSeries = useMemo(() => {
     if (!useDummyData) {
-      return liveReport?.redemptionFunnel || [];
+      return cvmOfferFunnel(liveReport?.redemptionFunnel || []);
     }
     const base = funnelData[activeRangeKey];
-    if (scaleFactor === 1) return base;
-    return base.map((point) => ({
-      ...point,
-      value: Math.round(point.value * scaleFactor),
-    }));
+    const scaled =
+      scaleFactor === 1
+        ? base
+        : base.map((point) => ({
+            ...point,
+            value: Math.round(point.value * scaleFactor),
+          }));
+    return cvmOfferFunnel(scaled);
   }, [activeRangeKey, scaleFactor, useDummyData, liveReport]);
 
   const timelineSeries = useMemo(() => {
@@ -1030,12 +908,48 @@ export default function OfferReportsPage() {
     queryParams.grain,
   ]);
 
+  const livePreviousTimeline = usePreviousPeriodSeries<TimeSeriesPoint>({
+    enabled: comparePreviousPeriod && !useDummyData,
+    previousQueryParams,
+    refreshKey: dataEpoch,
+    fetchSeries: async (params) => {
+      const envelope = await offerReportsService.getTimeline(
+        buildOfferReportParams({
+          range: params.range || activeRangeKey,
+          grain: params.grain,
+          startDate: params.startDate,
+          endDate: params.endDate,
+          preset: params.preset,
+        }),
+      );
+      return pickNamedArray<TimeSeriesPoint>(envelope.data, [
+        "redemptionTimeline",
+        "timeline",
+      ]);
+    },
+  });
+
   const timelineComparison = useMemo(
     () =>
-      comparePreviousPeriod && useDummyData
-        ? dummyPreviousPeriod(timelineSeries)
-        : undefined,
-    [comparePreviousPeriod, timelineSeries, useDummyData],
+      resolveComparisonSeries({
+        compare: comparePreviousPeriod,
+        useDummyData,
+        current: timelineSeries,
+        livePrevious: livePreviousTimeline,
+        previousQueryParams,
+        align: alignTrendSeries,
+      }),
+    [
+      comparePreviousPeriod,
+      livePreviousTimeline,
+      previousQueryParams,
+      timelineSeries,
+      useDummyData,
+    ],
+  );
+  const previousComparisonLabel = formatPreviousComparisonLabel(
+    comparePreviousPeriod,
+    previousPeriodLabel,
   );
 
   const offerTypeComparison = useMemo(() => {
@@ -1177,7 +1091,7 @@ export default function OfferReportsPage() {
     "Messages Generated",
     "Sent",
     "Delivered",
-    "Conversions",
+    "Taken Up",
     "Last Updated",
   ];
 
@@ -1200,8 +1114,7 @@ export default function OfferReportsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Offer Reports</h1>
           <p className="mt-2 text-base text-gray-600">
-            Track offer performance, redemption behavior, and ROI across all
-            promotional campaigns
+            Track offer eligibility, take-up, fulfilment, incremental value, and ROMI
           </p>
         </div>
         <ReportTrendsToolbar
@@ -1271,217 +1184,117 @@ export default function OfferReportsPage() {
         </p>
       )}
 
-      {/* Hero KPI Cards */}
       {!isTrendsView && (
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {heroCards.map((card, idx) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={card.label}
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Icon
-                    className="h-5 w-5"
-                    style={{ color: colors.primary.accent }}
-                  />
-                  <p className="text-sm font-medium text-gray-600">
-                    {card.label}
-                  </p>
-                </div>
-                <span
-                  className={`text-xs font-semibold ${
-                    card.trend.direction === "up"
-                      ? "text-emerald-600"
-                      : card.trend.direction === "down"
-                        ? "text-red-600"
-                        : "text-gray-500"
-                  }`}
-                >
-                  {card.trend.direction === "up"
-                    ? "↑"
-                    : card.trend.direction === "down"
-                      ? "↓"
-                      : "•"}{" "}
-                  {card.trend.value}
-                </span>
-              </div>
-              <p className="mt-3 text-3xl font-bold text-gray-900">
-                {card.value}
-              </p>
-              <p className="mt-1 text-sm text-gray-500">{card.subtext}</p>
-            </div>
-          );
-        })}
-      </section>
+        <OfferKpiGrid
+          summary={summary}
+          funnel={funnelSeries}
+          heroTrends={liveReport?.heroTrends}
+          useDummyData={useDummyData}
+        />
       )}
 
       {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        <ReportChartCard
-          title="Offer Performance Stages"
-          subtitle="Customer journey from exposure to redemption"
-          filename="offer-performance-stages.csv"
+        <SwitchableReportChart
+          title="Offer Outcome Stages"
+          subtitle="Eligible, offered, taken up, and fulfilled"
+          filename="offer-outcome-stages.csv"
           audit={overviewAudit}
           columns={[
             { key: "stage", label: "Stage" },
-            { key: "value", label: "Users" },
+            { key: "value", label: "Customers" },
           ]}
-          rows={funnelSeries}
-        >
-          {!useDummyData && !isLoadingLiveReport && !seriesHasActivity(funnelSeries) ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
-              {funnelSeries.length
-                ? "No customers entered the offer funnel in this window."
-                : "No redemption stages in this window."}
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={funnelSeries}
-                margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="stage" tick={{ fill: "#6b7280" }} />
-                <YAxis allowDecimals={false} tick={{ fill: "#6b7280" }} />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Bar
-                  dataKey="value"
-                  name="Users"
-                  fill={colors.reportCharts.offerReports.redemptionFunnel.value}
-                  maxBarSize={60}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ReportChartCard>
+          rows={
+            !useDummyData && !seriesHasActivity(funnelSeries) ? [] : funnelSeries
+          }
+          xKey="stage"
+          yLabel="Customers"
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          emptyMessage={
+            funnelSeries.length
+              ? "No customers entered the offer funnel in this window."
+              : "No offer outcome stages in this window."
+          }
+          series={[
+            {
+              dataKey: "value",
+              name: "Customers",
+              color: colors.reportCharts.offerReports.redemptionFunnel.value,
+            },
+          ]}
+        />
 
-        <ReportChartCard
+        <SwitchableReportChart
           title="Offer Type Comparison"
-          subtitle="Performance across offer types"
+          subtitle="Take-up rate and value per take-up by offer type"
           filename="offer-type-comparison.csv"
           audit={overviewAudit}
           columns={[
             { key: "type", label: "Type" },
-            { key: "redemptionRate", label: "Redemption Rate %" },
-            { key: "aov", label: "Avg Transaction Value" },
+            { key: "redemptionRate", label: "Take-up Rate %" },
+            { key: "aov", label: "Value per Take-up" },
           ]}
-          rows={offerTypeComparison}
-        >
-          {!useDummyData && !isLoadingLiveReport && !typeComparisonHasRows(offerTypeComparison) ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
-              No offer types with activity in this window.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={offerTypeComparison}
-                margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-                barCategoryGap="20%"
-                barGap={4}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="type" tick={{ fill: "#6b7280" }} />
-                <YAxis
-                  yAxisId="left"
-                  orientation="left"
-                  tick={{ fill: "#6b7280" }}
-                  label={{
-                    value: "Redemption Rate (%)",
-                    angle: -90,
-                    position: "insideLeft",
-                    style: { fill: "#6b7280", fontSize: 12 },
-                  }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fill: "#6b7280" }}
-                  label={{
-                    value: "Avg Transaction Value",
-                    angle: 90,
-                    position: "insideRight",
-                    style: { fill: "#6b7280", fontSize: 12 },
-                  }}
-                />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Bar
-                  yAxisId="left"
-                  dataKey="redemptionRate"
-                  name="Redemption Rate %"
-                  fill={
-                    colors.reportCharts.offerReports.offerTypeComparison
-                      .redemptionRate
-                  }
-                  maxBarSize={40}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  yAxisId="right"
-                  dataKey="aov"
-                  name="Avg Transaction Value"
-                  fill={
-                    colors.reportCharts.offerReports.offerTypeComparison
-                      .avgTransactionValue
-                  }
-                  maxBarSize={40}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ReportChartCard>
+          rows={
+            !useDummyData && !typeComparisonHasRows(offerTypeComparison)
+              ? []
+              : offerTypeComparison
+          }
+          xKey="type"
+          yLabel="Take-up Rate (%)"
+          yTickFormatter={(value) => `${value}%`}
+          rightYLabel="Value per Take-up"
+          emptyMessage="No offer types with activity in this window."
+          series={[
+            {
+              dataKey: "redemptionRate",
+              name: "Take-up Rate %",
+              color: colors.reportCharts.offerReports.offerTypeComparison.redemptionRate,
+              valueFormatter: (value) => `${value}%`,
+            },
+            {
+              dataKey: "aov",
+              name: "Value per Take-up",
+              color: colors.reportCharts.offerReports.offerTypeComparison.avgTransactionValue,
+              axis: "right",
+            },
+          ]}
+        />
       </section>
       )}
 
       {isTrendsView && (
       <section>
-        <ReportChartCard
-          title="Redemption Timeline"
-          subtitle="Redemption volume over the selected period"
-          filename="offer-redemption-timeline.csv"
+        <SwitchableReportChart
+          title="Take-up Timeline"
+          subtitle="Take-up volume over the selected period"
+          filename="offer-take-up-timeline.csv"
           audit={chartAudit}
           columns={[
             { key: "period", label: "Period" },
             { key: "date", label: "Date" },
-            { key: "redemptions", label: "Redemptions" },
-            { key: "cumulativeRedemptions", label: "Cumulative" },
+            { key: "redemptions", label: "Take-ups" },
+            { key: "cumulativeRedemptions", label: "Cumulative Take-ups" },
           ]}
           rows={timelineSeries}
-        >
-          <ReportGroupedBarChart
-            data={timelineSeries}
-            xKey="period"
-            yLabel="Redemptions"
-            yTickFormatter={(value) => value.toLocaleString("en-US")}
-            emptyMessage="No redemption activity in this window."
-            comparisonData={timelineComparison}
-            series={[
-              {
-                dataKey: "redemptions",
-                name: "Redemptions",
-                color:
-                  colors.reportCharts.offerReports.redemptionTimeline.redemptions,
-              },
-              {
-                dataKey: "cumulativeRedemptions",
-                name: "Cumulative",
-                color:
-                  colors.reportCharts.offerReports.redemptionTimeline.cumulative,
-              },
-            ]}
-          />
-        </ReportChartCard>
+          xKey="period"
+          yLabel="Take-ups"
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          emptyMessage="No take-up activity in this window."
+          comparisonData={timelineComparison}
+          comparisonLabel={previousComparisonLabel}
+          series={[
+            {
+              dataKey: "redemptions",
+              name: "Take-ups",
+              color: colors.reportCharts.offerReports.redemptionTimeline.redemptions,
+            },
+            {
+              dataKey: "cumulativeRedemptions",
+              name: "Cumulative",
+              color: colors.reportCharts.offerReports.redemptionTimeline.cumulative,
+            },
+          ]}
+        />
       </section>
       )}
 
@@ -1490,15 +1303,15 @@ export default function OfferReportsPage() {
       <section className="grid gap-6 lg:grid-cols-2">
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="text-xl font-semibold text-gray-900">Performance by Category</h2>
-          <p className="mt-1 text-sm text-gray-600">Revenue and conversions grouped by offer category</p>
+          <p className="mt-1 text-sm text-gray-600">Value generated and take-up grouped by offer category</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-500">
                   <th className="py-2 pr-4 font-medium">Category</th>
                   <th className="py-2 pr-4 font-medium">Offers</th>
-                  <th className="py-2 pr-4 font-medium">Conversions</th>
-                  <th className="py-2 font-medium">Revenue</th>
+                  <th className="py-2 pr-4 font-medium">Taken Up</th>
+                  <th className="py-2 font-medium">Value Generated</th>
                 </tr>
               </thead>
               <tbody>
@@ -1523,14 +1336,14 @@ export default function OfferReportsPage() {
         </div>
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="text-xl font-semibold text-gray-900">Top Offers</h2>
-          <p className="mt-1 text-sm text-gray-600">Highest-revenue offers in the selected window</p>
+          <p className="mt-1 text-sm text-gray-600">Highest value-generating offers in the selected window</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-500">
                   <th className="py-2 pr-4 font-medium">Offer</th>
-                  <th className="py-2 pr-4 font-medium">Conversions</th>
-                  <th className="py-2 font-medium">Revenue</th>
+                  <th className="py-2 pr-4 font-medium">Taken Up</th>
+                  <th className="py-2 font-medium">Value Generated</th>
                 </tr>
               </thead>
               <tbody>
@@ -1562,7 +1375,7 @@ export default function OfferReportsPage() {
               Offer Performance Table
             </h2>
             <p className="mt-1 text-sm text-gray-600">
-              Detailed view of all offers with redemption and revenue metrics
+              Target group, control group, delivery, and take-up for each offer
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">

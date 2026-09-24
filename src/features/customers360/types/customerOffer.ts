@@ -1,25 +1,11 @@
 /**
  * Customer 360 offers — offers available to this customer, or redeemed by them.
  *
- * An offer is a catalog item. Customers do not "belong" to offers the way they
- * belong to segments or lists. Availability is derived from the live CVM graph:
+ * Source of truth:
+ *   GET /subscribers/:id/offers keyed by subscriber id.
  *
- *   segment membership → campaign flow → offer
- *
- * Redemption is derived from the live event stream (`offer_redeemed` /
- * `offer_accepted`), not from the offer catalog status.
- *
- * Resolution:
- *   1. Prefer GET /subscribers/:id/offers (and /redemptions) when those exist
- *   2. Derive available offers from this customer's segment→campaign mappings
- *   3. Confirm redemptions from live customer events only (never fallback events)
- *   4. Keep profile `offers` hints when they cannot be confirmed
- *   5. Enrich each offer from the live offer catalog
- *
- * Recommended backend contract (when available):
- *   GET /subscribers/:id/offers
- *   Query: search, status, type, limit, offset
- *   Body: { success, data, pagination, counts: { available, redeemed, accepted } }
+ * Query: subscriber_id, identifier, identifier_type, msisdn, email, skipCache
+ * Body: { success, data, pagination }
  */
 
 import type { CustomerSegmentVia } from "./customerSegment";
