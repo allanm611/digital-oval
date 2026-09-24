@@ -282,21 +282,36 @@ export const colors = {
     // Overall Dashboard Performance
     overallPerformance: {
       channelPerformance: {
-        clicks: "#4FDFF3", // color4 - lighter for multi-bar
-        conversions: "#92A6B0", // color3 - lighter
-        ctr: "#00505C", // color1 (line) - dark teal
-        cvr: "#C38BFB", // color2 (line) - purple
+        dispatched: "#4FDFF3",
+        delivered: "#92A6B0",
+        takenUp: "#00505C",
+        deliveryRate: "#00505C",
+        takeUpRate: "#C38BFB",
+        clicks: "#4FDFF3",
+        conversions: "#92A6B0",
+        ctr: "#00505C",
+        cvr: "#C38BFB",
       },
       smsDelivery: {
-        sent: "#4FDFF3", // color4 - lighter for multi-bar
-        delivered: "#92A6B0", // color3 - lighter
-        converted: "#00505C", // color1 - dark teal
+        sent: "#4FDFF3",
+        delivered: "#92A6B0",
+        takenUp: "#00505C",
+        converted: "#00505C",
+      },
+      emailDelivery: {
+        sent: "#C38BFB",
+        delivered: "#F7B430",
+        takenUp: "#FC9C9C",
       },
       timeSeriesTrends: {
-        reach: "#4FDFF3", // color4 - lighter for multi-bar
-        clicks: "#92A6B0", // color3 - lighter
-        conversions: "#00505C", // color1 - dark teal
-        revenue: "#C38BFB", // color2 (line) - purple
+        subscribers: "#4FDFF3",
+        delivered: "#92A6B0",
+        takenUp: "#00505C",
+        valueGenerated: "#C38BFB",
+        reach: "#4FDFF3",
+        clicks: "#92A6B0",
+        conversions: "#00505C",
+        revenue: "#C38BFB",
       },
     },
   },

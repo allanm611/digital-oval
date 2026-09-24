@@ -2,30 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Input from '../../../shared/components/ui/Input';
 import SearchInput from '../../../shared/components/ui/SearchInput';
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  Activity,
-  ArrowUpRight,
-  BarChart3,
-  ChevronLeft,
-  ChevronRight,
-  Crown,
-  DollarSign,
-  Download,
-  Eye,
-  Repeat,
-  Users,
-} from "lucide-react";
+import { Eye } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
@@ -50,9 +27,18 @@ import { formatDate } from "../../../shared/services/dateService";
 import { customerService } from "../../customers360/services/customerServices";
 import { customerProfileReportsService } from "../services/customerProfileReportsService";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
 import { alignTrendSeries, toChartAudit } from "../utils/reportTimeWindow";
+import {
+  previousComparisonLabel as formatPreviousComparisonLabel,
+  resolveComparisonSeries,
+} from "../utils/reportComparison";
+import { pickNamedArray } from "../utils/normalizeCampaignReport";
+import { normalizeCustomerProfileReport, normalizeLifecyclePoints } from "../utils/normalizeCustomerProfileReport";
+import { aggregateValueBands } from "../utils/subscriberCvmMetrics";
+import CustomerProfileKpiGrid from "../components/CustomerProfileKpiGrid";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
-import ReportChartCard from "../components/ReportChartCard";
+import SwitchableReportChart from "../components/SwitchableReportChart";
 import { useToast } from "../../../contexts/ToastContext";
 import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
@@ -67,54 +53,33 @@ type ClvBucket = CustomerProfileReportsResponse["clvDistribution"][number];
 type CohortPoint = CustomerProfileReportsResponse["cohortRetention"][number];
 
 // Local UI types
-type HeroMetric = {
-  label: string;
-  value: string;
-  trend: string;
-  trendDirection: "up" | "down";
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
-
 // Re-export CustomerRow for backward compatibility
 export type { CustomerRow };
 
-const formatNumber = (value: number) =>
-  value.toLocaleString("en-US", { maximumFractionDigits: 0 });
-
-const heroBase = {
-  activeCustomers: 1_284_200,
-  avgClv: 1_540,
-  avgOrderValue: 128,
-  purchaseFrequency: 3.4,
-  engagementScore: 72,
-  churnRate: 8.3,
-};
-
 const baseValueMatrixData: ValueMatrixPoint[] = [
   {
-    segment: "Champions",
+    segment: "High Value",
     recency: 10,
     valueScore: 92,
     customers: 2400,
     lifecycle: "Active",
   },
   {
-    segment: "Loyalists",
+    segment: "Core",
     recency: 22,
     valueScore: 78,
     customers: 4800,
     lifecycle: "Active",
   },
   {
-    segment: "Potential Loyalists",
+    segment: "Growth",
     recency: 35,
     valueScore: 55,
     customers: 6400,
     lifecycle: "New",
   },
   {
-    segment: "At-Risk",
+    segment: "At Risk",
     recency: 60,
     valueScore: 48,
     customers: 3100,
@@ -128,7 +93,7 @@ const baseValueMatrixData: ValueMatrixPoint[] = [
     lifecycle: "Churned",
   },
   {
-    segment: "Reactivated",
+    segment: "Win-back",
     recency: 28,
     valueScore: 64,
     customers: 1800,
@@ -240,11 +205,11 @@ const baseCohortRetention: CohortPoint[] = [
 
 const generateCustomerRows = (): CustomerRow[] => {
   const segments = [
-    "Champions",
-    "Loyalists",
-    "Potential Loyalist",
-    "At-Risk",
-    "Reactivated",
+    "High Value",
+    "Core",
+    "Growth",
+    "At Risk",
+    "Win-back",
   ];
   const channels = ["Email", "SMS", "Push"];
   const locations = [
@@ -298,11 +263,11 @@ const generateCustomerRows = (): CustomerRow[] => {
 
       // Calculate churn risk based on segment and recency
       let churnRisk = 15;
-      if (segment === "At-Risk")
+      if (segment === "At Risk")
         churnRisk = 65 + Math.floor(Math.random() * 20);
-      else if (segment === "Potential Loyalist")
+      else if (segment === "Growth")
         churnRisk = 25 + Math.floor(Math.random() * 10);
-      else if (segment === "Reactivated")
+      else if (segment === "Win-back")
         churnRisk = 20 + Math.floor(Math.random() * 15);
       else if (daysAgo > 30) churnRisk = 30 + Math.floor(Math.random() * 20);
 
@@ -318,12 +283,12 @@ const generateCustomerRows = (): CustomerRow[] => {
       let orders = 5 + Math.floor(Math.random() * 20);
       let aov = 150 + Math.floor(Math.random() * 150);
 
-      if (segment === "Champions") {
+      if (segment === "High Value") {
         lifetimeValue = 8000 + Math.floor(Math.random() * 6000);
         clv = lifetimeValue * 1.15;
         orders = 30 + Math.floor(Math.random() * 25);
         aov = 250 + Math.floor(Math.random() * 100);
-      } else if (segment === "Loyalists") {
+      } else if (segment === "Core") {
         lifetimeValue = 5000 + Math.floor(Math.random() * 4000);
         clv = lifetimeValue * 1.18;
         orders = 20 + Math.floor(Math.random() * 15);
@@ -375,47 +340,6 @@ const tablePageSize = 10;
 // Table headers will be translated inside the component
 const tableCellBackground: CSSProperties = {
   backgroundColor: color.surface.tablebodybg,
-};
-
-type ChartTooltipEntry = {
-  color?: string;
-  name?: string;
-  value?: number | string;
-};
-
-type ChartTooltipProps = {
-  active?: boolean;
-  label?: string;
-  payload?: ChartTooltipEntry[];
-};
-
-const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            {entry.name}
-          </span>
-          <span className="font-semibold text-gray-900">{entry.value}</span>
-        </div>
-      ))}
-    </div>
-  );
 };
 
 const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
@@ -493,7 +417,7 @@ export default function CustomerProfileReportsPage() {
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
   });
-  const { isTrendsView, queryParams, overviewWindow, activeWindow } = timeWindow;
+  const { isTrendsView, queryParams, overviewWindow, activeWindow, comparePreviousPeriod, previousQueryParams, previousPeriodLabel } = timeWindow;
   const chartAudit = toChartAudit(activeWindow);
   const overviewAudit = toChartAudit(overviewWindow);
   const selectedRange = timeWindow.rangeKey;
@@ -545,8 +469,8 @@ export default function CustomerProfileReportsPage() {
       sortable: true,
     },
     {
-      id: "customerType",
-      label: "Customer Type",
+        id: "customerType",
+        label: "Value band",
       visible: true,
       sortable: true,
     },
@@ -654,8 +578,10 @@ export default function CustomerProfileReportsPage() {
       }
     }, []);
 
-  // Fetch all customers from API
+  // Subscriber detail. Real Data uses the portfolio customers endpoint.
+  // Dummy Data keeps the subscriber directory so the table still has rows to browse.
   useEffect(() => {
+    if (!useDummyData) return;
     const loadAllCustomersFromAPI = async () => {
       try {
         setIsLoadingCustomers(true);
@@ -663,7 +589,6 @@ export default function CustomerProfileReportsPage() {
         let offset = 0;
         let hasMore = true;
 
-        // Paginate through all customers
         while (hasMore) {
           const response = await customerService.getAllCustomers({
             limit: 100,
@@ -724,7 +649,72 @@ export default function CustomerProfileReportsPage() {
     };
 
     loadAllCustomersFromAPI();
-  }, [showError]);
+  }, [showError, useDummyData]);
+
+  useEffect(() => {
+    if (useDummyData) return;
+    let cancelled = false;
+    const loadReportSubscribers = async () => {
+      try {
+        setIsLoadingCustomers(true);
+        const response = await customerProfileReportsService.getCustomers({
+          range: queryParams.range,
+          grain: queryParams.grain,
+          startDate: queryParams.startDate,
+          endDate: queryParams.endDate,
+          preset: queryParams.preset,
+          page: 1,
+          pageSize: 100,
+          search: debouncedTableSearchTerm.trim() || undefined,
+          sortBy: "clv",
+          sortOrder: "desc",
+        });
+        if (cancelled) return;
+        const rows = Array.isArray(response.data) ? response.data : [];
+        setApiCustomers(
+          rows.map((row) => {
+            const id = Number(row.id);
+            const record = row as Record<string, unknown>;
+            return {
+              customerId: Number.isFinite(id) ? id : 0,
+              subscriptionId: Number.isFinite(id) ? id : 0,
+              firstName: String(record.firstName || record.name || "Subscriber"),
+              lastName: String(record.lastName || ""),
+              msisdn: (record.msisdn as string | number | null) ?? null,
+              email: (record.email as string | null) ?? null,
+              customerType: String(record.valueBand || record.segment || "—"),
+              tariff: String(record.preferredChannel || "—"),
+              status: String(record.status || "active"),
+              activationDate: (record.activationDate as string | null) ?? null,
+            };
+          }),
+        );
+        setSearchedApiCustomers([]);
+      } catch (error) {
+        if (cancelled) return;
+        setApiCustomers([]);
+        showError(
+          "Failed to Load Subscribers",
+          extractBackendError(error, "Failed to load subscriber report rows."),
+        );
+      } finally {
+        if (!cancelled) setIsLoadingCustomers(false);
+      }
+    };
+    loadReportSubscribers();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    useDummyData,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.preset,
+    debouncedTableSearchTerm,
+    showError,
+  ]);
 
   // Fetch specific customer by ID when subscriptionIdParam is provided
   useEffect(() => {
@@ -768,7 +758,7 @@ export default function CustomerProfileReportsPage() {
           }
         } catch (error) {
           console.error("Failed to fetch customer by ID:", error);
-          showError("Customer Not Found", extractBackendError(err, "Customer Not Found. Please try again."));
+          showError("Customer Not Found", extractBackendError(error, "Customer Not Found. Please try again."));
         }
       };
 
@@ -1014,8 +1004,9 @@ export default function CustomerProfileReportsPage() {
           pageSize: tablePageSize,
         });
         if (cancelled) return;
-        if (response.success && response.data) {
-          setLiveReport(response.data);
+        const normalized = normalizeCustomerProfileReport(response);
+        if (response.success && normalized) {
+          setLiveReport(normalized);
         } else {
           setLiveReport(null);
           setLiveReportError(response.error || response.message || "Failed to load report");
@@ -1045,35 +1036,35 @@ export default function CustomerProfileReportsPage() {
   ]);
 
   const valueMatrixSeries = useMemo(() => {
-    if (!useDummyData) {
-      if (liveReport?.valueMatrix?.length) return liveReport.valueMatrix;
-      return baseValueMatrixData.map((point) => ({
-        ...point,
-        customers: 0,
-        recency: 0,
-        valueScore: 0,
-      }));
-    }
-    const multiplier = actualMultiplier;
-    return baseValueMatrixData.map((point) => ({
-      ...point,
-      customers: Math.max(200, Math.round(point.customers * multiplier)),
-      recency: Math.round(
-        point.recency *
-          (activeRangeKey === "7d" ? 0.6 : activeRangeKey === "30d" ? 0.85 : 1),
-      ),
-      valueScore: Math.min(
-        100,
-        Math.round(
-          point.valueScore *
-            (activeRangeKey === "7d"
-              ? 0.95
-              : activeRangeKey === "30d"
-                ? 0.98
-                : 1),
-        ),
-      ),
-    }));
+    const source = !useDummyData
+      ? liveReport?.valueMatrix?.length
+        ? liveReport.valueMatrix
+        : baseValueMatrixData.map((point) => ({
+            ...point,
+            customers: 0,
+            recency: 0,
+            valueScore: 0,
+          }))
+      : baseValueMatrixData.map((point) => ({
+          ...point,
+          customers: Math.max(200, Math.round(point.customers * actualMultiplier)),
+          recency: Math.round(
+            point.recency *
+              (activeRangeKey === "7d" ? 0.6 : activeRangeKey === "30d" ? 0.85 : 1),
+          ),
+          valueScore: Math.min(
+            100,
+            Math.round(
+              point.valueScore *
+                (activeRangeKey === "7d"
+                  ? 0.95
+                  : activeRangeKey === "30d"
+                    ? 0.98
+                    : 1),
+            ),
+          ),
+        }));
+    return aggregateValueBands(source);
   }, [actualMultiplier, activeRangeKey, useDummyData, liveReport]);
 
   const lifecycleSeries = useMemo(() => {
@@ -1117,6 +1108,53 @@ export default function CustomerProfileReportsPage() {
     queryParams.endDate,
     queryParams.grain,
   ]);
+
+  const livePreviousLifecycle = usePreviousPeriodSeries<LifecyclePoint & { period: string }>({
+    enabled: comparePreviousPeriod && !useDummyData,
+    previousQueryParams,
+    fetchSeries: async (params) => {
+      const envelope = await customerProfileReportsService.getLifecycle({
+        range: params.range || activeRangeKey,
+        grain: params.grain,
+        startDate: params.startDate,
+        endDate: params.endDate,
+        preset: params.preset,
+      });
+      return normalizeLifecyclePoints(
+        pickNamedArray(envelope.data, ["lifecycleDistribution", "lifecycle"]),
+      ).map((point) => ({
+        ...point,
+        period: point.month,
+      }));
+    },
+  });
+
+  const lifecycleComparison = useMemo(
+    () =>
+      resolveComparisonSeries({
+        compare: comparePreviousPeriod,
+        useDummyData,
+        current: lifecycleSeries,
+        livePrevious: livePreviousLifecycle,
+        previousQueryParams,
+        align: (rows, window) =>
+          alignTrendSeries(rows, window).map((point) => ({
+            ...point,
+            month: point.period,
+          })),
+      }),
+    [
+      comparePreviousPeriod,
+      lifecycleSeries,
+      livePreviousLifecycle,
+      previousQueryParams,
+      useDummyData,
+    ],
+  );
+  const previousComparisonLabel = formatPreviousComparisonLabel(
+    comparePreviousPeriod,
+    previousPeriodLabel,
+  );
 
   const clvDistributionSeries = useMemo(() => {
     if (!useDummyData) {
@@ -1190,6 +1228,10 @@ export default function CustomerProfileReportsPage() {
   // Fetch customers for table: Use API search when search term provided, otherwise use loaded customers
   useEffect(() => {
     const loadTableCustomers = async () => {
+      if (!useDummyData) {
+        setSearchedApiCustomers([]);
+        return;
+      }
       if (!debouncedTableSearchTerm.trim()) {
         setSearchedApiCustomers(apiCustomers);
         return;
@@ -1243,7 +1285,7 @@ export default function CustomerProfileReportsPage() {
     };
 
     loadTableCustomers();
-  }, [debouncedTableSearchTerm]);
+  }, [debouncedTableSearchTerm, useDummyData]);
 
   const tableCustomers = useMemo(() => {
     return searchedApiCustomers.length > 0
@@ -1442,193 +1484,21 @@ export default function CustomerProfileReportsPage() {
       )}
 
       {!isTrendsView && (
-      <section>
-        {(() => {
-          // Use actual multiplier for custom dates, otherwise use preset scale
-          const valueScale = actualMultiplier;
-          const clvAdjust =
-            activeRangeKey === "7d"
-              ? 0.96
-              : activeRangeKey === "30d"
-                ? 0.99
-                : 1;
-          const engagementAdjust =
-            activeRangeKey === "7d" ? -3 : activeRangeKey === "30d" ? -1 : 0;
-          const churnAdjust =
-            activeRangeKey === "7d"
-              ? -0.4
-              : activeRangeKey === "30d"
-                ? -0.2
-                : 0;
-
-          const heroMetrics: HeroMetric[] = useDummyData
-            ? [
-                {
-                  label: t.customerProfileReports.activeCustomers,
-                  value: formatNumber(
-                    Math.round(heroBase.activeCustomers * valueScale),
-                  ),
-                  trend: "+4.2% vs last 90d",
-                  trendDirection: "up",
-                  description: t.customerProfileReports.activityInPeriod,
-                  icon: Users,
-                },
-                {
-                  label: t.customerProfileReports.avgCustomerLifetimeValue,
-                  value: formatCurrency(
-                    Math.round(heroBase.avgClv * clvAdjust),
-                  ),
-                  trend: "+3.1% vs last quarter",
-                  trendDirection: "up",
-                  description:
-                    t.customerProfileReports.meanRealizedPredictedClv,
-                  icon: DollarSign,
-                },
-                {
-                  label: t.customerProfileReports.avgTransactionValue,
-                  value: formatCurrency(
-                    Math.round(heroBase.avgOrderValue * clvAdjust),
-                  ),
-                  trend: "+1.6% vs prior period",
-                  trendDirection: "up",
-                  description: t.customerProfileReports.meanTransactionSize,
-                  icon: Crown,
-                },
-                {
-                  label: t.customerProfileReports.purchaseFrequency,
-                  value: `${(heroBase.purchaseFrequency * clvAdjust).toFixed(
-                    1,
-                  )} / yr`,
-                  trend: "+0.2 YoY",
-                  trendDirection: "up",
-                  description:
-                    t.customerProfileReports.transactionsPerCustomerAnnually,
-                  icon: Repeat,
-                },
-                {
-                  label: t.customerProfileReports.engagementScore,
-                  value: `${Math.max(
-                    0,
-                    heroBase.engagementScore + engagementAdjust,
-                  ).toFixed(0)} / 100`,
-                  trend: "-2 pts vs last 30d",
-                  trendDirection: engagementAdjust < 0 ? "down" : "up",
-                  description:
-                    t.customerProfileReports.multiChannelCompositeScore,
-                  icon: Activity,
-                },
-                {
-                  label: t.customerProfileReports.churnRate,
-                  value: `${Math.max(
-                    0,
-                    heroBase.churnRate + churnAdjust,
-                  ).toFixed(1)}%`,
-                  trend: "-0.6 pts vs last quarter",
-                  trendDirection: "down",
-                  description: t.customerProfileReports.noTransactionInDays,
-                  icon: BarChart3,
-                },
-              ]
-            : [
-                {
-                  label: t.customerProfileReports.activeCustomers,
-                  value: formatNumber(liveReport?.heroMetrics?.activeCustomers ?? 0),
-                  trend: liveReport?.heroTrends?.activeCustomers?.label ?? "—",
-                  trendDirection: liveReport?.heroTrends?.activeCustomers?.direction ?? "up",
-                  description: t.customerProfileReports.activityInPeriod,
-                  icon: Users,
-                },
-                {
-                  label: t.customerProfileReports.avgCustomerLifetimeValue,
-                  value: formatCurrency(liveReport?.heroMetrics?.avgClv ?? 0),
-                  trend: liveReport?.heroTrends?.avgClv?.label ?? "—",
-                  trendDirection: liveReport?.heroTrends?.avgClv?.direction ?? "up",
-                  description:
-                    t.customerProfileReports.meanRealizedPredictedClv,
-                  icon: DollarSign,
-                },
-                {
-                  label: t.customerProfileReports.avgTransactionValue,
-                  value: formatCurrency(liveReport?.heroMetrics?.avgOrderValue ?? 0),
-                  trend: liveReport?.heroTrends?.avgOrderValue?.label ?? "—",
-                  trendDirection: liveReport?.heroTrends?.avgOrderValue?.direction ?? "up",
-                  description: t.customerProfileReports.meanTransactionSize,
-                  icon: Crown,
-                },
-                {
-                  label: t.customerProfileReports.purchaseFrequency,
-                  value: `${(liveReport?.heroMetrics?.purchaseFrequency ?? 0).toFixed(1)} / yr`,
-                  trend: liveReport?.heroTrends?.purchaseFrequency?.label ?? "—",
-                  trendDirection: liveReport?.heroTrends?.purchaseFrequency?.direction ?? "up",
-                  description:
-                    t.customerProfileReports.transactionsPerCustomerAnnually,
-                  icon: Repeat,
-                },
-                {
-                  label: t.customerProfileReports.engagementScore,
-                  value: `${liveReport?.heroMetrics?.engagementScore ?? 0} / 100`,
-                  trend: liveReport?.heroTrends?.engagementScore?.label ?? "—",
-                  trendDirection: liveReport?.heroTrends?.engagementScore?.direction ?? "up",
-                  description:
-                    t.customerProfileReports.multiChannelCompositeScore,
-                  icon: Activity,
-                },
-                {
-                  label: t.customerProfileReports.churnRate,
-                  value: `${(liveReport?.heroMetrics?.churnRate ?? 0).toFixed(1)}%`,
-                  trend: liveReport?.heroTrends?.churnRate?.label ?? "—",
-                  trendDirection: liveReport?.heroTrends?.churnRate?.direction ?? "down",
-                  description: t.customerProfileReports.noTransactionInDays,
-                  icon: BarChart3,
-                },
-              ];
-
-          return (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {heroMetrics.map((metric) => (
-                <div
-                  key={metric.label}
-                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span style={{ color: colors.primary.accent }}>
-                      <metric.icon className="h-5 w-5" />
-                    </span>
-                    <p className="text-sm font-medium text-gray-600">
-                      {metric.label}
-                    </p>
-                  </div>
-                  <p className="mt-2 text-3xl font-bold text-gray-900">
-                    {metric.value}
-                  </p>
-                  <div className="mt-3 flex items-center gap-2 text-sm">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
-                        metric.trendDirection === "up"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-rose-50 text-rose-700"
-                      }`}
-                    >
-                      <ArrowUpRight
-                        className={`h-3.5 w-3.5 ${
-                          metric.trendDirection === "down" ? "rotate-90" : ""
-                        }`}
-                      />
-                      {metric.trend}
-                    </span>
-                    <span className="text-gray-500">{metric.description}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        })()}
-      </section>
+        <CustomerProfileKpiGrid
+          hero={liveReport?.heroMetrics}
+          heroTrends={liveReport?.heroTrends}
+          valueMatrix={valueMatrixSeries}
+          useDummyData={useDummyData}
+          rangeKey={activeRangeKey}
+          multiplier={actualMultiplier}
+          churnInactivityDays={liveReport?.meta?.churnInactivityDays}
+        />
       )}
+
 
       {!isTrendsView && (
       <section className="grid gap-6 lg:grid-cols-2">
-        <ReportChartCard
+        <SwitchableReportChart
           title={t.customerProfileReports.customerValueMatrix}
           subtitle={t.customerProfileReports.valueMatrixDescription}
           filename="customer-value-matrix.csv"
@@ -1638,37 +1508,19 @@ export default function CustomerProfileReportsPage() {
             { key: "customers", label: t.customerProfileReports.customers },
           ]}
           rows={valueMatrixSeries}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={valueMatrixSeries}
-              margin={{ top: 20, right: 24, left: 0, bottom: 50 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="segment"
-                tick={{ fill: "#6b7280", fontSize: 11 }}
-                interval={0}
-              />
-              <YAxis tick={{ fill: "#6b7280" }} />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "transparent" }}
-              />
-              <Bar
-                dataKey="customers"
-                name={t.customerProfileReports.customers}
-                fill={
-                  colors.reportCharts.customerProfile.valueMatrix.customers
-                }
-                maxBarSize={60}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ReportChartCard>
+          xKey="segment"
+          yLabel={t.customerProfileReports.customers}
+          yTickFormatter={(value) => value.toLocaleString("en-US")}
+          series={[
+            {
+              dataKey: "customers",
+              name: t.customerProfileReports.customers,
+              color: colors.reportCharts.customerProfile.valueMatrix.customers,
+            },
+          ]}
+        />
 
-        <ReportChartCard
+        <SwitchableReportChart
           title={t.customerProfileReports.customerLifetimeValueDistribution}
           subtitle={t.customerProfileReports.clvDistributionDescription}
           filename="customer-clv-distribution.csv"
@@ -1679,71 +1531,33 @@ export default function CustomerProfileReportsPage() {
             { key: "revenueShare", label: t.customerProfileReports.revenueShare },
           ]}
           rows={clvDistributionSeries}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={clvDistributionSeries}
-              margin={{ top: 20, right: 24, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="range" tick={{ fill: "#6b7280" }} />
-              <YAxis
-                yAxisId="left"
-                tick={{ fill: "#6b7280" }}
-                tickFormatter={(value) => `${value / 1000}k`}
-                label={{
-                  value: t.customerProfileReports.customers,
-                  angle: -90,
-                  position: "insideLeft",
-                }}
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                tick={{ fill: "#6b7280" }}
-                tickFormatter={(value) => `${value}%`}
-                label={{
-                  value: t.customerProfileReports.revenueShare,
-                  angle: 90,
-                  position: "insideRight",
-                }}
-              />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "transparent" }}
-              />
-              <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-              <Bar
-                yAxisId="left"
-                dataKey="customers"
-                name={t.customerProfileReports.customers}
-                fill={
-                  colors.reportCharts.customerProfile.clvDistribution
-                    .customers
-                }
-                radius={[4, 4, 0, 0]}
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="revenueShare"
-                name={t.customerProfileReports.revenueShare}
-                stroke={
-                  colors.reportCharts.customerProfile.clvDistribution
-                    .revenueShare
-                }
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ReportChartCard>
+          xKey="range"
+          yLabel={t.customerProfileReports.customers}
+          yTickFormatter={(value) => `${value / 1000}k`}
+          rightYLabel={t.customerProfileReports.revenueShare}
+          rightTickFormatter={(value) => `${value}%`}
+          series={[
+            {
+              dataKey: "customers",
+              name: t.customerProfileReports.customers,
+              color: colors.reportCharts.customerProfile.clvDistribution.customers,
+              valueFormatter: (value) => value.toLocaleString("en-US"),
+            },
+            {
+              dataKey: "revenueShare",
+              name: t.customerProfileReports.revenueShare,
+              color: colors.reportCharts.customerProfile.clvDistribution.revenueShare,
+              axis: "right",
+              valueFormatter: (value) => `${value}%`,
+            },
+          ]}
+        />
       </section>
       )}
 
       {isTrendsView && (
       <section className="space-y-6">
-        <ReportChartCard
+        <SwitchableReportChart
           title={t.customerProfileReports.lifecycleDistribution}
           subtitle={t.customerProfileReports.lifecycleDescription}
           filename="customer-lifecycle-distribution.csv"
@@ -1759,86 +1573,45 @@ export default function CustomerProfileReportsPage() {
             { key: "churned", label: t.customerProfileReports.churned },
           ]}
           rows={lifecycleSeries}
-        >
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={lifecycleSeries}
-                margin={{ top: 20, right: 24, left: 20, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fill: "#6b7280" }} />
-                <YAxis
-                  tick={{ fill: "#6b7280" }}
-                  tickFormatter={(value) => `${value}k`}
-                  label={{
-                    value: `${t.customerProfileReports.customers} (000s)`,
-                    angle: -90,
-                    position: "insideLeft",
-                  }}
-                />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
-                <Bar
-                  dataKey="active"
-                  name={t.customerProfileReports.active}
-                  fill={
-                    colors.reportCharts.customerProfile.lifecycleDistribution
-                      .active
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="new"
-                  name={t.customerProfileReports.new}
-                  fill={
-                    colors.reportCharts.customerProfile.lifecycleDistribution
-                      .new
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="reactivated"
-                  name={t.customerProfileReports.reactivated}
-                  fill={
-                    colors.reportCharts.customerProfile.lifecycleDistribution
-                      .reactivated
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="atRisk"
-                  name={t.customerProfileReports.atRisk}
-                  fill={
-                    colors.reportCharts.customerProfile.lifecycleDistribution
-                      .atRisk
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="dormant"
-                  name={t.customerProfileReports.dormant}
-                  fill={
-                    colors.reportCharts.customerProfile.lifecycleDistribution
-                      .dormant
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="churned"
-                  name={t.customerProfileReports.churned}
-                  fill={
-                    colors.reportCharts.customerProfile.lifecycleDistribution
-                      .churned
-                  }
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-        </ReportChartCard>
-        <ReportChartCard
+          xKey="month"
+          yLabel={`${t.customerProfileReports.customers} (000s)`}
+          yTickFormatter={(value) => `${value}k`}
+          comparisonData={lifecycleComparison}
+          comparisonLabel={previousComparisonLabel}
+          series={[
+            {
+              dataKey: "active",
+              name: t.customerProfileReports.active,
+              color: colors.reportCharts.customerProfile.lifecycleDistribution.active,
+            },
+            {
+              dataKey: "new",
+              name: t.customerProfileReports.new,
+              color: colors.reportCharts.customerProfile.lifecycleDistribution.new,
+            },
+            {
+              dataKey: "reactivated",
+              name: t.customerProfileReports.reactivated,
+              color: colors.reportCharts.customerProfile.lifecycleDistribution.reactivated,
+            },
+            {
+              dataKey: "atRisk",
+              name: t.customerProfileReports.atRisk,
+              color: colors.reportCharts.customerProfile.lifecycleDistribution.atRisk,
+            },
+            {
+              dataKey: "dormant",
+              name: t.customerProfileReports.dormant,
+              color: colors.reportCharts.customerProfile.lifecycleDistribution.dormant,
+            },
+            {
+              dataKey: "churned",
+              name: t.customerProfileReports.churned,
+              color: colors.reportCharts.customerProfile.lifecycleDistribution.churned,
+            },
+          ]}
+        />
+        <SwitchableReportChart
           title={t.customerProfileReports.cohortRetentionComparison}
           subtitle={t.customerProfileReports.cohortDescription}
           filename="customer-cohort-retention.csv"
@@ -1849,54 +1622,16 @@ export default function CustomerProfileReportsPage() {
             ...cohortChartKeys.map((key) => ({ key, label: key })),
           ]}
           rows={cohortComparisonSeries}
-        >
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={cohortComparisonSeries}
-                margin={{ top: 20, right: 24, left: 20, bottom: 40 }}
-                barCategoryGap="30%"
-                barGap={12}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fill: "#6b7280" }}
-                  label={{
-                    value: t.customerProfileReports.monthsSinceAcquisition,
-                    position: "bottom",
-                    style: { marginTop: 8, marginBottom: 8 },
-                  }}
-                />
-                <YAxis
-                  tick={{ fill: "#6b7280" }}
-                  domain={[0, 100]}
-                  tickFormatter={(value) => `${value}%`}
-                  label={{
-                    value: t.customerProfileReports.retentionPercent,
-                    angle: -90,
-                    position: "insideLeft",
-                  }}
-                />
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "transparent" }}
-                />
-                <Legend
-                  iconType="circle"
-                  wrapperStyle={{ paddingTop: 28, marginTop: 18 }}
-                />
-                {cohortChartKeys.map((cohortKey, index) => (
-                  <Bar
-                    key={cohortKey}
-                    dataKey={cohortKey}
-                    name={cohortKey}
-                    fill={cohortChartColors[index % cohortChartColors.length]}
-                    radius={[4, 4, 0, 0]}
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-        </ReportChartCard>
+          xKey="month"
+          yLabel={t.customerProfileReports.retentionPercent}
+          yTickFormatter={(value) => `${value}%`}
+          valueFormatter={(value) => `${value}%`}
+          series={cohortChartKeys.map((cohortKey, index) => ({
+            dataKey: cohortKey,
+            name: cohortKey,
+            color: cohortChartColors[index % cohortChartColors.length],
+          }))}
+        />
       </section>
       )}
 

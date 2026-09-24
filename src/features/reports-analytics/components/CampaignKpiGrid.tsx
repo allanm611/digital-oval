@@ -3,27 +3,37 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   CheckCircle2,
+  CircleDollarSign,
   Send,
   ShieldCheck,
+  TrendingUp,
   Users2,
+  Wallet,
 } from "lucide-react";
+import { formatCurrency } from "../../../shared/services/currencyService";
 import { colors } from "../../../shared/utils/tokens";
 import { tw } from "../../../shared/utils/utils";
 import { resolveHeroTrend } from "../utils/campaignReportQuery";
+import { previousPeriodSummary } from "../utils/campaignReportDummy";
 import { formatAudienceShare } from "../utils/normalizeCampaignReport";
 import {
   audienceSplit,
+  computeDeltaTrend,
+  convertedFrom,
+  costPerConversion,
+  CVM_METRIC_LABELS,
   formatCount,
   formatRate,
+  romiFrom,
   sentByChannel,
-  CVM_METRIC_LABELS,
+  valuePerConversion,
+  type KpiTrend,
+  type KpiTrendFormat,
 } from "../utils/campaignCvmMetrics";
-import type { CampaignReportsResponse } from "../types/ReportsAPI";
-
-type HeroTrend = {
-  value: string;
-  direction: "up" | "down";
-};
+import type {
+  CampaignReportTrend,
+  CampaignReportsResponse,
+} from "../types/ReportsAPI";
 
 type CampaignKpiGridProps = {
   summary: CampaignReportsResponse["summary"];
@@ -82,7 +92,7 @@ function KpiCard({
   value: string;
   subtext: string;
   icon: LucideIcon;
-  trend: HeroTrend;
+  trend: KpiTrend;
   children?: ReactNode;
 }) {
   const trendColor =
@@ -91,6 +101,8 @@ function KpiCard({
       : trend.direction === "down"
         ? "text-red-600"
         : "text-gray-500";
+  const trendMark =
+    trend.direction === "up" ? "↑" : trend.direction === "down" ? "↓" : "•";
 
   return (
     <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
@@ -100,8 +112,7 @@ function KpiCard({
           <p className="text-sm font-medium text-gray-600">{label}</p>
         </div>
         <span className={`text-xs font-semibold ${trendColor}`}>
-          {trend.direction === "up" ? "↑" : trend.direction === "down" ? "↓" : "•"}{" "}
-          {trend.value}
+          {trendMark} {trend.value}
         </span>
       </div>
       <p className="mt-3 text-3xl font-bold text-gray-900">{value}</p>
@@ -111,14 +122,19 @@ function KpiCard({
   );
 }
 
-const dummyTrends: Record<string, HeroTrend> = {
-  audience: { value: "+8.4%", direction: "up" },
-  sent: { value: "+6.1%", direction: "up" },
-  delivered: { value: "+5.8%", direction: "up" },
-  deliveryRate: { value: "+0.4 pts", direction: "up" },
-  converted: { value: "+3.2%", direction: "up" },
-  conversionRate: { value: "-0.4 pts", direction: "down" },
-};
+function kpiTrend(
+  current: number,
+  previous: number | undefined,
+  format: KpiTrendFormat,
+  apiTrend: CampaignReportTrend | undefined,
+  useDummyData: boolean,
+): KpiTrend {
+  if (!useDummyData) {
+    const resolved = resolveHeroTrend(apiTrend);
+    if (resolved.value !== "—") return resolved;
+  }
+  return computeDeltaTrend(current, previous, format);
+}
 
 export default function CampaignKpiGrid({
   summary,
@@ -128,25 +144,75 @@ export default function CampaignKpiGrid({
 }: CampaignKpiGridProps) {
   const split = audienceSplit(summary);
   const channelSent = sentByChannel(channelReach);
-  const converted = summary.converted || summary.conversions;
-  const deliveryTrend = useDummyData
-    ? dummyTrends.deliveryRate
-    : resolveHeroTrend(heroTrends?.deliveryRate || heroTrends?.delivered);
-  const audienceTrend = useDummyData
-    ? dummyTrends.audience
-    : resolveHeroTrend(heroTrends?.uniqueAudience || heroTrends?.reach);
-  const sentTrend = useDummyData
-    ? dummyTrends.sent
-    : resolveHeroTrend(heroTrends?.sent);
-  const deliveredTrend = useDummyData
-    ? dummyTrends.delivered
-    : resolveHeroTrend(heroTrends?.delivered);
-  const convertedTrend = useDummyData
-    ? dummyTrends.converted
-    : resolveHeroTrend(heroTrends?.converted || heroTrends?.conversions);
-  const conversionTrend = useDummyData
-    ? dummyTrends.conversionRate
-    : resolveHeroTrend(heroTrends?.conversionRate);
+  const converted = convertedFrom(summary);
+  const romi = romiFrom(summary);
+  const previous = useDummyData ? previousPeriodSummary(summary) : undefined;
+  const previousConverted = previous ? convertedFrom(previous) : undefined;
+  const previousRomi = previous ? romiFrom(previous) : undefined;
+
+  const audienceTrend = kpiTrend(
+    split.uniqueAudience,
+    previous?.uniqueAudience,
+    "percent",
+    heroTrends?.uniqueAudience || heroTrends?.reach,
+    useDummyData,
+  );
+  const sentTrend = kpiTrend(
+    summary.sent,
+    previous?.sent,
+    "percent",
+    heroTrends?.sent,
+    useDummyData,
+  );
+  const deliveredTrend = kpiTrend(
+    summary.delivered,
+    previous?.delivered,
+    "percent",
+    heroTrends?.delivered,
+    useDummyData,
+  );
+  const deliveryTrend = kpiTrend(
+    summary.deliveryRate,
+    previous?.deliveryRate,
+    "points",
+    heroTrends?.deliveryRate,
+    useDummyData,
+  );
+  const convertedTrend = kpiTrend(
+    converted,
+    previousConverted,
+    "percent",
+    heroTrends?.converted || heroTrends?.conversions,
+    useDummyData,
+  );
+  const conversionTrend = kpiTrend(
+    summary.conversionRate,
+    previous?.conversionRate,
+    "points",
+    heroTrends?.conversionRate,
+    useDummyData,
+  );
+  const valueTrend = kpiTrend(
+    summary.revenue,
+    previous?.revenue,
+    "compact",
+    heroTrends?.revenue,
+    useDummyData,
+  );
+  const romiTrend = kpiTrend(
+    romi,
+    previousRomi,
+    "multiplier",
+    heroTrends?.romi || heroTrends?.roas,
+    useDummyData,
+  );
+  const costTrend = kpiTrend(
+    summary.campaignCost,
+    previous?.campaignCost,
+    "compact",
+    heroTrends?.campaignCost,
+    useDummyData,
+  );
 
   const sentShareLabel = channelSent.length
     ? channelSent
@@ -158,10 +224,33 @@ export default function CampaignKpiGrid({
   return (
     <section className="space-y-3">
       <p className="text-xs text-gray-500">
-        Audience metrics are de-duplicated by unique customer identifier. Unique
-        customers reached is not the same as total messages sent.
+        Overview pairs commercial CVM outcomes (value generated, ROMI, campaign
+        cost) with unique-customer delivery. Corner figures are vs the previous
+        window of the same length.
       </p>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <KpiCard
+          label={CVM_METRIC_LABELS.valueGenerated}
+          value={formatCurrency(summary.revenue)}
+          subtext={`Avg ${formatCurrency(valuePerConversion(summary), { decimals: 0 })} per conversion`}
+          icon={CircleDollarSign}
+          trend={valueTrend}
+        />
+        <KpiCard
+          label={CVM_METRIC_LABELS.romi}
+          value={`${(Number.isFinite(romi) ? romi : 0).toFixed(1)}x`}
+          subtext={`Campaign cost ${formatCurrency(summary.campaignCost)}`}
+          icon={TrendingUp}
+          trend={romiTrend}
+        />
+        <KpiCard
+          label={CVM_METRIC_LABELS.campaignCost}
+          value={formatCurrency(summary.campaignCost)}
+          subtext={`Cost per conversion ${formatCurrency(costPerConversion(summary), { decimals: 2 })}`}
+          icon={Wallet}
+          trend={costTrend}
+        />
+
         <KpiCard
           label={CVM_METRIC_LABELS.audienceReached}
           value={formatCount(split.uniqueAudience)}

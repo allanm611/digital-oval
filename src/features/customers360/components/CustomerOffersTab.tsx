@@ -73,7 +73,7 @@ export default function CustomerOffersTab({
     return () => window.clearTimeout(timer);
   }, [searchTerm]);
 
-  const { result, progress, isLoading, error, refetch } = useCustomerOffers(
+  const { result, progress, isLoading, isEnriching, error, refetch } = useCustomerOffers(
     subscriberId ?? undefined,
     customerRecord,
   );
@@ -285,7 +285,9 @@ export default function CustomerOffersTab({
             <Sparkles className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.counts.available.toLocaleString()}
+            {isLoading && result.offers.length === 0
+              ? "—"
+              : result.counts.available.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             Eligible now via this customer's audience
@@ -299,7 +301,9 @@ export default function CustomerOffersTab({
             <Ticket className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.counts.redeemed.toLocaleString()}
+            {isLoading && result.offers.length === 0
+              ? "—"
+              : result.counts.redeemed.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             {isLoading
@@ -325,7 +329,9 @@ export default function CustomerOffersTab({
             <Gift className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.counts.total.toLocaleString()}
+            {isLoading && result.offers.length === 0
+              ? "—"
+              : result.counts.total.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             {isLoading
@@ -391,7 +397,14 @@ export default function CustomerOffersTab({
         </div>
       )}
 
-      {isLoading ? (
+      {isEnriching && result.offers.length > 0 && (
+        <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">
+          Enriching offer catalog {progress.checked.toLocaleString()} of{" "}
+          {progress.total.toLocaleString()}...
+        </div>
+      )}
+
+      {isLoading && result.offers.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner variant="modern" size="lg" color="primary" />
           <p className="mt-3 text-sm text-gray-500">

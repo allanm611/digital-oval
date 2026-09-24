@@ -47,14 +47,39 @@ export function formatTrendLabel(label?: string): string {
 }
 
 export function resolveHeroTrend(trend?: {
+  value?: number;
   label?: string;
-  direction?: "up" | "down";
-}): { value: string; direction: "up" | "down" } {
-  const value = formatTrendLabel(trend?.label);
-  const trimmed = value.trim();
-  if (trimmed.startsWith("-")) return { value, direction: "down" };
-  if (trimmed.startsWith("+")) return { value, direction: "up" };
-  return { value, direction: trend?.direction || "up" };
+  direction?: "up" | "down" | "flat";
+}): { value: string; direction: "up" | "down" | "flat" } {
+  if (!trend) return { value: "—", direction: "flat" };
+  const fromLabel = formatTrendLabel(trend.label);
+  const trimmed = fromLabel.trim();
+  if (trimmed && trimmed !== "—") {
+    if (
+      trimmed === "0" ||
+      trimmed === "0%" ||
+      trimmed === "0.0x" ||
+      trimmed === "0 pts" ||
+      trimmed === "+0" ||
+      trimmed === "+0.0x" ||
+      trimmed === "+0 pts"
+    ) {
+      return { value: fromLabel, direction: "flat" };
+    }
+    if (trimmed.startsWith("-")) return { value: fromLabel, direction: "down" };
+    if (trimmed.startsWith("+")) return { value: fromLabel, direction: "up" };
+    if (trend.direction === "down") return { value: fromLabel, direction: "down" };
+    if (trend.direction === "up") return { value: fromLabel, direction: "up" };
+    return { value: fromLabel, direction: "flat" };
+  }
+  if (typeof trend.value === "number" && Number.isFinite(trend.value) && trend.value !== 0) {
+    const sign = trend.value > 0 ? "+" : "";
+    return {
+      value: `${sign}${trend.value}`,
+      direction: trend.value > 0 ? "up" : "down",
+    };
+  }
+  return { value: "—", direction: "flat" };
 }
 
 export function settledValue<T>(result: PromiseSettledResult<T>): T | null {

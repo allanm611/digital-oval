@@ -15,7 +15,10 @@ import type {
   CustomerEventOrigin,
   CustomerEventPurchaseContext,
   CustomerEventQuery,
+  CommunicationChannelOption,
+  EventFilterCatalogs,
   EventTimePreset,
+  TrackingSourceOption,
 } from "../types/customerEvent";
 
 export const EVENT_COUNT_WINDOWS: Array<{
@@ -1227,10 +1230,128 @@ export function normalizeChannel(value: string): CustomerEventChannel {
   if (CHANNELS.includes(normalized as CustomerEventChannel)) {
     return normalized as CustomerEventChannel;
   }
-  if (normalized === "inapp" || normalized === "mobile") return "app";
-  if (normalized === "obd" || normalized === "ivr") return "voice";
-  if (normalized === "whatsapp" || normalized === "short_code") return "sms";
+  const compact = normalized.replace(/[\s_-]+/g, "");
+  if (normalized === "inapp" || normalized === "mobile" || compact === "inapp") {
+    return "app";
+  }
+  if (normalized === "obd" || normalized === "ivr" || compact.includes("ivr")) {
+    return "voice";
+  }
+  if (compact.includes("sms") || compact.includes("shortcode")) return "sms";
+  if (compact.includes("push")) return "push";
+  if (compact.includes("email") || compact === "mail") return "email";
+  if (compact.includes("ussd")) return "ussd";
+  if (compact.includes("digital") || compact.includes("web")) return "web";
+  if (compact.includes("whatsapp") || compact.includes("messenger")) return "other";
   return "other";
+}
+
+function filterToken(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+}
+
+function uniqueTokens(values: Array<unknown>): string[] {
+  const seen = new Set<string>();
+  values.forEach((value) => {
+    const token = filterToken(value);
+    if (token) seen.add(token);
+  });
+  return Array.from(seen);
+}
+
+function catalogRowByTokens<T>(
+  catalog: T[],
+  selected: string,
+  tokensOf: (row: T) => Array<unknown>,
+): T | undefined {
+  const selectedToken = filterToken(selected);
+  return catalog.find((row) => uniqueTokens(tokensOf(row)).includes(selectedToken));
+}
+
+function tokensAreUnique(
+  catalog: Array<{ token: string }>,
+  token: string,
+): boolean {
+  if (!token) return false;
+  return catalog.filter((row) => row.token === token).length <= 1;
+}
+
+export function eventMatchesTrackingSource(
+  event: CustomerEvent,
+  selected: string,
+  catalog: TrackingSourceOption[] = [],
+): boolean {
+  if (!selected || selected === "all") return true;
+
+  const row =
+    catalogRowByTokens(catalog, selected, (source) => [source.id, source.code]) ||
+    catalogRowByTokens(catalog, selected, (source) => [source.name]) ||
+    catalogRowByTokens(catalog, selected, (source) => [source.sourceType]);
+  const eventTokens = uniqueTokens([
+    event.tracking_source_id,
+    event.tracking_source_name,
+  ]);
+  const exactAliases = uniqueTokens([
+    selected,
+    row?.id,
+    row?.code,
+    row?.name,
+  ]);
+
+  if (eventTokens.some((token) => exactAliases.includes(token))) return true;
+
+  const typeToken = filterToken(row?.sourceType);
+  const typeIsUnique = tokensAreUnique(
+    catalog.map((source) => ({ token: filterToken(source.sourceType) })),
+    typeToken,
+  );
+  return typeIsUnique && eventTokens.includes(typeToken);
+}
+
+export function eventMatchesCommunicationChannel(
+  event: CustomerEvent,
+  selected: string,
+  catalog: CommunicationChannelOption[] = [],
+): boolean {
+  if (!selected || selected === "all") return true;
+
+  const row = catalogRowByTokens(catalog, selected, (channel) => [
+    channel.id,
+    channel.code,
+    channel.name,
+  ]);
+  const eventExact = uniqueTokens([
+    event.channel_raw,
+    event.communication_channel_id,
+    event.communication_channel_code,
+  ]);
+  const exactAliases = uniqueTokens([
+    selected,
+    row?.id,
+    row?.code,
+    row?.name,
+  ]);
+
+  if (eventExact.some((token) => exactAliases.includes(token))) return true;
+
+  const bucket = normalizeChannel(row?.code || row?.name || selected);
+  const bucketIsUnique = tokensAreUnique(
+    catalog.map((channel) => ({
+      token: normalizeChannel(channel.code || channel.name),
+    })),
+    bucket,
+  );
+  if (!bucketIsUnique) return false;
+
+  return uniqueTokens([
+    event.channel,
+    event.channel_raw,
+    event.communication_channel_id,
+    event.communication_channel_code,
+  ]).includes(filterToken(bucket));
 }
 
 export function normalizeOrigin(value: string): CustomerEventOrigin {
@@ -1324,6 +1445,7 @@ export function filterCustomerEvents(
   events: CustomerEvent[],
   query: CustomerEventQuery,
   now: Date = new Date(),
+  catalogs: EventFilterCatalogs = {},
 ): CustomerEvent[] {
   const origin = query.origin && query.origin !== "all" ? query.origin : "";
   const eventTypes = (query.event_types || []).filter(
@@ -1352,10 +1474,28 @@ export function filterCustomerEvents(
       return false;
     }
     if (eventType && event.event_type !== eventType) return false;
-    if (trackingSource && event.tracking_source_id !== trackingSource) return false;
+    if (
+      trackingSource &&
+      !eventMatchesTrackingSource(
+        event,
+        trackingSource,
+        catalogs.trackingSources,
+      )
+    ) {
+      return false;
+    }
     if (origin && event.origin !== origin) return false;
     if (status && event.status !== status) return false;
-    if (channel && event.channel !== channel) return false;
+    if (
+      channel &&
+      !eventMatchesCommunicationChannel(
+        event,
+        channel,
+        catalogs.communicationChannels,
+      )
+    ) {
+      return false;
+    }
     if (!isEventInRange(event.occurred_at, from, to)) return false;
     return true;
   });
@@ -1453,9 +1593,28 @@ export function normalizeCustomerEvent(raw: unknown, index = 0): CustomerEvent |
     ]) || new Date().toISOString();
 
   const channelRaw =
-    pickString(record, ["channel", "delivery_channel", "deliveryChannel"]) ||
+    pickString(record, [
+      "channel",
+      "delivery_channel",
+      "deliveryChannel",
+      "communication_channel",
+      "communicationChannel",
+    ]) ||
     catalog?.channel ||
     "other";
+  const communicationChannelId = pickString(record, [
+    "communication_channel_id",
+    "communicationChannelId",
+    "channel_id",
+    "channelId",
+  ]);
+  const communicationChannelCode =
+    pickString(record, [
+      "communication_channel_code",
+      "communicationChannelCode",
+      "channel_code",
+      "channelCode",
+    ]) || channelRaw;
   const originRaw =
     pickString(record, ["origin", "event_origin", "eventOrigin", "actor", "source_kind"]) ||
     catalog?.origin ||
@@ -1468,13 +1627,13 @@ export function normalizeCustomerEvent(raw: unknown, index = 0): CustomerEvent |
       "tracking_source",
       "trackingSource",
     ]) ||
-    pickString(nestedSource || {}, ["id", "code", "source_type", "sourceType"]) ||
+    pickString(nestedSource || {}, ["id", "code"]) ||
     catalog?.tracking_source_id ||
     "custom";
 
   const trackingSourceName =
     pickString(record, ["tracking_source_name", "trackingSourceName"]) ||
-    pickString(nestedSource || {}, ["name", "label"]) ||
+    pickString(nestedSource || {}, ["name", "label", "code"]) ||
     catalog?.tracking_source_name ||
     trackingSourceId;
 
@@ -1492,6 +1651,9 @@ export function normalizeCustomerEvent(raw: unknown, index = 0): CustomerEvent |
       catalog?.description ||
       "",
     channel: normalizeChannel(channelRaw),
+    channel_raw: channelRaw,
+    communication_channel_id: communicationChannelId || undefined,
+    communication_channel_code: communicationChannelCode || undefined,
     tracking_source_id: String(trackingSourceId),
     tracking_source_name: trackingSourceName,
     origin: normalizeOrigin(originRaw),
@@ -1557,195 +1719,38 @@ export function parseApiCounts(raw: unknown): CustomerEventCounts | null {
   return found ? counts : null;
 }
 
-function createSeededRandom(seed: number) {
-  let state = seed % 2147483647;
-  if (state <= 0) state += 2147483646;
-  return () => {
-    state = (state * 16807) % 2147483647;
-    return (state - 1) / 2147483646;
-  };
-}
-
-function hashSeed(value: string): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash) || 1;
-}
-
-function buildFallbackRelatedContext(
-  definition: CustomerEventCatalogItem,
-  occurredAt: string,
-  random: () => number,
-): Pick<CustomerEvent, "offer" | "campaign" | "creative" | "message"> {
-  if (!isCommunicationLinkedEvent(definition)) {
-    return { offer: null, campaign: null, creative: null, message: null };
-  }
-
-  const offerIndex = Math.floor(random() * 3);
-  const offers = [
-    {
-      name: "Welcome Data Bundle",
-      code: "WELCOME-DATA",
-      type: "Bundle",
-      status: "active",
-      description: "Starter data bundle for newly acquired subscribers.",
-    },
-    {
-      name: "Flash Sale Voice Pack",
-      code: "FLASH-VOICE",
-      type: "Voice",
-      status: "active",
-      description: "Limited-time voice minutes with bonus SMS.",
-    },
-    {
-      name: "Loyalty Bonus Offer",
-      code: "LOYALTY-BONUS",
-      type: "Bonus",
-      status: "approved",
-      description: "Reward offer for high-value customers.",
-    },
-  ];
-  const campaigns = [
-    { name: "Onboarding Welcome", code: "CMP-ONBOARD", status: "active", type: "lifecycle" },
-    { name: "Weekend Flash Sale", code: "CMP-FLASH", status: "active", type: "promotional" },
-    { name: "Loyalty Retention", code: "CMP-LOYAL", status: "scheduled", type: "retention" },
-  ];
-  const offer = offers[offerIndex];
-  const campaign = campaigns[offerIndex];
-  const inbound =
-    definition.code === "received_message" || definition.code === "message_received";
-  const occurred = parseEventDate(occurredAt) || new Date();
-  const sentAt = new Date(occurred.getTime() - 90 * 1000).toISOString();
-  const bodyByChannel: Record<string, string> = {
-    email: `Hi, you qualify for ${offer.name}. Open the app to redeem ${offer.code}.`,
-    sms: `${offer.name}: reply YES to redeem ${offer.code}.`,
-    push: `${offer.name} is ready. Tap to view your reward.`,
-    app: `Redeem ${offer.name} (${offer.code}) in the offers tab.`,
-  };
-  const content =
-    bodyByChannel[definition.channel] ||
-    `${offer.name} is available on ${definition.channel}.`;
-
-  return {
-    offer: {
-      id: null,
-      name: offer.name,
-      code: offer.code,
-      type: offer.type,
-      status: offer.status,
-      description: offer.description,
-    },
-    campaign: {
-      id: null,
-      name: campaign.name,
-      code: campaign.code,
-      status: campaign.status,
-      type: campaign.type,
-    },
-    creative: {
-      id: null,
-      name: `${campaign.name} ${definition.channel} creative`,
-      channel: definition.channel,
-      title: offer.name,
-      locale: "en",
-      text_body: content,
-      html_body: "",
-    },
-    message: {
-      subject: definition.channel === "email" ? offer.name : "",
-      content,
-      direction: inbound ? "inbound" : "outbound",
-      received_at: inbound ? occurredAt : null,
-      sent_at: inbound ? sentAt : occurredAt,
-      delivered_at: occurredAt,
-    },
-  };
-}
-
-/**
- * Deterministic fallback stream so the same subscriber always sees the same
- * events when the events API is not yet available.
- */
-export function generateFallbackCustomerEvents(
-  subscriberId: string,
-  now: Date = new Date(),
-): CustomerEvent[] {
-  const random = createSeededRandom(hashSeed(subscriberId));
-  const catalog = CUSTOMER_EVENT_CATALOG;
-  const windows = [
-    { withinMs: 45 * 60 * 1000, count: 3 },
-    { withinMs: 18 * 60 * 60 * 1000, count: 8 },
-    { withinMs: 5 * 24 * 60 * 60 * 1000, count: 12 },
-    { withinMs: 22 * 24 * 60 * 60 * 1000, count: 16 },
-    { withinMs: 75 * 24 * 60 * 60 * 1000, count: 14 },
-  ];
-
-  const events: CustomerEvent[] = [];
-  let sequence = 0;
-
-  windows.forEach((window, windowIndex) => {
-    for (let i = 0; i < window.count; i += 1) {
-      const definition = catalog[Math.floor(random() * catalog.length)];
-      const status =
-        definition.statuses[Math.floor(random() * definition.statuses.length)];
-      const offset = Math.floor(random() * window.withinMs);
-      const occurred = new Date(now.getTime() - offset - windowIndex * 1000);
-      sequence += 1;
-      const occurredAt = occurred.toISOString();
-      events.push({
-        id: `EVT-${subscriberId}-${sequence}`,
-        event_type: definition.code,
-        event_type_label: definition.label,
-        description: definition.description,
-        channel: definition.channel,
-        tracking_source_id: definition.tracking_source_id,
-        tracking_source_name: definition.tracking_source_name,
-        origin: definition.origin,
-        status,
-        occurred_at: occurredAt,
-        purchase: null,
-        loyalty: null,
-        interaction: null,
-        device: null,
-        ...buildFallbackRelatedContext(definition, occurredAt, random),
-      });
-    }
-  });
-
-  const receivedDefinition =
-    catalog.find((item) => item.code === "received_message") || catalog[0];
-  sequence += 1;
-  const receivedAt = new Date(now.getTime() - 12 * 60 * 1000).toISOString();
-  events.push({
-    id: `EVT-${subscriberId}-${sequence}`,
-    event_type: receivedDefinition.code,
-    event_type_label: receivedDefinition.label,
-    description: receivedDefinition.description,
-    channel: receivedDefinition.channel,
-    tracking_source_id: receivedDefinition.tracking_source_id,
-    tracking_source_name: receivedDefinition.tracking_source_name,
-    origin: receivedDefinition.origin,
-    status: "Received",
-    occurred_at: receivedAt,
-    purchase: null,
-    loyalty: null,
-    interaction: null,
-    device: null,
-    ...buildFallbackRelatedContext(receivedDefinition, receivedAt, random),
-  });
-
-  return events.sort(
-    (a, b) =>
-      (parseEventDate(b.occurred_at)?.getTime() || 0) -
-      (parseEventDate(a.occurred_at)?.getTime() || 0),
-  );
-}
-
 export function humanizeChannel(channel: string): string {
   if (!channel) return "—";
-  return channel.charAt(0).toUpperCase() + channel.slice(1);
+  return channel
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export function resolveEventChannelLabel(
+  event: Pick<
+    CustomerEvent,
+    | "channel"
+    | "channel_raw"
+    | "communication_channel_id"
+    | "communication_channel_code"
+  >,
+  catalog: CommunicationChannelOption[] = [],
+): string {
+  const keys = uniqueTokens([
+    event.communication_channel_code,
+    event.communication_channel_id,
+    event.channel_raw,
+    event.channel,
+  ]);
+  const match = catalog.find((channel) =>
+    uniqueTokens([channel.id, channel.code, channel.name]).some((token) =>
+      keys.includes(token),
+    ),
+  );
+  if (match?.name) return match.name;
+  return humanizeChannel(event.channel_raw || event.channel);
 }
 
 export function humanizeOrigin(origin: CustomerEventOrigin): string {

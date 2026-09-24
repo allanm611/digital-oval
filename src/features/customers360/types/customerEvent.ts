@@ -1,11 +1,12 @@
 /**
  * Customer 360 event stream — customer-driven actions and system events.
  *
- * Backend contract (when available):
+ * Source of truth:
  *   GET /subscribers/:id/events
- *   Query: search, event_type, tracking_source_id, origin, status, channel,
- *          preset, from, to, limit, offset
- *   Body: { success, data, pagination, counts, facets }
+ * Query: optional preset (last_1h | last_24h | last_7d | last_30d | last_90d),
+ *        from, to, search, event_type, tracking_source_id, origin, status,
+ *        channel, limit (<= 50), offset
+ * Body: { success, data, pagination, counts, facets }
  */
 
 export type CustomerEventOrigin = "customer" | "system";
@@ -118,6 +119,9 @@ export interface CustomerEvent {
   event_type_label: string;
   description: string;
   channel: CustomerEventChannel;
+  channel_raw?: string;
+  communication_channel_id?: string;
+  communication_channel_code?: string;
   tracking_source_id: string;
   tracking_source_name: string;
   origin: CustomerEventOrigin;
@@ -195,5 +199,17 @@ export interface CustomerEventCatalogItem {
 export interface TrackingSourceOption {
   id: string;
   name: string;
+  code: string;
   sourceType?: string;
+}
+
+export interface CommunicationChannelOption {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface EventFilterCatalogs {
+  trackingSources?: TrackingSourceOption[];
+  communicationChannels?: CommunicationChannelOption[];
 }

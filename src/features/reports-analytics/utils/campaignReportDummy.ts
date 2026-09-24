@@ -197,11 +197,31 @@ export function scaleCampaignSummary(
     revenue: Math.round(summary.revenue * scaleFactor),
     leads: Math.round(summary.leads * scaleFactor),
     campaignCost: Math.round(summary.campaignCost * scaleFactor),
-    deliveryRate: summary.deliveryRate,
-    conversionRate: summary.conversionRate,
-    roas: summary.roas,
-    cac: summary.cac,
+    deliveryRate: ratePercent(delivered, sent),
+    conversionRate: ratePercent(converted, delivered),
+    roas: Math.round(summary.campaignCost * scaleFactor)
+      ? Number(
+          (
+            Math.round(summary.revenue * scaleFactor) /
+            Math.round(summary.campaignCost * scaleFactor)
+          ).toFixed(1),
+        )
+      : 0,
+    cac:
+      converted > 0
+        ? Number(
+            (Math.round(summary.campaignCost * scaleFactor) / converted).toFixed(1),
+          )
+        : 0,
   };
+}
+
+/** Dummy previous-period snapshot used for overview KPI corner deltas. */
+export function previousPeriodSummary(
+  summary: CampaignSummary,
+  factor = 0.92,
+): CampaignSummary {
+  return scaleCampaignSummary(summary, factor);
 }
 
 export function scaleChannelReach(

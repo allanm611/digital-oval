@@ -29,6 +29,7 @@ type CustomerCampaignsTabProps = {
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
+  isEnriching?: boolean;
 };
 
 const ALL = "all";
@@ -54,6 +55,7 @@ export default function CustomerCampaignsTab({
   isLoading,
   error,
   refetch,
+  isEnriching = false,
 }: CustomerCampaignsTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -235,7 +237,9 @@ export default function CustomerCampaignsTab({
             <Megaphone className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.audienceCampaigns.length.toLocaleString()}
+            {isLoading && result.audienceCampaigns.length === 0
+              ? "—"
+              : result.audienceCampaigns.length.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             Unique campaigns mapped to this member's segments
@@ -249,7 +253,9 @@ export default function CustomerCampaignsTab({
             <Layers className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : result.memberships.length.toLocaleString()}
+            {isLoading && result.memberships.length === 0
+              ? "—"
+              : result.memberships.length.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             Segment memberships used to resolve audience
@@ -326,7 +332,14 @@ export default function CustomerCampaignsTab({
         </div>
       )}
 
-      {isLoading ? (
+      {isEnriching && (
+        <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">
+          Resolving campaigns for {progress.checked.toLocaleString()} of{" "}
+          {progress.total.toLocaleString()} segments...
+        </div>
+      )}
+
+      {isLoading && result.memberships.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner variant="modern" size="lg" color="primary" />
           <p className="mt-3 text-sm text-gray-500">

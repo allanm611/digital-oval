@@ -264,18 +264,31 @@ export interface OfferReportsResponse {
   // Summary metrics
   summary: {
     totalRedemptions: number;
-    redemptionRate: number; // Percentage (e.g., 3.4 for 3.4%)
-    revenueGenerated: number; // Total revenue in currency units
-    incrementalRevenue: number; // Incremental revenue in currency units
-    totalCost: number; // Total cost in currency units
-    roi: number; // Return on investment multiplier (e.g., 2.3 for 2.3x)
+    redemptionRate: number; // Take-up rate. Kept under this key for live payload compatibility.
+    revenueGenerated: number; // Value generated
+    incrementalRevenue: number; // Incremental value versus the control group
+    totalCost: number; // Reward cost
+    roi: number; // ROMI multiplier (value generated / reward cost)
+    /** Customers who qualified for the offer. */
+    eligible?: number;
+    /** Customers the offer was presented to. */
+    offered?: number;
+    /** Customers who accepted the offer. */
+    takenUp?: number;
+    /** Rewards provisioned after take-up. */
+    fulfilled?: number;
+    targetGroup?: number;
+    controlGroup?: number;
+    targetGroupTakenUp?: number;
+    controlGroupTakenUp?: number;
   };
 
-  // Redemption Funnel Chart Data (Bar Chart)
+  // Offer outcome funnel. Stages: Eligible, Offered, Taken Up, Fulfilled.
+  // Legacy payloads may still send Exposed / Viewed / Engaged / Redeemed; the UI maps those.
   redemptionFunnel: Array<{
-    stage: string; // e.g., "Exposed", "Viewed", "Engaged", "Redeemed"
+    stage: string;
     value: number; // Count at this stage
-    percentage?: number; // Percentage of total (optional, can be calculated client-side)
+    percentage?: number;
   }>;
 
   // Redemption Timeline Chart Data (Composed Chart: Bar + Line)
@@ -311,6 +324,15 @@ export interface OfferReportsResponse {
     incrementalRevenue?: OfferReportTrend;
     totalCost?: OfferReportTrend;
     roi?: OfferReportTrend;
+    eligible?: OfferReportTrend;
+    offered?: OfferReportTrend;
+    takenUp?: OfferReportTrend;
+    fulfilled?: OfferReportTrend;
+    takeUpRate?: OfferReportTrend;
+    rewardCost?: OfferReportTrend;
+    romi?: OfferReportTrend;
+    valueGenerated?: OfferReportTrend;
+    incrementalValue?: OfferReportTrend;
   };
   meta?: {
     timezone?: string;
@@ -493,8 +515,15 @@ export interface SegmentReportsResponse {
     totalMembers: number;
     avgMemberGrowth: number;
     activeInCampaigns: number;
+    /** @deprecated Use activityScore. Kept for live payload compatibility. */
     engagementRate: number;
+    /** @deprecated Use takeUpRate. Kept for live payload compatibility. */
     conversionRate: number;
+    activityScore?: number;
+    takeUpRate?: number;
+    arpu?: number;
+    activeSubscribers?: number;
+    dormantSubscribers?: number;
   };
 
   memberGrowth: Array<{
@@ -519,8 +548,12 @@ export interface SegmentReportsResponse {
   performanceComparison: Array<{
     segmentId?: string;
     segmentName: string;
+    /** @deprecated Use activityScore. */
     engagement: number;
+    /** @deprecated Use takeUpRate. */
     conversion: number;
+    activityScore?: number;
+    takeUpRate?: number;
   }>;
 
   segments: Array<SegmentReportRow>;
@@ -533,6 +566,9 @@ export interface SegmentReportsResponse {
     activeInCampaigns?: SegmentReportTrend;
     engagementRate?: SegmentReportTrend;
     conversionRate?: SegmentReportTrend;
+    activityScore?: SegmentReportTrend;
+    takeUpRate?: SegmentReportTrend;
+    arpu?: SegmentReportTrend;
   };
   meta?: {
     timezone?: string;
@@ -560,9 +596,14 @@ export interface SegmentReportRow {
   memberCount: number;
   growthRate: number;
   campaignsUsed: number;
+  /** @deprecated Use activityScore. */
   engagementRate: number;
+  /** @deprecated Use takeUpRate. */
   conversionRate: number;
   avgValue: number;
+  activityScore?: number;
+  takeUpRate?: number;
+  arpu?: number;
   status: "Active" | "Inactive";
   lastUpdated: string;
 }
@@ -680,6 +721,7 @@ export interface CampaignReportsResponse {
     engagementRate?: CampaignReportTrend;
     revenue?: CampaignReportTrend;
     roas?: CampaignReportTrend;
+    romi?: CampaignReportTrend;
     campaignCost?: CampaignReportTrend;
   };
   meta?: {
@@ -710,7 +752,7 @@ export interface CampaignReportsResponse {
 
 export interface CampaignReportTrend {
   value: number;
-  direction: "up" | "down";
+  direction: "up" | "down" | "flat";
   label: string;
 }
 
@@ -859,52 +901,115 @@ export interface CampaignSnapshotRefreshResult {
 // ============================================================================
 
 /**
+ * GET /monitoring/reporting/sms/portfolio
  *
- * Returns SMS delivery analytics including delivery rates, conversion rates,
- * and message log data.
+ * SMS channel delivery for the selected window: dispatch, handset delivery,
+ * subscriber reach, offer take-up, and opt-out. Digital-marketing aliases
+ * (open rate, click-through, conversion) are accepted on the payload and
+ * mapped to CVM measures before the UI reads them.
  */
 
+export type SmsDeliveryStatus = "Delivered" | "Failed" | "Pending" | "Rejected";
+
+export interface SmsDeliveryReportTrend {
+  value: number;
+  direction: "up" | "down";
+  label: string;
+}
+
 export interface DeliverySMSReportsResponse {
-  // Summary snapshot
   summary: {
     sent: number;
     delivered: number;
-    deliveryRate: number; // Percentage
-    failedRate: number; // Percentage
-    conversionRate: number; // Percentage
+    failed: number;
+    deliveryRate: number;
+    failedRate: number;
+    subscribersReached: number;
+    takenUp: number;
+    takeUpRate: number;
+    optOutRate: number;
+    /** @deprecated Use takenUp. Kept so older payloads still parse. */
     conversions: number;
-    openRate: number; // Percentage (if applicable)
-    ctr: number; // Click-through rate percentage
-    optOutRate: number; // Percentage
+    /** @deprecated Use takeUpRate. */
+    conversionRate: number;
+    /** @deprecated Digital-marketing alias. Not shown. */
+    openRate?: number;
+    /** @deprecated Digital-marketing alias. Not shown. */
+    ctr?: number;
   };
 
-  // Delivery Timeline Chart Data (Bar Chart)
   deliveryTimeline: Array<{
-    period: string; // Period label based on range (daily/weekly/monthly)
+    period: string;
+    date?: string;
     sent: number;
     delivered: number;
-    converted: number; // Conversions from this period
+    takenUp: number;
+    /** @deprecated Use takenUp. */
+    converted: number;
   }>;
 
-  // Message Log Table Data
+  broadcasts: Array<SmsBroadcastRow>;
+  /** @deprecated Use broadcasts. */
   messageLogs: Array<SMSLogEntry>;
-  totalLogs: number; // Total count for pagination
+  totalLogs: number;
+  totalBroadcasts: number;
+
+  heroTrends?: {
+    sent?: SmsDeliveryReportTrend;
+    delivered?: SmsDeliveryReportTrend;
+    deliveryRate?: SmsDeliveryReportTrend;
+    failedRate?: SmsDeliveryReportTrend;
+    subscribersReached?: SmsDeliveryReportTrend;
+    takenUp?: SmsDeliveryReportTrend;
+    takeUpRate?: SmsDeliveryReportTrend;
+    optOutRate?: SmsDeliveryReportTrend;
+  };
+  meta?: {
+    timezone?: string;
+    range?: string;
+    grain?: string;
+    preset?: TimeWindowPreset;
+    total?: number;
+    page?: number;
+    pageSize?: number;
+    computedAt?: string;
+    source?: "live" | "snapshot";
+  };
+}
+
+/** One SMS broadcast in the delivery log, tied to campaign, offer, and segment. */
+export interface SmsBroadcastRow {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  offerId?: string;
+  offerName: string;
+  segmentId?: string;
+  segmentName: string;
+  status: SmsDeliveryStatus;
+  sent: number;
+  delivered: number;
+  subscribersReached: number;
+  takenUp: number;
+  takeUpRate: number;
+  timestamp: string;
+  errorCode?: string;
 }
 
 export interface SMSLogEntry {
   id: string;
   campaignId: string;
   campaignName: string;
-  recipient: string; // Phone number or masked identifier
-  region: string; // Geographic region
+  recipient: string;
+  region: string;
   senderId: string;
-  timestamp: string; // ISO 8601 format: YYYY-MM-DDTHH:mm:ssZ
-  status: "Delivered" | "Failed" | "Pending" | "Rejected";
-  sent: number; // Count sent
-  delivered: number; // Count delivered
-  conversions: number; // Count converted
-  conversionRate: number; // Percentage
-  errorCode?: string; // Error code if status is Failed/Rejected
+  timestamp: string;
+  status: SmsDeliveryStatus;
+  sent: number;
+  delivered: number;
+  conversions: number;
+  conversionRate: number;
+  errorCode?: string;
 }
 
 // ============================================================================
@@ -912,48 +1017,115 @@ export interface SMSLogEntry {
 // ============================================================================
 
 /**
+ * GET /monitoring/reporting/email/portfolio
  *
- * Returns email delivery analytics including delivery rates, bounce rates,
- * open rates, and email log data.
+ * Email-channel delivery for the selected window: dispatch, mailbox delivery,
+ * subscriber reach, offer take-up, bounce, and opt-out. Digital-marketing
+ * aliases (open rate, click-through, conversion, unsubscribe) are accepted on
+ * the payload and mapped to CVM measures before the UI reads them.
  */
 
+export type EmailDeliveryStatus = "Delivered" | "Bounced" | "Deferred" | "Rejected";
+
+export interface EmailDeliveryReportTrend {
+  value: number;
+  direction: "up" | "down";
+  label: string;
+}
+
 export interface DeliveryEmailReportsResponse {
-  // Summary snapshot
   summary: {
     sent: number;
     delivered: number;
-    deliveryRate: number; // Percentage
-    conversionRate: number; // Percentage
+    bounced: number;
+    deliveryRate: number;
+    bounceRate: number;
+    subscribersReached: number;
+    takenUp: number;
+    takeUpRate: number;
+    optOutRate: number;
+    /** @deprecated Use takenUp. Kept so older payloads still parse. */
     conversions: number;
-    bounceRate: number; // Percentage
-    openRate: number; // Percentage
-    ctr: number; // Click-through rate percentage
-    unsubscribeRate: number; // Percentage
+    /** @deprecated Use takeUpRate. */
+    conversionRate: number;
+    /** @deprecated Digital-marketing alias. Not shown. */
+    openRate?: number;
+    /** @deprecated Digital-marketing alias. Not shown. */
+    ctr?: number;
+    /** @deprecated Use optOutRate. */
+    unsubscribeRate?: number;
   };
 
-  // Delivery Timeline Chart Data (Bar Chart)
   deliveryTimeline: Array<{
-    period: string; // Period label based on range (daily/weekly/monthly)
+    period: string;
+    date?: string;
     sent: number;
     delivered: number;
-    converted: number; // Conversions from this period
+    takenUp: number;
+    /** @deprecated Use takenUp. */
+    converted: number;
   }>;
 
-  // Email Log Table Data
+  dispatches: Array<EmailDispatchRow>;
+  /** @deprecated Use dispatches. */
   emailLogs: Array<EmailLogEntry>;
-  totalLogs: number; // Total count for pagination
+  totalLogs: number;
+  totalDispatches: number;
+
+  heroTrends?: {
+    sent?: EmailDeliveryReportTrend;
+    delivered?: EmailDeliveryReportTrend;
+    deliveryRate?: EmailDeliveryReportTrend;
+    bounceRate?: EmailDeliveryReportTrend;
+    subscribersReached?: EmailDeliveryReportTrend;
+    takenUp?: EmailDeliveryReportTrend;
+    takeUpRate?: EmailDeliveryReportTrend;
+    optOutRate?: EmailDeliveryReportTrend;
+  };
+  meta?: {
+    timezone?: string;
+    range?: string;
+    grain?: string;
+    preset?: TimeWindowPreset;
+    total?: number;
+    page?: number;
+    pageSize?: number;
+    computedAt?: string;
+    source?: "live" | "snapshot";
+  };
+}
+
+/** One email dispatch in the delivery log, tied to campaign, offer, and segment. */
+export interface EmailDispatchRow {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  offerId?: string;
+  offerName: string;
+  segmentId?: string;
+  segmentName: string;
+  status: EmailDeliveryStatus;
+  sent: number;
+  delivered: number;
+  subscribersReached: number;
+  takenUp: number;
+  takeUpRate: number;
+  sentDate: string;
+  errorCode?: string;
 }
 
 export interface EmailLogEntry {
   id: string;
   campaignId: string;
   campaignName: string;
-  status: "Delivered" | "Bounced" | "Deferred" | "Spam";
-  sent: number; // Count sent
-  delivered: number; // Count delivered
-  conversions: number; // Count converted
-  conversionRate: number; // Percentage
-  sentDate: string; // ISO 8601 format: YYYY-MM-DD
+  status: EmailDeliveryStatus;
+  sent: number;
+  delivered: number;
+  conversions: number;
+  conversionRate: number;
+  sentDate: string;
+  offerName?: string;
+  segmentName?: string;
 }
 
 // ============================================================================
@@ -961,62 +1133,71 @@ export interface EmailLogEntry {
 // ============================================================================
 
 /**
- *
- * Returns overall dashboard performance metrics across all channels
- * including KPIs, channel breakdown, SMS delivery, and time series data.
+ * Portfolio assembled from the campaign, offer, email, SMS, segment, and
+ * subscriber report endpoints for the same time window.
+ * Measures use CVM terms. Digital-marketing aliases (clicks, CTR, open rate,
+ * ROAS, CPC) are not part of this contract.
  */
-
 export interface OverallDashboardPerformanceResponse {
-  // KPI Snapshot
-  kpiSnapshot: {
-    totalReach: number;
-    totalClicks: number;
-    totalConversions: number;
-    totalRevenue: number; // Total revenue in currency units
-    totalSpend: number; // Total spend in currency units
-    overallROAS: number; // Return on ad spend
-    averageCTR: number; // Average click-through rate percentage
-    averageCVR: number; // Average conversion rate percentage
-  };
-
-  // Channel Performance Breakdown
-  channelSnapshot: Array<ChannelPerformance>;
-
-  // SMS Delivery Snapshot
-  smsDeliverySnapshot: {
-    sent: number;
-    delivered: number;
-    deliveryRate: number; // Percentage
-    conversionRate: number; // Percentage
-    conversions: number;
-  };
-
-  // Time Series Performance
-  timeSeriesSnapshot: Array<{
-    date: string; // ISO 8601 format: YYYY-MM-DD
-    reach: number;
-    clicks: number;
-    conversions: number;
-    revenue: number; // Revenue in currency units
-  }>;
+  subscribersReached: number;
+  dispatched: number;
+  delivered: number;
+  deliveryRate: number;
+  takenUp: number;
+  takeUpRate: number;
+  valueGenerated: number;
+  romi: number;
+  activeSubscribers: number;
+  arpu: number;
+  churnRate: number;
+  segmentPortfolio: number;
+  subscriberBase: number;
+  campaignCount: number;
+  offerCount: number;
+  channels: OverallChannelPerformance[];
+  deliveryTimeline: OverallDeliveryPoint[];
+  offerLifecycle: Array<{ stage: string; value: number }>;
+  valueBands: Array<{ segment: string; subscribers: number }>;
+  domains: OverallDomainSnapshot[];
+  sourceErrors?: string[];
 }
 
-export interface ChannelPerformance {
-  channel: string; // e.g., "Email", "SMS", "Push", "Social"
-  reach: number;
-  clicks: number;
-  opens: number; // For Email/SMS
-  conversions: number;
-  revenue: number; // Revenue in currency units
-  spend: number; // Spend in currency units
-  ctr: number; // Click-through rate percentage
-  openRate: number; // Open rate percentage (for Email/SMS)
-  cvr: number; // Conversion rate percentage
-  cpc: number; // Cost per click
-  cpl: number; // Cost per lead
-  cpa: number; // Cost per acquisition
-  roas: number; // Return on ad spend
-  engagementRate: number; // Engagement rate percentage (for Social)
+export type OverallReportDomain =
+  | "campaigns"
+  | "offers"
+  | "email"
+  | "sms"
+  | "segments"
+  | "profiles";
+
+export interface OverallChannelPerformance {
+  channel: string;
+  channelCode?: string;
+  dispatched: number;
+  delivered: number;
+  subscribersReached: number;
+  takenUp: number;
+  deliveryRate: number;
+  takeUpRate: number;
+  optOutRate: number;
+}
+
+export interface OverallChannelVolume {
+  channel: string;
+  dispatched: number;
+  delivered: number;
+  takenUp: number;
+}
+
+export interface OverallDeliveryPoint {
+  period: string;
+  channels: OverallChannelVolume[];
+}
+
+export interface OverallDomainSnapshot {
+  id: OverallReportDomain;
+  available: boolean;
+  metrics: Array<{ label: string; value: string }>;
 }
 
 // ============================================================================

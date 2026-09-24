@@ -12,6 +12,9 @@ export const CVM_METRIC_LABELS = {
   uniqueAudience: "Unique Audience",
   targetGroup: "Target Group",
   controlGroup: "Control Group",
+  valueGenerated: "Value Generated",
+  romi: "ROMI",
+  campaignCost: "Campaign Cost",
 } as const;
 
 export type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
@@ -51,6 +54,122 @@ export function conversionRateFrom(summary: Partial<CampaignSummary> | null | un
   }
   const converted = summary.converted ?? summary.conversions;
   return ratePercent(converted, summary.delivered || summary.uniqueAudience || summary.sent);
+}
+
+export function convertedFrom(summary: Partial<CampaignSummary> | null | undefined): number {
+  return asFiniteNumber(summary?.converted ?? summary?.conversions);
+}
+
+export function romiFrom(summary: Partial<CampaignSummary> | null | undefined): number {
+  if (!summary) return 0;
+  if (summary.roas != null && Number.isFinite(summary.roas) && summary.roas > 0) {
+    return asFiniteNumber(summary.roas);
+  }
+  const cost = asFiniteNumber(summary.campaignCost);
+  const value = asFiniteNumber(summary.revenue);
+  if (!cost) return 0;
+  return Number((value / cost).toFixed(1));
+}
+
+export function valuePerConversion(summary: Partial<CampaignSummary> | null | undefined): number {
+  const converted = convertedFrom(summary);
+  if (!converted) return 0;
+  return asFiniteNumber(summary?.revenue) / converted;
+}
+
+export function costPerConversion(summary: Partial<CampaignSummary> | null | undefined): number {
+  const converted = convertedFrom(summary);
+  if (!converted) return 0;
+  return asFiniteNumber(summary?.campaignCost) / converted;
+}
+
+export type KpiTrendDirection = "up" | "down" | "flat";
+export type KpiTrend = { value: string; direction: KpiTrendDirection };
+export type KpiTrendFormat = "percent" | "compact" | "points" | "multiplier";
+
+function formatCompactDelta(delta: number): string {
+  const sign = delta > 0 ? "+" : "";
+  const abs = Math.abs(delta);
+  if (abs >= 1_000_000) {
+    const millions = delta / 1_000_000;
+    return `${sign}${Number.isInteger(millions) ? millions.toFixed(0) : millions.toFixed(1)}M`;
+  }
+  if (abs >= 1000) {
+    return `${sign}${Math.round(delta / 1000)}K`;
+  }
+  return `${sign}${Math.round(delta).toLocaleString("en-US")}`;
+}
+
+export function computeDeltaTrend(
+  current: number,
+  previous: number | null | undefined,
+  format: KpiTrendFormat,
+): KpiTrend {
+  if (previous == null || !Number.isFinite(previous)) {
+    return { value: "—", direction: "flat" };
+  }
+  const delta = current - previous;
+  if (!Number.isFinite(delta) || Math.abs(delta) < 1e-9) {
+    if (format === "points") return { value: "0 pts", direction: "flat" };
+    if (format === "multiplier") return { value: "0.0x", direction: "flat" };
+    return { value: "—", direction: "flat" };
+  }
+  const direction: KpiTrendDirection = delta > 0 ? "up" : "down";
+  const sign = delta > 0 ? "+" : "";
+  if (format === "compact") {
+    return { value: formatCompactDelta(delta), direction };
+  }
+  if (format === "points") {
+    return { value: `${sign}${delta.toFixed(1)} pts`, direction };
+  }
+  if (format === "multiplier") {
+    return { value: `${sign}${delta.toFixed(1)}x`, direction };
+  }
+  if (previous === 0) {
+    return { value: "—", direction: "flat" };
+  }
+  const percent = (delta / Math.abs(previous)) * 100;
+  const digits = Math.abs(percent) >= 10 ? 0 : 1;
+  return { value: `${sign}${percent.toFixed(digits)}%`, direction };
+}
+
+export function cvmDeliveryFunnel(
+  summary: Partial<CampaignSummary> | null | undefined,
+  apiRows: CampaignReportsResponse["conversionFunnel"] = [],
+): CampaignReportsResponse["conversionFunnel"] {
+  const fromApi: Record<string, number> = {};
+  for (const row of apiRows) {
+    const stage = String(row.stage || "")
+      .toLowerCase()
+      .replace(/[_-]+/g, " ")
+      .trim();
+    const label = stage.includes("convert")
+      ? "Converted"
+      : stage.includes("deliver")
+        ? "Delivered"
+        : stage.includes("sent") || stage.includes("dispatch")
+          ? "Sent"
+          : "";
+    if (!label) continue;
+    const record = row as unknown as Record<string, unknown>;
+    fromApi[label] =
+      (fromApi[label] || 0) +
+      asFiniteNumber(
+        record.value ??
+          record.count ??
+          record.volume ??
+          record.total ??
+          record.customers,
+      );
+  }
+  const sent = Math.max(asFiniteNumber(summary?.sent), fromApi.Sent || 0);
+  const delivered = Math.max(asFiniteNumber(summary?.delivered), fromApi.Delivered || 0);
+  const converted = Math.max(convertedFrom(summary), fromApi.Converted || 0);
+  return [
+    { stage: "Sent", value: sent },
+    { stage: "Delivered", value: delivered },
+    { stage: "Converted", value: converted },
+  ];
 }
 
 export function audienceSplit(summary: Partial<CampaignSummary> | null | undefined): {

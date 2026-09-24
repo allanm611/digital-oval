@@ -54,11 +54,14 @@ function normalizeSummary(
   value: Record<string, unknown>,
 ): CampaignReportsResponse["summary"] {
   const sent = asFiniteNumber(value.sent ?? value.impressions ?? value.recipients);
-  const delivered = asFiniteNumber(value.delivered ?? value.reach);
   const uniqueAudience = asFiniteNumber(
-    value.uniqueAudience ?? value.uniqueReach ?? value.reach ?? delivered,
+    value.uniqueAudience ?? value.uniqueReach ?? value.reach,
   );
   const converted = asFiniteNumber(value.converted ?? value.conversions);
+  const delivered =
+    value.delivered != null && value.delivered !== ""
+      ? asFiniteNumber(value.delivered)
+      : asFiniteNumber(value.messagesDelivered ?? value.successfulDeliveries);
   const deliveryRate = asFiniteNumber(
     value.deliveryRate,
     rateFrom(delivered, sent),
@@ -275,12 +278,41 @@ export const CAMPAIGN_CHANNEL_CATALOG = [
 const CVM_FUNNEL_ALIASES: Record<string, "Sent" | "Delivered" | "Converted"> = {
   sent: "Sent",
   dispatched: "Sent",
+  "messages sent": "Sent",
+  "messages dispatched": "Sent",
+  impressions: "Sent",
   delivered: "Delivered",
   delivery: "Delivered",
+  "messages delivered": "Delivered",
   converted: "Converted",
   conversions: "Converted",
   conversion: "Converted",
+  outcomes: "Converted",
 };
+
+function funnelStageFromLabel(raw: string): "Sent" | "Delivered" | "Converted" | null {
+  const key = String(raw || "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (CVM_FUNNEL_ALIASES[key]) return CVM_FUNNEL_ALIASES[key];
+  if (key.includes("convert") || key.includes("outcome")) return "Converted";
+  if (key.includes("deliver")) return "Delivered";
+  if (key.includes("sent") || key.includes("dispatch")) return "Sent";
+  return null;
+}
+
+function funnelRowValue(row: CampaignReportsResponse["conversionFunnel"][number]): number {
+  const record = row as unknown as Record<string, unknown>;
+  return asFiniteNumber(
+    record.value ??
+      record.count ??
+      record.volume ??
+      record.total ??
+      record.customers,
+  );
+}
 
 export function normalizeCvmFunnel(
   rows: CampaignReportsResponse["conversionFunnel"] = [],
@@ -292,14 +324,10 @@ export function normalizeCvmFunnel(
   };
   let matched = false;
   for (const row of rows) {
-    const key = String(row.stage || "")
-      .toLowerCase()
-      .replace(/[_-]+/g, " ")
-      .trim();
-    const stage = CVM_FUNNEL_ALIASES[key];
+    const stage = funnelStageFromLabel(row.stage);
     if (!stage) continue;
     matched = true;
-    totals[stage] += asFiniteNumber(row.value);
+    totals[stage] += funnelRowValue(row);
   }
   if (!matched) return rows;
   return [

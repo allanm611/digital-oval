@@ -32,6 +32,7 @@ type CustomerSegmentsTabProps = {
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
+  isEnriching?: boolean;
 };
 
 const ALL = "all";
@@ -90,6 +91,7 @@ export default function CustomerSegmentsTab({
   isLoading,
   error,
   refetch,
+  isEnriching = false,
 }: CustomerSegmentsTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -284,7 +286,9 @@ export default function CustomerSegmentsTab({
             <Layers className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : membershipCount.toLocaleString()}
+            {isLoading && membershipCount === 0
+              ? "—"
+              : membershipCount.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             Segments this customer belongs to
@@ -298,7 +302,9 @@ export default function CustomerSegmentsTab({
             <Megaphone className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
-            {isLoading ? "—" : campaignCount.toLocaleString()}
+            {isLoading && campaignCount === 0 && !isEnriching
+              ? "—"
+              : campaignCount.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             Campaigns targeting these segments
@@ -309,7 +315,7 @@ export default function CustomerSegmentsTab({
             Last added
           </p>
           <p className="text-sm font-semibold text-gray-900">
-            {isLoading ? (
+            {isLoading && !latestAdded ? (
               "—"
             ) : latestAdded ? (
               <DateFormatter
@@ -390,7 +396,14 @@ export default function CustomerSegmentsTab({
         </div>
       )}
 
-      {isLoading ? (
+      {isEnriching && membershipCount > 0 && (
+        <div className="mb-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600">
+          Mapping campaigns for {progress.checked.toLocaleString()} of{" "}
+          {progress.total.toLocaleString()} segments...
+        </div>
+      )}
+
+      {isLoading && membershipCount === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner variant="modern" size="lg" color="primary" />
           <p className="mt-3 text-sm text-gray-500">

@@ -168,7 +168,8 @@ export const customerAccountDeviceService = {
     input.onProgress?.({ phase: "events", checked: 0, total: 1 });
     const eventsResult = await customerEventService.getSubscriberEvents(
       subscriberId,
-      { time_preset: "all", limit: 500 },
+      {},
+      { throwOnError: false, customerRecord: input.customerRecord },
     );
     const eventsLive = eventsResult.source === "api";
     let eventCount = 0;

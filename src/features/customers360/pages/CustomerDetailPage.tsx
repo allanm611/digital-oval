@@ -1,26 +1,12 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Send, Edit, Trash2, Eye } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  // PieChart,
-  // Pie,
-  // Cell,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  // LineChart,
-  // Line,
-  // Legend,
-} from "recharts";
-import { colors, buttons } from "../../../shared/utils/tokens";
+import { buttons } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import CustomerEventsTab from "../components/CustomerEventsTab";
+import CustomerAnalyticsTab from "../components/CustomerAnalyticsTab";
 import CustomerSubscribedListsTab from "../components/CustomerSubscribedListsTab";
 import CustomerAudiencePanel from "../components/CustomerAudiencePanel";
 import CustomerOffersTab from "../components/CustomerOffersTab";
@@ -61,7 +47,6 @@ import {
   formatMsisdn,
   type CustomerRow,
 } from "../utils/customerSubscriptionHelpers";
-import type { CustomerSearchResultsResponse } from "../../reports-analytics/types/ReportsAPI";
 import { customerService } from "../services/customerServices";
 import { customerCommunicationService } from "../services/customerCommunicationService";
 import { revenueMetricService } from "../../kpis/services/revenueMetricService";
@@ -70,159 +55,7 @@ import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import { Table, useTable, type TableColumn } from "../../../shared/components/Table";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 
-// Extract types from API response
-type CustomerEvent = CustomerSearchResultsResponse["events"][number];
 type OriginSource = "customers" | "reports";
-
-// Custom Tooltip Component
-type ChartTooltipEntry = {
-  color?: string;
-  name?: string;
-  value?: number | string;
-};
-
-type ChartTooltipProps = {
-  active?: boolean;
-  label?: string;
-  payload?: ChartTooltipEntry[];
-};
-
-const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between gap-4 text-sm text-gray-600"
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            {entry.name}
-          </span>
-          <span className="font-semibold text-gray-900">{entry.value}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Using shared customer data from customerDataService - will be generated in component
-
-const generateCustomerRelatedData = (customer: CustomerRow) => {
-  // Convert customer ID to string safely for use in IDs
-  const customerId =
-    typeof customer.id === "string"
-      ? customer.id
-      : (customer.id || "0").toString();
-
-  const events: CustomerEvent[] = [];
-  const interactionDate = new Date(customer.lastInteractionDate);
-  if (!isNaN(interactionDate.getTime())) {
-    const baseDate = new Date(interactionDate);
-    for (let i = 0; i < 15; i++) {
-      const eventDate = new Date(baseDate);
-      eventDate.setDate(eventDate.getDate() - i * 7);
-      const channelIndex = i % 3;
-      const channelType =
-        channelIndex === 0 ? "email" : channelIndex === 1 ? "sms" : "push";
-
-      if (channelType === "email") {
-        const emailTitles = [
-          "Welcome Email",
-          "Newsletter",
-          "Promotional Email",
-          "Order Confirmation",
-          "Shipping Update",
-        ];
-        const emailDescriptions = [
-          "Welcome to our community",
-          "Monthly updates and news",
-          "Special offers just for you",
-          "Your order has been confirmed",
-          "Your order is on the way",
-        ];
-        const emailStatuses = [
-          "Opened",
-          "Clicked",
-          "Opened",
-          "Delivered",
-          "Opened",
-        ];
-
-        events.push({
-          id: `EVT-${customerId.slice(-3)}-E${i}`,
-          type: "email",
-          title: emailTitles[i % emailTitles.length],
-          description: emailDescriptions[i % emailDescriptions.length],
-          date: eventDate.toISOString(),
-          status: emailStatuses[i % emailStatuses.length],
-        });
-      } else if (channelType === "sms") {
-        const smsTitles = [
-          "Transaction Update",
-          "Promotional SMS",
-          "Order Alert",
-          "Payment Reminder",
-          "Delivery Notification",
-        ];
-        const smsDescriptions = [
-          "Your transaction has been processed",
-          "Flash sale - 24 hours only",
-          "Your order is ready",
-          "Payment due soon",
-          "Package delivered",
-        ];
-        const smsStatuses = ["Delivered", "Read", "Delivered", "Sent", "Read"];
-
-        events.push({
-          id: `EVT-${customerId.slice(-3)}-S${i}`,
-          type: "sms",
-          title: smsTitles[i % smsTitles.length],
-          description: smsDescriptions[i % smsDescriptions.length],
-          date: eventDate.toISOString(),
-          status: smsStatuses[i % smsStatuses.length],
-        });
-      } else if (channelType === "push") {
-        const pushTitles = [
-          "New Products",
-          "Cart Reminder",
-          "Price Drop Alert",
-          "New Arrivals",
-          "Special Offer",
-        ];
-        const pushDescriptions = [
-          "Check out our latest arrivals",
-          "Items waiting in your cart",
-          "Price reduced on favorites",
-          "New collection available",
-          "Limited time offer",
-        ];
-        const pushStatuses = ["Sent", "Opened", "Sent", "Opened", "Sent"];
-
-        events.push({
-          id: `EVT-${customerId.slice(-3)}-P${i}`,
-          type: "push",
-          title: pushTitles[i % pushTitles.length],
-          description: pushDescriptions[i % pushDescriptions.length],
-          date: eventDate.toISOString(),
-          status: pushStatuses[i % pushStatuses.length],
-        });
-      }
-    }
-  }
-
-  return { events };
-};
 
 export default function CustomerDetailPage() {
   const navigate = useNavigate();
@@ -606,8 +439,6 @@ export default function CustomerDetailPage() {
     });
 
     return kpiData;
-
-    return kpiData;
   };
 
   const kpiList = generateKpiData();
@@ -630,94 +461,10 @@ export default function CustomerDetailPage() {
     setKpiPage(1);
   }, [kpiSearchTerm]);
 
-  const { events } = useMemo(() => {
-    if (!selectedSubscription)
-      return {
-        events: [],
-      };
-
-    const dummyData = customer
-      ? generateCustomerRelatedData(customer)
-      : { events: [] };
-
-    return {
-      events: dummyData.events,
-    };
-  }, [selectedSubscription, customer]);
-
   const paginatedKpis = useMemo(() => {
     const startIdx = (kpiPage - 1) * pageSize;
     return filteredKpis.slice(startIdx, startIdx + pageSize);
   }, [filteredKpis, kpiPage]);
-
-  const eventDistributionData = useMemo(() => {
-    const distribution: Record<string, number> = {};
-    events.forEach((event) => {
-      distribution[event.type] = (distribution[event.type] || 0) + 1;
-    });
-    return Object.entries(distribution).map(([type, count]) => ({
-      name: type.charAt(0).toUpperCase() + type.slice(1),
-      value: count,
-    }));
-  }, [events]);
-
-  const activityTimelineData = useMemo(() => {
-    const monthlyActivity: Record<string, number> = {};
-    events.forEach((event) => {
-      const date = new Date(event.date);
-      const monthKey = date.toLocaleString("default", {
-        month: "short",
-        year: "numeric",
-      });
-      monthlyActivity[monthKey] = (monthlyActivity[monthKey] || 0) + 1;
-    });
-    return Object.entries(monthlyActivity).map(([month, count]) => ({
-      month,
-      events: count,
-    }));
-  }, [events]);
-
-  const statusDistributionData = useMemo(() => {
-    const distribution: Record<string, number> = {};
-    events.forEach((event) => {
-      distribution[event.status] = (distribution[event.status] || 0) + 1;
-    });
-    return Object.entries(distribution).map(([status, count]) => ({
-      name: status,
-      value: count,
-    }));
-  }, [events]);
-
-  const engagementByChannelData = useMemo(() => {
-    const channelStats: Record<string, { total: number; engaged: number }> = {
-      email: { total: 0, engaged: 0 },
-      sms: { total: 0, engaged: 0 },
-      push: { total: 0, engaged: 0 },
-    };
-
-    events.forEach((event) => {
-      const channel = (event.type || "").toLowerCase();
-      if (channelStats[channel]) {
-        channelStats[channel].total++;
-        // Count engaged events (opened, clicked, read)
-        if (
-          ["opened", "clicked", "read"].includes(
-            (event.status || "").toLowerCase(),
-          )
-        ) {
-          channelStats[channel].engaged++;
-        }
-      }
-    });
-
-    return Object.entries(channelStats).map(([channel, stats]) => ({
-      name: channel.charAt(0).toUpperCase() + channel.slice(1),
-      total: stats.total,
-      engaged: stats.engaged,
-      engagementRate:
-        stats.total > 0 ? Math.round((stats.engaged / stats.total) * 100) : 0,
-    }));
-  }, [events]);
 
   const email =
     selectedSubscription?.email_address || selectedSubscription?.email || customer?.email;
@@ -1050,181 +797,21 @@ export default function CustomerDetailPage() {
         {activeTab === "activity" && (
           <CustomerEventsTab
             subscriberId={
-              selectedSubscription?.customerId ??
-              selectedSubscription?.id ??
-              customerIdFromParams
+              selectedSubscription?.customerId ?? customerIdFromParams
+            }
+            customerRecord={
+              (selectedSubscription as Record<string, unknown> | undefined) ??
+              null
             }
           />
         )}
 
         {activeTab === "engagement" && (
-          <div>
-            {events.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-gray-500 text-sm">
-                  No engagement data available
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Event Distribution by Channel - Bar Chart */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Event Distribution by Channel
-                  </h3>
-                  {eventDistributionData.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No data available</p>
-                  ) : (
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={eventDistributionData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#e5e7eb"
-                          />
-                          <XAxis
-                            dataKey="name"
-                            tick={{ fontSize: 11, fill: "#6b7280" }}
-                          />
-                          <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
-                          <Tooltip
-                            content={<CustomTooltip />}
-                            cursor={{ fill: "transparent" }}
-                          />
-                          <Bar
-                            dataKey="value"
-                            fill={colors.reportCharts.palette.color1}
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
-
-                {/* Activity Timeline */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Activity Timeline
-                  </h3>
-                  {activityTimelineData.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No data available</p>
-                  ) : (
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={activityTimelineData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#e5e7eb"
-                          />
-                          <XAxis
-                            dataKey="month"
-                            tick={{ fontSize: 11, fill: "#6b7280" }}
-                            angle={-45}
-                            textAnchor="end"
-                            height={60}
-                          />
-                          <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
-                          <Tooltip
-                            content={<CustomTooltip />}
-                            cursor={{ fill: "transparent" }}
-                          />
-                          <Bar
-                            dataKey="events"
-                            fill={colors.reportCharts.palette.color2}
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
-
-                {/* Status Distribution */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Status Distribution
-                  </h3>
-                  {statusDistributionData.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No data available</p>
-                  ) : (
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={statusDistributionData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#e5e7eb"
-                          />
-                          <XAxis
-                            dataKey="name"
-                            tick={{ fontSize: 11, fill: "#6b7280" }}
-                            angle={-45}
-                            textAnchor="end"
-                            height={60}
-                          />
-                          <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
-                          <Tooltip
-                            content={<CustomTooltip />}
-                            cursor={{ fill: "transparent" }}
-                          />
-                          <Bar
-                            dataKey="value"
-                            fill={colors.reportCharts.palette.color3}
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
-
-                {/* Engagement Rate by Channel */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Engagement Rate by Channel
-                  </h3>
-                  {engagementByChannelData.length === 0 ? (
-                    <p className="text-gray-400 text-sm">No data available</p>
-                  ) : (
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={engagementByChannelData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#e5e7eb"
-                          />
-                          <XAxis
-                            dataKey="name"
-                            tick={{ fontSize: 11, fill: "#6b7280" }}
-                          />
-                          <YAxis
-                            tick={{ fontSize: 11, fill: "#6b7280" }}
-                            label={{
-                              value: "Engagement Rate (%)",
-                              angle: -90,
-                              position: "insideLeft",
-                            }}
-                          />
-                          <Tooltip
-                            content={<CustomTooltip />}
-                            cursor={{ fill: "transparent" }}
-                            formatter={(value?: number) =>
-                              value ? `${value}%` : ""
-                            }
-                          />
-                          <Bar
-                            dataKey="engagementRate"
-                            fill={colors.reportCharts.palette.color4}
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <CustomerAnalyticsTab
+            subscriberId={
+              selectedSubscription?.customerId ?? customerIdFromParams
+            }
+          />
         )}
 
         {(activeTab === "segments" || activeTab === "campaigns") && (

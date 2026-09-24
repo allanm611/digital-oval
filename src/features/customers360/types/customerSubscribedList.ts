@@ -1,11 +1,9 @@
 /**
- * Customer 360 subscribed lists — mailing-list subscriptions plus
- * verified QuickList membership for this subscriber.
+ * Customer 360 subscribed lists — lists this subscriber belongs to.
  *
- * Resolution:
- *   1. Collect the customer's identifiers (MSISDN, email, IDs)
- *   2. Fetch every QuickList in the system
- *   3. Check membership in each list and keep the added-at timestamp
+ * Source of truth:
+ *   GET /subscribers/:id/quicklists
+ *   GET /subscribers/:id/quicklist-membership
  */
 
 export type SubscribedListType = "quicklist" | "subscription";

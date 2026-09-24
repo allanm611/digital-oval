@@ -41,7 +41,7 @@ export default function ReportChartTypeToggle({
             key={option.id}
             type="button"
             onClick={() => onChange(option.id)}
-            className={`inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors ${
               active
                 ? "bg-white text-gray-900 shadow-sm"
                 : "text-gray-500 hover:text-gray-800"
@@ -50,7 +50,7 @@ export default function ReportChartTypeToggle({
             title={option.label}
           >
             <option.icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{option.label}</span>
+            <span>{option.label}</span>
           </button>
         );
       })}

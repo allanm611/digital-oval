@@ -29,6 +29,7 @@ export function useCustomerOffers(
     total: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isEnriching, setIsEnriching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
 
@@ -46,8 +47,10 @@ export function useCustomerOffers(
       }
 
       setIsLoading(true);
+      setIsEnriching(false);
       setError(null);
       setProgress({ phase: "audience", checked: 0, total: 0 });
+      let hasPartial = false;
 
       try {
         const next = await customerOfferService.getCustomerOffers({
@@ -55,12 +58,24 @@ export function useCustomerOffers(
           customerRecord,
           skipCache,
           onProgress: (value) => {
-            if (!isStale()) setProgress(value);
+            if (!isStale()) {
+              setProgress(value);
+              if (value.phase === "catalog" && value.total > value.checked) {
+                setIsEnriching(true);
+              }
+            }
+          },
+          onPartial: (partial) => {
+            if (isStale()) return;
+            hasPartial = true;
+            setResult(partial);
+            setIsLoading(false);
           },
           isAborted: isStale,
         });
         if (!isStale()) {
           setResult(next);
+          setIsEnriching(false);
         }
       } catch (err) {
         if (isStale()) return;
@@ -68,9 +83,12 @@ export function useCustomerOffers(
         setError(
           err instanceof Error ? err.message : "Failed to load customer offers",
         );
-        setResult(EMPTY_RESULT);
+        if (!hasPartial) setResult(EMPTY_RESULT);
       } finally {
-        if (!isStale()) setIsLoading(false);
+        if (!isStale()) {
+          setIsLoading(false);
+          setIsEnriching(false);
+        }
       }
     },
     [subscriberId, customerRecord],
@@ -87,5 +105,5 @@ export function useCustomerOffers(
     void load(true);
   }, [load]);
 
-  return { result, progress, isLoading, error, refetch };
+  return { result, progress, isLoading, isEnriching, error, refetch };
 }
