@@ -251,7 +251,7 @@ export default function CreativeTemplateFormModal({
               value={formData.name}
               onChange={handleInputChange('name')}
               hasError={!!errors.name}
-             
+
               required
             />
             {errors.name && (
@@ -267,7 +267,7 @@ export default function CreativeTemplateFormModal({
               value={formData.code}
               onChange={handleInputChange('code')}
               hasError={!!errors.code}
-             
+
               className="font-mono"
               required
             />
