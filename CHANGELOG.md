@@ -1,3 +1,22 @@
+## [1.1.1](https://github.com/allanm611/digital-oval/compare/v1.1.0...v1.1.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* button flow setup ([bc768cd](https://github.com/allanm611/digital-oval/commit/bc768cdd41f8dd091c3ff50483b247c84526f0c3))
+* configure campaign  setup ([16a03f7](https://github.com/allanm611/digital-oval/commit/16a03f7ee420f972f3c9674e94cc4c026ab221b4))
+* customer 360 setup ([aa00117](https://github.com/allanm611/digital-oval/commit/aa001174d2462649643cc50961dd0dc05f5a05b2))
+* Merge pull request [#12](https://github.com/allanm611/digital-oval/issues/12) from YellowBird-UG/fplex/master-sz ([c6aa3f2](https://github.com/allanm611/digital-oval/commit/c6aa3f2d84477ad78933cd18520f0fce5a90ca4b))
+* Merge pull request [#13](https://github.com/allanm611/digital-oval/issues/13) from YellowBird-UG/fplex/master-sz ([84b746a](https://github.com/allanm611/digital-oval/commit/84b746adcb07105d82db14c7393a887d37f8e450))
+* Merge pull request [#14](https://github.com/allanm611/digital-oval/issues/14) from YellowBird-UG/fplex/master-sz ([7501416](https://github.com/allanm611/digital-oval/commit/750141616ff7438a12f045b8a50f6a75b25c8799))
+* Merge pull request [#15](https://github.com/allanm611/digital-oval/issues/15) from YellowBird-UG/fplex/master-sz ([84622e3](https://github.com/allanm611/digital-oval/commit/84622e362159e51e14d3902f934ec0b070456b6f))
+* Merge pull request [#16](https://github.com/allanm611/digital-oval/issues/16) from YellowBird-UG/fplex/master-sz ([71f0777](https://github.com/allanm611/digital-oval/commit/71f077797f883eb096b5e9984b4470996bed67af))
+* Merge pull request [#17](https://github.com/allanm611/digital-oval/issues/17) from YellowBird-UG/fplex/master-sz ([f52ef3d](https://github.com/allanm611/digital-oval/commit/f52ef3d480a69926e9cf7a6f3ca8b2ec8ee9a151))
+* Merge pull request [#18](https://github.com/allanm611/digital-oval/issues/18) from YellowBird-UG/fplex/master-sz ([b3051b5](https://github.com/allanm611/digital-oval/commit/b3051b5077305e3e55e56acabf56ad1a2a175288))
+* Merge pull request [#19](https://github.com/allanm611/digital-oval/issues/19) from YellowBird-UG/fplex/master-sz ([ef54f04](https://github.com/allanm611/digital-oval/commit/ef54f04413b9095f9adc8a8ec768e10ddaf87cca))
+* Merge pull request [#20](https://github.com/allanm611/digital-oval/issues/20) from YellowBird-UG/fplex/master-sz ([90dc382](https://github.com/allanm611/digital-oval/commit/90dc3824a8f015b844f6a2606c51c2a773dd32f8))
+* setup ([1d926ec](https://github.com/allanm611/digital-oval/commit/1d926ec15ba411273c16a25041d58413fa1e3a10))
+
 ## [1.5.9](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.8...v1.5.9) (2026-09-21)
 
 
