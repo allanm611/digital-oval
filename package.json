@@ -1,7 +1,11 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
+<<<<<<< HEAD
   "version": "1.5.10",
+=======
+  "version": "1.1.1",
+>>>>>>> b4a1f81288ff3bd0aae9418041fbf27679a69ed7
   "type": "module",
   "scripts": {
     "dev": "vite",
