@@ -1776,6 +1776,96 @@ export interface Translations {
       insertVariable: string;
       clearTemplate: string;
     };
+    aiGenerate: {
+      buttonLabel: string;
+      buttonAria: string;
+      modalTitle: string;
+      modalSubtitle: string;
+      sourceBody: { label: string; placeholder: string; hint: string };
+      resultTitle: string;
+      resultSubtitle: string;
+      generatedMessageLabel: string;
+      insert: string;
+      closeResult: string;
+      waitingForServer: string;
+      waitingHint: string;
+      words: string;
+      tone: { label: string };
+      tones: {
+        professional: string;
+        friendly: string;
+        urgent: string;
+        promotional: string;
+        empathetic: string;
+        formal: string;
+        playful: string;
+        concise: string;
+      };
+      objective: { label: string; placeholder: string; hint: string };
+      callToAction: { label: string; placeholder: string };
+      keyFacts: { label: string; placeholder: string };
+      audience: { label: string; placeholder: string };
+      length: { label: string };
+      lengths: {
+        channel_optimized: string;
+        short: string;
+        medium: string;
+      };
+      draftAction: { label: string };
+      draftActions: {
+        generate_new: string;
+        improve_existing: string;
+      };
+      mustInclude: { label: string; placeholder: string };
+      mustAvoid: { label: string; placeholder: string };
+      generate: string;
+      generating: string;
+      regenerate: string;
+      previewPrompt: string;
+      previewPromptAria: string;
+      promptPreviewTitle: string;
+      promptPreviewSubtitle: string;
+      promptPreviewMeta: string;
+      promptPreviewCardLabel: string;
+      promptPreviewFormHint: string;
+      editPrompt: string;
+      promptUsedTitle: string;
+      promptUsedHint: string;
+      notSpecified: string;
+      objectiveFallback: string;
+      aiBadgeLabel: string;
+      apply: string;
+      applyAndReplace: string;
+      applyTitleToo: string;
+      generatedTitle: string;
+      variantsTitle: string;
+      variantLabel: string;
+      characters: string;
+      smsSegments: string;
+      smsOverLimit: string;
+      reviewWarnings: string;
+      appliedTitle: string;
+      appliedMessage: string;
+      errors: {
+        toneRequired: string;
+        objectiveRequired: string;
+        messageBodyMinWords: string;
+        generateFailed: string;
+        modelRequired: string;
+      };
+      hints: {
+        variables: string;
+        channelLimit: string;
+        overwrite: string;
+      };
+      aiModel: {
+        label: string;
+        placeholder: string;
+        hint: string;
+        noneConfigured: string;
+        configureCta: string;
+      };
+    };
     messageBody: {
       label: string;
       placeholder: string;

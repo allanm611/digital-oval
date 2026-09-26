@@ -43,7 +43,7 @@ import { offerService } from "../services/offerService";
 import { offerCategoryService } from "../services/offerCategoryService";
 import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
-import { communicationChannelService, CommunicationChannel } from "../../../shared/services/communicationChannelService";
+import { communicationChannelService, CommunicationChannel, toCommunicationChannelOptions } from "../../../shared/services/communicationChannelService";
 import { routeService } from "../../routes/services/routeService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 // import { productCategoryService } from "../../products/services/productCategoryService";
@@ -111,6 +111,12 @@ import {
 
 // Import the types from offerCreative instead of defining locally
 import { OfferCreative, collectPlaceholderVariables } from "../types/offerCreative";
+import {
+  AI_GENERATED_FLAG_KEY,
+  extractAiSessionFromVariables,
+  omitAiSessionVariables,
+  persistAiSessionLocally,
+} from "../utils/aiCreativeSessionPersist";
 
 // Local creative for form (uses string ID until saved)
 type LocalOfferCreative = Omit<OfferCreative, "id" | "offer_id"> & {
@@ -324,7 +330,7 @@ function BasicInfoStep({
   const selectedChannel = communicationChannels?.find(
     (ch) => String(ch.id) === String(formData.communication_channel_id),
   );
-  const channelKind = resolveCommunicationChannelKind(selectedChannel?.name);
+  const channelKind = resolveCommunicationChannelKind(selectedChannel);
   const channelRouteMeta = channelKind
     ? CHANNEL_ROUTE_FIELD_META[channelKind]
     : null;
@@ -345,6 +351,7 @@ function BasicInfoStep({
         channelType: "SMS",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -353,6 +360,7 @@ function BasicInfoStep({
         channelType: "EMAIL",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -361,6 +369,7 @@ function BasicInfoStep({
         channelType: "WHATSAPP",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -369,6 +378,7 @@ function BasicInfoStep({
         channelType: "USSD",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -377,6 +387,7 @@ function BasicInfoStep({
         channelType: "PUSH",
         channel: selectedChannel,
         selectedRouteId: campaignRouteId,
+        allChannels: communicationChannels,
       }),
       loading: !!routesLoading,
     },
@@ -388,6 +399,7 @@ function BasicInfoStep({
       channelType: channelKindToRouteType(channelKind),
       channel: selectedChannel,
       selectedRouteId: formData.transactional_route_id,
+      allChannels: communicationChannels,
     },
   );
 
@@ -510,12 +522,7 @@ function BasicInfoStep({
           >
             <HeadlessSelect
               label="Communication Channel"
-              options={
-                communicationChannels?.map((channel) => ({
-                  value: String(channel.id),
-                  label: channel.name,
-                })) || []
-              }
+              options={toCommunicationChannelOptions(communicationChannels)}
               disabled={channelsLoading}
               value={
                 formData.communication_channel_id
@@ -820,7 +827,7 @@ function OfferCreativeStepWrapper({
           Offer Creative
         </h2>
         <p className="text-sm text-gray-600">
-          Design the creative content for your offer
+          Design the creative template content for your offer
         </p>
       </div>
       <OfferCreativeStep
@@ -841,8 +848,6 @@ function OfferTrackingStepWrapper({
   requiresTrackingRewardMapping = false,
   usesDefaultReward = false,
   validationErrors,
-  initialOpenSourceModal = false,
-  onInitialOpenSourceModalConsumed,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -863,10 +868,7 @@ function OfferTrackingStepWrapper({
   | "onSaveDraft"
   | "onCancel"
 > &
-  Pick<StepProps, "validationErrors"> & {
-    initialOpenSourceModal?: boolean;
-    onInitialOpenSourceModalConsumed?: () => void;
-  }) {
+  Pick<StepProps, "validationErrors">) {
   return (
     <div className="space-y-6">
       <div className="mt-8 mb-8">
@@ -892,8 +894,6 @@ function OfferTrackingStepWrapper({
       <OfferTrackingStep
         trackingSources={trackingSources}
         onTrackingSourcesChange={setTrackingSources}
-        initialOpenSourceModal={initialOpenSourceModal}
-        onInitialOpenSourceModalConsumed={onInitialOpenSourceModalConsumed}
       />
     </div>
   );
@@ -1098,7 +1098,7 @@ function ReviewStep({
   const reviewChannel = communicationChannels?.find(
     (ch) => String(ch.id) === String(formData.communication_channel_id),
   );
-  const reviewChannelKind = resolveCommunicationChannelKind(reviewChannel?.name);
+  const reviewChannelKind = resolveCommunicationChannelKind(reviewChannel);
   const reviewCampaignRouteId = reviewChannelKind
     ? getEffectiveRouteIdForChannel(formData, reviewChannelKind)
     : undefined;
@@ -1723,9 +1723,6 @@ export default function CreateOfferPage({
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** Re-open Select Tracking Sources after Create Tracking Source round-trip. */
-  const [openSelectTrackingSources, setOpenSelectTrackingSources] =
-    useState(false);
   const [isEditMode, setIsEditMode] = useState(
     () => Boolean(id || duplicateIdParam),
   );
@@ -1764,40 +1761,11 @@ export default function CreateOfferPage({
   const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
   const [categoryRefreshTrigger, setCategoryRefreshTrigger] = useState(0);
 
-  // Resume Offer Tracking after creating an engine tracking source.
-  useEffect(() => {
-    const resume = (
-      location.state as {
-        resumeOfferWizard?: {
-          step?: number;
-          openSelectTrackingSources?: boolean;
-        };
-      } | null
-    )?.resumeOfferWizard;
-    if (!resume) return;
-
-    const step =
-      typeof resume.step === "number" && resume.step >= 1 && resume.step <= 6
-        ? resume.step
-        : 4;
-    setCurrentStep(step);
-    setVisitedSteps((prev) => {
-      const next = new Set(prev);
-      for (let i = 1; i <= step; i += 1) next.add(i);
-      return next;
-    });
-    if (resume.openSelectTrackingSources) {
-      setOpenSelectTrackingSources(true);
-    }
-    navigate(`${location.pathname}${location.search}`, {
-      replace: true,
-      state: {},
-    });
-  }, [location.pathname, location.search, location.state, navigate]);
-
   const { user } = useAuth();
   const { t } = useLanguage();
-  const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData();
+  const { data: offerTypes, loading: offerTypesLoading, refresh: refreshOfferTypes } = useBackendOfferTypeData({
+    activeOnly: true,
+  });
   const requiresTrackingRewardMapping = useMemo(
     () =>
       offerRequiresTrackingAndRewardMapping(
@@ -2296,7 +2264,9 @@ export default function CreateOfferPage({
     const loadRoutes = async () => {
       try {
         setRoutesLoading(true);
-        const allRoutes = await routeService.getAllRoutesEnriched();
+        const allRoutes = await routeService.getAllRoutesEnriched({
+          skipCache: true,
+        });
         setDeliveryRoutes(
           Array.isArray(allRoutes)
             ? allRoutes.filter((route) => route.is_active !== false)
@@ -2389,7 +2359,7 @@ export default function CreateOfferPage({
     const channel = communicationChannels.find(
       (ch) => String(ch.id) === String(formData.communication_channel_id),
     );
-    const channelKind = resolveCommunicationChannelKind(channel?.name);
+    const channelKind = resolveCommunicationChannelKind(channel);
     if (!channelKind) {
       offerRouteHydrationDoneRef.current = true;
       return;
@@ -2462,7 +2432,7 @@ export default function CreateOfferPage({
     );
     Object.assign(
       errors,
-      collectOfferRouteValidationErrors(formData, selectedChannel?.name),
+      collectOfferRouteValidationErrors(formData, selectedChannel),
     );
 
     Object.assign(
@@ -2510,9 +2480,7 @@ export default function CreateOfferPage({
         const selectedChannel = communicationChannels?.find(
           (ch) => String(ch.id) === String(formData.communication_channel_id),
         );
-        const channelKind = resolveCommunicationChannelKind(
-          selectedChannel?.name,
-        );
+        const channelKind = resolveCommunicationChannelKind(selectedChannel);
         if (!channelKind) return true;
 
         return (
@@ -2602,9 +2570,7 @@ export default function CreateOfferPage({
         const reviewSelectedChannel = communicationChannels?.find(
           (ch) => String(ch.id) === String(formData.communication_channel_id),
         );
-        const reviewKind = resolveCommunicationChannelKind(
-          reviewSelectedChannel?.name,
-        );
+        const reviewKind = resolveCommunicationChannelKind(reviewSelectedChannel);
         if (!reviewKind) return true;
 
         return (
@@ -2679,7 +2645,7 @@ export default function CreateOfferPage({
         );
         Object.assign(
           errors,
-          collectOfferRouteValidationErrors(formData, selectedChannel?.name),
+          collectOfferRouteValidationErrors(formData, selectedChannel),
         );
       } else if (currentStep === 3) {
         // Step 3: Creative validation errors
@@ -2760,7 +2726,7 @@ export default function CreateOfferPage({
         );
         Object.assign(
           errors,
-          collectOfferRouteValidationErrors(formData, reviewChannel?.name),
+          collectOfferRouteValidationErrors(formData, reviewChannel),
         );
         Object.assign(
           errors,
@@ -3020,12 +2986,11 @@ export default function CreateOfferPage({
                 creative.text_body,
                 creative.html_body,
               );
+              const mergedVariables = { ...extracted, ...existingVars };
               const variables =
-                Object.keys(existingVars).length > 0
-                  ? existingVars
-                  : Object.keys(extracted).length > 0
-                    ? extracted
-                    : undefined;
+                Object.keys(mergedVariables).length > 0
+                  ? mergedVariables
+                  : undefined;
 
               const creativePayload = {
                 offer_id: offerId,
@@ -3040,7 +3005,57 @@ export default function CreateOfferPage({
                 created_by: user.user_id,
               };
 
-              return await offerCreativeService.create(creativePayload);
+              const session = extractAiSessionFromVariables(creative.variables);
+              const persistCreated = (created: { data?: { id?: number }; insertId?: number }) => {
+                const createdId = created.data?.id ?? created.insertId;
+                if (session) {
+                  persistAiSessionLocally(
+                    {
+                      creativeId: createdId,
+                      offerId,
+                      channel: creative.channel,
+                      locale: creative.locale,
+                      body: creative.text_body || creative.html_body,
+                    },
+                    session,
+                  );
+                }
+                return created;
+              };
+
+              try {
+                return persistCreated(
+                  await offerCreativeService.create(creativePayload),
+                );
+              } catch (createError) {
+                if (!variables || !session) throw createError;
+                const fallbackVariables = omitAiSessionVariables(variables);
+                fallbackVariables[AI_GENERATED_FLAG_KEY] = "1";
+                try {
+                  return persistCreated(
+                    await offerCreativeService.create({
+                      ...creativePayload,
+                      variables: fallbackVariables,
+                    }),
+                  );
+                } catch {
+                  persistAiSessionLocally(
+                    {
+                      offerId,
+                      channel: creative.channel,
+                      locale: creative.locale,
+                      body: creative.text_body || creative.html_body,
+                    },
+                    session,
+                  );
+                  return persistCreated(
+                    await offerCreativeService.create({
+                      ...creativePayload,
+                      variables: omitAiSessionVariables(variables),
+                    }),
+                  );
+                }
+              }
             } catch (err) {
               throw err;
             }
@@ -3425,10 +3440,6 @@ export default function CreateOfferPage({
           {currentStep === 4 && (
             <OfferTrackingStepWrapper
               {...stepProps}
-              initialOpenSourceModal={openSelectTrackingSources}
-              onInitialOpenSourceModalConsumed={() =>
-                setOpenSelectTrackingSources(false)
-              }
             />
           )}
           {currentStep === 5 && <OfferRewardStepWrapper {...stepProps} />}

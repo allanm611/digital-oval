@@ -15,6 +15,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
+import { mapCommunicationChannelToCreativeChannel } from "../utils/mapCommunicationChannel";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TypeSelector from "../../../shared/components/TypeSelector";
 import Input from "../../../shared/components/ui/Input";
@@ -27,7 +28,6 @@ import {
   OfferCreative,
   RenderCreativeResponse,
 } from "../types/offerCreative";
-import { offerCreativeService } from "../services/offerCreativeService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { ConfigurationItem } from "../../configurations/components/ConfigurationManager";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
@@ -36,7 +36,6 @@ import { smsRouteService } from "../../routes/services/smsRouteService";
 import { SMSRoute } from "../../routes/types/smsRoute";
 import { languageService, Language } from "../../configurations/services/languageService";
 import CreativePreviewRenderer from "./CreativePreviewRenderer";
-import SimpleTextPreview from "./SimpleTextPreview";
 import RichTextEditor from "../../communications/components/RichTextEditor";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
@@ -49,7 +48,19 @@ import {
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import CreateLanguageModal from "./CreateLanguageModal";
 import CreativeTemplateFormModal from "./CreativeTemplateFormModal";
-import SelectOfferCreativesModal from "./SelectOfferCreativesModal";
+import AiGenerateMessageButton from "./AiGenerateMessageButton";
+import AiGenerateMessageModal from "./AiGenerateMessageModal";
+import AiGeneratedBodyBadge from "./AiGeneratedBodyBadge";
+import MessageContentToolbar, {
+  messageContentActionClass,
+} from "./MessageContentToolbar";
+import type { AiGenerateModalView } from "../types/aiCreativeGeneration";
+import {
+  persistAiSessionLocally,
+  rememberAiCreativeSession,
+  resolveAiCreativeSession,
+  shouldShowAiGeneratedBadge,
+} from "../utils/aiCreativeSessionPersist";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
   id: string; // Use string for local temp ID
@@ -506,21 +517,8 @@ export default function OfferCreativeStep({
   // Map communication channel ID to creative channel name using actual channel config
   const getDefaultChannelFromId = (channelId?: number): CreativeChannel => {
     if (!channelId || !communicationChannels) return "SMS";
-
-    const channel = communicationChannels.find(ch => ch.id === channelId);
-    if (!channel) return "SMS";
-
-    const channelName = channel.name.toUpperCase();
-    const validChannels: CreativeChannel[] = ["Email", "SMS", "USSD", "WhatsApp", "Push"];
-
-    // Try to match the channel name with valid creative channels
-    for (const validChannel of validChannels) {
-      if (channelName.includes(validChannel.toUpperCase())) {
-        return validChannel;
-      }
-    }
-
-    return "SMS"; // Fallback to SMS if no match
+    const channel = communicationChannels.find((ch) => ch.id === channelId);
+    return mapCommunicationChannelToCreativeChannel(channel || undefined);
   };
 
   // Fetch creative templates from backend
@@ -538,10 +536,6 @@ export default function OfferCreativeStep({
   // Fetch languages from backend API
   const [languages, setLanguages] = useState<Language[]>([]);
   const [languagesLoading, setLanguagesLoading] = useState(true);
-
-  // Fetch existing creatives for dropdown selector
-  const [existingCreatives, setExistingCreatives] = useState<OfferCreative[]>([]);
-  const [existingCreativesLoading, setExistingCreativesLoading] = useState(true);
 
   // Fetch reusable creative templates (GET /creative-template)
   useEffect(() => {
@@ -631,29 +625,6 @@ export default function OfferCreativeStep({
     fetchLanguages();
   }, []);
 
-  // Fetch existing creatives for dropdown selector
-  useEffect(() => {
-    const fetchExistingCreatives = async () => {
-      try {
-        setExistingCreativesLoading(true);
-        const channel = getDefaultChannelFromId(communicationChannelId);
-        const response = await offerCreativeService.superSearch({
-          channel,
-          limit: 100,
-          skipCache: true
-        });
-        const creativesData = response?.data || [];
-        setExistingCreatives(Array.isArray(creativesData) ? creativesData : []);
-      } catch (error) {
-        console.error("Failed to fetch existing creatives:", error);
-        setExistingCreatives([]);
-      } finally {
-        setExistingCreativesLoading(false);
-      }
-    };
-    fetchExistingCreatives();
-  }, [communicationChannelId]);
-
   // Handle language creation - auto-select it
   const handleLanguageCreated = async (newLanguage: Language) => {
     setLanguages((prev) => [...prev, newLanguage]);
@@ -706,10 +677,6 @@ export default function OfferCreativeStep({
       return creatives.length > 0 ? creatives[0].id : null;
     },
   );
-
-  const [showSelectCreativesModal, setShowSelectCreativesModal] =
-    useState(false);
-
 
   // Get languages already used by other creatives
   const getUsedLanguages = (): string[] => {
@@ -799,32 +766,24 @@ export default function OfferCreativeStep({
   const [isRichTextMap, setIsRichTextMap] = useState<Record<string, boolean>>(
     {},
   );
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiModalView, setAiModalView] = useState<AiGenerateModalView>("compose");
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const mapCatalogCreative = (catalog: OfferCreative): LocalOfferCreative => ({
-    id: String(catalog.id),
-    channel: catalog.channel,
-    locale: catalog.locale as Locale,
-    title: catalog.title || catalog.name || "",
-    text_body: catalog.text_body || "",
-    html_body: catalog.html_body || "",
-    variables: (catalog.variables || {}) as Record<
-      string,
-      string | number | boolean
-    >,
-    is_active: catalog.is_active ?? true,
-    template_type_id: catalog.template_type_id,
-    save_as_template: false,
-  });
-
   const addCreative = () => {
+    const unfinishedDraft = creatives.find((c) => !c.locale);
+    if (unfinishedDraft) {
+      setSelectedCreative(unfinishedDraft.id);
+      return;
+    }
+
     const defaultChannel = getDefaultChannelFromId(communicationChannelId);
 
     const newCreative: LocalOfferCreative = {
       id: generateId(),
-      channel: defaultChannel, // Use channel from step 1 communication channel selection
-      locale: "" as Locale, // User must explicitly select language
+      channel: defaultChannel,
+      locale: "" as Locale,
       title: "",
       text_body: "",
       html_body: "",
@@ -833,51 +792,25 @@ export default function OfferCreativeStep({
       save_as_template: false,
     };
 
-    const updatedCreatives = [...creatives, newCreative];
-    onCreativesChange(updatedCreatives);
+    onCreativesChange([...creatives, newCreative]);
     setSelectedCreative(newCreative.id);
-    // Initialize empty template selection for new creative
     setSelectedTemplates((prev) => ({ ...prev, [newCreative.id]: null }));
-    setShowSelectCreativesModal(false);
-  };
-
-  const handleConfirmCatalogCreatives = (creativeIds: number[]) => {
-    const usedIds = new Set(creatives.map((c) => String(c.id)));
-    const usedLocales = new Set(
-      creatives.map((c) => c.locale).filter((locale): locale is string => !!locale),
-    );
-
-    const added: LocalOfferCreative[] = [];
-    for (const id of creativeIds) {
-      const catalog = existingCreatives.find((c) => c.id === id);
-      if (!catalog) continue;
-      if (usedIds.has(String(catalog.id))) continue;
-      if (catalog.locale && usedLocales.has(catalog.locale)) continue;
-
-      const mapped = mapCatalogCreative(catalog);
-      added.push(mapped);
-      usedIds.add(mapped.id);
-      if (mapped.locale) usedLocales.add(mapped.locale);
-    }
-
-    if (added.length === 0) {
-      setShowSelectCreativesModal(false);
-      return;
-    }
-
-    onCreativesChange([...creatives, ...added]);
-    setSelectedCreative(added[0].id);
-    setSelectedTemplates((prev) => {
-      const next = { ...prev };
-      added.forEach((c) => {
-        next[c.id] = c.template_type_id ?? null;
-      });
-      return next;
-    });
-    setShowSelectCreativesModal(false);
   };
 
   const removeCreative = (id: string) => {
+    const removed = creatives.find((c) => c.id === id);
+    if (removed) {
+      persistAiSessionLocally(
+        {
+          creativeId: removed.id,
+          offerId: removed.offer_id,
+          channel: removed.channel,
+          locale: removed.locale,
+          body: removed.text_body || removed.html_body,
+        },
+        null,
+      );
+    }
     const updatedCreatives = creatives.filter((c) => c.id !== id);
     onCreativesChange(updatedCreatives);
 
@@ -927,24 +860,8 @@ export default function OfferCreativeStep({
     );
   }, [languages, usedLocalesOnOffer]);
 
-  const availableCatalogCreatives = useMemo(() => {
-    const usedIds = new Set(creatives.map((c) => String(c.id)));
-    return existingCreatives.filter((c) => {
-      if (c.is_active === false) return false;
-      if (c.channel !== selectedChannelForFiltering) return false;
-      if (usedIds.has(String(c.id))) return false;
-      if (c.locale && usedLocalesOnOffer.has(c.locale)) return false;
-      return true;
-    });
-  }, [
-    existingCreatives,
-    creatives,
-    selectedChannelForFiltering,
-    usedLocalesOnOffer,
-  ]);
-
   const canAddCreative =
-    availableCatalogCreatives.length > 0 || hasUnusedLanguage;
+    languagesLoading || !languages?.length || hasUnusedLanguage;
 
   const selectedCreativeData = filteredCreatives.find((c) => c.id === selectedCreative) || creatives.find((c) => c.id === selectedCreative);
 
@@ -1262,7 +1179,8 @@ export default function OfferCreativeStep({
             {creatives.length === 0 ? t.offers.creatives.subheadline : `Create a ${selectedChannelForFiltering} creative to get started`}
           </p>
           <button
-            onClick={() => setShowSelectCreativesModal(true)}
+            type="button"
+            onClick={addCreative}
             disabled={!canAddCreative}
             className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${!canAddCreative ? "opacity-50 cursor-not-allowed" : ""}`}
             style={{
@@ -1285,7 +1203,8 @@ export default function OfferCreativeStep({
                   {t.offers.creatives.title}
                 </h3>
                 <button
-                  onClick={() => setShowSelectCreativesModal(true)}
+                  type="button"
+                  onClick={addCreative}
                   disabled={!canAddCreative}
                   className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium ${!canAddCreative ? "opacity-50 cursor-not-allowed" : ""}`}
                   style={{
@@ -1294,7 +1213,7 @@ export default function OfferCreativeStep({
                   title={
                     !canAddCreative
                       ? "All languages already have creatives"
-                      : ""
+                      : "Add a blank creative template for this offer"
                   }
                 >
                   <Plus className="w-5 h-5 mr-1.5" />
@@ -1378,8 +1297,8 @@ export default function OfferCreativeStep({
             </div>
           </div>
 
-          {/* Creative Editor - Center Column (1/3) */}
-          <div className="lg:col-span-1">
+          {/* Creative Editor - remaining columns after creatives list */}
+          <div className="lg:col-span-2 min-w-0">
             <div
               className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
             >
@@ -1624,14 +1543,7 @@ export default function OfferCreativeStep({
 
 
                     {/* Message content toolbar */}
-                    <div
-                      className="flex items-center justify-between p-3 rounded-lg"
-                      style={{ backgroundColor: color.surface.cards }}
-                    >
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {t.offers.messageContent.label}
-                      </span>
-                      <div className="flex items-center gap-2">
+                    <MessageContentToolbar>
                         {editingCreative.channel !== "Email" && (
                           editingCreative.channel === "SMS" ||
                           editingCreative.channel === "WhatsApp" ||
@@ -1646,7 +1558,7 @@ export default function OfferCreativeStep({
                                   !prev[selectedCreativeData.id],
                               }))
                             }
-                            className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                            className={messageContentActionClass}
                             style={{
                               backgroundColor: selectedCreativeData && isRichTextMap[
                                 selectedCreativeData.id
@@ -1668,15 +1580,16 @@ export default function OfferCreativeStep({
                               : t.offers.plainText}
                           </button>
                         )}
-                        <div className="relative">
+                        <div className="relative shrink-0">
                           <button
                             type="button"
                             onClick={() =>
                               setShowVariableSelector(!showVariableSelector)
                             }
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                            className={messageContentActionClass}
                             style={{
                               backgroundColor: color.primary.accent,
+                              borderColor: color.primary.accent,
                               color: "white",
                             }}
                           >
@@ -1693,10 +1606,25 @@ export default function OfferCreativeStep({
                             />
                           </div>
                         </div>
-                      </div>
-                    </div>
+                        <AiGenerateMessageButton
+                          onClick={() => {
+                            setAiModalView("compose");
+                            setIsAiModalOpen(true);
+                          }}
+                          disabled={!selectedCreativeData}
+                          active={isAiModalOpen}
+                        />
+                    </MessageContentToolbar>
 
                     {/* Message Body */}
+                    <AiGeneratedBodyBadge
+                      visible={shouldShowAiGeneratedBadge(editingCreative)}
+                      onClick={() => {
+                        setAiModalView("result");
+                        setIsAiModalOpen(true);
+                      }}
+                      label={t.offers.aiGenerate.aiBadgeLabel}
+                    >
                     {selectedCreativeData && (selectedCreativeData.channel === "Email" || isRichTextMap[selectedCreativeData.id]) ? (
                         <div
                           onClick={() => setActiveField("body")}
@@ -1705,8 +1633,21 @@ export default function OfferCreativeStep({
                           <RichTextEditor
                             value={selectedCreativeData.channel === "Email" ? (editingCreative.html_body || "") : (editingCreative.text_body || "")}
                             onChange={(value) => {
-                              selectedCreativeData && updateCreative(selectedCreativeData.id, {
-                                ...(selectedCreativeData.channel === "Email" ? { html_body: value, text_body: value } : { text_body: value }),
+                              if (!selectedCreativeData) return;
+                              const cleared = !value.trim();
+                              updateCreative(selectedCreativeData.id, {
+                                ...(selectedCreativeData.channel === "Email"
+                                  ? { html_body: value, text_body: value }
+                                  : { text_body: value }),
+                                ...(cleared
+                                  ? {
+                                      variables: rememberAiCreativeSession(
+                                        selectedCreativeData,
+                                        null,
+                                        { body: "" },
+                                      ),
+                                    }
+                                  : {}),
                               });
                             }}
                             placeholder={t.offers.messageBody.placeholder}
@@ -1730,9 +1671,20 @@ export default function OfferCreativeStep({
                             } else {
                               setVariableError("");
                             }
+                            if (!selectedCreativeData) return;
+                            const cleared = !value.trim();
                             selectedCreativeData && updateCreative(selectedCreativeData.id, {
                               text_body: value,
                               ...(selectedCreativeData.channel === "Email" && { html_body: value }),
+                              ...(cleared
+                                ? {
+                                    variables: rememberAiCreativeSession(
+                                      selectedCreativeData,
+                                      null,
+                                      { body: "" },
+                                    ),
+                                  }
+                                : {}),
                             });
                           }}
                           onKeyDown={(e) => {
@@ -1762,6 +1714,7 @@ export default function OfferCreativeStep({
                           disabled={!selectedCreativeData}
                         />
                       )}
+                    </AiGeneratedBodyBadge>
 
                     {variableError && (
                       <div className="mt-3 text-sm text-red-700">
@@ -1781,40 +1734,51 @@ export default function OfferCreativeStep({
                       </button>
                     </div>
                   </div>
-                </div>
               </div>
             </div>
-
-            {/* Preview Panel - Right Column (1/3) */}
-          {creatives.length > 0 && (
-            <div className="lg:col-span-1">
-              <div className="sticky top-4">
-                {(() => {
-                  // Build variables object with default values using same format as manual communications
-                  const previewVars: Record<string, string | number | boolean> = {};
-                  selectedVariables.forEach((v) => {
-                    // Use the same formatVariablePlaceholder logic to extract the key
-                    const placeholder = formatVariablePlaceholder(v);
-                    // Remove {{ and }} to get just the key part
-                    const variableKey = placeholder.slice(2, -2);
-                    previewVars[variableKey] = v.defaultValue ?? `Sample ${v.name}`;
-                  });
-
-                  const replacedBody = replaceVariables(editingCreative.text_body || editingCreative.html_body || "", previewVars);
-
-                  return (
-                    <SimpleTextPreview
-                      channel={editingCreative.channel}
-                      title={replaceVariables(editingCreative.title, previewVars)}
-                      body={replacedBody}
-                    />
-                  );
-                })()}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
+
+      {/* AI message generation */}
+      <AiGenerateMessageModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        channel={editingCreative.channel}
+        communicationChannelId={communicationChannelId}
+        locale={editingCreative.locale || "en"}
+        brandName={editingCreative.title || undefined}
+        existingTitle={editingCreative.title || ""}
+        existingBody={
+          editingCreative.channel === "Email"
+            ? editingCreative.html_body || editingCreative.text_body || ""
+            : editingCreative.text_body || ""
+        }
+        availableVariables={selectedVariables.map(formatVariablePlaceholder)}
+        initialSession={
+          selectedCreativeData
+            ? resolveAiCreativeSession(selectedCreativeData)
+            : null
+        }
+        initialView={aiModalView}
+        onApply={({ title, body, session }) => {
+          if (!selectedCreativeData) return;
+          const isEmail = selectedCreativeData.channel === "Email";
+          const isRichText =
+            isEmail || Boolean(isRichTextMap[selectedCreativeData.id]);
+          const variables = rememberAiCreativeSession(
+            selectedCreativeData,
+            session,
+            { body },
+          );
+          updateCreative(selectedCreativeData.id, {
+            text_body: body,
+            variables,
+            ...(isRichText ? { html_body: body } : {}),
+            ...(title ? { title } : {}),
+          });
+        }}
+      />
 
       {/* Preview Modal */}
       <RegularModal
@@ -1879,24 +1843,6 @@ export default function OfferCreativeStep({
             handleTemplateCreated(newTemplate);
           }
         }}
-      />
-
-      <SelectOfferCreativesModal
-        open={showSelectCreativesModal}
-        creatives={availableCatalogCreatives}
-        loading={existingCreativesLoading}
-        channelLabel={getChannelLabel(selectedChannelForFiltering)}
-        canCreateNew={hasUnusedLanguage}
-        onClose={() => setShowSelectCreativesModal(false)}
-        onConfirm={handleConfirmCatalogCreatives}
-        onCreateNew={addCreative}
-        localeLabel={(locale) =>
-          getLocaleLabel(
-            locale,
-            Array.isArray(languages) ? languages : undefined,
-            t,
-          )
-        }
       />
     </div>
   );

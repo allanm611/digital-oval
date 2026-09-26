@@ -602,6 +602,13 @@ export default function Sidebar({
       entity: "users" as const,
     },
     {
+      name: "Health Check",
+      href: "/health-check",
+      icon: Activity,
+      type: "single",
+      entity: "users" as const,
+    },
+    {
       name: t.sidebar.secondary.myProfile,
       href: "/dashboard/profile",
       icon: User,

@@ -17,7 +17,7 @@ import { ProductCategory } from "../types/productCategory";
 import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
 import { color, tw, button } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { navigateBackOrFallback, getResolvedReturnTo, navigateToReturnTo } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -38,16 +38,11 @@ export default function ProductDetailsPage() {
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
 
-  const returnTo = (
-    location.state as { returnTo?: { pathname: string; section?: string } }
-  )?.returnTo;
+  const returnTo = getResolvedReturnTo(location);
 
   const navigateBack = () => {
     if (returnTo) {
-      navigate(returnTo.pathname, {
-        replace: true,
-        state: { focusSection: returnTo.section },
-      });
+      navigateToReturnTo(navigate, returnTo);
       return;
     }
 
@@ -222,7 +217,11 @@ export default function ProductDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <BackButton showBreadcrumb={true} currentLabel="Product Details" />
+        <BackButton
+          showBreadcrumb={true}
+          currentLabel="Product Details"
+          onClick={navigateBack}
+        />
         <div className="flex flex-wrap items-center gap-2">
           <ActivateDeactivateButton
             isActive={product?.is_active || false}

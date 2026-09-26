@@ -25,6 +25,17 @@ function numericId(value: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function channelTypeOf(codeOrName?: string | null): RouteChannelType | "" {
+  const value = (codeOrName || "").toUpperCase();
+  if (!value) return "";
+  if (value.includes("SMS")) return "SMS";
+  if (value.includes("EMAIL")) return "EMAIL";
+  if (value.includes("PUSH")) return "PUSH";
+  if (value.includes("WHATSAPP") || value.includes("MESSENGER")) return "WHATSAPP";
+  if (value.includes("USSD")) return "USSD";
+  return "";
+}
+
 /**
  * Human-readable route label. Never returns a bare numeric id when a name
  * (or gateway / channel name) is available — that is what made offer Basic Info
@@ -79,19 +90,45 @@ export function toRouteSelectOptions(
     });
   }
 
-  return options;
+  return options.sort((a, b) =>
+    a.label.localeCompare(b.label, undefined, { sensitivity: "base" }),
+  );
+}
+
+type OfferChannelFilterOptions = {
+  channelType?: RouteChannelType | "";
+  channelId?: number | null;
+  /**
+   * When true, keep Flash ≠ Normal: only exact channel-id matches plus
+   * untagged same-kind routes. When false (only one Email/SMS/… channel),
+   * show every active route of that kind so orphaned FKs are not hidden.
+   */
+  restrictToChannelId?: boolean;
+};
+
+function sameTypeChannelCount(
+  channels: Array<Pick<CommunicationChannel, "id" | "name" | "code">> | null | undefined,
+  channelType?: RouteChannelType | "",
+): number {
+  if (!channelType) return 0;
+  const seen = new Set<number>();
+  for (const channel of channels || []) {
+    const id = numericId(channel.id);
+    if (id == null || seen.has(id)) continue;
+    if (channelTypeOf(channel.code || channel.name) !== channelType) continue;
+    seen.add(id);
+  }
+  return seen.size;
 }
 
 /**
  * True when this route may appear for the offer's selected communication channel.
- * Routes bound to another channel (SMS Flash vs SMS Normal, SMS vs USSD) never match.
+ * Never mixes kinds (SMS into Email). Distinct variants of the same kind
+ * (SMS Flash vs SMS Normal) stay split only when both channels exist.
  */
 export function routeBelongsToOfferChannel(
   route: SMSRoute | Record<string, unknown>,
-  options: {
-    channelType?: RouteChannelType | "";
-    channelId?: number | null;
-  },
+  options: OfferChannelFilterOptions,
 ): boolean {
   const channelId = numericId(options.channelId);
   const channelType = options.channelType || "";
@@ -100,52 +137,52 @@ export function routeBelongsToOfferChannel(
   );
   const routeKind = (route as { channel_type?: RouteChannelType }).channel_type;
 
-  if (routeChannelId != null) {
-    if (channelId != null) return routeChannelId === channelId;
-    return !channelType || routeKind === channelType;
+  if (channelType && routeKind && routeKind !== channelType) {
+    return false;
+  }
+
+  if (options.restrictToChannelId && channelId != null) {
+    if (routeChannelId != null) return routeChannelId === channelId;
+    return !routeKind || routeKind === channelType;
   }
 
   if (channelType) {
     return !routeKind || routeKind === channelType;
   }
+
+  if (channelId != null && routeChannelId != null) {
+    return routeChannelId === channelId;
+  }
   return true;
 }
+
+export type OfferRouteSelectOptions = {
+  channelType?: RouteChannelType | "";
+  channel?: Pick<CommunicationChannel, "id" | "name" | "code"> | null;
+  selectedRouteId?: number | null;
+  allChannels?: Array<Pick<CommunicationChannel, "id" | "name" | "code">> | null;
+};
 
 /**
  * Routes shown for the offer's selected communication channel.
  *
  * Channel switches must be a local filter of the already-loaded catalog:
- * never mix in a route from the previously selected channel.
+ * never mix in a route from a different channel kind.
  */
 export function filterRoutesForOfferChannel(
   routes: SMSRoute[],
-  options: {
-    channelType?: RouteChannelType | "";
-    channel?: Pick<CommunicationChannel, "id"> | null;
-    selectedRouteId?: number | null;
-  },
+  options: OfferRouteSelectOptions,
 ): SMSRoute[] {
   const catalog = (routes || []).filter((route) => route.is_active !== false);
-  const channelType = options.channelType;
+  const channelType = options.channelType || "";
   const channelId = numericId(options.channel?.id);
+  const restrictToChannelId =
+    sameTypeChannelCount(options.allChannels, channelType) > 1;
 
-  const boundToChannel =
-    channelId != null
-      ? catalog.filter(
-          (route) => numericId(route.communication_channel_id) === channelId,
-        )
-      : [];
-
-  // Prefer exact communication-channel matches (Flash ≠ Normal).
-  // Only fall back to untagged / same-kind routes when this channel has none.
-  // Never fall back to every route of the same kind — that kept the previous
-  // channel's route in the list after a switch.
-  const pool =
-    boundToChannel.length > 0
-      ? boundToChannel
-      : catalog.filter((route) =>
-          routeBelongsToOfferChannel(route, { channelType, channelId }),
-        );
+  const membership = { channelType, channelId, restrictToChannelId };
+  const pool = catalog.filter((route) =>
+    routeBelongsToOfferChannel(route, membership),
+  );
 
   const selectedId = numericId(options.selectedRouteId);
   if (selectedId == null) return pool;
@@ -155,10 +192,7 @@ export function filterRoutesForOfferChannel(
     catalog.find((route) => Number(route.id) === selectedId) ||
     routes.find((route) => Number(route.id) === selectedId);
 
-  if (
-    selected &&
-    routeBelongsToOfferChannel(selected, { channelType, channelId })
-  ) {
+  if (selected && routeBelongsToOfferChannel(selected, membership)) {
     return [...pool, selected];
   }
 
@@ -167,11 +201,7 @@ export function filterRoutesForOfferChannel(
 
 export function routeSelectOptionsForOfferChannel(
   routes: SMSRoute[],
-  options: {
-    channelType?: RouteChannelType | "";
-    channel?: Pick<CommunicationChannel, "id"> | null;
-    selectedRouteId?: number | null;
-  },
+  options: OfferRouteSelectOptions,
 ): RouteSelectOption[] {
   return toRouteSelectOptions(filterRoutesForOfferChannel(routes, options));
 }

@@ -27,6 +27,7 @@ import {
   Smartphone,
   Gift,
   Tag,
+  Sparkles,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -85,6 +86,13 @@ export default function AdminHubPage() {
           description: "Manage ETL workflows and file registry",
           icon: Download,
           href: "/dashboard/etl",
+          category: "Infrastructure",
+        },
+        {
+          title: "Health Check Dashboard",
+          description: "Monitor Playwright automated health checks across modules",
+          icon: Activity,
+          href: "/health-check",
           category: "Infrastructure",
         },
       ],
@@ -327,6 +335,14 @@ export default function AdminHubPage() {
           description: "Manage KPI fields available for dynamic variable insertion in messages and creatives",
           icon: Layers,
           href: "/dashboard/dynamic-message-variables",
+          category: "System Configuration",
+        },
+        {
+          title: "AI Models",
+          description:
+            "Open AI administration. Configure providers used to generate message content.",
+          icon: Sparkles,
+          href: "/dashboard/ai-models",
           category: "System Configuration",
         },
       ],

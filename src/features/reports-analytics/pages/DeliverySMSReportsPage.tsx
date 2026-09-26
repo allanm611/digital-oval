@@ -1,70 +1,59 @@
-import { useMemo, useState, useEffect } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import { useLanguage } from "../../../contexts/LanguageContext";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Download,
-  MailOpen,
-  MessageCircle,
-  MousePointerClick,
-  TrendingUp,
-  UserMinus,
-} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { colors } from "../../../shared/utils/tokens";
 import Input from "../../../shared/components/ui/Input";
-import { color, tw } from "../../../shared/utils/utils";
+import { tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination, { DEFAULT_PAGE_SIZE } from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { Table } from "../../../shared/components/Table/Table";
-import { useTable } from "../../../shared/components/Table/useTable";
 import type { TableColumn } from "../../../shared/components/Table/types";
-import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
 import type {
-  RangeOption,
   DeliverySMSReportsResponse,
-  SMSLogEntry,
+  RangeOption,
+  SmsBroadcastRow,
+  SmsDeliveryStatus,
 } from "../types/ReportsAPI";
+import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import { alignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
+import {
+  previousComparisonLabel as formatPreviousComparisonLabel,
+  resolveComparisonSeries,
+} from "../utils/reportComparison";
+import { pickNamedArray } from "../utils/normalizeCampaignReport";
+import { ratePercent } from "../utils/campaignCvmMetrics";
+import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import SwitchableReportChart from "../components/SwitchableReportChart";
+import SmsDeliveryKpiGrid from "../components/SmsDeliveryKpiGrid";
+import { smsDeliveryReportsService } from "../services/smsDeliveryReportsService";
+import { normalizeSmsDeliveryReport } from "../utils/normalizeSmsDeliveryReport";
+import {
+  emptySmsSnapshot,
+  formatCount,
+  formatRate,
+  SMS_CVM_LABELS,
+  smsCvmSnapshot,
+  toSmsSummary,
+  type SmsCvmSnapshot,
+} from "../utils/smsCvmMetrics";
 
-// Extract types from API response type
-type SMSSummary = DeliverySMSReportsResponse["summary"];
 type DeliveryPoint = DeliverySMSReportsResponse["deliveryTimeline"][number];
-type MessageStatus = SMSLogEntry["status"];
 
-// Mock data structure (combines summary and timeline)
-type SMSRangeData = {
-  summary: SMSSummary;
+type SmsRangeData = {
+  summary: SmsCvmSnapshot;
   deliverySeries: DeliveryPoint[];
 };
 
-// Table row type
-type SMSTableRow = {
-  id: string;
-  campaignName: string;
-  status: MessageStatus;
-  sent: number;
-  delivered: number;
-  conversions: number;
-  conversionRate: number;
-};
-
-const rangeOptions: RangeOption[] = ["7d", "30d", "90d"];
 const rangeDays: Record<RangeOption, number> = {
   "7d": 7,
   "30d": 30,
   "90d": 90,
 };
-const statusOptions: (MessageStatus | "All")[] = [
+
+const statusOptions: (SmsDeliveryStatus | "All")[] = [
   "All",
   "Delivered",
   "Failed",
@@ -72,96 +61,97 @@ const statusOptions: (MessageStatus | "All")[] = [
   "Rejected",
 ];
 
-// Chart colors now use standardized colors from tokens.reportCharts
+const RELATED_REPORTS = [
+  { label: "Campaign Reports", to: "/dashboard/reports/campaigns" },
+  { label: "Offer Reports", to: "/dashboard/reports/offers" },
+  { label: "Delivery & Email Reports", to: "/dashboard/reports/email-delivery" },
+  { label: "Segment Reports", to: "/dashboard/reports/segments" },
+  { label: "Customer Profile Reports", to: "/dashboard/reports/customer-profiles" },
+];
 
-const smsMockData: Record<RangeOption, SMSRangeData> = {
+function snapshot(
+  sent: number,
+  delivered: number,
+  takenUp: number,
+  optOutRate: number,
+  subscribersReached: number,
+): SmsCvmSnapshot {
+  const failed = Math.max(0, sent - delivered);
+  return {
+    sent,
+    delivered,
+    failed,
+    deliveryRate: ratePercent(delivered, sent),
+    failedRate: ratePercent(failed, sent),
+    subscribersReached,
+    takenUp,
+    takeUpRate: ratePercent(takenUp, delivered),
+    optOutRate,
+  };
+}
+
+const smsMockData: Record<RangeOption, SmsRangeData> = {
   "7d": {
-    summary: {
-      sent: 87_500,
-      delivered: 82_000,
-      deliveryRate: 93.7,
-      conversionRate: 7.5,
-      conversions: 6_400,
-      failedRate: 4.5,
-      openRate: 42.3,
-      ctr: 9.1,
-      optOutRate: 0.6,
-    },
+    summary: snapshot(87_500, 82_000, 6_400, 0.6, 74_200),
     deliverySeries: [
-      { period: "Mon", sent: 12_500, delivered: 11_800, converted: 920 },
-      { period: "Tue", sent: 12_200, delivered: 11_500, converted: 915 },
-      { period: "Wed", sent: 12_800, delivered: 12_050, converted: 940 },
-      { period: "Thu", sent: 12_400, delivered: 11_780, converted: 930 },
-      { period: "Fri", sent: 12_600, delivered: 11_900, converted: 945 },
-      { period: "Sat", sent: 12_100, delivered: 11_420, converted: 905 },
-      { period: "Sun", sent: 13_000, delivered: 12_550, converted: 950 },
+      { period: "Mon", sent: 12_500, delivered: 11_800, takenUp: 920, converted: 920 },
+      { period: "Tue", sent: 12_200, delivered: 11_500, takenUp: 915, converted: 915 },
+      { period: "Wed", sent: 12_800, delivered: 12_050, takenUp: 940, converted: 940 },
+      { period: "Thu", sent: 12_400, delivered: 11_780, takenUp: 930, converted: 930 },
+      { period: "Fri", sent: 12_600, delivered: 11_900, takenUp: 945, converted: 945 },
+      { period: "Sat", sent: 12_100, delivered: 11_420, takenUp: 905, converted: 905 },
+      { period: "Sun", sent: 13_000, delivered: 12_550, takenUp: 950, converted: 950 },
     ],
   },
   "30d": {
-    summary: {
-      sent: 360_000,
-      delivered: 337_500,
-      deliveryRate: 93.7,
-      conversionRate: 7.8,
-      conversions: 27_000,
-      failedRate: 4.2,
-      openRate: 41.8,
-      ctr: 9.4,
-      optOutRate: 0.7,
-    },
+    summary: snapshot(360_000, 337_500, 27_000, 0.7, 301_000),
     deliverySeries: [
-      { period: "Oct 1-7", sent: 90_000, delivered: 84_800, converted: 6_750 },
-      { period: "Oct 8-14", sent: 90_500, delivered: 85_050, converted: 6_820 },
-      {
-        period: "Oct 15-21",
-        sent: 88_500,
-        delivered: 83_300,
-        converted: 6_700,
-      },
-      {
-        period: "Oct 22-28",
-        sent: 91_000,
-        delivered: 84_350,
-        converted: 6_780,
-      },
+      { period: "Oct 1-7", sent: 90_000, delivered: 84_800, takenUp: 6_750, converted: 6_750 },
+      { period: "Oct 8-14", sent: 90_500, delivered: 85_050, takenUp: 6_820, converted: 6_820 },
+      { period: "Oct 15-21", sent: 88_500, delivered: 83_300, takenUp: 6_700, converted: 6_700 },
+      { period: "Oct 22-28", sent: 91_000, delivered: 84_350, takenUp: 6_780, converted: 6_780 },
     ],
   },
   "90d": {
-    summary: {
-      sent: 1_075_000,
-      delivered: 1_008_000,
-      deliveryRate: 93.8,
-      conversionRate: 8.0,
-      conversions: 80_400,
-      failedRate: 4.0,
-      openRate: 42.6,
-      ctr: 9.9,
-      optOutRate: 0.8,
-    },
+    summary: snapshot(1_075_000, 1_008_000, 80_400, 0.8, 890_000),
     deliverySeries: [
-      {
-        period: "September",
-        sent: 355_000,
-        delivered: 333_000,
-        converted: 26_700,
-      },
-      {
-        period: "October",
-        sent: 360_000,
-        delivered: 337_500,
-        converted: 27_000,
-      },
-      {
-        period: "November",
-        sent: 360_000,
-        delivered: 337_500,
-        converted: 27_200,
-      },
+      { period: "September", sent: 355_000, delivered: 333_000, takenUp: 26_700, converted: 26_700 },
+      { period: "October", sent: 360_000, delivered: 337_500, takenUp: 27_000, converted: 27_000 },
+      { period: "November", sent: 360_000, delivered: 337_500, takenUp: 27_200, converted: 27_200 },
     ],
   },
 };
 
-const formatNumber = (value: number) => value.toLocaleString("en-US");
+const BROADCAST_SEEDS: Array<Omit<SmsBroadcastRow, "timestamp" | "takeUpRate"> & { daysAgo: number }> = [
+  { id: "B-101", campaignId: "", campaignName: "Loyalty Reactivation", offerId: "", offerName: "Data Bonus 1GB", segmentId: "", segmentName: "At Risk", status: "Delivered", sent: 12500, delivered: 11800, subscribersReached: 11240, takenUp: 920, daysAgo: 1 },
+  { id: "B-102", campaignId: "", campaignName: "Loyalty Reactivation", offerId: "", offerName: "Data Bonus 1GB", segmentId: "", segmentName: "Core", status: "Pending", sent: 8400, delivered: 0, subscribersReached: 0, takenUp: 0, daysAgo: 0 },
+  { id: "B-103", campaignId: "", campaignName: "VIP Retention", offerId: "", offerName: "Voice Bundle", segmentId: "", segmentName: "High Value", status: "Delivered", sent: 4200, delivered: 4010, subscribersReached: 3980, takenUp: 610, daysAgo: 3 },
+  { id: "B-104", campaignId: "", campaignName: "Churn Win-back", offerId: "", offerName: "Win-back Credit", segmentId: "", segmentName: "Win-back", status: "Failed", sent: 9600, delivered: 2100, subscribersReached: 1980, takenUp: 40, errorCode: "TIMEOUT", daysAgo: 4 },
+  { id: "B-105", campaignId: "", campaignName: "Welcome Onboarding", offerId: "", offerName: "Starter Pack", segmentId: "", segmentName: "New", status: "Delivered", sent: 15100, delivered: 14620, subscribersReached: 14110, takenUp: 1880, daysAgo: 6 },
+  { id: "B-106", campaignId: "", campaignName: "Recharge Nudge", offerId: "", offerName: "Airtime Bonus", segmentId: "", segmentName: "Dormant", status: "Rejected", sent: 7300, delivered: 0, subscribersReached: 0, takenUp: 0, errorCode: "DND_ACTIVE", daysAgo: 8 },
+  { id: "B-107", campaignId: "", campaignName: "Recharge Nudge", offerId: "", offerName: "Airtime Bonus", segmentId: "", segmentName: "Growth", status: "Delivered", sent: 18800, delivered: 17640, subscribersReached: 16990, takenUp: 1420, daysAgo: 12 },
+  { id: "B-108", campaignId: "", campaignName: "Birthday Offer", offerId: "", offerName: "Birthday Data", segmentId: "", segmentName: "Core", status: "Delivered", sent: 2600, delivered: 2510, subscribersReached: 2490, takenUp: 740, daysAgo: 15 },
+  { id: "B-109", campaignId: "", campaignName: "Data Upsell", offerId: "", offerName: "Night Bundle", segmentId: "", segmentName: "High Value", status: "Failed", sent: 5400, delivered: 900, subscribersReached: 860, takenUp: 20, errorCode: "INV_NUMBER", daysAgo: 21 },
+  { id: "B-110", campaignId: "", campaignName: "Data Upsell", offerId: "", offerName: "Night Bundle", segmentId: "", segmentName: "Growth", status: "Delivered", sent: 22100, delivered: 20940, subscribersReached: 20110, takenUp: 1670, daysAgo: 28 },
+  { id: "B-111", campaignId: "", campaignName: "Roaming Alert", offerId: "", offerName: "Roaming Pass", segmentId: "", segmentName: "Core", status: "Pending", sent: 1100, delivered: 0, subscribersReached: 0, takenUp: 0, daysAgo: 2 },
+  { id: "B-112", campaignId: "", campaignName: "Churn Win-back", offerId: "", offerName: "Win-back Credit", segmentId: "", segmentName: "At Risk", status: "Delivered", sent: 13400, delivered: 12110, subscribersReached: 11840, takenUp: 980, daysAgo: 45 },
+];
+
+function daysAgoIso(daysAgo: number): string {
+  const date = new Date();
+  date.setHours(10, 0, 0, 0);
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString();
+}
+
+const dummyBroadcasts: SmsBroadcastRow[] = BROADCAST_SEEDS.map((seed) => {
+  const { daysAgo, ...row } = seed;
+  return {
+    ...row,
+    timestamp: daysAgoIso(daysAgo),
+    takeUpRate: ratePercent(row.takenUp, row.delivered),
+  };
+});
 
 const getDaysBetween = (start: string, end: string) => {
   const startDate = start ? new Date(start) : null;
@@ -185,492 +175,407 @@ const mapDaysToRange = (days: number | null): RangeOption => {
   return "90d";
 };
 
-const getRangeLabel = (option: RangeOption): string => {
-  const labels: Record<RangeOption, string> = {
-    "7d": "Daily",
-    "30d": "Weekly",
-    "90d": "Monthly",
-  };
-  return labels[option];
-};
-
-// Scale data based on actual number of days vs base range
-const getScaleFactor = (
-  customDays: number | null,
-  baseRange: RangeOption,
-): number => {
+const getScaleFactor = (customDays: number | null, baseRange: RangeOption): number => {
   if (!customDays) return 1;
-  const baseDays = rangeDays[baseRange];
-  return customDays / baseDays;
+  return customDays / rangeDays[baseRange];
 };
 
-// Get date constraints for date inputs
-const getDateConstraints = () => {
-  const today = new Date();
-  // Use local date to avoid timezone issues
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  const maxDate = `${year}-${month}-${day}`; // Today (no future dates)
-
-  const minDate = new Date(today);
-  minDate.setFullYear(today.getFullYear() - 2); // 2 years ago max
-  const minYear = minDate.getFullYear();
-  const minMonth = String(minDate.getMonth() + 1).padStart(2, "0");
-  const minDay = String(minDate.getDate()).padStart(2, "0");
-  const minDateStr = `${minYear}-${minMonth}-${minDay}`;
-
-  return { minDate: minDateStr, maxDate };
-};
-
-// Generate comprehensive dummy data with dates relative to today
-const generateSMSMessageLogs = (): MessageLogEntry[] => {
-  const campaigns = [
-    { id: "CAMP-8472", name: "Loyalty Reactivation" },
-    { id: "LOYALTY-5541", name: "VIP Upsell" },
-    { id: "REACT-2201", name: "Churn Winback" },
-    { id: "WELCOME-3321", name: "Welcome Series" },
-    { id: "PROMO-4456", name: "Flash Sale" },
-    { id: "BIRTHDAY-6678", name: "Birthday Campaign" },
-  ];
-  const statuses: MessageStatus[] = [
-    "Delivered",
-    "Failed",
-    "Pending",
-    "Rejected",
-  ];
-  const regions = ["Uganda", "Kenya", "Rwanda", "Tanzania", "Ghana", "Nigeria"];
-  const errorCodes = ["INV_NUMBER", "DND_ACTIVE", "BLOCKED", "TIMEOUT"];
-  const phonePrefixes = ["+256", "+254", "+250", "+255", "+233", "+234"];
-
-  const rows: MessageLogEntry[] = [];
-  const today = new Date();
-  let globalCounter = 0;
-
-  // Generate messages across the last 90 days with various statuses
-  campaigns.forEach((campaign, campIdx) => {
-    for (let i = 0; i < 8; i++) {
-      globalCounter++;
-      const daysAgo = Math.floor(Math.random() * 90); // Spread across last 90 days
-      const messageDate = new Date(today);
-      messageDate.setDate(today.getDate() - daysAgo);
-      messageDate.setHours(
-        9 + Math.floor(Math.random() * 12),
-        Math.floor(Math.random() * 60),
-        0,
-        0,
-      );
-
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const regionIdx = campIdx % regions.length;
-      const delivered = status === "Delivered" ? 1 : 0;
-      const conversions = delivered === 1 && Math.random() > 0.6 ? 1 : 0;
-      const conversionRate =
-        delivered === 1 ? (conversions === 1 ? 100 : 0) : 0;
-
-      const phoneNum = `${phonePrefixes[regionIdx]} ${
-        700 + Math.floor(Math.random() * 100)
-      } ${String(100000 + Math.floor(Math.random() * 900000))}`;
-
-      rows.push({
-        id: `MSG-${globalCounter}`,
-        campaignId: campaign.id,
-        campaignName: campaign.name,
-        recipient: phoneNum,
-        region: regions[regionIdx],
-        senderId: "SentraCVM",
-        timestamp: messageDate.toISOString(),
-        status,
-        sent: 1,
-        delivered,
-        conversions,
-        conversionRate,
-        ...(status === "Failed" || status === "Rejected"
-          ? {
-              errorCode:
-                errorCodes[Math.floor(Math.random() * errorCodes.length)],
-            }
-          : {}),
-      });
-    }
-  });
-
-  return rows;
-};
-
-const smsMessageLogs: MessageLogEntry[] = generateSMSMessageLogs();
-
-type ChartTooltipEntry = {
-  color?: string;
-  name?: string;
-  value?: number | string;
-};
-
-type ChartTooltipProps = {
-  active?: boolean;
-  label?: string;
-  payload?: ChartTooltipEntry[];
-};
-
-const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
-  if (!active || !payload?.length) {
-    return null;
-  }
-
-  return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
-      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
-      {payload.map((entry, idx) => (
-        <div
-          key={idx}
-          className="flex items-center justify-between gap-4 text-sm"
-        >
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-gray-600">{entry.name}</span>
-          </span>
-          <span className="font-semibold text-gray-900">
-            {typeof entry.value === "number"
-              ? formatNumber(entry.value)
-              : entry.value}
-          </span>
-        </div>
-      ))}
-    </div>
+function scaleSnapshot(base: SmsCvmSnapshot, factor: number): SmsCvmSnapshot {
+  if (factor === 1) return base;
+  return snapshot(
+    Math.round(base.sent * factor),
+    Math.round(base.delivered * factor),
+    Math.round(base.takenUp * factor),
+    base.optOutRate,
+    Math.round(base.subscribersReached * factor),
   );
-};
+}
+
+function entityPath(
+  kind: "campaign" | "offer" | "segment",
+  id: string | undefined,
+  label: string,
+): string | null {
+  if (!label || label === "—") return null;
+  if (kind === "segment") return "/dashboard/reports/segments";
+  if (!id || !/^\d+$/.test(id)) return null;
+  if (kind === "campaign") return `/dashboard/campaigns/${id}/report`;
+  return `/dashboard/reports/offers/${id}`;
+}
+
+function EntityLink({
+  label,
+  to,
+}: {
+  label: string;
+  to: string | null;
+}) {
+  if (!to || !label || label === "—") {
+    return <span>{label || "—"}</span>;
+  }
+  return (
+    <Link to={to} className="font-medium text-gray-900 underline-offset-2 hover:underline">
+      {label}
+    </Link>
+  );
+}
 
 export default function DeliverySMSReportsPage() {
-  const { t } = useLanguage();
-  const [deliveryRange, setDeliveryRange] = useState<RangeOption>("90d");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const [appliedCustomRange, setAppliedCustomRange] = useState({
-    start: "",
-    end: "",
+  const timeWindow = useReportTimeWindow({
+    overviewPreset: "monthly",
+    defaultTrendsPreset: "daily",
   });
-  const [statusFilter, setStatusFilter] = useState<MessageStatus | "All">(
-    "All",
-  );
+  const {
+    isTrendsView,
+    queryParams,
+    activeWindow,
+    comparePreviousPeriod,
+    previousQueryParams,
+    previousPeriodLabel,
+  } = timeWindow;
+  const chartAudit = toChartAudit(activeWindow);
+  const deliveryRange = timeWindow.rangeKey;
+  const appliedCustomRange = activeWindow.bounds;
+
+  const [statusFilter, setStatusFilter] = useState<SmsDeliveryStatus | "All">("All");
   const [campaignQuery, setCampaignQuery] = useState("");
   const [useDummyData, setUseDummyData] = useState(true);
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [liveReport, setLiveReport] = useState<DeliverySMSReportsResponse | null>(null);
+  const [liveReportError, setLiveReportError] = useState<string | null>(null);
+  const [isLoadingLiveReport, setIsLoadingLiveReport] = useState(false);
 
-  const handleRun = () => {
-    setAppliedCustomRange(customRange);
-  };
-
-  const customDays = getDaysBetween(
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-  );
+  const customDays = getDaysBetween(appliedCustomRange.start, appliedCustomRange.end);
   const activeRangeKey: RangeOption =
     appliedCustomRange.start && appliedCustomRange.end
       ? mapDaysToRange(customDays)
       : deliveryRange;
+  const scaleFactor =
+    appliedCustomRange.start && appliedCustomRange.end && customDays
+      ? getScaleFactor(customDays, activeRangeKey)
+      : 1;
 
-  // Calculate scale factor for custom date ranges
-  const scaleFactor = useMemo(() => {
-    if (appliedCustomRange.start && appliedCustomRange.end && customDays) {
-      return getScaleFactor(customDays, activeRangeKey);
+  useEffect(() => {
+    if (useDummyData) {
+      setLiveReport(null);
+      setLiveReportError(null);
+      setIsLoadingLiveReport(false);
+      return;
     }
-    return 1;
+
+    let cancelled = false;
+    const handle = window.setTimeout(() => {
+      const load = async () => {
+        try {
+          setIsLoadingLiveReport(true);
+          setLiveReportError(null);
+          const response = await smsDeliveryReportsService.getPortfolio({
+            range: queryParams.range || activeRangeKey,
+            grain: queryParams.grain,
+            startDate: queryParams.startDate,
+            endDate: queryParams.endDate,
+            preset: queryParams.preset,
+            page: 1,
+            pageSize: 200,
+            search: campaignQuery.trim() || undefined,
+            status: statusFilter === "All" ? undefined : statusFilter,
+            sortBy: "sent",
+            sortOrder: "desc",
+          });
+          if (cancelled) return;
+          const normalized = normalizeSmsDeliveryReport(response);
+          if (response.success && normalized) {
+            setLiveReport(normalized);
+          } else {
+            setLiveReport(null);
+            setLiveReportError(
+              response.error || response.message || "Failed to load SMS delivery report",
+            );
+          }
+        } catch (error) {
+          if (cancelled) return;
+          setLiveReport(null);
+          setLiveReportError(
+            extractBackendError(error, "Failed to load Delivery & SMS Reports."),
+          );
+        } finally {
+          if (!cancelled) setIsLoadingLiveReport(false);
+        }
+      };
+      void load();
+    }, campaignQuery ? 250 : 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
   }, [
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-    customDays,
+    useDummyData,
+    queryParams.range,
+    queryParams.grain,
+    queryParams.startDate,
+    queryParams.endDate,
+    queryParams.preset,
+    campaignQuery,
+    statusFilter,
     activeRangeKey,
   ]);
 
-  // Scale snapshot data based on actual date range
-  const baseSnapshot = smsMockData[activeRangeKey];
-  const summarySnapshot = useMemo(() => {
+  const summary = useMemo(() => {
     if (!useDummyData) {
-      return {
-        ...baseSnapshot,
-        summary: {
-          sent: 0,
-          delivered: 0,
-          conversions: 0,
-          deliveryRate: 0,
-          failedRate: 0,
-          conversionRate: 0,
-          openRate: 0,
-          ctr: 0,
-          optOutRate: 0,
-        },
-      };
+      return liveReport?.summary ? smsCvmSnapshot(liveReport.summary) : emptySmsSnapshot();
     }
-    if (scaleFactor === 1) return baseSnapshot;
-    return {
-      ...baseSnapshot,
-      summary: {
-        ...baseSnapshot.summary,
-        sent: Math.round(baseSnapshot.summary.sent * scaleFactor),
-        delivered: Math.round(baseSnapshot.summary.delivered * scaleFactor),
-        conversions: Math.round(baseSnapshot.summary.conversions * scaleFactor),
-        // Rates stay the same
-        deliveryRate: baseSnapshot.summary.deliveryRate,
-        failedRate: baseSnapshot.summary.failedRate,
-        conversionRate: baseSnapshot.summary.conversionRate,
-        openRate: baseSnapshot.summary.openRate,
-        ctr: baseSnapshot.summary.ctr,
-        optOutRate: baseSnapshot.summary.optOutRate,
-      },
-    };
-  }, [baseSnapshot, scaleFactor, useDummyData]);
+    return scaleSnapshot(smsMockData[activeRangeKey].summary, scaleFactor);
+  }, [activeRangeKey, liveReport, scaleFactor, useDummyData]);
 
-  const deliverySnapshot = useMemo(() => {
-    if (!useDummyData) {
-      return {
-        ...baseSnapshot,
-        deliverySeries: baseSnapshot.deliverySeries.map((point) => ({
-          ...point,
-          sent: 0,
-          delivered: 0,
-          converted: 0,
-        })),
-      };
-    }
-    if (scaleFactor === 1) return baseSnapshot;
-    return {
-      ...baseSnapshot,
-      deliverySeries: baseSnapshot.deliverySeries.map((point) => ({
-        ...point,
-        sent: Math.round(point.sent * scaleFactor),
-        delivered: Math.round(point.delivered * scaleFactor),
-        converted: Math.round(point.converted * scaleFactor),
-      })),
+  const deliverySeries = useMemo(() => {
+    const window = {
+      startDate: queryParams.startDate,
+      endDate: queryParams.endDate,
+      grain: queryParams.grain,
     };
-  }, [baseSnapshot, scaleFactor, useDummyData]);
-  const filteredLogs = useMemo(() => {
     if (!useDummyData) {
-      return [];
+      return alignTrendSeries(liveReport?.deliveryTimeline || [], window);
     }
+    const template =
+      smsMockData[dummyTemplateRange(queryParams.grain || "daily")].deliverySeries;
+    return alignTrendSeries(template, window);
+  }, [
+    liveReport,
+    queryParams.endDate,
+    queryParams.grain,
+    queryParams.startDate,
+    useDummyData,
+  ]);
+
+  const deliveryRateSeries = useMemo(
+    () =>
+      deliverySeries.map((point) => ({
+        period: point.period,
+        date: point.date,
+        deliveryRate: ratePercent(point.delivered, point.sent),
+        takeUpRate: ratePercent(point.takenUp ?? point.converted, point.delivered),
+      })),
+    [deliverySeries],
+  );
+
+  const fetchPreviousTimeline = useCallback(async (params: typeof previousQueryParams) => {
+    const envelope = await smsDeliveryReportsService.getTimeline({
+      range: params.range || deliveryRange,
+      grain: params.grain,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      preset: params.preset,
+    });
+    const normalized = normalizeSmsDeliveryReport(envelope);
+    return (
+      normalized?.deliveryTimeline ||
+      pickNamedArray<DeliveryPoint>(envelope.data, ["deliveryTimeline", "delivery_timeline", "timeline"])
+    );
+  }, [deliveryRange]);
+
+  const livePreviousTimeline = usePreviousPeriodSeries<DeliveryPoint>({
+    enabled: comparePreviousPeriod && !useDummyData,
+    previousQueryParams,
+    fetchSeries: fetchPreviousTimeline,
+  });
+
+  const deliveryComparison = useMemo(
+    () =>
+      resolveComparisonSeries({
+        compare: comparePreviousPeriod,
+        useDummyData,
+        current: deliverySeries,
+        livePrevious: livePreviousTimeline,
+        previousQueryParams,
+        align: alignTrendSeries,
+      }),
+    [comparePreviousPeriod, deliverySeries, livePreviousTimeline, previousQueryParams, useDummyData],
+  );
+
+  const previousRateSeries = useMemo(
+    () =>
+      (deliveryComparison || []).map((point) => ({
+        period: point.period,
+        date: point.date,
+        deliveryRate: ratePercent(point.delivered, point.sent),
+        takeUpRate: ratePercent(point.takenUp ?? point.converted, point.delivered),
+      })),
+    [deliveryComparison],
+  );
+
+  const previousComparisonLabel = formatPreviousComparisonLabel(
+    comparePreviousPeriod,
+    previousPeriodLabel,
+  );
+
+  const filteredBroadcasts = useMemo(() => {
+    const source = useDummyData ? dummyBroadcasts : liveReport?.broadcasts || [];
     const now = Date.now();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
         ? (customDays ?? rangeDays[deliveryRange])
         : rangeDays[deliveryRange];
-
-    const startMs = appliedCustomRange.start
-      ? new Date(appliedCustomRange.start).getTime()
-      : null;
-    const endMs = appliedCustomRange.end
-      ? new Date(appliedCustomRange.end).getTime()
-      : null;
-
+    const startMs = appliedCustomRange.start ? new Date(appliedCustomRange.start).getTime() : null;
+    const endMs = appliedCustomRange.end ? new Date(appliedCustomRange.end).getTime() : null;
     const query = campaignQuery.trim().toLowerCase();
-    return smsMessageLogs.filter((entry) => {
-      const matchesStatus =
-        statusFilter === "All" ? true : entry.status === statusFilter;
+
+    return source.filter((entry) => {
+      const matchesStatus = statusFilter === "All" || entry.status === statusFilter;
       const matchesQuery = query
-        ? entry.campaignId.toLowerCase().includes(query) ||
-          entry.campaignName.toLowerCase().includes(query)
+        ? [entry.campaignName, entry.campaignId, entry.offerName, entry.segmentName]
+            .join(" ")
+            .toLowerCase()
+            .includes(query)
         : true;
+      if (!useDummyData) return matchesStatus && matchesQuery;
       const entryDate = new Date(entry.timestamp).getTime();
       const matchesRange =
-        appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
+        startMs && endMs
           ? entryDate >= startMs && entryDate <= endMs
           : now - entryDate <= maxDays * 24 * 60 * 60 * 1000;
       return matchesStatus && matchesQuery && matchesRange;
     });
   }, [
+    appliedCustomRange.end,
+    appliedCustomRange.start,
     campaignQuery,
-    statusFilter,
-    customRange,
     customDays,
     deliveryRange,
+    liveReport,
+    statusFilter,
     useDummyData,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
   ]);
 
-  // Reset pagination when filters change
   useEffect(() => {
     setTablePage(1);
-  }, [
-    campaignQuery,
-    statusFilter,
-    appliedCustomRange.start,
-    appliedCustomRange.end,
-  ]);
+  }, [campaignQuery, statusFilter, appliedCustomRange.start, appliedCustomRange.end, useDummyData]);
 
-  // Paginated logs for table display
-  const paginatedLogs = useMemo(() => {
-    const startIdx = (tablePage - 1) * tablePageSize;
-    return filteredLogs.slice(startIdx, startIdx + tablePageSize);
-  }, [filteredLogs, tablePage]);
+  const tableColumns = useMemo<TableColumn<SmsBroadcastRow>[]>(
+    () => [
+      {
+        id: "campaignName",
+        label: SMS_CVM_LABELS.campaign,
+        width: "180px",
+        visible: true,
+        render: (_, row) => (
+          <EntityLink
+            label={row.campaignName}
+            to={entityPath("campaign", row.campaignId, row.campaignName)}
+          />
+        ),
+      },
+      {
+        id: "offerName",
+        label: SMS_CVM_LABELS.offer,
+        width: "160px",
+        visible: true,
+        render: (_, row) => (
+          <EntityLink
+            label={row.offerName}
+            to={entityPath("offer", row.offerId, row.offerName)}
+          />
+        ),
+      },
+      {
+        id: "segmentName",
+        label: SMS_CVM_LABELS.segment,
+        width: "140px",
+        visible: true,
+        render: (_, row) => (
+          <EntityLink
+            label={row.segmentName}
+            to={entityPath("segment", row.segmentId, row.segmentName)}
+          />
+        ),
+      },
+      { id: "status", label: "Delivery Status", width: "140px", visible: true },
+      {
+        id: "sent",
+        label: "Dispatched",
+        width: "110px",
+        visible: true,
+        render: (value) => formatCount(value),
+      },
+      {
+        id: "delivered",
+        label: SMS_CVM_LABELS.delivered,
+        width: "110px",
+        visible: true,
+        render: (value) => formatCount(value),
+      },
+      {
+        id: "takenUp",
+        label: SMS_CVM_LABELS.takenUp,
+        width: "110px",
+        visible: true,
+        render: (value) => formatCount(value),
+      },
+      {
+        id: "takeUpRate",
+        label: SMS_CVM_LABELS.takeUpRate,
+        width: "130px",
+        visible: true,
+        render: (value) => formatRate(value),
+      },
+    ],
+    [],
+  );
 
   const csvHeaders = [
-    "Campaign ID",
-    "Campaign Name",
-    "Status",
-    "Sent",
+    "Campaign",
+    "Offer",
+    "Segment",
+    "Delivery Status",
+    "Dispatched",
     "Delivered",
-    "Conversions",
-    "Conversion Rate",
+    "Subscribers Reached",
+    "Taken Up",
+    "Take-up Rate",
   ];
-
-  const csvRows = filteredLogs.map((row, index) => [
-    index + 1,
+  const csvRows = filteredBroadcasts.map((row) => [
     row.campaignName,
+    row.offerName,
+    row.segmentName,
     row.status,
     row.sent,
     row.delivered,
-    row.conversions,
-    `${row.conversionRate}%`,
+    row.subscribersReached,
+    row.takenUp,
+    `${row.takeUpRate}%`,
   ]);
-
-  const summaryStats = [
-    {
-      label: "Messages Sent",
-      value: formatNumber(summarySnapshot.summary.sent),
-      description: "Total SMS dispatched last 30 days",
-      icon: MessageCircle,
-    },
-    {
-      label: "Delivered Messages",
-      value: formatNumber(summarySnapshot.summary.delivered),
-      description: "Reached user devices successfully",
-      icon: CheckCircle2,
-    },
-    {
-      label: "Delivery Rate",
-      value: `${summarySnapshot.summary.deliveryRate.toFixed(1)}%`,
-      description: "Delivered vs total sent",
-      icon: TrendingUp,
-    },
-    {
-      label: "Failed Delivery Rate",
-      value: `${summarySnapshot.summary.failedRate.toFixed(1)}%`,
-      description: "Messages bouncing or rejected",
-      icon: AlertTriangle,
-    },
-    {
-      label: "Open Rate",
-      value: `${summarySnapshot.summary.openRate.toFixed(1)}%`,
-      description: "Recipients opening SMS content",
-      icon: MailOpen,
-    },
-    {
-      label: "Click-Through Rate",
-      value: `${summarySnapshot.summary.ctr.toFixed(1)}%`,
-      description: "Recipients tapping tracked links",
-      icon: MousePointerClick,
-    },
-    {
-      label: "Conversion Rate",
-      value: `${summarySnapshot.summary.conversionRate.toFixed(1)}%`,
-      description: "Delivered SMS leading to actions",
-      icon: TrendingUp,
-    },
-    {
-      label: "Opt-Out Rate",
-      value: `${summarySnapshot.summary.optOutRate.toFixed(1)}%`,
-      description: "Recipients choosing to unsubscribe",
-      icon: UserMinus,
-    },
-  ];
-
-  const statusStyles: Record<MessageStatus, string> = {
-    Delivered: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    Failed: "border-red-200 bg-red-50 text-red-700",
-    Pending: "border-amber-200 bg-amber-50 text-amber-700",
-    Rejected: "border-slate-200 bg-slate-50 text-slate-700",
-  };
-
-  const tableColumnsMemo = useMemo<TableColumn<SMSTableRow>[]>(() => [
-    {
-      id: "campaignName",
-      label: "Campaign Name",
-      width: "200px",
-      visible: true,
-    },
-    {
-      id: "status",
-      label: "Status",
-      width: "150px",
-      visible: true,
-      render: (_, row) => (
-        <span className="text-sm">
-          {row.status}
-        </span>
-      ),
-    },
-    {
-      id: "sent",
-      label: "Sent",
-      width: "100px",
-      visible: true,
-    },
-    {
-      id: "delivered",
-      label: "Delivered",
-      width: "100px",
-      visible: true,
-    },
-    {
-      id: "conversions",
-      label: "Conversions",
-      width: "120px",
-      visible: true,
-    },
-    {
-      id: "conversionRate",
-      label: "Conversion Rate",
-      width: "150px",
-      visible: true,
-      render: (value) => `${value}%`,
-    },
-  ], []);
 
   return (
     <div className="space-y-6">
       <header className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Delivery & SMS Reports
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Delivery & SMS Reports</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Deep dive into SMS delivery health and outcomes
+            SMS dispatch, handset delivery, subscriber reach, offer take-up, and channel opt-out
+            for the selected window
           </p>
         </div>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap gap-2">
-            {rangeOptions.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  setDeliveryRange(option);
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`${
-                  tw.rounded
-                } border px-3 py-1.5 text-sm font-medium transition-colors ${
-                  !(appliedCustomRange.start && appliedCustomRange.end) &&
-                  deliveryRange === option
-                    ? "border-[#252829] bg-[#252829] text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                }`}
-              >
-                {getRangeLabel(option)}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+        <nav className="flex flex-wrap gap-2" aria-label="Related reports">
+          {RELATED_REPORTS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`${tw.rounded} border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-gray-300 hover:text-gray-900`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <ReportTrendsToolbar
+          timeWindow={timeWindow}
+          extraActions={
             <div
               className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
             >
               <label
                 htmlFor="sms-data-toggle"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
+                className="mr-2 whitespace-nowrap text-sm font-medium text-gray-700"
               >
                 Data Mode:
               </label>
@@ -678,10 +583,9 @@ export default function DeliverySMSReportsPage() {
                 id="sms-data-toggle"
                 type="button"
                 onClick={() => setUseDummyData(!useDummyData)}
-                className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{
-                  backgroundColor: useDummyData ? 'var(--c-toggle-active)' : '#d1d5db',
-                }}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
+                  useDummyData ? "bg-[#252829]" : "bg-gray-300"
+                }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -689,256 +593,179 @@ export default function DeliverySMSReportsPage() {
                   }`}
                 />
               </button>
-              <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
+              <span className="ml-2 whitespace-nowrap text-xs text-gray-600">
                 {useDummyData ? "Dummy Data" : "Real Data"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="sms-date-start"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                From:
-              </label>
-              <Input
-                id="sms-date-start"
-                type="date"
-                value={customRange.start}
-                min={getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    start: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="sms-date-end"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                To:
-              </label>
-              <Input
-                id="sms-date-end"
-                type="date"
-                value={customRange.end}
-                min={customRange.start || getDateConstraints().minDate}
-                max={getDateConstraints().maxDate}
-                onChange={(event) =>
-                  setCustomRange((prev) => ({
-                    ...prev,
-                    end: event.target.value,
-                  }))
-                }
-                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
-              />
-            </div>
-            {customRange.start && customRange.end && (
-              <button
-                type="button"
-                onClick={handleRun}
-                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
-                style={{ backgroundColor: colors.primary.accent }}
-              >
-                Run
-              </button>
-            )}
-            {(customRange.start || customRange.end) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setCustomRange({ start: "", end: "" });
-                  setAppliedCustomRange({ start: "", end: "" });
-                }}
-                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
+          }
+        />
       </header>
 
-      <section>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {summaryStats.map((stat) => (
-            <div
-              key={stat.label}
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center gap-2">
-                <stat.icon
-                  className="h-5 w-5"
-                  style={{ color: colors.primary.accent }}
-                />
-                <p className="text-sm font-medium text-gray-600">
-                  {stat.label}
-                </p>
-              </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-sm text-gray-500">{stat.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section
-        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-      >
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              SMS Delivery Funnel
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Track sent, delivered, and conversions across timelines
-            </p>
-          </div>
-        </div>
-        <div className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={deliverySnapshot.deliverySeries}
-              margin={{ top: 20, right: 30, left: 24, bottom: 0 }}
-              barCategoryGap="25%"
-              barGap={8}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="period"
-                tick={{ fill: "#6b7280" }}
-                axisLine={{ stroke: "#e5e7eb" }}
-              />
-              <YAxis
-                tick={{ fill: "#6b7280" }}
-                axisLine={{ stroke: "#e5e7eb" }}
-                label={{
-                  value: "Message Count",
-                  angle: -90,
-                  position: "insideLeft",
-                }}
-                width={90}
-                tickFormatter={(value) => formatNumber(value)}
-              />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: "transparent" }}
-              />
-              <Legend
-                wrapperStyle={{ paddingTop: "20px", gap: "20px" }}
-                iconType="circle"
-              />
-              <Bar
-                dataKey="sent"
-                name="Sent"
-                fill={colors.reportCharts.deliverySMS.smsDelivery.sent}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={50}
-              />
-              <Bar
-                dataKey="delivered"
-                name="Delivered"
-                fill={colors.reportCharts.deliverySMS.smsDelivery.delivered}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={50}
-              />
-              <Bar
-                dataKey="converted"
-                name="Converted"
-                fill={colors.reportCharts.deliverySMS.smsDelivery.converted}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={50}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Message Delivery Log
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Inspect individual sends, troubleshoot failures, and export detail
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
-              placeholder="Search campaign"
-              value={campaignQuery}
-              onChange={setCampaignQuery}
-              className="w-full md:w-80"
-            />
-            <HeadlessSelect
-              value={statusFilter}
-              onChange={(value) =>
-                setStatusFilter(value as MessageStatus | "All")
-              }
-              options={statusOptions.map((option) => ({
-                label: option === "All" ? "All Statuses" : option,
-                value: option,
-              }))}
-              placeholder="All Statuses"
-              className="w-full md:w-40"
-            />
-            <CsvDownloadButton
-              headers={csvHeaders}
-              rows={csvRows}
-              filename="sms_delivery_logs.csv"
-              style={{ backgroundColor: colors.primary.action }}
-            />
-          </div>
-        </div>
-        <>
-          <Table<SMSTableRow>
-            columns={tableColumnsMemo}
-            data={filteredLogs.map((entry) => ({
-              id: entry.id,
-              campaignName: entry.campaignName,
-              status: entry.status,
-              sent: entry.sent,
-              delivered: entry.delivered,
-              conversions: entry.conversions,
-              conversionRate: entry.conversionRate,
-            }))}
-            totalItems={filteredLogs.length}
-            currentPage={tablePage}
-            pageSize={tablePageSize}
-            onPageChange={setTablePage}
-            style={{
-              headerBackground: colors.surface.tableHeader,
-              headerTextColor: colors.surface.tableHeaderText,
-              rowBackground: colors.surface.tablebodybg,
-              rowSpacing: "0 8px",
-            }}
+      {!isTrendsView && (
+        <section>
+          <SmsDeliveryKpiGrid
+            summary={toSmsSummary(summary)}
+            heroTrends={liveReport?.heroTrends}
+            useDummyData={useDummyData}
           />
-          {filteredLogs.length > 0 && (
-            <Pagination
-              currentPage={tablePage}
-              pageSize={tablePageSize}
-              totalItems={filteredLogs.length}
-              onPageChange={setTablePage}
-              onPageSizeChange={(size) => {
-                setTablePageSize(size);
-                setTablePage(1);
-              }}
-            />
-          )}
-        </>
-        {filteredLogs.length === 0 && (
-          <div className="py-10 text-center text-sm text-gray-500">
-            No messages match your filters yet.
+        </section>
+      )}
+
+      {isTrendsView && (
+        <section className="grid gap-6 lg:grid-cols-2">
+          <SwitchableReportChart
+            title="SMS Delivery"
+            subtitle="Dispatched, delivered, and offer take-up across the window"
+            filename="sms-delivery.csv"
+            audit={chartAudit}
+            columns={[
+              { key: "period", label: "Period" },
+              { key: "date", label: "Date" },
+              { key: "sent", label: "Dispatched" },
+              { key: "delivered", label: "Delivered" },
+              { key: "takenUp", label: "Taken Up" },
+            ]}
+            rows={deliverySeries}
+            xKey="period"
+            yLabel="Messages"
+            yTickFormatter={(value) => formatCount(value)}
+            comparisonData={deliveryComparison}
+            comparisonLabel={previousComparisonLabel}
+            series={[
+              {
+                dataKey: "sent",
+                name: "Dispatched",
+                color: colors.reportCharts.deliverySMS.smsDelivery.sent,
+              },
+              {
+                dataKey: "delivered",
+                name: "Delivered",
+                color: colors.reportCharts.deliverySMS.smsDelivery.delivered,
+              },
+              {
+                dataKey: "takenUp",
+                name: "Taken Up",
+                color: colors.reportCharts.deliverySMS.smsDelivery.converted,
+              },
+            ]}
+          />
+          <SwitchableReportChart
+            title="Delivery & Take-up Rates"
+            subtitle="Delivery rate and offer take-up rate for the same window"
+            filename="sms-delivery-rates.csv"
+            audit={chartAudit}
+            columns={[
+              { key: "period", label: "Period" },
+              { key: "date", label: "Date" },
+              { key: "deliveryRate", label: "Delivery Rate %" },
+              { key: "takeUpRate", label: "Take-up Rate %" },
+            ]}
+            rows={deliveryRateSeries}
+            xKey="period"
+            yLabel="Rate (%)"
+            valueFormatter={(value) => `${value}%`}
+            comparisonData={comparePreviousPeriod ? previousRateSeries : undefined}
+            comparisonLabel={previousComparisonLabel}
+            series={[
+              {
+                dataKey: "deliveryRate",
+                name: "Delivery Rate %",
+                color: colors.reportCharts.deliverySMS.smsDelivery.delivered,
+              },
+              {
+                dataKey: "takeUpRate",
+                name: "Take-up Rate %",
+                color: colors.reportCharts.deliverySMS.smsDelivery.converted,
+              },
+            ]}
+          />
+        </section>
+      )}
+
+      {!isTrendsView && (
+        <section className="space-y-6">
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                {SMS_CVM_LABELS.broadcastLog}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Each row is an SMS broadcast, with the campaign, offer, and segment it ran against
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+              <Input
+                placeholder="Search campaign, offer, or segment"
+                value={campaignQuery}
+                onChange={(value) => setCampaignQuery(String(value))}
+                className="w-full md:w-80"
+              />
+              <HeadlessSelect
+                value={statusFilter}
+                onChange={(value) => setStatusFilter(value as SmsDeliveryStatus | "All")}
+                options={statusOptions.map((option) => ({
+                  label: option === "All" ? "All Statuses" : option,
+                  value: option,
+                }))}
+                placeholder="All Statuses"
+                className="w-full md:w-40"
+              />
+              <CsvDownloadButton
+                headers={csvHeaders}
+                rows={csvRows}
+                filename="sms_broadcast_delivery.csv"
+                style={{ backgroundColor: colors.primary.action }}
+              />
+            </div>
           </div>
-        )}
-      </section>
+
+          {liveReportError && !useDummyData && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {liveReportError}
+            </div>
+          )}
+
+          {isLoadingLiveReport && !useDummyData ? (
+            <div className="flex justify-center py-16">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <>
+              <Table<SmsBroadcastRow>
+                columns={tableColumns}
+                data={filteredBroadcasts}
+                totalItems={filteredBroadcasts.length}
+                currentPage={tablePage}
+                pageSize={tablePageSize}
+                onPageChange={setTablePage}
+                style={{
+                  headerBackground: colors.surface.tableHeader,
+                  headerTextColor: colors.surface.tableHeaderText,
+                  rowBackground: colors.surface.tablebodybg,
+                  rowSpacing: "0 8px",
+                }}
+              />
+              {filteredBroadcasts.length > 0 && (
+                <Pagination
+                  currentPage={tablePage}
+                  pageSize={tablePageSize}
+                  totalItems={filteredBroadcasts.length}
+                  onPageChange={setTablePage}
+                  onPageSizeChange={(size) => {
+                    setTablePageSize(size);
+                    setTablePage(1);
+                  }}
+                />
+              )}
+              {filteredBroadcasts.length === 0 && (
+                <div className="py-10 text-center text-sm text-gray-500">
+                  No SMS broadcasts match this window and filter.
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
     </div>
   );
 }

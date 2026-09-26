@@ -43,10 +43,18 @@ class GatewayConfigurationService {
     const qs = query.toString();
     const result = await this.request<{
       success: boolean;
-      data: GatewayConfiguration[];
+      data:
+        | GatewayConfiguration[]
+        | { items?: GatewayConfiguration[]; data?: GatewayConfiguration[] };
       total?: number;
     }>(qs ? `?${qs}` : "");
-    return result.data || [];
+    const payload = result.data;
+    if (Array.isArray(payload)) return payload;
+    if (payload && typeof payload === "object") {
+      if (Array.isArray(payload.items)) return payload.items;
+      if (Array.isArray(payload.data)) return payload.data;
+    }
+    return [];
   }
 
   async getById(id: number): Promise<GatewayConfiguration> {

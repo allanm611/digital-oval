@@ -7,18 +7,35 @@ export type OfferChannelRouteKind =
   | "ussd"
   | "push";
 
-/** Matches Basic Info route dropdown visibility rules. */
-export function resolveCommunicationChannelKind(
-  channelName?: string,
-): OfferChannelRouteKind | null {
-  const name = channelName?.toUpperCase()?.trim() ?? "";
+function classifyChannelToken(value?: string | null): OfferChannelRouteKind | null {
+  const name = value?.toUpperCase()?.trim() ?? "";
   if (!name) return null;
   if (name.includes("USSD")) return "ussd";
-  if (name.includes("WHATSAPP")) return "whatsapp";
+  if (name.includes("WHATSAPP") || name.includes("MESSENGER")) return "whatsapp";
   if (name.includes("PUSH")) return "push";
   if (name.includes("SMS")) return "sms";
-  if (name === "EMAIL" || name.includes("EMAIL")) return "email";
+  if (name.includes("EMAIL") || name.includes("E-MAIL")) return "email";
   return null;
+}
+
+/**
+ * Matches Basic Info route dropdown visibility rules.
+ * Accepts a channel name, code, or channel object so a code of EMAIL still
+ * resolves when the display name is something like "Corporate Mail".
+ */
+export function resolveCommunicationChannelKind(
+  channelName?: string | { name?: string; code?: string } | null,
+  channelCode?: string,
+): OfferChannelRouteKind | null {
+  if (channelName && typeof channelName === "object") {
+    return (
+      classifyChannelToken(channelName.code) ??
+      classifyChannelToken(channelName.name)
+    );
+  }
+  return (
+    classifyChannelToken(channelCode) ?? classifyChannelToken(channelName)
+  );
 }
 
 type RouteFieldSlice = Pick<
@@ -186,7 +203,7 @@ export function getEffectiveRouteIdForChannel(
 
 export function collectOfferRouteValidationErrors(
   formData: RouteFieldSlice,
-  channelName?: string,
+  channelName?: string | { name?: string; code?: string } | null,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
   const kind = resolveCommunicationChannelKind(channelName);

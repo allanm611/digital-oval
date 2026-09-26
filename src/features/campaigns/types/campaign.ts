@@ -569,6 +569,8 @@ export interface CampaignSegment {
   include_exclude?: "include" | "exclude";
   is_primary?: boolean;
   priority?: number;
+  /** When true, this campaign treats segments as mutually exclusive: one offer each. */
+  is_mutually_exclusive?: boolean;
 }
 
 export interface SegmentCriteria {

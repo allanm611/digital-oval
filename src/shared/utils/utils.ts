@@ -5,6 +5,7 @@ import {
   spacing,
   borderRadius,
   buttons,
+  wizardActions,
   zIndex,
   notes,
 } from "./tokens";
@@ -95,7 +96,7 @@ export const typography = {
 export const space = spacing;
 export const radius = borderRadius;
 export const button = themedButtons;
-export { zIndex };
+export { zIndex, wizardActions };
 export const zIndexTokens = zIndex;
 
 // Utility function to convert button tokens to CSS style object
@@ -216,6 +217,10 @@ export const tw = {
   // Bordered button with transparent background and colored border
   // Use with inline styles: style={{ borderColor: color.primary.action, color: color.primary.action }}
   borderedButton: `px-4 py-2.5 text-sm font-medium ${ROUNDED} border transition-colors bg-transparent hover:text-white`,
+
+  // Wizard toolbar: fixed height + 1px border on every variant so Next matches Previous
+  wizardButton: `inline-flex box-border h-9 shrink-0 items-center justify-center gap-2 px-4 py-0 text-sm font-medium leading-5 whitespace-nowrap ${ROUNDED} border transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`,
+  wizardNavButton: "min-w-[8.5rem]",
 };
 
 // Complete component styles - pre-built styles for common UI elements that you can use directly

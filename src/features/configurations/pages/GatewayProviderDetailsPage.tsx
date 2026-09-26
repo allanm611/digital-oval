@@ -13,6 +13,7 @@ import {
   gatewayProtocolLabel,
   resolveGatewayProtocol,
 } from "../constants/gatewayProtocol";
+import { useGatewayProtocols } from "../hooks/useGatewayProtocols";
 import { gatewayConfigurationService } from "../services/gatewayConfigurationService";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -24,6 +25,7 @@ export default function GatewayProviderDetailsPage() {
   const navigate = useNavigate();
   const { success: showSuccess, error: showError } = useToast();
 
+  const { getProtocol } = useGatewayProtocols();
   const [loading, setLoading] = useState(true);
   const [provider, setProvider] = useState<GatewayProvider | null>(null);
   const [configCount, setConfigCount] = useState(0);
@@ -126,6 +128,7 @@ export default function GatewayProviderDetailsPage() {
 
   const fields = provider.field_schema?.fields || [];
   const protocol = resolveGatewayProtocol(provider);
+  const protocolLabel = getProtocol(protocol)?.label || gatewayProtocolLabel(protocol);
 
   return (
     <div className="space-y-6">
@@ -179,9 +182,7 @@ export default function GatewayProviderDetailsPage() {
             </h1>
             <p className={`text-sm ${tw.textSecondary} mt-1`}>
               {provider.channel_label || provider.channel_value || "No channel"}
-              {protocol
-                ? ` · ${gatewayProtocolLabel(protocol)}`
-                : ""}
+              {protocol ? ` · ${protocolLabel}` : ""}
               {configCount > 0
                 ? ` · ${configCount} configuration${configCount === 1 ? "" : "s"}`
                 : " · No configurations yet"}
@@ -210,8 +211,13 @@ export default function GatewayProviderDetailsPage() {
           <div>
             <p className={`text-xs uppercase ${tw.textMuted}`}>Protocol</p>
             <p className={`text-sm ${tw.textPrimary} mt-1`}>
-              {protocol ? gatewayProtocolLabel(protocol) : "—"}
+              {protocol ? protocolLabel : "—"}
             </p>
+            {protocol && (
+              <p className={`text-xs font-mono ${tw.textMuted} mt-0.5`}>
+                {protocol}
+              </p>
+            )}
           </div>
           <div>
             <p className={`text-xs uppercase ${tw.textMuted}`}>Created</p>
@@ -255,7 +261,7 @@ export default function GatewayProviderDetailsPage() {
       <div className={`${tw.rounded} border border-gray-200 bg-white p-6`}>
         <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
           Connection fields
-          {protocol ? ` (${gatewayProtocolLabel(protocol)})` : ""}
+          {protocol ? ` (${protocolLabel})` : ""}
         </h2>
         {fields.length === 0 ? (
           <p className={`text-sm ${tw.textMuted}`}>

@@ -37,10 +37,13 @@ export const API_CONFIG = {
     SEGMENTS: "/segments",
     OFFER_PRODUCTS: "/offer-products",
     OFFER_CREATIVES: "/offer-creatives",
+    AI_GENERATE_CREATIVE: "/offer-creatives/ai/generate",
+    AI_MODEL_CONFIGURATIONS: "/ai-model-configurations",
     OFFER_TRACKING_SOURCES: "/offer-tracking-sources",
     TRACKING_SOURCES: "/tracking-sources",
     NOTIFICATIONS: "/notifications",
     DOCUMENTATION: "/documentation",
+    HEALTH: "/playwright-health",
   },
   TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 3,
@@ -51,9 +54,6 @@ export const buildApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}${endpoint}`;
 };
 
-// Helper function to build URLs for file uploads
-// Uses the regular API endpoint (which routes through proxy on Vercel)
-// The proxy has been optimized to handle multipart/form-data correctly
 export const buildDirectBackendUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}${endpoint}`;
 };

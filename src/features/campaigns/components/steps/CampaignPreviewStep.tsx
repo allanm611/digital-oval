@@ -16,6 +16,12 @@ import {
 import { CampaignFlowConfig } from "../../types/campaignFlow";
 import { color, tw, components } from "../../../../shared/utils/utils";
 import DateFormatter from "../../../../shared/components/DateFormatter";
+import {
+  formatAttributionWindow,
+  formatLimit,
+  hasCommittedTrackingReward,
+  readTrackingRewardFromConditionRule,
+} from "../../utils/trackingRewardConfig";
 
 interface ControlGroup {
   enabled: boolean;
@@ -457,6 +463,77 @@ export default function CampaignPreviewStep({
             ) : (
               <div className="text-sm text-gray-500">
                 No offers have been mapped to this campaign yet.
+              </div>
+            )}
+          </div>
+
+          {/* Segment → offer tracking overlays */}
+          <div className={components.card.surface}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-3`}>
+              Tracking & Rewards
+            </h3>
+            {campaignFlows.length ? (
+              <div className="space-y-3">
+                {campaignFlows.map((flow, index) => {
+                  const segment = selectedSegments.find(
+                    (s) => String(s.id) === String(flow.segment_id),
+                  );
+                  const offer = selectedOffers.find(
+                    (o) => String(o.id) === String(flow.offer_id),
+                  );
+                  const tracking = readTrackingRewardFromConditionRule(
+                    flow.condition_rule,
+                  );
+                  const configured = hasCommittedTrackingReward(tracking);
+                  return (
+                    <div
+                      key={`${flow.segment_id}-${flow.offer_id}-${index}`}
+                      className={`p-3 ${tw.rounded} border border-gray-100 bg-white space-y-1`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-sm font-medium text-gray-700 truncate">
+                          {segment?.name || `Segment #${flow.segment_id}`}
+                          {" → "}
+                          {offer?.name || `Offer #${flow.offer_id}`}
+                        </div>
+                        <span
+                          className={`text-xs font-medium ${
+                            configured ? "text-gray-900" : "text-gray-400"
+                          }`}
+                        >
+                          {configured
+                            ? `${tracking.sources.length} source${
+                                tracking.sources.length === 1 ? "" : "s"
+                              }`
+                            : "Not configured"}
+                        </span>
+                      </div>
+                      {configured
+                        ? tracking.sources.map((source) => (
+                            <p
+                              key={source.id}
+                              className="text-xs text-gray-500"
+                            >
+                              {source.tracking_source_name}: window{" "}
+                              {formatAttributionWindow(source.attribution_window)}
+                              {"; "}
+                              {source.filtering_criteria === "match_any"
+                                ? "match any rule"
+                                : "no rule"}
+                              {"; tracking "}
+                              {formatLimit(source.tracking_limit)}
+                              {"; rewards "}
+                              {formatLimit(source.reward_limit)}
+                            </p>
+                          ))
+                        : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                No segment-to-offer mappings yet.
               </div>
             )}
           </div>

@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useId, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { tw } from '../../utils/utils';
 
@@ -14,6 +14,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   type?: 'text' | 'number' | 'email' | 'password' | 'tel' | 'url' | 'search' | 'date' | 'time' | 'datetime-local'; // default: text
   label?: string; // Floating label
   labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
+  /** Keep the floating label raised even when the value is empty. */
+  floatLabel?: boolean;
   style?: React.CSSProperties;
   /** Show eye toggle for password fields. Defaults to true when type is password. */
   showPasswordToggle?: boolean;
@@ -31,6 +33,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   type = 'text',
   label,
   labelBgColor,
+  floatLabel = false,
   style = {},
   showPasswordToggle,
   onFocus,
@@ -39,6 +42,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
 }, ref) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const generatedId = useId();
+  const inputId = rest.id ?? generatedId;
 
   const isPasswordType = type === 'password';
   const shouldShowToggle = isPasswordType && showPasswordToggle !== false;
@@ -79,7 +84,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
   }
 
   const hasValue = value !== '' && value !== null && value !== undefined;
-  const shouldFloatLabel = isFocused || hasValue;
+  const shouldFloatLabel = isFocused || hasValue || floatLabel;
 
   const passwordToggleButton = shouldShowToggle ? (
     <button
@@ -155,6 +160,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     <div className="relative w-full">
       <input
         ref={ref}
+        id={inputId}
         placeholder={shouldFloatLabel ? placeholder : " "}
         value={value}
         onChange={(e) => {
@@ -173,6 +179,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
           ...transparentStyle,
         }}
         {...rest}
+        id={inputId}
         type={inputType}
         onFocus={(e) => {
           handleFocus(e);
@@ -184,8 +191,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
         onBlur={handleBlur}
       />
 
-      {/* Floating Label */}
+      {/* Floating Label — htmlFor links a11y name so Playwright getByLabel / role name work */}
       <label
+        htmlFor={inputId}
         className={`absolute left-3 transition-all duration-200 pointer-events-none font-medium
           ${shouldFloatLabel
             ? 'top-0 -translate-y-1/2 px-1 text-xs'

@@ -39,6 +39,57 @@ function asRouteArray(payload: unknown, depth = 0): SMSRoute[] {
   return [];
 }
 
+function asPositiveInt(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function readListTotal(payload: unknown, depth = 0): number | null {
+  if (!payload || typeof payload !== "object" || depth > 3) return null;
+  const record = payload as Record<string, unknown>;
+  const direct =
+    asPositiveInt(record.total) ??
+    asPositiveInt(record.count) ??
+    asPositiveInt(record.totalCount);
+  if (direct != null) return direct;
+
+  for (const key of ["pagination", "meta", "data"]) {
+    if (!(key in record)) continue;
+    const nested = record[key];
+    if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+      const fromNested = readListTotal(nested, depth + 1);
+      if (fromNested != null) return fromNested;
+    }
+  }
+  return null;
+}
+
+function readHasMore(payload: unknown): boolean | null {
+  if (!payload || typeof payload !== "object") return null;
+  const record = payload as Record<string, unknown>;
+  const pagination =
+    record.pagination && typeof record.pagination === "object"
+      ? (record.pagination as Record<string, unknown>)
+      : record.meta && typeof record.meta === "object"
+        ? (record.meta as Record<string, unknown>)
+        : record;
+  if (typeof pagination.hasMore === "boolean") return pagination.hasMore;
+  if (typeof pagination.has_more === "boolean") return pagination.has_more;
+  return null;
+}
+
+function dedupeRoutesById(routes: SMSRoute[]): SMSRoute[] {
+  const seen = new Set<number>();
+  const unique: SMSRoute[] = [];
+  for (const route of routes) {
+    const id = Number(route.id);
+    if (!Number.isFinite(id) || seen.has(id)) continue;
+    seen.add(id);
+    unique.push(route);
+  }
+  return unique;
+}
+
 function asTrimmedString(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
@@ -216,8 +267,33 @@ class RouteService {
   }
 
   async getAllRoutes(): Promise<SMSRoute[]> {
-    const result = await this.request<unknown>("");
-    return asRouteArray(result).map(normalizeRoute);
+    const first = await this.request<unknown>("");
+    const collected = asRouteArray(first).map(normalizeRoute);
+    const total = readListTotal(first);
+    const hasMore = readHasMore(first);
+
+    if ((total == null || collected.length >= total) && hasMore !== true) {
+      return dedupeRoutesById(collected);
+    }
+
+    const pageSize = Math.max(collected.length, 50);
+    let offset = collected.length;
+    let safety = 0;
+    while (safety < 50) {
+      safety += 1;
+      if (total != null && collected.length >= total) break;
+      const next = await this.request<unknown>(
+        `?limit=${pageSize}&offset=${offset}`,
+      );
+      const batch = asRouteArray(next).map(normalizeRoute);
+      if (batch.length === 0) break;
+      collected.push(...batch);
+      offset += batch.length;
+      if (batch.length < pageSize) break;
+      if (readHasMore(next) === false) break;
+    }
+
+    return dedupeRoutesById(collected);
   }
 
   /**
@@ -261,31 +337,55 @@ class RouteService {
       communicationChannelService.getAll().catch(() => []),
     ]);
 
-    const configById = new Map(configs.map((c) => [c.id, c]));
-    const channelById = new Map(channels.map((c) => [c.id, c]));
+    const configById = new Map(
+      (Array.isArray(configs) ? configs : []).map((c) => [c.id, c]),
+    );
+    const channelById = new Map(
+      (Array.isArray(channels) ? channels : []).map((c) => [c.id, c]),
+    );
 
-    return routes.map((route) => {
-      const config =
-        route.configuration_id != null
-          ? configById.get(route.configuration_id)
-          : undefined;
-      const channelId = route.communication_channel_id ?? config?.channel_id;
-      const channel = channelId != null ? channelById.get(channelId) : undefined;
-      const channelCode =
-        channel?.code || config?.channel_value || undefined;
-      const channelType = resolveChannelType(channelCode || channel?.name);
+    return routes.map((route) =>
+      this.withChannelAndGateway(route, configById, channelById),
+    );
+  }
 
-      return {
-        ...route,
-        channel_type: channelType || undefined,
-        channel_code: channelCode,
-        channel_name: channel?.name || config?.channel_label,
-        configuration_name: config?.name,
-        provider_name: config?.provider_name || route.gateway_provider,
-        gateway_provider:
-          config?.provider_name || route.gateway_provider || undefined,
-      };
-    });
+  private withChannelAndGateway(
+    route: SMSRoute,
+    configById: Map<
+      number,
+      {
+        id: number;
+        name?: string;
+        channel_id?: number;
+        channel_value?: string;
+        channel_label?: string;
+        provider_name?: string;
+      }
+    >,
+    channelById: Map<number, { id: number; name?: string; code?: string }>,
+  ): SMSRoute {
+    const config =
+      route.configuration_id != null
+        ? configById.get(route.configuration_id)
+        : undefined;
+    const inferredChannelId =
+      route.communication_channel_id ?? config?.channel_id ?? null;
+    const channel =
+      inferredChannelId != null ? channelById.get(inferredChannelId) : undefined;
+    const channelCode = channel?.code || config?.channel_value || undefined;
+    const channelType = resolveChannelType(channelCode || channel?.name);
+
+    return {
+      ...route,
+      communication_channel_id: inferredChannelId,
+      channel_type: channelType || undefined,
+      channel_code: channelCode,
+      channel_name: channel?.name || config?.channel_label,
+      configuration_name: config?.name,
+      provider_name: config?.provider_name || route.gateway_provider,
+      gateway_provider:
+        config?.provider_name || route.gateway_provider || undefined,
+    };
   }
 
   async getRoutesByChannel(channelType: RouteChannelType): Promise<SMSRoute[]> {
@@ -308,26 +408,9 @@ class RouteService {
       communicationChannelService.getAll().catch(() => []),
     ]);
 
-    const config =
-      route.configuration_id != null
-        ? configs.find((c) => c.id === route.configuration_id)
-        : undefined;
-    const channelId = route.communication_channel_id ?? config?.channel_id;
-    const channel =
-      channelId != null ? channels.find((c) => c.id === channelId) : undefined;
-    const channelCode = channel?.code || config?.channel_value;
-    const channelType = resolveChannelType(channelCode || channel?.name);
-
-    return {
-      ...route,
-      channel_type: channelType || undefined,
-      channel_code: channelCode,
-      channel_name: channel?.name || config?.channel_label,
-      configuration_name: config?.name,
-      provider_name: config?.provider_name || route.gateway_provider,
-      gateway_provider:
-        config?.provider_name || route.gateway_provider || undefined,
-    };
+    const configById = new Map((configs || []).map((c) => [c.id, c]));
+    const channelById = new Map((channels || []).map((c) => [c.id, c]));
+    return this.withChannelAndGateway(route, configById, channelById);
   }
 
   async createRoute(data: CreateSMSRouteRequest): Promise<SMSRoute> {

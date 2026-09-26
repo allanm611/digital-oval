@@ -277,6 +277,9 @@ export default function EngineTrackingSourceDetailsPage() {
   const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<FieldFormState>(EMPTY_FIELD_FORM);
   const [savingField, setSavingField] = useState(false);
+  const [fieldToDelete, setFieldToDelete] =
+    useState<EngineTrackingSourceField | null>(null);
+  const [deletingField, setDeletingField] = useState(false);
 
   useEffect(() => {
     loadSource();
@@ -444,24 +447,50 @@ export default function EngineTrackingSourceDetailsPage() {
     }
   };
 
-  const handleDeleteField = async (field: EngineTrackingSourceField) => {
-    if (!source) return;
-    try {
-      await engineTrackingSourceService.deleteField(source.id, field.id);
-      setSource((prev) =>
-        prev
-          ? {
-              ...prev,
-              fields: (prev.fields || []).map((f) =>
-                f.id === field.id ? { ...f, isActive: false } : f,
-              ),
-            }
-          : prev,
+  const handleDeleteField = (field: EngineTrackingSourceField) => {
+    if (!Number.isFinite(field.id) || field.id <= 0) {
+      showError(
+        "This field cannot be deleted because it has not been saved with an id.",
       );
-      if (editingFieldId === field.id) setEditingFieldId(null);
-      showSuccess(`Field "${field.fieldName}" deactivated`);
+      return;
+    }
+    setFieldToDelete(field);
+  };
+
+  const handleConfirmDeleteField = async () => {
+    if (!source || !fieldToDelete) return;
+
+    const fieldId = fieldToDelete.id;
+    const fieldLabel = fieldToDelete.fieldName || fieldToDelete.fieldKey;
+
+    const withoutField = (src: EngineTrackingSource): EngineTrackingSource => ({
+      ...src,
+      fields: (src.fields || []).filter((f) => f.id !== fieldId),
+    });
+
+    try {
+      setDeletingField(true);
+      await engineTrackingSourceService.deleteField(source.id, fieldId);
+
+      setSource((prev) => (prev ? withoutField(prev) : prev));
+      if (editingFieldId === fieldId) setEditingFieldId(null);
+
+      try {
+        const refreshed =
+          await engineTrackingSourceService.getByIdWithSelectorConfig(
+            source.id,
+          );
+        setSource(withoutField(refreshed));
+      } catch {
+        /* keep the optimistic removal if refresh fails */
+      }
+
+      showSuccess(`Field "${fieldLabel}" has been deleted.`);
+      setFieldToDelete(null);
     } catch (err) {
-      showError(extractBackendError(err, "Failed to remove field."));
+      showError(extractBackendError(err, "Failed to delete field."));
+    } finally {
+      setDeletingField(false);
     }
   };
 
@@ -762,9 +791,14 @@ export default function EngineTrackingSourceDetailsPage() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteField(field)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded"
-                              title="Deactivate field"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleDeleteField(field);
+                              }}
+                              disabled={deletingField}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Delete field"
+                              aria-label={`Delete field ${field.fieldName || field.fieldKey}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -798,6 +832,24 @@ export default function EngineTrackingSourceDetailsPage() {
         description="This permanently deletes the tracking source. This action cannot be undone. Sources referenced by conversion rules or reward mappings cannot be deleted — deactivate them instead."
         itemName={source.name}
         isLoading={deleting}
+      />
+
+      <DeleteConfirmModal
+        isOpen={fieldToDelete !== null}
+        onClose={() => {
+          if (deletingField) return;
+          setFieldToDelete(null);
+        }}
+        onConfirm={handleConfirmDeleteField}
+        title="Delete Field"
+        description="This removes the field from this tracking source. Offer tracking rules that use this field may fail until they are updated. This action cannot be undone."
+        itemName={
+          fieldToDelete
+            ? fieldToDelete.fieldName || fieldToDelete.fieldKey
+            : ""
+        }
+        isLoading={deletingField}
+        confirmText="Delete"
       />
     </div>
   );

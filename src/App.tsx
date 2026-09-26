@@ -21,6 +21,19 @@ import { AppErrorBoundary } from "./shared/components/AppErrorBoundary";
 import { SafeRoute } from "./shared/components/SafeRoute";
 import { ProtectedRoute } from "./shared/components/ProtectedRoute";
 import { NavigationHistoryProvider } from "./shared/contexts/NavigationHistoryContext";
+import {
+  TestingDashboardPage,
+  CreateModulePage,
+  AIInsightsPage,
+  HealthCheckNotificationsPage,
+  ModuleLogsPage,
+  EditModulePage,
+  ModuleSchedulePage,
+  ModuleDetailPage,
+  ApiTestBuilderPage,
+  UiFlowTestBuilderPage,
+  DynamicTestBuilderPage,
+} from "./features/testing/healthCheckPages";
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -42,6 +55,11 @@ const DocsPage = lazy(() =>
 );
 const EditDocsPage = lazy(() => import("./features/docs/pages/EditDocsPage"));
 const ManageSidebarPage = lazy(() => import("./features/docs/pages/ManageSidebarPage"));
+const HealthCheckApp = lazy(() =>
+  import("./features/testing/pages/HealthCheckApp").then((m) => ({
+    default: m.HealthCheckApp,
+  })),
+);
 const NotFoundPage = lazy(() => import("./shared/pages/NotFoundPage"));
 
 // Loading fallback component
@@ -98,6 +116,19 @@ function AppRoutes() {
             <Route path="/documentation/add" element={<EditDocsPage />} />
             <Route path="/documentation/manage-sidebar" element={<ManageSidebarPage />} />
             <Route path="/documentation/*" element={<DocsPage />} />
+            <Route path="/health-check" element={<HealthCheckApp />}>
+              <Route index element={<TestingDashboardPage />} />
+              <Route path="create" element={<CreateModulePage />} />
+              <Route path="insights" element={<AIInsightsPage />} />
+              <Route path="notifications" element={<HealthCheckNotificationsPage />} />
+              <Route path="api-tests" element={<ApiTestBuilderPage />} />
+              <Route path="ui-tests" element={<UiFlowTestBuilderPage />} />
+              <Route path="generate" element={<DynamicTestBuilderPage />} />
+              <Route path=":id/logs" element={<ModuleLogsPage />} />
+              <Route path=":id/edit" element={<EditModulePage />} />
+              <Route path=":id/schedule" element={<ModuleSchedulePage />} />
+              <Route path=":id" element={<ModuleDetailPage />} />
+            </Route>
           </Route>
 
           {/* 404 catch-all */}

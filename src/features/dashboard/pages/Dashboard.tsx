@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -750,6 +750,12 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/OfferReportsPage"
       ),
   ),
+  OfferDetailReportPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/OfferDetailReportPage"
+      ),
+  ),
   SegmentReportsPage: lazy(
     () =>
       import(
@@ -778,7 +784,40 @@ const AdministrationPages = {
         /* webpackPrefetch: true */ "../../monitoring/pages/ExecutionDetailsPage"
       ),
   ),
+  AiModelsHubPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelsHubPage"
+      ),
+  ),
+  AiModelConfigurationHubPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationHubPage"
+      ),
+  ),
+  AiModelConfigurationFormPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationFormPage"
+      ),
+  ),
 };
+
+function LegacyHealthCheckRedirect() {
+  const location = useLocation();
+  const suffix = location.pathname
+    .replace(/^\/dashboard\/health-check\/?/, "")
+    .replace(/^\/health-check\/?/, "");
+  const target = suffix ? `/health-check/${suffix}` : "/health-check";
+
+  return (
+    <Navigate
+      to={{ pathname: target, search: location.search, hash: location.hash }}
+      replace
+    />
+  );
+}
 
 // Other Pages - All routes preloaded for instant access
 const OtherPages = {
@@ -910,6 +949,22 @@ export default function Dashboard() {
             element={<AdministrationPages.AdminHubPage />}
           />
           <Route
+            path="/ai-models"
+            element={<AdministrationPages.AiModelsHubPage />}
+          />
+          <Route
+            path="/ai-models/configuration"
+            element={<AdministrationPages.AiModelConfigurationHubPage />}
+          />
+          <Route
+            path="/ai-models/configuration/:providerId"
+            element={<AdministrationPages.AiModelConfigurationFormPage mode="view" />}
+          />
+          <Route
+            path="/ai-models/configuration/:providerId/edit"
+            element={<AdministrationPages.AiModelConfigurationFormPage mode="edit" />}
+          />
+          <Route
             path="/monitoring"
             element={<AdministrationPages.MonitoringPage />}
           />
@@ -917,6 +972,7 @@ export default function Dashboard() {
             path="/monitoring/:id"
             element={<AdministrationPages.ExecutionDetailsPage />}
           />
+          <Route path="/health-check/*" element={<LegacyHealthCheckRedirect />} />
           <Route path="/campaigns" element={<CampaignPages.CampaignsPage />} />
           <Route
             path="/campaigns/analytics"
@@ -1373,6 +1429,10 @@ export default function Dashboard() {
           <Route
             path="/reports/offers"
             element={<AnalyticsPages.OfferReportsPage />}
+          />
+          <Route
+            path="/reports/offers/:id"
+            element={<AnalyticsPages.OfferDetailReportPage />}
           />
           <Route
             path="/reports/segments"

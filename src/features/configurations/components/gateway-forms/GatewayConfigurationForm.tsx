@@ -89,6 +89,10 @@ export default function GatewayConfigurationForm({
     [providers, providerId],
   );
 
+  const selectedProviderProtocol = selectedProvider
+    ? resolveGatewayProtocol(selectedProvider)
+    : "";
+
   const schemaFields: GatewayProviderField[] = useMemo(() => {
     if (selectedProvider?.field_schema?.fields?.length) {
       return selectedProvider.field_schema.fields;
@@ -373,9 +377,9 @@ export default function GatewayConfigurationForm({
         </h2>
         <p className={`text-xs ${tw.textMuted} mb-6`}>
           {selectedProvider
-            ? resolveGatewayProtocol(selectedProvider)
+            ? selectedProviderProtocol
               ? `Fields follow the ${gatewayProtocolLabel(
-                  resolveGatewayProtocol(selectedProvider),
+                  selectedProviderProtocol,
                 )} protocol defined on ${selectedProvider.name}.`
               : `Fields are defined by ${selectedProvider.name}.`
             : "Fields are defined by the selected gateway provider's protocol schema."}

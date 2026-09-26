@@ -622,11 +622,23 @@ class EngineTrackingSourceService {
       throw new Error(await parseErrorResponse(response));
     }
 
-    if (response.status === 204) {
+    if (response.status === 204 || response.status === 205) {
       return undefined as T;
     }
 
-    return response.json();
+    const text = await response.text();
+    if (!text.trim()) {
+      return undefined as T;
+    }
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      if (String(options.method || "GET").toUpperCase() === "DELETE") {
+        return undefined as T;
+      }
+      throw new Error("Invalid response from tracking sources API.");
+    }
   }
 
   /** GET /tracking-sources */

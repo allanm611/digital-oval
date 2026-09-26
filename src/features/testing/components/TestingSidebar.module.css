@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&display=swap');
+
+.sidebarContent {
+  padding: 20px 0 20px 16px;
+  font-family: 'Google Sans', 'Arial', sans-serif;
+  padding-right: 8px;
+}
+
+.navItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  margin-bottom: 2px;
+  border-radius: 4px;
+  color: #f3f4f6;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+}
+
+.navItem:hover {
+  background-color: rgba(46, 133, 85, 0.15);
+  color: #f3f4f6;
+}
+
+.navItemActive {
+  color: #25c2a0;
+  background-color: rgba(46, 133, 85, 0.15);
+}
+
+.sectionTitle {
+  padding: 8px 12px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+}

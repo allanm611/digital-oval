@@ -26,6 +26,8 @@ interface OfferSelectionModalProps {
   selectedOffers: CampaignOffer[];
   editingOffer?: CampaignOffer | null;
   onCreateNew?: () => void;
+  /** Mutually exclusive campaigns: pick exactly one offer for the segment. */
+  singleSelect?: boolean;
 }
 
 export default function OfferSelectionModal({
@@ -34,6 +36,7 @@ export default function OfferSelectionModal({
   onSelect,
   selectedOffers,
   editingOffer,
+  singleSelect = false,
 }: OfferSelectionModalProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -64,7 +67,9 @@ export default function OfferSelectionModal({
 
   useEffect(() => {
     if (isOpen) {
-      setTempSelectedOffers(selectedOffers);
+      setTempSelectedOffers(
+        singleSelect ? selectedOffers.slice(0, 1) : selectedOffers,
+      );
       loadOffers();
       loadCategories();
     }
@@ -373,6 +378,10 @@ export default function OfferSelectionModal({
 
   const handleOfferToggle = (offer: CampaignOffer) => {
     const isSelected = tempSelectedOffers.some((o) => o.id === offer.id);
+    if (singleSelect) {
+      setTempSelectedOffers(isSelected ? [] : [offer]);
+      return;
+    }
     if (isSelected) {
       setTempSelectedOffers(
         tempSelectedOffers.filter((o) => o.id !== offer.id),
@@ -383,7 +392,7 @@ export default function OfferSelectionModal({
   };
 
   const handleConfirm = () => {
-    onSelect(tempSelectedOffers);
+    onSelect(singleSelect ? tempSelectedOffers.slice(0, 1) : tempSelectedOffers);
   };
 
   const handleSubmitForApproval = async (offerId: number) => {
@@ -454,10 +463,16 @@ export default function OfferSelectionModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-black">
-              {editingOffer ? "Edit Offer" : "Select Campaign Offers"}
+              {editingOffer
+                ? "Edit Offer"
+                : singleSelect
+                  ? "Select an Offer"
+                  : "Select Campaign Offers"}
             </h2>
             <p className="text-sm text-black mt-1">
-              Choose offers to include in your campaign
+              {singleSelect
+                ? "Mutually exclusive campaigns allow only one offer per segment."
+                : "Choose offers to include in your campaign"}
             </p>
           </div>
           <button
@@ -753,6 +768,7 @@ export default function OfferSelectionModal({
           <div className="text-sm text-gray-500">
             {tempSelectedOffers.length} of {filteredOffers.length} offers
             selected
+            {singleSelect ? " (one per segment)" : ""}
           </div>
           <div className="flex items-center space-x-3">
             <button

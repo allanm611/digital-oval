@@ -493,9 +493,7 @@ export default function RewardConfigurationsPage() {
           />
         </div>
         <p className={`text-sm ${tw.textSecondary}`}>
-          Manage reward templates (credentials and payload settings). Every
-          provider includes a protected default template that stays in sync with
-          the provider schema when the provider is edited.
+          Manage reward templates (credentials and payload settings).
         </p>
         {providerFilterFromUrl && (
           <p className={`text-xs ${tw.textMuted}`}>

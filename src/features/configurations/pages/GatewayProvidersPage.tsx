@@ -21,6 +21,7 @@ import {
   gatewayProtocolLabel,
   resolveGatewayProtocol,
 } from "../constants/gatewayProtocol";
+import { useGatewayProtocols } from "../hooks/useGatewayProtocols";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
 import { useDeleteConfirm } from "../../../shared/hooks/useDeleteConfirm";
 import {
@@ -36,6 +37,8 @@ export default function GatewayProvidersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [channelFilter, setChannelFilter] = useState("");
+  const [protocolFilter, setProtocolFilter] = useState("");
+  const { catalog, getProtocol } = useGatewayProtocols();
   const [channelOptions, setChannelOptions] = useState<
     { value: string; label: string }[]
   >([]);
@@ -61,8 +64,11 @@ export default function GatewayProvidersPage() {
 
   useEffect(() => {
     loadChannels();
-    loadProviders();
   }, []);
+
+  useEffect(() => {
+    loadProviders();
+  }, [channelFilter]);
 
   const loadChannels = async () => {
     try {
@@ -83,7 +89,9 @@ export default function GatewayProvidersPage() {
   const loadProviders = async () => {
     try {
       setLoading(true);
-      const data = await gatewayProviderService.getAll();
+      const data = await gatewayProviderService.getAll(
+        channelFilter ? { channel_id: Number(channelFilter) } : undefined,
+      );
       setProviders(data);
     } catch (err) {
       showError(
@@ -141,16 +149,16 @@ export default function GatewayProvidersPage() {
   const filteredProviders = providers.filter((provider) => {
     const term = searchTerm.toLowerCase();
     const protocol = resolveGatewayProtocol(provider);
+    const protocolLabel = getProtocol(protocol)?.label || gatewayProtocolLabel(protocol);
     const matchesSearch =
       !term ||
       provider.name.toLowerCase().includes(term) ||
       (provider.channel_label || "").toLowerCase().includes(term) ||
       (provider.channel_value || "").toLowerCase().includes(term) ||
       protocol.toLowerCase().includes(term) ||
-      gatewayProtocolLabel(protocol).toLowerCase().includes(term);
-    const matchesChannel =
-      !channelFilter || String(provider.channel_id) === channelFilter;
-    return matchesSearch && matchesChannel;
+      protocolLabel.toLowerCase().includes(term);
+    const matchesProtocol = !protocolFilter || protocol === protocolFilter;
+    return matchesSearch && matchesProtocol;
   });
 
   const defaultColumns: TableColumn<GatewayProvider>[] = [
@@ -170,7 +178,7 @@ export default function GatewayProvidersPage() {
       label: "Protocol",
       visible: true,
       render: (_value, row) =>
-        gatewayProtocolLabel(resolveGatewayProtocol(row)),
+        gatewayProtocolLabel(resolveGatewayProtocol(row), catalog),
     },
     {
       id: "field_schema",
@@ -256,7 +264,7 @@ export default function GatewayProvidersPage() {
 
   useEffect(() => {
     tableHandlePageChange(1);
-  }, [searchTerm, channelFilter, tableHandlePageChange]);
+  }, [searchTerm, channelFilter, protocolFilter, tableHandlePageChange]);
 
   return (
     <div className="space-y-6">
@@ -278,7 +286,7 @@ export default function GatewayProvidersPage() {
         </p>
       </div>
 
-      <div className="my-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="my-5 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="md:col-span-2">
           <SearchInput
             placeholder="Search providers by name, channel, or protocol..."
@@ -296,6 +304,19 @@ export default function GatewayProvidersPage() {
           ]}
           placeholder="Filter by channel"
         />
+        <HeadlessSelect
+          label=""
+          value={protocolFilter}
+          onChange={setProtocolFilter}
+          options={[
+            { value: "", label: "All protocols" },
+            ...catalog.map((item) => ({
+              value: item.value,
+              label: item.label,
+            })),
+          ]}
+          placeholder="Filter by protocol"
+        />
       </div>
 
       <div className={`${tw.rounded} overflow-hidden`}>
@@ -303,16 +324,16 @@ export default function GatewayProvidersPage() {
           <div className="text-center py-12">
             <div className="w-12 h-12 text-gray-400 mx-auto mb-4">🔌</div>
             <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm || channelFilter
+              {searchTerm || channelFilter || protocolFilter
                 ? "No providers found"
                 : "No gateway providers yet"}
             </h3>
             <p className={`${tw.textMuted} mb-6`}>
-              {searchTerm || channelFilter
-                ? "Try adjusting your search or channel filter"
+              {searchTerm || channelFilter || protocolFilter
+                ? "Try adjusting your search or filters"
                 : "Create a provider template before adding gateway configurations"}
             </p>
-            {!searchTerm && !channelFilter && (
+            {!searchTerm && !channelFilter && !protocolFilter && (
               <FeatureActionButton
                 featureId="gateway-providers"
                 action="create"

@@ -29,19 +29,6 @@ export default function CreateProductPage({
   const returnUrlParam = searchParams.get("returnUrl");
   const returnUrl = returnUrlParam ? decodeURIComponent(returnUrlParam) : null;
 
-  // Extract the path to return to (with step parameter preserved)
-  const getBackButtonFallback = (): string => {
-    if (returnUrl) {
-      try {
-        const url = new URL(returnUrl);
-        return url.pathname + url.search;
-      } catch (e) {
-        return "/dashboard/products";
-      }
-    }
-    return "/dashboard/products";
-  };
-
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -224,15 +211,47 @@ export default function CreateProductPage({
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  const isEmbeddedModal = typeof onClose === "function";
+
+  const handleCancel = () => {
+    if (isLoading) return;
+
+    if (onClose) {
+      onClose();
+      return;
+    }
+
+    if (returnToOfferFlow && returnUrl) {
+      try {
+        const url = new URL(returnUrl);
+        url.searchParams.set("step", "2");
+        navigate(`${url.pathname}${url.search}`);
+        return;
+      } catch {
+        navigate("/dashboard/products");
+        return;
+      }
+    }
+
+    navigate("/dashboard/products");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Back Button and Close Button */}
       <div className="flex items-center justify-between gap-4 mb-4">
-        <BackButton showBreadcrumb={true} currentLabel="Create Product" />
+        <BackButton
+          showBreadcrumb={true}
+          currentLabel="Create Product"
+          parentLabel={isEmbeddedModal ? "Offers" : undefined}
+          onClick={handleCancel}
+        />
         {onClose && (
           <button
-            onClick={onClose}
-            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
+            type="button"
+            onClick={handleCancel}
+            disabled={isLoading}
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -253,7 +272,7 @@ export default function CreateProductPage({
         onCategoryCreated={handleCategoryCreated}
         submitButtonText="Create"
         loadingText="Creating..."
-        onCancel={() => navigate("/dashboard/products")}
+        onCancel={handleCancel}
       />
     </div>
   );

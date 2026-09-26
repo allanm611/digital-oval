@@ -199,15 +199,31 @@ export const colors = {
     // Campaign Reports
     campaignReports: {
       channelReach: {
-        reach: "#4FDFF3", // color4 - lighter for multi-bar
-        impressions: "#92A6B0", // color3 - lighter
+        sent: "#92A6B0",
+        delivered: "#4FDFF3",
+        uniqueAudience: "#00505C",
+        converted: "#C38BFB",
+        reach: "#4FDFF3",
+        impressions: "#92A6B0",
+      },
+      deliveryFunnel: {
+        value: "#4FDFF3",
       },
       engagementStages: {
-        value: "#4FDFF3", // color4 - lighter for single bar
+        value: "#4FDFF3",
+      },
+      volumeTrends: {
+        sent: "#92A6B0",
+        delivered: "#4FDFF3",
+        converted: "#00505C",
+      },
+      rateTrends: {
+        deliveryRate: "#4FDFF3",
+        conversionRate: "#C38BFB",
       },
       ctrEngagementTrends: {
-        ctr: "#4FDFF3", // color4 - lighter
-        engagement: "#92A6B0", // color3
+        ctr: "#4FDFF3",
+        engagement: "#92A6B0",
       },
       revenueVsSpend: {
         revenue: "#4FDFF3", // color4 - lighter
@@ -266,21 +282,36 @@ export const colors = {
     // Overall Dashboard Performance
     overallPerformance: {
       channelPerformance: {
-        clicks: "#4FDFF3", // color4 - lighter for multi-bar
-        conversions: "#92A6B0", // color3 - lighter
-        ctr: "#00505C", // color1 (line) - dark teal
-        cvr: "#C38BFB", // color2 (line) - purple
+        dispatched: "#4FDFF3",
+        delivered: "#92A6B0",
+        takenUp: "#00505C",
+        deliveryRate: "#00505C",
+        takeUpRate: "#C38BFB",
+        clicks: "#4FDFF3",
+        conversions: "#92A6B0",
+        ctr: "#00505C",
+        cvr: "#C38BFB",
       },
       smsDelivery: {
-        sent: "#4FDFF3", // color4 - lighter for multi-bar
-        delivered: "#92A6B0", // color3 - lighter
-        converted: "#00505C", // color1 - dark teal
+        sent: "#4FDFF3",
+        delivered: "#92A6B0",
+        takenUp: "#00505C",
+        converted: "#00505C",
+      },
+      emailDelivery: {
+        sent: "#C38BFB",
+        delivered: "#F7B430",
+        takenUp: "#FC9C9C",
       },
       timeSeriesTrends: {
-        reach: "#4FDFF3", // color4 - lighter for multi-bar
-        clicks: "#92A6B0", // color3 - lighter
-        conversions: "#00505C", // color1 - dark teal
-        revenue: "#C38BFB", // color2 (line) - purple
+        subscribers: "#4FDFF3",
+        delivered: "#92A6B0",
+        takenUp: "#00505C",
+        valueGenerated: "#C38BFB",
+        reach: "#4FDFF3",
+        clicks: "#92A6B0",
+        conversions: "#00505C",
+        revenue: "#C38BFB",
       },
     },
   },
@@ -574,6 +605,21 @@ export const buttons = {
     borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm
   },
+};
+
+/**
+ * Wizard toolbar actions (Cancel, Previous, Next Step, Save Draft).
+ * Primary and outline variants share one box so Next is never taller/wider
+ * than Previous, and the pair stays the same size on every wizard page.
+ */
+export const wizardActions = {
+  height: "2.25rem", // 36px — h-9; includes 1px border via border-box
+  navMinWidth: "8.5rem", // Previous + Next Step occupy the same slot
+  paddingX: "1rem",
+  fontSize: "0.875rem",
+  lineHeight: "1.25rem",
+  borderWidth: "1px",
+  borderRadius: "0.375rem",
 };
 
 // Cards defines consistent styling for all card components

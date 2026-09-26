@@ -44,12 +44,23 @@ const CreateProductModalWrapper = lazy(
   () => import("../../products/components/CreateProductModalWrapper"),
 );
 import OfferCreativeFormModal from "../components/OfferCreativeFormModal";
+import AiGenerateMessageButton from "../components/AiGenerateMessageButton";
+import AiGenerateMessageModal from "../components/AiGenerateMessageModal";
+import AiGeneratedBodyBadge from "../components/AiGeneratedBodyBadge";
+import MessageContentToolbar, {
+  messageContentActionClass,
+} from "../components/MessageContentToolbar";
 import { Offer, OfferStatusEnum, OfferProductLink } from "../types/offer";
 import { OfferCategoryType } from "../types/offerCategory";
 import { offerService } from "../services/offerService";
 import { offerCategoryService } from "../services/offerCategoryService";
 import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
+import {
+  communicationChannelService,
+  type CommunicationChannel,
+} from "../../../shared/services/communicationChannelService";
+import { creativeChannelFromCatalogId } from "../utils/mapCommunicationChannel";
 import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
 import { senderIdService, SenderId } from "../../configurations/services/senderIdService";
 import { smsRouteService } from "../../routes/services/smsRouteService";
@@ -61,9 +72,19 @@ import {
   VALID_CHANNELS,
   CreateOfferCreativeRequest,
 } from "../types/offerCreative";
+import type {
+  AiCreativeSession,
+  AiGenerateModalView,
+} from "../types/aiCreativeGeneration";
+import {
+  persistAiSessionLocally,
+  rememberAiCreativeSession,
+  resolveAiCreativeSession,
+  shouldShowAiGeneratedBadge,
+} from "../utils/aiCreativeSessionPersist";
 import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { navigateBackOrFallback, getResolvedReturnTo, navigateToReturnTo, navigatePreservingReturn } from "../../../shared/utils/navigation";
 import { getStatusBadgeConfig } from "../../../shared/utils/statusColors";
 import { supportsHtmlBody, requiresHtmlBody } from "../utils/channelUtils";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -71,7 +92,7 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { extractBackendError } from "../../../shared/utils/errorHandler";;;
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
@@ -201,20 +222,11 @@ export default function OfferDetailsPage() {
   } | null>(null);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
-  // Check if we came from a catalog modal
-  const returnTo = (
-    location.state as {
-      returnTo?: {
-        pathname: string;
-        fromModal?: boolean;
-        catalogId?: number | string;
-      };
-    }
-  )?.returnTo;
+  const returnTo = getResolvedReturnTo(location);
 
   const handleBack = () => {
-    if (returnTo?.pathname) {
-      navigate(returnTo.pathname, { replace: true });
+    if (returnTo) {
+      navigateToReturnTo(navigate, returnTo);
       return;
     }
 
@@ -348,6 +360,9 @@ export default function OfferDetailsPage() {
   const titleInputRefAdd = useRef<HTMLInputElement>(null);
   const bodyTextareaRefAdd = useRef<HTMLTextAreaElement>(null);
   const [isRichTextAdd, setIsRichTextAdd] = useState(false);
+  const [isAiModalOpenAdd, setIsAiModalOpenAdd] = useState(false);
+  const [aiSessionAdd, setAiSessionAdd] = useState<AiCreativeSession | null>(null);
+  const [aiModalViewAdd, setAiModalViewAdd] = useState<AiGenerateModalView>("compose");
   const [newCreativeVariables, setNewCreativeVariables] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
     null,
@@ -476,6 +491,21 @@ export default function OfferDetailsPage() {
     fetchSmsRoutes();
   }, []);
 
+  const [communicationChannels, setCommunicationChannels] = useState<CommunicationChannel[]>([]);
+
+  useEffect(() => {
+    const fetchCommunicationChannels = async () => {
+      try {
+        const rows = await communicationChannelService.getAll();
+        setCommunicationChannels(Array.isArray(rows) ? rows : []);
+      } catch (error) {
+        console.error("Failed to fetch communication channels:", error);
+        setCommunicationChannels([]);
+      }
+    };
+    fetchCommunicationChannels();
+  }, []);
+
   // Helper function to calculate SMS segments
   const calculateSMSSegments = (
     messageText: string,
@@ -569,20 +599,7 @@ export default function OfferDetailsPage() {
 
   // Map communication channel ID to creative channel
   const getChannelFromOfferId = (channelId?: number): CreativeChannel => {
-    switch (channelId) {
-      case 2:
-        return "SMS";
-      case 3:
-        return "USSD";
-      case 4:
-        return "Email";
-      case 5:
-        return "Push";
-      case 6:
-        return "WhatsApp";
-      default:
-        return "SMS";
-    }
+    return creativeChannelFromCatalogId(channelId, communicationChannels);
   };
 
   const resetNewCreativeForm = () => {
@@ -604,6 +621,9 @@ export default function OfferDetailsPage() {
     setIsPreviewOpen(false);
     setSelectedVariablesAdd([]);
     setShowVariableSelectorAdd(false);
+    setAiSessionAdd(null);
+    setAiModalViewAdd("compose");
+    setIsAiModalOpenAdd(false);
   };
 
   const handleVariableSelectAdd = (variable: TemplateVariable) => {
@@ -1097,11 +1117,35 @@ export default function OfferDetailsPage() {
       if (newCreativeForm.html_body.trim()) {
         payload.html_body = newCreativeForm.html_body.trim();
       }
-      if (parsedVariables && Object.keys(parsedVariables).length > 0) {
-        payload.variables = parsedVariables;
+      const variables = rememberAiCreativeSession(
+        {
+          channel: newCreativeForm.channel,
+          locale: newCreativeForm.locale,
+          text_body: newCreativeForm.text_body,
+          html_body: newCreativeForm.html_body,
+          variables: parsedVariables,
+        },
+        aiSessionAdd,
+        { offerId: id, body: newCreativeForm.text_body || newCreativeForm.html_body },
+      );
+      if (Object.keys(variables).length > 0) {
+        payload.variables = variables;
       }
 
-      await offerCreativeService.create(payload);
+      const created = await offerCreativeService.create(payload);
+      const createdId = created.data?.id ?? created.insertId;
+      if (aiSessionAdd && createdId) {
+        persistAiSessionLocally(
+          {
+            creativeId: createdId,
+            offerId: id,
+            channel: newCreativeForm.channel,
+            locale: newCreativeForm.locale,
+            body: newCreativeForm.text_body || newCreativeForm.html_body,
+          },
+          aiSessionAdd,
+        );
+      }
       success(
         "Creative Created",
         payload.save_as_template
@@ -1670,6 +1714,7 @@ export default function OfferDetailsPage() {
 
   const buildOfferReturnState = (section: "products" | "creatives") => ({
     pathname: offerDetailsPath,
+    search: location.search,
     section,
   });
 
@@ -1777,6 +1822,7 @@ export default function OfferDetailsPage() {
         <BackButton
           showBreadcrumb={true}
           currentLabel="Offer Details"
+          onClick={handleBack}
         />
         <div className="flex flex-wrap items-center gap-2">
           {/* Draft: Submit for Approval */}
@@ -1977,7 +2023,12 @@ export default function OfferDetailsPage() {
                 <button
                   onClick={() => {
                     navigate(`/dashboard/reports/offers/${id}`, {
-                      state: { returnTo: { pathname: location.pathname } },
+                      state: {
+                        returnTo: {
+                          pathname: location.pathname,
+                          search: location.search,
+                        },
+                      },
                     });
                     setShowMoreMenu(false);
                   }}
@@ -2656,7 +2707,15 @@ export default function OfferDetailsPage() {
                       const flow = campaignFlows.find((f) => f.campaign_name === row.campaign);
                       return (
                         <button
-                          onClick={() => navigate(`/dashboard/campaigns/${flow?.campaign_id}`)}
+                          onClick={() =>
+                            flow?.campaign_id != null &&
+                            navigatePreservingReturn(
+                              navigate,
+                              `/dashboard/campaigns/${flow.campaign_id}`,
+                              location,
+                              "Offer Details",
+                            )
+                          }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >
@@ -2675,7 +2734,15 @@ export default function OfferDetailsPage() {
                       const flow = campaignFlows.find((f) => f.segment_name === row.segment);
                       return (
                         <button
-                          onClick={() => navigate(`/dashboard/segments/${flow?.segment_id}`)}
+                          onClick={() =>
+                            flow?.segment_id != null &&
+                            navigatePreservingReturn(
+                              navigate,
+                              `/dashboard/segments/${flow.segment_id}`,
+                              location,
+                              "Offer Details",
+                            )
+                          }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >
@@ -2763,13 +2830,32 @@ export default function OfferDetailsPage() {
               is_active: creativeData.is_active,
               save_as_template: Boolean(creativeData.save_as_template),
               created_by: user.user_id,
+              ...(creativeData.variables ? { variables: creativeData.variables } : {}),
             };
 
             if (creativeData.sms_route) {
               (createPayload as any).sms_route = creativeData.sms_route;
             }
 
-            await offerCreativeService.create(createPayload);
+            const created = await offerCreativeService.create(createPayload);
+            const createdId = created.data?.id ?? created.insertId;
+            if (createPayload.variables && createdId) {
+              persistAiSessionLocally(
+                {
+                  creativeId: createdId,
+                  offerId: id,
+                  channel: createPayload.channel,
+                  locale: createPayload.locale,
+                  body: createPayload.text_body || createPayload.html_body,
+                },
+                resolveAiCreativeSession({
+                  variables: createPayload.variables,
+                  channel: createPayload.channel,
+                  locale: createPayload.locale,
+                  text_body: createPayload.text_body,
+                }),
+              );
+            }
 
             setIsAddCreativeModalOpen(false);
             resetNewCreativeForm();
@@ -3009,14 +3095,7 @@ export default function OfferDetailsPage() {
               )}
 
               {/* Message content toolbar */}
-              <div
-                className="flex items-center justify-between p-3 rounded-lg"
-                style={{ backgroundColor: color.surface.cards }}
-              >
-                <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                  Message Content
-                </span>
-                <div className="flex items-center gap-2">
+              <MessageContentToolbar>
                   {(newCreativeForm.channel === "Email" ||
                     newCreativeForm.channel === "SMS" ||
                     newCreativeForm.channel === "Push" ||
@@ -3024,7 +3103,7 @@ export default function OfferDetailsPage() {
                     <button
                       type="button"
                       onClick={() => setIsRichTextAdd((prev) => !prev)}
-                      className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                      className={messageContentActionClass}
                       style={{
                         backgroundColor: isRichTextAdd
                           ? `${color.primary.accent}10`
@@ -3040,15 +3119,16 @@ export default function OfferDetailsPage() {
                       {isRichTextAdd ? "Rich Text" : "Plain Text"}
                     </button>
                   )}
-                  <div className="relative">
+                  <div className="relative shrink-0">
                     <button
                       type="button"
                       onClick={() =>
                         setShowVariableSelectorAdd(!showVariableSelectorAdd)
                       }
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                      className={messageContentActionClass}
                       style={{
                         backgroundColor: color.primary.accent,
+                        borderColor: color.primary.accent,
                         color: "white",
                       }}
                     >
@@ -3065,14 +3145,37 @@ export default function OfferDetailsPage() {
                       />
                     </div>
                   </div>
-                </div>
-              </div>
+                  <AiGenerateMessageButton
+                    onClick={() => {
+                      setAiModalViewAdd("compose");
+                      setIsAiModalOpenAdd(true);
+                    }}
+                    active={isAiModalOpenAdd}
+                  />
+              </MessageContentToolbar>
 
               {/* Message Body */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Message Body
                 </label>
+                <AiGeneratedBodyBadge
+                  visible={
+                    Boolean(
+                      aiSessionAdd &&
+                        (newCreativeForm.text_body || newCreativeForm.html_body),
+                    ) ||
+                    shouldShowAiGeneratedBadge({
+                      ...newCreativeForm,
+                      offer_id: id,
+                    })
+                  }
+                  onClick={() => {
+                    setAiModalViewAdd("result");
+                    setIsAiModalOpenAdd(true);
+                  }}
+                  label={t.offers.aiGenerate.aiBadgeLabel}
+                >
                 {isRichTextAdd ? (
                   <div
                     onClick={() => setActiveFieldAdd("body")}
@@ -3080,12 +3183,13 @@ export default function OfferDetailsPage() {
                   >
                     <RichTextEditor
                       value={newCreativeForm.text_body || ""}
-                      onChange={(value) =>
+                      onChange={(value) => {
+                        if (!value.trim()) setAiSessionAdd(null);
                         setNewCreativeForm((prev) => ({
                           ...prev,
                           text_body: value,
-                        }))
-                      }
+                        }));
+                      }}
                       placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
                       minHeight="250px"
                     />
@@ -3097,6 +3201,7 @@ export default function OfferDetailsPage() {
                     value={newCreativeForm.text_body || ""}
                     onChange={(value) => {
                       setActiveFieldAdd("body");
+                      if (!value.trim()) setAiSessionAdd(null);
                       if (bodyTextareaRefAdd.current) {
                         setCursorPositionAdd(bodyTextareaRefAdd.current.selectionStart || 0);
                       }
@@ -3117,6 +3222,7 @@ export default function OfferDetailsPage() {
                     rows={8}
                   />
                 )}
+                </AiGeneratedBodyBadge>
 
                 {/* Info bar */}
                 <div className="mt-2 flex items-center justify-between">
@@ -3286,6 +3392,47 @@ export default function OfferDetailsPage() {
         </div>
       )}
 
+      <AiGenerateMessageModal
+        isOpen={isAiModalOpenAdd}
+        onClose={() => setIsAiModalOpenAdd(false)}
+        channel={newCreativeForm.channel}
+        communicationChannelId={offer?.communication_channel_id}
+        locale={newCreativeForm.locale || "en"}
+        brandName={newCreativeForm.title || undefined}
+        existingTitle={newCreativeForm.title || ""}
+        existingBody={newCreativeForm.text_body || newCreativeForm.html_body || ""}
+        availableVariables={selectedVariablesAdd.map(formatVariablePlaceholder)}
+        initialSession={
+          aiSessionAdd ||
+          resolveAiCreativeSession({
+            ...newCreativeForm,
+            offer_id: id,
+          })
+        }
+        initialView={aiModalViewAdd}
+        onApply={({ title, body, session }) => {
+          const shouldUseHtml =
+            newCreativeForm.channel === "Email" || isRichTextAdd;
+          setAiSessionAdd(session);
+          const variables = rememberAiCreativeSession(
+            {
+              ...newCreativeForm,
+              text_body: body,
+              html_body: shouldUseHtml ? body : newCreativeForm.html_body,
+            },
+            session,
+            { offerId: id, body },
+          );
+          setNewCreativeForm((prev) => ({
+            ...prev,
+            text_body: body,
+            variables,
+            ...(shouldUseHtml ? { html_body: body } : {}),
+            ...(title ? { title } : {}),
+          }));
+        }}
+      />
+
       {/* Edit Creative Modal */}
       <OfferCreativeFormModal
         isOpen={isEditCreativeModalOpen}
@@ -3303,6 +3450,7 @@ export default function OfferDetailsPage() {
               text_body: creativeData.text_body,
               html_body: creativeData.html_body,
               is_active: creativeData.is_active,
+              ...(creativeData.variables ? { variables: creativeData.variables } : {}),
             };
 
             if (creativeData.sms_route) {
@@ -3312,6 +3460,21 @@ export default function OfferDetailsPage() {
             await offerCreativeService.update(
               editingCreative.id as number,
               updatePayload,
+            );
+            persistAiSessionLocally(
+              {
+                creativeId: editingCreative.id,
+                offerId: id,
+                channel: String(creativeData.channel || editingCreative.channel),
+                locale: String(creativeData.locale || editingCreative.locale),
+                body: creativeData.text_body || creativeData.html_body,
+              },
+              resolveAiCreativeSession({
+                ...editingCreative,
+                variables: creativeData.variables || editingCreative.variables,
+                text_body: creativeData.text_body,
+                html_body: creativeData.html_body,
+              }),
             );
 
             setIsEditCreativeModalOpen(false);

@@ -51,6 +51,14 @@ import RescheduleBroadcastsModal from "../components/RescheduleBroadcastsModal";
 import { broadcastService } from "../services/broadcastService";
 import { Broadcast } from "../types/broadcast";
 import { mapSchedulingToBroadcastFields } from "../utils/mapSchedulingToBroadcastFields";
+import {
+  exclusiveOfferLimitMessage,
+  isMutuallyExclusiveCampaign,
+  mergeCampaignMetadata,
+  segmentsExceedingExclusiveOfferLimit,
+  stampMutuallyExclusiveOnSegments,
+} from "../utils/mutuallyExclusiveOffers";
+import { findMappingMissingTrackingSource } from "../utils/trackingRewardConfig";
 
 const steps: Step[] = [
   {
@@ -345,6 +353,7 @@ export default function CreateCampaignPage() {
               : undefined,
             priority: campaign?.priority || undefined,
             priority_rank: (campaign?.metadata as any)?.priority_rank || 1,
+            metadata: (campaign?.metadata as Record<string, unknown>) || {},
           };
           setFormData(newFormData);
 
@@ -399,7 +408,13 @@ export default function CreateCampaignPage() {
               })
             );
             const validSegments = fullSegments.filter((s): s is CampaignSegment => s !== null);
-            setSelectedSegments(validSegments);
+            const exclusive = isMutuallyExclusiveCampaign(
+              validSegments,
+              (campaign as { metadata?: Record<string, unknown> })?.metadata,
+            );
+            setSelectedSegments(
+              stampMutuallyExclusiveOnSegments(validSegments, exclusive),
+            );
           }
 
           if (offersResponse?.success && offersResponse.data?.length > 0) {
@@ -688,6 +703,30 @@ export default function CreateCampaignPage() {
           }
         }
 
+        if (
+          isMutuallyExclusiveCampaign(selectedSegments, formData.metadata) &&
+          !errors.flows
+        ) {
+          const extra = segmentsExceedingExclusiveOfferLimit(
+            campaignFlows,
+            selectedSegments,
+          );
+          if (extra.length > 0) {
+            errors.flows = exclusiveOfferLimitMessage(extra[0].name);
+          }
+        }
+
+        if (!errors.flows) {
+          const missing = findMappingMissingTrackingSource(
+            campaignFlows,
+            selectedOffers,
+            selectedSegments,
+          );
+          if (missing) {
+            errors.flows = `Add a tracking source for "${missing.offerName}" on segment "${missing.segmentName}" before continuing.`;
+          }
+        }
+
         return { isValid: Object.keys(errors).length === 0, errors };
 
       case 4: // Scheduling step
@@ -886,12 +925,10 @@ export default function CreateCampaignPage() {
           ...(controlGroup.percentage && {
             control_group_percentage: controlGroup.percentage,
           }),
-          ...((formData.scheduling || formData.priority_rank) && {
-            metadata: {
-              ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
-              ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
-            },
-          }),
+          metadata: mergeCampaignMetadata(
+            formData,
+            isMutuallyExclusiveCampaign(selectedSegments, formData.metadata),
+          ),
           abort_pending_broadcasts: shouldAbortPendingBroadcasts,
           ...(shouldAbortPendingBroadcasts
             ? mapSchedulingToBroadcastFields(formData.scheduling)
@@ -951,12 +988,16 @@ export default function CreateCampaignPage() {
                 ) || [];
               if (newFlows.length > 0) {
                 const flowsToCreate = newFlows.map(
-                  (flow: any, index: number) => ({
+                  (flow: CampaignFlowConfig, index: number) => ({
+                    ...flow,
                     campaign_id: parseInt(id),
                     segment_id: flow?.segment_id || 0,
                     offer_id: flow?.offer_id || 0,
                     flow_type: flow?.flow_type || "STANDARD",
-                    step_order: index + 1,
+                    step_order: flow?.step_order || index + 1,
+                    wait_interval_hours: flow?.wait_interval_hours || 0,
+                    bucket_allocation: flow?.bucket_allocation,
+                    condition_rule: flow?.condition_rule,
                     created_by: user?.user_id,
                   }),
                 );
@@ -1057,12 +1098,10 @@ export default function CreateCampaignPage() {
           ...(controlGroup.percentage && {
             control_group_percentage: controlGroup.percentage,
           }),
-          ...((formData.scheduling || formData.priority_rank) && {
-            metadata: {
-              ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
-              ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
-            },
-          }),
+          metadata: mergeCampaignMetadata(
+            formData,
+            isMutuallyExclusiveCampaign(selectedSegments, formData.metadata),
+          ),
         };
 
         await campaignService.updateCampaign(createdCampaignId, updateData);
@@ -1207,12 +1246,10 @@ export default function CreateCampaignPage() {
           ...(controlGroup.percentage && {
             control_group_percentage: controlGroup.percentage,
           }),
-          ...((formData.scheduling || formData.priority_rank) && {
-            metadata: {
-              ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
-              ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
-            },
-          }),
+          metadata: mergeCampaignMetadata(
+            formData,
+            isMutuallyExclusiveCampaign(selectedSegments, formData.metadata),
+          ),
           ...mapSchedulingToBroadcastFields(formData.scheduling),
         };
 
@@ -1520,12 +1557,10 @@ export default function CreateCampaignPage() {
         ...(controlGroup.percentage && {
           control_group_percentage: controlGroup.percentage,
         }),
-        ...((formData.scheduling || formData.priority_rank) && {
-          metadata: {
-            ...(formData.scheduling && { broadcast_schedule: formData.scheduling }),
-            ...(formData.priority_rank && { priority_rank: formData.priority_rank }),
-          },
-        }),
+        metadata: mergeCampaignMetadata(
+          formData,
+          isMutuallyExclusiveCampaign(selectedSegments, formData.metadata),
+        ),
       };
 
       let campaignId: number;
