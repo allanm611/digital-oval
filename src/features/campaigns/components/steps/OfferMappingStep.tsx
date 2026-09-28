@@ -17,6 +17,10 @@ import MultipleTargetOfferMapping from "./MultipleTargetOfferMapping";
 import { SegmentOfferMapping } from "../../pages/CreateCampaignPage";
 
 import { tw } from "../../../../shared/utils/utils";
+import {
+  applyMappedOfferPatch,
+  fetchMappedOfferPatch,
+} from "../../utils/refreshMappedOffer";
 
 const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 interface OfferMappingStepProps {
@@ -378,6 +382,10 @@ export default function OfferMappingStep({
           offerMappings={sequentialMappings}
           onUpdateMappings={setSequentialMappings}
           onAddOffer={() => setShowOfferModal(true)}
+          onEditOffer={(offerId) => {
+            setEditingOfferId(offerId);
+            setShowEditOfferModal(true);
+          }}
         />
       )}
 
@@ -479,9 +487,29 @@ export default function OfferMappingStep({
             setEditingOfferId(null);
           }}
           onOfferCreated={(offerId) => {
-            // Close modal and refresh selected offers
             setShowEditOfferModal(false);
             setEditingOfferId(null);
+            void fetchMappedOfferPatch(offerId)
+              .then((patch) => {
+                if (!patch) return;
+                setSelectedOffers(
+                  selectedOffers.map((offer) =>
+                    applyMappedOfferPatch(offer, offerId, patch),
+                  ),
+                );
+                setOfferMappings((prev) => {
+                  const next: { [segmentId: string]: CampaignOffer[] } = {};
+                  Object.entries(prev).forEach(([segmentId, offers]) => {
+                    next[segmentId] = offers.map((offer) =>
+                      applyMappedOfferPatch(offer, offerId, patch),
+                    );
+                  });
+                  return next;
+                });
+              })
+              .catch(() => {
+                // The offer saved. The mapping keeps its previous label.
+              });
           }}
           offerId={editingOfferId || undefined}
         />

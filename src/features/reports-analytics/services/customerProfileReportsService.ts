@@ -189,6 +189,7 @@ class CustomerProfileReportsService {
       sortBy: params.sortBy,
       sortOrder: params.sortOrder,
       search: params.search,
+      filters: params.filters,
       segment: params.segment,
     });
     return this.request<CustomerProfileEnvelope>(`/portfolio${query}`);
@@ -218,6 +219,7 @@ class CustomerProfileReportsService {
       sortBy: params.sortBy,
       sortOrder: params.sortOrder,
       search: params.search,
+      filters: params.filters,
       segment: params.segment,
     });
     return this.request<{

@@ -11,11 +11,17 @@ import Pagination, { DEFAULT_PAGE_SIZE, getInitialPageSize } from "../../../shar
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw } from "../../../shared/utils/utils";
-import Input from "../../../shared/components/ui/Input";
 import type { RangeOption, SegmentReportsResponse } from "../types/ReportsAPI";
 import { segmentReportsService } from "../services/segmentReportsService";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
 import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import { useReportTableFilters } from "../hooks/useReportTableFilters";
+import ReportTableFilterBar from "../components/ReportTableFilterBar";
+import {
+  firstNameContains,
+  matchReportFilters,
+  SEGMENT_REPORT_FILTER_FIELDS,
+} from "../utils/reportTableFilters";
 import { alignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
 import {
   previousComparisonLabel as formatPreviousComparisonLabel,
@@ -307,6 +313,7 @@ export default function SegmentReportsPage() {
   const navigate = useNavigate();
   const [tableQuery, setTableQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
+  const tableFilters = useReportTableFilters(SEGMENT_REPORT_FILTER_FIELDS);
   const timeWindow = useReportTimeWindow({
     overviewPreset: "weekly",
     defaultTrendsPreset: "daily",
@@ -487,10 +494,9 @@ export default function SegmentReportsPage() {
     [fetchSegments, useDummyData],
   );
 
-  // Load segments on mount
   useEffect(() => {
-    fetchSegments();
-  }, [fetchSegments]);
+    handleSearch(firstNameContains(tableFilters.activeRules));
+  }, [handleSearch, tableFilters.activeRules]);
 
   const handleFilteredCountChange = (count: number) => {
     // Updates when filters applied in the Table component
@@ -808,23 +814,25 @@ export default function SegmentReportsPage() {
       : null;
 
     return segmentTableRows.filter((row) => {
-      const matchesQuery = tableQuery.trim()
-        ? row.name.toLowerCase().includes(tableQuery.trim().toLowerCase())
-        : true;
+      const matchesFilters = matchReportFilters(
+        row as unknown as Record<string, unknown>,
+        tableFilters.activeRules,
+        SEGMENT_REPORT_FILTER_FIELDS,
+      );
       const matchesStatus =
         statusFilter === "All Statuses" ? true : row.status === statusFilter;
-      if (!useDummyData) return matchesQuery && matchesStatus;
+      if (!useDummyData) return matchesFilters && matchesStatus;
       const rowDate = row.lastUpdatedDate || Date.now();
       const now = Date.now();
       const matchesRange =
         appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
           ? rowDate >= startMs && rowDate <= endMs
           : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
-      return matchesQuery && matchesStatus && matchesRange;
+      return matchesFilters && matchesStatus && matchesRange;
     });
   }, [
     statusFilter,
-    tableQuery,
+    tableFilters.activeRules,
     customDays,
     selectedRange,
     appliedCustomRange,
@@ -1037,12 +1045,6 @@ export default function SegmentReportsPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
-              placeholder="Search segment"
-              value={tableQuery}
-              onChange={handleSearch}
-              className="w-full md:w-80"
-            />
             <HeadlessSelect
               value={statusFilter}
               onChange={(value) => setStatusFilter(value as string)}
@@ -1061,6 +1063,10 @@ export default function SegmentReportsPage() {
             />
           </div>
         </div>
+        <ReportTableFilterBar
+          fields={SEGMENT_REPORT_FILTER_FIELDS}
+          filters={tableFilters}
+        />
 
         {liveReportError && !useDummyData && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">

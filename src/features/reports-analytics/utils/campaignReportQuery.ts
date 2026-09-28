@@ -16,6 +16,7 @@ export function buildCampaignReportParams(options: {
   page?: number;
   pageSize?: number;
   search?: string;
+  filters?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   metric?: string;
@@ -31,6 +32,7 @@ export function buildCampaignReportParams(options: {
     page: options.page,
     pageSize: options.pageSize,
     search: options.search,
+    filters: options.filters,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,
     metric: options.metric,

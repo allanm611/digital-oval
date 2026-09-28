@@ -66,6 +66,7 @@ class SegmentReportsService {
       sortBy: params.sortBy,
       sortOrder: params.sortOrder,
       search: params.search,
+      filters: params.filters,
       status: params.status,
       segmentId: params.segment,
     });

@@ -44,6 +44,7 @@ export const API_CONFIG = {
     NOTIFICATIONS: "/notifications",
     DOCUMENTATION: "/documentation",
     HEALTH: "/playwright-health",
+    CONNECTION_PROFILE_PIPELINES: "/connection-profile-pipelines",
   },
   TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 3,

@@ -28,6 +28,8 @@ interface OfferFlowChartProps {
   offerMappings: SequentialOfferMapping[];
   onUpdateMappings: (mappings: SequentialOfferMapping[]) => void;
   onAddOffer: () => void;
+  /** Edit in place on Map Segments to Offers instead of leaving the campaign. */
+  onEditOffer?: (offerId: number) => void;
 }
 
 export default function OfferFlowChart({
@@ -37,6 +39,7 @@ export default function OfferFlowChart({
   offerMappings,
   onUpdateMappings,
   onAddOffer,
+  onEditOffer,
 }: OfferFlowChartProps) {
   const navigate = useNavigate();
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([0]));
@@ -229,7 +232,13 @@ export default function OfferFlowChart({
                     </button>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => navigate(`/dashboard/offers/${offer.id}/edit`)}
+                        onClick={() => {
+                          if (onEditOffer) {
+                            onEditOffer(Number(offer.id));
+                            return;
+                          }
+                          navigate(`/dashboard/offers/${offer.id}/edit`);
+                        }}
                         className="text-gray-400 hover:text-blue-600 p-1"
                         title="Edit offer"
                       >

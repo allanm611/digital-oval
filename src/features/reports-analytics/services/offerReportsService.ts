@@ -43,6 +43,7 @@ function windowQuery(
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
     search: params.search,
+    filters: params.filters,
     offerId: params.offerId,
     status: params.status,
     metric: params.metric,

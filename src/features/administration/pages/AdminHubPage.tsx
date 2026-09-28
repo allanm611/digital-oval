@@ -11,6 +11,7 @@ import {
   Link2,
   Activity,
   GitBranch,
+  Workflow,
   Users,
   UserCheck,
   Settings,
@@ -72,6 +73,13 @@ export default function AdminHubPage() {
           description: "Configure database and API connections",
           icon: Database,
           href: "/dashboard/connection-profiles",
+          category: "Infrastructure",
+        },
+        {
+          title: "Connection Pipelines",
+          description: "Define how each connection profile extracts or exports data",
+          icon: Workflow,
+          href: "/dashboard/connection-profile-pipelines",
           category: "Infrastructure",
         },
         {

@@ -30,6 +30,7 @@ import {
 import { parseISODate, fillCampaignTrendSeries, dummyTemplateRange, toChartAudit } from "../utils/reportTimeWindow";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
 import { usePreviousPeriodSeries } from "../hooks/usePreviousPeriodSeries";
+import { useReportTableFilters } from "../hooks/useReportTableFilters";
 import {
   previousComparisonLabel as formatPreviousComparisonLabel,
   resolveComparisonSeries,
@@ -49,9 +50,14 @@ import {
   scaleChannelReach,
 } from "../utils/campaignReportDummy";
 import { cvmDeliveryFunnel, emptyCampaignSummary } from "../utils/campaignCvmMetrics";
+import {
+  CAMPAIGN_REPORT_FILTER_FIELDS,
+  firstNameContains,
+  matchReportFilters,
+} from "../utils/reportTableFilters";
+import ReportTableFilterBar from "../components/ReportTableFilterBar";
 
 import { tw } from "../../../shared/utils/utils";
-import Input from "../../../shared/components/ui/Input";
 import { campaignService } from "../../campaigns/services/campaignService";
 import { campaignReportsService } from "../services/campaignReportsService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -181,6 +187,7 @@ export default function CampaignReportsPage() {
   const { success: showSuccess, error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
   const [debouncedTableQuery, setDebouncedTableQuery] = useState("");
+  const tableFilters = useReportTableFilters(CAMPAIGN_REPORT_FILTER_FIELDS);
   const timeWindow = useReportTimeWindow({
     overviewPreset: "monthly",
     defaultTrendsPreset: "daily",
@@ -398,11 +405,15 @@ export default function CampaignReportsPage() {
   }, []);
 
   useEffect(() => {
+    setTableQuery(firstNameContains(tableFilters.activeRules));
+  }, [tableFilters.activeRules]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedTableQuery(tableQuery);
     }, 300);
     return () => clearTimeout(timer);
-  }, [tableQuery]);
+  }, [tableQuery, tableFilters.serializedFilters]);
 
   const handleRefreshSnapshots = async () => {
     try {
@@ -597,6 +608,7 @@ export default function CampaignReportsPage() {
             page: tablePage,
             pageSize: tablePageSize,
             search: debouncedTableQuery.trim() || undefined,
+            filters: tableFilters.serializedFilters || undefined,
             sortBy: "conversions",
             sortOrder: "desc",
           }),
@@ -635,6 +647,7 @@ export default function CampaignReportsPage() {
     tablePage,
     tablePageSize,
     debouncedTableQuery,
+    tableFilters.serializedFilters,
     dataEpoch,
   ]);
 
@@ -702,25 +715,28 @@ export default function CampaignReportsPage() {
   const filteredRows = useMemo(() => {
     if (!useDummyData) return campaignTableRows;
 
-    const query = tableQuery.trim().toLowerCase();
     const startDate = parseISODate(overviewWindow.bounds.start);
     const endDate = parseISODate(overviewWindow.bounds.end);
     const startMs = startDate?.getTime() ?? 0;
     const endMs = endDate ? endDate.getTime() + 24 * 60 * 60 * 1000 - 1 : Date.now();
 
     return campaignTableRows.filter((row) => {
-      const matchesQuery = query ? row.name.toLowerCase().includes(query) : true;
+      const matchesFilters = matchReportFilters(
+        row as unknown as Record<string, unknown>,
+        tableFilters.activeRules,
+        CAMPAIGN_REPORT_FILTER_FIELDS,
+      );
       const matchesCampaign = selectedCampaignFilter
         ? getCampaignRowId(row) === selectedCampaignFilter
         : true;
       const rowDate = row.lastRunDateMS || Date.now();
       const matchesRange = rowDate >= startMs && rowDate <= endMs;
 
-      return matchesQuery && matchesCampaign && matchesRange;
+      return matchesFilters && matchesCampaign && matchesRange;
     });
   }, [
     useDummyData,
-    tableQuery,
+    tableFilters.activeRules,
     selectedCampaignFilter,
     campaignTableRows,
     overviewWindow.bounds.start,
@@ -732,6 +748,7 @@ export default function CampaignReportsPage() {
     setTablePage(1);
   }, [
     debouncedTableQuery,
+    tableFilters.serializedFilters,
     selectedCampaignFilter,
     overviewWindow.bounds.start,
     overviewWindow.bounds.end,
@@ -1179,13 +1196,7 @@ export default function CampaignReportsPage() {
               Track campaign audiences, delivery counts, and outcome metrics
             </p>
           </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
-              placeholder="Search campaign"
-              value={tableQuery}
-              onChange={setTableQuery}
-              className="w-full md:w-80"
-            />
+          <div className="flex flex-col gap-3 md:flex-row md:items-start">
             <CsvDownloadButton
               headers={csvHeaders}
               rows={csvRows}
@@ -1194,6 +1205,10 @@ export default function CampaignReportsPage() {
             />
           </div>
         </div>
+        <ReportTableFilterBar
+          fields={CAMPAIGN_REPORT_FILTER_FIELDS}
+          filters={tableFilters}
+        />
 
         {useDummyData ? (
           <>

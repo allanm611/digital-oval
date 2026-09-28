@@ -1144,8 +1144,9 @@ export default function OfferRewardStep({
                 No Rewards Added
               </h3>
               <p className="text-gray-500 text-sm mb-2 max-w-md mx-auto">
-                Bind rewards to tracking sources already configured on this
-                offer. Each tracking source can have one reward.
+                Rewards are optional for this offer type. Bind a reward to a
+                tracking source already configured on this offer only when it
+                should grant one. Each tracking source can have one reward.
               </p>
               <div className="max-w-sm mx-auto space-y-3 mt-6">
                 <button
@@ -1205,7 +1206,7 @@ export default function OfferRewardStep({
                 <p className="mb-3 text-xs text-red-600">{rewardActionError}</p>
               ) : !usesDefaultReward ? (
                 <p className={`mb-3 text-xs ${tw.textSecondary}`}>
-                  One reward per tracking source. Select sources from this
+                  Optional. One reward per tracking source, selected from this
                   offer&apos;s Tracking step.
                 </p>
               ) : null}

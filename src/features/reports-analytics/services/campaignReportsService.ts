@@ -43,6 +43,7 @@ function windowQuery(params: ReportQueryParams & { metric?: string; limit?: numb
     sortBy: params.sortBy,
     sortOrder: params.sortOrder,
     search: params.search,
+    filters: params.filters,
     campaignId: params.campaignId,
     metric: params.metric,
     limit: params.limit,

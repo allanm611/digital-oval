@@ -57,6 +57,8 @@ import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal"
 
 type OriginSource = "customers" | "reports";
 
+const profileActionButtonClass = `${tw.rounded} inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap px-4 py-2 text-sm font-medium transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 sm:w-auto`;
+
 export default function CustomerDetailPage() {
   const navigate = useNavigate();
   const { customerId: customerIdFromParams } = useParams<{
@@ -629,46 +631,48 @@ export default function CustomerDetailPage() {
         tab={activeTab}
       >
       <div className="flex min-w-0 flex-col gap-4">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4">
+        {/* Header: stack on small screens, share a row only when both clusters fit */}
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <BackButton
-
+            className="min-w-0 max-w-full"
             showBreadcrumb={true}
             currentLabel="Customer Details"
           />
-          <div className="flex items-center gap-2">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:max-w-full sm:flex-row sm:flex-wrap sm:justify-end">
             <button
+              type="button"
               onClick={() => setIsCommunicateModalOpen(true)}
-              className={`${tw.rounded} inline-flex items-center gap-2 px-4 py-2 text-sm font-medium`}
+              className={`${profileActionButtonClass} focus-visible:outline-gray-900`}
               style={{
                 backgroundColor: color.primary.action,
                 color: "white",
               }}
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4 shrink-0" aria-hidden="true" />
               Send Communication
             </button>
             <PermissionGate permission="customer.update">
               <button
+                type="button"
                 onClick={() => setEditingCustomer(true)}
-                className={`text-sm font-medium inline-flex items-center gap-2 flex-shrink-0 ${tw.rounded}`}
+                className={`${profileActionButtonClass} focus-visible:outline-gray-900`}
                 style={{
                   backgroundColor: color.primary.action,
                   color: "white",
-                  padding: "8px 16px",
                 }}
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4 shrink-0" aria-hidden="true" />
                 Edit
               </button>
             </PermissionGate>
             <PermissionGate permission="customer.delete">
               <button
+                type="button"
                 onClick={() => setDeleteConfirmOpen(true)}
-                className={`${tw.rounded} inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white`}
-                style={{ backgroundColor: "#dc2626" }}
+                className={`${profileActionButtonClass} focus-visible:outline-red-700`}
+                style={{ backgroundColor: "#dc2626", color: "white" }}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                 Delete
               </button>
             </PermissionGate>
