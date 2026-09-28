@@ -1,3 +1,10 @@
+## [1.5.11](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.10...v1.5.11) (2026-09-28)
+
+
+### Bug Fixes
+
+* Merge pull request [#22](https://github.com/YellowBird-UG/Sentra_cvm_front/issues/22) from YellowBird-UG/fplex/master-sz ([e380d10](https://github.com/YellowBird-UG/Sentra_cvm_front/commit/e380d1030a10d91618470c9b486d8e92fd922b33))
+
 ## [1.5.10](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.9...v1.5.10) (2026-09-24)
 
 
