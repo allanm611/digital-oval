@@ -16,11 +16,13 @@ import type { ReportTimeWindowState } from "../hooks/useReportTimeWindow";
 import {
   TREND_GRAIN_TABS,
   OVERVIEW_RANGE_PRESETS,
+  boundsForPreset,
   namedRangePresets,
   formatPeriodRange,
   getDateConstraints,
   type TrendSubPreset,
 } from "../utils/reportTimeWindow";
+import ReportDateRangePicker from "./ReportDateRangePicker";
 
 const REPORT_VIEW_TABS: Array<{ id: ReportViewMode; label: string }> = [
   { id: "overview", label: "Overview" },
@@ -121,6 +123,8 @@ export default function ReportTrendsToolbar({
     comparePreviousPeriod,
     setComparePreviousPeriod,
     applyInlineTrendRange,
+    applyInlineOverviewRange,
+    overviewInlineError,
     selectTrendYear,
     trendYear,
     availableTrendYears,
@@ -146,11 +150,29 @@ export default function ReportTrendsToolbar({
   const trendPresets = namedRangePresets(grainTab);
   const [fromDate, setFromDate] = useState(trendsWindow.bounds.start);
   const [toDate, setToDate] = useState(trendsWindow.bounds.end);
+  const [overviewFrom, setOverviewFrom] = useState(overviewWindow.bounds.start);
+  const [overviewTo, setOverviewTo] = useState(overviewWindow.bounds.end);
 
   useEffect(() => {
     setFromDate(trendsWindow.bounds.start);
     setToDate(trendsWindow.bounds.end);
   }, [trendsWindow.bounds.start, trendsWindow.bounds.end]);
+
+  useEffect(() => {
+    setOverviewFrom(overviewWindow.bounds.start);
+    setOverviewTo(overviewWindow.bounds.end);
+  }, [overviewWindow.bounds.start, overviewWindow.bounds.end]);
+
+  const isOverviewCustom = overviewPreset === "custom";
+  const overviewQuickPresets = OVERVIEW_RANGE_PRESETS.filter((preset) =>
+    [
+      "last_7_days",
+      "last_14_days",
+      "this_month",
+      "last_month",
+      "last_3_months",
+    ].includes(preset.id),
+  );
 
   const overviewSelectValue = overviewSavedRangeId
     ? `${SAVED_RANGE_PREFIX}${overviewSavedRangeId}`
@@ -199,6 +221,12 @@ export default function ReportTrendsToolbar({
     if (start && end) applyInlineTrendRange({ start, end });
   };
 
+  const handleOverviewInlineRange = (next: { start: string; end: string }) => {
+    setOverviewFrom(next.start);
+    setOverviewTo(next.end);
+    if (next.start && next.end) applyInlineOverviewRange(next);
+  };
+
   const pickerTitle =
     pickerTarget === "overview"
       ? "Custom date range"
@@ -210,8 +238,8 @@ export default function ReportTrendsToolbar({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           {entityFilter}
           {entityFilter ? <div className="h-6 border-l border-gray-300" /> : null}
           <SegmentedTabs
@@ -228,8 +256,8 @@ export default function ReportTrendsToolbar({
 
       {!isTrendsView && (
         <div className="space-y-2">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <div className="flex w-full min-w-[16rem] flex-col gap-1.5 sm:max-w-xs sm:flex-1">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="flex w-full min-w-0 flex-col gap-1.5 sm:max-w-xs sm:min-w-[12rem] sm:flex-1">
               <span className="text-xs font-medium text-gray-600">Period</span>
               <HeadlessSelect
                 searchable
@@ -243,14 +271,30 @@ export default function ReportTrendsToolbar({
               type="button"
               title="Pick a custom From / To range"
               onClick={() => selectOverviewPreset("custom")}
-              className={`${chipClass(overviewPreset === "custom" && !overviewSavedRangeId)} inline-flex items-center gap-1.5 whitespace-nowrap`}
+              className={`${chipClass(isOverviewCustom && !overviewSavedRangeId)} inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap sm:w-auto`}
             >
               <CalendarRange className="h-3.5 w-3.5" />
               Custom date range
             </button>
           </div>
+          {isOverviewCustom ? (
+            <div className="min-w-0 max-w-xl">
+              <ReportDateRangePicker
+                start={overviewFrom}
+                end={overviewTo}
+                minDate={constraints.minDate}
+                maxDate={constraints.maxDate}
+                onChange={handleOverviewInlineRange}
+                showCalendar={false}
+                compact
+                fromId="report-overview-from"
+                toId="report-overview-to"
+                error={overviewInlineError}
+              />
+            </div>
+          ) : null}
           {windowLabel ? (
-            <p className="text-xs text-gray-500">
+            <p className="break-words text-xs text-gray-500">
               Overview window: {formatPeriodRange(overviewWindow)}
               {overviewPreset !== "custom"
                 ? ` · ${OVERVIEW_RANGE_PRESETS.find((item) => item.id === overviewPreset)?.label || ""}`
@@ -262,7 +306,7 @@ export default function ReportTrendsToolbar({
 
       {isTrendsView && (
         <div className="space-y-3">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
             <SegmentedTabs
               items={TREND_GRAIN_TABS}
               value={grainTab}
@@ -270,7 +314,7 @@ export default function ReportTrendsToolbar({
               ariaLabel="Trend grain"
             />
             <div
-              className={`${tw.rounded} inline-flex items-center gap-2 border border-gray-200 bg-white px-3 py-1.5`}
+              className={`${tw.rounded} inline-flex max-w-full items-center gap-2 border border-gray-200 bg-white px-3 py-1.5`}
             >
               <Checkbox
                 id="compare-previous-period"
@@ -281,7 +325,7 @@ export default function ReportTrendsToolbar({
               />
               <label
                 htmlFor="compare-previous-period"
-                className="cursor-pointer text-sm font-medium text-gray-700"
+                className="min-w-0 cursor-pointer text-sm font-medium text-gray-700"
               >
                 Compare vs previous period
               </label>
@@ -295,43 +339,24 @@ export default function ReportTrendsToolbar({
             onSelectPreset={selectPreset}
             onSelectSavedRange={selectSavedRange}
           />
-          <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-            <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:max-w-[14rem]">
-              <label
-                htmlFor="report-trend-inline-from"
-                className="text-xs font-medium text-gray-600"
-              >
-                From
-              </label>
-              <Input
-                id="report-trend-inline-from"
-                type="date"
-                variant="compact"
-                value={fromDate}
-                min={constraints.minDate}
-                max={constraints.maxDate}
-                onChange={(value) =>
-                  handleInlineDateChange({ start: String(value) })
+          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+            <div className="w-full max-w-xl">
+              <ReportDateRangePicker
+                start={fromDate}
+                end={toDate}
+                minDate={constraints.minDate}
+                maxDate={constraints.maxDate}
+                onChange={(next) =>
+                  handleInlineDateChange({
+                    start: next.start,
+                    end: next.end,
+                  })
                 }
-              />
-            </div>
-            <div className="flex min-w-[11rem] flex-1 flex-col gap-1.5 sm:max-w-[14rem]">
-              <label
-                htmlFor="report-trend-inline-to"
-                className="text-xs font-medium text-gray-600"
-              >
-                To
-              </label>
-              <Input
-                id="report-trend-inline-to"
-                type="date"
-                variant="compact"
-                value={toDate}
-                min={fromDate || constraints.minDate}
-                max={constraints.maxDate}
-                onChange={(value) =>
-                  handleInlineDateChange({ end: String(value) })
-                }
+                showCalendar={false}
+                compact
+                fromId="report-trend-inline-from"
+                toId="report-trend-inline-to"
+                error={inlineRangeError}
               />
             </div>
             {grainTab === "monthly" ? (
@@ -349,10 +374,7 @@ export default function ReportTrendsToolbar({
               </div>
             ) : null}
           </div>
-          {inlineRangeError ? (
-            <p className="text-sm text-red-600">{inlineRangeError}</p>
-          ) : null}
-          <p className="text-xs text-gray-500">
+          <p className="break-words text-xs text-gray-500">
             Period: {periodLabel}
             {grainTab === "monthly" && trendYear ? ` · Year ${trendYear}` : ""}
             {comparePreviousPeriod
@@ -367,52 +389,40 @@ export default function ReportTrendsToolbar({
         isOpen={isPickerOpen}
         onClose={closePicker}
         title={pickerTitle}
-        size="md"
+        size="xl"
       >
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
             {pickerTarget === "overview"
-              ? "Inclusive From / To. Grain is inferred from the span so KPIs and tables stay aligned."
-              : `Inclusive From / To for ${pickerGrain}. Saved ranges stay on this tab only — they will not appear under the other grain tabs.`}
+              ? "Pick inclusive From / To dates on the calendar or type them. Grain is inferred from the span so KPIs and tables stay aligned."
+              : `Pick inclusive From / To dates for ${pickerGrain}. Saved ranges stay on this tab only.`}
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label
-                htmlFor="report-trend-from"
-                className="text-sm font-medium text-gray-700"
+          <div className="flex flex-wrap gap-2">
+            {overviewQuickPresets.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                title={preset.hint}
+                onClick={() => {
+                  const bounds = boundsForPreset(preset.id);
+                  setDraftRange(bounds);
+                  setDraftName("");
+                }}
+                className={chipClass(false)}
               >
-                From
-              </label>
-              <Input
-                id="report-trend-from"
-                type="date"
-                value={draftRange.start}
-                min={constraints.minDate}
-                max={constraints.maxDate}
-                onChange={(value) =>
-                  setDraftRange((prev) => ({ ...prev, start: String(value) }))
-                }
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label
-                htmlFor="report-trend-to"
-                className="text-sm font-medium text-gray-700"
-              >
-                To
-              </label>
-              <Input
-                id="report-trend-to"
-                type="date"
-                value={draftRange.end}
-                min={draftRange.start || constraints.minDate}
-                max={constraints.maxDate}
-                onChange={(value) =>
-                  setDraftRange((prev) => ({ ...prev, end: String(value) }))
-                }
-              />
-            </div>
+                {preset.label}
+              </button>
+            ))}
           </div>
+          <ReportDateRangePicker
+            start={draftRange.start}
+            end={draftRange.end}
+            minDate={constraints.minDate}
+            maxDate={constraints.maxDate}
+            onChange={setDraftRange}
+            fromId="report-trend-from"
+            toId="report-trend-to"
+          />
           <div className="space-y-1.5">
             <label
               htmlFor="report-trend-range-name"

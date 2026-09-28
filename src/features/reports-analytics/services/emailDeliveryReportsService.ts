@@ -66,6 +66,7 @@ class EmailDeliveryReportsService {
       sortBy: params.sortBy,
       sortOrder: params.sortOrder,
       search: params.search,
+      filters: params.filters,
       status: params.status,
       campaignId: params.campaignId,
     });

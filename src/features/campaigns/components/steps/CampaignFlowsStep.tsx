@@ -34,6 +34,10 @@ import {
   isMutuallyExclusiveCampaign,
   segmentsExceedingExclusiveOfferLimit,
 } from "../../utils/mutuallyExclusiveOffers";
+import {
+  applyMappedOfferPatch,
+  fetchMappedOfferPatch,
+} from "../../utils/refreshMappedOffer";
 
 const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 
@@ -888,6 +892,30 @@ export default function CampaignFlowsStep({
           onOfferCreated={(offerId) => {
             setShowEditOfferModal(false);
             setEditingOfferId(null);
+            void fetchMappedOfferPatch(offerId)
+              .then((patch) => {
+                if (!patch) return;
+                setSelectedOffers(
+                  selectedOffers.map((offer) =>
+                    applyMappedOfferPatch(offer, offerId, patch),
+                  ),
+                );
+                setSegmentFlows((prev) => {
+                  const next = { ...prev };
+                  Object.keys(next).forEach((segmentId) => {
+                    next[segmentId] = {
+                      ...next[segmentId],
+                      offers: next[segmentId].offers.map((offer) =>
+                        applyMappedOfferPatch(offer, offerId, patch),
+                      ),
+                    };
+                  });
+                  return next;
+                });
+              })
+              .catch(() => {
+                // The offer saved. The mapping row keeps its previous label.
+              });
           }}
           offerId={editingOfferId || undefined}
         />

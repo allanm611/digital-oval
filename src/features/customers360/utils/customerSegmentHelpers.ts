@@ -226,24 +226,110 @@ export function membershipFromHint(
   };
 }
 
+export function isPlaceholderCampaignName(
+  name: string,
+  campaignId: number,
+): boolean {
+  return name.trim().toLowerCase() === `campaign ${campaignId}`;
+}
+
+function readCampaignName(
+  row: Record<string, unknown>,
+  campaignId: number,
+): string {
+  const nested =
+    asRecord(row.campaign) ??
+    asRecord(row.campaign_details) ??
+    asRecord(row.campaignDetails);
+  return (
+    stringOrNull(
+      row.campaign_name ??
+        row.campaignName ??
+        nested?.name ??
+        nested?.campaign_name ??
+        nested?.campaignName ??
+        row.name,
+    ) || `Campaign ${campaignId}`
+  );
+}
+
+export type CampaignIdentity = {
+  name: string;
+  status: string | null;
+};
+
+export function placeholderCampaignIds(
+  campaigns: CustomerSegmentCampaign[],
+): number[] {
+  return Array.from(
+    new Set(
+      campaigns
+        .filter((campaign) =>
+          isPlaceholderCampaignName(campaign.campaignName, campaign.campaignId),
+        )
+        .map((campaign) => campaign.campaignId),
+    ),
+  );
+}
+
+export function applyCampaignIdentities(
+  memberships: CustomerSegmentMembership[],
+  identities: ReadonlyMap<number, CampaignIdentity>,
+): CustomerSegmentMembership[] {
+  if (identities.size === 0) return memberships;
+  return memberships.map((membership) => ({
+    ...membership,
+    campaigns: membership.campaigns.map((campaign) => {
+      const identity = identities.get(campaign.campaignId);
+      if (!identity?.name) return campaign;
+      const hasRealName = !isPlaceholderCampaignName(
+        campaign.campaignName,
+        campaign.campaignId,
+      );
+      return {
+        ...campaign,
+        campaignName: hasRealName ? campaign.campaignName : identity.name,
+        campaignStatus: campaign.campaignStatus || identity.status,
+      };
+    }),
+  }));
+}
+
+function preferCampaignName(
+  current: string,
+  incoming: string,
+  campaignId: number,
+): string {
+  const currentIsReal = !isPlaceholderCampaignName(current, campaignId);
+  const incomingIsReal = !isPlaceholderCampaignName(incoming, campaignId);
+  if (!currentIsReal && incomingIsReal) return incoming;
+  if (currentIsReal) return current;
+  return incoming || current;
+}
+
 export function parseCampaignFromUnknown(
   item: unknown,
   via: CustomerSegmentVia,
 ): CustomerSegmentCampaign | null {
   const row = asRecord(item);
   if (!row) return null;
+  const nested =
+    asRecord(row.campaign) ??
+    asRecord(row.campaign_details) ??
+    asRecord(row.campaignDetails);
   const campaignId = numericId(
-    row.campaign_id ?? row.campaignId ?? row.id,
+    row.campaign_id ?? row.campaignId ?? nested?.id ?? row.id,
   );
   if (!campaignId) return null;
-  const campaignName =
-    stringOrNull(row.campaign_name ?? row.campaignName ?? row.name) ||
-    `Campaign ${campaignId}`;
+  const campaignName = readCampaignName(row, campaignId);
   return {
     campaignId,
     campaignName,
     campaignStatus: stringOrNull(
-      row.campaign_status ?? row.campaignStatus ?? row.status,
+      row.campaign_status ??
+        row.campaignStatus ??
+        row.status ??
+        nested?.status,
     ),
     campaignType: stringOrNull(
       row.campaign_type ?? row.campaignType ?? row.type,
@@ -291,11 +377,11 @@ export function mergeCampaigns(
 
     byId.set(campaign.campaignId, {
       campaignId: existing.campaignId,
-      campaignName:
-        existing.campaignName.startsWith("Campaign ") &&
-        !campaign.campaignName.startsWith("Campaign ")
-          ? campaign.campaignName
-          : existing.campaignName,
+      campaignName: preferCampaignName(
+        existing.campaignName,
+        campaign.campaignName,
+        existing.campaignId,
+      ),
       campaignStatus: existing.campaignStatus || campaign.campaignStatus,
       campaignType: existing.campaignType || campaign.campaignType,
       flowType: existing.flowType || campaign.flowType,

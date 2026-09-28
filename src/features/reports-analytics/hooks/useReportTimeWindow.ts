@@ -101,6 +101,9 @@ export function useReportTimeWindow(options?: {
   );
   const [comparePreviousPeriod, setComparePreviousPeriod] = useState(false);
   const [inlineRangeError, setInlineRangeError] = useState<string | null>(null);
+  const [overviewInlineError, setOverviewInlineError] = useState<string | null>(
+    null,
+  );
 
   const [pickerTarget, setPickerTarget] = useState<PickerTarget>("overview");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -196,10 +199,26 @@ export function useReportTimeWindow(options?: {
         openPicker("overview");
         return;
       }
+      setOverviewInlineError(null);
       setOverviewCustomBounds({ start: "", end: "" });
     },
     [openPicker],
   );
+
+  const applyInlineOverviewRange = useCallback((bounds: LocalDateBounds) => {
+    const grain = inferSavedRangeGrain(bounds.start, bounds.end);
+    const result = validateDateRange(bounds.start, bounds.end, { grain });
+    if (!result.ok) {
+      setOverviewInlineError(result.error || "Invalid date range.");
+      return false;
+    }
+    setOverviewInlineError(null);
+    setOverviewGrain(grain);
+    setOverviewCustomBounds(bounds);
+    setOverviewSavedRangeId(null);
+    setOverviewPreset("custom");
+    return true;
+  }, []);
 
   const selectOverviewSavedRange = useCallback(
     (range: SavedReportDateRange) => {
@@ -447,6 +466,8 @@ export function useReportTimeWindow(options?: {
     comparePreviousPeriod,
     setComparePreviousPeriod,
     applyInlineTrendRange,
+    applyInlineOverviewRange,
+    overviewInlineError,
     selectTrendYear,
     trendYear: yearFromBounds(trendsWindow.bounds),
     availableTrendYears: yearsForLookback(),

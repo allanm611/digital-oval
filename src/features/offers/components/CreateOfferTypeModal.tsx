@@ -145,8 +145,9 @@ export default function CreateOfferTypeModal({
                 Seeding reward
               </span>
               <span className={`block text-xs ${tw.textMuted} mt-0.5`}>
-                When enabled, offers of this type do not require tracking. A
-                default reward is managed without a tracking-source binding.
+                When enabled, offers of this type always include a default reward
+                and do not require tracking. A type named Seeding does this
+                even when this is off. Rewards stay optional for every other type.
               </span>
             </span>
           </label>

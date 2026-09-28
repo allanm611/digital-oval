@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
 import { Layers, Megaphone, RotateCcw } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -9,7 +10,7 @@ import Pagination, {
 } from "../../../shared/components/ui/Pagination";
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Table, type TableColumn } from "../../../shared/components/Table";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import type {
   CustomerSegmentCampaign,
   CustomerSegmentMembership,
@@ -51,34 +52,86 @@ function statusClassName(status: string | null, isActive: boolean): string {
   return "bg-sky-50 text-sky-800";
 }
 
+const PREVIEW_CAMPAIGN_COUNT = 2;
+
+function CampaignNameLink({
+  campaign,
+  className,
+}: {
+  campaign: CustomerSegmentCampaign;
+  className: string;
+}) {
+  return (
+    <CustomerProfileEntityLink
+      to={`/dashboard/campaigns/${campaign.campaignId}`}
+      className={className}
+      title={campaign.campaignName}
+    >
+      {campaign.campaignName}
+    </CustomerProfileEntityLink>
+  );
+}
+
 function CampaignLinks({
   campaigns,
+  segmentName,
 }: {
   campaigns: CustomerSegmentCampaign[];
+  segmentName: string;
 }) {
   if (campaigns.length === 0) {
     return <span className="text-sm text-gray-400">None mapped</span>;
   }
 
-  const preview = campaigns.slice(0, 2);
+  const preview = campaigns.slice(0, PREVIEW_CAMPAIGN_COUNT);
+  const overflow = campaigns.slice(PREVIEW_CAMPAIGN_COUNT);
+
   return (
-    <div className="min-w-[160px]">
+    <div className="min-w-[160px] max-w-[220px]">
       <div className="flex flex-wrap gap-1">
         {preview.map((campaign) => (
-          <CustomerProfileEntityLink
+          <CampaignNameLink
             key={campaign.campaignId}
-            to={`/dashboard/campaigns/${campaign.campaignId}`}
-            className="inline-flex max-w-[160px] truncate rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-800 hover:underline"
-            title={campaign.campaignName}
-          >
-            {campaign.campaignName}
-          </CustomerProfileEntityLink>
+            campaign={campaign}
+            className="inline-flex max-w-[180px] truncate rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-800 hover:underline"
+          />
         ))}
       </div>
-      {campaigns.length > 2 ? (
-        <p className="mt-1 text-xs text-gray-500">
-          +{campaigns.length - 2} more
-        </p>
+      {overflow.length > 0 ? (
+        <Popover className="relative mt-1">
+          <PopoverButton
+            type="button"
+            className="text-xs font-medium text-indigo-700 hover:text-indigo-900 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+            aria-label={`Show ${overflow.length} more campaign${overflow.length === 1 ? "" : "s"} for ${segmentName}`}
+          >
+            +{overflow.length} more
+          </PopoverButton>
+          <PopoverPanel
+            anchor="bottom start"
+            portal
+            className="w-72 rounded-md border border-gray-200 bg-white p-3 shadow-lg [--anchor-gap:6px]"
+            style={{ zIndex: zIndex.popover }}
+          >
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              More campaigns for {segmentName}
+            </p>
+            <ul className="mt-2 max-h-60 space-y-1 overflow-y-auto">
+              {overflow.map((campaign) => (
+                <li key={campaign.campaignId} className="min-w-0">
+                  <CampaignNameLink
+                    campaign={campaign}
+                    className="block break-words text-sm font-medium text-gray-900 hover:underline"
+                  />
+                  {campaign.campaignStatus ? (
+                    <p className="text-xs text-gray-500">
+                      {humanizeCampaignStatus(campaign.campaignStatus)}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </PopoverPanel>
+        </Popover>
       ) : null}
     </div>
   );
@@ -214,7 +267,9 @@ export default function CustomerSegmentsTab({
         id: "campaigns",
         label: "Campaigns",
         visible: true,
-        render: (_, row) => <CampaignLinks campaigns={row.campaigns} />,
+        render: (_, row) => (
+          <CampaignLinks campaigns={row.campaigns} segmentName={row.name} />
+        ),
       },
       {
         id: "matchedIdentifier",

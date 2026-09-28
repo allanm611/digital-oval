@@ -1,0 +1,347 @@
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Trash2 } from "lucide-react";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
+import BackButton from "../../../shared/components/ui/BackButton";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import FeatureActionButton from "../../../shared/components/FeatureActionButton";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import DateFormatter from "../../../shared/components/DateFormatter";
+import { useToast } from "../../../contexts/ToastContext";
+import { color, tw, button } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
+import { connectionProfileService } from "../../connection-profiles/services/connectionProfileService";
+import {
+  ACTION_TYPE_OPTIONS,
+  CONVERSION_OPTIONS,
+  labelFor,
+  LOAD_STRATEGY_OPTIONS,
+  SOURCE_TYPE_OPTIONS,
+} from "../constants/pipelineOptions";
+import { connectionProfilePipelineService } from "../services/pipelineService";
+import { ConnectionProfilePipeline } from "../types/pipeline";
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-sm text-gray-600">{label}</p>
+      <p className="text-sm font-medium text-gray-900 mt-1 break-words">{value}</p>
+    </div>
+  );
+}
+
+export default function PipelineDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { success, error: showError } = useToast();
+  const [pipeline, setPipeline] = useState<ConnectionProfilePipeline | null>(null);
+  const [profileName, setProfileName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const data = await connectionProfilePipelineService.getPipeline(Number(id));
+      setPipeline(data);
+      try {
+        const profile = await connectionProfileService.getProfile(
+          data.connection_profile_id,
+          true,
+        );
+        setProfileName(profile.profile_name);
+      } catch {
+        setProfileName(data.profile_name || "");
+      }
+    } catch (error) {
+      console.error("Failed to load pipeline", error);
+      showError(
+        "Unable to load pipeline",
+        extractBackendError(error, "This pipeline could not be loaded."),
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [id, showError]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleToggle = async () => {
+    if (!pipeline) return;
+    setToggling(true);
+    try {
+      const updated = await connectionProfilePipelineService.setActive(
+        pipeline.id,
+        !pipeline.is_active,
+      );
+      setPipeline(updated);
+      success(updated.is_active ? "Pipeline activated" : "Pipeline deactivated");
+    } catch (error) {
+      showError(
+        "Unable to update status",
+        extractBackendError(error, "The pipeline status could not be changed."),
+      );
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!pipeline) return;
+    setDeleting(true);
+    try {
+      await connectionProfilePipelineService.deletePipeline(pipeline.id);
+      success("Pipeline deleted");
+      navigate("/dashboard/connection-profile-pipelines");
+    } catch (error) {
+      showError(
+        "Unable to delete pipeline",
+        extractBackendError(error, "The pipeline could not be deleted."),
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <LoadingSpinner variant="modern" size="xl" color="primary" />
+      </div>
+    );
+  }
+
+  if (!pipeline) {
+    return (
+      <div className="space-y-4">
+        <BackButton
+          fallbackTo="/dashboard/connection-profile-pipelines"
+          showBreadcrumb
+          currentLabel="Pipeline"
+        />
+        <p className="text-sm text-gray-500">This pipeline is not available.</p>
+      </div>
+    );
+  }
+
+  const sourceEntries = Object.entries(pipeline.source_config);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <BackButton
+          fallbackTo="/dashboard/connection-profile-pipelines"
+          showBreadcrumb
+          parentLabel="Connection Pipelines"
+          currentLabel={pipeline.pipeline_name}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <ActivateDeactivateButton
+            variant="button"
+            isActive={pipeline.is_active}
+            isLoading={toggling}
+            onToggle={handleToggle}
+          >
+            {pipeline.is_active ? "Deactivate" : "Activate"}
+          </ActivateDeactivateButton>
+          <FeatureActionButton
+            featureId="connection-profile-pipelines"
+            action="edit"
+            itemId={pipeline.id}
+            variant="primary"
+            label="Edit"
+          />
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-transparent ${tw.rounded}`}
+            style={{
+              color: button.delete.background,
+              border: `1px solid ${button.delete.background}`,
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <section
+            className={`${tw.rounded} border border-gray-200 p-6`}
+            style={{ backgroundColor: color.surface.cards }}
+          >
+            <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
+              Extraction
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <DetailItem
+                label="Action"
+                value={labelFor(ACTION_TYPE_OPTIONS, pipeline.action_type)}
+              />
+              <DetailItem
+                label="Source"
+                value={labelFor(SOURCE_TYPE_OPTIONS, pipeline.source_type)}
+              />
+              <DetailItem
+                label="Target"
+                value={`${pipeline.target_schema}.${pipeline.target_table}`}
+              />
+              <DetailItem
+                label="Load strategy"
+                value={labelFor(LOAD_STRATEGY_OPTIONS, pipeline.load_strategy)}
+              />
+              <DetailItem label="Batch size" value={String(pipeline.batch_size)} />
+              <DetailItem
+                label="Status"
+                value={pipeline.is_active ? "Active" : "Inactive"}
+              />
+            </div>
+          </section>
+
+          <section
+            className={`${tw.rounded} border border-gray-200 p-6`}
+            style={{ backgroundColor: color.surface.cards }}
+          >
+            <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Source</h2>
+            {sourceEntries.length === 0 ? (
+              <p className="text-sm text-gray-500">No source settings stored.</p>
+            ) : (
+              <div className="space-y-3">
+                {sourceEntries.map(([key, value]) => (
+                  <div key={key}>
+                    <p className="text-sm text-gray-600">{key}</p>
+                    <pre className="text-sm font-medium text-gray-900 mt-1 whitespace-pre-wrap break-words">
+                      {typeof value === "object"
+                        ? JSON.stringify(value, null, 2)
+                        : String(value)}
+                    </pre>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section
+            className={`${tw.rounded} border border-gray-200 p-6`}
+            style={{ backgroundColor: color.surface.cards }}
+          >
+            <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
+              Field mappings
+            </h2>
+            {pipeline.field_mappings.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No mappings. Source columns pass through to the target.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-500">
+                      <th className="py-2 pr-4 font-medium">Source</th>
+                      <th className="py-2 pr-4 font-medium">Target</th>
+                      <th className="py-2 pr-4 font-medium">Type</th>
+                      <th className="py-2 pr-4 font-medium">Conversion</th>
+                      <th className="py-2 font-medium">Flags</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pipeline.field_mappings.map((mapping) => (
+                      <tr key={`${mapping.source_field}-${mapping.target_column}`} className="border-t border-gray-100">
+                        <td className="py-2 pr-4">{mapping.source_field}</td>
+                        <td className="py-2 pr-4">{mapping.target_column}</td>
+                        <td className="py-2 pr-4">{mapping.data_type}</td>
+                        <td className="py-2 pr-4">
+                          {labelFor(CONVERSION_OPTIONS, mapping.conversion)}
+                          {mapping.format ? ` (${mapping.format})` : ""}
+                        </td>
+                        <td className="py-2">
+                          {[
+                            mapping.required ? "Required" : "",
+                            mapping.is_upsert_key ? "Match key" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+
+        <aside className="space-y-6">
+          <section
+            className={`${tw.rounded} border border-gray-200 p-6`}
+            style={{ backgroundColor: color.surface.cards }}
+          >
+            <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
+              Connection profile
+            </h2>
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  `/dashboard/connection-profiles/${pipeline.connection_profile_id}`,
+                )
+              }
+              className="text-sm font-medium"
+              style={{ color: color.primary.action }}
+            >
+              {profileName || `Profile #${pipeline.connection_profile_id}`}
+            </button>
+            <p className="text-xs text-gray-500 mt-2">
+              Host, credentials, pool, and health stay on the profile.
+            </p>
+          </section>
+          <section
+            className={`${tw.rounded} border border-gray-200 p-6`}
+            style={{ backgroundColor: color.surface.cards }}
+          >
+            <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Activity</h2>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600">Created</p>
+                <p className="text-sm font-medium text-gray-900 mt-1">
+                  {pipeline.created_at ? (
+                    <DateFormatter date={pipeline.created_at} includeTime />
+                  ) : (
+                    "—"
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Updated</p>
+                <p className="text-sm font-medium text-gray-900 mt-1">
+                  {pipeline.updated_at ? (
+                    <DateFormatter date={pipeline.updated_at} includeTime />
+                  ) : (
+                    "—"
+                  )}
+                </p>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <DeleteConfirmModal
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        isLoading={deleting}
+        title="Delete pipeline"
+        itemName={pipeline.pipeline_name}
+        description="This removes the extraction definition. The connection profile and its credentials stay in place."
+      />
+    </div>
+  );
+}

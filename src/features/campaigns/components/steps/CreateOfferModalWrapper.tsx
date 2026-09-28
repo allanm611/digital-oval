@@ -82,7 +82,11 @@ export default function CreateOfferModalWrapper({
           }
         >
           <div className="p-6 relative z-10 bg-white min-h-[calc(100vh-120px)]">
-            <CreateOfferPage onSuccess={handleSuccess} offerId={offerId} />
+            <CreateOfferPage
+              onSuccess={handleSuccess}
+              onDismiss={onClose}
+              offerId={offerId}
+            />
           </div>
         </div>
       </div>

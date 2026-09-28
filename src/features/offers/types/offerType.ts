@@ -4,11 +4,14 @@ export interface OfferType {
   description?: string;
   is_active?: boolean;
   /**
-   * When true, offers of this type grant rewards without requiring tracking
-   * sources (seeding-style grants). When false, tracking is mandatory.
+   * When true, offers of this type always include a default reward and do not
+   * require tracking. Offer type SEEDING does this even when the flag is false.
+   * For every other type, rewards are optional and tracking stays required.
    * Aligns with backend `is_seeding_reward`.
    */
   is_seeding_reward?: boolean;
+  /** Catalog code when the API sends one (for example SEEDING). */
+  code?: string | null;
   created_at?: string;
   updated_at?: string;
   created_by?: string | null;

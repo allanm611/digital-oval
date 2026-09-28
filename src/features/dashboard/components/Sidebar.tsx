@@ -188,6 +188,8 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
   "/dashboard/servers": () => import("../../servers/pages/ServersPageWrapper"),
   "/dashboard/connection-profiles": () =>
     import("../../connection-profiles/pages/ConnectionProfilesPage"),
+  "/dashboard/connection-profile-pipelines": () =>
+    import("../../connection-profiles-pipeline/pages/PipelinesPage"),
   "/dashboard/data-connectors": () =>
     import("../../data-connectors/pages/DataConnectors"),
   "/dashboard/etl": () => import("../../etl/pages/EtlFileRegistryPage"),

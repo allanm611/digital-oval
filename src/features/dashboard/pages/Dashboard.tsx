@@ -674,6 +674,24 @@ const ServerPages = {
         /* webpackPrefetch: true */ "../../connection-profiles/pages/ConnectionProfilesAnalyticsPage"
       ),
   ),
+  ConnectionProfilePipelinesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../connection-profiles-pipeline/pages/PipelinesPage"
+      ),
+  ),
+  ConnectionProfilePipelineDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../connection-profiles-pipeline/pages/PipelineDetailsPage"
+      ),
+  ),
+  ConnectionProfilePipelineFormPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../connection-profiles-pipeline/pages/PipelineFormPage"
+      ),
+  ),
   KPIsPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../kpis/pages/KPIsContainer"),
   ),
@@ -1479,6 +1497,22 @@ export default function Dashboard() {
           <Route
             path="/connection-profiles/:id"
             element={<ServerPages.ConnectionProfileDetailsPage />}
+          />
+          <Route
+            path="/connection-profile-pipelines"
+            element={<ServerPages.ConnectionProfilePipelinesPage />}
+          />
+          <Route
+            path="/connection-profile-pipelines/new"
+            element={<ServerPages.ConnectionProfilePipelineFormPage mode="create" />}
+          />
+          <Route
+            path="/connection-profile-pipelines/:id/edit"
+            element={<ServerPages.ConnectionProfilePipelineFormPage mode="edit" />}
+          />
+          <Route
+            path="/connection-profile-pipelines/:id"
+            element={<ServerPages.ConnectionProfilePipelineDetailsPage />}
           />
           <Route
             path="/data-connectors"
