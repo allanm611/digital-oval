@@ -85,10 +85,10 @@ export default function SourceConfigEditor({
         />
         <label className="flex items-center gap-3 text-sm text-gray-700 md:col-span-2">
           <Checkbox
-            checked={form.ftp.has_header}
+            checked={form.ftp.has_headers}
             onChange={(event) =>
               onChange({
-                ftp: { ...form.ftp, has_header: event.target.checked },
+                ftp: { ...form.ftp, has_headers: event.target.checked },
               })
             }
           />

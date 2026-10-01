@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 
 import DashboardLayout from "../components/DashboardLayout";
@@ -808,10 +807,34 @@ const AdministrationPages = {
         /* webpackPrefetch: true */ "../../administration/pages/AiModelsHubPage"
       ),
   ),
+  InsightWorkbenchPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/InsightWorkbenchPage"
+      ),
+  ),
+  InsightWorkbenchCategoryPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/InsightWorkbenchCategoryPage"
+      ),
+  ),
+  InsightWorkbenchModelPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/InsightWorkbenchModelPage"
+      ),
+  ),
   AiModelConfigurationHubPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationHubPage"
+      ),
+  ),
+  AiModelConfigurationDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationDetailsPage"
       ),
   ),
   AiModelConfigurationFormPage: lazy(
@@ -950,7 +973,6 @@ const OtherPages = {
 };
 
 export default function Dashboard() {
-  const { t } = useLanguage();
   return (
     <DashboardLayout>
       <Suspense
@@ -971,16 +993,28 @@ export default function Dashboard() {
             element={<AdministrationPages.AiModelsHubPage />}
           />
           <Route
+            path="/ai-models/insight-workbench"
+            element={<AdministrationPages.InsightWorkbenchPage />}
+          />
+          <Route
+            path="/ai-models/insight-workbench/categories/:categorySlug"
+            element={<AdministrationPages.InsightWorkbenchCategoryPage />}
+          />
+          <Route
+            path="/ai-models/insight-workbench/models/:modelId"
+            element={<AdministrationPages.InsightWorkbenchModelPage />}
+          />
+          <Route
             path="/ai-models/configuration"
             element={<AdministrationPages.AiModelConfigurationHubPage />}
           />
           <Route
             path="/ai-models/configuration/:providerId"
-            element={<AdministrationPages.AiModelConfigurationFormPage mode="view" />}
+            element={<AdministrationPages.AiModelConfigurationDetailsPage />}
           />
           <Route
             path="/ai-models/configuration/:providerId/edit"
-            element={<AdministrationPages.AiModelConfigurationFormPage mode="edit" />}
+            element={<AdministrationPages.AiModelConfigurationFormPage />}
           />
           <Route
             path="/monitoring"

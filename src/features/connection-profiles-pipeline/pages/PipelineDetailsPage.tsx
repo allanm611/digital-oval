@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Loader2, Play, Trash2 } from "lucide-react";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -19,7 +19,10 @@ import {
   SOURCE_TYPE_OPTIONS,
 } from "../constants/pipelineOptions";
 import { connectionProfilePipelineService } from "../services/pipelineService";
-import { ConnectionProfilePipeline } from "../types/pipeline";
+import {
+  ConnectionProfilePipeline,
+  PipelineExecutionResult,
+} from "../types/pipeline";
 
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
@@ -38,6 +41,10 @@ export default function PipelineDetailsPage() {
   const [profileName, setProfileName] = useState("");
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [executeOpen, setExecuteOpen] = useState(false);
+  const [executing, setExecuting] = useState(false);
+  const [lastExecution, setLastExecution] =
+    useState<PipelineExecutionResult | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -108,6 +115,31 @@ export default function PipelineDetailsPage() {
     }
   };
 
+  const handleExecute = async () => {
+    if (!pipeline) return;
+    setExecuting(true);
+    try {
+      const result = await connectionProfilePipelineService.executePipeline(
+        pipeline.id,
+      );
+      setLastExecution(result);
+      success(
+        "Pipeline completed",
+        `${result.loaded_records ?? 0} record${
+          result.loaded_records === 1 ? "" : "s"
+        } loaded in ${(result.execution_time_ms / 1000).toFixed(1)}s.`,
+      );
+      setExecuteOpen(false);
+    } catch (error) {
+      showError(
+        "Unable to execute pipeline",
+        extractBackendError(error, "The pipeline execution could not be started."),
+      );
+    } finally {
+      setExecuting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-16">
@@ -140,7 +172,35 @@ export default function PipelineDetailsPage() {
           parentLabel="Connection Pipelines"
           currentLabel={pipeline.pipeline_name}
         />
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 [&>button]:box-border [&>button]:h-9 [&>button]:shrink-0 [&>button]:justify-center [&>button]:whitespace-nowrap">
+          <button
+            type="button"
+            onClick={() => setExecuteOpen(true)}
+            disabled={
+              !pipeline.is_active ||
+              pipeline.action_type !== "PULL" ||
+              executing
+            }
+            className={`${tw.borderedButton} inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50`}
+            style={{
+              borderColor: "var(--c-bordered-button-color)",
+              color: "var(--c-bordered-button-color)",
+            }}
+            title={
+              !pipeline.is_active
+                ? "Activate the pipeline before running it"
+                : pipeline.action_type !== "PULL"
+                  ? "The backend currently executes pull pipelines only"
+                  : "Run this pipeline now"
+            }
+          >
+            {executing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            Run now
+          </button>
           <ActivateDeactivateButton
             variant="button"
             isActive={pipeline.is_active}
@@ -253,9 +313,9 @@ export default function PipelineDetailsPage() {
                   </thead>
                   <tbody>
                     {pipeline.field_mappings.map((mapping) => (
-                      <tr key={`${mapping.source_field}-${mapping.target_column}`} className="border-t border-gray-100">
+                      <tr key={`${mapping.source_field}-${mapping.target_field}`} className="border-t border-gray-100">
                         <td className="py-2 pr-4">{mapping.source_field}</td>
-                        <td className="py-2 pr-4">{mapping.target_column}</td>
+                        <td className="py-2 pr-4">{mapping.target_field}</td>
                         <td className="py-2 pr-4">{mapping.data_type}</td>
                         <td className="py-2 pr-4">
                           {labelFor(CONVERSION_OPTIONS, mapping.conversion)}
@@ -330,8 +390,49 @@ export default function PipelineDetailsPage() {
               </div>
             </div>
           </section>
+          {lastExecution && (
+            <section
+              className={`${tw.rounded} border border-green-200 bg-green-50 p-6`}
+            >
+              <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
+                Latest run
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <DetailItem
+                  label="Extracted"
+                  value={String(lastExecution.extracted_records ?? 0)}
+                />
+                <DetailItem
+                  label="Transformed"
+                  value={String(lastExecution.transformed_records ?? 0)}
+                />
+                <DetailItem
+                  label="Loaded"
+                  value={String(lastExecution.loaded_records ?? 0)}
+                />
+                <DetailItem
+                  label="Duration"
+                  value={`${(lastExecution.execution_time_ms / 1000).toFixed(1)}s`}
+                />
+              </div>
+            </section>
+          )}
         </aside>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={executeOpen}
+        onClose={() => {
+          if (!executing) setExecuteOpen(false);
+        }}
+        onConfirm={handleExecute}
+        isLoading={executing}
+        title="Run pipeline now?"
+        itemName={pipeline.pipeline_name}
+        description="This immediately asks the execution of the current saved pipeline definition."
+        confirmText="Run pipeline"
+        variant="warning"
+      />
 
       <DeleteConfirmModal
         isOpen={deleteOpen}

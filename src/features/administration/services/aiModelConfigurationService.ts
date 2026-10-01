@@ -201,6 +201,25 @@ class AiModelConfigurationService {
     await this.request(`/${encodeURIComponent(providerId)}`, { method: "DELETE" });
   }
 
+  async setActive(
+    config: AiModelConfiguration,
+    isActive: boolean,
+  ): Promise<AiModelConfiguration> {
+    return this.upsert(config.provider_id, {
+      name: config.name,
+      model: config.model,
+      base_url: config.base_url,
+      organization: config.organization,
+      api_version: config.api_version,
+      project_id: config.project_id,
+      temperature: config.temperature,
+      max_output_tokens: config.max_output_tokens,
+      timeout_ms: config.timeout_ms,
+      is_active: isActive,
+      is_default: isActive ? config.is_default : false,
+    });
+  }
+
   async listForGenerate(): Promise<AiModelGenerateOption[]> {
     const configs = await this.list();
     return configs

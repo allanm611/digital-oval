@@ -31,10 +31,16 @@ export type FieldConversion =
   | "to_timestamp"
   | "json_extract";
 
-/** One Quicklist-style column mapping. Persisted inside field_mappings JSONB. */
+export type MissingValueStrategy =
+  | "skip_field"
+  | "null"
+  | "default"
+  | "error";
+
+/** One ETL mapping persisted inside field_mappings JSONB. */
 export interface FieldMapping {
   source_field: string;
-  target_column: string;
+  target_field: string;
   data_type: FieldDataType;
   conversion: FieldConversion;
   /** Date format, or JSON path when conversion is json_extract. */
@@ -43,6 +49,7 @@ export interface FieldMapping {
   required: boolean;
   /** Rows match on these columns when load_strategy is UPSERT. */
   is_upsert_key: boolean;
+  missing_value_strategy?: MissingValueStrategy;
 }
 
 export interface FtpFileSourceConfig {
@@ -50,7 +57,7 @@ export interface FtpFileSourceConfig {
   file_pattern: string;
   file_format: "csv" | "tsv" | "json" | "parquet" | "xlsx" | "fixed_width";
   delimiter: string;
-  has_header: boolean;
+  has_headers: boolean;
   encoding: string;
   archive_after_read: boolean;
   archive_path: string;
@@ -77,8 +84,10 @@ export interface RestApiSourceConfig {
   body_template: string;
 }
 
-export interface FieldMappingDraft extends FieldMapping {
+export interface FieldMappingDraft extends Omit<FieldMapping, "target_field"> {
   key: string;
+  /** Form-facing label; serialized as the ETL runtime's target_field. */
+  target_column: string;
 }
 
 export interface PipelineFormState {
@@ -114,6 +123,12 @@ export interface ConnectionProfilePipeline {
   updated_at: string;
   profile_name?: string;
   connection_type?: string;
+  schedule_enabled?: boolean;
+  schedule_cron?: string | null;
+  schedule_timezone?: string;
+  last_executed_at?: string | null;
+  next_execution_at?: string | null;
+  execution_count?: number;
 }
 
 export interface PipelineWritePayload {
@@ -130,25 +145,35 @@ export interface PipelineWritePayload {
   is_active: boolean;
 }
 
+export type PipelineUpdatePayload = Partial<PipelineWritePayload>;
+
 export interface PipelineListQuery {
   connection_profile_id?: number;
   action_type?: PipelineActionType;
   source_type?: PipelineSourceType;
   is_active?: boolean;
-  limit?: number;
-  offset?: number;
-  skipCache?: boolean;
 }
 
 export interface PipelineListResponse {
   data: ConnectionProfilePipeline[];
-  count?: number;
-  /** sample = local rows used until /connection-profile-pipelines is deployed */
-  source?: "api" | "sample";
-  pagination?: {
-    limit?: number;
-    offset?: number;
-    total?: number;
-    hasMore?: boolean;
-  };
+  count: number;
+}
+
+export interface PipelineExecutionError {
+  stage?: string;
+  message?: string;
+  error?: string;
+  details?: unknown;
+}
+
+export interface PipelineExecutionResult {
+  success: boolean;
+  pipeline_id: number;
+  pipeline_name?: string;
+  target_table?: string;
+  extracted_records?: number;
+  transformed_records?: number;
+  loaded_records?: number;
+  execution_time_ms: number;
+  errors?: PipelineExecutionError[];
 }

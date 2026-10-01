@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Power } from "lucide-react";
+import { Play, Power, PowerOff } from "lucide-react";
 import { buttons } from "../../utils/tokens";
 
 interface ActivateDeactivateButtonProps {
@@ -9,7 +9,7 @@ interface ActivateDeactivateButtonProps {
   isLoading?: boolean;
   title?: string;
   children?: ReactNode; // Text content for button variant
-  variant?: "toggle" | "button"; // Display variant
+  variant?: "toggle" | "button" | "icon";
 }
 
 export default function ActivateDeactivateButton({
@@ -22,6 +22,29 @@ export default function ActivateDeactivateButton({
   variant = "toggle",
 }: ActivateDeactivateButtonProps) {
   const hasText = !!children;
+  const label = title || (isActive ? "Deactivate" : "Activate");
+
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={disabled || isLoading}
+        className="p-1 inline-flex items-center justify-center rounded-md transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          color: isActive ? "var(--c-toggle-active)" : "var(--c-text-muted)",
+        }}
+        title={label}
+        aria-label={label}
+      >
+        {isLoading ? (
+          <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <Power className="w-4 h-4" />
+        )}
+      </button>
+    );
+  }
 
   if (variant === "button" && hasText) {
     // Secondary button variant
@@ -41,8 +64,10 @@ export default function ActivateDeactivateButton({
       >
         {isLoading ? (
           <div className="h-4 w-4 border-2 border-gray-800 border-t-transparent rounded-full animate-spin" />
+        ) : isActive ? (
+          <PowerOff className="w-4 h-4" />
         ) : (
-          <Power className="w-4 h-4" />
+          <Play className="w-4 h-4" />
         )}
         <span>{children}</span>
       </button>

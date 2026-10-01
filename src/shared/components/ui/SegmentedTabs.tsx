@@ -119,7 +119,7 @@ export default function SegmentedTabs<T extends string>({
     return (
       <div
         ref={rootRef}
-        className={`${SHELL_CLASS} min-w-0 w-full ${className}`}
+        className={`${SHELL_CLASS} relative min-w-0 w-full ${className}`}
       >
         <OverflowScrollArea
           hint={overflowHint}
@@ -130,6 +130,7 @@ export default function SegmentedTabs<T extends string>({
           observeKey={`${items.length}:${value}`}
           activeItemSelector={`[data-tab-id="${value}"]`}
           fadeColor="var(--c-surface-card-bg, #ffffff)"
+          overlayAnchor="parent"
           contentClassName="flex flex-nowrap"
           onKeyDown={handleKeyDown}
         >

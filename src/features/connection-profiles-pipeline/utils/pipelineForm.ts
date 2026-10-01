@@ -25,7 +25,7 @@ export function emptyFtpConfig(): FtpFileSourceConfig {
     file_pattern: "*.csv",
     file_format: "csv",
     delimiter: ",",
-    has_header: true,
+    has_headers: true,
     encoding: "utf-8",
     archive_after_read: false,
     archive_path: "",
@@ -156,7 +156,10 @@ export function hydrateSourceConfig(
       (asString(sourceConfig.file_format, "csv") as FtpFileSourceConfig["file_format"]) ||
       "csv";
     ftp.delimiter = asString(sourceConfig.delimiter, ",");
-    ftp.has_header = asBoolean(sourceConfig.has_header, true);
+    ftp.has_headers = asBoolean(
+      sourceConfig.has_headers ?? sourceConfig.has_header,
+      true,
+    );
     ftp.encoding = asString(sourceConfig.encoding, "utf-8");
     ftp.archive_after_read = asBoolean(sourceConfig.archive_after_read, false);
     ftp.archive_path = asString(sourceConfig.archive_path);
@@ -202,6 +205,7 @@ export function formFromPipeline(
       ? pipeline.field_mappings.map((mapping) => ({
           ...mapping,
           key: createMappingKey(),
+          target_column: mapping.target_field,
           format: mapping.format ?? "",
           default_value: mapping.default_value ?? "",
         }))
@@ -231,7 +235,7 @@ export function buildSourceConfig(
       file_pattern: form.ftp.file_pattern.trim(),
       file_format: form.ftp.file_format,
       delimiter: form.ftp.delimiter,
-      has_header: form.ftp.has_header,
+      has_headers: form.ftp.has_headers,
       encoding: form.ftp.encoding.trim() || "utf-8",
       archive_after_read: form.ftp.archive_after_read,
     };
@@ -284,11 +288,12 @@ export function buildFieldMappings(form: PipelineFormState): FieldMapping[] {
     .map((mapping) => {
       const next: FieldMapping = {
         source_field: mapping.source_field.trim(),
-        target_column: mapping.target_column.trim(),
+        target_field: mapping.target_column.trim(),
         data_type: mapping.data_type,
         conversion: mapping.conversion,
         required: mapping.required,
         is_upsert_key: mapping.is_upsert_key,
+        missing_value_strategy: mapping.required ? "error" : "default",
       };
       if (mapping.format?.trim()) next.format = mapping.format.trim();
       if (mapping.default_value?.trim()) {
@@ -425,6 +430,19 @@ export function normalizeFieldMappings(value: unknown): FieldMapping[] {
       return [];
     }
   }
+  if (rows && typeof rows === "object" && !Array.isArray(rows)) {
+    return Object.entries(rows as Record<string, unknown>).map(
+      ([source, target]) => ({
+        source_field: source,
+        target_field: asString(target),
+        data_type: "string",
+        conversion: "none",
+        required: false,
+        is_upsert_key: false,
+        missing_value_strategy: "default",
+      }),
+    );
+  }
   if (!Array.isArray(rows)) return [];
 
   return rows
@@ -432,8 +450,8 @@ export function normalizeFieldMappings(value: unknown): FieldMapping[] {
     .map((row) => {
       const mapping = row as Record<string, unknown>;
       return {
-        source_field: asString(mapping.source_field),
-        target_column: asString(mapping.target_column),
+        source_field: asString(mapping.source_field ?? mapping.source_column),
+        target_field: asString(mapping.target_field ?? mapping.target_column),
         data_type: (asString(mapping.data_type, "string") ||
           "string") as FieldMapping["data_type"],
         conversion: (asString(mapping.conversion, "none") ||
@@ -442,6 +460,9 @@ export function normalizeFieldMappings(value: unknown): FieldMapping[] {
         default_value: asString(mapping.default_value) || undefined,
         required: asBoolean(mapping.required, false),
         is_upsert_key: asBoolean(mapping.is_upsert_key, false),
+        missing_value_strategy: (
+          asString(mapping.missing_value_strategy) || undefined
+        ) as FieldMapping["missing_value_strategy"],
       };
     });
 }

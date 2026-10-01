@@ -409,6 +409,16 @@ const allConfigurations = [
     navigationPath: "/dashboard/ai-models/configuration",
   },
   {
+    id: "insight-workbench",
+    name: "Insight Workbench",
+    description:
+      "Explore enterprise data, develop Python, R, and Scala analytical models, and publish AI powered insights",
+    type: "configuration",
+    category: "System Configuration",
+    status: "active",
+    navigationPath: "/dashboard/ai-models/insight-workbench",
+  },
+  {
     id: "utilities",
     name: "Utilities",
     description: "Manage utility types like water, electricity, and food",

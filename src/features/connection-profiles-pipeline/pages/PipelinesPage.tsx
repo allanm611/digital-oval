@@ -29,7 +29,6 @@ export default function PipelinesPage() {
 
   const profileIdParam = searchParams.get("profileId") || "all";
   const [pipelines, setPipelines] = useState<ConnectionProfilePipeline[]>([]);
-  const [usingSampleData, setUsingSampleData] = useState(false);
   const [profiles, setProfiles] = useState<ConnectionProfileType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,12 +45,9 @@ export default function PipelinesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const pipelineResponse = await connectionProfilePipelineService.listPipelines({
-        limit: 100,
-        skipCache: true,
-      });
+      const pipelineResponse =
+        await connectionProfilePipelineService.listPipelines();
       setPipelines(pipelineResponse.data);
-      setUsingSampleData(pipelineResponse.source === "sample");
     } catch (error) {
       console.error("Failed to load connection profile pipelines", error);
       showError(

@@ -14,7 +14,6 @@ import {
   Workflow,
   Users,
   UserCheck,
-  Settings,
   Clock,
   TrendingUp,
   Mail,
@@ -56,7 +55,7 @@ export default function AdminHubPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const categories: AdminCategory[] = [
+  const categories = useMemo<AdminCategory[]>(() => [
     {
       name: "Infrastructure",
       description: "Manage servers, connections, and data connectors",
@@ -348,14 +347,14 @@ export default function AdminHubPage() {
         {
           title: "AI Models",
           description:
-            "Open AI administration. Configure providers used to generate message content.",
+            "Configure AI providers and open the Insight Workbench for analytical models.",
           icon: Sparkles,
           href: "/dashboard/ai-models",
           category: "System Configuration",
         },
       ],
     },
-  ];
+  ], [t]);
 
   const allCards = useMemo(
     () => categories.flatMap((cat) => cat.cards),
