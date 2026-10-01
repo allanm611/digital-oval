@@ -2,7 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { tw, button } from "../../../shared/utils/utils";
 import {
   CONVERSION_OPTIONS,
   DATA_TYPE_OPTIONS,
@@ -173,8 +173,7 @@ export default function FieldMappingsEditor({
       <button
         type="button"
         onClick={() => onChange([...mappings, emptyMapping()])}
-        className={`inline-flex items-center gap-2 px-3 py-2 text-sm ${tw.rounded} border border-gray-300 text-gray-800`}
-        style={{ color: color.primary.action }}
+        className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium ${tw.rounded} border border-black bg-black text-white transition-colors hover:bg-gray-800`}
       >
         <Plus className="w-4 h-4" />
         Add mapping

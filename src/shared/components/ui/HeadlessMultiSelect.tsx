@@ -22,6 +22,8 @@ interface HeadlessMultiSelectProps {
   showCheckboxes?: boolean;
   hideSelectedChips?: boolean;
   zIndex?: number;
+  ariaLabel?: string;
+  clearSelectionLabel?: string;
 }
 
 export default function HeadlessMultiSelect({
@@ -37,6 +39,8 @@ export default function HeadlessMultiSelect({
   showCheckboxes = false,
   hideSelectedChips = false,
   zIndex,
+  ariaLabel,
+  clearSelectionLabel,
 }: HeadlessMultiSelectProps) {
   const effectiveZIndex = zIndex ?? zIndexTokens.popover;
   const [searchTerm, setSearchTerm] = useState("");
@@ -170,6 +174,20 @@ export default function HeadlessMultiSelect({
           }
           aria-haspopup="listbox"
           aria-expanded={isOpen}
+          aria-label={ariaLabel || placeholder}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setIsOpen(true);
+              requestAnimationFrame(() => {
+                dropdownRef.current
+                  ?.querySelector<HTMLElement>(
+                    '[role="option"]:not([aria-disabled="true"])',
+                  )
+                  ?.focus();
+              });
+            }
+          }}
         >
           <div className="flex items-center justify-between w-full">
             <span
@@ -239,6 +257,13 @@ export default function HeadlessMultiSelect({
               borderWidth: "1px",
             }}
             onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                setIsOpen(false);
+                buttonRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+              }
+            }}
           >
             {searchable && (
               <div
@@ -281,9 +306,20 @@ export default function HeadlessMultiSelect({
                     key={String(option.value)}
                     role="option"
                     aria-selected={selected}
+                    aria-disabled={option.disabled || undefined}
+                    tabIndex={option.disabled ? -1 : 0}
                     onClick={(event) => {
                       event.stopPropagation();
                       if (!option.disabled) toggleValue(option.value);
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        !option.disabled &&
+                        (event.key === "Enter" || event.key === " ")
+                      ) {
+                        event.preventDefault();
+                        toggleValue(option.value);
+                      }
                     }}
                     className={`relative cursor-default select-none py-2.5 pl-10 pr-6 transition-colors duration-150 ${
                       option.disabled
@@ -342,6 +378,24 @@ export default function HeadlessMultiSelect({
                   </div>
                 );
               })
+            )}
+            {clearSelectionLabel && value.length > 0 && (
+              <div
+                className="sticky bottom-0 border-t p-2"
+                style={{
+                  borderColor: "var(--c-border-default)",
+                  backgroundColor: "var(--c-surface-background)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => onChange([])}
+                  className={`w-full px-2 py-1.5 text-left text-xs font-medium ${tw.rounded}`}
+                  style={{ color: "var(--c-interactive-link)" }}
+                >
+                  {clearSelectionLabel}
+                </button>
+              </div>
             )}
           </div>,
           document.body,

@@ -112,17 +112,17 @@ export const CONVERSION_OPTIONS: Array<{
   { value: "json_extract", label: "JSON extract" },
 ];
 
-export const FILE_CONNECTION_TYPES = [
-  "ftp",
-  "sftp",
-  "files",
-  "s3",
-  "azure_blob",
+export const FILE_CONNECTION_TYPES = ["ftp", "sftp", "files"];
+
+export const DATABASE_CONNECTION_TYPES = [
+  "database",
+  "jdbc",
+  "postgres",
+  "postgresql",
+  "mysql",
 ];
 
-export const DATABASE_CONNECTION_TYPES = ["database", "jdbc"];
-
-export const API_CONNECTION_TYPES = ["api", "webhook"];
+export const API_CONNECTION_TYPES = ["api", "webhook", "http", "rest"];
 
 export function labelFor<T extends string>(
   options: Array<{ value: T; label: string }>,

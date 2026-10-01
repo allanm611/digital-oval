@@ -131,6 +131,10 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const nextErrors = validatePipelineForm(form);
+    if (selectedProfile && !sourceAligned) {
+      nextErrors.source_type =
+        "Source type must match the selected connection profile.";
+    }
     setErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean)) {
       showError("Check the pipeline definition", "Some required extraction fields are missing or invalid.");
@@ -143,15 +147,11 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
       if (mode === "create") {
         const created = await connectionProfilePipelineService.createPipeline(payload);
         success("Pipeline created", `${created.pipeline_name || form.pipeline_name} is ready to extract data.`);
-        navigate(
-          created.id
-            ? `/dashboard/connection-profile-pipelines/${created.id}`
-            : "/dashboard/connection-profile-pipelines",
-        );
+        navigate("/dashboard/connection-profile-pipelines", { replace: true });
       } else if (id) {
         await connectionProfilePipelineService.updatePipeline(Number(id), payload);
         success("Pipeline updated");
-        navigate(`/dashboard/connection-profile-pipelines/${id}`);
+        navigate("/dashboard/connection-profile-pipelines", { replace: true });
       }
     } catch (error) {
       console.error("Failed to save pipeline", error);
@@ -195,8 +195,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
             <h2 className={`${tw.cardHeading} text-gray-900`}>Pipeline</h2>
             <p className="text-sm text-gray-500 mt-1">
               Each pipeline belongs to one connection profile. The profile
-              supplies the host, credentials, and pool. This definition supplies
-              the extract.
+              supplies the host, credentials, and pool.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -250,6 +249,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
               <HeadlessSelect
                 label="Source type*"
                 value={form.source_type}
+                error={!!errors.source_type}
                 options={SOURCE_TYPE_OPTIONS.map((option) => ({
                   value: option.value,
                   label: option.label,
@@ -259,8 +259,16 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
                   patch({
                     source_type: String(value) as PipelineFormState["source_type"],
                   });
+                  if (errors.source_type) {
+                    setErrors((current) => ({ ...current, source_type: "" }));
+                  }
                 }}
               />
+              {errors.source_type && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.source_type}
+                </p>
+              )}
               {sourceHelp && (
                 <p className="mt-1 text-xs text-gray-500">{sourceHelp}</p>
               )}
@@ -275,7 +283,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
                 : ` The usual source for this connection is ${
                     SOURCE_TYPE_OPTIONS.find((option) => option.value === recommended)
                       ?.label
-                  }. You can still save a different source if this profile is used that way.`}
+                  }. Select that source type before saving because execution uses the profile's connection driver.`}
             </p>
           )}
           <label className="flex items-center gap-3 text-sm text-gray-700">
@@ -291,8 +299,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
           <div>
             <h2 className={`${tw.cardHeading} text-gray-900`}>Source</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Describe what to read. Do not put passwords or tokens here — those
-              belong on the connection profile.
+              Describe what to read. Do not put passwords or tokens here
             </p>
           </div>
           <SourceConfigEditor

@@ -25,6 +25,12 @@ type OverflowScrollAreaProps = {
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
   /** Fade overlay color when content overflows. Defaults to the page background. */
   fadeColor?: string;
+  /**
+   * `self` positions the chevrons on this scroller.
+   * `parent` positions them on the nearest positioned ancestor so they can
+   * match that ancestor's box (the white tab rectangle).
+   */
+  overlayAnchor?: "self" | "parent";
 };
 
 function prefersReducedMotion(): boolean {
@@ -73,6 +79,7 @@ export default function OverflowScrollArea({
   ariaLabel,
   onKeyDown,
   fadeColor = "var(--c-primary-background, #e5e7eb)",
+  overlayAnchor = "self",
 }: OverflowScrollAreaProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const { hasOverflow, isAtStart, isAtEnd } = useHorizontalOverflow(
@@ -110,7 +117,9 @@ export default function OverflowScrollArea({
   };
 
   return (
-    <div className={`relative min-w-0 w-full ${className}`}>
+    <div
+      className={`${overlayAnchor === "parent" ? "static" : "relative"} min-w-0 w-full ${className}`}
+    >
       {hasOverflow && !isAtStart ? (
         <HorizontalScrollHint
           direction="start"

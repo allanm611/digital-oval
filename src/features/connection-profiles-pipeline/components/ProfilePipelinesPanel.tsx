@@ -30,8 +30,6 @@ export default function ProfilePipelinesPanel({
       try {
         const response = await connectionProfilePipelineService.listPipelines({
           connection_profile_id: profileId,
-          limit: 20,
-          skipCache: true,
         });
         if (!cancelled) setPipelines(response.data);
       } catch (error) {
