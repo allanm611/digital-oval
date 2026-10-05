@@ -16,8 +16,8 @@ type HorizontalScrollHintProps = {
 
 /**
  * Overflow affordance: a teal chevron that pages clipped content.
- * Large size fills the height of the white tab bar so the control lines up
- * with that rectangle instead of hanging above and below it.
+ * Large size is a square the height of the tab bar, using the same corner
+ * radius as the tabs, with no border of its own.
  */
 export default function HorizontalScrollHint({
   hint = DEFAULT_HORIZONTAL_SCROLL_HINT,
@@ -55,7 +55,7 @@ export default function HorizontalScrollHint({
         onBlur={() => setShowHint(false)}
         className={
           isLarge
-            ? `box-border flex aspect-square h-full min-h-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-colors hover:bg-gray-50 hover:border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-interactive-focus)] focus-visible:ring-offset-1`
+            ? `box-border flex aspect-square h-full min-h-0 items-center justify-center border-0 bg-transparent shadow-none ${tw.rounded} transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-interactive-focus)] focus-visible:ring-offset-1`
             : `p-2 ${tw.rounded} transition-all duration-200 hover:opacity-70`
         }
         style={

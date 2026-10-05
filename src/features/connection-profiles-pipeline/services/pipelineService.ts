@@ -15,6 +15,12 @@ import {
   normalizeFieldMappings,
   normalizeSourceConfig,
 } from "../utils/pipelineForm";
+import {
+  columnsFromApiPayload,
+  DiscoveredColumn,
+  DiscoveredTable,
+  tablesFromApiPayload,
+} from "../utils/sourceColumns";
 
 const BASE_URL = buildApiUrl("/connection-profile-pipelines");
 
@@ -261,6 +267,66 @@ class ConnectionProfilePipelineService {
     isActive: boolean,
   ): Promise<ConnectionProfilePipeline> {
     return this.updatePipeline(id, { is_active: isActive });
+  }
+
+  async previewQueryColumns(payload: {
+    connection_profile_id: number;
+    query: string;
+    parameters?: Record<string, unknown>;
+  }): Promise<DiscoveredColumn[]> {
+    const response = await this.request<unknown>("/preview-columns", {
+      method: "POST",
+      body: JSON.stringify({
+        connection_profile_id: payload.connection_profile_id,
+        query: payload.query,
+        parameters: payload.parameters ?? {},
+        limit: 1,
+      }),
+    });
+    const columns = columnsFromApiPayload(response);
+    if (columns.length === 0) {
+      throw new Error("The sample query did not return any columns.");
+    }
+    return columns;
+  }
+
+  async previewTables(payload: {
+    connection_profile_id: number;
+  }): Promise<DiscoveredTable[]> {
+    const catalogQuery = [
+      "SELECT table_schema, table_name",
+      "FROM information_schema.tables",
+      "WHERE table_type IN ('BASE TABLE', 'TABLE')",
+      "AND table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'mysql', 'performance_schema', 'sys')",
+    ].join(" ");
+    let response: unknown;
+    try {
+      response = await this.request<unknown>("/preview-tables", {
+        method: "POST",
+        body: JSON.stringify({
+          connection_profile_id: payload.connection_profile_id,
+        }),
+      });
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+      if (status !== 404 && status !== 405 && status !== 501) throw error;
+      response = await this.request<unknown>("/preview-columns", {
+        method: "POST",
+        body: JSON.stringify({
+          connection_profile_id: payload.connection_profile_id,
+          query: catalogQuery,
+          parameters: {},
+          limit: 500,
+        }),
+      });
+    }
+    const tables = tablesFromApiPayload(response);
+    if (tables.length === 0) {
+      throw new Error(
+        "The database catalog did not return schema and table names. The server should list tables for this connection profile.",
+      );
+    }
+    return tables;
   }
 
   async executePipeline(id: number): Promise<PipelineExecutionResult> {

@@ -9,6 +9,7 @@ import {
   RestApiSourceConfig,
   ConnectionProfilePipeline,
 } from "../types/pipeline";
+import { bodyTemplateError } from "./jsonParameters";
 
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
@@ -363,6 +364,10 @@ export function validatePipelineForm(
     }
     if (!parseJsonObject(form.rest.headers_json).ok) {
       errors.headers_json = "Headers must be a JSON object.";
+    }
+    const bodyError = bodyTemplateError(form.rest.body_template);
+    if (form.rest.method === "POST" && bodyError) {
+      errors.body_template = bodyError;
     }
     if (
       form.rest.pagination !== "none" &&

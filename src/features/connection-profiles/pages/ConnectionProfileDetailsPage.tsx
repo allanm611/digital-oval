@@ -537,7 +537,10 @@ export default function ConnectionProfileDetailsPage() {
             </div>
           </div>
 
-          <ProfilePipelinesPanel profileId={profile.id} />
+          <ProfilePipelinesPanel
+            profileId={profile.id}
+            connectionType={profile.connection_type}
+          />
         </div>
 
         {/* Sidebar */}

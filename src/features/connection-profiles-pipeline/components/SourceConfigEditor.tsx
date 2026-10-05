@@ -5,12 +5,14 @@ import Textarea from "../../../shared/components/ui/Textarea";
 import FormField from "../../../shared/components/FormField";
 import { FILE_FORMAT_OPTIONS } from "../constants/pipelineOptions";
 import { PipelineFormState, PipelineSourceType } from "../types/pipeline";
+import JsonParameterEditor from "./JsonParameterEditor";
 
 interface SourceConfigEditorProps {
   sourceType: PipelineSourceType;
   form: PipelineFormState;
   errors: Record<string, string>;
   onChange: (patch: Partial<PipelineFormState>) => void;
+  onParameterIssue?: (field: string, message: string) => void;
 }
 
 export default function SourceConfigEditor({
@@ -18,6 +20,7 @@ export default function SourceConfigEditor({
   form,
   errors,
   onChange,
+  onParameterIssue,
 }: SourceConfigEditorProps) {
   if (sourceType === "FTP_FILE") {
     return (
@@ -161,12 +164,12 @@ export default function SourceConfigEditor({
           />
         </div>
         <FormField error={errors.parameters_json}>
-          <Textarea
-            label="Query parameters (JSON object)"
-            rows={4}
+          <JsonParameterEditor
+            label="Query parameters"
+            description="Name each parameter without the colon. A query that uses :status needs a field named status."
+            example={'{\n  "status": "active",\n  "limit": 100\n}'}
             value={form.database.parameters_json}
-            hasError={!!errors.parameters_json}
-            placeholder={'{\n  "status": "active"\n}'}
+            onIssue={(message) => onParameterIssue?.("parameters_json", message)}
             onChange={(value) =>
               onChange({
                 database: { ...form.database, parameters_json: value },
@@ -269,37 +272,43 @@ export default function SourceConfigEditor({
         </div>
       )}
       <FormField error={errors.query_params_json}>
-        <Textarea
-          label="Query parameters (JSON object)"
-          rows={3}
+        <JsonParameterEditor
+          label="Query parameters"
+            description="Each row is added to the request URL. The value only accepts the format selected for that row."
+          example={'{\n  "status": "active",\n  "limit": 100\n}'}
           value={form.rest.query_params_json}
-          hasError={!!errors.query_params_json}
+          onIssue={(message) => onParameterIssue?.("query_params_json", message)}
           onChange={(value) =>
             onChange({ rest: { ...form.rest, query_params_json: value } })
           }
         />
       </FormField>
       <FormField error={errors.headers_json}>
-        <Textarea
-          label="Headers (JSON object)"
-          rows={3}
+        <JsonParameterEditor
+          label="Headers"
+          description="Header names and values are text. Leave passwords and tokens on the connection profile."
+          example={'{\n  "Accept": "application/json"\n}'}
+          valueKinds={["string"]}
           value={form.rest.headers_json}
-          hasError={!!errors.headers_json}
-          placeholder={'{\n  "Accept": "application/json"\n}'}
+          onIssue={(message) => onParameterIssue?.("headers_json", message)}
           onChange={(value) =>
             onChange({ rest: { ...form.rest, headers_json: value } })
           }
         />
       </FormField>
       {form.rest.method === "POST" && (
-        <Textarea
-          label="Request body template"
-          rows={4}
-          value={form.rest.body_template}
-          onChange={(value) =>
-            onChange({ rest: { ...form.rest, body_template: value } })
-          }
-        />
+        <FormField error={errors.body_template}>
+          <JsonParameterEditor
+            label="Request body"
+            description="Add one field per value. The JSON object is built for you. Use Text for words and for tokens such as {{since}}."
+            example={'{\n  "status": "active",\n  "since": "{{since}}",\n  "limit": 100\n}'}
+            value={form.rest.body_template}
+            onIssue={(message) => onParameterIssue?.("body_template", message)}
+            onChange={(value) =>
+              onChange({ rest: { ...form.rest, body_template: value } })
+            }
+          />
+        </FormField>
       )}
     </div>
   );
