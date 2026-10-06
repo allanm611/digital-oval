@@ -20,7 +20,6 @@ import type {
   EventTimePreset,
 } from "../types/customerEvent";
 import {
-  aggregateEventCounts,
   CHANNEL_FILTER_OPTIONS,
   EMPTY_COUNT_BUCKET,
   EVENT_TIME_TABS,
@@ -139,10 +138,7 @@ export default function CustomerEventsTab({
     [result.allEvents, query, filterCatalogs],
   );
 
-  const counts = useMemo(
-    () => aggregateEventCounts(result.allEvents),
-    [result.allEvents],
-  );
+  const counts = result.counts;
 
   const customCount = useMemo((): CustomerEventCountBucket => {
     if (!dateFrom && !dateTo) return EMPTY_COUNT_BUCKET;

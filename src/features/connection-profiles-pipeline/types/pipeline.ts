@@ -4,9 +4,18 @@
  * how rows are read, transformed, and written.
  */
 
+import type { PipelineScheduleDraft } from "../utils/pipelineSchedule";
+
 export type PipelineActionType = "PULL" | "PUSH" | "READ" | "SYNC";
 
-export type PipelineSourceType = "FTP_FILE" | "DATABASE_QUERY" | "REST_API";
+export type PipelineSourceType =
+  | "FTP_FILE"
+  | "DATABASE_QUERY"
+  | "REST_API"
+  | "KAFKA"
+  | "WEBSOCKET"
+  | "TCP"
+  | "SMS_INBOX";
 
 export type PipelineLoadStrategy = "BATCH_INSERT" | "UPSERT" | "APPEND";
 
@@ -84,6 +93,14 @@ export interface RestApiSourceConfig {
   body_template: string;
 }
 
+/** Read options that are not already stored on the connection profile. */
+export interface StreamSourceConfig {
+  start_from: "latest" | "earliest";
+  record_separator: "newline" | "crlf" | "comma";
+  subscribe_message: string;
+  keyword: string;
+}
+
 export interface FieldMappingDraft extends Omit<FieldMapping, "target_field"> {
   key: string;
   /** Form-facing label; serialized as the ETL runtime's target_field. */
@@ -98,12 +115,14 @@ export interface PipelineFormState {
   ftp: FtpFileSourceConfig;
   database: DatabaseQuerySourceConfig;
   rest: RestApiSourceConfig;
+  stream: StreamSourceConfig;
   mappings: FieldMappingDraft[];
   target_schema: string;
   target_table: string;
   load_strategy: PipelineLoadStrategy;
   batch_size: string;
   is_active: boolean;
+  schedule: PipelineScheduleDraft;
 }
 
 export interface ConnectionProfilePipeline {
@@ -143,6 +162,9 @@ export interface PipelineWritePayload {
   load_strategy: PipelineLoadStrategy;
   batch_size: number;
   is_active: boolean;
+  schedule_enabled: boolean;
+  schedule_cron: string | null;
+  schedule_timezone: string;
 }
 
 export type PipelineUpdatePayload = Partial<PipelineWritePayload>;

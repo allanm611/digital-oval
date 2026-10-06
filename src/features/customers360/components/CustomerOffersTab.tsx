@@ -234,6 +234,11 @@ export default function CustomerOffersTab({
                 +{row.viaCampaigns.length - 2}
               </span>
             ) : null}
+            {row.viaSegments.length > 0 ? (
+              <p className="mt-1 w-full truncate text-xs text-gray-500">
+                {row.viaSegments.map((segment) => segment.segmentName).join(", ")}
+              </p>
+            ) : null}
           </div>
         ),
       },
@@ -290,7 +295,7 @@ export default function CustomerOffersTab({
               : result.counts.available.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            Eligible now via this customer's audience
+            Marked available for this customer
           </p>
         </div>
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>

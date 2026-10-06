@@ -44,6 +44,11 @@ function abortIfNeeded(isAborted?: () => boolean) {
   }
 }
 
+function isPlaceholderOfferName(name: string, offerId: number): boolean {
+  const trimmed = name.trim().toLowerCase();
+  return !trimmed || trimmed === `offer ${offerId}`;
+}
+
 function cacheKey(subscriberId: string): string {
   return subscriberId;
 }
@@ -168,8 +173,13 @@ export const customerOfferService = {
     const catalogIds = Array.from(
       new Set(
         Array.from(byKey.values())
+          .filter(
+            (item) =>
+              item.offerId != null &&
+              isPlaceholderOfferName(item.name, item.offerId),
+          )
           .map((item) => item.offerId)
-          .filter((id): id is number => Boolean(id)),
+          .filter((id): id is number => id != null),
       ),
     );
 

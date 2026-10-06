@@ -35,8 +35,19 @@ export type HintOffer = {
   catalogStatus: string | null;
   valueAmount: number | null;
   valuePercent: number | null;
+  validFrom: string | null;
+  validTo: string | null;
+  isReusable: boolean;
+  maxUsagePerCustomer: number | null;
   redeemedAt: string | null;
   presentedAt: string | null;
+  acceptedAt: string | null;
+  redemptionCount: number;
+  channel: string | null;
+  campaignId: number | null;
+  campaignName: string | null;
+  segmentId: number | null;
+  segmentName: string | null;
 };
 
 export type DraftCustomerOffer = {
@@ -284,8 +295,19 @@ export function parseHintOffer(item: unknown, index = 0): HintOffer | null {
       catalogStatus: null,
       valueAmount: null,
       valuePercent: null,
+      validFrom: null,
+      validTo: null,
+      isReusable: false,
+      maxUsagePerCustomer: null,
       redeemedAt: null,
       presentedAt: null,
+      acceptedAt: null,
+      redemptionCount: 0,
+      channel: null,
+      campaignId: null,
+      campaignName: null,
+      segmentId: null,
+      segmentName: null,
     };
   }
 
@@ -336,6 +358,17 @@ export function parseHintOffer(item: unknown, index = 0): HintOffer | null {
         row.discount_percentage ??
         nested?.discount_percentage,
     ),
+    validFrom: stringOrNull(row.valid_from ?? row.validFrom ?? nested?.valid_from),
+    validTo: stringOrNull(row.valid_to ?? row.validTo ?? nested?.valid_to),
+    isReusable:
+      typeof row.is_reusable === "boolean"
+        ? row.is_reusable
+        : typeof row.isReusable === "boolean"
+          ? row.isReusable
+          : false,
+    maxUsagePerCustomer: numberOrNull(
+      row.max_usage_per_customer ?? row.maxUsagePerCustomer,
+    ),
     redeemedAt:
       stringOrNull(
         row.redeemed_at ??
@@ -345,7 +378,15 @@ export function parseHintOffer(item: unknown, index = 0): HintOffer | null {
       ) ?? null,
     presentedAt:
       extractAddedAt(row) ??
-      stringOrNull(row.presented_at ?? row.presentedAt ?? row.valid_from),
+      stringOrNull(row.presented_at ?? row.presentedAt),
+    acceptedAt: stringOrNull(row.accepted_at ?? row.acceptedAt),
+    redemptionCount:
+      numberOrNull(row.redemption_count ?? row.redemptionCount) ?? 0,
+    channel: stringOrNull(row.channel ?? row.last_channel ?? row.lastChannel),
+    campaignId: numericId(row.campaign_id ?? row.campaignId),
+    campaignName: stringOrNull(row.campaign_name ?? row.campaignName),
+    segmentId: numericId(row.segment_id ?? row.segmentId),
+    segmentName: stringOrNull(row.segment_name ?? row.segmentName),
   };
 }
 
@@ -368,10 +409,36 @@ export function hintToDraft(hint: HintOffer): DraftCustomerOffer {
     catalogStatus: hint.catalogStatus,
     valueAmount: hint.valueAmount,
     valuePercent: hint.valuePercent,
+    validFrom: hint.validFrom,
+    validTo: hint.validTo,
+    isReusable: hint.isReusable,
+    maxUsagePerCustomer: hint.maxUsagePerCustomer,
     presentedAt: hint.presentedAt,
+    acceptedAt: hint.acceptedAt,
     redeemedAt: hint.redeemedAt,
-    redemptionCount: hint.redeemedAt || hint.stateHint === "redeemed" ? 1 : 0,
-    evidence: ["profile_hint"],
+    redemptionCount:
+      hint.redemptionCount > 0
+        ? hint.redemptionCount
+        : hint.redeemedAt || hint.stateHint === "redeemed"
+          ? 1
+          : 0,
+    lastChannel: hint.channel,
+    viaCampaigns:
+      hint.campaignId && hint.campaignName
+        ? [
+            {
+              campaignId: hint.campaignId,
+              campaignName: hint.campaignName,
+              campaignStatus: null,
+              isActive: null,
+            },
+          ]
+        : [],
+    viaSegments:
+      hint.segmentId && hint.segmentName
+        ? [{ segmentId: hint.segmentId, segmentName: hint.segmentName }]
+        : [],
+    evidence: ["subscriber_api"],
     stateHint: hint.stateHint,
   });
 }
@@ -504,6 +571,9 @@ export function resolveOfferState(
   }
   if (draft.stateHint === "inactive" || isInactiveCatalog(draft)) {
     return "inactive";
+  }
+  if (draft.stateHint === "available") {
+    return "available";
   }
 
   const hasLiveCampaign = Array.from(draft.viaCampaigns.values()).some((campaign) =>

@@ -12,10 +12,12 @@ import {
 
 interface ProfilePipelinesPanelProps {
   profileId: number;
+  connectionType?: string | null;
 }
 
 export default function ProfilePipelinesPanel({
   profileId,
+  connectionType,
 }: ProfilePipelinesPanelProps) {
   const navigate = useNavigate();
   const [pipelines, setPipelines] = useState<ConnectionProfilePipeline[]>([]);
@@ -62,11 +64,13 @@ export default function ProfilePipelinesPanel({
         </div>
         <button
           type="button"
-          onClick={() =>
+          onClick={() => {
+            const params = new URLSearchParams({ profileId: String(profileId) });
+            if (connectionType) params.set("connectionType", connectionType);
             navigate(
-              `/dashboard/connection-profile-pipelines/new?profileId=${profileId}`,
-            )
-          }
+              `/dashboard/connection-profile-pipelines/new?${params.toString()}`,
+            );
+          }}
           className={`inline-flex items-center gap-2 px-3 py-2 text-sm text-white ${tw.rounded}`}
           style={{ backgroundColor: color.primary.action }}
         >
@@ -120,7 +124,10 @@ export default function ProfilePipelinesPanel({
         type="button"
         onClick={() =>
           navigate(
-            `/dashboard/connection-profile-pipelines?profileId=${profileId}`,
+            `/dashboard/connection-profile-pipelines?${new URLSearchParams({
+              profileId: String(profileId),
+              ...(connectionType ? { connectionType } : {}),
+            }).toString()}`,
           )
         }
         className="mt-4 text-sm font-medium"

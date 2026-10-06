@@ -411,16 +411,21 @@ export function parseSubscriberListMembership(
         : identifier
           ? "msisdn"
           : null;
+  const numericCount = (value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+  };
   const totalMembers =
-    typeof row.total === "number"
-      ? row.total
-      : typeof row.total_members === "number"
-        ? row.total_members
-        : typeof row.rows_imported === "number"
-          ? row.rows_imported
-          : typeof nested.rows_imported === "number"
-            ? nested.rows_imported
-            : null;
+    numericCount(row.total) ??
+    numericCount(row.total_members) ??
+    numericCount(row.rows_imported) ??
+    numericCount(nested.total) ??
+    numericCount(nested.total_members) ??
+    numericCount(nested.rows_imported);
 
   return {
     id: `${listTypeRaw === "subscription" ? "subscription" : "quicklist"}-${listId}`,

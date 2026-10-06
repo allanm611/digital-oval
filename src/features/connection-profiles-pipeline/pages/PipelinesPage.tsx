@@ -19,8 +19,17 @@ import {
   LOAD_STRATEGY_OPTIONS,
   SOURCE_TYPE_OPTIONS,
 } from "../constants/pipelineOptions";
+import { useProfilesByConnectionType } from "../hooks/useProfilesByConnectionType";
 import { connectionProfilePipelineService } from "../services/pipelineService";
 import { ConnectionProfilePipeline } from "../types/pipeline";
+import { describeStoredSchedule } from "../utils/pipelineSchedule";
+import {
+  connectionTypeLabel,
+  matchingConnectionTypeValue,
+  normalizeConnectionType,
+  profileFilterMessage,
+  profileSelectOptions,
+} from "../utils/connectionTypeCatalog";
 
 export default function PipelinesPage() {
   const navigate = useNavigate();
@@ -28,19 +37,81 @@ export default function PipelinesPage() {
   const { error: showError } = useToast();
 
   const profileIdParam = searchParams.get("profileId") || "all";
+  const connectionTypeParam = searchParams.get("connectionType") || "";
   const [pipelines, setPipelines] = useState<ConnectionProfilePipeline[]>([]);
-  const [profiles, setProfiles] = useState<ConnectionProfileType[]>([]);
+  const [pinnedProfiles, setPinnedProfiles] = useState<ConnectionProfileType[]>([]);
+  const [namedProfiles, setNamedProfiles] = useState<ConnectionProfileType[]>([]);
+  const [namesResolved, setNamesResolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const {
+    typeOptions,
+    typesLoading,
+    profiles,
+    profilesLoading,
+    profilesLoaded,
+    profilesTruncated,
+    isSearching,
+    searchApplied,
+    catalogCount,
+    onProfileSearch,
+  } = useProfilesByConnectionType(connectionTypeParam, pinnedProfiles);
+
   const profileNameById = useMemo(() => {
     const names = new Map<number, string>();
     profiles.forEach((profile) => names.set(profile.id, profile.profile_name));
+    namedProfiles.forEach((profile) => names.set(profile.id, profile.profile_name));
+    pipelines.forEach((pipeline) => {
+      if (pipeline.profile_name) {
+        names.set(pipeline.connection_profile_id, pipeline.profile_name);
+      }
+    });
+    pinnedProfiles.forEach((profile) => names.set(profile.id, profile.profile_name));
     return names;
-  }, [profiles]);
+  }, [namedProfiles, pinnedProfiles, pipelines, profiles]);
+
+  const profileIdsOfType = useMemo(
+    () => new Set(profiles.map((profile) => profile.id)),
+    [profiles],
+  );
+
+  const profileOptions = useMemo(() => {
+    if (!connectionTypeParam) {
+      if (profileIdParam === "all") return [];
+      return [
+        {
+          value: profileIdParam,
+          label:
+            profileNameById.get(Number(profileIdParam)) ||
+            `Profile #${profileIdParam}`,
+        },
+      ];
+    }
+
+    const options = [
+      {
+        value: "all",
+        label: `All ${connectionTypeLabel(connectionTypeParam)} profiles`,
+      },
+      ...profileSelectOptions(profiles),
+    ];
+    if (
+      profileIdParam !== "all" &&
+      !options.some((option) => option.value === profileIdParam)
+    ) {
+      options.push({
+        value: profileIdParam,
+        label:
+          profileNameById.get(Number(profileIdParam)) ||
+          `Profile #${profileIdParam}`,
+      });
+    }
+    return options;
+  }, [connectionTypeParam, profileIdParam, profileNameById, profiles]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,16 +125,6 @@ export default function PipelinesPage() {
         "Unable to load pipelines",
         extractBackendError(error, "The extraction pipeline list could not be loaded."),
       );
-    }
-
-    try {
-      const profileResponse = await connectionProfileService.listProfiles({
-        limit: 100,
-        skipCache: true,
-      });
-      setProfiles(profileResponse.data ?? []);
-    } catch (error) {
-      console.error("Failed to load connection profiles for pipeline filters", error);
     } finally {
       setLoading(false);
     }
@@ -73,6 +134,106 @@ export default function PipelinesPage() {
     load();
   }, [load]);
 
+  const profileIdsKey = useMemo(
+    () =>
+      [...new Set(pipelines.map((pipeline) => pipeline.connection_profile_id))]
+        .filter((id) => Number.isInteger(id) && id > 0)
+        .sort((left, right) => left - right)
+        .join(","),
+    [pipelines],
+  );
+
+  useEffect(() => {
+    const ids = profileIdsKey
+      .split(",")
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0);
+    if (ids.length === 0) {
+      setNamedProfiles([]);
+      setNamesResolved(true);
+      return;
+    }
+
+    setNamesResolved(false);
+    let cancelled = false;
+    const resolveNames = async () => {
+      const loaded = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return await connectionProfileService.getProfile(id);
+          } catch (error) {
+            console.error("Failed to load connection profile name", id, error);
+            return null;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setNamedProfiles(
+        loaded.filter((profile): profile is ConnectionProfileType =>
+          Boolean(profile?.profile_name),
+        ),
+      );
+      setNamesResolved(true);
+    };
+    void resolveNames();
+    return () => {
+      cancelled = true;
+    };
+  }, [profileIdsKey]);
+
+  useEffect(() => {
+    const canonical = matchingConnectionTypeValue(
+      connectionTypeParam,
+      typeOptions,
+    );
+    if (!canonical || canonical === connectionTypeParam) return;
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.set("connectionType", canonical);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [connectionTypeParam, setSearchParams, typeOptions]);
+
+  useEffect(() => {
+    if (profileIdParam === "all") return;
+    const numericId = Number(profileIdParam);
+    if (!Number.isInteger(numericId) || numericId <= 0) return;
+    if (pinnedProfiles.some((profile) => profile.id === numericId)) return;
+
+    let cancelled = false;
+    const resolveProfile = async () => {
+      try {
+        const profile = await connectionProfileService.getProfile(numericId);
+        if (cancelled) return;
+        setPinnedProfiles([profile]);
+        if (
+          profile.connection_type &&
+          normalizeConnectionType(profile.connection_type) !==
+            normalizeConnectionType(connectionTypeParam)
+        ) {
+          setSearchParams(
+            (current) => {
+              const next = new URLSearchParams(current);
+              if (next.get("profileId") !== String(profile.id)) return current;
+              next.set("connectionType", profile.connection_type);
+              return next;
+            },
+            { replace: true },
+          );
+        }
+      } catch (error) {
+        console.error("Failed to resolve filtered connection profile", error);
+      }
+    };
+    resolveProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [connectionTypeParam, pinnedProfiles, profileIdParam, setSearchParams]);
+
   const rows = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     return pipelines
@@ -81,7 +242,7 @@ export default function PipelinesPage() {
         profile_name:
           pipeline.profile_name ||
           profileNameById.get(pipeline.connection_profile_id) ||
-          `#${pipeline.connection_profile_id}`,
+          (namesResolved ? `#${pipeline.connection_profile_id}` : ""),
       }))
       .filter((pipeline) => {
         const haystack = [
@@ -98,6 +259,16 @@ export default function PipelinesPage() {
         ) {
           return false;
         }
+        const selectedType = normalizeConnectionType(connectionTypeParam);
+        if (selectedType && profileIdParam === "all") {
+          const rowType = normalizeConnectionType(pipeline.connection_type);
+          if (rowType) {
+            if (rowType !== selectedType) return false;
+          } else if (profilesLoaded) {
+            const known = profileIdsOfType.has(pipeline.connection_profile_id);
+            if (!known && !profilesTruncated) return false;
+          }
+        }
         if (term && !haystack.includes(term)) return false;
         if (actionFilter !== "all" && pipeline.action_type !== actionFilter) {
           return false;
@@ -109,7 +280,20 @@ export default function PipelinesPage() {
         if (statusFilter === "inactive" && pipeline.is_active) return false;
         return true;
       });
-  }, [actionFilter, pipelines, profileIdParam, profileNameById, searchTerm, sourceFilter, statusFilter]);
+  }, [
+    actionFilter,
+    connectionTypeParam,
+    pipelines,
+    profileIdParam,
+    profileIdsOfType,
+    profileNameById,
+    profilesLoaded,
+    namesResolved,
+    profilesTruncated,
+    searchTerm,
+    sourceFilter,
+    statusFilter,
+  ]);
 
   const columns: TableColumn<ConnectionProfilePipeline>[] = useMemo(
     () => [
@@ -161,6 +345,12 @@ export default function PipelinesPage() {
         label: "Load",
         visible: true,
         render: (value) => labelFor(LOAD_STRATEGY_OPTIONS, value),
+      },
+      {
+        id: "schedule_enabled",
+        label: "Schedule",
+        visible: true,
+        render: (_value, pipeline) => describeStoredSchedule(pipeline),
       },
       {
         id: "is_active",
@@ -219,6 +409,16 @@ export default function PipelinesPage() {
     persistToLocalStorage: true,
   });
 
+  const profileHelp = profileFilterMessage({
+    connectionType: connectionTypeParam,
+    profilesLoading,
+    profilesLoaded,
+    isSearching,
+    searchApplied,
+    catalogCount,
+    visibleCount: profiles.length,
+    profilesTruncated,
+  });
   const activeCount = rows.filter((pipeline) => pipeline.is_active).length;
   const pullCount = rows.filter((pipeline) => pipeline.action_type === "PULL").length;
 
@@ -236,19 +436,25 @@ export default function PipelinesPage() {
           action="create"
           label="New pipeline"
           onClick={
-            profileIdParam !== "all"
-              ? () =>
+            profileIdParam !== "all" || connectionTypeParam
+              ? () => {
+                  const params = new URLSearchParams();
+                  if (connectionTypeParam) {
+                    params.set("connectionType", connectionTypeParam);
+                  }
+                  if (profileIdParam !== "all") {
+                    params.set("profileId", profileIdParam);
+                  }
                   navigate(
-                    `/dashboard/connection-profile-pipelines/new?profileId=${profileIdParam}`,
-                  )
+                    `/dashboard/connection-profile-pipelines/new?${params.toString()}`,
+                  );
+                }
               : undefined
           }
         />
       </div>
       <p className={`text-sm ${tw.textSecondary}`}>
-        Define how each connection profile extracts or exports data. A profile
-        holds credentials. A pipeline holds the source, field mappings, and
-        target table.
+        Define how each connection profile extracts or exports data.
       </p>
       
 
@@ -273,56 +479,72 @@ export default function PipelinesPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-1">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search name, profile, or table"
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Search name, profile, or table"
+        />
         <HeadlessSelect
-          value={profileIdParam}
-          placeholder="All profiles"
+          value={connectionTypeParam || "all"}
+          placeholder={
+            typesLoading ? "Loading connection types..." : "All connection types"
+          }
           searchable
+          searchPlaceholder="Search connection types..."
+          disabled={typesLoading && typeOptions.length === 0}
           options={[
-            { value: "all", label: "All profiles" },
-            ...profiles.map((profile) => ({
-              value: String(profile.id),
-              label: profile.profile_name,
+            { value: "all", label: "All connection types" },
+            ...typeOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
             })),
-            ...pipelines
-              .filter(
-                (pipeline) =>
-                  !profiles.some(
-                    (profile) => profile.id === pipeline.connection_profile_id,
-                  ),
-              )
-              .filter(
-                (pipeline, index, list) =>
-                  list.findIndex(
-                    (item) =>
-                      item.connection_profile_id === pipeline.connection_profile_id,
-                  ) === index,
-              )
-              .map((pipeline) => ({
-                value: String(pipeline.connection_profile_id),
-                label:
-                  pipeline.profile_name ||
-                  `Profile #${pipeline.connection_profile_id}`,
-              })),
           ]}
           onChange={(value) => {
             const next = String(value);
-            if (next === "all") {
-              searchParams.delete("profileId");
-            } else {
-              searchParams.set("profileId", next);
-            }
-            setSearchParams(searchParams);
+            setSearchParams((current) => {
+              const params = new URLSearchParams(current);
+              if (next === "all") params.delete("connectionType");
+              else params.set("connectionType", next);
+              params.delete("profileId");
+              return params;
+            });
+            setPinnedProfiles([]);
             handlePageChange(1);
           }}
         />
+        {connectionTypeParam ? (
+          <div>
+            <HeadlessSelect
+              key={connectionTypeParam}
+              value={profileIdParam}
+              placeholder="All profiles"
+              searchable
+              searchPlaceholder="Search by name or code..."
+              options={profileOptions}
+              onChange={(value) => {
+                const next = String(value);
+                if (next === "all") {
+                  setPinnedProfiles([]);
+                } else {
+                  const profile = profiles.find((item) => String(item.id) === next);
+                  if (profile) setPinnedProfiles([profile]);
+                }
+                setSearchParams((current) => {
+                  const params = new URLSearchParams(current);
+                  if (next === "all") params.delete("profileId");
+                  else params.set("profileId", next);
+                  return params;
+                });
+                handlePageChange(1);
+              }}
+              onSearchChange={onProfileSearch}
+            />
+            {profileHelp ? (
+              <p className="mt-1 text-xs text-gray-500">{profileHelp}</p>
+            ) : null}
+          </div>
+        ) : null}
         <HeadlessSelect
           value={actionFilter}
           options={[
@@ -351,8 +573,6 @@ export default function PipelinesPage() {
             handlePageChange(1);
           }}
         />
-      </div>
-      <div className="max-w-xs">
         <HeadlessSelect
           value={statusFilter}
           options={[
