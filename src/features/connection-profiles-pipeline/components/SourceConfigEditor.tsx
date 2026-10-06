@@ -3,12 +3,16 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Input from "../../../shared/components/ui/Input";
 import Textarea from "../../../shared/components/ui/Textarea";
 import FormField from "../../../shared/components/FormField";
-import { FILE_FORMAT_OPTIONS } from "../constants/pipelineOptions";
+import {
+  FILE_FORMAT_OPTIONS,
+  OBJECT_STORAGE_CONNECTION_TYPES,
+} from "../constants/pipelineOptions";
 import { PipelineFormState, PipelineSourceType } from "../types/pipeline";
 import JsonParameterEditor from "./JsonParameterEditor";
 
 interface SourceConfigEditorProps {
   sourceType: PipelineSourceType;
+  connectionType?: string;
   form: PipelineFormState;
   errors: Record<string, string>;
   onChange: (patch: Partial<PipelineFormState>) => void;
@@ -17,18 +21,133 @@ interface SourceConfigEditorProps {
 
 export default function SourceConfigEditor({
   sourceType,
+  connectionType = "",
   form,
   errors,
   onChange,
   onParameterIssue,
 }: SourceConfigEditorProps) {
+  const objectStorage = OBJECT_STORAGE_CONNECTION_TYPES.includes(
+    connectionType.trim().toLowerCase(),
+  );
+
+  if (sourceType === "KAFKA") {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-gray-500">
+          Brokers and the topic stay on the connection profile. This pipeline
+          only chooses where reading starts.
+        </p>
+        <div className="max-w-sm">
+          <HeadlessSelect
+            label="Start from"
+            value={form.stream.start_from}
+            options={[
+              { value: "latest", label: "Latest message" },
+              { value: "earliest", label: "Earliest message" },
+            ]}
+            onChange={(value) =>
+              onChange({
+                stream: {
+                  ...form.stream,
+                  start_from: String(value) === "earliest" ? "earliest" : "latest",
+                },
+              })
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (sourceType === "WEBSOCKET") {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-gray-500">
+          The URL, path, and credentials stay on the connection profile. Add a
+          subscribe message only when the socket expects one.
+        </p>
+        <FormField error={errors.subscribe_message}>
+          <Textarea
+            label="Subscribe message"
+            rows={4}
+            value={form.stream.subscribe_message}
+            placeholder='{"action":"subscribe"}'
+            onChange={(value) =>
+              onChange({
+                stream: { ...form.stream, subscribe_message: value },
+              })
+            }
+          />
+        </FormField>
+      </div>
+    );
+  }
+
+  if (sourceType === "TCP") {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-gray-500">
+          The host, port, and decoder stay on the connection profile. Choose
+          how each record is split.
+        </p>
+        <div className="max-w-sm">
+          <HeadlessSelect
+            label="Record separator"
+            value={form.stream.record_separator}
+            options={[
+              { value: "newline", label: "Newline" },
+              { value: "crlf", label: "Carriage return and newline" },
+              { value: "comma", label: "Comma" },
+            ]}
+            onChange={(value) =>
+              onChange({
+                stream: {
+                  ...form.stream,
+                  record_separator:
+                    String(value) === "crlf" || String(value) === "comma"
+                      ? (String(value) as PipelineFormState["stream"]["record_separator"])
+                      : "newline",
+                },
+              })
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (sourceType === "SMS_INBOX") {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-gray-500">
+          The short code, provider, and inbox filter stay on the connection
+          profile. Add a keyword here only when this pipeline should read a
+          subset of that inbox.
+        </p>
+        <div className="max-w-sm">
+          <Input
+            label="Keyword"
+            placeholder="PAYMENT"
+            value={form.stream.keyword}
+            onChange={(value) =>
+              onChange({
+                stream: { ...form.stream, keyword: String(value) },
+              })
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (sourceType === "FTP_FILE") {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField error={errors.remote_path}>
           <Input
-            label="Remote path*"
-            placeholder="/incoming/cdr"
+            label={objectStorage ? "Prefix*" : "Remote path*"}
+            placeholder={objectStorage ? "incoming/cdr/" : "/incoming/cdr"}
             value={form.ftp.remote_path}
             hasError={!!errors.remote_path}
             onChange={(value) =>
@@ -40,8 +159,8 @@ export default function SourceConfigEditor({
         </FormField>
         <FormField error={errors.file_pattern}>
           <Input
-            label="File pattern*"
-            placeholder="voice_sms_*.csv"
+            label={objectStorage ? "Object pattern*" : "File pattern*"}
+            placeholder={objectStorage ? "*.csv" : "voice_sms_*.csv"}
             value={form.ftp.file_pattern}
             hasError={!!errors.file_pattern}
             onChange={(value) =>

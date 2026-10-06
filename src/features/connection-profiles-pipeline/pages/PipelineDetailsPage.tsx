@@ -19,6 +19,7 @@ import {
   SOURCE_TYPE_OPTIONS,
 } from "../constants/pipelineOptions";
 import { connectionProfilePipelineService } from "../services/pipelineService";
+import { describeStoredSchedule } from "../utils/pipelineSchedule";
 import {
   ConnectionProfilePipeline,
   PipelineExecutionResult,
@@ -259,6 +260,10 @@ export default function PipelineDetailsPage() {
               />
               <DetailItem label="Batch size" value={String(pipeline.batch_size)} />
               <DetailItem
+                label="Schedule"
+                value={describeStoredSchedule(pipeline)}
+              />
+              <DetailItem
                 label="Status"
                 value={pipeline.is_active ? "Active" : "Inactive"}
               />
@@ -373,6 +378,26 @@ export default function PipelineDetailsPage() {
                 <p className="text-sm font-medium text-gray-900 mt-1">
                   {pipeline.created_at ? (
                     <DateFormatter date={pipeline.created_at} includeTime />
+                  ) : (
+                    "—"
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Next run</p>
+                <p className="text-sm font-medium text-gray-900 mt-1">
+                  {pipeline.schedule_enabled && pipeline.next_execution_at ? (
+                    <DateFormatter date={pipeline.next_execution_at} includeTime />
+                  ) : (
+                    "Not scheduled"
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Last scheduled run</p>
+                <p className="text-sm font-medium text-gray-900 mt-1">
+                  {pipeline.last_executed_at ? (
+                    <DateFormatter date={pipeline.last_executed_at} includeTime />
                   ) : (
                     "—"
                   )}

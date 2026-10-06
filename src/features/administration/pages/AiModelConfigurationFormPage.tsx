@@ -290,7 +290,7 @@ export default function AiModelConfigurationFormPage() {
         <div className={`${tw.rounded} border p-6 shadow-sm ${tw.borderDefault} bg-[var(--c-surface-card-bg)]`}>
           <h2 className={`${tw.cardHeading} ${tw.textPrimary} mb-4`}>Credentials</h2>
           <p className={`text-sm ${tw.textPrimary} mb-6`}>
-            API keys stay on the server in production. Generation requests send only this
+            Generation requests send only this
             configuration id — never the secret. Rotate a key by entering a new value.
           </p>
           <div className="space-y-6">

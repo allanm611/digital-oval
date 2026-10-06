@@ -6,6 +6,7 @@ import type {
   CustomerEventCountBucket,
   CustomerEventCounts,
   CustomerEventCreativeSummary,
+  CustomerEventFacetOption,
   CustomerEventFacets,
   CustomerEventDeviceContext,
   CustomerEventInteractionContext,
@@ -1717,6 +1718,47 @@ export function parseApiCounts(raw: unknown): CustomerEventCounts | null {
     }
   });
   return found ? counts : null;
+}
+
+function parseFacetList(raw: unknown): CustomerEventFacetOption[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const row = asRecord(item);
+    if (!row) return [];
+    const value = pickString(row, ["value", "code", "id", "name"]);
+    if (!value) return [];
+    const label = pickString(row, ["label", "name"]) || value;
+    const count = Number(row.count);
+    return [
+      {
+        value,
+        label,
+        count: Number.isFinite(count) ? count : undefined,
+      },
+    ];
+  });
+}
+
+export function parseApiFacets(raw: unknown): CustomerEventFacets | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const facets: CustomerEventFacets = {
+    event_types: parseFacetList(record.event_types ?? record.eventTypes),
+    tracking_sources: parseFacetList(
+      record.tracking_sources ?? record.trackingSources,
+    ),
+    statuses: parseFacetList(record.statuses),
+    channels: parseFacetList(record.channels),
+  };
+  if (
+    facets.event_types.length === 0 &&
+    facets.tracking_sources.length === 0 &&
+    facets.statuses.length === 0 &&
+    facets.channels.length === 0
+  ) {
+    return null;
+  }
+  return facets;
 }
 
 export function humanizeChannel(channel: string): string {

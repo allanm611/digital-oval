@@ -13,6 +13,7 @@ import { connectionProfileService } from "../../connection-profiles/services/con
 import { ConnectionProfileType } from "../../connection-profiles/types/connectionProfile";
 import FieldMappingsEditor from "../components/FieldMappingsEditor";
 import SourceConfigEditor from "../components/SourceConfigEditor";
+import PipelineScheduleFields from "../components/PipelineScheduleFields";
 import TargetCatalogFields from "../components/TargetCatalogFields";
 import {
   ACTION_TYPE_OPTIONS,
@@ -64,7 +65,6 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
   );
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
-  const sourceTouchedRef = useRef(false);
   const parameterIssuesRef = useRef<Record<string, string>>({});
 
   const {
@@ -88,7 +88,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
   }, [connectionType, typeOptions]);
 
   useEffect(() => {
-    if (mode === "edit" || sourceTouchedRef.current || !connectionType) return;
+    if (!connectionType) return;
     const nextSource = recommendedSourceType(connectionType);
     if (!nextSource) return;
     setForm((current) =>
@@ -96,7 +96,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
         ? current
         : { ...current, source_type: nextSource },
     );
-  }, [connectionType, mode]);
+  }, [connectionType]);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,7 +108,6 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
           );
           if (cancelled) return;
           setForm(formFromPipeline(pipeline));
-          sourceTouchedRef.current = true;
           setProfileLabelFallback(pipeline.profile_name || "");
           if (pipeline.connection_type) {
             setConnectionType(pipeline.connection_type);
@@ -142,15 +141,13 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
           setPinnedProfiles([profile]);
           if (profile.connection_type) setConnectionType(profile.connection_type);
           if (profile.profile_name) setProfileLabelFallback(profile.profile_name);
-          if (!sourceTouchedRef.current) {
-            const recommended = recommendedSourceType(profile.connection_type);
-            if (recommended) {
-              setForm((current) =>
-                current.source_type === recommended
-                  ? current
-                  : { ...current, source_type: recommended },
-              );
-            }
+          const recommended = recommendedSourceType(profile.connection_type);
+          if (recommended) {
+            setForm((current) =>
+              current.source_type === recommended
+                ? current
+                : { ...current, source_type: recommended },
+            );
           }
         } catch (profileError) {
           console.error("Failed to load preset connection profile", profileError);
@@ -188,7 +185,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
     [form.connection_profile_id, profiles],
   );
 
-  const recommended = recommendedSourceType(selectedProfile?.connection_type);
+  const recommended = recommendedSourceType(connectionType);
   const sourceAligned = sourceMatchesConnection(
     form.source_type,
     selectedProfile?.connection_type,
@@ -204,14 +201,11 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
     setPinnedProfiles([]);
     setProfileLabelFallback("");
     setWarehouseColumns([]);
-    const recommended = recommendedSourceType(nextType);
+    const nextSource = recommendedSourceType(nextType);
     setForm((current) => ({
       ...current,
       connection_profile_id: "",
-      source_type:
-        !sourceTouchedRef.current && recommended
-          ? recommended
-          : current.source_type,
+      source_type: nextSource ?? current.source_type,
     }));
     if (errors.connection_type || errors.connection_profile_id) {
       setErrors((current) => ({
@@ -228,10 +222,9 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
       setPinnedProfiles([profile]);
       setProfileLabelFallback(profile.profile_name);
     }
-    const nextSource =
-      !sourceTouchedRef.current && profile
-        ? recommendedSourceType(profile.connection_type) || form.source_type
-        : form.source_type;
+    const nextSource = profile
+      ? recommendedSourceType(profile.connection_type) || form.source_type
+      : form.source_type;
     setWarehouseColumns([]);
     patch({
       connection_profile_id: String(value),
@@ -253,7 +246,10 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
         "Select a connection type before choosing a profile.";
       delete nextErrors.connection_profile_id;
     }
-    if (selectedProfile && !sourceAligned) {
+    if (connectionType && !recommended) {
+      nextErrors.source_type =
+        "This connection type does not have a pipeline source yet.";
+    } else if (selectedProfile && !sourceAligned) {
       nextErrors.source_type =
         "Source type must match the selected connection profile.";
     }
@@ -325,7 +321,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
     (option) => option.value === form.action_type,
   )?.description;
   const sourceHelp = SOURCE_TYPE_OPTIONS.find(
-    (option) => option.value === form.source_type,
+    (option) => option.value === (recommended || form.source_type),
   )?.description;
 
   return (
@@ -342,8 +338,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
           <div>
             <h2 className={`${tw.cardHeading} text-gray-900`}>Pipeline</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Choose the connection type first, then the profile. The profile
-              supplies the host, credentials, and pool.
+              Each pipeline belongs to one connection profile. The profile supplies the host, credentials, and pool.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -418,21 +413,18 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
             <div>
               <HeadlessSelect
                 label="Source type*"
-                value={form.source_type}
+                value={recommended || ""}
                 error={!!errors.source_type}
-                options={SOURCE_TYPE_OPTIONS.map((option) => ({
+                disabled
+                placeholder="Follows the connection type"
+                options={(recommended
+                  ? SOURCE_TYPE_OPTIONS.filter((option) => option.value === recommended)
+                  : []
+                ).map((option) => ({
                   value: option.value,
                   label: option.label,
                 }))}
-                onChange={(value) => {
-                  sourceTouchedRef.current = true;
-                  patch({
-                    source_type: String(value) as PipelineFormState["source_type"],
-                  });
-                  if (errors.source_type) {
-                    setErrors((current) => ({ ...current, source_type: "" }));
-                  }
-                }}
+                onChange={() => undefined}
               />
               {errors.source_type && (
                 <p className="mt-1 text-xs text-red-600">
@@ -444,16 +436,10 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
               )}
             </div>
           </div>
-          {selectedProfile && recommended && (
-            <p className={`text-sm ${sourceAligned ? "text-gray-600" : "text-amber-700"}`}>
-              {selectedProfile.profile_name} is a {selectedProfile.connection_type}{" "}
-              profile.
-              {sourceAligned
-                ? " This source type matches that connection."
-                : ` The usual source for this connection is ${
-                    SOURCE_TYPE_OPTIONS.find((option) => option.value === recommended)
-                      ?.label
-                  }. Select that source type before saving because execution uses the profile's connection driver.`}
+          {connectionType && !recommended && (
+            <p className="text-sm text-amber-700">
+              This connection type does not have a pipeline source yet. Choose a
+              file, database, API, Kafka, WebSocket, TCP, or SMS inbox profile.
             </p>
           )}
           <label className="flex items-center gap-3 text-sm text-gray-700">
@@ -465,16 +451,27 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
           </label>
         </section>
 
+        {connectionType && (
         <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
           <div>
             <h2 className={`${tw.cardHeading} text-gray-900`}>Source</h2>
             <p className="text-sm text-gray-500 mt-1">
-              Describe what to read. Add parameters as fields and the JSON is
-              built for you. Do not put passwords or tokens here.
+              {recommended === "DATABASE_QUERY" || recommended === "REST_API"
+                ? "Describe what to read."
+                : recommended === "FTP_FILE"
+                  ? "Name the folder and file pattern. Credentials stay on the connection profile."
+                  : "The connection profile holds the host and credentials. These fields only describe what this pipeline reads."}
             </p>
           </div>
+          {!recommended ? (
+            <p className="text-sm text-gray-500">
+              A SQL query or a file path cannot be used for this connection.
+              The host and credentials stay on the connection profile.
+            </p>
+          ) : (
           <SourceConfigEditor
-            sourceType={form.source_type}
+            sourceType={recommended}
+            connectionType={connectionType}
             form={form}
             errors={errors}
             onChange={patch}
@@ -487,7 +484,9 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
               });
             }}
           />
+          )}
         </section>
+        )}
 
         <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
@@ -557,6 +556,18 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
               />
             </FormField>
           </div>
+        </section>
+
+        <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
+          <div>
+            <h2 className={`${tw.cardHeading} text-gray-900`}>Schedule</h2>
+            
+          </div>
+          <PipelineScheduleFields
+            form={form}
+            errors={errors}
+            onChange={(schedule) => patch({ schedule })}
+          />
         </section>
 
         <div className="flex justify-end gap-3">

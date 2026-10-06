@@ -126,13 +126,21 @@ export default function JsonParameterEditor({
           <p className="text-sm font-medium text-gray-800">{label}</p>
           <p className="mt-1 text-xs text-gray-500">{description}</p>
         </div>
-        {mode === "fields" && (
+        {mode === "fields" ? (
           <button
             type="button"
             onClick={() => setMode("raw")}
             className="shrink-0 text-sm font-medium text-red-400 hover:text-red-500"
           >
             Edit the JSON directly
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => useFields(false)}
+            className="shrink-0 text-sm font-medium text-red-400 hover:text-red-500"
+          >
+            Build the JSON from fields
           </button>
         )}
       </div>
@@ -233,30 +241,19 @@ export default function JsonParameterEditor({
         />
       )}
 
-      {mode === "raw" && (
+      {mode === "raw" && confirmReplace && (
         <div className="space-y-2">
+          <p className="text-xs text-amber-700">
+            This value is nested or not a JSON object, so the fields cannot
+            open it. Replacing it clears the current JSON.
+          </p>
           <button
             type="button"
-            onClick={() => useFields(false)}
-            className="text-xs font-medium text-gray-600 hover:text-black"
+            onClick={() => useFields(true)}
+            className="text-xs font-medium text-amber-800 hover:text-black"
           >
-            Build the JSON from fields
+            Replace with empty fields
           </button>
-          {confirmReplace && (
-            <div className="space-y-2">
-              <p className="text-xs text-amber-700">
-                This value is nested or not a JSON object, so the fields cannot
-                open it. Replacing it clears the current JSON.
-              </p>
-              <button
-                type="button"
-                onClick={() => useFields(true)}
-                className="text-xs font-medium text-amber-800 hover:text-black"
-              >
-                Replace with empty fields
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Play, Power, PowerOff } from "lucide-react";
+import { Play, PowerOff } from "lucide-react";
 import { buttons } from "../../utils/tokens";
 
 interface ActivateDeactivateButtonProps {
@@ -28,19 +28,28 @@ export default function ActivateDeactivateButton({
     return (
       <button
         type="button"
+        role="switch"
+        aria-checked={isActive}
+        aria-busy={isLoading}
         onClick={onToggle}
         disabled={disabled || isLoading}
-        className="p-1 inline-flex items-center justify-center rounded-md transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
         style={{
-          color: isActive ? "var(--c-toggle-active)" : "var(--c-text-muted)",
+          backgroundColor: isActive
+            ? "var(--c-toggle-active)"
+            : "var(--c-toggle-inactive)",
         }}
         title={label}
         aria-label={label}
       >
         {isLoading ? (
-          <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white border-t-transparent animate-spin" />
         ) : (
-          <Power className="w-4 h-4" />
+          <span
+            className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+              isActive ? "translate-x-3.5" : "translate-x-0.5"
+            }`}
+          />
         )}
       </button>
     );

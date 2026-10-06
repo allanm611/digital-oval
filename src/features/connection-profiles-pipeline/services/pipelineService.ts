@@ -29,6 +29,10 @@ const SOURCE_TYPES: PipelineSourceType[] = [
   "FTP_FILE",
   "DATABASE_QUERY",
   "REST_API",
+  "KAFKA",
+  "WEBSOCKET",
+  "TCP",
+  "SMS_INBOX",
 ];
 const LOAD_STRATEGIES: PipelineLoadStrategy[] = [
   "BATCH_INSERT",

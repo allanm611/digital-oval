@@ -7,9 +7,15 @@ import {
   PipelineSourceType,
   PipelineWritePayload,
   RestApiSourceConfig,
+  StreamSourceConfig,
   ConnectionProfilePipeline,
 } from "../types/pipeline";
 import { bodyTemplateError } from "./jsonParameters";
+import {
+  cronFromSchedule,
+  emptySchedule,
+  scheduleFromPipeline,
+} from "./pipelineSchedule";
 
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
@@ -39,6 +45,15 @@ export function emptyDatabaseConfig(): DatabaseQuerySourceConfig {
     incremental_column: "",
     incremental_type: "none",
     parameters_json: "",
+  };
+}
+
+export function emptyStreamConfig(): StreamSourceConfig {
+  return {
+    start_from: "latest",
+    record_separator: "newline",
+    subscribe_message: "",
+    keyword: "",
   };
 }
 
@@ -82,12 +97,14 @@ export function emptyPipelineForm(
     ftp: emptyFtpConfig(),
     database: emptyDatabaseConfig(),
     rest: emptyRestConfig(),
+    stream: emptyStreamConfig(),
     mappings: [emptyMapping()],
     target_schema: "cvm",
     target_table: "",
     load_strategy: "BATCH_INSERT",
     batch_size: "1000",
     is_active: true,
+    schedule: emptySchedule(),
   };
 }
 
@@ -145,10 +162,11 @@ function jsonToEditor(value: unknown): string {
 export function hydrateSourceConfig(
   sourceType: PipelineSourceType,
   sourceConfig: Record<string, unknown>,
-): Pick<PipelineFormState, "ftp" | "database" | "rest"> {
+): Pick<PipelineFormState, "ftp" | "database" | "rest" | "stream"> {
   const ftp = emptyFtpConfig();
   const database = emptyDatabaseConfig();
   const rest = emptyRestConfig();
+  const stream = emptyStreamConfig();
 
   if (sourceType === "FTP_FILE") {
     ftp.remote_path = asString(sourceConfig.remote_path, "/");
@@ -194,7 +212,15 @@ export function hydrateSourceConfig(
     rest.body_template = asString(sourceConfig.body_template);
   }
 
-  return { ftp, database, rest };
+  const startFrom = asString(sourceConfig.start_from, "latest");
+  stream.start_from = startFrom === "earliest" ? "earliest" : "latest";
+  const separator = asString(sourceConfig.record_separator, "newline");
+  stream.record_separator =
+    separator === "crlf" || separator === "comma" ? separator : "newline";
+  stream.subscribe_message = asString(sourceConfig.subscribe_message);
+  stream.keyword = asString(sourceConfig.keyword);
+
+  return { ftp, database, rest, stream };
 }
 
 export function formFromPipeline(
@@ -224,6 +250,7 @@ export function formFromPipeline(
     load_strategy: pipeline.load_strategy,
     batch_size: String(pipeline.batch_size || 1000),
     is_active: pipeline.is_active,
+    schedule: scheduleFromPipeline(pipeline),
   };
 }
 
@@ -277,6 +304,26 @@ export function buildSourceConfig(
   if (form.rest.body_template.trim()) {
     config.body_template = form.rest.body_template;
   }
+  if (form.source_type === "REST_API") return config;
+
+  if (form.source_type === "KAFKA") {
+    return { start_from: form.stream.start_from };
+  }
+  if (form.source_type === "WEBSOCKET") {
+    const socket: Record<string, unknown> = {};
+    if (form.stream.subscribe_message.trim()) {
+      socket.subscribe_message = form.stream.subscribe_message.trim();
+    }
+    return socket;
+  }
+  if (form.source_type === "TCP") {
+    return { record_separator: form.stream.record_separator };
+  }
+  if (form.source_type === "SMS_INBOX") {
+    const inbox: Record<string, unknown> = {};
+    if (form.stream.keyword.trim()) inbox.keyword = form.stream.keyword.trim();
+    return inbox;
+  }
   return config;
 }
 
@@ -319,6 +366,20 @@ export function buildPipelinePayload(
     load_strategy: form.load_strategy,
     batch_size: Number(form.batch_size),
     is_active: form.is_active,
+    ...schedulePayload(form),
+  };
+}
+
+function schedulePayload(form: PipelineFormState): {
+  schedule_enabled: boolean;
+  schedule_cron: string | null;
+  schedule_timezone: string;
+} {
+  const built = cronFromSchedule(form.schedule);
+  return {
+    schedule_enabled: form.schedule.enabled,
+    schedule_cron: form.schedule.enabled && built.ok ? built.cron : null,
+    schedule_timezone: form.schedule.timezone.trim() || "Africa/Nairobi",
   };
 }
 
@@ -393,6 +454,20 @@ export function validatePipelineForm(
   const batch = Number(form.batch_size);
   if (!Number.isInteger(batch) || batch < 1 || batch > 100000) {
     errors.batch_size = "Batch size must be a whole number from 1 to 100000.";
+  }
+
+  if (form.schedule.enabled) {
+    if (!form.schedule.timezone.trim()) {
+      errors.schedule_timezone = "Choose the timezone for this schedule.";
+    }
+    const built = cronFromSchedule(form.schedule);
+    if (!built.ok) {
+      if (form.schedule.frequency === "custom") errors.schedule_cron = built.message;
+      else if (built.message.startsWith("Minute")) errors.schedule_minute = built.message;
+      else if (built.message.startsWith("Hour")) errors.schedule_hour = built.message;
+      else if (built.message.startsWith("Day")) errors.schedule_day = built.message;
+      else errors.schedule_cron = built.message;
+    }
   }
 
   const seen = new Set<string>();

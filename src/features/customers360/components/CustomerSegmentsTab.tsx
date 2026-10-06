@@ -479,9 +479,7 @@ export default function CustomerSegmentsTab({
           <p className="text-gray-500 text-sm mt-1">
             {filtersActive
               ? "Try a different type, campaign mapping, or search term."
-              : result.systemSegmentCount > 0
-                ? `${result.systemSegmentCount.toLocaleString()} system segment${result.systemSegmentCount === 1 ? " was" : "s were"} checked.`
-                : "No segments exist in the system yet."}
+              : "This customer has no segment memberships on file."}
           </p>
         </div>
       ) : (
@@ -517,7 +515,7 @@ export default function CustomerSegmentsTab({
                           <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
                             <th className="py-2 pr-4">Campaign</th>
                             <th className="py-2 pr-4">Status</th>
-                            <th className="py-2 pr-4">Flow</th>
+                            <th className="py-2 pr-4">Type</th>
                             <th className="py-2 pr-4">Offer</th>
                             <th className="py-2">Last used</th>
                           </tr>
@@ -552,7 +550,9 @@ export default function CustomerSegmentsTab({
                                 </span>
                               </td>
                               <td className="py-2 pr-4 text-gray-700">
-                                {humanizeFlowType(campaign.flowType)}
+                                {humanizeFlowType(
+                                  campaign.flowType || campaign.campaignType,
+                                )}
                               </td>
                               <td className="py-2 pr-4 text-gray-700">
                                 {campaign.offerName || "—"}

@@ -126,7 +126,13 @@ export default function FieldMappingsEditor({
     try {
       const discovered = await columnsFromSampleFile(file, {
         fileFormat:
-          form.source_type === "REST_API" ? "json" : form.ftp.file_format,
+          form.source_type === "REST_API" ||
+          form.source_type === "KAFKA" ||
+          form.source_type === "WEBSOCKET" ||
+          form.source_type === "TCP" ||
+          form.source_type === "SMS_INBOX"
+            ? "json"
+            : form.ftp.file_format,
         delimiter: form.ftp.delimiter || ",",
         hasHeaders: form.ftp.has_headers,
         responsePath: form.rest.response_path,
@@ -152,8 +158,13 @@ export default function FieldMappingsEditor({
     warehouseColumns.length > 0 ? warehouseColumns : columns,
     mappings.map((mapping) => mapping.target_column),
   );
+  const sampleIsMessage =
+    form.source_type === "KAFKA" ||
+    form.source_type === "WEBSOCKET" ||
+    form.source_type === "TCP" ||
+    form.source_type === "SMS_INBOX";
   const fileAccept =
-    form.source_type === "REST_API"
+    form.source_type === "REST_API" || sampleIsMessage
       ? ".json,application/json"
       : form.ftp.file_format === "xlsx"
         ? ".xlsx,.xls"
@@ -206,7 +217,7 @@ export default function FieldMappingsEditor({
               ) : (
                 <Upload className="h-4 w-4" />
               )}
-              Upload sample file
+              {sampleIsMessage ? "Upload sample message" : "Upload sample file"}
             </button>
           </>
         )}

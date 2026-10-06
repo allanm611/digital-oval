@@ -27,6 +27,7 @@ import {
   isCommunicationLinkedEvent,
   normalizeCustomerEvent,
   parseApiCounts,
+  parseApiFacets,
   toCreativeChannel,
   unwrapEventList,
 } from "../utils/customerEventHelpers";
@@ -231,44 +232,49 @@ async function loadEventRelatedDetails(
 
 const EVENT_PAGE_SIZE = 50;
 const EVENT_MAX_PAGES = 10;
-const SERVER_PRESETS = new Set([
-  "last_1h",
-  "last_24h",
-  "last_7d",
-  "last_30d",
-  "last_90d",
-]);
+const PRESET_HOURS: Record<string, number> = {
+  last_1h: 1,
+  last_24h: 24,
+  last_7d: 24 * 7,
+  last_30d: 24 * 30,
+  last_90d: 24 * 90,
+};
+
+function presetStart(preset: string | undefined): string | null {
+  if (!preset) return null;
+  const hours = PRESET_HOURS[preset];
+  if (!hours) return null;
+  return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+}
 
 function queryToSearchParams(query: CustomerEventQuery): URLSearchParams {
   const params = new URLSearchParams();
-  if (query.search?.trim()) params.set("search", query.search.trim());
   const eventTypes = (query.event_types || []).filter(
     (item) => item && item !== "all",
   );
-  if (eventTypes.length > 0) {
-    eventTypes.forEach((type) => params.append("event_type", type));
-  } else if (query.event_type && query.event_type !== "all") {
+  if (eventTypes.length === 1) {
+    params.set("event_type", eventTypes[0]);
+  } else if (
+    eventTypes.length === 0 &&
+    query.event_type &&
+    query.event_type !== "all"
+  ) {
     params.set("event_type", query.event_type);
   }
-  if (query.tracking_source_id && query.tracking_source_id !== "all") {
-    params.set("tracking_source_id", query.tracking_source_id);
-  }
-  if (query.origin && query.origin !== "all") params.set("origin", query.origin);
-  if (query.status && query.status !== "all") params.set("status", query.status);
-  if (query.channel && query.channel !== "all") params.set("channel", query.channel);
-  if (query.time_preset && SERVER_PRESETS.has(query.time_preset)) {
-    params.set("preset", query.time_preset);
-  }
+
+  const start = presetStart(query.time_preset);
+  if (start) params.set("start_date", start);
   if (query.time_preset === "custom") {
-    if (query.date_from) params.set("from", query.date_from);
-    if (query.date_to) params.set("to", query.date_to);
+    if (query.date_from) params.set("start_date", query.date_from);
+    if (query.date_to) params.set("end_date", query.date_to);
   }
-  if (query.limit != null) {
-    params.set(
-      "limit",
-      String(Math.min(Math.max(query.limit, 1), EVENT_PAGE_SIZE)),
-    );
-  }
+
+  params.set(
+    "limit",
+    String(
+      Math.min(Math.max(query.limit ?? EVENT_PAGE_SIZE, 1), 1000),
+    ),
+  );
   if ((query.offset ?? 0) > 0) {
     params.set("offset", String(query.offset));
   }
@@ -294,6 +300,8 @@ function buildResult(
   query: CustomerEventQuery,
   source: "api" | "fallback",
   apiCounts?: CustomerEventListResult["counts"] | null,
+  apiFacets?: CustomerEventListResult["facets"] | null,
+  reportedTotal?: number | null,
 ): CustomerEventListResult {
   const now = new Date();
   const attributeFiltered = filterCustomerEvents(
@@ -302,13 +310,17 @@ function buildResult(
     now,
   );
   const events = filterCustomerEvents(allEvents, query, now);
+  const clientNarrowed = events.length !== allEvents.length;
 
   return {
     events,
     allEvents,
-    total: events.length,
+    total:
+      !clientNarrowed && reportedTotal != null
+        ? reportedTotal
+        : events.length,
     counts: apiCounts || aggregateEventCounts(attributeFiltered, now),
-    facets: buildEventFacets(allEvents),
+    facets: apiFacets || buildEventFacets(allEvents),
     source,
   };
 }
@@ -331,6 +343,8 @@ async function fetchFromApi(
 ): Promise<CustomerEventListResult> {
   const collected: CustomerEvent[] = [];
   let apiCounts: CustomerEventListResult["counts"] | null = null;
+  let apiFacets: CustomerEventListResult["facets"] | null = null;
+  let reportedTotal: number | null = null;
   let useBareQuery = false;
 
   for (let page = 0; page < EVENT_MAX_PAGES; page += 1) {
@@ -366,6 +380,12 @@ async function fetchFromApi(
       .filter((item): item is CustomerEvent => Boolean(item));
 
     if (!apiCounts) apiCounts = parseApiCounts(record.counts);
+    if (!apiFacets) apiFacets = parseApiFacets(record.facets);
+    if (reportedTotal == null) {
+      const pagination = asRecord(record.pagination) || asRecord(record.meta);
+      const total = Number(pagination?.total ?? pagination?.count);
+      if (Number.isFinite(total)) reportedTotal = total;
+    }
     collected.push(...pageEvents);
 
     if (useBareQuery) break;
@@ -373,7 +393,14 @@ async function fetchFromApi(
     if (!paginationHasMore(payload, EVENT_PAGE_SIZE)) break;
   }
 
-  return buildResult(collected, query, "api", apiCounts);
+  return buildResult(
+    collected,
+    query,
+    "api",
+    apiCounts,
+    apiFacets,
+    reportedTotal,
+  );
 }
 
 export type GetSubscriberEventsOptions = {

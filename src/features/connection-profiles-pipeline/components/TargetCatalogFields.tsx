@@ -292,7 +292,7 @@ export default function TargetCatalogFields({
         <p className="text-sm text-gray-500">
           {form.source_type === "DATABASE_QUERY"
             ? "Schemas and tables load from the selected connection profile. A workbook uses each sheet name as a table. A CSV or JSON file uses the file name."
-            : "A workbook uses each sheet name as a table under the current schema. A CSV or JSON file uses the file name. The sample stays in this browser."}
+            : "A workbook uses each sheet name as a table under the current schema."}
         </p>
         {notice && <p className="text-sm text-gray-600">{notice}</p>}
       </div>
