@@ -22,7 +22,10 @@ import {
 import { useProfilesByConnectionType } from "../hooks/useProfilesByConnectionType";
 import { connectionProfilePipelineService } from "../services/pipelineService";
 import { ConnectionProfilePipeline } from "../types/pipeline";
-import { describeStoredSchedule } from "../utils/pipelineSchedule";
+import {
+  describeStoredSchedule,
+  isPipelineScheduled,
+} from "../utils/pipelineSchedule";
 import {
   connectionTypeLabel,
   matchingConnectionTypeValue,
@@ -350,7 +353,29 @@ export default function PipelinesPage() {
         id: "schedule_enabled",
         label: "Schedule",
         visible: true,
-        render: (_value, pipeline) => describeStoredSchedule(pipeline),
+        render: (_value, pipeline) => {
+          const scheduled = isPipelineScheduled(pipeline);
+          return (
+            <button
+              type="button"
+              title={
+                scheduled
+                  ? describeStoredSchedule(pipeline)
+                  : "Open the schedule and set when this pipeline runs"
+              }
+              onClick={() =>
+                navigate(
+                  scheduled
+                    ? `/dashboard/connection-profile-pipelines/${pipeline.id}#schedule`
+                    : `/dashboard/connection-profile-pipelines/${pipeline.id}/edit#schedule`,
+                )
+              }
+              className={`text-sm font-medium underline whitespace-nowrap ${tw.link}`}
+            >
+              {scheduled ? "Scheduled" : "Not scheduled"}
+            </button>
+          );
+        },
       },
       {
         id: "is_active",

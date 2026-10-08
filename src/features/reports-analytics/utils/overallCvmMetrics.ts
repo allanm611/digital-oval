@@ -54,14 +54,25 @@ export const OVERALL_CVM_LABELS = {
   churnRate: "Churn Rate",
 } as const;
 
+/**
+ * Dashboard is mounted at `/dashboard/*`. Links must include that prefix;
+ * a bare `/reports/...` path matches the app-root 404, not the nested report route.
+ */
 export const OVERALL_DOMAIN_ROUTES: Record<OverallReportDomain, string> = {
-  campaigns: "/reports/campaigns",
-  offers: "/reports/offers",
-  email: "/reports/email-delivery",
-  sms: "/reports/delivery",
-  segments: "/reports/segments",
-  profiles: "/reports/customer-profiles",
+  campaigns: "/dashboard/reports/campaigns",
+  offers: "/dashboard/reports/offers",
+  email: "/dashboard/reports/email-delivery",
+  sms: "/dashboard/reports/delivery",
+  segments: "/dashboard/reports/segments",
+  profiles: "/dashboard/reports/customer-profiles",
 };
+
+export function overallDomainRoute(id: string): string | null {
+  if (id in OVERALL_DOMAIN_ROUTES) {
+    return OVERALL_DOMAIN_ROUTES[id as OverallReportDomain];
+  }
+  return null;
+}
 
 export type OverallSource<T> = {
   id: OverallReportDomain;

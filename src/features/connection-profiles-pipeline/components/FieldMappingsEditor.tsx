@@ -179,7 +179,7 @@ export default function FieldMappingsEditor({
       <p className="text-sm text-gray-500">
         Load the source columns, then choose the source field. Target columns
         follow the selected warehouse table when that table's columns are known.
-        Mark a match key when the load strategy is upsert.
+        
       </p>
       <div className="flex flex-wrap items-center gap-3">
         {form.source_type === "DATABASE_QUERY" ? (

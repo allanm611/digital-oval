@@ -3,6 +3,7 @@ import { customerEventService } from "./customerEventService";
 import type {
   CustomerAccountDeviceProgress,
   CustomerAccountDeviceResult,
+  CustomerDeviceMovement,
 } from "../types/customerAccountDevice";
 import {
   buildSnapshot,
@@ -12,17 +13,26 @@ import {
   EMPTY_ACCOUNT_SNAPSHOT,
   eventToAccountStatus,
   eventToDeviceDraft,
+  deriveDeviceMovements,
+  EMPTY_DUMP_FEED,
+  eventToMovement,
+  eventToSighting,
   finalizeInventory,
   findExistingKey,
   isLoginEvent,
   mergeDraft,
   parseAccountRecord,
+  parseAdtDump,
   parseDeviceRecord,
   parseHintAccounts,
   parseHintDevices,
   parseHintSnapshot,
+  parseRegisterDump,
+  readEmbeddedDump,
+  resolveDeviceTrail,
   sortInventory,
   unwrapInventoryList,
+  type DeviceSighting,
   type DraftInventory,
 } from "../utils/customerAccountDeviceHelpers";
 import { asRecord } from "../utils/customerSegmentHelpers";
@@ -49,8 +59,28 @@ function emptyResult(warnings: string[] = []): CustomerAccountDeviceResult {
     source: "live",
     subscriberLookupUsed: false,
     eventsLive: false,
+    movements: [],
+    trailSource: "none",
+    adt: { ...EMPTY_DUMP_FEED, fields: [] },
+    hlr: { ...EMPTY_DUMP_FEED, fields: [] },
+    vlr: { ...EMPTY_DUMP_FEED, fields: [] },
     warnings,
   };
+}
+
+const DUMP_ROW_LIMIT = 50;
+
+function withDumpLimit(url: string): string {
+  const joiner = url.includes("?") ? "&" : "?";
+  return `${url}${joiner}limit=${DUMP_ROW_LIMIT}`;
+}
+
+async function tryFirstAvailable(paths: string[]): Promise<unknown | null> {
+  for (const url of paths) {
+    const payload = await tryJsonGet(withDumpLimit(url));
+    if (payload != null) return payload;
+  }
+  return null;
 }
 
 async function tryJsonGet(url: string): Promise<unknown | null> {
@@ -166,6 +196,24 @@ export const customerAccountDeviceService = {
 
     abortIfNeeded(input.isAborted);
     input.onProgress?.({ phase: "events", checked: 0, total: 1 });
+    const encoded = encodeURIComponent(subscriberId);
+    const dumpsPromise = Promise.all([
+      tryFirstAvailable([
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/adt`,
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/adt-dump`,
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/device-changes`,
+      ]),
+      tryFirstAvailable([
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/hlr`,
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/hlr-dump`,
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/hr`,
+      ]),
+      tryFirstAvailable([
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/vlr`,
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/vlr-dump`,
+        `${API_CONFIG.BASE_URL}/subscribers/${encoded}/var`,
+      ]),
+    ]);
     const eventsResult = await customerEventService.getSubscriberEvents(
       subscriberId,
       {},
@@ -176,6 +224,8 @@ export const customerAccountDeviceService = {
     let lastLoginFromEvents: string | null = null;
     let latestAccountStatus: { at: string; status: ReturnType<typeof eventToAccountStatus> } | null =
       null;
+    const sightings: DeviceSighting[] = [];
+    const explicitMovements: CustomerDeviceMovement[] = [];
 
     if (eventsLive) {
       eventsResult.allEvents.forEach((event) => {
@@ -193,6 +243,10 @@ export const customerAccountDeviceService = {
           eventCount += 1;
           upsertDraft(byKey, deviceDraft);
         }
+        const sighting = eventToSighting(event);
+        if (sighting) sightings.push(sighting);
+        const movement = eventToMovement(event);
+        if (movement) explicitMovements.push(movement);
         const accountStatus = eventToAccountStatus(event);
         if (accountStatus) {
           eventCount += 1;
@@ -234,6 +288,40 @@ export const customerAccountDeviceService = {
       lastLoginFromEvents,
     );
 
+    abortIfNeeded(input.isAborted);
+    input.onProgress?.({ phase: "dumps", checked: 0, total: 3 });
+    const [adtPayload, hlrPayload, vlrPayload] = await dumpsPromise;
+    input.onProgress?.({ phase: "dumps", checked: 3, total: 3 });
+    abortIfNeeded(input.isAborted);
+
+    const adtParsed = parseAdtDump(
+      adtPayload ??
+        readEmbeddedDump(input.customerRecord, [
+          "adt",
+          "adt_dump",
+          "device_changes",
+        ]),
+    );
+    const identity = { msisdn: snapshot.msisdn, imsi: snapshot.imsi };
+    const hlr = parseRegisterDump(
+      hlrPayload ??
+        readEmbeddedDump(input.customerRecord, ["hlr", "hlr_dump", "hr"]),
+      "hlr",
+      identity,
+    );
+    const vlr = parseRegisterDump(
+      vlrPayload ??
+        readEmbeddedDump(input.customerRecord, ["vlr", "vlr_dump", "var"]),
+      "vlr",
+      identity,
+    );
+    const trail = resolveDeviceTrail(
+      adtParsed.movements,
+      explicitMovements,
+      deriveDeviceMovements(sightings),
+      adtParsed.feed.available,
+    );
+
     if (!eventsLive) {
       warnings.push(
         "Live customer events were not available, so last login and device activity could not be confirmed from the event stream.",
@@ -256,6 +344,11 @@ export const customerAccountDeviceService = {
       source: !eventsLive ? "partial" : "live",
       subscriberLookupUsed: scoped.available,
       eventsLive,
+      movements: trail.movements,
+      trailSource: trail.trailSource,
+      adt: adtParsed.feed,
+      hlr,
+      vlr,
       warnings: warnings.filter(
         (warning, index, all) => all.indexOf(warning) === index,
       ),

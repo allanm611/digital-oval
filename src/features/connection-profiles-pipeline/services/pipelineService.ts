@@ -121,6 +121,8 @@ export function normalizePipeline(raw: unknown): ConnectionProfilePipeline {
         : undefined,
     schedule_cron: optionalNullableString(row.schedule_cron),
     schedule_timezone: optionalString(row.schedule_timezone),
+    schedule_start_at: optionalNullableString(row.schedule_start_at),
+    schedule_end_at: optionalNullableString(row.schedule_end_at),
     last_executed_at: optionalNullableString(row.last_executed_at),
     next_execution_at: optionalNullableString(row.next_execution_at),
     execution_count:

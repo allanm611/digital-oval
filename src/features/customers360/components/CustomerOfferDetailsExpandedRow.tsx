@@ -6,8 +6,10 @@ import { color, tw } from "../../../shared/utils/utils";
 import type { CustomerOfferItem } from "../types/customerOffer";
 import {
   humanizeCatalogStatus,
-  humanizeOfferState,
+  humanizeOfferStatus,
   humanizeOfferType,
+  humanizeValidity,
+  usageSummary,
 } from "../utils/customerOfferHelpers";
 
 type CustomerOfferDetailsExpandedRowProps = {
@@ -42,13 +44,6 @@ function displayValue(value: string | null | undefined): string {
   return String(value);
 }
 
-function evidenceLabel(value: CustomerOfferItem["evidence"][number]): string {
-  if (value === "subscriber_api") return "Subscriber offers API";
-  if (value === "campaign_mapping") return "Campaign mapping";
-  if (value === "event") return "Customer event";
-  return "Profile hint";
-}
-
 function OfferValue({ offer }: { offer: CustomerOfferItem }) {
   if (offer.valueAmount != null) {
     return <CurrencyFormatter amount={offer.valueAmount} />;
@@ -59,14 +54,47 @@ function OfferValue({ offer }: { offer: CustomerOfferItem }) {
   return <span>—</span>;
 }
 
+function statusExplanation(offer: CustomerOfferItem): string {
+  if (offer.status === "active" && offer.validity === "expired") {
+    return "Status is Active because this customer is attached to the reward. The offer validity has ended, so another redemption is blocked until the window is extended.";
+  }
+  if (offer.status === "active" && offer.validity === "scheduled") {
+    return "Status is Active because this customer is attached to the reward. The validity window has not started, so it cannot be redeemed yet.";
+  }
+  if (offer.status === "active" && offer.canRedeemAgain) {
+    return "Status is Active because this customer is attached to the reward. Another redemption is still allowed.";
+  }
+  if (offer.status === "active" && offer.redemptionCount > 0 && !offer.isReusable) {
+    return "Status is Active because this customer is attached to the reward. This offer is single-use and has already been redeemed.";
+  }
+  if (
+    offer.status === "active" &&
+    offer.maxUsagePerCustomer != null &&
+    offer.redemptionCount >= offer.maxUsagePerCustomer
+  ) {
+    return "Status is Active because this customer is attached to the reward. The per-customer usage limit has been reached.";
+  }
+  if (offer.status === "active") {
+    return "Status is Active because this customer is attached to the reward.";
+  }
+  return "Status is Inactive because this customer is not attached to the reward. Earlier receipts and redemptions stay on this offer.";
+}
+
 export default function CustomerOfferDetailsExpandedRow({
   offer,
 }: CustomerOfferDetailsExpandedRowProps) {
+  const unlistedRedemptions = Math.max(
+    0,
+    offer.redemptionCount - offer.redemptions.length,
+  );
+  const receipts = [...offer.receipts].reverse();
+  const redemptions = [...offer.redemptions].reverse();
+
   return (
     <div style={{ backgroundColor: color.surface.tablebodybg }} className="px-6 py-6">
       <div className="space-y-6">
         <div>
-          <SectionHeading>Offer details</SectionHeading>
+          <SectionHeading>Offer</SectionHeading>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <DetailField label="Offer">
               {offer.offerId ? (
@@ -85,15 +113,14 @@ export default function CustomerOfferDetailsExpandedRow({
             <DetailField label="Offer type">
               {humanizeOfferType(offer.type)}
             </DetailField>
-            <DetailField label="Customer status">
-              {humanizeOfferState(offer.state)}
-              {offer.verification === "hint" ? " · Unverified" : ""}
+            <DetailField label="Value">
+              <OfferValue offer={offer} />
             </DetailField>
             <DetailField label="Catalog status">
               {humanizeCatalogStatus(offer.catalogStatus)}
             </DetailField>
-            <DetailField label="Value">
-              <OfferValue offer={offer} />
+            <DetailField label="Validity">
+              {humanizeValidity(offer.validity)}
             </DetailField>
             <DetailField label="Valid from">
               {offer.validFrom ? (
@@ -121,26 +148,44 @@ export default function CustomerOfferDetailsExpandedRow({
                 "—"
               )}
             </DetailField>
-            <DetailField label="Reusable">
-              {offer.isReusable ? "Yes" : "No"}
-              {offer.maxUsagePerCustomer
-                ? ` · max ${offer.maxUsagePerCustomer}/customer`
-                : ""}
-            </DetailField>
             <DetailField label="Description">
               {displayValue(offer.description)}
-            </DetailField>
-            <DetailField label="Evidence">
-              {offer.evidence.length > 0
-                ? offer.evidence.map(evidenceLabel).join(", ")
-                : "—"}
             </DetailField>
           </div>
         </div>
 
         <div>
-          <SectionHeading>Available via</SectionHeading>
+          <SectionHeading>Attachment</SectionHeading>
+          <p className="text-sm text-gray-600 mb-4">{statusExplanation(offer)}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <DetailField label="Status">
+              {humanizeOfferStatus(offer.status)}
+            </DetailField>
+            <DetailField label="Attached">
+              {offer.isAttached ? "Yes" : "No"}
+            </DetailField>
+            <DetailField label="Attached at">
+              {offer.attachedAt ? (
+                <DateFormatter
+                  date={offer.attachedAt}
+                  includeTime
+                  useUserTimezone
+                />
+              ) : offer.acceptedAt ? (
+                <DateFormatter
+                  date={offer.acceptedAt}
+                  includeTime
+                  useUserTimezone
+                />
+              ) : (
+                "—"
+              )}
+            </DetailField>
+            <DetailField label="How attached">
+              {offer.isAttached
+                ? offer.attachmentSources.join(", ")
+                : "Not attached"}
+            </DetailField>
             <DetailField label="Campaigns">
               {offer.viaCampaigns.length === 0 ? (
                 "—"
@@ -177,68 +222,95 @@ export default function CustomerOfferDetailsExpandedRow({
                 </div>
               )}
             </DetailField>
-            <DetailField label="Last channel">
-              {displayValue(offer.lastChannel)}
-            </DetailField>
           </div>
         </div>
 
         <div>
-          <SectionHeading>Redemption & activity</SectionHeading>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <DetailField label="Redeemed">
-              {offer.redeemedAt ? (
-                <DateFormatter
-                  date={offer.redeemedAt}
-                  includeTime
-                  useUserTimezone
-                />
-              ) : (
-                "—"
-              )}
-            </DetailField>
-            <DetailField label="Accepted">
-              {offer.acceptedAt ? (
-                <DateFormatter
-                  date={offer.acceptedAt}
-                  includeTime
-                  useUserTimezone
-                />
-              ) : (
-                "—"
-              )}
-            </DetailField>
-            <DetailField label="Redemptions">
-              {offer.redemptionCount.toLocaleString()}
-            </DetailField>
-          </div>
-          {offer.relatedEvents.length > 0 ? (
-            <div className="mt-4 space-y-2">
-              {offer.relatedEvents.slice(0, 5).map((event) => (
-                <p key={event.eventId} className="text-sm text-gray-700">
-                  <span className="font-medium">{event.eventTypeLabel}</span>
+          <SectionHeading>Received</SectionHeading>
+          {offer.receipts.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              {offer.hasReceived
+                ? "This customer received the offer, but no delivery record was returned."
+                : "This customer has not received this offer. Attachment alone does not count as a delivery."}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {receipts.map((receipt, index) => (
+                <p key={receipt.id} className="text-sm text-gray-700">
+                  <span className="font-medium">Delivery {index + 1}</span>
                   <span className="text-gray-500">
-                    {" "}
-                    · {event.channel} · {event.status} ·{" "}
+                    {receipt.channel ? ` · ${receipt.channel}` : ""}
+                    {receipt.campaignName ? ` · ${receipt.campaignName}` : ""}
+                    {receipt.source ? ` · ${receipt.source}` : ""}
+                    {" · "}
                   </span>
-                  <DateFormatter
-                    date={event.occurredAt}
-                    includeTime
-                    useUserTimezone
-                    className="text-sm text-gray-500"
-                  />
+                  {receipt.receivedAt ? (
+                    <DateFormatter
+                      date={receipt.receivedAt}
+                      includeTime
+                      useUserTimezone
+                      className="text-sm text-gray-500"
+                    />
+                  ) : (
+                    <span className="text-gray-500">date not on file</span>
+                  )}
                 </p>
               ))}
-              {offer.relatedEvents.length > 5 ? (
+            </div>
+          )}
+        </div>
+
+        <div>
+          <SectionHeading>Redemptions</SectionHeading>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <DetailField label="Uses">{usageSummary(offer)}</DetailField>
+            <DetailField label="Reusable">
+              {offer.isReusable ? "Yes" : "No"}
+              {offer.maxUsagePerCustomer
+                ? ` · max ${offer.maxUsagePerCustomer}/customer`
+                : ""}
+            </DetailField>
+            <DetailField label="Can redeem again">
+              {offer.canRedeemAgain ? "Yes" : "No"}
+            </DetailField>
+          </div>
+          {redemptions.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              {offer.redemptionCount > 0
+                ? `${offer.redemptionCount.toLocaleString()} redemption${offer.redemptionCount === 1 ? "" : "s"} counted without timestamps.`
+                : "No redemptions yet. Repeat redemptions will list here without changing Active status."}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {redemptions.map((redemption, index) => (
+                <p key={redemption.id} className="text-sm text-gray-700">
+                  <span className="font-medium">Redemption {index + 1}</span>
+                  <span className="text-gray-500">
+                    {redemption.channel ? ` · ${redemption.channel}` : ""}
+                    {redemption.campaignName ? ` · ${redemption.campaignName}` : ""}
+                    {redemption.status ? ` · ${redemption.status}` : ""}
+                    {" · "}
+                  </span>
+                  {redemption.redeemedAt ? (
+                    <DateFormatter
+                      date={redemption.redeemedAt}
+                      includeTime
+                      useUserTimezone
+                      className="text-sm text-gray-500"
+                    />
+                  ) : (
+                    <span className="text-gray-500">date not on file</span>
+                  )}
+                </p>
+              ))}
+              {unlistedRedemptions > 0 ? (
                 <p className="text-xs text-gray-500">
-                  +{offer.relatedEvents.length - 5} more related events
+                  {unlistedRedemptions.toLocaleString()} earlier redemption
+                  {unlistedRedemptions === 1 ? "" : "s"} counted without a
+                  timestamp.
                 </p>
               ) : null}
             </div>
-          ) : (
-            <p className="mt-3 text-sm text-gray-500">
-              No offer events are linked to this customer yet.
-            </p>
           )}
         </div>
       </div>

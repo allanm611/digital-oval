@@ -22,6 +22,7 @@ import {
   humanizeCommunicationStatus,
   latestSentAt,
   uniqueChannels,
+  uniqueEventTypes,
   uniqueOrigins,
   uniqueStatuses,
 } from "../utils/customerCommunicationHelpers";
@@ -58,7 +59,7 @@ function progressLabel(
       ? `Checking campaign broadcasts (${checked.toLocaleString()} of ${total.toLocaleString()})...`
       : "Finding campaign broadcasts for this customer...";
   }
-  return "Checking live outbound events...";
+  return "Checking communication-related events...";
 }
 
 export default function CustomerCommunicationsTab({
@@ -71,6 +72,7 @@ export default function CustomerCommunicationsTab({
   const [channel, setChannel] = useState(ALL);
   const [status, setStatus] = useState(ALL);
   const [origin, setOrigin] = useState(ALL);
+  const [eventType, setEventType] = useState(ALL);
   const [page, setPage] = useState(1);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const pageSize = DEFAULT_PAGE_SIZE;
@@ -94,20 +96,22 @@ export default function CustomerCommunicationsTab({
         channel,
         status,
         origin,
+        eventType,
       }),
-    [result.communications, debouncedSearch, channel, status, origin],
+    [result.communications, debouncedSearch, channel, status, origin, eventType],
   );
 
   useEffect(() => {
     setPage(1);
     setExpandedRowId(null);
-  }, [debouncedSearch, channel, status, origin, subscriberId]);
+  }, [debouncedSearch, channel, status, origin, eventType, subscriberId]);
 
   const filtersActive =
     Boolean(debouncedSearch.trim()) ||
     channel !== ALL ||
     status !== ALL ||
-    origin !== ALL;
+    origin !== ALL ||
+    eventType !== ALL;
 
   const channelOptions = useMemo(
     () => [
@@ -142,6 +146,17 @@ export default function CustomerCommunicationsTab({
     [result.communications],
   );
 
+  const eventTypeOptions = useMemo(
+    () => [
+      { value: ALL, label: "All event types" },
+      ...uniqueEventTypes(result.communications).map((item) => ({
+        value: item.value,
+        label: item.label,
+      })),
+    ],
+    [result.communications],
+  );
+
   const paginated = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
@@ -160,6 +175,11 @@ export default function CustomerCommunicationsTab({
             <p className={`text-sm font-medium ${tw.tableFirstColumn}`}>
               {row.subject}
             </p>
+            {row.eventType ? (
+              <p className="text-xs text-gray-400 font-mono mt-0.5">
+                {row.eventType}
+              </p>
+            ) : null}
             {row.body ? (
               <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                 {row.body}
@@ -238,6 +258,7 @@ export default function CustomerCommunicationsTab({
     setChannel(ALL);
     setStatus(ALL);
     setOrigin(ALL);
+    setEventType(ALL);
   };
 
   if (!subscriberId) {
@@ -327,7 +348,7 @@ export default function CustomerCommunicationsTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mb-4">
         <SearchInput
           placeholder="Search subject, campaign, or recipient..."
           value={searchTerm}
@@ -352,6 +373,13 @@ export default function CustomerCommunicationsTab({
           onChange={(value) => setOrigin(String(value))}
           options={originOptions}
           placeholder="Source"
+          className="w-full"
+        />
+        <HeadlessSelect
+          value={eventType}
+          onChange={(value) => setEventType(String(value))}
+          options={eventTypeOptions}
+          placeholder="Event type"
           className="w-full"
         />
       </div>
@@ -406,7 +434,7 @@ export default function CustomerCommunicationsTab({
           </p>
           <p className="text-gray-500 text-sm mt-1">
             {filtersActive
-              ? "Try a different channel, status, source, or search term."
+              ? "Try a different channel, status, source, event type, or search term."
               : "Campaign broadcasts, manual sends, and system messages will appear here after they are delivered."}
           </p>
         </div>
