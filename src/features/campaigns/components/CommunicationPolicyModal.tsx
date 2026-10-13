@@ -19,13 +19,23 @@ import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
   COMMUNICATION_POLICY_TYPES,
-  TimeWindowConfig,
-  MaximumCommunicationConfig,
-  DNDConfig,
-  VIPListConfig,
   DNDCategory,
   DAYS_OF_WEEK,
 } from "../types/communicationPolicyConfig";
+import {
+  buildFrequencyCappingConfig,
+  buildVipListConfig,
+  hydrateFrequencyPeriods,
+  hydrateVipRules,
+  isPolicyActive,
+  parsePolicyChannels,
+  parsePolicyConfig,
+  readDndConfig,
+  readTimeWindowConfig,
+  resolvePolicyEditor,
+  type FrequencyPeriodDraft,
+  type VipRuleDraft,
+} from "../utils/communicationPolicyConfigMapper";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
@@ -40,25 +50,8 @@ interface CommunicationPolicyModalProps {
 }
 
 interface AllPolicyConfigs {
-  timeWindow: TimeWindowConfig;
-  maximumCommunication: MaximumCommunicationConfig;
-  dnd: DNDConfig;
-  vipList: VIPListConfig;
-}
-
-// Period item for maximum communication (with id for list management)
-interface MaxCommPeriod {
-  id: string;
-  type: "daily" | "weekly" | "monthly";
-  maxCount: number;
-}
-
-// VIP List row item (with id for list management)
-interface VIPListRow {
-  id: string;
-  vipListId: string;
-  action: "include" | "exclude";
-  priority: number;
+  timeWindow: ReturnType<typeof readTimeWindowConfig>;
+  dnd: ReturnType<typeof readDndConfig>;
 }
 
 const PERIOD_OPTIONS = [
@@ -86,89 +79,61 @@ export default function CommunicationPolicyModal({
   const [isActive, setIsActive] = useState(true);
 
   const [configs, setConfigs] = useState<AllPolicyConfigs>({
-    timeWindow: {
-      startTime: "09:00",
-      endTime: "18:00",
-      timezone: "UTC",
-      days: [],
-    },
-    maximumCommunication: {
-      type: "daily",
-      maxCount: 3,
-    },
-    dnd: {
-      categories: [],
-    },
-    vipList: {
-      action: "include",
-      vipLists: [],
-      priority: 1,
-    },
+    timeWindow: readTimeWindowConfig(null),
+    dnd: { categories: [] },
   });
 
   // Track which section is currently expanded (only one at a time) — also serves as selected type
   const [expandedSection, setExpandedSection] = useState<string | null>("timeWindow");
 
-  // Maximum communication periods (multiple)
-  const [maxCommPeriods, setMaxCommPeriods] = useState<MaxCommPeriod[]>([]);
+  // Frequency capping periods. This is the value that gets saved.
+  const [maxCommPeriods, setMaxCommPeriods] = useState<FrequencyPeriodDraft[]>([]);
 
-  // VIP List rows (multiple)
-  const [vipListRows, setVipListRows] = useState<VIPListRow[]>([]);
+  // VIP list rules. This is the value that gets saved.
+  const [vipListRows, setVipListRows] = useState<VipRuleDraft[]>([]);
 
   const [errors, setErrors] = useState<{
     name?: string;
     channels?: string;
     policyType?: string;
+    config?: string;
   }>({});
 
   useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+
     const initializeForm = async () => {
+      const parsedConfig = parsePolicyConfig(policy?.config);
+
       if (policy) {
         setName(policy.name);
         setDescription(policy.description || "");
-        setIsActive(policy.isActive ?? true);
+        setIsActive(isPolicyActive(policy));
         setExpandedSection(policy.type_code || "timeWindow");
+        setConfigs({
+          timeWindow: readTimeWindowConfig(parsedConfig),
+          dnd: readDndConfig(parsedConfig),
+        });
+        setMaxCommPeriods(hydrateFrequencyPeriods(parsedConfig));
+        setVipListRows(hydrateVipRules(parsedConfig));
 
-        // Convert channel codes back to IDs for the modal
-        if (policy.channels && policy.channels.length > 0) {
+        const savedChannels = parsePolicyChannels(policy.channels);
+        if (savedChannels.length > 0) {
           try {
             const allChannels = await communicationChannelService.getAll();
-            const channelIds = policy.channels.map((code: string) => {
-              const channel = allChannels.find((ch) => ch.code === code);
-              return channel?.id;
-            }).filter(Boolean);
+            if (cancelled) return;
+            const channelIds = savedChannels
+              .map((code) => allChannels.find((channel) => channel.code === code)?.id)
+              .filter((id): id is number => id !== undefined && id !== null);
             setSelectedChannelIds(channelIds);
           } catch (err) {
+            if (cancelled) return;
             console.error("Failed to load channels:", err);
             setSelectedChannelIds([]);
           }
         } else {
           setSelectedChannelIds([]);
-        }
-
-        // Load existing policy config
-        if (policy.config) {
-          setConfigs((prev) => ({
-            ...prev,
-            timeWindow: {
-              startTime: (policy.config as TimeWindowConfig)?.startTime || "09:00",
-              endTime: (policy.config as TimeWindowConfig)?.endTime || "18:00",
-              timezone: (policy.config as TimeWindowConfig)?.timezone || "UTC",
-              days: Array.isArray((policy.config as TimeWindowConfig)?.days) ? (policy.config as TimeWindowConfig).days : [],
-            },
-            maximumCommunication: {
-              type: (policy.config as MaximumCommunicationConfig)?.type || "daily",
-              maxCount: (policy.config as MaximumCommunicationConfig)?.maxCount || 3,
-            },
-            dnd: {
-              categories: Array.isArray((policy.config as DNDConfig)?.categories) ? (policy.config as DNDConfig).categories : [],
-            },
-            vipList: {
-              action: (policy.config as VIPListConfig)?.action || "include",
-              vipLists: Array.isArray((policy.config as VIPListConfig)?.vipLists) ? (policy.config as VIPListConfig).vipLists : [],
-              priority: (policy.config as VIPListConfig)?.priority || 1,
-            },
-          }));
         }
       } else {
         setName("");
@@ -177,45 +142,32 @@ export default function CommunicationPolicyModal({
         setIsActive(true);
         setExpandedSection("timeWindow");
         setConfigs({
-          timeWindow: {
-            startTime: "09:00",
-            endTime: "18:00",
-            timezone: "UTC",
-            days: [],
-          },
-          maximumCommunication: {
-            type: "daily",
-            maxCount: 3,
-          },
-          dnd: {
-            categories: [],
-          },
-          vipList: {
-            action: "include",
-            vipLists: [],
-            priority: 1,
-          },
+          timeWindow: readTimeWindowConfig(null),
+          dnd: { categories: [] },
         });
+        setMaxCommPeriods([]);
+        setVipListRows([]);
       }
-      setErrors({});
-      setMaxCommPeriods([]);
-      setVipListRows([]);
+      if (!cancelled) setErrors({});
     };
 
     initializeForm();
+    return () => {
+      cancelled = true;
+    };
   }, [policy, isOpen]);
 
   const toggleSection = (type: string) => {
     setExpandedSection((current) => (current === type ? null : type));
   };
 
-  const updateConfig = <T extends CommunicationPolicyType>(
+  const updateConfig = <T extends keyof AllPolicyConfigs>(
     type: T,
     updater: (prev: AllPolicyConfigs[T]) => AllPolicyConfigs[T]
   ) => {
     setConfigs((prev) => ({
       ...prev,
-      [type]: updater(prev[type] as AllPolicyConfigs[T]),
+      [type]: updater(prev[type]),
     }));
   };
 
@@ -231,8 +183,32 @@ export default function CommunicationPolicyModal({
       newErrors.channels = "At least one communication channel is required";
     }
 
-    if (!expandedSection) {
+    const editor = resolvePolicyEditor(expandedSection);
+    if (!expandedSection || !editor) {
       newErrors.policyType = "Please select a policy type";
+    }
+
+    if (editor === "maximumCommunication") {
+      if (maxCommPeriods.length === 0) {
+        newErrors.config = "Add at least one frequency period before saving.";
+      } else if (maxCommPeriods.some((period) => period.maxCount < 1)) {
+        newErrors.config = "Each frequency period needs a maximum count of at least 1.";
+      } else if (
+        new Set(maxCommPeriods.map((period) => period.type)).size !==
+        maxCommPeriods.length
+      ) {
+        newErrors.config = "Each period type can only be used once.";
+      }
+    }
+
+    if (editor === "vipList") {
+      if (vipListRows.length === 0) {
+        newErrors.config = "Add at least one VIP list rule before saving.";
+      } else if (vipListRows.some((row) => !row.vipListId)) {
+        newErrors.config = "Select a VIP list for every rule.";
+      } else if (vipListRows.some((row) => row.priority < 1)) {
+        newErrors.config = "Each VIP rule needs a priority of at least 1.";
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -249,33 +225,49 @@ export default function CommunicationPolicyModal({
         return channel?.code as string;
       }).filter(Boolean);
 
-      const getConfig = () => {
-        switch (expandedSection) {
-          case "maximumCommunication": return configs.maximumCommunication;
-          case "dnd": return configs.dnd;
-          case "vipList": return configs.vipList;
-          default: return configs.timeWindow;
+      const config = (() => {
+        switch (editor) {
+          case "maximumCommunication":
+            return buildFrequencyCappingConfig(maxCommPeriods);
+          case "vipList":
+            return buildVipListConfig(vipListRows, vipListsData);
+          case "dnd":
+            return configs.dnd;
+          default:
+            return configs.timeWindow;
         }
-      };
+      })();
 
       const policyData: CreateCommunicationPolicyRequest = {
         name,
         description,
         channels: channelCodes,
-        type_code: expandedSection,
-        config: getConfig(),
+        type_code: expandedSection as string,
+        config,
         is_active: isActive,
       };
 
       await onSave(policyData);
     } catch (err) {
-      setErrors({ channels: "Failed to process communication channels" });
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to process communication channels";
+      setErrors({
+        config: message.includes("frequency") || message.includes("VIP")
+          ? message
+          : undefined,
+        channels:
+          message.includes("frequency") || message.includes("VIP")
+            ? undefined
+            : message,
+      });
       console.error("Error in handleSubmit:", err);
     }
   };
 
   const getTypeIcon = (code: string) => {
-    switch (code) {
+    switch (resolvePolicyEditor(code)) {
       case "timeWindow": return <Clock className="w-5 h-5" />;
       case "maximumCommunication": return <BarChart3 className="w-5 h-5" />;
       case "dnd": return <BellOff className="w-5 h-5" />;
@@ -381,7 +373,7 @@ export default function CommunicationPolicyModal({
           <button
             type="button"
             onClick={() => {
-              const newPeriod: MaxCommPeriod = {
+              const newPeriod: FrequencyPeriodDraft = {
                 id: Date.now().toString(),
                 type: getFirstAvailablePeriodType(),
                 maxCount: 3,
@@ -628,7 +620,7 @@ export default function CommunicationPolicyModal({
           <button
             type="button"
             onClick={() => {
-              const newRow: VIPListRow = {
+              const newRow: VipRuleDraft = {
                 id: Date.now().toString(),
                 vipListId: "",
                 action: "include",
@@ -760,6 +752,7 @@ export default function CommunicationPolicyModal({
   const renderPolicySection = (policyType: { code: string; name: string; description?: string }) => {
     const { code, name: typeName, description: typeDesc } = policyType;
     const isExpanded = expandedSection === code;
+    const editor = resolvePolicyEditor(code);
 
     return (
       <div
@@ -807,10 +800,18 @@ export default function CommunicationPolicyModal({
 
         {isExpanded && (
           <div className="px-5 py-6 bg-white border-t border-gray-100 overflow-visible">
-            {code === "timeWindow" && renderTimeWindowConfig()}
-            {code === "maximumCommunication" && renderMaxCommunicationConfig()}
-            {code === "dnd" && renderDNDConfig()}
-            {code === "vipList" && renderVIPListConfig()}
+            {editor === "timeWindow" && renderTimeWindowConfig()}
+            {editor === "maximumCommunication" && renderMaxCommunicationConfig()}
+            {editor === "dnd" && renderDNDConfig()}
+            {editor === "vipList" && renderVIPListConfig()}
+            {!editor && (
+              <p className={`${tw.caption} ${tw.textMuted}`}>
+                This policy type does not have a configuration form yet.
+              </p>
+            )}
+            {errors.config && (
+              <p className="text-xs text-red-600 mt-3">{errors.config}</p>
+            )}
           </div>
         )}
       </div>
@@ -915,7 +916,7 @@ export default function CommunicationPolicyModal({
                     Policy Configurations
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
-                    Expand a section to select and configure that policy type. Only one type will be saved.
+                    Expand the policy type to save. Frequency Capping and VIP List Rules are saved from the rows you add.
                   </p>
                 </div>
                 <button
