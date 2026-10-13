@@ -12,11 +12,19 @@ export interface TimeWindowConfig {
   days?: string[];
 }
 
+export interface FrequencyCappingPeriod {
+  type: "daily" | "weekly" | "monthly";
+  maxCount: number;
+}
+
 export interface MaximumCommunicationConfig {
+  /** Cap enforced by the current broadcast engine. Mirrors the daily period when one exists. */
   type: "daily" | "weekly" | "monthly";
   maxCount: number;
   resetTime?: string;
   resetDay?: string;
+  /** Every period the user configured. This is the source of truth for create/edit. */
+  periods?: FrequencyCappingPeriod[];
 }
 
 export interface DNDConfig {
@@ -32,10 +40,23 @@ export interface DNDCategory {
   value?: "allowed" | "not allowed";
 }
 
+export interface VIPListRule {
+  vipListId: string;
+  vipListName?: string;
+  action: "include" | "exclude";
+  priority: number;
+}
+
 export interface VIPListConfig {
+  /**
+   * Legacy single action used by the exclusion engine.
+   * "exclude" when any rule excludes a list; those lists are the only entries in vipLists.
+   */
   action: "include" | "exclude";
   vipLists: VIPList[];
   priority?: number;
+  /** Per-list action and priority. This is the source of truth for create/edit. */
+  rules?: VIPListRule[];
 }
 
 export interface VIPList {
@@ -85,9 +106,9 @@ export const COMMUNICATION_POLICY_TYPES = [
   },
   {
     value: "maximumCommunication" as const,
-    label: "Maximum Communication",
+    label: "Frequency Capping",
     description:
-      "Set maximum number of communications sent to a customer in a given period",
+      "Limits the maximum number of communications a customer can receive daily, weekly, or monthly.",
     icon: "📊",
   },
   {
@@ -99,8 +120,9 @@ export const COMMUNICATION_POLICY_TYPES = [
   },
   {
     value: "vipList" as const,
-    label: "VIP List",
-    description: "Include or exclude VIP customers from campaigns",
+    label: "VIP List Rules",
+    description:
+      "Defines inclusion or exclusion rules for high-priority VIP customer lists.",
     icon: "⭐",
   },
 ] as const;

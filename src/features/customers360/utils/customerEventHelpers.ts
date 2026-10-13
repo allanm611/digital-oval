@@ -826,48 +826,67 @@ function parseInteractionContext(
 function parseDeviceContext(
   record: Record<string, unknown>,
 ): CustomerEventDeviceContext | null {
+  const nestedContext = parseNestedContext(record);
   const nested =
     asRecord(record.device) ||
     asRecord(record.handset) ||
-    asRecord(record.session);
-  const idSources = [nested, record].filter(Boolean) as Record<string, unknown>[];
+    asRecord(record.session) ||
+    asRecord(nestedContext.device) ||
+    asRecord(nestedContext.handset);
+  const idSources = [nested, nestedContext, record].filter(
+    Boolean,
+  ) as Record<string, unknown>[];
+  const pick = (keys: string[]) =>
+    idSources.reduce((found, source) => found || pickString(source, keys), "");
 
   const deviceId =
     pickString(nested || {}, ["device_id", "deviceId", "id"]) ||
     pickString(record, ["device_id", "deviceId"]) ||
+    pickString(nestedContext, ["device_id", "deviceId"]) ||
     null;
-  const imei =
-    idSources.reduce(
-      (found, source) => found || pickString(source, ["imei", "imei_number"]),
-      "",
-    ) || null;
-  const os =
-    idSources.reduce(
-      (found, source) =>
-        found || pickString(source, ["os", "operating_system", "platform"]),
-      "",
-    ) || null;
-  const osVersion =
-    idSources.reduce(
-      (found, source) =>
-        found || pickString(source, ["os_version", "osVersion", "system_version"]),
-      "",
-    ) || null;
-  const appVersion =
-    idSources.reduce(
-      (found, source) =>
-        found || pickString(source, ["app_version", "appVersion", "client_version"]),
-      "",
-    ) || null;
+  const imei = pick(["imei", "imei_number"]) || null;
+  const os = pick(["os", "operating_system", "platform"]) || null;
+  const osVersion = pick(["os_version", "osVersion", "system_version"]) || null;
+  const appVersion = pick(["app_version", "appVersion", "client_version"]) || null;
   const deviceType =
     pickString(nested || {}, ["device_type", "deviceType", "type"]) ||
     pickString(record, ["device_type", "deviceType"]) ||
+    pickString(nestedContext, ["device_type", "deviceType"]) ||
     null;
+  const manufacturer = pick(["manufacturer", "device_manufacturer", "vendor", "brand", "make"]) || null;
+  const model = pick(["model", "device_model", "handset_model"]) || null;
   const deviceName =
-    pickString(nested || {}, ["device_name", "deviceName", "model", "name"]) ||
-    pickString(record, ["device_name", "deviceName", "device_model"]);
+    pick(["device_name", "deviceName", "name"]) || model || "";
+  const technology =
+    pick(["technology", "radio_technology", "rat", "network_type", "networkType", "generation"]) ||
+    null;
+  const previousImei =
+    pick(["previous_imei", "old_imei", "from_imei", "imei_from", "previousImei"]) || null;
+  const previousIccid = pick(["previous_iccid", "old_iccid", "from_iccid"]) || null;
+  const previousImsi = pick(["previous_imsi", "old_imsi", "from_imsi"]) || null;
+  const msisdn = pick(["msisdn", "phone"]) || null;
+  const iccid = pick(["iccid"]) || null;
+  const imsi = pick(["imsi"]) || null;
+  const cellId = pick(["cell_id", "cellId", "cell", "cgi", "eci"]) || null;
+  const locationArea =
+    pick(["lac", "location_area", "locationArea", "tracking_area", "tracking_area_code"]) ||
+    null;
+  const siteName = pick(["site_name", "siteName", "site", "cell_name"]) || null;
+  const region = pick(["region", "zone", "city"]) || null;
 
-  if (!deviceId && !imei && !os && !osVersion && !appVersion && !deviceType && !deviceName) {
+  if (
+    !deviceId &&
+    !imei &&
+    !os &&
+    !osVersion &&
+    !appVersion &&
+    !deviceType &&
+    !deviceName &&
+    !manufacturer &&
+    !model &&
+    !technology &&
+    !previousImei
+  ) {
     return null;
   }
 
@@ -879,6 +898,19 @@ function parseDeviceContext(
     os_version: osVersion,
     app_version: appVersion,
     imei,
+    manufacturer,
+    model,
+    technology,
+    previous_imei: previousImei,
+    previous_iccid: previousIccid,
+    previous_imsi: previousImsi,
+    msisdn,
+    iccid,
+    imsi,
+    cell_id: cellId,
+    location_area: locationArea,
+    site_name: siteName,
+    region,
   };
 }
 

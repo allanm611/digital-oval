@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Loader2, Play, Trash2 } from "lucide-react";
 import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -19,7 +19,10 @@ import {
   SOURCE_TYPE_OPTIONS,
 } from "../constants/pipelineOptions";
 import { connectionProfilePipelineService } from "../services/pipelineService";
-import { describeStoredSchedule } from "../utils/pipelineSchedule";
+import {
+  describeStoredSchedule,
+  isPipelineScheduled,
+} from "../utils/pipelineSchedule";
 import {
   ConnectionProfilePipeline,
   PipelineExecutionResult,
@@ -36,6 +39,7 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 
 export default function PipelineDetailsPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const [pipeline, setPipeline] = useState<ConnectionProfilePipeline | null>(null);
@@ -78,6 +82,14 @@ export default function PipelineDetailsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (loading || location.hash !== "#schedule") return;
+    document.getElementById("schedule")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [loading, location.hash, pipeline]);
 
   const handleToggle = async () => {
     if (!pipeline) return;
@@ -261,13 +273,63 @@ export default function PipelineDetailsPage() {
               <DetailItem label="Batch size" value={String(pipeline.batch_size)} />
               <DetailItem
                 label="Schedule"
-                value={describeStoredSchedule(pipeline)}
+                value={isPipelineScheduled(pipeline) ? "Scheduled" : "Not scheduled"}
               />
               <DetailItem
                 label="Status"
                 value={pipeline.is_active ? "Active" : "Inactive"}
               />
             </div>
+          </section>
+
+          <section
+            id="schedule"
+            className={`${tw.rounded} border border-gray-200 p-6 scroll-mt-6`}
+            style={{ backgroundColor: color.surface.cards }}
+          >
+            <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>Schedule</h2>
+            {isPipelineScheduled(pipeline) ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <DetailItem label="Repeat" value={describeStoredSchedule(pipeline)} />
+                <div>
+                  <p className="text-sm text-gray-600">Next run</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1">
+                    {pipeline.next_execution_at ? (
+                      <DateFormatter date={pipeline.next_execution_at} includeTime />
+                    ) : (
+                      "Due on the next scheduler check"
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Last scheduled run</p>
+                  <p className="text-sm font-medium text-gray-900 mt-1">
+                    {pipeline.last_executed_at ? (
+                      <DateFormatter date={pipeline.last_executed_at} includeTime />
+                    ) : (
+                      "No scheduled run yet"
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">
+                  This pipeline runs only when someone starts it.
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `/dashboard/connection-profile-pipelines/${pipeline.id}/edit#schedule`,
+                    )
+                  }
+                  className={`text-sm font-medium underline ${tw.link}`}
+                >
+                  Set schedule
+                </button>
+              </div>
+            )}
           </section>
 
           <section

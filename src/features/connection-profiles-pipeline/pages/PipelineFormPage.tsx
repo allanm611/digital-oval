@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import FormField from "../../../shared/components/FormField";
@@ -46,6 +46,7 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const presetProfileId = searchParams.get("profileId") || "";
+  const location = useLocation();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
@@ -281,6 +282,14 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    if (loading || location.hash !== "#schedule") return;
+    document.getElementById("schedule")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [loading, location.hash]);
 
   if (loading) {
     return (
@@ -558,10 +567,15 @@ export default function PipelineFormPage({ mode }: PipelineFormPageProps) {
           </div>
         </section>
 
-        <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4`}>
+        <section
+          id="schedule"
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm space-y-4 scroll-mt-6`}
+        >
           <div>
             <h2 className={`${tw.cardHeading} text-gray-900`}>Schedule</h2>
-            
+            <p className="text-sm text-gray-500 mt-1">
+              Configure how often this pipeline runs.
+            </p>
           </div>
           <PipelineScheduleFields
             form={form}

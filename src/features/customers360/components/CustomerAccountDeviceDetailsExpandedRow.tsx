@@ -4,8 +4,10 @@ import { color, tw } from "../../../shared/utils/utils";
 import type { CustomerInventoryItem } from "../types/customerAccountDevice";
 import {
   humanizeDeviceType,
+  humanizeImeiCheck,
   humanizeInventoryKind,
   humanizeInventoryStatus,
+  humanizeRadioTechnology,
 } from "../utils/customerAccountDeviceHelpers";
 
 type CustomerAccountDeviceDetailsExpandedRowProps = {
@@ -119,14 +121,27 @@ export default function CustomerAccountDeviceDetailsExpandedRow({
           <div>
             <SectionHeading>Hardware</SectionHeading>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <DetailField label="Model">{displayValue(item.model)}</DetailField>
-              <DetailField label="OS">
-                {[item.os, item.osVersion].filter(Boolean).join(" ") || "—"}
-              </DetailField>
-              <DetailField label="App version">
-                {displayValue(item.appVersion)}
-              </DetailField>
-              <DetailField label="IMEI">{displayValue(item.imei)}</DetailField>
+            <DetailField label="Model">{displayValue(item.model)}</DetailField>
+            <DetailField label="Manufacturer">
+              {displayValue(item.manufacturer)}
+            </DetailField>
+            <DetailField label="Technology">
+              {humanizeRadioTechnology(item.technology)}
+            </DetailField>
+            <DetailField label="OS">
+              {[item.os, item.osVersion].filter(Boolean).join(" ") || "—"}
+            </DetailField>
+            <DetailField label="App version">
+              {displayValue(item.appVersion)}
+            </DetailField>
+            <DetailField label="IMEI">{displayValue(item.imei)}</DetailField>
+            <DetailField label="TAC">{displayValue(item.tac)}</DetailField>
+            <DetailField label="IMEI check">
+              {item.imei ? humanizeImeiCheck(item.imeiCheck) : "—"}
+            </DetailField>
+            <DetailField label="Last reported location">
+              {displayValue(item.lastLocation)}
+            </DetailField>
             </div>
           </div>
         )}

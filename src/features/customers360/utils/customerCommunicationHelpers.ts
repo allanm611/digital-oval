@@ -20,9 +20,19 @@ export const EMPTY_COMMUNICATION_COUNTS: CustomerCommunicationCounts = {
   pending: 0,
 };
 
-const OUTBOUND_EVENT_TYPES = new Set([
+/**
+ * Message deliveries the catalog already uses. Kept so existing event
+ * codes still qualify even when the code does not follow the delivery
+ * naming pattern (for example `order_confirmation` or `price_drop_alert`).
+ */
+const COMMUNICATION_DELIVERY_EVENT_TYPES = new Set([
   "message_sent",
   "message_delivered",
+  "message_failed",
+  "message_bounced",
+  "message_opened",
+  "message_clicked",
+  "message_read",
   "campaign_executed",
   "welcome_email",
   "promotional_sms",
@@ -35,13 +45,70 @@ const OUTBOUND_EVENT_TYPES = new Set([
   "received_message",
 ]);
 
-const EXCLUDED_EVENT_TYPES = new Set([
+/**
+ * Customer-originated messages. These are activity, not a send to the
+ * customer. `received_message` is intentionally absent: in this catalog it
+ * means the customer was delivered a campaign or offer message.
+ */
+const CUSTOMER_ORIGINATED_MESSAGE_TYPES = new Set([
+  "message_received",
+  "inbound_message",
+  "customer_sms",
+  "mo_sms",
+]);
+
+/**
+ * Events that belong on another Customer 360 tab. A creative or message
+ * payload on these types does not make them a communication.
+ */
+const NON_COMMUNICATION_EVENT_TYPES = new Set([
   "offer_redeemed",
   "offer_accepted",
+  "offer_presented",
+  "opt_in",
+  "opt_out",
   "app_login",
   "ussd_session",
-  "message_received",
+  "recharge",
+  "bundle_purchase",
+  "data_usage",
+  "voice_call",
+  "points_earned",
+  "points_redeemed",
+  "loyalty_tier_changed",
+  "reward_granted",
+  "support_ticket_created",
+  "complaint_logged",
+  "customer_care_contact",
+  "device_registered",
+  "sim_swap",
+  "account_suspended",
 ]);
+
+/** Whole-token domains that are never a message send, even if a channel word appears in the code. */
+const OTHER_DOMAIN_TYPE_PATTERN =
+  /(^|_)(offer|opt_in|opt_out|unsubscribe|consent|dnd|preference|recharge|bundle|purchase|payment|points|loyalty|reward|ticket|complaint|sim_swap|usage|redeem)(_|$)/;
+
+/**
+ * Matches delivery codes the backend can add without a frontend change:
+ * `sms_delivered`, `email_bounced`, `push_notification`, `whatsapp_message`.
+ */
+const COMMUNICATION_DELIVERY_TYPE_PATTERN =
+  /(^|_)(message|email|sms|push|whatsapp|newsletter|notification)(_|$)/;
+
+const CAMPAIGN_DELIVERY_TYPE_PATTERN = /^campaign_(executed|sent|message)/;
+
+function normalizeEventTypeCode(value: string): string {
+  return value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+}
+
+function isOtherCustomerDomain(type: string): boolean {
+  return (
+    CUSTOMER_ORIGINATED_MESSAGE_TYPES.has(type) ||
+    NON_COMMUNICATION_EVENT_TYPES.has(type) ||
+    OTHER_DOMAIN_TYPE_PATTERN.test(type)
+  );
+}
 
 export type DraftCommunication = {
   subject: string;
@@ -63,6 +130,8 @@ export type DraftCommunication = {
   creativeId: number | null;
   creativeName: string | null;
   eventId: string | null;
+  eventType: string | null;
+  eventTypeLabel: string | null;
   evidence: Set<CustomerCommunicationEvidence>;
 };
 
@@ -220,6 +289,8 @@ export function createDraft(
     creativeId: extras?.creativeId ?? null,
     creativeName: extras?.creativeName ?? null,
     eventId: extras?.eventId ?? null,
+    eventType: extras?.eventType ?? null,
+    eventTypeLabel: extras?.eventTypeLabel ?? null,
     evidence: new Set(extras?.evidence || []),
   };
 }
@@ -255,6 +326,8 @@ export function mergeDraft(
   target.creativeId = target.creativeId ?? source.creativeId;
   target.creativeName = target.creativeName || source.creativeName;
   target.eventId = target.eventId || source.eventId;
+  target.eventType = target.eventType || source.eventType;
+  target.eventTypeLabel = target.eventTypeLabel || source.eventTypeLabel;
   return target;
 }
 
@@ -422,6 +495,10 @@ export function parseCommunicationRecord(
     creativeId: numericId(row.creative_id ?? creative?.id),
     creativeName: stringOrNull(row.creative_name ?? creative?.name),
     eventId: stringOrNull(row.event_id ?? row.eventId),
+    eventType: stringOrNull(row.event_type ?? row.eventType),
+    eventTypeLabel: stringOrNull(
+      row.event_type_label ?? row.eventTypeLabel,
+    ),
     evidence: extras?.evidence ? [extras.evidence] : [],
   });
 }
@@ -441,23 +518,38 @@ export function parseHintCommunications(
     .filter((item): item is DraftCommunication => Boolean(item));
 }
 
-export function isOutboundCommunicationEvent(event: CustomerEvent): boolean {
-  if (event.message?.direction === "inbound") return false;
-  const type = event.event_type.toLowerCase();
-  if (EXCLUDED_EVENT_TYPES.has(type)) return false;
+/**
+ * True when this event is a communication sent to the customer.
+ *
+ * The decision is the event type, not the presence of a creative. Offer,
+ * consent, usage, and care events stay on their own tabs. A new delivery
+ * code is included when its name is a channel or message lifecycle, or
+ * when the payload direction is explicitly outbound and the type is not
+ * another customer domain.
+ */
+export function isCommunicationRelatedEvent(event: CustomerEvent): boolean {
+  const type = normalizeEventTypeCode(event.event_type);
+  if (!type || isOtherCustomerDomain(type)) return false;
+
   if (event.message?.direction === "outbound") return true;
-  if (OUTBOUND_EVENT_TYPES.has(type)) return true;
-  return Boolean(
-    event.origin === "system" &&
-      (event.message?.content ||
-        event.message?.subject ||
-        event.message?.sent_at ||
-        event.creative?.id),
-  );
+  if (
+    event.message?.direction === "inbound" &&
+    !COMMUNICATION_DELIVERY_EVENT_TYPES.has(type)
+  ) {
+    return false;
+  }
+  if (COMMUNICATION_DELIVERY_EVENT_TYPES.has(type)) return true;
+  if (COMMUNICATION_DELIVERY_TYPE_PATTERN.test(type)) return true;
+  if (CAMPAIGN_DELIVERY_TYPE_PATTERN.test(type)) return true;
+  return false;
+}
+
+export function isOutboundCommunicationEvent(event: CustomerEvent): boolean {
+  return isCommunicationRelatedEvent(event);
 }
 
 export function eventToDraft(event: CustomerEvent): DraftCommunication | null {
-  if (!isOutboundCommunicationEvent(event)) return null;
+  if (!isCommunicationRelatedEvent(event)) return null;
 
   const body =
     event.message?.content ||
@@ -484,6 +576,8 @@ export function eventToDraft(event: CustomerEvent): DraftCommunication | null {
     creativeId: event.creative?.id ?? null,
     creativeName: event.creative?.name || event.creative?.title || null,
     eventId: event.id,
+    eventType: event.event_type,
+    eventTypeLabel: event.event_type_label || null,
     evidence: ["event"],
   });
 }
@@ -519,6 +613,8 @@ export function finalizeCommunication(
     creativeId: draft.creativeId,
     creativeName: draft.creativeName,
     eventId: draft.eventId,
+    eventType: draft.eventType,
+    eventTypeLabel: draft.eventTypeLabel,
     evidence: Array.from(draft.evidence),
     verification,
   };
@@ -584,19 +680,41 @@ export function uniqueOrigins(
   return Array.from(new Set(items.map((item) => item.origin)));
 }
 
+export function uniqueEventTypes(
+  items: CustomerCommunicationItem[],
+): Array<{ value: string; label: string }> {
+  const labels = new Map<string, string>();
+  items.forEach((item) => {
+    if (!item.eventType || labels.has(item.eventType)) return;
+    labels.set(item.eventType, item.eventTypeLabel || item.eventType);
+  });
+  return Array.from(labels.entries())
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
 export function filterCommunications(
   items: CustomerCommunicationItem[],
-  query: { search?: string; channel?: string; status?: string; origin?: string },
+  query: {
+    search?: string;
+    channel?: string;
+    status?: string;
+    origin?: string;
+    eventType?: string;
+  },
 ): CustomerCommunicationItem[] {
   const search = query.search?.trim().toLowerCase() ?? "";
   const channel = query.channel && query.channel !== "all" ? query.channel : "";
   const status = query.status && query.status !== "all" ? query.status : "";
   const origin = query.origin && query.origin !== "all" ? query.origin : "";
+  const eventType =
+    query.eventType && query.eventType !== "all" ? query.eventType : "";
 
   return items.filter((item) => {
     if (channel && item.channel !== channel) return false;
     if (status && item.status !== status) return false;
     if (origin && item.origin !== origin) return false;
+    if (eventType && item.eventType !== eventType) return false;
     if (!search) return true;
     return (
       item.subject.toLowerCase().includes(search) ||

@@ -111,6 +111,19 @@ export interface CustomerEventDeviceContext {
   os_version: string | null;
   app_version: string | null;
   imei: string | null;
+  manufacturer?: string | null;
+  model?: string | null;
+  technology?: string | null;
+  previous_imei?: string | null;
+  previous_iccid?: string | null;
+  previous_imsi?: string | null;
+  msisdn?: string | null;
+  iccid?: string | null;
+  imsi?: string | null;
+  cell_id?: string | null;
+  location_area?: string | null;
+  site_name?: string | null;
+  region?: string | null;
 }
 
 export interface CustomerEvent {

@@ -11,11 +11,14 @@ import { color, tw, button as buttonStyle } from "../../../shared/utils/utils";
 import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
-  TimeWindowConfig,
-  MaximumCommunicationConfig,
-  DNDConfig,
-  VIPListConfig,
 } from "../types/communicationPolicyConfig";
+import {
+  hydrateFrequencyPeriods,
+  hydrateVipRules,
+  readDndConfig,
+  readTimeWindowConfig,
+  resolvePolicyEditor,
+} from "../utils/communicationPolicyConfigMapper";
 import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
 import { communicationPolicyService } from "../services/communicationPolicyService";
 import { extractBackendError } from "../../../shared/utils/errorHandler";;;
@@ -98,9 +101,9 @@ export default function CommunicationPolicyDetailPage() {
 
   const renderConfigDetails = () => {
     if (!policy) return null;
-    switch (policy.type_code) {
+    switch (resolvePolicyEditor(policy.type_code)) {
       case "timeWindow": {
-        const c = policy.config as TimeWindowConfig;
+        const c = readTimeWindowConfig(policy.config);
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Start Time" value={c.startTime} />
@@ -116,18 +119,37 @@ export default function CommunicationPolicyDetailPage() {
         );
       }
       case "maximumCommunication": {
-        const c = policy.config as MaximumCommunicationConfig;
+        const periods = hydrateFrequencyPeriods(policy.config);
+        if (periods.length === 0) {
+          return <p className={`text-sm ${tw.textMuted}`}>No frequency limits saved</p>;
+        }
+        const periodLabels: Record<string, string> = {
+          daily: "Daily",
+          weekly: "Weekly",
+          monthly: "Monthly",
+        };
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field label="Period" value={c.type} />
-            <Field label="Max Count" value={String(c.maxCount)} />
-            {c.resetTime && <Field label="Reset Time" value={c.resetTime} />}
-            {c.resetDay && <Field label="Reset Day" value={c.resetDay} />}
+          <div className="space-y-3">
+            {periods.map((period) => (
+              <div
+                key={period.id}
+                className="grid grid-cols-2 gap-4 py-3 border-b border-gray-100 last:border-0"
+              >
+                <div className="space-y-1">
+                  <p className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>Period</p>
+                  <p className={`text-sm ${tw.textPrimary}`}>{periodLabels[period.type]}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>Maximum</p>
+                  <p className={`text-sm ${tw.textPrimary}`}>{period.maxCount}</p>
+                </div>
+              </div>
+            ))}
           </div>
         );
       }
       case "dnd": {
-        const c = policy.config as DNDConfig;
+        const c = readDndConfig(policy.config);
         if (!c.categories || c.categories.length === 0) {
           return <p className={`text-sm ${tw.textMuted}`}>No categories configured</p>;
         }
@@ -135,7 +157,7 @@ export default function CommunicationPolicyDetailPage() {
           <div className="space-y-3">
             {c.categories.map((cat, i) => (
               <div
-                key={i}
+                key={cat.id || i}
                 className="grid grid-cols-2 gap-4 py-3 border-b border-gray-100 last:border-0"
               >
                 <div className="space-y-1">
@@ -152,11 +174,31 @@ export default function CommunicationPolicyDetailPage() {
         );
       }
       case "vipList": {
-        const c = policy.config as VIPListConfig;
+        const rules = hydrateVipRules(policy.config);
+        if (rules.length === 0) {
+          return <p className={`text-sm ${tw.textMuted}`}>No VIP list rules saved</p>;
+        }
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field label="Action" value={c.action} />
-            {c.priority !== undefined && <Field label="Priority" value={String(c.priority)} />}
+          <div className="space-y-3">
+            {rules.map((rule) => (
+              <div
+                key={rule.id}
+                className="grid grid-cols-3 gap-4 py-3 border-b border-gray-100 last:border-0"
+              >
+                <div className="space-y-1">
+                  <p className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>VIP List</p>
+                  <p className={`text-sm ${tw.textPrimary}`}>{rule.vipListName || rule.vipListId}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>Action</p>
+                  <p className={`text-sm ${tw.textPrimary}`}>{rule.action === "exclude" ? "Exclude" : "Include"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>Priority</p>
+                  <p className={`text-sm ${tw.textPrimary}`}>{rule.priority}</p>
+                </div>
+              </div>
+            ))}
           </div>
         );
       }

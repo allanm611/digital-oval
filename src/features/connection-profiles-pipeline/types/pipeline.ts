@@ -145,6 +145,8 @@ export interface ConnectionProfilePipeline {
   schedule_enabled?: boolean;
   schedule_cron?: string | null;
   schedule_timezone?: string;
+  schedule_start_at?: string | null;
+  schedule_end_at?: string | null;
   last_executed_at?: string | null;
   next_execution_at?: string | null;
   execution_count?: number;

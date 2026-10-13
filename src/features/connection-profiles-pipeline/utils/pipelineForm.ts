@@ -14,6 +14,7 @@ import { bodyTemplateError } from "./jsonParameters";
 import {
   cronFromSchedule,
   emptySchedule,
+  scheduleBounds,
   scheduleFromPipeline,
 } from "./pipelineSchedule";
 
@@ -457,16 +458,15 @@ export function validatePipelineForm(
   }
 
   if (form.schedule.enabled) {
-    if (!form.schedule.timezone.trim()) {
-      errors.schedule_timezone = "Choose the timezone for this schedule.";
-    }
     const built = cronFromSchedule(form.schedule);
-    if (!built.ok) {
-      if (form.schedule.frequency === "custom") errors.schedule_cron = built.message;
-      else if (built.message.startsWith("Minute")) errors.schedule_minute = built.message;
-      else if (built.message.startsWith("Hour")) errors.schedule_hour = built.message;
-      else if (built.message.startsWith("Day")) errors.schedule_day = built.message;
-      else errors.schedule_cron = built.message;
+    if (!built.ok) errors[built.field] = built.message;
+    const bounds = scheduleBounds(form.schedule);
+    if (form.schedule.endType === "at") {
+      if (!bounds.end) {
+        errors.schedule_end = "Choose an end date and time.";
+      } else if (bounds.start && bounds.end <= bounds.start) {
+        errors.schedule_end = "The end must be after the start.";
+      }
     }
   }
 

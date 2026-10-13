@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, RotateCcw, ShieldCheck, Smartphone } from "lucide-react";
+import { ArrowLeftRight, CreditCard, RotateCcw, ShieldCheck, Smartphone } from "lucide-react";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -13,18 +13,24 @@ import { useCustomerAccountDevices } from "../hooks/useCustomerAccountDevices";
 import type {
   CustomerAccountDeviceStatus,
   CustomerInventoryItem,
+  CustomerRadioTechnology,
   CustomerVerificationFlag,
 } from "../types/customerAccountDevice";
 import {
   filterInventory,
   humanizeDeviceType,
+  humanizeImeiCheck,
   humanizeInventoryKind,
   humanizeInventoryStatus,
+  humanizeRadioTechnology,
   humanizeVerificationFlag,
+  imeiCheckStatus,
   uniqueInventoryKinds,
   uniqueInventoryStatuses,
 } from "../utils/customerAccountDeviceHelpers";
 import CustomerAccountDeviceDetailsExpandedRow from "./CustomerAccountDeviceDetailsExpandedRow";
+import CustomerDeviceTrailSection from "./CustomerDeviceTrailSection";
+import CustomerNetworkDumpsSection from "./CustomerNetworkDumpsSection";
 
 type CustomerAccountDevicesTabProps = {
   subscriberId?: string | number | null;
@@ -47,9 +53,18 @@ function verificationClassName(flag: CustomerVerificationFlag): string {
   return "bg-gray-100 text-gray-500";
 }
 
-function progressLabel(phase: "lookup" | "events"): string {
+function progressLabel(phase: "lookup" | "events" | "dumps"): string {
   if (phase === "lookup") return "Checking subscriber accounts and devices...";
+  if (phase === "dumps") return "Checking ADT, HLR, and VLR extracts...";
   return "Checking live login and device events...";
+}
+
+function technologyClassName(technology: CustomerRadioTechnology | null): string {
+  if (technology === "5g") return "bg-violet-50 text-violet-800";
+  if (technology === "4g") return "bg-green-50 text-green-800";
+  if (technology === "3g") return "bg-sky-50 text-sky-800";
+  if (technology === "2g") return "bg-slate-100 text-slate-700";
+  return "bg-gray-100 text-gray-500";
 }
 
 function SnapshotField({
@@ -169,6 +184,45 @@ export default function CustomerAccountDevicesTab({
         ),
       },
       {
+        id: "imei",
+        label: "IMEI",
+        visible: true,
+        render: (_, row) =>
+          row.imei ? (
+            <span className="font-mono text-sm text-gray-800">{row.imei}</span>
+          ) : (
+            <span className="text-sm text-gray-400">—</span>
+          ),
+      },
+      {
+        id: "model",
+        label: "Model",
+        visible: true,
+        render: (_, row) => {
+          const label = [row.manufacturer, row.model].filter(Boolean).join(" ");
+          return (
+            <span className="text-sm text-gray-700">{label || "—"}</span>
+          );
+        },
+      },
+      {
+        id: "technology",
+        label: "Technology",
+        visible: true,
+        render: (_, row) =>
+          row.technology ? (
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${technologyClassName(
+                row.technology,
+              )}`}
+            >
+              {humanizeRadioTechnology(row.technology)}
+            </span>
+          ) : (
+            <span className="text-sm text-gray-400">—</span>
+          ),
+      },
+      {
         id: "status",
         label: "Status",
         visible: true,
@@ -226,7 +280,8 @@ export default function CustomerAccountDevicesTab({
             Account & Device
           </h3>
           <p className="text-sm text-gray-500">
-            SIM accounts and registered devices for this customer.
+            SIM accounts, the handset on the line, and the trail when that
+            handset or SIM changes.
           </p>
         </div>
         <button
@@ -239,7 +294,7 @@ export default function CustomerAccountDevicesTab({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -271,9 +326,33 @@ export default function CustomerAccountDevicesTab({
           <p className="mt-1 text-xs text-gray-500">
             {isLoading
               ? "Registered and last-used devices"
-              : snapshot.lastActivityDeviceName
-                ? `Last used ${snapshot.lastActivityDeviceName}`
-                : "No device registration on file"}
+              : snapshot.primaryImei
+                ? `IMEI ${snapshot.primaryImei}`
+                : snapshot.lastActivityDeviceName
+                  ? `Last used ${snapshot.lastActivityDeviceName}`
+                  : "No device registration on file"}
+          </p>
+        </div>
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Device changes
+            </p>
+            <ArrowLeftRight className="h-4 w-4 text-gray-400" />
+          </div>
+          <p className="text-2xl font-semibold text-gray-900">
+            {isLoading ? "—" : result.movements.length.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            {isLoading
+              ? "Handset and SIM changes"
+              : result.trailSource === "adt"
+                ? "From the ADT dump"
+                : result.trailSource === "event"
+                  ? "From device events"
+                  : result.trailSource === "derived"
+                    ? "Reconstructed from events"
+                    : "No change recorded"}
           </p>
         </div>
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
@@ -335,12 +414,59 @@ export default function CustomerAccountDevicesTab({
       </div>
 
       <div className="mb-6">
-        <h4 className="text-base font-semibold text-gray-900 mb-3">
+        <h4 className="text-base font-semibold text-gray-900 mb-1">
           Device information
         </h4>
+        <p className="text-sm text-gray-500 mb-3">
+          The IMEI identifies the handset. Type, manufacturer, model, and
+          radio technology are shown only when the device record includes
+          them. The TAC is the first 8 digits of the IMEI and is not matched
+          to a local catalog.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <SnapshotField label="Primary device">
             {isLoading ? "—" : snapshot.primaryDeviceName || "—"}
+          </SnapshotField>
+          <SnapshotField label="IMEI">
+            {isLoading ? (
+              "—"
+            ) : snapshot.primaryImei ? (
+              <span>
+                <span className="font-mono">{snapshot.primaryImei}</span>
+                <span className="block text-xs font-normal text-gray-500 mt-1">
+                  {humanizeImeiCheck(imeiCheckStatus(snapshot.primaryImei))}
+                </span>
+              </span>
+            ) : (
+              "—"
+            )}
+          </SnapshotField>
+          <SnapshotField label="TAC">
+            {isLoading ? "—" : snapshot.primaryTac || "—"}
+          </SnapshotField>
+          <SnapshotField label="Device type">
+            {isLoading ? "—" : humanizeDeviceType(snapshot.primaryDeviceType)}
+          </SnapshotField>
+          <SnapshotField label="Manufacturer">
+            {isLoading ? "—" : snapshot.primaryManufacturer || "—"}
+          </SnapshotField>
+          <SnapshotField label="Model">
+            {isLoading ? "—" : snapshot.primaryModel || "—"}
+          </SnapshotField>
+          <SnapshotField label="Technology">
+            {isLoading ? (
+              "—"
+            ) : snapshot.primaryTechnology ? (
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${technologyClassName(
+                  snapshot.primaryTechnology,
+                )}`}
+              >
+                {humanizeRadioTechnology(snapshot.primaryTechnology)}
+              </span>
+            ) : (
+              "—"
+            )}
           </SnapshotField>
           <SnapshotField label="OS version">
             {isLoading ? "—" : snapshot.primaryOs || "—"}
@@ -387,7 +513,7 @@ export default function CustomerAccountDevicesTab({
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <SearchInput
-            placeholder="Search MSISDN, ICCID, IMEI, or device..."
+            placeholder="Search MSISDN, ICCID, IMEI, model, or manufacturer..."
             value={searchTerm}
             onChange={setSearchTerm}
           />
@@ -512,6 +638,18 @@ export default function CustomerAccountDevicesTab({
           )}
         </>
       )}
+
+      <CustomerDeviceTrailSection
+        movements={result.movements}
+        adt={result.adt}
+        trailSource={result.trailSource}
+        isLoading={isLoading}
+      />
+      <CustomerNetworkDumpsSection
+        hlr={result.hlr}
+        vlr={result.vlr}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

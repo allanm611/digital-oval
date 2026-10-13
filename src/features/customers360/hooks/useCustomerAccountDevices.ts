@@ -7,6 +7,7 @@ import type {
 import {
   EMPTY_ACCOUNT_DEVICE_COUNTS,
   EMPTY_ACCOUNT_SNAPSHOT,
+  EMPTY_DUMP_FEED,
 } from "../utils/customerAccountDeviceHelpers";
 
 const EMPTY_RESULT: CustomerAccountDeviceResult = {
@@ -18,6 +19,11 @@ const EMPTY_RESULT: CustomerAccountDeviceResult = {
   subscriberLookupUsed: false,
   eventsLive: false,
   warnings: [],
+  movements: [],
+  trailSource: "none",
+  adt: { ...EMPTY_DUMP_FEED, fields: [] },
+  hlr: { ...EMPTY_DUMP_FEED, fields: [] },
+  vlr: { ...EMPTY_DUMP_FEED, fields: [] },
 };
 
 export function useCustomerAccountDevices(

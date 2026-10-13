@@ -1,262 +1,420 @@
-export type ScheduleFrequency =
-  | "hourly"
-  | "daily"
-  | "weekly"
-  | "monthly"
-  | "custom";
+import { getSettingsTimezone } from "../../../shared/utils/settingsHelper";
+
+export type ScheduleRecurrence = "hourly" | "daily" | "weekly" | "monthly";
+export type ScheduleEndType = "never" | "at";
+
+export interface ScheduleDayTime {
+  day: number;
+  time: string;
+}
 
 export interface PipelineScheduleDraft {
   enabled: boolean;
-  frequency: ScheduleFrequency;
-  minute: string;
-  hour: string;
-  dayOfWeek: string;
-  dayOfMonth: string;
-  cron: string;
+  startDate: string;
+  startTime: string;
+  endType: ScheduleEndType;
+  endDate: string;
+  endTime: string;
+  recurrence: ScheduleRecurrence;
+  interval: string;
+  specificSchedule: boolean;
+  dayTimes: ScheduleDayTime[];
+  selectedDays: number[];
   timezone: string;
 }
 
-export const SCHEDULE_FREQUENCY_OPTIONS: Array<{
-  value: ScheduleFrequency;
+export const SCHEDULE_RECURRENCE_OPTIONS: Array<{
+  value: ScheduleRecurrence;
   label: string;
-  description: string;
 }> = [
-  {
-    value: "hourly",
-    label: "Every hour",
-    description: "Runs once each hour, at the minute you choose.",
-  },
-  {
-    value: "daily",
-    label: "Every day",
-    description: "Runs once a day at the time you choose.",
-  },
-  {
-    value: "weekly",
-    label: "Every week",
-    description: "Runs once a week on the day and time you choose.",
-  },
-  {
-    value: "monthly",
-    label: "Every month",
-    description: "Runs once a month. Days 29 to 31 are skipped in shorter months.",
-  },
-  {
-    value: "custom",
-    label: "Custom",
-    description: "A five-field cron expression: minute, hour, day, month, weekday.",
-  },
+  { value: "hourly", label: "Hours" },
+  { value: "daily", label: "Days" },
+  { value: "weekly", label: "Weeks" },
+  { value: "monthly", label: "Months" },
 ];
 
 export const WEEKDAY_OPTIONS = [
-  { value: "1", label: "Monday" },
-  { value: "2", label: "Tuesday" },
-  { value: "3", label: "Wednesday" },
-  { value: "4", label: "Thursday" },
-  { value: "5", label: "Friday" },
-  { value: "6", label: "Saturday" },
-  { value: "0", label: "Sunday" },
+  { value: 0, label: "Sunday" },
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
 ];
 
-export const SCHEDULE_TIMEZONE_OPTIONS = [
-  { value: "Africa/Nairobi", label: "Africa/Nairobi" },
-  { value: "UTC", label: "UTC" },
-  { value: "Africa/Lagos", label: "Africa/Lagos" },
-  { value: "Africa/Johannesburg", label: "Africa/Johannesburg" },
-  { value: "Africa/Cairo", label: "Africa/Cairo" },
-  { value: "Europe/London", label: "Europe/London" },
-  { value: "Europe/Paris", label: "Europe/Paris" },
-  { value: "Asia/Dubai", label: "Asia/Dubai" },
-  { value: "Asia/Kolkata", label: "Asia/Kolkata" },
-  { value: "America/New_York", label: "America/New_York" },
-];
-
-const DEFAULT_TIMEZONE = "Africa/Nairobi";
+function todayDate(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
 
 export function emptySchedule(): PipelineScheduleDraft {
   return {
     enabled: false,
-    frequency: "daily",
-    minute: "0",
-    hour: "2",
-    dayOfWeek: "1",
-    dayOfMonth: "1",
-    cron: "",
-    timezone: DEFAULT_TIMEZONE,
+    startDate: todayDate(),
+    startTime: "08:00",
+    endType: "never",
+    endDate: "",
+    endTime: "23:59",
+    recurrence: "daily",
+    interval: "1",
+    specificSchedule: false,
+    dayTimes: [{ day: 1, time: "08:00" }],
+    selectedDays: [1, 2, 3, 4, 5, 6],
+    timezone: getSettingsTimezone() || "Africa/Nairobi",
   };
 }
 
-function wholeNumber(value: string, min: number, max: number): number | null {
-  if (!/^\d+$/.test(value.trim())) return null;
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < min || parsed > max) return null;
-  return parsed;
+function clockParts(time: string): { hour: number; minute: number } | null {
+  const match = time.trim().match(/^(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return null;
+  return { hour, minute };
 }
 
-function isCronField(token: string, min: number, max: number): boolean {
-  return token.split(",").every((part) => {
-    const match = part.match(/^(\*|\d+)(?:-(\d+))?(?:\/(\d+))?$/);
-    if (!match) return false;
-    if (match[1] === "*" && match[2]) return false;
-    const step = match[3] ? Number(match[3]) : null;
-    if (step !== null && (!Number.isInteger(step) || step < 1)) return false;
-    if (match[1] === "*") return true;
-    const start = Number(match[1]);
-    const end = match[2] ? Number(match[2]) : start;
-    return (
-      Number.isInteger(start) &&
-      Number.isInteger(end) &&
-      start >= min &&
-      end <= max &&
-      start <= end
+function dayOfMonth(date: string): number | null {
+  const match = date.match(/^\d{4}-\d{2}-(\d{2})$/);
+  if (!match) return null;
+  const day = Number(match[1]);
+  if (day < 1 || day > 31) return null;
+  return day;
+}
+
+export function zonedWallTimeToIso(
+  date: string,
+  time: string,
+  timeZone: string,
+): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !clockParts(time)) return null;
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  try {
+    const utcGuess = Date.UTC(year, month - 1, day, hour, minute, 0);
+    const zoned = new Date(
+      new Date(utcGuess).toLocaleString("en-US", { timeZone }),
     );
-  });
+    const utc = new Date(
+      new Date(utcGuess).toLocaleString("en-US", { timeZone: "UTC" }),
+    );
+    const instant = new Date(utcGuess - (zoned.getTime() - utc.getTime()));
+    if (Number.isNaN(instant.getTime())) return null;
+    return instant.toISOString();
+  } catch {
+    return null;
+  }
 }
 
-export function isCronExpression(value: string): boolean {
-  const fields = value.trim().split(/\s+/);
-  const body = fields.length === 6 ? fields.slice(1) : fields;
-  if (body.length !== 5) return false;
-  const [minute, hour, day, month, weekday] = body;
-  return (
-    isCronField(minute, 0, 59) &&
-    isCronField(hour, 0, 23) &&
-    isCronField(day, 1, 31) &&
-    isCronField(month, 1, 12) &&
-    isCronField(weekday, 0, 7)
-  );
+export function isoToWallTime(
+  iso: string,
+  timeZone: string,
+): { date: string; time: string } | null {
+  const instant = new Date(iso);
+  if (Number.isNaN(instant.getTime())) return null;
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(instant);
+    const read = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((part) => part.type === type)?.value || "";
+    const hour = read("hour") === "24" ? "00" : read("hour");
+    const date = `${read("year")}-${read("month")}-${read("day")}`;
+    const time = `${hour}:${read("minute")}`;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !clockParts(time)) return null;
+    return { date, time };
+  } catch {
+    return null;
+  }
+}
+
+export function scheduleBounds(schedule: PipelineScheduleDraft): {
+  start: string | null;
+  end: string | null;
+} {
+  const zone = schedule.timezone.trim() || "UTC";
+  return {
+    start: zonedWallTimeToIso(schedule.startDate, schedule.startTime, zone),
+    end:
+      schedule.endType === "at"
+        ? zonedWallTimeToIso(schedule.endDate, schedule.endTime, zone)
+        : null,
+  };
 }
 
 export function cronFromSchedule(
   schedule: PipelineScheduleDraft,
-): { ok: true; cron: string } | { ok: false; message: string } {
-  if (schedule.frequency === "custom") {
-    const cron = schedule.cron.trim();
-    if (!cron) {
-      return { ok: false, message: "Enter a cron expression for this schedule." };
-    }
-    if (!isCronExpression(cron)) {
+): { ok: true; cron: string } | { ok: false; field: string; message: string } {
+  const clock = clockParts(schedule.startTime);
+  if (!schedule.startDate.trim() || !clock) {
+    return {
+      ok: false,
+      field: "schedule_start",
+      message: "Choose a start date and time.",
+    };
+  }
+  if (!schedule.timezone.trim()) {
+    return {
+      ok: false,
+      field: "schedule_timezone",
+      message: "Choose the timezone for this schedule.",
+    };
+  }
+  const interval = Number(schedule.interval);
+  if (!Number.isInteger(interval) || interval < 1) {
+    return {
+      ok: false,
+      field: "schedule_interval",
+      message: "Recur every must be a whole number of at least 1.",
+    };
+  }
+
+  const specific = schedule.specificSchedule && schedule.recurrence !== "hourly" && schedule.recurrence !== "monthly";
+  let hour = clock.hour;
+  let minute = clock.minute;
+  let days: number[] = [];
+  if (specific) {
+    if (schedule.dayTimes.length === 0) {
       return {
         ok: false,
-        message:
-          "Use five fields: minute hour day month weekday. For example, 0 2 * * * runs every day at 02:00.",
+        field: "schedule_days",
+        message: "Add at least one day and time.",
       };
     }
-    return { ok: true, cron };
-  }
-
-  const minute = wholeNumber(schedule.minute, 0, 59);
-  if (minute === null) {
-    return { ok: false, message: "Minute must be a whole number from 0 to 59." };
-  }
-  if (schedule.frequency === "hourly") {
-    return { ok: true, cron: `${minute} * * * *` };
-  }
-
-  const hour = wholeNumber(schedule.hour, 0, 23);
-  if (hour === null) {
-    return { ok: false, message: "Hour must be a whole number from 0 to 23." };
-  }
-  if (schedule.frequency === "daily") {
-    return { ok: true, cron: `${minute} ${hour} * * *` };
-  }
-  if (schedule.frequency === "weekly") {
-    const day = wholeNumber(schedule.dayOfWeek, 0, 6);
-    if (day === null) {
-      return { ok: false, message: "Choose the weekday this pipeline runs." };
+    const times = new Set(schedule.dayTimes.map((row) => row.time));
+    if (times.size > 1) {
+      return {
+        ok: false,
+        field: "schedule_days",
+        message: "Each day has to use the same time. The pipeline stores one run time.",
+      };
     }
-    return { ok: true, cron: `${minute} ${hour} * * ${day}` };
+    const rowClock = clockParts(schedule.dayTimes[0]?.time || "");
+    if (!rowClock) {
+      return {
+        ok: false,
+        field: "schedule_days",
+        message: "Choose a time for each scheduled day.",
+      };
+    }
+    hour = rowClock.hour;
+    minute = rowClock.minute;
+    days = schedule.dayTimes.map((row) => row.day);
+    if (days.some((day) => !Number.isInteger(day) || day < 0 || day > 6)) {
+      return {
+        ok: false,
+        field: "schedule_days",
+        message: "Choose a weekday for each row.",
+      };
+    }
+    if (new Set(days).size !== days.length) {
+      return {
+        ok: false,
+        field: "schedule_days",
+        message: "Each weekday can be listed once.",
+      };
+    }
   }
 
-  const dayOfMonth = wholeNumber(schedule.dayOfMonth, 1, 31);
-  if (dayOfMonth === null) {
-    return { ok: false, message: "Day of month must be a whole number from 1 to 31." };
+  if (schedule.recurrence === "hourly") {
+    if (interval > 23) {
+      return {
+        ok: false,
+        field: "schedule_interval",
+        message: "Hourly repeat must be from 1 to 23 hours.",
+      };
+    }
+    return { ok: true, cron: interval === 1 ? `${minute} * * * *` : `${minute} */${interval} * * *` };
   }
-  return { ok: true, cron: `${minute} ${hour} ${dayOfMonth} * *` };
+  if (schedule.recurrence === "weekly" && !schedule.specificSchedule) {
+    return {
+      ok: false,
+      field: "schedule_days",
+      message: "Choose the weekdays this pipeline runs.",
+    };
+  }
+  if ((schedule.recurrence === "weekly" || specific) && interval !== 1) {
+    return {
+      ok: false,
+      field: "schedule_interval",
+      message: "A weekday schedule repeats every week, so Recur every stays at 1.",
+    };
+  }
+  if (specific) {
+    const ordered = [...new Set(days)].sort((left, right) => left - right);
+    return { ok: true, cron: `${minute} ${hour} * * ${ordered.join(",")}` };
+  }
+  if (schedule.recurrence === "daily") {
+    if (schedule.recurrence === "daily" && interval > 31) {
+      return {
+        ok: false,
+        field: "schedule_interval",
+        message: "Daily repeat must be from 1 to 31.",
+      };
+    }
+    if (interval === 1) return { ok: true, cron: `${minute} ${hour} * * *` };
+    return { ok: true, cron: `${minute} ${hour} */${interval} * *` };
+  }
+  const day = dayOfMonth(schedule.startDate);
+  if (day === null) {
+    return {
+      ok: false,
+      field: "schedule_start",
+      message: "Choose a start date and time.",
+    };
+  }
+  if (interval > 12) {
+    return {
+      ok: false,
+      field: "schedule_interval",
+      message: "Monthly repeat must be from 1 to 12 months.",
+    };
+  }
+  return {
+    ok: true,
+    cron: interval === 1 ? `${minute} ${hour} ${day} * *` : `${minute} ${hour} ${day} */${interval} *`,
+  };
 }
 
-function clock(hour: string, minute: string): string {
-  return `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+function weekdayLabel(day: number): string {
+  return WEEKDAY_OPTIONS.find((option) => option.value === day)?.label || "";
 }
 
-export function describeSchedule(
-  schedule: Pick<
-    PipelineScheduleDraft,
-    "enabled" | "frequency" | "minute" | "hour" | "dayOfWeek" | "dayOfMonth" | "cron" | "timezone"
-  >,
-): string {
-  if (!schedule.enabled) return "Not scheduled";
-  const zone = schedule.timezone || DEFAULT_TIMEZONE;
-  if (schedule.frequency === "hourly") {
-    return `Every hour at minute ${schedule.minute.padStart(2, "0")} (${zone}).`;
+export function describeSchedule(schedule: PipelineScheduleDraft): string {
+  if (!schedule.enabled) {
+    return "Not scheduled. The pipeline runs only when someone starts it.";
   }
-  if (schedule.frequency === "daily") {
-    return `Every day at ${clock(schedule.hour, schedule.minute)} (${zone}).`;
+  const zone = schedule.timezone || "UTC";
+  const interval = Number(schedule.interval) || 1;
+  const specific = schedule.specificSchedule && schedule.dayTimes.length > 0 && schedule.recurrence !== "hourly" && schedule.recurrence !== "monthly";
+  const time = specific ? schedule.dayTimes[0]?.time || schedule.startTime : schedule.startTime || "08:00";
+  let when = interval === 1 ? `Every day at ${time}` : `Every ${interval} days of the month at ${time}`;
+  if (schedule.recurrence === "hourly") {
+    when = interval === 1 ? `Every hour at minute ${time.slice(3)}` : `Every ${interval} hours at minute ${time.slice(3)}`;
+  } else if (specific) {
+    const names = [...schedule.dayTimes]
+      .map((row) => weekdayLabel(row.day))
+      .filter(Boolean);
+    when = names.length ? `${names.join(", ")} at ${time}` : `Selected days at ${time}`;
+  } else if (schedule.recurrence === "weekly") {
+    when = `Every week at ${time}`;
+  } else if (schedule.recurrence === "monthly") {
+    const day = dayOfMonth(schedule.startDate);
+    when = interval === 1
+      ? `Day ${day || "—"} of each month at ${time}`
+      : `Day ${day || "—"} every ${interval} months at ${time}`;
   }
-  if (schedule.frequency === "weekly") {
-    const day =
-      WEEKDAY_OPTIONS.find((option) => option.value === schedule.dayOfWeek)?.label ||
-      "the selected day";
-    return `Every ${day} at ${clock(schedule.hour, schedule.minute)} (${zone}).`;
-  }
-  if (schedule.frequency === "monthly") {
-    return `Day ${schedule.dayOfMonth} of each month at ${clock(schedule.hour, schedule.minute)} (${zone}).`;
-  }
-  return schedule.cron.trim()
-    ? `Custom schedule ${schedule.cron.trim()} (${zone}).`
-    : `Custom schedule (${zone}).`;
+  const start = schedule.startDate
+    ? `, starting ${schedule.startDate} ${time}`
+    : "";
+  const end =
+    schedule.endType === "at" && schedule.endDate
+      ? `, until ${schedule.endDate} ${schedule.endTime}`
+      : ", with no end date";
+  return `${when} (${zone})${start}${end}.`;
 }
 
 export function scheduleFromPipeline(input: {
   schedule_enabled?: boolean;
   schedule_cron?: string | null;
   schedule_timezone?: string;
+  schedule_start_at?: string | null;
+  schedule_end_at?: string | null;
 }): PipelineScheduleDraft {
   const base = emptySchedule();
   base.enabled = input.schedule_enabled === true;
-  base.timezone = input.schedule_timezone || DEFAULT_TIMEZONE;
+  base.timezone = input.schedule_timezone || base.timezone;
+  const zone = base.timezone;
+
+  const start = input.schedule_start_at
+    ? isoToWallTime(input.schedule_start_at, zone)
+    : null;
+  if (start) {
+    base.startDate = start.date;
+    base.startTime = start.time;
+  }
+  const end = input.schedule_end_at
+    ? isoToWallTime(input.schedule_end_at, zone)
+    : null;
+  if (end) {
+    base.endType = "at";
+    base.endDate = end.date;
+    base.endTime = end.time;
+  }
+
   const cron = (input.schedule_cron || "").trim();
-  if (!cron) return base;
-
+  const applyTime = (minute: string, hour?: string) => {
+    if (start) return;
+    base.startTime = hour
+      ? `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`
+      : `00:${minute.padStart(2, "0")}`;
+  };
+  const hourlyStep = cron.match(/^(\d{1,2}) \*\/(\d{1,2}) \* \* \*$/);
   const hourly = cron.match(/^(\d{1,2}) \* \* \* \*$/);
-  if (hourly) {
-    base.frequency = "hourly";
-    base.minute = String(Number(hourly[1]));
+  if (hourlyStep || hourly) {
+    base.recurrence = "hourly";
+    base.interval = hourlyStep ? String(Number(hourlyStep[2])) : "1";
+    applyTime(String(Number((hourlyStep || hourly)?.[1])));
     return base;
   }
+  const dailyStep = cron.match(/^(\d{1,2}) (\d{1,2}) \*\/(\d{1,2}) \* \*$/);
   const daily = cron.match(/^(\d{1,2}) (\d{1,2}) \* \* \*$/);
-  if (daily) {
-    base.frequency = "daily";
-    base.minute = String(Number(daily[1]));
-    base.hour = String(Number(daily[2]));
+  if (dailyStep || daily) {
+    base.recurrence = "daily";
+    base.interval = dailyStep ? String(Number(dailyStep[3])) : "1";
+    const match = dailyStep || daily;
+    applyTime(String(Number(match?.[1])), String(Number(match?.[2])));
     return base;
   }
-  const weekly = cron.match(/^(\d{1,2}) (\d{1,2}) \* \* ([0-7])$/);
+  const weekly = cron.match(/^(\d{1,2}) (\d{1,2}) \* \* ([0-7](?:,[0-7])*)$/);
   if (weekly) {
-    base.frequency = "weekly";
-    base.minute = String(Number(weekly[1]));
-    base.hour = String(Number(weekly[2]));
-    base.dayOfWeek = weekly[3] === "7" ? "0" : String(Number(weekly[3]));
+    base.recurrence = "weekly";
+    base.interval = "1";
+    base.specificSchedule = true;
+    applyTime(String(Number(weekly[1])), String(Number(weekly[2])));
+    const time = base.startTime;
+    base.selectedDays = weekly[3]
+      .split(",")
+      .map((day) => (day === "7" ? 0 : Number(day)))
+      .filter((day) => day >= 0 && day <= 6);
+    base.dayTimes = base.selectedDays.map((day) => ({ day, time }));
     return base;
   }
+  const monthlyStep = cron.match(/^(\d{1,2}) (\d{1,2}) (\d{1,2}) \*\/(\d{1,2}) \*$/);
   const monthly = cron.match(/^(\d{1,2}) (\d{1,2}) (\d{1,2}) \* \*$/);
-  if (monthly) {
-    base.frequency = "monthly";
-    base.minute = String(Number(monthly[1]));
-    base.hour = String(Number(monthly[2]));
-    base.dayOfMonth = String(Number(monthly[3]));
+  if (monthlyStep || monthly) {
+    base.recurrence = "monthly";
+    const match = monthlyStep || monthly;
+    base.interval = monthlyStep ? String(Number(monthlyStep[4])) : "1";
+    applyTime(String(Number(match?.[1])), String(Number(match?.[2])));
+    const day = String(Number(match?.[3])).padStart(2, "0");
+    if (!start) base.startDate = `${base.startDate.slice(0, 8)}${day}`;
     return base;
   }
-
-  base.frequency = "custom";
-  base.cron = cron;
   return base;
+}
+
+export function isPipelineScheduled(input: {
+  schedule_enabled?: boolean;
+  schedule_cron?: string | null;
+}): boolean {
+  return input.schedule_enabled === true && Boolean((input.schedule_cron || "").trim());
 }
 
 export function describeStoredSchedule(input: {
   schedule_enabled?: boolean;
   schedule_cron?: string | null;
   schedule_timezone?: string;
+  schedule_start_at?: string | null;
+  schedule_end_at?: string | null;
 }): string {
   return describeSchedule(scheduleFromPipeline(input));
 }

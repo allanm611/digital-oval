@@ -33,7 +33,7 @@ import {
   domainDescription,
   domainLabel,
   OVERALL_CVM_LABELS,
-  OVERALL_DOMAIN_ROUTES,
+  overallDomainRoute,
   sourceFailures,
 } from "../utils/overallCvmMetrics";
 import type { OverallDashboardPerformanceResponse } from "../types/ReportsAPI";
@@ -302,19 +302,17 @@ export default function OverallDashboardPerformancePage() {
 
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {portfolio.domains.map((domain) => {
-              const Icon = DOMAIN_ICONS[domain.id];
-              return (
-                <Link
-                  key={domain.id}
-                  to={OVERALL_DOMAIN_ROUTES[domain.id]}
-                  className={`${tw.rounded} border border-gray-200 bg-white p-5 shadow-sm transition-colors hover:border-gray-300`}
-                >
+              const Icon = DOMAIN_ICONS[domain.id] ?? Target;
+              const href = overallDomainRoute(domain.id);
+              const cardClass = `${tw.rounded} border border-gray-200 bg-white p-5 shadow-sm`;
+              const body = (
+                <>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <Icon className="h-5 w-5" style={{ color: colors.primary.accent }} />
                       <h2 className="text-base font-semibold text-gray-900">{domainLabel(domain.id)}</h2>
                     </div>
-                    <ArrowUpRight className="h-4 w-4 text-gray-400" />
+                    {href ? <ArrowUpRight className="h-4 w-4 text-gray-400" /> : null}
                   </div>
                   <p className="mt-1 text-sm text-gray-500">{domainDescription(domain.id)}</p>
                   {domain.available ? (
@@ -329,6 +327,22 @@ export default function OverallDashboardPerformancePage() {
                   ) : (
                     <p className="mt-4 text-sm text-amber-700">Unavailable for this window</p>
                   )}
+                </>
+              );
+              if (!href) {
+                return (
+                  <article key={domain.id} className={cardClass}>
+                    {body}
+                  </article>
+                );
+              }
+              return (
+                <Link
+                  key={domain.id}
+                  to={href}
+                  className={`${cardClass} transition-colors hover:border-gray-300`}
+                >
+                  {body}
                 </Link>
               );
             })}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import CustomerProfileEntityLink from "../navigation/CustomerProfileEntityLink";
-import { Gift, RotateCcw, Sparkles, Ticket } from "lucide-react";
+import { Gift, Link2, RotateCcw, Ticket } from "lucide-react";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -12,14 +12,19 @@ import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Table, type TableColumn } from "../../../shared/components/Table";
 import { color, tw } from "../../../shared/utils/utils";
 import { useCustomerOffers } from "../hooks/useCustomerOffers";
-import type { CustomerOfferItem, CustomerOfferState } from "../types/customerOffer";
+import type {
+  CustomerOfferItem,
+  CustomerOfferStatus,
+} from "../types/customerOffer";
 import {
   filterCustomerOffers,
-  humanizeOfferState,
+  humanizeOfferStatus,
   humanizeOfferType,
+  humanizeValidity,
   latestRedeemedAt,
-  uniqueOfferStates,
+  uniqueOfferStatuses,
   uniqueOfferTypes,
+  usageSummary,
 } from "../utils/customerOfferHelpers";
 import CustomerOfferDetailsExpandedRow from "./CustomerOfferDetailsExpandedRow";
 
@@ -30,12 +35,10 @@ type CustomerOffersTabProps = {
 
 const ALL = "all";
 
-function stateClassName(state: CustomerOfferState): string {
-  if (state === "redeemed") return "bg-green-50 text-green-800";
-  if (state === "available") return "bg-teal-50 text-teal-800";
-  if (state === "accepted") return "bg-sky-50 text-sky-800";
-  if (state === "expired") return "bg-gray-100 text-gray-700";
-  return "bg-amber-50 text-amber-800";
+function statusClassName(status: CustomerOfferStatus): string {
+  return status === "active"
+    ? "bg-green-50 text-green-800"
+    : "bg-gray-100 text-gray-700";
 }
 
 function progressLabel(
@@ -44,9 +47,7 @@ function progressLabel(
   total: number,
 ): string {
   if (phase === "audience") {
-    return total > 0
-      ? `Resolving audience offers (${checked.toLocaleString()} of ${total.toLocaleString()})...`
-      : "Finding segment and campaign mappings...";
+    return "Loading offers this customer has received or is attached to...";
   }
   if (phase === "events") {
     return "Checking live redemption events...";
@@ -56,13 +57,31 @@ function progressLabel(
     : "Loading offer catalog...";
 }
 
+function RelationshipBadges({ offer }: { offer: CustomerOfferItem }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {offer.hasReceived ? (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-800">
+          Received
+        </span>
+      ) : null}
+      {offer.isAttached ? (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-800">
+          Attached
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 export default function CustomerOffersTab({
   subscriberId,
   customerRecord,
 }: CustomerOffersTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [state, setState] = useState(ALL);
+  const [relationship, setRelationship] = useState(ALL);
+  const [status, setStatus] = useState(ALL);
   const [type, setType] = useState(ALL);
   const [page, setPage] = useState(1);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
@@ -82,26 +101,39 @@ export default function CustomerOffersTab({
     () =>
       filterCustomerOffers(result.offers, {
         search: debouncedSearch,
-        state,
+        relationship,
+        status,
         type,
       }),
-    [result.offers, debouncedSearch, state, type],
+    [result.offers, debouncedSearch, relationship, status, type],
   );
 
   useEffect(() => {
     setPage(1);
     setExpandedRowId(null);
-  }, [debouncedSearch, state, type, subscriberId]);
+  }, [debouncedSearch, relationship, status, type, subscriberId]);
 
   const filtersActive =
-    Boolean(debouncedSearch.trim()) || state !== ALL || type !== ALL;
+    Boolean(debouncedSearch.trim()) ||
+    relationship !== ALL ||
+    status !== ALL ||
+    type !== ALL;
 
-  const stateOptions = useMemo(
+  const relationshipOptions = useMemo(
+    () => [
+      { value: ALL, label: "All links" },
+      { value: "received", label: "Received" },
+      { value: "attached", label: "Attached" },
+    ],
+    [],
+  );
+
+  const statusOptions = useMemo(
     () => [
       { value: ALL, label: "All statuses" },
-      ...uniqueOfferStates(result.offers).map((item) => ({
+      ...uniqueOfferStatuses(result.offers).map((item) => ({
         value: item,
-        label: humanizeOfferState(item),
+        label: humanizeOfferStatus(item),
       })),
     ],
     [result.offers],
@@ -156,28 +188,30 @@ export default function CustomerOffersTab({
         ),
       },
       {
-        id: "type",
-        label: "Type",
+        id: "relationship",
+        label: "Link",
         visible: true,
-        render: (_, row) => (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-            {humanizeOfferType(row.type)}
-          </span>
-        ),
+        render: (_, row) => <RelationshipBadges offer={row} />,
       },
       {
-        id: "state",
+        id: "status",
         label: "Status",
         visible: true,
         render: (_, row) => (
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${stateClassName(
-              row.state,
-            )}`}
-          >
-            {humanizeOfferState(row.state)}
-            {row.verification === "hint" ? " · Unverified" : ""}
-          </span>
+          <div className="min-w-[108px]">
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusClassName(
+                row.status,
+              )}`}
+            >
+              {humanizeOfferStatus(row.status)}
+            </span>
+            {row.validity === "expired" || row.validity === "scheduled" ? (
+              <p className="mt-1 text-xs text-amber-700">
+                {humanizeValidity(row.validity)}
+              </p>
+            ) : null}
+          </div>
         ),
       },
       {
@@ -194,29 +228,35 @@ export default function CustomerOffersTab({
           ),
       },
       {
-        id: "redeemedAt",
-        label: "Redeemed Date",
+        id: "redemptions",
+        label: "Redemptions",
         visible: true,
-        render: (_, row) =>
-          row.redeemedAt ? (
-            <DateFormatter
-              date={row.redeemedAt}
-              includeTime
-              useUserTimezone
-              className="text-sm text-gray-700"
-            />
-          ) : (
-            <span className="text-sm text-gray-400">—</span>
-          ),
+        render: (_, row) => (
+          <div className="min-w-[150px]">
+            <p className="text-sm text-gray-900">{usageSummary(row)}</p>
+            {row.redeemedAt ? (
+              <DateFormatter
+                date={row.redeemedAt}
+                includeTime
+                useUserTimezone
+                className="text-xs text-gray-500"
+              />
+            ) : (
+              <p className="text-xs text-gray-400">No redemption yet</p>
+            )}
+          </div>
+        ),
       },
       {
         id: "viaCampaigns",
-        label: "Via campaigns",
+        label: "Linked through",
         visible: true,
         render: (_, row) => (
           <div className="flex flex-wrap gap-1 min-w-[160px]">
-            {row.viaCampaigns.length === 0 ? (
-              <span className="text-sm text-gray-400">—</span>
+            {row.viaCampaigns.length === 0 && row.viaSegments.length === 0 ? (
+              <span className="text-sm text-gray-400">
+                {row.isAttached ? "Direct attachment" : "—"}
+              </span>
             ) : (
               row.viaCampaigns.slice(0, 2).map((campaign) => (
                 <CustomerProfileEntityLink
@@ -249,7 +289,8 @@ export default function CustomerOffersTab({
   const clearFilters = () => {
     setSearchTerm("");
     setDebouncedSearch("");
-    setState(ALL);
+    setRelationship(ALL);
+    setStatus(ALL);
     setType(ALL);
   };
 
@@ -266,9 +307,11 @@ export default function CustomerOffersTab({
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-1">Offers</h3>
-          <p className="text-sm text-gray-500">
-            Offers available to this customer through campaign-segment mapping,
-            and offers they have accepted or redeemed.
+          <p className="text-sm text-gray-500 max-w-3xl">
+            Each row is one offer for this customer: how they received it, and
+            whether they are attached to the reward. Attachment keeps the status
+            Active. Redemptions are counted separately and can happen more than
+            once.
           </p>
         </div>
         <button
@@ -285,37 +328,59 @@ export default function CustomerOffersTab({
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Available
+              Attached
             </p>
-            <Sparkles className="h-4 w-4 text-gray-400" />
+            <Link2 className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
             {isLoading && result.offers.length === 0
               ? "—"
-              : result.counts.available.toLocaleString()}
+              : result.counts.attached.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            Marked available for this customer
+            {isLoading
+              ? "Checking reward attachment"
+              : `${result.counts.active.toLocaleString()} active while attached`}
           </p>
         </div>
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Redeemed
+              Received
+            </p>
+            <Gift className="h-4 w-4 text-gray-400" />
+          </div>
+          <p className="text-2xl font-semibold text-gray-900">
+            {isLoading && result.offers.length === 0
+              ? "—"
+              : result.counts.received.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            {isLoading
+              ? "Checking deliveries"
+              : result.counts.both > 0
+                ? `${result.counts.both.toLocaleString()} also attached`
+                : "Delivered to this customer"}
+          </p>
+        </div>
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Redemptions
             </p>
             <Ticket className="h-4 w-4 text-gray-400" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">
             {isLoading && result.offers.length === 0
               ? "—"
-              : result.counts.redeemed.toLocaleString()}
+              : result.counts.redemptionEvents.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             {isLoading
-              ? "Confirmed from live offer events"
+              ? "Counting every use"
               : lastRedeemed
                 ? "Last redeemed "
-                : "No redemption on file"}
+                : "No redemption on file. Repeat uses stay on the same offer."}
             {!isLoading && lastRedeemed ? (
               <DateFormatter
                 date={lastRedeemed}
@@ -326,36 +391,25 @@ export default function CustomerOffersTab({
             ) : null}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Offers found
-            </p>
-            <Gift className="h-4 w-4 text-gray-400" />
-          </div>
-          <p className="text-2xl font-semibold text-gray-900">
-            {isLoading && result.offers.length === 0
-              ? "—"
-              : result.counts.total.toLocaleString()}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            {isLoading
-              ? "From campaigns, events, and catalog"
-              : `From ${result.campaignCount.toLocaleString()} campaign${result.campaignCount === 1 ? "" : "s"} and ${result.segmentCount.toLocaleString()} segment${result.segmentCount === 1 ? "" : "s"}`}
-          </p>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
         <SearchInput
           placeholder="Search offers, campaigns, or segments..."
           value={searchTerm}
           onChange={setSearchTerm}
         />
         <HeadlessSelect
-          value={state}
-          onChange={(value) => setState(String(value))}
-          options={stateOptions}
+          value={relationship}
+          onChange={(value) => setRelationship(String(value))}
+          options={relationshipOptions}
+          placeholder="Link"
+          className="w-full"
+        />
+        <HeadlessSelect
+          value={status}
+          onChange={(value) => setStatus(String(value))}
+          options={statusOptions}
           placeholder="Status"
           className="w-full"
         />
@@ -421,24 +475,20 @@ export default function CustomerOffersTab({
           <p className="text-gray-700 text-sm font-medium">
             {filtersActive
               ? "No offers match the selected filters"
-              : "No offers are available or redeemed for this customer"}
+              : "No offers are received or attached for this customer"}
           </p>
           <p className="text-gray-500 text-sm mt-1">
             {filtersActive
-              ? "Try a different status, type, or search term."
-              : result.segmentCount === 0
-                ? "This customer is not in any mapped segments, so no campaign offers were found."
-                : result.campaignCount === 0
-                  ? "This customer's segments are not mapped to campaign offers."
-                  : "Audience mappings were found, but none resolved to an offer catalog item."}
+              ? "Try a different link, status, type, or search term."
+              : "Received offers appear when this customer is delivered an offer. Attached offers stay Active while the customer is linked to the reward."}
           </p>
         </div>
       ) : (
         <>
           <p className="text-xs text-gray-500 mb-3">
             Showing {filtered.length.toLocaleString()} offer
-            {filtered.length === 1 ? "" : "s"} available or redeemed by this
-            customer
+            {filtered.length === 1 ? "" : "s"}. Open a row to see how it was
+            received, how the customer is attached, and each redemption.
           </p>
           <div className={`${tw.rounded} overflow-hidden`}>
             <Table<CustomerOfferItem>
