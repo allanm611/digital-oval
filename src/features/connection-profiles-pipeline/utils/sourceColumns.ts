@@ -1,5 +1,9 @@
 import * as XLSX from "xlsx";
-import { FieldDataType, FieldMappingDraft } from "../types/pipeline";
+import {
+  FieldDataType,
+  FieldMappingDraft,
+  InferredFieldMapping,
+} from "../types/pipeline";
 import { emptyMapping } from "./pipelineForm";
 
 export interface DiscoveredColumn {
@@ -23,6 +27,71 @@ export function toColumnIdentifier(name: string): string {
     .slice(0, 100);
   if (!cleaned) return "column";
   return /^[0-9]/.test(cleaned) ? `c_${cleaned}`.slice(0, 100) : cleaned;
+}
+
+export function fieldDataTypeFromInference(typeName?: string): FieldDataType {
+  const type = String(typeName || "").toLowerCase();
+  if (type.includes("bool")) return "boolean";
+  if (type.includes("int")) return "integer";
+  if (
+    type.includes("numeric") ||
+    type.includes("decimal") ||
+    type.includes("float") ||
+    type.includes("double") ||
+    type === "number"
+  ) {
+    return "number";
+  }
+  if (type === "date") return "date";
+  if (type.includes("time") || type.includes("datetime")) return "timestamp";
+  if (type.includes("json")) return "json";
+  return "string";
+}
+
+export function columnsFromInferredMappings(
+  mappings: InferredFieldMapping[],
+): DiscoveredColumn[] {
+  return mappings.flatMap((mapping) => {
+    const name = String(mapping.source_field || "").trim();
+    if (!name) return [];
+    return [
+      {
+        name,
+        dataType: fieldDataTypeFromInference(mapping.data_type),
+      },
+    ];
+  });
+}
+
+export function draftsFromInferredMappings(
+  mappings: InferredFieldMapping[],
+): FieldMappingDraft[] {
+  const used = new Set<string>();
+  return mappings.flatMap((mapping) => {
+    const name = String(mapping.source_field || "").trim();
+    if (!name) return [];
+    let target = toColumnIdentifier(mapping.target_field || name);
+    const base = target;
+    let suffix = 2;
+    while (used.has(target.toLowerCase())) {
+      target = `${base}_${suffix}`.slice(0, 100);
+      suffix += 1;
+    }
+    used.add(target.toLowerCase());
+    return [
+      {
+        ...emptyMapping(),
+        source_field: name,
+        target_column: target,
+        data_type: fieldDataTypeFromInference(mapping.data_type),
+        required: mapping.required === true,
+        default_value:
+          mapping.default_value === undefined || mapping.default_value === null
+            ? ""
+            : String(mapping.default_value),
+      },
+    ];
+  });
 }
 
 export function mappingsFromColumns(
@@ -506,6 +575,99 @@ export function columnsFromJsonSample(
   if (Array.isArray(parsed)) return columnsFromRecords(parsed);
   if (parsed && typeof parsed === "object") return columnsFromRecords([parsed]);
   return [];
+}
+
+const SAMPLE_ROW_LIMIT = 20;
+
+function recordsFromMatrix(
+  rows: unknown[][],
+  hasHeaders: boolean,
+): Record<string, unknown>[] {
+  const filled = rows.filter((row) =>
+    row.some((cell) => String(cell || "").trim()),
+  );
+  if (filled.length === 0) return [];
+  const header = (filled[0] || []).map((cell) => String(cell || "").trim());
+  const dataRows = hasHeaders ? filled.slice(1) : filled;
+  return dataRows.slice(0, SAMPLE_ROW_LIMIT).map((row) => {
+    const record: Record<string, unknown> = {};
+    const width = Math.max(header.length, row.length);
+    for (let index = 0; index < width; index += 1) {
+      const name = hasHeaders
+        ? header[index] || `column_${index + 1}`
+        : `column_${index + 1}`;
+      record[name] = row[index] ?? "";
+    }
+    return record;
+  });
+}
+
+function recordsFromJson(parsed: unknown, responsePath = ""): Record<string, unknown>[] {
+  const located = valueAtPath(parsed, responsePath);
+  const source = Array.isArray(located)
+    ? located
+    : located && typeof located === "object"
+      ? [located]
+      : Array.isArray(parsed)
+        ? parsed
+        : parsed && typeof parsed === "object"
+          ? [parsed]
+          : [];
+  return source
+    .filter((row) => row && typeof row === "object" && !Array.isArray(row))
+    .slice(0, SAMPLE_ROW_LIMIT) as Record<string, unknown>[];
+}
+
+export async function recordsFromSampleFile(
+  file: File,
+  options: {
+    fileFormat: string;
+    delimiter: string;
+    hasHeaders: boolean;
+    responsePath?: string;
+  },
+): Promise<Record<string, unknown>[]> {
+  const format = options.fileFormat.toLowerCase();
+  if (format === "parquet" || format === "fixed_width") {
+    throw new Error(
+      "This file format cannot be sampled in the browser. Upload CSV, TSV, JSON, or Excel.",
+    );
+  }
+
+  if (format === "json") {
+    const records = recordsFromJson(
+      JSON.parse(await file.text()) as unknown,
+      options.responsePath,
+    );
+    if (records.length === 0) {
+      throw new Error("The sample JSON does not contain any records.");
+    }
+    return records;
+  }
+
+  if (format === "csv" || format === "tsv") {
+    const text = (await file.text()).replace(/^\uFEFF/, "");
+    const delimiter = format === "tsv" ? "\t" : options.delimiter || ",";
+    const lines = text.split(/\r?\n/).filter((line) => line.trim());
+    if (lines.length === 0) throw new Error("The sample file is empty.");
+    const matrix = lines.map((line) => splitCsvLine(line, delimiter));
+    const records = recordsFromMatrix(matrix, options.hasHeaders);
+    if (records.length === 0 && options.hasHeaders) {
+      throw new Error("The sample file has headers but no data rows.");
+    }
+    return records;
+  }
+
+  const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    raw: false,
+    defval: "",
+  }) as unknown[][];
+  const records = recordsFromMatrix(rows, options.hasHeaders);
+  if (records.length === 0) throw new Error("The sample workbook has no data rows.");
+  return records;
 }
 
 export async function columnsFromSampleFile(

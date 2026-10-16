@@ -52,6 +52,8 @@ export interface CreateManualRewardRequest {
   applyType?: "now" | "later";
   applyDate?: string;
   applyTime?: string;
+  /** UTC offset for applyDate/applyTime, e.g. +03:00 */
+  timeZoneOffset?: string;
   previewData?: Record<string, unknown>;
 }
 
@@ -105,8 +107,13 @@ export interface UpdateManualRewardRequest {
   applyType?: "now" | "later";
   applyDate?: string;
   applyTime?: string;
+  /** UTC offset for applyDate/applyTime, e.g. +03:00 */
+  timeZoneOffset?: string;
   status?: ManualRewardApiStatus;
-  /** Merged into existing preview_data (runtime config overrides, config link) */
+  /**
+   * Merged into existing preview_data.
+   * Holds communication policy, seed list, schedule, and notification preferences.
+   */
   previewData?: Record<string, unknown>;
 }
 

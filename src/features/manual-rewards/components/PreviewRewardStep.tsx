@@ -2,8 +2,6 @@ import { AlertCircle, Users, Gift, Calendar, FlaskConical, Mail, MessageSquare, 
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { formatDateWithTimezone } from "../../../shared/services/dateService";
-import { getSettingsTimezoneOffset } from "../../../shared/utils/settingsHelper";
 
 interface PreviewRewardStepProps {
   data: ManualRewardData;
@@ -65,9 +63,10 @@ export default function PreviewRewardStep({
     }
 
     if (data.applyDate && data.applyTime) {
+      const zone = data.scheduleTimeZone ? ` (${data.scheduleTimeZone})` : "";
       return t.manualRewards.summaryScheduled.replace(
         "{dateTime}",
-        formatDateWithTimezone(new Date(`${data.applyDate}T${data.applyTime}`), getSettingsTimezoneOffset(), "default", true),
+        `${data.applyDate} ${data.applyTime}${zone}`,
       );
     }
 
@@ -226,10 +225,17 @@ export default function PreviewRewardStep({
                   {t.manualRewards.communicationPolicy || "Communication Policy"}
                 </p>
                 <p className={`text-sm font-medium ${tw.textPrimary} mt-0.5`}>
-                  {data.selectedCommunicationPolicyId
-                    ? `Policy ${data.selectedCommunicationPolicyId}`
-                    : "Not selected"}
+                  {data.communicationPolicyName ||
+                    (data.selectedCommunicationPolicyId
+                      ? `Policy ${data.selectedCommunicationPolicyId}`
+                      : "Not selected")}
                 </p>
+                {data.seedRecipients && data.seedRecipients.length > 0 && (
+                  <p className={`text-xs ${tw.textMuted} mt-1`}>
+                    Seed list: {data.seedRecipientIds?.length || 0} of{" "}
+                    {data.seedRecipients.length} selected
+                  </p>
+                )}
                 {data.rewardValidation?.completed && (
                   <p className={`text-xs ${tw.textMuted} mt-1`}>
                     Test: {data.rewardValidation.passed} passed,{" "}

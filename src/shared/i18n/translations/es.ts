@@ -2663,6 +2663,7 @@ export const es: Translations = {
       customer360Profile: "Perfil 360 del Cliente",
       customers: "Clientes",
       customerIdentity: "Identidad del Cliente",
+      loyaltyPrograms: "Programas de fidelización",
       userManagement: "Gestión de Usuarios",
       allUsers: "Todos los Usuarios",
       accessControl: "Control de Acceso",

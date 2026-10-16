@@ -19,10 +19,12 @@ import CustomerAccountDevicesTab from "../components/CustomerAccountDevicesTab";
 import CustomerProfileTabs from "../components/CustomerProfileTabs";
 import {
   CUSTOMER_PROFILE_TAB_IDS,
+  CUSTOMER_PROFILE_TABS,
   CUSTOMER_PROFILE_TAB_PANEL_ID,
   parseCustomerProfileTab,
   type CustomerProfileTabId,
 } from "../constants/customerProfileTabs";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
 import {
   CUSTOMER_PROFILE_OVERVIEW_TAB,
   CUSTOMER_PROFILE_TAB_PARAM,
@@ -202,6 +204,14 @@ export default function CustomerDetailPage() {
   const activeTab = parseCustomerProfileTab(
     searchParams.get(CUSTOMER_PROFILE_TAB_PARAM),
   );
+  const activeProfileTab = CUSTOMER_PROFILE_TABS.find(
+    (tab) => tab.id === activeTab,
+  );
+  usePageTask({
+    task: "Customer 360",
+    subject: customer?.name,
+    step: activeProfileTab?.label,
+  });
 
   const setActiveTab = useCallback(
     (tab: CustomerProfileTabId) => {

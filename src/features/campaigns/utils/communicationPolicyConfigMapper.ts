@@ -323,11 +323,178 @@ const PERIOD_LABELS: Record<FrequencyCappingPeriod["type"], string> = {
   monthly: "Monthly",
 };
 
-export function summarizePolicyConfig(
-  typeCode: string | null | undefined,
+export const POLICY_EDITOR_ORDER: CommunicationPolicyType[] = [
+  "timeWindow",
+  "maximumCommunication",
+  "dnd",
+  "vipList",
+];
+
+export const POLICY_EDITOR_LABELS: Record<CommunicationPolicyType, string> = {
+  timeWindow: "Time Window",
+  maximumCommunication: "Frequency Capping",
+  dnd: "Do Not Disturb (DND)",
+  vipList: "VIP List Rules",
+};
+
+const SLICE_KEYS: Record<CommunicationPolicyType, string[]> = {
+  timeWindow: ["timeWindow", "time_window"],
+  maximumCommunication: [
+    "maximumCommunication",
+    "frequency",
+    "frequency_capping",
+    "frequencyCapping",
+  ],
+  dnd: ["dnd", "doNotDisturb"],
+  vipList: ["vipList", "vip_list", "vipListRules"],
+};
+
+function isConfigObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function firstObject(
+  record: Record<string, unknown>,
+  keys: string[],
+): Record<string, unknown> | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (isConfigObject(value)) return value;
+  }
+  return null;
+}
+
+function hasNestedConfiguration(config: Record<string, unknown>): boolean {
+  return POLICY_EDITOR_ORDER.some((editor) =>
+    Boolean(firstObject(config, SLICE_KEYS[editor])),
+  );
+}
+
+function rootSlice(
+  config: Record<string, unknown>,
+  editor: CommunicationPolicyType,
+): Record<string, unknown> | null {
+  if (
+    editor === "timeWindow" &&
+    (typeof config.startTime === "string" || typeof config.endTime === "string")
+  ) {
+    return {
+      startTime: config.startTime,
+      endTime: config.endTime,
+      timezone: config.timezone,
+      days: config.days,
+    };
+  }
+  if (
+    editor === "maximumCommunication" &&
+    (Array.isArray(config.periods) || readPeriodType(config.type))
+  ) {
+    return {
+      type: config.type,
+      maxCount: config.maxCount ?? config.max_count,
+      periods: config.periods,
+      resetTime: config.resetTime,
+      resetDay: config.resetDay,
+    };
+  }
+  if (editor === "dnd" && Array.isArray(config.categories)) {
+    return { categories: config.categories };
+  }
+  if (
+    editor === "vipList" &&
+    (Array.isArray(config.rules) ||
+      Array.isArray(config.vipLists) ||
+      config.action === "include" ||
+      config.action === "exclude")
+  ) {
+    return {
+      action: config.action,
+      vipLists: config.vipLists,
+      rules: config.rules,
+      priority: config.priority,
+    };
+  }
+  return null;
+}
+
+export function readEditorSlice(
+  policy: { type_code?: string | null; config?: unknown } | null | undefined,
+  editor: CommunicationPolicyType,
+): unknown {
+  const config = parsePolicyConfig(policy?.config);
+  if (!config) return null;
+
+  const direct = firstObject(config, SLICE_KEYS[editor]);
+  if (direct) return direct;
+
+  const wrapped = asRecord(config.configurations);
+  if (wrapped) {
+    const nested = firstObject(wrapped, SLICE_KEYS[editor]);
+    if (nested) return nested;
+  }
+
+  if (hasNestedConfiguration(config)) return null;
+
+  const legacyEditor = resolvePolicyEditor(policy?.type_code);
+  if (legacyEditor === editor) return config;
+  if (!legacyEditor) return rootSlice(config, editor);
+  return null;
+}
+
+export function listConfiguredEditors(
+  policy: {
+    type_code?: string | null;
+    type_codes?: unknown;
+    config?: unknown;
+  } | null | undefined,
+): CommunicationPolicyType[] {
+  if (!policy) return [];
+  return POLICY_EDITOR_ORDER.filter((editor) =>
+    Boolean(readEditorSlice(policy, editor)),
+  );
+}
+
+export function buildMultiPolicyConfig(selection: {
+  timeWindow?: TimeWindowConfig | null;
+  maximumCommunication?: MaximumCommunicationConfig | null;
+  dnd?: DNDConfig | null;
+  vipList?: VIPListConfig | null;
+}): {
+  type_code: string;
+  type_codes: CommunicationPolicyType[];
+  config: {
+    timeWindow?: TimeWindowConfig;
+    maximumCommunication?: MaximumCommunicationConfig;
+    dnd?: DNDConfig;
+    vipList?: VIPListConfig;
+  };
+} {
+  const config: {
+    timeWindow?: TimeWindowConfig;
+    maximumCommunication?: MaximumCommunicationConfig;
+    dnd?: DNDConfig;
+    vipList?: VIPListConfig;
+  } = {};
+
+  if (selection.timeWindow) config.timeWindow = selection.timeWindow;
+  if (selection.maximumCommunication) {
+    config.maximumCommunication = selection.maximumCommunication;
+  }
+  if (selection.dnd) config.dnd = selection.dnd;
+  if (selection.vipList) config.vipList = selection.vipList;
+
+  const type_codes = POLICY_EDITOR_ORDER.filter((editor) => Boolean(config[editor]));
+  return {
+    type_code: type_codes.length === 1 ? type_codes[0] : "composite",
+    type_codes,
+    config,
+  };
+}
+
+function summarizeEditor(
+  editor: CommunicationPolicyType,
   config: unknown,
 ): string {
-  const editor = resolvePolicyEditor(typeCode);
   if (editor === "maximumCommunication") {
     const periods = hydrateFrequencyPeriods(config);
     if (periods.length === 0) return "No frequency limits saved";
@@ -359,16 +526,37 @@ export function summarizePolicyConfig(
     return `${timeWindow.startTime}–${timeWindow.endTime} · ${days}`;
   }
 
-  if (editor === "dnd") {
-    const dnd = readDndConfig(config);
-    if (dnd.categories.length === 0) return "No DND categories saved";
-    return dnd.categories
-      .map((category) => {
-        const label = category.type || category.name || "Category";
-        return `${label}: ${category.value === "not allowed" ? "Not allowed" : "Allowed"}`;
-      })
-      .join(" · ");
+  const dnd = readDndConfig(config);
+  if (dnd.categories.length === 0) return "No DND categories saved";
+  return dnd.categories
+    .map((category) => {
+      const label = category.type || category.name || "Category";
+      return `${label}: ${category.value === "not allowed" ? "Not allowed" : "Allowed"}`;
+    })
+    .join(" · ");
+}
+
+export function summarizePolicyConfig(
+  typeCode: string | null | undefined,
+  config: unknown,
+  typeCodes?: unknown,
+): string {
+  const editors = listConfiguredEditors({
+    type_code: typeCode,
+    type_codes: typeCodes,
+    config,
+  });
+
+  if (editors.length === 0) {
+    const editor = resolvePolicyEditor(typeCode);
+    if (!editor) return "No configuration saved";
+    return summarizeEditor(editor, config);
   }
 
-  return "No configuration saved";
+  return editors
+    .map((editor) => {
+      const slice = readEditorSlice({ type_code: typeCode, config }, editor);
+      return `${POLICY_EDITOR_LABELS[editor]}: ${summarizeEditor(editor, slice)}`;
+    })
+    .join(" | ");
 }

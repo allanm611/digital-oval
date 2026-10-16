@@ -30,6 +30,7 @@ import {
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
 import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
 import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
 import {
   CreateOfferRequest,
@@ -1735,6 +1736,21 @@ export default function CreateOfferPage({
     max_usage_per_customer: 1,
     eligibility_rules: {},
   });
+
+  const activeOfferStep = steps.find((step) => step.id === currentStep);
+  usePageTask(
+    onDismiss || propOfferId
+      ? null
+      : {
+          task: isDuplicateMode
+            ? "Duplicate Offer"
+            : isEditMode
+              ? "Edit Offer"
+              : "Create Offer",
+          subject: formData.name,
+          step: activeOfferStep?.name,
+        },
+  );
 
   const [creatives, setCreatives] = useState<LocalOfferCreative[]>([]);
   const [trackingSources, setTrackingSources] = useState<OfferTrackingSource[]>([]);

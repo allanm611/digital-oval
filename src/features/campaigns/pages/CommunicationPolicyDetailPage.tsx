@@ -11,13 +11,16 @@ import { color, tw, button as buttonStyle } from "../../../shared/utils/utils";
 import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
+  type CommunicationPolicyType,
 } from "../types/communicationPolicyConfig";
 import {
   hydrateFrequencyPeriods,
   hydrateVipRules,
+  listConfiguredEditors,
+  POLICY_EDITOR_LABELS,
   readDndConfig,
+  readEditorSlice,
   readTimeWindowConfig,
-  resolvePolicyEditor,
 } from "../utils/communicationPolicyConfigMapper";
 import CommunicationPolicyModal from "../components/CommunicationPolicyModal";
 import { communicationPolicyService } from "../services/communicationPolicyService";
@@ -99,11 +102,12 @@ export default function CommunicationPolicyDetailPage() {
     }
   };
 
-  const renderConfigDetails = () => {
+  const renderEditorDetails = (editor: CommunicationPolicyType) => {
     if (!policy) return null;
-    switch (resolvePolicyEditor(policy.type_code)) {
+    const slice = readEditorSlice(policy, editor);
+    switch (editor) {
       case "timeWindow": {
-        const c = readTimeWindowConfig(policy.config);
+        const c = readTimeWindowConfig(slice);
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Start Time" value={c.startTime} />
@@ -119,7 +123,7 @@ export default function CommunicationPolicyDetailPage() {
         );
       }
       case "maximumCommunication": {
-        const periods = hydrateFrequencyPeriods(policy.config);
+        const periods = hydrateFrequencyPeriods(slice);
         if (periods.length === 0) {
           return <p className={`text-sm ${tw.textMuted}`}>No frequency limits saved</p>;
         }
@@ -149,7 +153,7 @@ export default function CommunicationPolicyDetailPage() {
         );
       }
       case "dnd": {
-        const c = readDndConfig(policy.config);
+        const c = readDndConfig(slice);
         if (!c.categories || c.categories.length === 0) {
           return <p className={`text-sm ${tw.textMuted}`}>No categories configured</p>;
         }
@@ -174,7 +178,7 @@ export default function CommunicationPolicyDetailPage() {
         );
       }
       case "vipList": {
-        const rules = hydrateVipRules(policy.config);
+        const rules = hydrateVipRules(slice);
         if (rules.length === 0) {
           return <p className={`text-sm ${tw.textMuted}`}>No VIP list rules saved</p>;
         }
@@ -205,6 +209,26 @@ export default function CommunicationPolicyDetailPage() {
       default:
         return <p className={`text-sm ${tw.textMuted}`}>No configuration details available</p>;
     }
+  };
+
+  const renderConfigDetails = () => {
+    if (!policy) return null;
+    const editors = listConfiguredEditors(policy);
+    if (editors.length === 0) {
+      return <p className={`text-sm ${tw.textMuted}`}>No configuration details available</p>;
+    }
+    return (
+      <div className="space-y-8">
+        {editors.map((editor) => (
+          <div key={editor}>
+            <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+              {POLICY_EDITOR_LABELS[editor]}
+            </h4>
+            {renderEditorDetails(editor)}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -332,14 +356,15 @@ export default function CommunicationPolicyDetailPage() {
               >
                 {policy.is_active ? "Active" : "Inactive"}
               </span>
-              {(policy as any).type_name && (
+              {listConfiguredEditors(policy).map((editor) => (
                 <span
-                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium`}
+                  key={editor}
+                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium"
                   style={{ backgroundColor: `${color.primary.accent}15`, color: color.primary.accent }}
                 >
-                  {(policy as any).type_name}
+                  {POLICY_EDITOR_LABELS[editor]}
                 </span>
-              )}
+              ))}
             </div>
           </div>
 
@@ -347,14 +372,15 @@ export default function CommunicationPolicyDetailPage() {
           <div className={`bg-white ${tw.rounded} border border-[${tw.borderDefault}] p-6`}>
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>Policy Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Field label="Policy Type" value={(policy as any).type_name || policy.type_code} />
+              <Field
+                label="Configurations"
+                value={
+                  listConfiguredEditors(policy)
+                    .map((editor) => POLICY_EDITOR_LABELS[editor])
+                    .join(", ") || "None"
+                }
+              />
               <Field label="Status" value={policy.is_active ? "Active" : "Inactive"} />
-              {(policy as any).type_description && (
-                <div className="md:col-span-2 space-y-1">
-                  <p className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>Type Description</p>
-                  <p className={`text-sm ${tw.textPrimary}`}>{(policy as any).type_description}</p>
-                </div>
-              )}
               <div className="md:col-span-2 space-y-1">
                 <p className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>Channels</p>
                 <div className="flex flex-wrap gap-2 mt-1">

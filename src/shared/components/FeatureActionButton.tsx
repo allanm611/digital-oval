@@ -38,6 +38,7 @@ const PERMISSION_MAP: Record<string, Record<string, string>> = {
   servers: { create: 'servers.create', edit: 'servers.update' },
   'subscriber-profiles': { create: 'kpi.create', edit: 'kpi.update' },
   quicklists: { create: 'quicklists.create', edit: 'quicklists.update' },
+  'loyalty-programs': { create: 'customer.update', edit: 'customer.update' },
   programs: { create: 'campaigns.create', edit: 'campaigns.update' },
   'segment-categories': { create: 'segments.create', edit: 'segments.update' },
 };
@@ -66,6 +67,7 @@ const ROUTE_MAP: Record<string, string> = {
   servers: '/dashboard/servers',
   'subscriber-profiles': '/dashboard/kpis/subscriber-profiles',
   quicklists: '/dashboard/quicklists',
+  'loyalty-programs': '/dashboard/loyalty-programs',
   programs: '/dashboard/programs',
   'segment-categories': '/dashboard/segment-categories',
   'manual-communications': '/dashboard/manual-communications',

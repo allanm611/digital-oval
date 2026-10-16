@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
 import {
   ArrowLeft,
   Edit,
@@ -50,6 +51,7 @@ export default function ProductDetailsPage() {
   };
 
   const [product, setProduct] = useState<Product | null>(null);
+  usePageTask({ subject: product?.name });
   const [category, setCategory] = useState<ProductCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

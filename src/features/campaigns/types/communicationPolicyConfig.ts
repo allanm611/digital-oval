@@ -67,17 +67,29 @@ export interface VIPList {
   status: "active" | "inactive";
 }
 
+/** One policy can enforce any combination of these configurations. */
+export interface PolicyConfigurationBundle {
+  timeWindow?: TimeWindowConfig | null;
+  maximumCommunication?: MaximumCommunicationConfig | null;
+  dnd?: DNDConfig | null;
+  vipList?: VIPListConfig | null;
+}
+
+export type CommunicationPolicyConfigValue =
+  | TimeWindowConfig
+  | MaximumCommunicationConfig
+  | DNDConfig
+  | VIPListConfig
+  | PolicyConfigurationBundle;
+
 export interface CommunicationPolicyConfiguration {
   id: number;
   name: string;
   description?: string;
   channels: string[];
   type_code: string;
-  config:
-    | TimeWindowConfig
-    | MaximumCommunicationConfig
-    | DNDConfig
-    | VIPListConfig;
+  type_codes?: string[];
+  config: CommunicationPolicyConfigValue;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -88,11 +100,9 @@ export interface CreateCommunicationPolicyRequest {
   description?: string;
   channels: string[];
   type_code: string;
-  config:
-    | TimeWindowConfig
-    | MaximumCommunicationConfig
-    | DNDConfig
-    | VIPListConfig;
+  /** Configurations included on this save. Omitted keys are removed on update. */
+  type_codes?: CommunicationPolicyType[];
+  config: CommunicationPolicyConfigValue;
   is_active?: boolean;
 }
 

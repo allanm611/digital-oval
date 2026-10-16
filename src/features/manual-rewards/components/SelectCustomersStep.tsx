@@ -48,7 +48,17 @@ export default function SelectCustomersStep({
     (data.inputMethod as "file" | "manual") || "",
   );
   const [selectedQuickList, setSelectedQuickList] =
-    useState<QuickListItem | null>(null);
+    useState<QuickListItem | null>(
+      data.quicklistId
+        ? {
+            id: data.quicklistId,
+            name: `Quicklist ${data.quicklistId}`,
+            upload_type: "quicklist",
+            row_count: data.rowCount || 0,
+            created_at: "",
+          }
+        : null,
+    );
   const [isQuickListCreated, setIsQuickListCreated] = useState(false);
   const [manualInput, setManualInput] = useState(data.audienceFileText || "");
   const [error, setError] = useState("");
@@ -123,6 +133,13 @@ export default function SelectCustomersStep({
       } else {
         setError("Please fill in all required fields");
       }
+      return;
+    }
+
+    if (inputMethod === "file" && selectedQuickList && selectedQuickList.row_count <= 0) {
+      setError(
+        `Quicklist "${selectedQuickList.name}" has no subscriber rows yet. Wait until the import finishes and the list contains MSISDNs, then select it again.`,
+      );
       return;
     }
 

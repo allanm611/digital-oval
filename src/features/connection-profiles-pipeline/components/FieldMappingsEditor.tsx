@@ -11,15 +11,23 @@ import {
   CONVERSION_OPTIONS,
   DATA_TYPE_OPTIONS,
 } from "../constants/pipelineOptions";
+import { pipelineRuntimeService } from "../services/pipelineRuntimeService";
 import { connectionProfilePipelineService } from "../services/pipelineService";
-import { FieldMappingDraft, PipelineFormState } from "../types/pipeline";
+import {
+  FieldMappingDraft,
+  InferredFieldMapping,
+  PipelineFormState,
+} from "../types/pipeline";
 import { emptyMapping, parseJsonObject } from "../utils/pipelineForm";
 import {
+  columnsFromInferredMappings,
   columnsFromSampleFile,
   DiscoveredColumn,
+  draftsFromInferredMappings,
   extractSelectColumns,
   isBlankMappingSet,
   mappingsFromColumns,
+  recordsFromSampleFile,
   selectOptions,
   targetOptions,
   toColumnIdentifier,
@@ -75,6 +83,24 @@ export default function FieldMappingsEditor({
     );
   };
 
+  const applyInferred = (inferred: InferredFieldMapping[], replace: boolean) => {
+    const next = columnsFromInferredMappings(inferred);
+    if (next.length === 0) {
+      throw new Error("The sample did not return any columns.");
+    }
+    setColumns(next);
+    if (replace || isBlankMappingSet(mappings)) {
+      onChange(draftsFromInferredMappings(inferred));
+      setNotice(
+        `${next.length} column${next.length === 1 ? "" : "s"} inferred, including detected data types.`,
+      );
+      return;
+    }
+    setNotice(
+      `${next.length} inferred columns are available in the lists. Existing mappings were kept.`,
+    );
+  };
+
   const loadFromQuery = async () => {
     const query = form.database.query.trim();
     if (!form.connection_profile_id) {
@@ -89,21 +115,31 @@ export default function FieldMappingsEditor({
     setLoading(true);
     setNotice("");
     try {
-      const discovered = await connectionProfilePipelineService.previewQueryColumns({
+      const inferred = await pipelineRuntimeService.inferSchema({
         connection_profile_id: Number(form.connection_profile_id),
         query,
         parameters: parameters.ok ? parameters.value : {},
       });
-      applyColumns(discovered, false);
+      applyInferred(inferred.inferred_mappings, false);
     } catch (error) {
       const status = (error as { status?: number }).status;
       const parsed = extractSelectColumns(query);
       if ((status === 404 || status === 501 || status === 405) && parsed.length > 0) {
-        applyColumns(parsed, false);
-        setNotice(
-          "The server could not run the sample query. These names were taken from the SELECT list. SELECT * still needs the server.",
-        );
-        return;
+        try {
+          const discovered = await connectionProfilePipelineService.previewQueryColumns({
+            connection_profile_id: Number(form.connection_profile_id),
+            query,
+            parameters: parameters.ok ? parameters.value : {},
+          });
+          applyColumns(discovered, false);
+          return;
+        } catch {
+          applyColumns(parsed, false);
+          setNotice(
+            "The server could not run the sample query. These names were taken from the SELECT list. SELECT * still needs the server.",
+          );
+          return;
+        }
       }
       console.error("Failed to load query columns", error);
       showError(
@@ -123,21 +159,35 @@ export default function FieldMappingsEditor({
   const loadFromFile = async (file: File) => {
     setLoading(true);
     setNotice("");
+    const sampleOptions = {
+      fileFormat:
+        form.source_type === "REST_API" ||
+        form.source_type === "KAFKA" ||
+        form.source_type === "WEBSOCKET" ||
+        form.source_type === "TCP" ||
+        form.source_type === "SMS_INBOX"
+          ? "json"
+          : form.ftp.file_format,
+      delimiter: form.ftp.delimiter || ",",
+      hasHeaders: form.ftp.has_headers,
+      responsePath: form.rest.response_path,
+    };
     try {
-      const discovered = await columnsFromSampleFile(file, {
-        fileFormat:
-          form.source_type === "REST_API" ||
-          form.source_type === "KAFKA" ||
-          form.source_type === "WEBSOCKET" ||
-          form.source_type === "TCP" ||
-          form.source_type === "SMS_INBOX"
-            ? "json"
-            : form.ftp.file_format,
-        delimiter: form.ftp.delimiter || ",",
-        hasHeaders: form.ftp.has_headers,
-        responsePath: form.rest.response_path,
-      });
-      applyColumns(discovered, false);
+      const records = await recordsFromSampleFile(file, sampleOptions);
+      try {
+        const inferred = await pipelineRuntimeService.inferSchema({
+          sample_data: records,
+        });
+        applyInferred(inferred.inferred_mappings, false);
+      } catch (error) {
+        const status = (error as { status?: number }).status;
+        if (status !== 404 && status !== 405 && status !== 501) throw error;
+        const discovered = await columnsFromSampleFile(file, sampleOptions);
+        applyColumns(discovered, false);
+        setNotice(
+          "The schema service was unavailable. Column names were read in the browser, without server-side type detection.",
+        );
+      }
     } catch (error) {
       console.error("Failed to read sample file", error);
       showError(

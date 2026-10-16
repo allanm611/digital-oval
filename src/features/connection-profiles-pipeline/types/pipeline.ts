@@ -201,3 +201,40 @@ export interface PipelineExecutionResult {
   execution_time_ms: number;
   errors?: PipelineExecutionError[];
 }
+
+/** Mapping returned by POST /data-connectors/pipelines/infer-schema. */
+export interface InferredFieldMapping {
+  source_field: string;
+  target_field: string;
+  data_type?: string;
+  required?: boolean;
+  default_value?: unknown;
+  missing_value_strategy?: MissingValueStrategy | string;
+}
+
+export interface SchemaInferenceResult {
+  success: boolean;
+  sample_records_count: number;
+  inferred_mappings: InferredFieldMapping[];
+  sample_records?: Record<string, unknown>[];
+  profile_id?: number;
+}
+
+export interface SchemaInferenceRequest {
+  sample_data?: Record<string, unknown>[];
+  connection_profile_id?: number;
+  query?: string;
+  parameters?: Record<string, unknown> | unknown[];
+}
+
+/** 202 body from the inbound push and file callback routes. */
+export interface InboundAcceptance {
+  success: boolean;
+  message: string;
+  tracking_id: string;
+  status: string;
+  channel_identifier?: string;
+  pipeline_id?: number;
+  filename?: string;
+  size_bytes?: number;
+}

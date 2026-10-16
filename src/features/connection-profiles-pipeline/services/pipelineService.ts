@@ -15,6 +15,7 @@ import {
   normalizeFieldMappings,
   normalizeSourceConfig,
 } from "../utils/pipelineForm";
+import { pipelineRuntimeService } from "./pipelineRuntimeService";
 import {
   columnsFromApiPayload,
   DiscoveredColumn,
@@ -336,20 +337,7 @@ class ConnectionProfilePipelineService {
   }
 
   async executePipeline(id: number): Promise<PipelineExecutionResult> {
-    requirePipelineId(id);
-    const response = await this.request<unknown>(`/${id}/execute`, {
-      method: "POST",
-    });
-    const result = this.unwrapData<PipelineExecutionResult>(response);
-    if (
-      !result ||
-      typeof result !== "object" ||
-      result.success !== true ||
-      Number(result.pipeline_id) !== id
-    ) {
-      throw new Error("The pipeline API returned an invalid execution response.");
-    }
-    return result;
+    return pipelineRuntimeService.executePipeline(id);
   }
 }
 

@@ -19,11 +19,6 @@ export default function CommunicationPolicyDetailsExpandedRow({
     return value;
   };
 
-  const getTypeLabel = (policyRecord: CommunicationPolicyConfiguration) => {
-    const named = (policyRecord as CommunicationPolicyConfiguration & { type_name?: string }).type_name;
-    return named || policyRecord.type_code || "—";
-  };
-
   const getStatusLabel = (isActive: boolean) => {
     return isActive ? "Active" : "Inactive";
   };
@@ -56,21 +51,12 @@ export default function CommunicationPolicyDetailsExpandedRow({
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className={`text-xs font-medium ${tw.textMuted}`}>
-            Type
-          </label>
-          <div className={`text-sm ${tw.textPrimary}`}>
-            {getTypeLabel(policy)}
-          </div>
-        </div>
-
         <div className="flex flex-col gap-1 md:col-span-3">
           <label className={`text-xs font-medium ${tw.textMuted}`}>
             Configuration
           </label>
           <div className={`text-sm ${tw.textPrimary} break-words`}>
-            {summarizePolicyConfig(policy.type_code, policy.config)}
+            {summarizePolicyConfig(policy.type_code, policy.config, policy.type_codes)}
           </div>
         </div>
 

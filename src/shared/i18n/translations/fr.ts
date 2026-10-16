@@ -2942,6 +2942,7 @@ export const fr: Translations = {
       customer360Profile: "Profil Client 360",
       customers: "Clients",
       customerIdentity: "Identité du Client",
+      loyaltyPrograms: "Programmes de fidélité",
       userManagement: "Gestion des Utilisateurs",
       allUsers: "Tous les Utilisateurs",
       accessControl: "Contrôle d'Accès",

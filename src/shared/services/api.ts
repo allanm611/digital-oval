@@ -36,6 +36,7 @@ export const API_CONFIG = {
     CAMPAIGNS: "/campaigns",
     SEGMENTS: "/segments",
     OFFER_PRODUCTS: "/offer-products",
+    LOYALTY_PROGRAMS: "/loyalty-programs",
     OFFER_CREATIVES: "/offer-creatives",
     AI_GENERATE_CREATIVE: "/offer-creatives/ai/generate",
     AI_MODEL_CONFIGURATIONS: "/ai-model-configurations",

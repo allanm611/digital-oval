@@ -21,6 +21,7 @@ import { AppErrorBoundary } from "./shared/components/AppErrorBoundary";
 import { SafeRoute } from "./shared/components/SafeRoute";
 import { ProtectedRoute } from "./shared/components/ProtectedRoute";
 import { NavigationHistoryProvider } from "./shared/contexts/NavigationHistoryContext";
+import { PageTaskProvider } from "./shared/navigation/PageTaskProvider";
 import {
   TestingDashboardPage,
   CreateModulePage,
@@ -153,15 +154,17 @@ function App() {
                       <NotificationSettingsProvider>
                         <DocsVersionProvider>
                           <Router>
-                            <NavigationHistoryProvider>
-                              <div
-                                className="min-h-screen"
-                                style={{ backgroundColor: color.primary.background }}
-                              >
-                                <GlobalLoader />
-                                <AppRoutes />
-                              </div>
-                            </NavigationHistoryProvider>
+                            <PageTaskProvider>
+                              <NavigationHistoryProvider>
+                                <div
+                                  className="min-h-screen"
+                                  style={{ backgroundColor: color.primary.background }}
+                                >
+                                  <GlobalLoader />
+                                  <AppRoutes />
+                                </div>
+                              </NavigationHistoryProvider>
+                            </PageTaskProvider>
                           </Router>
                         </DocsVersionProvider>
                       </NotificationSettingsProvider>

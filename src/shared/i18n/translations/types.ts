@@ -3096,6 +3096,7 @@ export interface Translations {
       customer360Profile: string;
       customers: string;
       customerIdentity: string;
+      loyaltyPrograms: string;
       userManagement: string;
       allUsers: string;
       accessControl: string;

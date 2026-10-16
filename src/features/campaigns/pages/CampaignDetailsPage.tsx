@@ -79,6 +79,8 @@ import { Table } from "../../../shared/components/Table/Table";
 import { useTable } from "../../../shared/components/Table/useTable";
 import { TableColumn } from "../../../shared/components/Table/types";
 import { ColumnPickerModal } from "../../../shared/components/ColumnPickerModal";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
+import { formatTaskStatus } from "../../../shared/navigation/pageTask";
 
 interface ChannelStat {
   channel: CreativeChannel;
@@ -121,6 +123,10 @@ export default function CampaignDetailsPage() {
     navigatePreservingReturn(navigate, path, location, "Campaign Details");
   };
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  usePageTask({
+    subject: campaign?.name,
+    status: formatTaskStatus(campaign?.status),
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [showRejectModal, setShowRejectModal] = useState(false);
 

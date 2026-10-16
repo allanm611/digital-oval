@@ -2851,6 +2851,7 @@ export const sw: Translations = {
       customer360Profile: "Profili ya Mteja 360",
       customers: "Wateja",
       customerIdentity: "Utambulisho wa Mteja",
+      loyaltyPrograms: "Programu za Uaminifu",
       userManagement: "Usimamizi wa Watumiaji",
       allUsers: "Watumiaji Wote",
       accessControl: "Kontroli ya Upatikanaji",

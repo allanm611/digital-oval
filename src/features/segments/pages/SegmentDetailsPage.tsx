@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
 import { Popover } from "@headlessui/react";
 import {
   ArrowLeft,
@@ -77,6 +78,7 @@ export default function SegmentDetailsPage() {
   };
 
   const [segment, setSegment] = useState<Segment | null>(null);
+  usePageTask({ subject: segment?.name });
   const [isLoading, setIsLoading] = useState(true);
   const [membersCount, setMembersCount] = useState<number>(0);
   const [segmentSize, setSegmentSize] = useState<number | null>(

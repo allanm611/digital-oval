@@ -3120,6 +3120,7 @@ export const en: Translations = {
       customer360Profile: "Customer 360 profile",
       customers: "Customers",
       customerIdentity: "Customer Identity",
+      loyaltyPrograms: "Loyalty Programs",
       userManagement: "User Management",
       allUsers: "All Users",
       accessControl: "Access Control",

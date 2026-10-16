@@ -18,6 +18,7 @@ import {
   LOAD_STRATEGY_OPTIONS,
   SOURCE_TYPE_OPTIONS,
 } from "../constants/pipelineOptions";
+import PipelineInboundPanel from "../components/PipelineInboundPanel";
 import { connectionProfilePipelineService } from "../services/pipelineService";
 import {
   describeStoredSchedule,
@@ -143,6 +144,12 @@ export default function PipelineDetailsPage() {
         } loaded in ${(result.execution_time_ms / 1000).toFixed(1)}s.`,
       );
       setExecuteOpen(false);
+      try {
+        const refreshed = await connectionProfilePipelineService.getPipeline(pipeline.id);
+        setPipeline(refreshed);
+      } catch {
+        // The run already succeeded. Activity timestamps refresh on the next visit.
+      }
     } catch (error) {
       showError(
         "Unable to execute pipeline",
@@ -175,6 +182,7 @@ export default function PipelineDetailsPage() {
   }
 
   const sourceEntries = Object.entries(pipeline.source_config);
+  const canRun = pipeline.is_active && pipeline.action_type !== "PUSH";
 
   return (
     <div className="space-y-6">
@@ -189,11 +197,7 @@ export default function PipelineDetailsPage() {
           <button
             type="button"
             onClick={() => setExecuteOpen(true)}
-            disabled={
-              !pipeline.is_active ||
-              pipeline.action_type !== "PULL" ||
-              executing
-            }
+            disabled={!canRun || executing}
             className={`${tw.borderedButton} inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50`}
             style={{
               borderColor: "var(--c-bordered-button-color)",
@@ -202,8 +206,8 @@ export default function PipelineDetailsPage() {
             title={
               !pipeline.is_active
                 ? "Activate the pipeline before running it"
-                : pipeline.action_type !== "PULL"
-                  ? "The backend currently executes pull pipelines only"
+                : pipeline.action_type === "PUSH"
+                  ? "Push pipelines receive data through the inbound callback"
                   : "Run this pipeline now"
             }
           >
@@ -507,6 +511,8 @@ export default function PipelineDetailsPage() {
         </aside>
       </div>
 
+      <PipelineInboundPanel pipeline={pipeline} />
+
       <DeleteConfirmModal
         isOpen={executeOpen}
         onClose={() => {
@@ -516,7 +522,7 @@ export default function PipelineDetailsPage() {
         isLoading={executing}
         title="Run pipeline now?"
         itemName={pipeline.pipeline_name}
-        description="This immediately asks the execution of the current saved pipeline definition."
+        description="This runs the saved pipeline now. Extracted rows are transformed with the saved mappings and loaded into the target table."
         confirmText="Run pipeline"
         variant="warning"
       />

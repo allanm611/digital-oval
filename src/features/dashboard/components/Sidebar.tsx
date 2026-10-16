@@ -45,6 +45,7 @@ import {
   Download,
   Zap,
   BookOpen,
+  Award,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -163,6 +164,8 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../campaigns/pages/SeedListManagementPage"),
   "/dashboard/customers": () =>
     import("../../customers360/pages/CustomersPageWrapper"),
+  "/dashboard/loyalty-programs": () =>
+    import("../../loyalty/pages/LoyaltyProgramsPage"),
   "/dashboard/customer-identity": () =>
     import("../../customerIdentity/pages/CustomerIdentityPage"),
   "/dashboard/user-management": () =>
@@ -513,6 +516,13 @@ export default function Sidebar({
         ],
       },
       {
+        name: t.sidebar.navigation.loyaltyPrograms,
+        href: "/dashboard/loyalty-programs",
+        icon: Award,
+        type: "single",
+        entity: "customers",
+      },
+      {
         name: t.sidebar.navigation.reportsAndAnalytics,
         href: "/dashboard/reports",
         icon: LineChart,
@@ -667,7 +677,11 @@ export default function Sidebar({
         ) || location.pathname === item.href
       );
     }
-    return location.pathname === item.href;
+    return (
+      location.pathname === item.href ||
+      (item.href !== "/dashboard" &&
+        location.pathname.startsWith(`${item.href}/`))
+    );
   };
 
   // Entity permission mapping - consolidates all entity permission strings

@@ -781,6 +781,18 @@ const AnalyticsPages = {
   ),
 };
 
+const LoyaltyPages = {
+  LoyaltyProgramsPage: lazy(
+    () => import("../../loyalty/pages/LoyaltyProgramsPage"),
+  ),
+  LoyaltyProgramFormPage: lazy(
+    () => import("../../loyalty/pages/LoyaltyProgramFormPage"),
+  ),
+  LoyaltyProgramDetailsPage: lazy(
+    () => import("../../loyalty/pages/LoyaltyProgramDetailsPage"),
+  ),
+};
+
 // Administration Pages
 const AdministrationPages = {
   AdminHubPage: lazy(
@@ -1321,6 +1333,22 @@ export default function Dashboard() {
             element={<OtherPages.QuickListDetailsPage />}
           />
           <Route path="/customers" element={<AnalyticsPages.CustomersPage />} />
+          <Route
+            path="/loyalty-programs"
+            element={<LoyaltyPages.LoyaltyProgramsPage />}
+          />
+          <Route
+            path="/loyalty-programs/create"
+            element={<LoyaltyPages.LoyaltyProgramFormPage />}
+          />
+          <Route
+            path="/loyalty-programs/:id"
+            element={<LoyaltyPages.LoyaltyProgramDetailsPage />}
+          />
+          <Route
+            path="/loyalty-programs/:id/edit"
+            element={<LoyaltyPages.LoyaltyProgramFormPage />}
+          />
           <Route
             path="/customers/details/:customerId"
             element={<AnalyticsPages.CustomerDetailPage />}
