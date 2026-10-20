@@ -20,6 +20,8 @@ interface HeadlessSelectProps {
   error?: boolean;
   className?: string;
   searchable?: boolean;
+  searchPlaceholder?: string;
+  onSearchChange?: (term: string) => void;
   zIndex?: number;
   label?: string;
   labelBgColor?: string; // Custom background color for floating label (e.g., 'var(--c-dashboard-background)')
@@ -34,6 +36,8 @@ export default function HeadlessSelect({
   error = false,
   className = "",
   searchable = false,
+  searchPlaceholder = "Search options...",
+  onSearchChange,
   zIndex,
   label,
   labelBgColor,
@@ -226,8 +230,12 @@ export default function HeadlessSelect({
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search options..."
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setSearchTerm(next);
+                      onSearchChange?.(next);
+                    }}
+                    placeholder={searchPlaceholder}
                     className={`w-full px-2 py-1 text-sm ${tw.rounded} focus:outline-none focus:ring-0`}
                     style={{
                       borderColor: 'var(--c-border-default)',
@@ -382,8 +390,12 @@ export default function HeadlessSelect({
                   <input
                     type="text"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search options..."
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setSearchTerm(next);
+                      onSearchChange?.(next);
+                    }}
+                    placeholder={searchPlaceholder}
                     className={`w-full px-2 py-1 text-sm ${tw.rounded} focus:outline-none focus:ring-0`}
                     style={{
                       borderColor: 'var(--c-border-default)',

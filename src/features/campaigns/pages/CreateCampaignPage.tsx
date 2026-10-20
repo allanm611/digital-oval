@@ -59,6 +59,7 @@ import {
   stampMutuallyExclusiveOnSegments,
 } from "../utils/mutuallyExclusiveOffers";
 import { findMappingMissingTrackingSource } from "../utils/trackingRewardConfig";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
 
 const steps: Step[] = [
   {
@@ -171,6 +172,17 @@ export default function CreateCampaignPage() {
     line_of_business_id: undefined,
     line_of_business: undefined,
     communication_policy: undefined,
+  });
+
+  const activeCampaignStep = steps.find((step) => step.id === currentStep);
+  usePageTask({
+    task: isDuplicateMode || Boolean(duplicateIdParam)
+      ? "Duplicate Campaign"
+      : isEditMode
+        ? "Edit Campaign"
+        : "Create Campaign",
+    subject: formData.name,
+    step: activeCampaignStep?.name,
   });
 
   const [selectedSegments, setSelectedSegments] = useState<CampaignSegment[]>(

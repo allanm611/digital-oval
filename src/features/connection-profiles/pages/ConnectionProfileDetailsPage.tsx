@@ -27,6 +27,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import RegularModal from "../../../shared/components/ui/RegularModal";
+import ProfilePipelinesPanel from "../../connection-profiles-pipeline/components/ProfilePipelinesPanel";
 
 export default function ConnectionProfileDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -535,6 +536,11 @@ export default function ConnectionProfileDetailsPage() {
               </div>
             </div>
           </div>
+
+          <ProfilePipelinesPanel
+            profileId={profile.id}
+            connectionType={profile.connection_type}
+          />
         </div>
 
         {/* Sidebar */}

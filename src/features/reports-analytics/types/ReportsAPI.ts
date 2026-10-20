@@ -52,6 +52,8 @@ export interface ReportQueryParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   search?: string;
+  /** JSON array of { field, operator, value, valueTo } table filter rules. */
+  filters?: string;
   segment?: string;
   campaignId?: string | number;
   offerId?: string | number;

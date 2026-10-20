@@ -12,7 +12,11 @@
  *   1. Prefer GET /subscribers/:id/communications (or /messages)
  *   2. Match communication logs and campaign broadcast delivery logs
  *      against this customer's phone / email / IDs
- *   3. Include live outbound events only (never fallback/demo events)
+ *   3. From the live event stream, keep only communication deliveries.
+ *      Known delivery types are included, other Customer 360 domains
+ *      (offers, consent, usage, care) are excluded, and new backend
+ *      codes are included when the type itself is a message delivery
+ *      (for example sms_delivered or email_bounced).
  *   4. Keep profile communication hints when they cannot be confirmed
  *
  * Recommended backend contract (when available):
@@ -84,6 +88,8 @@ export interface CustomerCommunicationItem {
   creativeId: number | null;
   creativeName: string | null;
   eventId: string | null;
+  eventType: string | null;
+  eventTypeLabel: string | null;
   evidence: CustomerCommunicationEvidence[];
   verification: CustomerCommunicationVerification;
 }

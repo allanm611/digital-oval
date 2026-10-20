@@ -16,7 +16,8 @@ type HorizontalScrollHintProps = {
 
 /**
  * Overflow affordance: a teal chevron that pages clipped content.
- * Large size is a 44px circular button so tab strips stay usable at zoom.
+ * Large size is a square the height of the tab bar, using the same corner
+ * radius as the tabs, with no border of its own.
  */
 export default function HorizontalScrollHint({
   hint = DEFAULT_HORIZONTAL_SCROLL_HINT,
@@ -32,13 +33,18 @@ export default function HorizontalScrollHint({
 
   return (
     <div
-      style={{
-        position: "absolute",
-        top: align === "top" ? "-8px" : "50%",
-        transform: align === "center" ? "translateY(-50%)" : undefined,
-        [isStart ? "left" : "right"]: isLarge ? 6 : 0,
-        zIndex: 20,
-      }}
+      className={isLarge ? "absolute inset-y-0 z-20 flex" : undefined}
+      style={
+        isLarge
+          ? { [isStart ? "left" : "right"]: 0 }
+          : {
+              position: "absolute",
+              top: align === "top" ? "-8px" : "50%",
+              transform: align === "center" ? "translateY(-50%)" : undefined,
+              [isStart ? "left" : "right"]: 0,
+              zIndex: 20,
+            }
+      }
     >
       <button
         type="button"
@@ -49,7 +55,7 @@ export default function HorizontalScrollHint({
         onBlur={() => setShowHint(false)}
         className={
           isLarge
-            ? `flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white shadow-md transition-colors hover:bg-gray-50 hover:border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-interactive-focus)] focus-visible:ring-offset-1`
+            ? `box-border flex aspect-square h-full min-h-0 items-center justify-center border-0 bg-transparent shadow-none ${tw.rounded} transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--c-interactive-focus)] focus-visible:ring-offset-1`
             : `p-2 ${tw.rounded} transition-all duration-200 hover:opacity-70`
         }
         style={
@@ -65,7 +71,7 @@ export default function HorizontalScrollHint({
         aria-label={hint}
       >
         <Icon
-          className={isLarge ? "h-7 w-7" : "h-5 w-5"}
+          className="h-5 w-5"
           strokeWidth={isLarge ? 2.5 : 2}
         />
       </button>

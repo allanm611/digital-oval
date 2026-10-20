@@ -7,12 +7,13 @@ import {
   catalogToDraft,
   countOffers,
   EMPTY_OFFER_COUNTS,
+  collectOfferRows,
+  draftKey,
   finalizeOffer,
   hintToDraft,
   mergeDraft,
   parseHintOffer,
   sortOffers,
-  unwrapOfferList,
   type DraftCustomerOffer,
 } from "../utils/customerOfferHelpers";
 import { collectCustomerIdentifiers } from "../utils/customerSubscribedListHelpers";
@@ -44,6 +45,11 @@ function abortIfNeeded(isAborted?: () => boolean) {
   }
 }
 
+function isPlaceholderOfferName(name: string, offerId: number): boolean {
+  const trimmed = name.trim().toLowerCase();
+  return !trimmed || trimmed === `offer ${offerId}`;
+}
+
 function cacheKey(subscriberId: string): string {
   return subscriberId;
 }
@@ -60,12 +66,6 @@ function emptyResult(warnings: string[] = []): CustomerOfferResult {
     eventsLive: false,
     warnings,
   };
-}
-
-function draftKey(draft: DraftCustomerOffer): string {
-  if (draft.offerId) return `offer-${draft.offerId}`;
-  const name = draft.name.trim().toLowerCase();
-  return name ? `name-${name}` : `anon-${Math.random().toString(36).slice(2)}`;
 }
 
 function upsertDraft(
@@ -154,8 +154,8 @@ export const customerOfferService = {
     abortIfNeeded(input.isAborted);
 
     const byKey = new Map<string, DraftCustomerOffer>();
-    unwrapOfferList(payload).forEach((item, index) => {
-      const hint = parseHintOffer(item, index);
+    collectOfferRows(payload).forEach((row, index) => {
+      const hint = parseHintOffer(row.item, index, row.bucket);
       if (!hint) return;
       const draft = hintToDraft(hint);
       draft.evidence.delete("profile_hint");
@@ -168,8 +168,13 @@ export const customerOfferService = {
     const catalogIds = Array.from(
       new Set(
         Array.from(byKey.values())
+          .filter(
+            (item) =>
+              item.offerId != null &&
+              isPlaceholderOfferName(item.name, item.offerId),
+          )
           .map((item) => item.offerId)
-          .filter((id): id is number => Boolean(id)),
+          .filter((id): id is number => id != null),
       ),
     );
 

@@ -31,12 +31,14 @@ const PERMISSION_MAP: Record<string, Record<string, string>> = {
   'offer-creatives': { create: 'offers.create', edit: 'offers.update' },
   'campaign-categories': { create: 'campaigns.create', edit: 'campaigns.update' },
   'connection-profiles': { create: 'connection-profiles.create', edit: 'connection-profiles.update' },
+  'connection-profile-pipelines': { create: 'connection-profiles.create', edit: 'connection-profiles.update' },
   kpi: { create: 'kpi.create', edit: 'kpi.update' },
   'kpi-categories': { create: 'kpi.create', edit: 'kpi.update' },
   'email-routes': { create: 'offers.create', edit: 'offers.update' },
   servers: { create: 'servers.create', edit: 'servers.update' },
   'subscriber-profiles': { create: 'kpi.create', edit: 'kpi.update' },
   quicklists: { create: 'quicklists.create', edit: 'quicklists.update' },
+  'loyalty-programs': { create: 'customer.update', edit: 'customer.update' },
   programs: { create: 'campaigns.create', edit: 'campaigns.update' },
   'segment-categories': { create: 'segments.create', edit: 'segments.update' },
 };
@@ -58,12 +60,14 @@ const ROUTE_MAP: Record<string, string> = {
   'offer-creatives': '/dashboard/offer-creatives',
   'campaign-categories': '/dashboard/campaign-categories',
   'connection-profiles': '/dashboard/connection-profiles',
+  'connection-profile-pipelines': '/dashboard/connection-profile-pipelines',
   kpi: '/dashboard/kpis',
   'kpi-categories': '/dashboard/kpi-categories',
   'email-routes': '/dashboard/email-routes',
   servers: '/dashboard/servers',
   'subscriber-profiles': '/dashboard/kpis/subscriber-profiles',
   quicklists: '/dashboard/quicklists',
+  'loyalty-programs': '/dashboard/loyalty-programs',
   programs: '/dashboard/programs',
   'segment-categories': '/dashboard/segment-categories',
   'manual-communications': '/dashboard/manual-communications',
@@ -111,7 +115,7 @@ export default function FeatureActionButton({
 
   let route = baseRoute;
   if (action === 'create') {
-    const createPath = ['connection-profiles', 'servers'].includes(featureId) ? '/new' : '/create';
+    const createPath = ['connection-profiles', 'connection-profile-pipelines', 'servers'].includes(featureId) ? '/new' : '/create';
     route = `${baseRoute}${createPath}`;
   } else if (action === 'edit' && itemId) {
     route = `${baseRoute}/${itemId}/edit`;

@@ -23,7 +23,7 @@ import { SMSRoute } from "../../routes/types/smsRoute";
 import { emailRouteService } from "../../routes/services/emailRouteService";
 import { EmailRoute } from "../../routes/types/emailRoute";
 import { color, tw, zIndex, components, getButtonStyles, button } from "../../../shared/utils/utils";
-import { ManualRewardData } from "../pages/CreateManualRewardPage";
+import { ManualRewardData, ManualRewardSeedRecipient } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
@@ -44,6 +44,7 @@ import {
   isVirtualDefaultTemplateId,
   materializeRewardTemplateId,
 } from "../../configurations/utils/rewardTemplateDefaults";
+import { slimSeedRecipient } from "../utils/manualRewardPreview";
 import RewardConfigurationParametersEditor from "../../configurations/components/reward-forms/RewardConfigurationParametersEditor";
 
 interface DefineRewardStepProps {
@@ -103,6 +104,22 @@ interface RewardSeedTestResult {
   message: string;
 }
 
+function restoreSeedRecipient(
+  recipient: ManualRewardSeedRecipient,
+): SeedListRecipient {
+  return {
+    id: recipient.id,
+    seed_list_id: recipient.seed_list_id ?? 0,
+    customer_id: 0,
+    customer_name: recipient.customer_name,
+    customer_email: recipient.customer_email,
+    customer_phone: recipient.customer_phone,
+    status: "active",
+    added_at: "",
+    created_at: "",
+  };
+}
+
 export default function DefineRewardStep({
   data,
   onUpdate,
@@ -128,7 +145,7 @@ export default function DefineRewardStep({
   const [isTesting, setIsTesting] = useState(false);
   const [seedTestError, setSeedTestError] = useState("");
   const [selectedSeedContactIds, setSelectedSeedContactIds] = useState<Set<number>>(
-    new Set(),
+    () => new Set(data.seedRecipientIds || []),
   );
   const [seedTestResults, setSeedTestResults] = useState<
     RewardSeedTestResult[]
@@ -136,7 +153,9 @@ export default function DefineRewardStep({
 
   // Seedlist modal state
   const [showSeedListModal, setShowSeedListModal] = useState(false);
-  const [selectedRecipients, setSelectedRecipients] = useState<SeedListRecipient[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<SeedListRecipient[]>(
+    () => (data.seedRecipients || []).map(restoreSeedRecipient),
+  );
 
   // Channel states
   const [channels, setChannels] = useState<Array<{ id: Channel; name: string; icon: any }>>([]);
@@ -144,10 +163,10 @@ export default function DefineRewardStep({
     data.channel || (getSettingsCommunicationChannel() as Channel),
   );
   const [smsRoutes, setSmsRoutes] = useState<SMSRoute[]>([]);
-  const [smsRoute, setSmsRoute] = useState("");
+  const [smsRoute, setSmsRoute] = useState(data.smsRoute || "");
   const [emailRoutes, setEmailRoutes] = useState<EmailRoute[]>([]);
-  const [emailRoute, setEmailRoute] = useState("");
-  const [rewardTitle, setRewardTitle] = useState("");
+  const [emailRoute, setEmailRoute] = useState(data.emailRoute || "");
+  const [rewardTitle, setRewardTitle] = useState(data.rewardTitle || "");
 
   const {
     providerOptions,
@@ -383,9 +402,16 @@ export default function DefineRewardStep({
           });
 
         setChannels(channelsList);
-        // Set default channel to first available
         if (channelsList.length > 0) {
-          setSelectedChannel(channelsList[0].id);
+          setSelectedChannel((current) => {
+            if (data.channel && channelsList.some((channel) => channel.id === data.channel)) {
+              return data.channel;
+            }
+            if (channelsList.some((channel) => channel.id === current)) {
+              return current;
+            }
+            return channelsList[0].id;
+          });
         }
       } catch (error) {
         console.error("Failed to fetch communication channels:", error);
@@ -418,24 +444,31 @@ export default function DefineRewardStep({
     return unsubscribe;
   }, []);
 
-  // Sync channel data from parent on mount
   useEffect(() => {
     if (data.channel) setSelectedChannel(data.channel as Channel);
     if (data.smsRoute) setSmsRoute(data.smsRoute);
+    if (data.emailRoute) setEmailRoute(data.emailRoute);
     if (data.rewardTitle) setRewardTitle(data.rewardTitle);
   }, []);
 
-  // Sync selectedPolicy with parent data
   useEffect(() => {
-    if (data.selectedCommunicationPolicyId) {
-      const policy = communicationPolicyService.getPolicyById(
+    if (!selectedChannel) return;
+    onUpdate({ channel: selectedChannel });
+  }, [selectedChannel]);
+
+  useEffect(() => {
+    if (!data.selectedCommunicationPolicyId) return;
+    const policy =
+      communicationPolicies.find(
+        (item) => item.id === data.selectedCommunicationPolicyId,
+      ) ||
+      communicationPolicyService.getPolicyById(
         data.selectedCommunicationPolicyId,
       );
-      if (policy) {
-        setSelectedPolicy(policy);
-      }
+    if (policy) {
+      setSelectedPolicy(policy);
     }
-  }, [data.selectedCommunicationPolicyId]);
+  }, [data.selectedCommunicationPolicyId, communicationPolicies]);
 
   const rewardTypes = [
     {
@@ -593,8 +626,12 @@ export default function DefineRewardStep({
       description: description.trim() || undefined,
       channel: selectedChannel,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
+      emailRoute: selectedChannel === "EMAIL" ? emailRoute : undefined,
       rewardTitle: selectedChannel === "EMAIL" ? rewardTitle : undefined,
       selectedCommunicationPolicyId: selectedPolicy?.id,
+      communicationPolicyName: selectedPolicy?.name,
+      seedRecipients: selectedRecipients.map(slimSeedRecipient),
+      seedRecipientIds: Array.from(selectedSeedContactIds),
     });
 
     onNext();
@@ -616,8 +653,13 @@ export default function DefineRewardStep({
     }
     setSelectedRecipients(recipients);
     setShowSeedListModal(false);
-    // Reset test contact selections when changing recipients
     setSelectedSeedContactIds(new Set());
+    onUpdate({
+      seedRecipients: recipients.map(slimSeedRecipient),
+      seedRecipientIds: [],
+      seedTestContacts: [],
+      rewardValidation: undefined,
+    });
   };
 
   const resetRewardValidation = () => {
@@ -638,6 +680,7 @@ export default function DefineRewardStep({
       next.add(recipientId);
     }
     setSelectedSeedContactIds(next);
+    onUpdate({ seedRecipientIds: Array.from(next) });
   };
 
   const validateSeedContact = (contact: string): boolean => {
@@ -932,9 +975,16 @@ export default function DefineRewardStep({
               label="Communication Channel *"
               value={selectedChannel}
               onChange={(value) => {
-                setSelectedChannel(value as Channel);
+                const channel = value as Channel;
+                setSelectedChannel(channel);
                 setSmsRoute("");
                 setRewardTitle("");
+                onUpdate({
+                  channel,
+                  smsRoute: undefined,
+                  emailRoute: undefined,
+                  rewardTitle: undefined,
+                });
               }}
               options={channels.map((channel) => ({
                 value: channel.id,
@@ -957,6 +1007,7 @@ export default function DefineRewardStep({
                 value={smsRoute}
                 onChange={(value) => {
                   setSmsRoute(value);
+                  onUpdate({ smsRoute: value });
                 }}
                 placeholder="Select SMS Route"
                 zIndex={zIndex.popover}
@@ -976,6 +1027,7 @@ export default function DefineRewardStep({
                 value={emailRoute}
                 onChange={(value) => {
                   setEmailRoute(value);
+                  onUpdate({ emailRoute: value });
                 }}
                 placeholder="Select Email Route"
                 zIndex={zIndex.popover}
@@ -991,7 +1043,11 @@ export default function DefineRewardStep({
               label="Subject Line"
               placeholder="Enter email subject..."
               value={rewardTitle}
-              onChange={(value) => setRewardTitle(String(value))}
+              onChange={(value) => {
+                const title = String(value);
+                setRewardTitle(title);
+                onUpdate({ rewardTitle: title });
+              }}
              
               required
             />
@@ -1012,14 +1068,20 @@ export default function DefineRewardStep({
           onChange={(value) => {
             if (value === "") {
               setSelectedPolicy(null);
-              onUpdate({ selectedCommunicationPolicyId: undefined });
+              onUpdate({
+                selectedCommunicationPolicyId: undefined,
+                communicationPolicyName: undefined,
+              });
             } else {
               const policy = communicationPolicies.find(
                 (p) => p.id.toString() === value,
               );
               if (policy) {
                 setSelectedPolicy(policy);
-                onUpdate({ selectedCommunicationPolicyId: policy.id });
+                onUpdate({
+                  selectedCommunicationPolicyId: policy.id,
+                  communicationPolicyName: policy.name,
+                });
                 resetRewardValidation();
               }
             }
@@ -1082,8 +1144,11 @@ export default function DefineRewardStep({
                           onChange={() => {
                             if (selectedSeedContactIds.size === activeSeedRecipients.length) {
                               setSelectedSeedContactIds(new Set());
+                              onUpdate({ seedRecipientIds: [] });
                             } else {
-                              setSelectedSeedContactIds(new Set(activeSeedRecipients.map((r) => r.id)));
+                              const ids = activeSeedRecipients.map((r) => r.id);
+                              setSelectedSeedContactIds(new Set(ids));
+                              onUpdate({ seedRecipientIds: ids });
                             }
                           }}
                         />

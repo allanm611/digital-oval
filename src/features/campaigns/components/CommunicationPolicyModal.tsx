@@ -19,13 +19,26 @@ import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
   COMMUNICATION_POLICY_TYPES,
-  TimeWindowConfig,
-  MaximumCommunicationConfig,
-  DNDConfig,
-  VIPListConfig,
   DNDCategory,
   DAYS_OF_WEEK,
+  type CommunicationPolicyType,
 } from "../types/communicationPolicyConfig";
+import {
+  buildFrequencyCappingConfig,
+  buildMultiPolicyConfig,
+  buildVipListConfig,
+  hydrateFrequencyPeriods,
+  hydrateVipRules,
+  isPolicyActive,
+  listConfiguredEditors,
+  parsePolicyChannels,
+  readDndConfig,
+  readEditorSlice,
+  readTimeWindowConfig,
+  resolvePolicyEditor,
+  type FrequencyPeriodDraft,
+  type VipRuleDraft,
+} from "../utils/communicationPolicyConfigMapper";
 import Checkbox from "../../../shared/components/ui/Checkbox";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import { communicationChannelService } from "../../../shared/services/communicationChannelService";
@@ -40,25 +53,8 @@ interface CommunicationPolicyModalProps {
 }
 
 interface AllPolicyConfigs {
-  timeWindow: TimeWindowConfig;
-  maximumCommunication: MaximumCommunicationConfig;
-  dnd: DNDConfig;
-  vipList: VIPListConfig;
-}
-
-// Period item for maximum communication (with id for list management)
-interface MaxCommPeriod {
-  id: string;
-  type: "daily" | "weekly" | "monthly";
-  maxCount: number;
-}
-
-// VIP List row item (with id for list management)
-interface VIPListRow {
-  id: string;
-  vipListId: string;
-  action: "include" | "exclude";
-  priority: number;
+  timeWindow: ReturnType<typeof readTimeWindowConfig>;
+  dnd: ReturnType<typeof readDndConfig>;
 }
 
 const PERIOD_OPTIONS = [
@@ -86,136 +82,119 @@ export default function CommunicationPolicyModal({
   const [isActive, setIsActive] = useState(true);
 
   const [configs, setConfigs] = useState<AllPolicyConfigs>({
-    timeWindow: {
-      startTime: "09:00",
-      endTime: "18:00",
-      timezone: "UTC",
-      days: [],
-    },
-    maximumCommunication: {
-      type: "daily",
-      maxCount: 3,
-    },
-    dnd: {
-      categories: [],
-    },
-    vipList: {
-      action: "include",
-      vipLists: [],
-      priority: 1,
-    },
+    timeWindow: readTimeWindowConfig(null),
+    dnd: { categories: [] },
   });
 
-  // Track which section is currently expanded (only one at a time) — also serves as selected type
-  const [expandedSection, setExpandedSection] = useState<string | null>("timeWindow");
+  const [selectedEditors, setSelectedEditors] = useState<CommunicationPolicyType[]>([]);
+  const [expandedSections, setExpandedSections] = useState<CommunicationPolicyType[]>([]);
 
-  // Maximum communication periods (multiple)
-  const [maxCommPeriods, setMaxCommPeriods] = useState<MaxCommPeriod[]>([]);
+  // Frequency capping periods. This is the value that gets saved.
+  const [maxCommPeriods, setMaxCommPeriods] = useState<FrequencyPeriodDraft[]>([]);
 
-  // VIP List rows (multiple)
-  const [vipListRows, setVipListRows] = useState<VIPListRow[]>([]);
+  // VIP list rules. This is the value that gets saved.
+  const [vipListRows, setVipListRows] = useState<VipRuleDraft[]>([]);
 
   const [errors, setErrors] = useState<{
     name?: string;
     channels?: string;
     policyType?: string;
+    config?: string;
+    sections?: Partial<Record<CommunicationPolicyType, string>>;
   }>({});
 
   useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+
     const initializeForm = async () => {
       if (policy) {
+        const selected = listConfiguredEditors(policy);
         setName(policy.name);
         setDescription(policy.description || "");
-        setIsActive(policy.isActive ?? true);
-        setExpandedSection(policy.type_code || "timeWindow");
+        setIsActive(isPolicyActive(policy));
+        setSelectedEditors(selected);
+        setExpandedSections(selected);
+        setConfigs({
+          timeWindow: readTimeWindowConfig(readEditorSlice(policy, "timeWindow")),
+          dnd: readDndConfig(readEditorSlice(policy, "dnd")),
+        });
+        setMaxCommPeriods(
+          hydrateFrequencyPeriods(readEditorSlice(policy, "maximumCommunication")),
+        );
+        setVipListRows(hydrateVipRules(readEditorSlice(policy, "vipList")));
 
-        // Convert channel codes back to IDs for the modal
-        if (policy.channels && policy.channels.length > 0) {
+        const savedChannels = parsePolicyChannels(policy.channels);
+        if (savedChannels.length > 0) {
           try {
             const allChannels = await communicationChannelService.getAll();
-            const channelIds = policy.channels.map((code: string) => {
-              const channel = allChannels.find((ch) => ch.code === code);
-              return channel?.id;
-            }).filter(Boolean);
+            if (cancelled) return;
+            const channelIds = savedChannels
+              .map((code) => allChannels.find((channel) => channel.code === code)?.id)
+              .filter((id): id is number => id !== undefined && id !== null);
             setSelectedChannelIds(channelIds);
           } catch (err) {
+            if (cancelled) return;
             console.error("Failed to load channels:", err);
             setSelectedChannelIds([]);
           }
         } else {
           setSelectedChannelIds([]);
         }
-
-        // Load existing policy config
-        if (policy.config) {
-          setConfigs((prev) => ({
-            ...prev,
-            timeWindow: {
-              startTime: (policy.config as TimeWindowConfig)?.startTime || "09:00",
-              endTime: (policy.config as TimeWindowConfig)?.endTime || "18:00",
-              timezone: (policy.config as TimeWindowConfig)?.timezone || "UTC",
-              days: Array.isArray((policy.config as TimeWindowConfig)?.days) ? (policy.config as TimeWindowConfig).days : [],
-            },
-            maximumCommunication: {
-              type: (policy.config as MaximumCommunicationConfig)?.type || "daily",
-              maxCount: (policy.config as MaximumCommunicationConfig)?.maxCount || 3,
-            },
-            dnd: {
-              categories: Array.isArray((policy.config as DNDConfig)?.categories) ? (policy.config as DNDConfig).categories : [],
-            },
-            vipList: {
-              action: (policy.config as VIPListConfig)?.action || "include",
-              vipLists: Array.isArray((policy.config as VIPListConfig)?.vipLists) ? (policy.config as VIPListConfig).vipLists : [],
-              priority: (policy.config as VIPListConfig)?.priority || 1,
-            },
-          }));
-        }
       } else {
         setName("");
         setDescription("");
         setSelectedChannelIds([]);
         setIsActive(true);
-        setExpandedSection("timeWindow");
+        setSelectedEditors([]);
+        setExpandedSections([]);
         setConfigs({
-          timeWindow: {
-            startTime: "09:00",
-            endTime: "18:00",
-            timezone: "UTC",
-            days: [],
-          },
-          maximumCommunication: {
-            type: "daily",
-            maxCount: 3,
-          },
-          dnd: {
-            categories: [],
-          },
-          vipList: {
-            action: "include",
-            vipLists: [],
-            priority: 1,
-          },
+          timeWindow: readTimeWindowConfig(null),
+          dnd: { categories: [] },
         });
+        setMaxCommPeriods([]);
+        setVipListRows([]);
       }
-      setErrors({});
-      setMaxCommPeriods([]);
-      setVipListRows([]);
+      if (!cancelled) setErrors({});
     };
 
     initializeForm();
+    return () => {
+      cancelled = true;
+    };
   }, [policy, isOpen]);
 
-  const toggleSection = (type: string) => {
-    setExpandedSection((current) => (current === type ? null : type));
+  const toggleExpanded = (editor: CommunicationPolicyType) => {
+    setExpandedSections((current) => {
+      const isOpen = current.includes(editor);
+      if (isOpen) return current.filter((item) => item !== editor);
+      return [...current, editor];
+    });
+    setSelectedEditors((current) =>
+      current.includes(editor) ? current : [...current, editor],
+    );
   };
 
-  const updateConfig = <T extends CommunicationPolicyType>(
+  const toggleSelected = (editor: CommunicationPolicyType) => {
+    const willSelect = !selectedEditors.includes(editor);
+    setSelectedEditors((current) =>
+      willSelect ? [...current, editor] : current.filter((item) => item !== editor),
+    );
+    setExpandedSections((current) => {
+      if (willSelect) {
+        return current.includes(editor) ? current : [...current, editor];
+      }
+      return current.filter((item) => item !== editor);
+    });
+  };
+
+  const updateConfig = <T extends keyof AllPolicyConfigs>(
     type: T,
     updater: (prev: AllPolicyConfigs[T]) => AllPolicyConfigs[T]
   ) => {
     setConfigs((prev) => ({
       ...prev,
-      [type]: updater(prev[type] as AllPolicyConfigs[T]),
+      [type]: updater(prev[type]),
     }));
   };
 
@@ -231,8 +210,54 @@ export default function CommunicationPolicyModal({
       newErrors.channels = "At least one communication channel is required";
     }
 
-    if (!expandedSection) {
-      newErrors.policyType = "Please select a policy type";
+    const sectionErrors: Partial<Record<CommunicationPolicyType, string>> = {};
+    if (selectedEditors.length === 0) {
+      newErrors.policyType = "Select at least one policy configuration.";
+    }
+
+    if (selectedEditors.includes("maximumCommunication")) {
+      if (maxCommPeriods.length === 0) {
+        sectionErrors.maximumCommunication = "Add at least one frequency period before saving.";
+      } else if (maxCommPeriods.some((period) => period.maxCount < 1)) {
+        sectionErrors.maximumCommunication = "Each frequency period needs a maximum count of at least 1.";
+      } else if (
+        new Set(maxCommPeriods.map((period) => period.type)).size !==
+        maxCommPeriods.length
+      ) {
+        sectionErrors.maximumCommunication = "Each period type can only be used once.";
+      }
+    }
+
+    if (selectedEditors.includes("vipList")) {
+      if (vipListRows.length === 0) {
+        sectionErrors.vipList = "Add at least one VIP list rule before saving.";
+      } else if (vipListRows.some((row) => !row.vipListId)) {
+        sectionErrors.vipList = "Select a VIP list for every rule.";
+      } else if (vipListRows.some((row) => row.priority < 1)) {
+        sectionErrors.vipList = "Each VIP rule needs a priority of at least 1.";
+      }
+    }
+
+    if (selectedEditors.includes("dnd")) {
+      if (configs.dnd.categories.length === 0) {
+        sectionErrors.dnd = "Add at least one Do Not Disturb category.";
+      } else if (configs.dnd.categories.some((category) => !category.type)) {
+        sectionErrors.dnd = "Select a type for every Do Not Disturb category.";
+      }
+    }
+
+    if (selectedEditors.includes("timeWindow")) {
+      if (!configs.timeWindow.startTime || !configs.timeWindow.endTime) {
+        sectionErrors.timeWindow = "Start time and end time are required.";
+      }
+    }
+
+    if (Object.keys(sectionErrors).length > 0) {
+      newErrors.sections = sectionErrors;
+      newErrors.config = "Complete every selected configuration before saving.";
+      setExpandedSections((current) => [
+        ...new Set([...current, ...(Object.keys(sectionErrors) as CommunicationPolicyType[])]),
+      ]);
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -249,33 +274,48 @@ export default function CommunicationPolicyModal({
         return channel?.code as string;
       }).filter(Boolean);
 
-      const getConfig = () => {
-        switch (expandedSection) {
-          case "maximumCommunication": return configs.maximumCommunication;
-          case "dnd": return configs.dnd;
-          case "vipList": return configs.vipList;
-          default: return configs.timeWindow;
-        }
-      };
+      const saved = buildMultiPolicyConfig({
+        timeWindow: selectedEditors.includes("timeWindow") ? configs.timeWindow : null,
+        maximumCommunication: selectedEditors.includes("maximumCommunication")
+          ? buildFrequencyCappingConfig(maxCommPeriods)
+          : null,
+        dnd: selectedEditors.includes("dnd") ? configs.dnd : null,
+        vipList: selectedEditors.includes("vipList")
+          ? buildVipListConfig(vipListRows, vipListsData)
+          : null,
+      });
 
       const policyData: CreateCommunicationPolicyRequest = {
         name,
         description,
         channels: channelCodes,
-        type_code: expandedSection,
-        config: getConfig(),
+        type_code: saved.type_code,
+        type_codes: saved.type_codes,
+        config: saved.config,
         is_active: isActive,
       };
 
       await onSave(policyData);
     } catch (err) {
-      setErrors({ channels: "Failed to process communication channels" });
+      const message =
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to process communication channels";
+      setErrors({
+        config: message.includes("frequency") || message.includes("VIP")
+          ? message
+          : undefined,
+        channels:
+          message.includes("frequency") || message.includes("VIP")
+            ? undefined
+            : message,
+      });
       console.error("Error in handleSubmit:", err);
     }
   };
 
   const getTypeIcon = (code: string) => {
-    switch (code) {
+    switch (resolvePolicyEditor(code)) {
       case "timeWindow": return <Clock className="w-5 h-5" />;
       case "maximumCommunication": return <BarChart3 className="w-5 h-5" />;
       case "dnd": return <BellOff className="w-5 h-5" />;
@@ -381,7 +421,7 @@ export default function CommunicationPolicyModal({
           <button
             type="button"
             onClick={() => {
-              const newPeriod: MaxCommPeriod = {
+              const newPeriod: FrequencyPeriodDraft = {
                 id: Date.now().toString(),
                 type: getFirstAvailablePeriodType(),
                 maxCount: 3,
@@ -628,7 +668,7 @@ export default function CommunicationPolicyModal({
           <button
             type="button"
             onClick={() => {
-              const newRow: VIPListRow = {
+              const newRow: VipRuleDraft = {
                 id: Date.now().toString(),
                 vipListId: "",
                 action: "include",
@@ -759,58 +799,81 @@ export default function CommunicationPolicyModal({
 
   const renderPolicySection = (policyType: { code: string; name: string; description?: string }) => {
     const { code, name: typeName, description: typeDesc } = policyType;
-    const isExpanded = expandedSection === code;
+    const editor = resolvePolicyEditor(code);
+    if (!editor) return null;
+    const isExpanded = expandedSections.includes(editor);
+    const isSelected = selectedEditors.includes(editor);
+    const sectionError = errors.sections?.[editor];
 
     return (
       <div
-        key={code}
+        key={editor}
         className={`border ${
           tw.rounded
         } overflow-visible transition-all duration-200 ${
-          isExpanded ? "border-2" : tw.borderDefault
+          isSelected ? "border-2" : tw.borderDefault
         }`}
         style={{
-          borderColor: isExpanded ? color.primary.accent : undefined,
+          borderColor: isSelected ? color.primary.accent : undefined,
         }}
       >
-        <button
-          type="button"
-          onClick={() => toggleSection(code)}
-          className={`w-full px-5 py-4 flex items-center justify-between transition-all duration-200 ${
-            isExpanded ? "bg-gray-50" : "bg-white hover:bg-gray-50"
+        <div
+          className={`w-full px-5 py-4 flex items-center justify-between gap-3 transition-all duration-200 ${
+            isExpanded || isSelected ? "bg-gray-50" : "bg-white"
           }`}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className={`p-2.5 ${tw.rounded} transition-all duration-200`}
-              style={{ color: isExpanded ? color.primary.accent : "#6b7280" }}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Checkbox
+              checked={isSelected}
+              onChange={() => toggleSelected(editor)}
+              aria-label={`Include ${typeName}`}
+            />
+            <button
+              type="button"
+              onClick={() => toggleExpanded(editor)}
+              className="flex items-center gap-3 min-w-0 flex-1 text-left"
             >
-              {getTypeIcon(code)}
-            </div>
-            <div className="text-left">
-              <h3
-                className={`text-sm transition-colors duration-200 ${
-                  isExpanded ? "font-semibold text-gray-900" : "font-medium text-gray-700"
-                }`}
+              <div
+                className={`p-2.5 ${tw.rounded} transition-all duration-200`}
+                style={{ color: isSelected ? color.primary.accent : "#6b7280" }}
               >
-                {typeName}
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">{typeDesc}</p>
-            </div>
+                {getTypeIcon(code)}
+              </div>
+              <div className="text-left min-w-0">
+                <h3
+                  className={`text-sm transition-colors duration-200 ${
+                    isSelected ? "font-semibold text-gray-900" : "font-medium text-gray-700"
+                  }`}
+                >
+                  {typeName}
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">{typeDesc}</p>
+              </div>
+            </button>
           </div>
-          {isExpanded ? (
-            <ChevronUp className="w-5 h-5 transition-colors duration-200 text-gray-600" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400 transition-colors duration-200" />
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={() => toggleExpanded(editor)}
+            className="p-1 rounded hover:bg-gray-100"
+            aria-label={isExpanded ? `Collapse ${typeName}` : `Expand ${typeName}`}
+          >
+            {isExpanded ? (
+              <ChevronUp className="w-5 h-5 transition-colors duration-200 text-gray-600" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-400 transition-colors duration-200" />
+            )}
+          </button>
+        </div>
 
         {isExpanded && (
           <div className="px-5 py-6 bg-white border-t border-gray-100 overflow-visible">
-            {code === "timeWindow" && renderTimeWindowConfig()}
-            {code === "maximumCommunication" && renderMaxCommunicationConfig()}
-            {code === "dnd" && renderDNDConfig()}
-            {code === "vipList" && renderVIPListConfig()}
+            {editor === "timeWindow" && renderTimeWindowConfig()}
+            {editor === "maximumCommunication" && renderMaxCommunicationConfig()}
+            {editor === "dnd" && renderDNDConfig()}
+            {editor === "vipList" && renderVIPListConfig()}
+            {sectionError && (
+              <p className="text-xs text-red-600 mt-3">{sectionError}</p>
+            )}
           </div>
         )}
       </div>
@@ -915,23 +978,49 @@ export default function CommunicationPolicyModal({
                     Policy Configurations
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
-                    Expand a section to select and configure that policy type. Only one type will be saved.
+                    Select one or more configurations. Checked sections are saved together on this policy.
                   </p>
+                  {selectedEditors.length > 0 && (
+                    <p className="text-xs text-gray-700 mt-1">
+                      {selectedEditors.length} selected
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
-                  onClick={() => setExpandedSection(null)}
+                  onClick={() => setExpandedSections([])}
                   className="text-xs text-gray-600 hover:text-gray-900 hover:underline transition-colors"
                 >
                   Collapse All
                 </button>
               </div>
-              {(policyTypesData.length > 0
-                ? policyTypesData.map((pt: any) => ({ code: pt.code, name: pt.name, description: pt.description }))
-                : COMMUNICATION_POLICY_TYPES.map((t) => ({ code: t.value, name: t.label, description: t.description }))
-              ).map((pt) => renderPolicySection(pt))}
+              {(() => {
+                const source = policyTypesData.length > 0
+                  ? policyTypesData.map((pt: { code?: string; name?: string; description?: string }) => ({
+                      code: String(pt.code ?? ""),
+                      name: String(pt.name ?? pt.code ?? ""),
+                      description: pt.description,
+                    }))
+                  : COMMUNICATION_POLICY_TYPES.map((item) => ({
+                      code: item.value,
+                      name: item.label,
+                      description: item.description,
+                    }));
+                const seen = new Set<CommunicationPolicyType>();
+                return source
+                  .filter((item) => {
+                    const editor = resolvePolicyEditor(item.code);
+                    if (!editor || seen.has(editor)) return false;
+                    seen.add(editor);
+                    return true;
+                  })
+                  .map((item) => renderPolicySection(item));
+              })()}
               {errors.policyType && (
                 <p className="text-xs text-red-600 mt-2">{errors.policyType}</p>
+              )}
+              {errors.config && (
+                <p className="text-xs text-red-600 mt-2">{errors.config}</p>
               )}
             </div>
 
@@ -940,7 +1029,7 @@ export default function CommunicationPolicyModal({
               <label className="flex items-center space-x-3 cursor-pointer">
                 <Checkbox
                   checked={isActive}
-                  onChange={(value) => setIsActive(!!value)}
+                  onChange={() => setIsActive((current) => !current)}
                   className="rounded w-5 h-5"
                   style={{ accentColor: color.primary.action }}
                 />

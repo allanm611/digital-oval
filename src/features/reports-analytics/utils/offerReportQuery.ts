@@ -20,6 +20,7 @@ export function buildOfferReportParams(options: {
   page?: number;
   pageSize?: number;
   search?: string;
+  filters?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   metric?: string;
@@ -41,6 +42,7 @@ export function buildOfferReportParams(options: {
     page: options.page,
     pageSize: options.pageSize,
     search: options.search,
+    filters: options.filters,
     sortBy: options.sortBy,
     sortOrder: options.sortOrder,
     metric: options.metric,

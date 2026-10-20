@@ -2,28 +2,54 @@ import type { Offer } from "../../offers/types/offer";
 import type { CustomerEvent } from "../types/customerEvent";
 import type { CustomerSegmentVia } from "../types/customerSegment";
 import type {
+  CustomerOfferBucket,
   CustomerOfferCampaignRef,
   CustomerOfferCounts,
   CustomerOfferEvidence,
   CustomerOfferEventRef,
   CustomerOfferItem,
-  CustomerOfferState,
+  CustomerOfferReceipt,
+  CustomerOfferRedemption,
+  CustomerOfferRelationship,
+  CustomerOfferStatus,
+  CustomerOfferValidity,
   CustomerOfferVerification,
 } from "../types/customerOffer";
 import { asRecord } from "./customerSegmentHelpers";
-import { extractAddedAt } from "./customerSubscribedListHelpers";
 
 export const EMPTY_OFFER_COUNTS: CustomerOfferCounts = {
   total: 0,
-  available: 0,
-  redeemed: 0,
-  accepted: 0,
-  expired: 0,
+  attached: 0,
+  received: 0,
+  both: 0,
+  active: 0,
   inactive: 0,
+  redemptionEvents: 0,
 };
 
 const REDEEMED_EVENT_TYPES = new Set(["offer_redeemed"]);
 const ACCEPTED_EVENT_TYPES = new Set(["offer_accepted"]);
+const ATTACHED_RELATIONSHIPS = new Set([
+  "attached",
+  "attachment",
+  "enrolled",
+  "linked",
+  "eligible",
+  "active",
+]);
+const RECEIVED_RELATIONSHIPS = new Set([
+  "received",
+  "receipt",
+  "presented",
+  "sent",
+  "delivered",
+  "communication",
+]);
+
+export type TaggedOfferRow = {
+  item: unknown;
+  bucket: CustomerOfferBucket;
+};
 
 export type HintOffer = {
   offerId: number | null;
@@ -31,12 +57,25 @@ export type HintOffer = {
   code: string;
   type: string;
   description: string;
-  stateHint: CustomerOfferState | null;
   catalogStatus: string | null;
   valueAmount: number | null;
   valuePercent: number | null;
-  redeemedAt: string | null;
+  validFrom: string | null;
+  validTo: string | null;
+  isReusable: boolean;
+  maxUsagePerCustomer: number | null;
+  isAttached: boolean;
+  hasReceived: boolean;
+  attachedAt: string | null;
+  acceptedAt: string | null;
+  attachmentSource: string | null;
   presentedAt: string | null;
+  channel: string | null;
+  reportedRedemptionCount: number;
+  receipts: CustomerOfferReceipt[];
+  redemptions: CustomerOfferRedemption[];
+  campaigns: CustomerOfferCampaignRef[];
+  segments: CustomerSegmentVia[];
 };
 
 export type DraftCustomerOffer = {
@@ -52,16 +91,21 @@ export type DraftCustomerOffer = {
   validTo: string | null;
   isReusable: boolean;
   maxUsagePerCustomer: number | null;
-  presentedAt: string | null;
+  isAttached: boolean;
+  hasReceived: boolean;
+  attachedAt: string | null;
   acceptedAt: string | null;
+  presentedAt: string | null;
   redeemedAt: string | null;
-  redemptionCount: number;
+  reportedRedemptionCount: number;
   lastChannel: string | null;
+  attachmentSources: Set<string>;
+  receipts: Map<string, CustomerOfferReceipt>;
+  redemptions: Map<string, CustomerOfferRedemption>;
   viaCampaigns: Map<number, CustomerOfferCampaignRef>;
   viaSegments: Map<number, CustomerSegmentVia>;
   relatedEvents: Map<string, CustomerOfferEventRef>;
   evidence: Set<CustomerOfferEvidence>;
-  stateHint: CustomerOfferState | null;
 };
 
 export function numericId(value: unknown): number | null {
@@ -97,40 +141,116 @@ export function numberOrNull(value: unknown): number | null {
   return null;
 }
 
-export function unwrapOfferList(payload: unknown): unknown[] {
-  if (Array.isArray(payload)) return payload;
-  const record = asRecord(payload);
-  if (!record) return [];
-  const nested = asRecord(record.data);
-  const candidates = [
-    record.data,
-    record.offers,
-    record.redemptions,
-    record.items,
-    record.results,
-    nested?.data,
-    nested?.offers,
-    nested?.redemptions,
-    nested?.items,
-  ];
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) return candidate;
+function booleanOrNull(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
   }
-  return [];
+  const raw = stringOrNull(value)?.toLowerCase();
+  if (!raw) return null;
+  if (["true", "yes", "1", "y"].includes(raw)) return true;
+  if (["false", "no", "0", "n"].includes(raw)) return false;
+  return null;
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
 }
 
 function laterDate(left: string | null, right: string | null): string | null {
   if (!left) return right;
   if (!right) return left;
-  return new Date(left).getTime() >= new Date(right).getTime() ? left : right;
+  const leftTime = new Date(left).getTime();
+  const rightTime = new Date(right).getTime();
+  if (Number.isNaN(leftTime)) return right;
+  if (Number.isNaN(rightTime)) return left;
+  return leftTime >= rightTime ? left : right;
 }
 
-export function humanizeOfferState(state: CustomerOfferState): string {
-  if (state === "available") return "Available";
-  if (state === "redeemed") return "Redeemed";
-  if (state === "accepted") return "Accepted";
-  if (state === "expired") return "Expired";
-  return "Inactive";
+function earlierDate(left: string | null, right: string | null): string | null {
+  if (!left) return right;
+  if (!right) return left;
+  const leftTime = new Date(left).getTime();
+  const rightTime = new Date(right).getTime();
+  if (Number.isNaN(leftTime)) return right;
+  if (Number.isNaN(rightTime)) return left;
+  return leftTime <= rightTime ? left : right;
+}
+
+function pushUniqueRows(
+  rows: TaggedOfferRow[],
+  value: unknown,
+  bucket: CustomerOfferBucket,
+) {
+  asArray(value).forEach((item) => rows.push({ item, bucket }));
+}
+
+function hasRelationshipBuckets(source: Record<string, unknown>): boolean {
+  return [
+    source.received,
+    source.received_offers,
+    source.receivedOffers,
+    source.attached,
+    source.attached_offers,
+    source.attachedOffers,
+    source.attachments,
+  ].some((value) => Array.isArray(value));
+}
+
+/**
+ * Splits a subscriber-offers payload into received, attached, and redemption rows.
+ * A flat offers array is kept as mixed and classified per row.
+ */
+export function collectOfferRows(payload: unknown): TaggedOfferRow[] {
+  if (Array.isArray(payload)) {
+    return payload.map((item) => ({ item, bucket: "mixed" as const }));
+  }
+  const record = asRecord(payload);
+  if (!record) return [];
+  const nested = asRecord(record.data);
+  const source = nested ?? record;
+  const rows: TaggedOfferRow[] = [];
+
+  if (hasRelationshipBuckets(source)) {
+    pushUniqueRows(rows, source.received ?? source.received_offers ?? source.receivedOffers, "received");
+    pushUniqueRows(
+      rows,
+      source.attached ?? source.attached_offers ?? source.attachedOffers ?? source.attachments,
+      "attached",
+    );
+    pushUniqueRows(rows, source.redemptions ?? source.redemption_history, "redemption");
+    return rows;
+  }
+
+  pushUniqueRows(
+    rows,
+    source.offers ?? source.customer_offers ?? source.items ?? source.results,
+    "mixed",
+  );
+  if (rows.length === 0 && Array.isArray(record.data)) {
+    pushUniqueRows(rows, record.data, "mixed");
+  }
+  if (rows.length === 0) {
+    pushUniqueRows(rows, source.redemptions ?? source.redemption_history, "redemption");
+  }
+  return rows;
+}
+
+export function unwrapOfferList(payload: unknown): unknown[] {
+  return collectOfferRows(payload).map((row) => row.item);
+}
+
+export function humanizeOfferStatus(status: CustomerOfferStatus): string {
+  return status === "active" ? "Active" : "Inactive";
+}
+
+export function humanizeOfferRelationship(
+  relationship: CustomerOfferRelationship,
+): string {
+  if (relationship === "both") return "Received and attached";
+  if (relationship === "attached") return "Attached";
+  return "Received";
 }
 
 export function humanizeOfferType(type: string | null | undefined): string {
@@ -147,27 +267,419 @@ export function humanizeCatalogStatus(status: string | null | undefined): string
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function normalizeStateHint(value: unknown): CustomerOfferState | null {
-  const raw = stringOrNull(value)?.toLowerCase().replace(/[\s-]+/g, "_");
-  if (!raw) return null;
-  if (raw === "redeemed" || raw === "used" || raw === "claimed") return "redeemed";
-  if (raw === "accepted" || raw === "opted_in") return "accepted";
-  if (raw === "available" || raw === "active" || raw === "eligible") {
-    return "available";
+export function humanizeValidity(validity: CustomerOfferValidity): string {
+  if (validity === "valid") return "Within validity";
+  if (validity === "expired") return "Validity ended";
+  if (validity === "scheduled") return "Not started";
+  return "Validity unknown";
+}
+
+function relationshipToken(value: unknown): string | null {
+  return stringOrNull(value)?.toLowerCase().replace(/[\s-]+/g, "_") ?? null;
+}
+
+function isAttachedToken(value: string | null): boolean {
+  if (!value) return false;
+  return ATTACHED_RELATIONSHIPS.has(value) || value.includes("attach");
+}
+
+function isReceivedToken(value: string | null): boolean {
+  if (!value) return false;
+  return RECEIVED_RELATIONSHIPS.has(value) || value.includes("receiv");
+}
+
+function parseCampaignRefs(row: Record<string, unknown>): CustomerOfferCampaignRef[] {
+  const list = asArray(row.campaigns ?? row.via_campaigns ?? row.viaCampaigns);
+  const fromList = list
+    .map((item) => {
+      const record = asRecord(item);
+      if (!record) return null;
+      const campaignId = numericId(record.campaign_id ?? record.campaignId ?? record.id);
+      const campaignName = stringOrNull(
+        record.campaign_name ?? record.campaignName ?? record.name,
+      );
+      if (!campaignId || !campaignName) return null;
+      const isActive = booleanOrNull(record.is_active ?? record.isActive);
+      return {
+        campaignId,
+        campaignName,
+        campaignStatus: stringOrNull(record.status ?? record.campaign_status),
+        isActive,
+      };
+    })
+    .filter((item): item is CustomerOfferCampaignRef => Boolean(item));
+
+  if (fromList.length > 0) return fromList;
+
+  const campaignId = numericId(row.campaign_id ?? row.campaignId);
+  const campaignName = stringOrNull(row.campaign_name ?? row.campaignName);
+  if (!campaignId || !campaignName) return [];
+  return [
+    {
+      campaignId,
+      campaignName,
+      campaignStatus: stringOrNull(row.campaign_status ?? row.campaignStatus),
+      isActive: booleanOrNull(row.campaign_is_active ?? row.campaignIsActive),
+    },
+  ];
+}
+
+function parseSegmentRefs(row: Record<string, unknown>): CustomerSegmentVia[] {
+  const list = asArray(row.segments ?? row.via_segments ?? row.viaSegments);
+  const fromList = list
+    .map((item) => {
+      const record = asRecord(item);
+      if (!record) return null;
+      const segmentId = numericId(record.segment_id ?? record.segmentId ?? record.id);
+      const segmentName = stringOrNull(
+        record.segment_name ?? record.segmentName ?? record.name,
+      );
+      if (!segmentId || !segmentName) return null;
+      return { segmentId, segmentName };
+    })
+    .filter((item): item is CustomerSegmentVia => Boolean(item));
+
+  if (fromList.length > 0) return fromList;
+
+  const segmentId = numericId(row.segment_id ?? row.segmentId);
+  const segmentName = stringOrNull(row.segment_name ?? row.segmentName);
+  if (!segmentId || !segmentName) return [];
+  return [{ segmentId, segmentName }];
+}
+
+function parseReceiptRecord(
+  item: unknown,
+  index: number,
+  fallback: { channel: string | null; campaignId: number | null; campaignName: string | null },
+): CustomerOfferReceipt | null {
+  if (typeof item === "string" && item.trim()) {
+    return {
+      id: `receipt-${index}-${item.trim()}`,
+      receivedAt: item.trim(),
+      channel: fallback.channel,
+      campaignId: fallback.campaignId,
+      campaignName: fallback.campaignName,
+      source: null,
+    };
   }
-  if (raw === "expired" || raw === "lapsed") return "expired";
-  if (raw === "inactive" || raw === "paused" || raw === "cancelled" || raw === "canceled") {
-    return "inactive";
+  const row = asRecord(item);
+  if (!row) return null;
+  const receivedAt = stringOrNull(
+    row.received_at ??
+      row.receivedAt ??
+      row.presented_at ??
+      row.presentedAt ??
+      row.sent_at ??
+      row.delivered_at ??
+      row.occurred_at ??
+      row.created_at,
+  );
+  const channel = stringOrNull(row.channel ?? row.last_channel) ?? fallback.channel;
+  const campaignId = numericId(row.campaign_id ?? row.campaignId) ?? fallback.campaignId;
+  const campaignName =
+    stringOrNull(row.campaign_name ?? row.campaignName) ?? fallback.campaignName;
+  const source = stringOrNull(row.source ?? row.delivery_source ?? row.channel_source);
+  const explicitId = stringOrNull(row.receipt_id ?? row.receiptId ?? row.id);
+  if (!receivedAt && !channel && !campaignName && !source && !explicitId) return null;
+  return {
+    id: explicitId || `receipt-${receivedAt ?? "na"}-${channel ?? "na"}-${campaignId ?? index}`,
+    receivedAt,
+    channel,
+    campaignId,
+    campaignName,
+    source,
+  };
+}
+
+function parseRedemptionRecord(
+  item: unknown,
+  index: number,
+  fallback: { channel: string | null; campaignId: number | null; campaignName: string | null },
+): CustomerOfferRedemption | null {
+  const row = asRecord(item);
+  if (!row) return null;
+  const redeemedAt = stringOrNull(
+    row.redeemed_at ??
+      row.redeemedAt ??
+      row.redeemed_date ??
+      row.redeemedDate ??
+      row.redemption_date ??
+      row.occurred_at ??
+      row.created_at,
+  );
+  const channel = stringOrNull(row.channel ?? row.last_channel) ?? fallback.channel;
+  const status = stringOrNull(row.status ?? row.redemption_status);
+  const campaignId = numericId(row.campaign_id ?? row.campaignId) ?? fallback.campaignId;
+  const campaignName =
+    stringOrNull(row.campaign_name ?? row.campaignName) ?? fallback.campaignName;
+  const explicitId = stringOrNull(row.redemption_id ?? row.redemptionId);
+  if (!redeemedAt && !channel && !status && !explicitId) return null;
+  return {
+    id:
+      explicitId ||
+      `redemption-${redeemedAt ?? "na"}-${channel ?? "na"}-${campaignId ?? index}-${status ?? ""}`,
+    redeemedAt,
+    channel,
+    status,
+    campaignId,
+    campaignName,
+  };
+}
+
+export function parseHintOffer(
+  item: unknown,
+  index = 0,
+  bucket: CustomerOfferBucket = "mixed",
+): HintOffer | null {
+  if (typeof item === "string" && item.trim()) {
+    return {
+      offerId: null,
+      name: item.trim(),
+      code: "",
+      type: "",
+      description: "",
+      catalogStatus: null,
+      valueAmount: null,
+      valuePercent: null,
+      validFrom: null,
+      validTo: null,
+      isReusable: false,
+      maxUsagePerCustomer: null,
+      isAttached: bucket === "attached",
+      hasReceived: bucket !== "attached",
+      attachedAt: null,
+      acceptedAt: null,
+      attachmentSource: null,
+      presentedAt: null,
+      channel: null,
+      reportedRedemptionCount: 0,
+      receipts: [],
+      redemptions: [],
+      campaigns: [],
+      segments: [],
+    };
   }
-  return null;
+
+  const row = asRecord(item);
+  if (!row) return null;
+
+  const nested = asRecord(row.offer) || asRecord(row.offer_details);
+  const offerId =
+    numericId(row.offer_id ?? row.offerId) ??
+    numericId(nested?.id ?? nested?.offer_id) ??
+    (bucket === "mixed" ? numericId(row.id) : null);
+  const name =
+    stringOrNull(row.name ?? row.offer_name ?? row.offerName ?? row.title) ??
+    stringOrNull(nested?.name ?? nested?.title) ??
+    (offerId ? `Offer ${offerId}` : "");
+  if (!name && !offerId) return null;
+
+  const relationship = relationshipToken(
+    row.relationship ?? row.kind ?? row.link_type ?? row.association ?? row.offer_link,
+  );
+  const explicitAttached = booleanOrNull(
+    row.is_attached ?? row.isAttached ?? row.attached,
+  );
+  const statusToken = relationshipToken(
+    row.customer_status ?? row.customerStatus ?? row.attachment_status ?? row.status,
+  );
+  const acceptedAt = stringOrNull(row.accepted_at ?? row.acceptedAt);
+  const attachedAt = stringOrNull(
+    row.attached_at ??
+      row.attachedAt ??
+      row.enrolled_at ??
+      row.enrolledAt ??
+      row.added_at ??
+      row.addedAt,
+  );
+
+  const isAttached =
+    explicitAttached === false
+      ? false
+      : bucket === "attached" ||
+        explicitAttached === true ||
+        isAttachedToken(relationship) ||
+        isAttachedToken(statusToken) ||
+        statusToken === "available" ||
+        statusToken === "eligible" ||
+        statusToken === "accepted" ||
+        statusToken === "opted_in" ||
+        Boolean(acceptedAt);
+
+  const campaigns = parseCampaignRefs(row);
+  const segments = parseSegmentRefs(row);
+  const channel = stringOrNull(row.channel ?? row.last_channel ?? row.lastChannel);
+  const primaryCampaign = campaigns[0];
+
+  const receiptItems = asArray(
+    row.receipts ?? row.deliveries ?? row.received_history,
+  );
+  const receipts = receiptItems
+    .map((entry, receiptIndex) =>
+      parseReceiptRecord(entry, receiptIndex, {
+        channel,
+        campaignId: primaryCampaign?.campaignId ?? null,
+        campaignName: primaryCampaign?.campaignName ?? null,
+      }),
+    )
+    .filter((entry): entry is CustomerOfferReceipt => Boolean(entry));
+
+  const presentedAt = stringOrNull(
+    row.received_at ??
+      row.receivedAt ??
+      row.presented_at ??
+      row.presentedAt ??
+      row.sent_at ??
+      row.delivered_at,
+  );
+
+  if (
+    receipts.length === 0 &&
+    (presentedAt || bucket === "received" || isReceivedToken(relationship))
+  ) {
+    receipts.push({
+      id: `receipt-${presentedAt ?? index}-${channel ?? "na"}-${primaryCampaign?.campaignId ?? index}`,
+      receivedAt: presentedAt,
+      channel,
+      campaignId: primaryCampaign?.campaignId ?? null,
+      campaignName: primaryCampaign?.campaignName ?? null,
+      source: stringOrNull(row.source ?? row.delivery_source),
+    });
+  }
+
+  const redemptionItems = asArray(row.redemptions ?? row.redemption_history);
+  const redemptions = redemptionItems
+    .map((entry, redemptionIndex) =>
+      parseRedemptionRecord(entry, redemptionIndex, {
+        channel,
+        campaignId: primaryCampaign?.campaignId ?? null,
+        campaignName: primaryCampaign?.campaignName ?? null,
+      }),
+    )
+    .filter((entry): entry is CustomerOfferRedemption => Boolean(entry));
+
+  const redeemedAt = stringOrNull(
+    row.redeemed_at ?? row.redeemedAt ?? row.redeemedDate ?? row.redemption_date,
+  );
+  const redeemedStatus =
+    statusToken === "redeemed" || statusToken === "used" || statusToken === "claimed";
+  if (redemptions.length === 0 && (redeemedAt || bucket === "redemption" || redeemedStatus)) {
+    redemptions.push({
+      id: `redemption-${redeemedAt ?? index}-${channel ?? "na"}-${offerId ?? index}`,
+      redeemedAt,
+      channel,
+      status: redeemedStatus ? statusToken : stringOrNull(row.redemption_status),
+      campaignId: primaryCampaign?.campaignId ?? null,
+      campaignName: primaryCampaign?.campaignName ?? null,
+    });
+  }
+
+  const reportedRedemptionCount = Math.max(
+    numberOrNull(
+      row.redemption_count ??
+        row.redemptionCount ??
+        row.times_redeemed ??
+        row.usage_count,
+    ) ?? 0,
+    redemptions.length,
+  );
+
+  const hasReceived =
+    bucket === "received" ||
+    bucket === "redemption" ||
+    isReceivedToken(relationship) ||
+    receipts.length > 0 ||
+    redemptions.length > 0 ||
+    reportedRedemptionCount > 0;
+
+  const attachmentSource = stringOrNull(
+    row.attachment_source ?? row.attachmentSource ?? (isAttached ? row.source : null),
+  );
+
+  return {
+    offerId,
+    name: name || `Offer ${index + 1}`,
+    code: stringOrNull(row.code ?? row.offer_code ?? nested?.code) || "",
+    type:
+      stringOrNull(
+        row.type ??
+          row.offer_type ??
+          row.offerType ??
+          row.offer_type_label ??
+          nested?.offer_type_label ??
+          nested?.offer_type,
+      ) || "",
+    description: stringOrNull(row.description ?? nested?.description) || "",
+    catalogStatus: stringOrNull(
+      row.catalog_status ?? row.lifecycle_status ?? nested?.status,
+    ),
+    valueAmount: numberOrNull(
+      row.value ??
+        row.value_amount ??
+        row.discount_amount ??
+        row.bonus_value ??
+        nested?.discount_amount ??
+        nested?.bonus_value,
+    ),
+    valuePercent: numberOrNull(
+      row.value_percent ?? row.discount_percentage ?? nested?.discount_percentage,
+    ),
+    validFrom: stringOrNull(row.valid_from ?? row.validFrom ?? nested?.valid_from),
+    validTo: stringOrNull(row.valid_to ?? row.validTo ?? nested?.valid_to),
+    isReusable:
+      booleanOrNull(row.is_reusable ?? row.isReusable ?? nested?.is_reusable) ?? false,
+    maxUsagePerCustomer: numberOrNull(
+      row.max_usage_per_customer ??
+        row.maxUsagePerCustomer ??
+        nested?.max_usage_per_customer,
+    ),
+    isAttached,
+    hasReceived,
+    attachedAt,
+    acceptedAt,
+    attachmentSource,
+    presentedAt: receipts.reduce<string | null>(
+      (latest, receipt) => laterDate(latest, receipt.receivedAt),
+      presentedAt,
+    ),
+    channel,
+    reportedRedemptionCount,
+    receipts,
+    redemptions,
+    campaigns,
+    segments,
+  };
+}
+
+export function parseHintOffers(
+  record: Record<string, unknown> | null | undefined,
+): HintOffer[] {
+  if (!record) return [];
+  return collectOfferRows(record.offers ?? record.customer_offers)
+    .map((row, index) => parseHintOffer(row.item, index, row.bucket))
+    .filter((item): item is HintOffer => Boolean(item));
 }
 
 export function createDraftOffer(
-  extras?: Partial<Omit<DraftCustomerOffer, "viaCampaigns" | "viaSegments" | "relatedEvents" | "evidence">> & {
+  extras?: Partial<
+    Omit<
+      DraftCustomerOffer,
+      | "viaCampaigns"
+      | "viaSegments"
+      | "relatedEvents"
+      | "evidence"
+      | "receipts"
+      | "redemptions"
+      | "attachmentSources"
+    >
+  > & {
     viaCampaigns?: CustomerOfferCampaignRef[];
     viaSegments?: CustomerSegmentVia[];
     relatedEvents?: CustomerOfferEventRef[];
     evidence?: CustomerOfferEvidence[];
+    receipts?: CustomerOfferReceipt[];
+    redemptions?: CustomerOfferRedemption[];
+    attachmentSources?: string[];
   },
 ): DraftCustomerOffer {
   const draft: DraftCustomerOffer = {
@@ -183,17 +695,24 @@ export function createDraftOffer(
     validTo: extras?.validTo ?? null,
     isReusable: extras?.isReusable ?? false,
     maxUsagePerCustomer: extras?.maxUsagePerCustomer ?? null,
-    presentedAt: extras?.presentedAt ?? null,
+    isAttached: extras?.isAttached ?? false,
+    hasReceived: extras?.hasReceived ?? false,
+    attachedAt: extras?.attachedAt ?? null,
     acceptedAt: extras?.acceptedAt ?? null,
+    presentedAt: extras?.presentedAt ?? null,
     redeemedAt: extras?.redeemedAt ?? null,
-    redemptionCount: extras?.redemptionCount ?? 0,
+    reportedRedemptionCount: extras?.reportedRedemptionCount ?? 0,
     lastChannel: extras?.lastChannel ?? null,
+    attachmentSources: new Set(extras?.attachmentSources || []),
+    receipts: new Map(),
+    redemptions: new Map(),
     viaCampaigns: new Map(),
     viaSegments: new Map(),
     relatedEvents: new Map(),
     evidence: new Set(extras?.evidence || []),
-    stateHint: extras?.stateHint ?? null,
   };
+  extras?.receipts?.forEach((item) => draft.receipts.set(item.id, item));
+  extras?.redemptions?.forEach((item) => draft.redemptions.set(item.id, item));
   extras?.viaCampaigns?.forEach((item) => draft.viaCampaigns.set(item.campaignId, item));
   extras?.viaSegments?.forEach((item) => draft.viaSegments.set(item.segmentId, item));
   extras?.relatedEvents?.forEach((item) => draft.relatedEvents.set(item.eventId, item));
@@ -214,7 +733,14 @@ export function mergeDraft(
   source.relatedEvents.forEach((item, id) => {
     if (!target.relatedEvents.has(id)) target.relatedEvents.set(id, item);
   });
+  source.receipts.forEach((item, id) => {
+    if (!target.receipts.has(id)) target.receipts.set(id, item);
+  });
+  source.redemptions.forEach((item, id) => {
+    if (!target.redemptions.has(id)) target.redemptions.set(id, item);
+  });
   source.evidence.forEach((item) => target.evidence.add(item));
+  source.attachmentSources.forEach((item) => target.attachmentSources.add(item));
 
   target.offerId = target.offerId ?? source.offerId;
   target.name = preferName(target.name, source.name);
@@ -229,12 +755,18 @@ export function mergeDraft(
   target.isReusable = target.isReusable || source.isReusable;
   target.maxUsagePerCustomer =
     target.maxUsagePerCustomer ?? source.maxUsagePerCustomer;
+  target.isAttached = target.isAttached || source.isAttached;
+  target.hasReceived = target.hasReceived || source.hasReceived;
+  target.attachedAt = earlierDate(target.attachedAt, source.attachedAt);
+  target.acceptedAt = earlierDate(target.acceptedAt, source.acceptedAt);
   target.presentedAt = laterDate(target.presentedAt, source.presentedAt);
-  target.acceptedAt = laterDate(target.acceptedAt, source.acceptedAt);
   target.redeemedAt = laterDate(target.redeemedAt, source.redeemedAt);
-  target.redemptionCount = Math.max(target.redemptionCount, source.redemptionCount);
+  target.reportedRedemptionCount = Math.max(
+    target.reportedRedemptionCount,
+    source.reportedRedemptionCount,
+    target.redemptions.size,
+  );
   target.lastChannel = target.lastChannel || source.lastChannel;
-  target.stateHint = target.stateHint || source.stateHint;
   return target;
 }
 
@@ -272,93 +804,17 @@ export function draftKey(draft: {
   return `anon-${Math.random().toString(36).slice(2)}`;
 }
 
-export function parseHintOffer(item: unknown, index = 0): HintOffer | null {
-  if (typeof item === "string" && item.trim()) {
-    return {
-      offerId: null,
-      name: item.trim(),
-      code: "",
-      type: "",
-      description: "",
-      stateHint: null,
-      catalogStatus: null,
-      valueAmount: null,
-      valuePercent: null,
-      redeemedAt: null,
-      presentedAt: null,
-    };
-  }
-
-  const row = asRecord(item);
-  if (!row) return null;
-
-  const nested = asRecord(row.offer) || asRecord(row.offer_details);
-  const offerId =
-    numericId(row.offer_id ?? row.offerId ?? row.id) ??
-    numericId(nested?.id ?? nested?.offer_id);
-  const name =
-    stringOrNull(row.name ?? row.offer_name ?? row.offerName ?? row.title) ??
-    stringOrNull(nested?.name ?? nested?.title) ??
-    (offerId ? `Offer ${offerId}` : "");
-  if (!name && !offerId) return null;
-
-  return {
-    offerId,
-    name: name || `Offer ${index + 1}`,
-    code: stringOrNull(row.code ?? row.offer_code ?? nested?.code) || "",
-    type:
-      stringOrNull(
-        row.type ??
-          row.offer_type ??
-          row.offerType ??
-          row.offer_type_label ??
-          nested?.offer_type_label ??
-          nested?.offer_type,
-      ) || "",
-    description:
-      stringOrNull(row.description ?? nested?.description) || "",
-    stateHint: normalizeStateHint(
-      row.customer_status ?? row.customerStatus ?? row.status,
-    ),
-    catalogStatus: stringOrNull(
-      row.catalog_status ?? row.lifecycle_status ?? nested?.status,
-    ),
-    valueAmount: numberOrNull(
-      row.value ??
-        row.value_amount ??
-        row.discount_amount ??
-        row.bonus_value ??
-        nested?.discount_amount ??
-        nested?.bonus_value,
-    ),
-    valuePercent: numberOrNull(
-      row.value_percent ??
-        row.discount_percentage ??
-        nested?.discount_percentage,
-    ),
-    redeemedAt:
-      stringOrNull(
-        row.redeemed_at ??
-          row.redeemedAt ??
-          row.redeemedDate ??
-          row.redemption_date,
-      ) ?? null,
-    presentedAt:
-      extractAddedAt(row) ??
-      stringOrNull(row.presented_at ?? row.presentedAt ?? row.valid_from),
-  };
-}
-
-export function parseHintOffers(
-  record: Record<string, unknown> | null | undefined,
-): HintOffer[] {
-  if (!record) return [];
-  return unwrapOfferList(record.offers ?? record.customer_offers)
-    .map((item, index) => parseHintOffer(item, index))
-    .filter((item): item is HintOffer => Boolean(item));
-}
-
 export function hintToDraft(hint: HintOffer): DraftCustomerOffer {
+  const sources: string[] = [];
+  if (hint.attachmentSource) sources.push(hint.attachmentSource);
+  if (hint.isAttached && hint.campaigns.length > 0) sources.push("Campaign");
+  if (hint.isAttached && hint.segments.length > 0) sources.push("Segment");
+
+  const latestRedemption = hint.redemptions.reduce<string | null>(
+    (latest, item) => laterDate(latest, item.redeemedAt),
+    null,
+  );
+
   return createDraftOffer({
     offerId: hint.offerId,
     name: hint.name,
@@ -368,11 +824,24 @@ export function hintToDraft(hint: HintOffer): DraftCustomerOffer {
     catalogStatus: hint.catalogStatus,
     valueAmount: hint.valueAmount,
     valuePercent: hint.valuePercent,
+    validFrom: hint.validFrom,
+    validTo: hint.validTo,
+    isReusable: hint.isReusable,
+    maxUsagePerCustomer: hint.maxUsagePerCustomer,
+    isAttached: hint.isAttached,
+    hasReceived: hint.hasReceived,
+    attachedAt: hint.attachedAt,
+    acceptedAt: hint.acceptedAt,
     presentedAt: hint.presentedAt,
-    redeemedAt: hint.redeemedAt,
-    redemptionCount: hint.redeemedAt || hint.stateHint === "redeemed" ? 1 : 0,
-    evidence: ["profile_hint"],
-    stateHint: hint.stateHint,
+    redeemedAt: latestRedemption,
+    reportedRedemptionCount: hint.reportedRedemptionCount,
+    lastChannel: hint.channel,
+    attachmentSources: sources,
+    receipts: hint.receipts,
+    redemptions: hint.redemptions,
+    viaCampaigns: hint.campaigns,
+    viaSegments: hint.segments,
+    evidence: ["subscriber_api"],
   });
 }
 
@@ -447,6 +916,28 @@ export function eventToDraft(event: CustomerEvent): DraftCustomerOffer | null {
         }
       : null;
 
+  const redemption: CustomerOfferRedemption | null = redeemed
+    ? {
+        id: `event-${event.id}`,
+        redeemedAt: event.occurred_at,
+        channel: event.channel || null,
+        status: event.status || null,
+        campaignId: campaign?.campaignId ?? null,
+        campaignName: campaign?.campaignName ?? null,
+      }
+    : null;
+
+  const receipt: CustomerOfferReceipt | null = redeemed
+    ? null
+    : {
+        id: `event-receipt-${event.id}`,
+        receivedAt: event.occurred_at,
+        channel: event.channel || null,
+        campaignId: campaign?.campaignId ?? null,
+        campaignName: campaign?.campaignName ?? null,
+        source: "Customer event",
+      };
+
   return createDraftOffer({
     offerId: event.offer?.id ?? null,
     name: event.offer?.name || "",
@@ -454,77 +945,93 @@ export function eventToDraft(event: CustomerEvent): DraftCustomerOffer | null {
     type: event.offer?.type || "",
     description: event.offer?.description || "",
     catalogStatus: event.offer?.status || null,
-    presentedAt: event.occurred_at,
+    isAttached: accepted,
+    hasReceived: true,
+    attachedAt: accepted ? event.occurred_at : null,
     acceptedAt: accepted ? event.occurred_at : null,
+    presentedAt: event.occurred_at,
     redeemedAt: redeemed ? event.occurred_at : null,
-    redemptionCount: redeemed ? 1 : 0,
+    reportedRedemptionCount: redeemed ? 1 : 0,
     lastChannel: event.channel,
+    attachmentSources: accepted ? ["Accepted"] : [],
+    receipts: receipt ? [receipt] : [],
+    redemptions: redemption ? [redemption] : [],
     viaCampaigns: campaign ? [campaign] : [],
     relatedEvents: [eventRef],
     evidence: ["event"],
-    stateHint: redeemed ? "redeemed" : accepted ? "accepted" : null,
   });
 }
 
-function isActiveCampaignStatus(status: string | null, isActive: boolean | null): boolean {
-  if (isActive === false) return false;
-  const value = (status || "active").toLowerCase();
-  if (["inactive", "completed", "cancelled", "canceled", "expired", "archived"].includes(value)) {
+function resolveValidity(draft: DraftCustomerOffer, now: Date): CustomerOfferValidity {
+  const status = (draft.catalogStatus || "").toLowerCase();
+  if (["expired", "archived"].includes(status)) return "expired";
+  const from = draft.validFrom ? new Date(draft.validFrom) : null;
+  const until = draft.validTo ? new Date(draft.validTo) : null;
+  if (until && !Number.isNaN(until.getTime()) && until.getTime() < now.getTime()) {
+    return "expired";
+  }
+  if (from && !Number.isNaN(from.getTime()) && from.getTime() > now.getTime()) {
+    return "scheduled";
+  }
+  if ((from && !Number.isNaN(from.getTime())) || (until && !Number.isNaN(until.getTime()))) {
+    return "valid";
+  }
+  if (["active", "approved"].includes(status)) return "valid";
+  return "unknown";
+}
+
+export function resolveOfferStatus(draft: DraftCustomerOffer): CustomerOfferStatus {
+  return draft.isAttached ? "active" : "inactive";
+}
+
+export function resolveRelationship(
+  draft: Pick<DraftCustomerOffer, "isAttached" | "hasReceived">,
+): CustomerOfferRelationship {
+  if (draft.isAttached && draft.hasReceived) return "both";
+  if (draft.isAttached) return "attached";
+  return "received";
+}
+
+export function canRedeemOffer(input: {
+  isAttached: boolean;
+  validity: CustomerOfferValidity;
+  isReusable: boolean;
+  redemptionCount: number;
+  maxUsagePerCustomer: number | null;
+}): boolean {
+  if (!input.isAttached) return false;
+  if (input.validity === "expired" || input.validity === "scheduled") return false;
+  if (input.redemptionCount > 0 && !input.isReusable) return false;
+  if (
+    input.maxUsagePerCustomer != null &&
+    input.redemptionCount >= input.maxUsagePerCustomer
+  ) {
     return false;
   }
-  if (["paused", "draft", "pending"].includes(value)) return false;
   return true;
 }
 
-function isExpiredCatalog(draft: DraftCustomerOffer, now: Date): boolean {
-  const status = (draft.catalogStatus || "").toLowerCase();
-  if (["expired", "archived"].includes(status)) return true;
-  if (!draft.validTo) return false;
-  const until = new Date(draft.validTo);
-  return !Number.isNaN(until.getTime()) && until.getTime() < now.getTime();
-}
-
-function isInactiveCatalog(draft: DraftCustomerOffer): boolean {
-  const status = (draft.catalogStatus || "").toLowerCase();
-  return ["paused", "draft", "rejected", "pending_approval"].includes(status);
-}
-
-export function resolveOfferState(
-  draft: DraftCustomerOffer,
-  now = new Date(),
-): CustomerOfferState {
-  if (draft.redeemedAt || draft.redemptionCount > 0 || draft.stateHint === "redeemed") {
-    return "redeemed";
+export function usageSummary(offer: Pick<
+  CustomerOfferItem,
+  "redemptionCount" | "maxUsagePerCustomer" | "isReusable"
+>): string {
+  const countLabel = `${offer.redemptionCount.toLocaleString()} redemption${
+    offer.redemptionCount === 1 ? "" : "s"
+  }`;
+  if (offer.maxUsagePerCustomer != null) {
+    const left = Math.max(0, offer.maxUsagePerCustomer - offer.redemptionCount);
+    return `${countLabel} · ${left.toLocaleString()} of ${offer.maxUsagePerCustomer.toLocaleString()} left`;
   }
-  if (draft.acceptedAt || draft.stateHint === "accepted") {
-    return "accepted";
-  }
-  if (draft.stateHint === "expired" || isExpiredCatalog(draft, now)) {
-    return "expired";
-  }
-  if (draft.stateHint === "inactive" || isInactiveCatalog(draft)) {
-    return "inactive";
-  }
-
-  const hasLiveCampaign = Array.from(draft.viaCampaigns.values()).some((campaign) =>
-    isActiveCampaignStatus(campaign.campaignStatus, campaign.isActive),
-  );
-  const mapped = draft.evidence.has("campaign_mapping") || draft.evidence.has("subscriber_api");
-
-  if (mapped && draft.viaCampaigns.size > 0 && !hasLiveCampaign) {
-    return "inactive";
-  }
-  if (mapped || draft.stateHint === "available" || draft.evidence.has("profile_hint")) {
-    return "available";
-  }
-  return "available";
+  return offer.isReusable ? `${countLabel} · reusable` : `${countLabel} · single use`;
 }
 
 export function finalizeOffer(
   draft: DraftCustomerOffer,
   now = new Date(),
 ): CustomerOfferItem {
-  const state = resolveOfferState(draft, now);
+  const status = resolveOfferStatus(draft);
+  const validity = resolveValidity(draft, now);
+  const relationship = resolveRelationship(draft);
   const verification: CustomerOfferVerification =
     draft.evidence.has("subscriber_api") ||
     draft.evidence.has("campaign_mapping") ||
@@ -535,6 +1042,23 @@ export function finalizeOffer(
   const relatedEvents = Array.from(draft.relatedEvents.values()).sort((a, b) => {
     return new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime();
   });
+  const receipts = Array.from(draft.receipts.values()).sort((a, b) => {
+    return (Date.parse(b.receivedAt || "") || 0) - (Date.parse(a.receivedAt || "") || 0);
+  });
+  const redemptions = Array.from(draft.redemptions.values()).sort((a, b) => {
+    return (Date.parse(b.redeemedAt || "") || 0) - (Date.parse(a.redeemedAt || "") || 0);
+  });
+  const redemptionCount = Math.max(draft.reportedRedemptionCount, redemptions.length);
+  const redeemedAt =
+    redemptions.reduce<string | null>(
+      (latest, item) => laterDate(latest, item.redeemedAt),
+      draft.redeemedAt,
+    ) ?? null;
+
+  const attachmentSources = Array.from(draft.attachmentSources);
+  if (draft.isAttached && attachmentSources.length === 0) {
+    attachmentSources.push("Subscriber offer");
+  }
 
   return {
     id: draftKey(draft),
@@ -543,7 +1067,11 @@ export function finalizeOffer(
     code: draft.code,
     type: draft.type,
     description: draft.description,
-    state,
+    status,
+    relationship,
+    isAttached: draft.isAttached,
+    hasReceived: draft.hasReceived,
+    validity,
     catalogStatus: draft.catalogStatus,
     valueAmount: draft.valueAmount,
     valuePercent: draft.valuePercent,
@@ -551,11 +1079,26 @@ export function finalizeOffer(
     validTo: draft.validTo,
     isReusable: draft.isReusable,
     maxUsagePerCustomer: draft.maxUsagePerCustomer,
-    presentedAt: draft.presentedAt,
+    presentedAt:
+      receipts.reduce<string | null>(
+        (latest, item) => laterDate(latest, item.receivedAt),
+        draft.presentedAt,
+      ) ?? null,
+    attachedAt: draft.attachedAt,
     acceptedAt: draft.acceptedAt,
-    redeemedAt: draft.redeemedAt,
-    redemptionCount: draft.redemptionCount,
-    lastChannel: draft.lastChannel || relatedEvents[0]?.channel || null,
+    redeemedAt,
+    redemptionCount,
+    canRedeemAgain: canRedeemOffer({
+      isAttached: draft.isAttached,
+      validity,
+      isReusable: draft.isReusable,
+      redemptionCount,
+      maxUsagePerCustomer: draft.maxUsagePerCustomer,
+    }),
+    lastChannel: draft.lastChannel || redemptions[0]?.channel || receipts[0]?.channel || null,
+    attachmentSources,
+    receipts,
+    redemptions,
     viaCampaigns: Array.from(draft.viaCampaigns.values()).sort((a, b) =>
       a.campaignName.localeCompare(b.campaignName),
     ),
@@ -568,21 +1111,22 @@ export function finalizeOffer(
   };
 }
 
-const STATE_RANK: Record<CustomerOfferState, number> = {
-  redeemed: 0,
-  accepted: 1,
-  available: 2,
-  expired: 3,
-  inactive: 4,
+const RELATIONSHIP_RANK: Record<CustomerOfferRelationship, number> = {
+  both: 0,
+  attached: 1,
+  received: 2,
 };
 
 export function sortOffers(offers: CustomerOfferItem[]): CustomerOfferItem[] {
   return [...offers].sort((a, b) => {
-    if (STATE_RANK[a.state] !== STATE_RANK[b.state]) {
-      return STATE_RANK[a.state] - STATE_RANK[b.state];
+    if (a.status !== b.status) return a.status === "active" ? -1 : 1;
+    if (RELATIONSHIP_RANK[a.relationship] !== RELATIONSHIP_RANK[b.relationship]) {
+      return RELATIONSHIP_RANK[a.relationship] - RELATIONSHIP_RANK[b.relationship];
     }
-    const aTime = Date.parse(a.redeemedAt || a.acceptedAt || a.presentedAt || "") || 0;
-    const bTime = Date.parse(b.redeemedAt || b.acceptedAt || b.presentedAt || "") || 0;
+    const aTime =
+      Date.parse(a.redeemedAt || a.presentedAt || a.attachedAt || "") || 0;
+    const bTime =
+      Date.parse(b.redeemedAt || b.presentedAt || b.attachedAt || "") || 0;
     if (aTime !== bTime) return bTime - aTime;
     return a.name.localeCompare(b.name);
   });
@@ -592,7 +1136,11 @@ export function countOffers(offers: CustomerOfferItem[]): CustomerOfferCounts {
   return offers.reduce(
     (counts, offer) => {
       counts.total += 1;
-      counts[offer.state] += 1;
+      if (offer.isAttached) counts.attached += 1;
+      if (offer.hasReceived) counts.received += 1;
+      if (offer.relationship === "both") counts.both += 1;
+      counts[offer.status] += 1;
+      counts.redemptionEvents += offer.redemptionCount;
       return counts;
     },
     { ...EMPTY_OFFER_COUNTS },
@@ -605,24 +1153,33 @@ export function uniqueOfferTypes(offers: CustomerOfferItem[]): string[] {
   ).sort();
 }
 
-export function uniqueOfferStates(offers: CustomerOfferItem[]): CustomerOfferState[] {
-  const present = new Set(offers.map((item) => item.state));
-  return (["available", "redeemed", "accepted", "expired", "inactive"] as CustomerOfferState[]).filter(
-    (state) => present.has(state),
+export function uniqueOfferStatuses(offers: CustomerOfferItem[]): CustomerOfferStatus[] {
+  const present = new Set(offers.map((item) => item.status));
+  return (["active", "inactive"] as CustomerOfferStatus[]).filter((status) =>
+    present.has(status),
   );
 }
 
 export function filterCustomerOffers(
   offers: CustomerOfferItem[],
-  query: { search?: string; state?: string; type?: string },
+  query: {
+    search?: string;
+    status?: string;
+    type?: string;
+    relationship?: string;
+  },
 ): CustomerOfferItem[] {
   const search = query.search?.trim().toLowerCase() ?? "";
-  const state = query.state && query.state !== "all" ? query.state : "";
+  const status = query.status && query.status !== "all" ? query.status : "";
   const type = query.type && query.type !== "all" ? query.type : "";
+  const relationship =
+    query.relationship && query.relationship !== "all" ? query.relationship : "";
 
   return offers.filter((item) => {
-    if (state && item.state !== state) return false;
+    if (status && item.status !== status) return false;
     if (type && item.type !== type) return false;
+    if (relationship === "received" && !item.hasReceived) return false;
+    if (relationship === "attached" && !item.isAttached) return false;
     if (!search) return true;
     const campaignHaystack = item.viaCampaigns
       .map((campaign) => campaign.campaignName)

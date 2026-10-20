@@ -187,7 +187,7 @@ export default function BackButton({
           <ArrowLeft className={iconSize || "w-5 h-5"} />
         </button>
 
-        <ol className="flex items-center gap-1 text-base flex-wrap">
+        <ol className="flex min-w-0 flex-wrap items-center gap-1 text-base">
           <li>
             <button
               type="button"
@@ -204,7 +204,10 @@ export default function BackButton({
               <li className="text-gray-400" aria-hidden="true">
                 <ChevronRight className="w-3 h-3" />
               </li>
-              <li className="text-base font-medium text-gray-900" aria-current="page">
+              <li
+                className="min-w-0 break-words text-base font-medium text-gray-900"
+                aria-current="page"
+              >
                 {breadcrumbData.computedCurrentLabel}
               </li>
             </>

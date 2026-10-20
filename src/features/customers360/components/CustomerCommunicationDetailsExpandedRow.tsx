@@ -100,6 +100,18 @@ export default function CustomerCommunicationDetailsExpandedRow({
                 </p>
               </div>
             </DetailField>
+            <DetailField label="Event type">
+              {item.eventType ? (
+                <div>
+                  <p>{item.eventTypeLabel || item.eventType}</p>
+                  <p className="text-xs text-gray-500 font-mono">
+                    {item.eventType}
+                  </p>
+                </div>
+              ) : (
+                "—"
+              )}
+            </DetailField>
             <DetailField label="Evidence">
               {item.evidence.length > 0
                 ? item.evidence.map(evidenceLabel).join(", ")

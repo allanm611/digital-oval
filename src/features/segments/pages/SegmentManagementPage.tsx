@@ -29,6 +29,7 @@ import {
 import SearchInput from "../../../shared/components/ui/SearchInput";
 import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
+import { excludeAnalysisSegments } from "../../analyse/utils/analysisDefinition";
 import { segmentTypeService } from "../services/segmentTypeService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
@@ -472,13 +473,13 @@ export default function SegmentManagementPage() {
         skipCache: true,
       });
 
-      segmentData = response.data || [];
+      segmentData = excludeAnalysisSegments(response.data || []);
       totalCount = response.pagination?.total || segmentData.length;
 
       setSegments(segmentData);
       // Update allSegments for tag calculation - fetch all for this
       const allSegmentsResponse = await segmentService.getSegments({ skipCache: true });
-      setAllSegments(allSegmentsResponse.data || []);
+      setAllSegments(excludeAnalysisSegments(allSegmentsResponse.data || []));
 
       // Update pagination info
       setTotalCount(totalCount);

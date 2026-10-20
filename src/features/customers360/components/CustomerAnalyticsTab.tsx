@@ -39,13 +39,21 @@ function KpiCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-      <div className="flex items-center gap-2">
-        <Icon className="h-5 w-5" style={{ color: colors.primary.accent }} />
-        <p className="text-sm font-medium text-gray-600">{label}</p>
+    <div className={`${tw.rounded} min-w-0 border border-gray-200 bg-white p-4 shadow-sm sm:p-6`}>
+      <div className="flex min-w-0 items-start gap-2">
+        <Icon
+          className="mt-0.5 h-5 w-5 shrink-0"
+          style={{ color: colors.primary.accent }}
+          aria-hidden="true"
+        />
+        <p className="min-w-0 break-words text-sm font-medium text-gray-600">
+          {label}
+        </p>
       </div>
-      <p className="mt-3 text-3xl font-bold text-gray-900">{value}</p>
-      <p className="mt-1 text-sm text-gray-500">{subtext}</p>
+      <p className="mt-3 break-words text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">
+        {value}
+      </p>
+      <p className="mt-1 break-words text-sm text-gray-500">{subtext}</p>
     </div>
   );
 }
@@ -60,16 +68,18 @@ function SideList({
   rows: Array<{ title: string; detail: string }>;
 }) {
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-5 shadow-sm`}>
-      <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+    <div className={`${tw.rounded} min-w-0 border border-gray-200 bg-white p-4 shadow-sm sm:p-5`}>
+      <h3 className="break-words text-sm font-semibold text-gray-900">{title}</h3>
       {rows.length === 0 ? (
         <p className="mt-3 text-sm text-gray-500">{empty}</p>
       ) : (
         <ul className="mt-3 divide-y divide-gray-100">
           {rows.map((row) => (
-            <li key={`${row.title}-${row.detail}`} className="py-2.5">
-              <p className="text-sm font-medium text-gray-900">{row.title}</p>
-              <p className="text-xs text-gray-500">{row.detail}</p>
+            <li key={`${row.title}-${row.detail}`} className="min-w-0 py-2.5">
+              <p className="break-words text-sm font-medium text-gray-900">
+                {row.title}
+              </p>
+              <p className="break-words text-xs text-gray-500">{row.detail}</p>
             </li>
           ))}
         </ul>
@@ -100,13 +110,13 @@ export default function CustomerAnalyticsTab({
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="min-w-0 space-y-6">
+      <header className="min-w-0 space-y-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">
             Subscriber Analytics
           </h2>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 break-words text-sm text-gray-600">
             Live view of this subscriber: engagement, touchpoints,
             conversions, consent, audience membership, and lifecycle.
           </p>
@@ -115,21 +125,21 @@ export default function CustomerAnalyticsTab({
       </header>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="break-words rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
         </div>
       )}
       {result.warnings.map((warning) => (
         <div
           key={warning}
-          className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+          className="break-words rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
         >
           {warning}
         </div>
       ))}
 
       {!timeWindow.isTrendsView && (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid min-w-0 grid-cols-1 gap-4 *:min-w-0 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             icon={Gauge}
             label={SUBSCRIBER_CVM_LABELS.engagementScore}
@@ -199,7 +209,7 @@ export default function CustomerAnalyticsTab({
         </section>
       )}
 
-      <section className="grid gap-6 lg:grid-cols-2">
+      <section className="grid min-w-0 grid-cols-1 gap-6 *:min-w-0 lg:grid-cols-2">
         <SwitchableReportChart
           title="Activity Timeline"
           subtitle="Subscriber activity and event volume across the selected window"
@@ -296,7 +306,7 @@ export default function CustomerAnalyticsTab({
 
       {(result.conversionSeries.length > 0 ||
         result.engagementSeries.length > 0) && (
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="grid min-w-0 grid-cols-1 gap-6 *:min-w-0 lg:grid-cols-2">
           {result.engagementSeries.length > 0 && (
             <SwitchableReportChart
               title="Engagement Trend"
@@ -346,7 +356,7 @@ export default function CustomerAnalyticsTab({
         </section>
       )}
 
-      <section className="grid gap-6 lg:grid-cols-3">
+      <section className="grid min-w-0 grid-cols-1 gap-6 *:min-w-0 md:grid-cols-2 lg:grid-cols-3">
         <SideList
           title="Audience membership"
           empty="This subscriber is not in a reported segment for this window."

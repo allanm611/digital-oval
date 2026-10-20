@@ -55,7 +55,12 @@ export default function CustomerEventDetailsExpandedRow({
   useEffect(() => {
     let cancelled = false;
     const shouldFetch = Boolean(
-      event.offer?.id || event.campaign?.id || event.creative?.id,
+      (event.offer?.id && !event.offer.name) ||
+        (event.campaign?.id && !event.campaign.name) ||
+        (event.creative?.id &&
+          !event.creative.name &&
+          !event.creative.text_body &&
+          !event.creative.html_body),
     );
 
     if (!shouldFetch) {

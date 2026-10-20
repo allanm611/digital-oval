@@ -3,6 +3,7 @@ import type { OfferTrackingSource } from "../types/offerTrackingSource";
 import {
   findDefaultReward,
   isDefaultImmediateRewardConfigured,
+  isRewardConfigurationComplete,
 } from "./seedingRewardDefaults";
 import {
   findRewardsWithInvalidPriorities,
@@ -211,6 +212,25 @@ function applySharedLinkedBindingChecks(
   if (messageIssue) {
     errors.rewards = messageIssue.message;
   }
+
+  // A reward the user added must be finished or removed. An empty list is valid
+  // for every non-seeding offer type. The seeding default reward is checked
+  // separately and is not optional.
+  if (!errors.rewards) {
+    const unfinishedLinked = rewards.some((reward) => {
+      if (reward.is_default) return false;
+      const rules = reward.rules || [];
+      if (rules.length === 0) return true;
+      return rules.some(
+        (rule) =>
+          rule.enabled !== false && !isRewardConfigurationComplete(rule),
+      );
+    });
+    if (unfinishedLinked) {
+      errors.rewards =
+        "Finish or remove each reward. Every enabled configuration needs a provider and reward template. Rewards are optional when this offer should not grant one.";
+    }
+  }
 }
 
 export function validateOfferRewardTrackingMapping(
@@ -247,22 +267,22 @@ export function validateOfferRewardTrackingMapping(
     errors.tracking = `${first.sourceName}: ${first.reason} Priorities must be unique within each source (1–20).`;
   }
 
-  // Seeding reward (is_seeding_reward): tracking optional; default reward mandatory.
+  // SEEDING always has a default reward. Tracking stays optional.
   if (usesDefaultReward) {
     if (!findDefaultReward(rewards)) {
       errors.rewards =
-        "Seeding-reward offers require a default reward. It should be created automatically — refresh this step.";
+        "Seeding offers always include a default reward. It should be created automatically — refresh this step.";
     } else if (!isDefaultImmediateRewardConfigured(rewards)) {
       errors.rewards =
-        "Configure the default reward (provider and reward template). Tracking is not required for seeding-reward offer types.";
+        "Configure the default reward (provider and reward template). Tracking is not required for Seeding offers.";
     }
 
     applySharedLinkedBindingChecks(errors, rewards, trackingSources);
     return errors;
   }
 
-  // Optional tracking without default reward: if the user linked sources/configs,
-  // enforce consistent binding shape (rule-level when rules exist).
+  // Non-seeding types: tracking is required, rewards are optional.
+  // When the user does add a reward, it must be bound the same way.
   if (!requiresMapping) {
     applySharedLinkedBindingChecks(errors, rewards, trackingSources);
     return errors;
@@ -280,10 +300,8 @@ export function validateOfferRewardTrackingMapping(
     r.rules.filter((rule) => rule.enabled),
   );
 
-  if (enabledRules.length === 0) {
-    errors.rewards =
-      "At least one enabled reward configuration is required for this offer type.";
-  } else {
+  // Zero rewards is valid. Only enforce mapping when a configuration is enabled.
+  if (enabledRules.length > 0) {
     const unmappedReward = rewards.some((reward) => {
       if (reward.is_default) return false;
       const hasEnabled = reward.rules.some((r) => r.enabled);

@@ -6,6 +6,10 @@ import { color, tw } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { getSettingsTimezone } from "../../../shared/utils/settingsHelper";
+import {
+  schedulingFromReward,
+  splitScheduleDateTime,
+} from "../utils/manualRewardPreview";
 
 interface ApplyRewardStepProps {
   data: ManualRewardData;
@@ -21,31 +25,44 @@ export default function ApplyRewardStep({
   const { t } = useLanguage();
   const [error, setError] = useState("");
 
-  // Convert manual reward data to generic scheduling format
   const schedulingData: SchedulingData = {
-    type: data.applyType === "now" ? "immediate" : "scheduled",
-    start_date: data.applyDate
-      ? `${data.applyDate}T${data.applyTime || "00:00"}`
-      : undefined,
-    time_zone: getSettingsTimezone(),
+    ...schedulingFromReward(data),
+    time_zone:
+      data.schedule?.time_zone ||
+      data.scheduleTimeZone ||
+      getSettingsTimezone(),
   };
 
   const handleSchedulingChange = (scheduling: SchedulingData) => {
-    // Convert back from generic format to manual reward format
-    if (scheduling.start_date) {
-      const [date, time] = scheduling.start_date.split("T");
-      onUpdate({
-        applyType: scheduling.type === "immediate" ? "now" : "later",
-        applyDate: date,
-        applyTime: time || "00:00",
-      });
-    } else {
-      onUpdate({
-        applyType: "now",
-        applyDate: undefined,
-        applyTime: undefined,
-      });
-    }
+    const parsed = splitScheduleDateTime(
+      scheduling.start_date ? String(scheduling.start_date) : undefined,
+      scheduling.start_time ? String(scheduling.start_time) : undefined,
+    );
+    const notifications = Array.isArray(scheduling.notification_preferences)
+      ? scheduling.notification_preferences
+      : data.notificationPreferences;
+
+    onUpdate({
+      schedule: {
+        ...scheduling,
+        start_date: parsed.date ? `${parsed.date}T${parsed.time}` : scheduling.start_date,
+        start_time: parsed.time,
+        notification_preferences: notifications,
+      },
+      scheduleTimeZone: scheduling.time_zone,
+      timeZoneOffset:
+        typeof scheduling.time_zone_offset === "string"
+          ? scheduling.time_zone_offset
+          : data.timeZoneOffset,
+      notificationPreferences: notifications,
+      ...(parsed.date && parsed.time
+        ? {
+            applyType: "later" as const,
+            applyDate: parsed.date,
+            applyTime: parsed.time,
+          }
+        : {}),
+    });
   };
 
   const getRewardTypeLabel = () => {

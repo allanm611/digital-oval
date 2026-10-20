@@ -4,6 +4,7 @@ import { Edit, Eye, Trash2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import ActivateDeactivateButton from "../../../shared/components/ui/ActivateDeactivateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
 import { extractBackendError } from "../../../shared/utils/errorHandler";
@@ -18,14 +19,14 @@ import {
 
 function statusLabel(config: AiModelConfiguration | undefined): string {
   if (!config) return "Not configured";
+  if (!config.is_active) return `Inactive · ${config.model || "no model"}`;
   if (config.source === "environment") {
     return config.is_default
       ? `Server default · ${config.model}`
       : `Server env · ${config.model}`;
   }
-  if (!config.is_active) return `Inactive · ${config.model || "no model"}`;
   if (config.is_default) return `Default · ${config.model}`;
-  return `Configured · ${config.model}`;
+  return `Active · ${config.model}`;
 }
 
 function statusTone(config: AiModelConfiguration | undefined): string {
@@ -42,6 +43,7 @@ export default function AiModelConfigurationHubPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{
     providerId: AiModelConfiguration["provider_id"];
     name: string;
@@ -88,6 +90,40 @@ export default function AiModelConfigurationHubPage() {
     }
   };
 
+  const handleToggleActive = async (config: AiModelConfiguration) => {
+    const nextActive = !config.is_active;
+    setTogglingId(config.provider_id);
+    setConfigs((prev) =>
+      prev.map((item) =>
+        item.provider_id === config.provider_id
+          ? { ...item, is_active: nextActive, is_default: nextActive ? item.is_default : false }
+          : item,
+      ),
+    );
+    try {
+      const saved = await aiModelConfigurationService.setActive(config, nextActive);
+      setConfigs((prev) =>
+        prev.map((item) => (item.provider_id === saved.provider_id ? saved : item)),
+      );
+      success(
+        nextActive ? "Activated" : "Deactivated",
+        `${config.name} is ${nextActive ? "active for message generation" : "inactive and hidden from Generate"}`,
+      );
+    } catch (err) {
+      setConfigs((prev) =>
+        prev.map((item) =>
+          item.provider_id === config.provider_id ? config : item,
+        ),
+      );
+      showError(
+        "Error",
+        extractBackendError(err, "Failed to update provider status"),
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <BackButton
@@ -99,8 +135,7 @@ export default function AiModelConfigurationHubPage() {
 
       <p className={`text-sm ${tw.textPrimary}`}>
         Select an AI provider to configure credentials and generation defaults.
-        Saved models appear when generating offer message content. View, Edit, and
-        Delete appear after a provider is saved.
+        Saved models appear when generating offer message content.
       </p>
 
       {loadError && !loading && (
@@ -168,13 +203,27 @@ export default function AiModelConfigurationHubPage() {
                       {statusLabel(config)}
                     </p>
                   </div>
-                  {isConfigured ? (
-                    <div className="flex items-center gap-1 shrink-0">
+                  {isConfigured && config ? (
+                    <div
+                      className="flex items-center gap-1 shrink-0 h-6"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <ActivateDeactivateButton
+                        variant="icon"
+                        isActive={config.is_active !== false}
+                        isLoading={togglingId === provider.id}
+                        onToggle={() => void handleToggleActive(config)}
+                        title={
+                          config.is_active !== false
+                            ? `Deactivate ${provider.name}`
+                            : `Activate ${provider.name}`
+                        }
+                      />
                       <button
                         type="button"
                         className={`p-1 icon-edit ${tw.rounded} transition-all duration-200`}
-                        title="View configuration"
-                        aria-label={`View ${provider.name} configuration`}
+                        title="View details"
+                        aria-label={`View ${provider.name} details`}
                         onClick={(event) => {
                           event.stopPropagation();
                           navigate(aiModelViewPath(provider.id));

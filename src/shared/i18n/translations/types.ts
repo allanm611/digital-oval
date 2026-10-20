@@ -3096,10 +3096,14 @@ export interface Translations {
       customer360Profile: string;
       customers: string;
       customerIdentity: string;
+      loyaltyPrograms: string;
       userManagement: string;
       allUsers: string;
       accessControl: string;
       reportsAndAnalytics: string;
+      reports: string;
+      analytics: string;
+      analyse: string;
       overallDashboardPerformance: string;
       customerProfileReports: string;
       campaignReports: string;

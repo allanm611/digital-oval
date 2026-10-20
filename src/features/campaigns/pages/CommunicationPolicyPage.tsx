@@ -338,13 +338,6 @@ export default function CommunicationPolicyPage() {
       },
     },
     {
-      id: "type_code",
-      label: t.communicationPolicy.type,
-      visible: true,
-      filterConfig: { type: "select", options: ["EMAIL", "SMS", "PUSH", "INAPP"] },
-      render: (value, policy) => (policy as any).type_name || value,
-    },
-    {
       id: "is_active",
       label: t.communicationPolicy.status,
       visible: true,

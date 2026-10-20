@@ -12,8 +12,11 @@ import Checkbox from "./ui/Checkbox";
 import Radio from "./ui/Radio";
 import { getSettingsTimezone } from "../utils/settingsHelper";
 import { timezoneService } from "../../features/configurations/services/timezoneService";
-import { formatDateWithTimezone } from "../services/dateService";
 import type { TimeZone } from "../../features/configurations/types/timezone";
+import {
+  convertWallClockBetweenOffsets,
+  shiftClockTime,
+} from "../utils/wallClockTimezone";
 
 interface NotificationPreference {
   stage: string;
@@ -53,28 +56,51 @@ export default function SchedulingComponent({
   showPreviewButton = true,
   onPreviewSchedule,
 }: SchedulingComponentProps) {
-  const [endType, setEndType] = useState<"never" | "at">("never");
+  const [endType, setEndType] = useState<"never" | "at">(
+    scheduling?.end_date ? "at" : "never",
+  );
   const [startType, setStartType] = useState<"datetime" | "previous">(
-    "datetime",
+    scheduling?.start_type === "previous" ? "previous" : "datetime",
   );
 
-  const [recurrencePattern, setRecurrencePattern] = useState("Weeks");
-  const [recurrenceInterval, setRecurrenceInterval] = useState(1);
+  const [recurrencePattern, setRecurrencePattern] = useState(
+    scheduling?.recurrence_pattern === "daily"
+      ? "Days"
+      : scheduling?.recurrence_pattern === "monthly"
+        ? "Months"
+        : "Weeks",
+  );
+  const [recurrenceInterval, setRecurrenceInterval] = useState(
+    typeof scheduling?.recurrence_interval === "number"
+      ? scheduling.recurrence_interval
+      : 1,
+  );
   const [monthlyRule, setMonthlyRule] = useState<
     "first_day" | "last_day" | "day_of_month"
   >("first_day");
   const [monthlyDayOfMonth, setMonthlyDayOfMonth] = useState(1);
-  const [defaultStartTime, setDefaultStartTime] = useState("08:00");
-  const [selectedDays, setSelectedDays] = useState<number[]>([
-    1, 2, 3, 4, 5, 6,
-  ]); // Monday to Saturday
+  const [defaultStartTime, setDefaultStartTime] = useState(
+    (typeof scheduling?.default_start_time === "string" &&
+      scheduling.default_start_time) ||
+      (typeof scheduling?.start_time === "string" && scheduling.start_time) ||
+      "08:00",
+  );
+  const [selectedDays, setSelectedDays] = useState<number[]>(
+    Array.isArray(scheduling?.selected_days) && scheduling.selected_days.length > 0
+      ? scheduling.selected_days
+      : [1, 2, 3, 4, 5, 6],
+  );
   const [setSpecificStartTime, setSetSpecificStartTime] = useState(false);
   const [specificDayStartTimes, setSpecificDayStartTimes] = useState<
     Array<{ id: number; day: number; time: string }>
   >([{ id: 1, day: 1, time: "08:00" }]);
   const [startDeliveryOnCompletion, setStartDeliveryOnCompletion] =
     useState(false);
-  const [targetRenderTime, setTargetRenderTime] = useState("Real Time");
+  const [targetRenderTime, setTargetRenderTime] = useState(
+    typeof scheduling?.target_render_time === "string"
+      ? scheduling.target_render_time
+      : "Real Time",
+  );
   const [startBroadcastBefore, setStartBroadcastBefore] = useState("Before");
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
   const [broadcastStartTime, setBroadcastStartTime] = useState("12:00");
@@ -90,6 +116,10 @@ export default function SchedulingComponent({
 
   // Prevent re-initialization loop
   const initializedRef = useRef(false);
+  const schedulingRef = useRef(scheduling);
+  schedulingRef.current = scheduling;
+  const onSchedulingChangeRef = useRef(onSchedulingChange);
+  onSchedulingChangeRef.current = onSchedulingChange;
 
   // Fetch timezones from API
   useEffect(() => {
@@ -118,32 +148,55 @@ export default function SchedulingComponent({
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    if (!scheduling || !scheduling.start_date || !scheduling.time_zone) {
+    const current = schedulingRef.current;
+    if (!current || !current.start_date || !current.time_zone) {
       const settingsTimezone = getSettingsTimezone();
-      const defaultScheduling = {
-        ...(scheduling || {}),
-        type: (scheduling && scheduling.type) || "scheduled",
-        time_zone: (scheduling && scheduling.time_zone) || settingsTimezone,
-        start_date: (scheduling && scheduling.start_date) || new Date().toISOString().split("T")[0],
-        end_date: (scheduling && scheduling.end_date) || "",
-      };
-      onSchedulingChange(defaultScheduling);
+      const time =
+        (typeof current?.start_time === "string" && current.start_time.slice(0, 5)) ||
+        "08:00";
+      const datePart =
+        current?.start_date?.split("T")[0] ||
+        new Date().toISOString().split("T")[0];
+      const startDate = current?.start_date?.includes("T")
+        ? current.start_date
+        : `${datePart}T${time}`;
+      updateScheduling({
+        type: current?.type || "scheduled",
+        time_zone: current?.time_zone || settingsTimezone,
+        start_date: startDate,
+        start_time: startDate.split("T")[1]?.slice(0, 5) || time,
+        end_date: current?.end_date || "",
+      });
     }
   }, []);
 
-  // Ensure timezone is set from settings if missing (after timezones load)
+  // Stamp the IANA zone and its UTC offset once the timezone catalog loads.
   useEffect(() => {
-    if (scheduling && !scheduling.time_zone && timezoneList.length > 0) {
-      const settingsTimezone = getSettingsTimezone();
-      updateScheduling({ time_zone: settingsTimezone });
+    if (timezoneList.length === 0) return;
+    const current = schedulingRef.current;
+    const zone = current?.time_zone || getSettingsTimezone();
+    const selected = timezoneList.find((tz) => tz.value === zone);
+    if (!selected?.utc_offset) return;
+    if (
+      current?.time_zone === zone &&
+      current?.time_zone_offset === selected.utc_offset
+    ) {
+      return;
     }
-  }, [timezoneList, scheduling, onSchedulingChange]);
+    updateScheduling({
+      time_zone: zone,
+      time_zone_offset: selected.utc_offset,
+    });
+  }, [timezoneList]);
 
-  // Sync notification preferences with scheduling
+  const notificationsReadyRef = useRef(false);
+  // Push notification edits after the first paint so a saved selection is not cleared.
   useEffect(() => {
-    if (scheduling && notificationPreferences.length > 0) {
-      updateScheduling({ notification_preferences: notificationPreferences });
+    if (!notificationsReadyRef.current) {
+      notificationsReadyRef.current = true;
+      return;
     }
+    updateScheduling({ notification_preferences: notificationPreferences });
   }, [notificationPreferences]);
 
   useEffect(() => {
@@ -160,6 +213,9 @@ export default function SchedulingComponent({
       recurrence_pattern: mappedPattern,
       recurrence_interval: recurrenceInterval,
       selected_days: selectedDays,
+      default_start_time: defaultStartTime,
+      start_type: startType,
+      target_render_time: targetRenderTime,
       monthly_rule:
         mappedPattern === "monthly" && setSpecificStartTime
           ? monthlyRule
@@ -189,6 +245,9 @@ export default function SchedulingComponent({
     monthlyDayOfMonth,
     setSpecificStartTime,
     specificDayStartTimes,
+    defaultStartTime,
+    startType,
+    targetRenderTime,
   ]);
 
   useEffect(() => {
@@ -214,11 +273,12 @@ export default function SchedulingComponent({
       .map((day) => ({ label: day.label, value: day.value }));
   };
 
-  const updateScheduling = (updates: Partial<SchedulingData>) => {
-    if (!scheduling) return;
-    const newScheduling = { ...scheduling, ...updates };
-    onSchedulingChange(newScheduling);
-  };
+  function updateScheduling(updates: Partial<SchedulingData>) {
+    const base = schedulingRef.current || {};
+    const newScheduling = { ...base, ...updates };
+    schedulingRef.current = newScheduling;
+    onSchedulingChangeRef.current(newScheduling);
+  }
 
   const toggleDayOfWeek = (day: number) => {
     setSelectedDays((prev) =>
@@ -339,14 +399,20 @@ export default function SchedulingComponent({
                 name="startType"
                 value="datetime"
                 checked={startType === "datetime"}
-                onChange={() => setStartType("datetime")}
+                onChange={() => {
+                  setStartType("datetime");
+                  updateScheduling({ start_type: "datetime" });
+                }}
                 label="Start date/time"
               />
               <Radio
                 name="startType"
                 value="previous"
                 checked={startType === "previous"}
-                onChange={() => setStartType("previous")}
+                onChange={() => {
+                  setStartType("previous");
+                  updateScheduling({ start_type: "previous" });
+                }}
                 label="Starts when the previous broadcast is aborted"
               />
             </div>
@@ -366,8 +432,16 @@ export default function SchedulingComponent({
                   }
                   onChange={(value) => {
                     if (value) {
+                      const current = schedulingRef.current;
+                      const time =
+                        (typeof current?.start_time === "string" &&
+                          current.start_time.slice(0, 5)) ||
+                        current?.start_date?.split("T")[1]?.slice(0, 5) ||
+                        defaultStartTime ||
+                        "08:00";
                       updateScheduling({
-                        start_date: String(value) + "T08:00",
+                        start_date: `${String(value)}T${time}`,
+                        start_time: time,
                       });
                     }
                   }}
@@ -378,7 +452,11 @@ export default function SchedulingComponent({
                 <Input
                   type="time"
                   label="Start Time"
-                  value={scheduling.start_time || "08:00"}
+                  value={
+                    scheduling.start_time ||
+                    scheduling.start_date?.split("T")[1]?.slice(0, 5) ||
+                    "08:00"
+                  }
                   onChange={(value) => {
                     if (value && scheduling.start_date) {
                       updateScheduling({
@@ -486,38 +564,68 @@ export default function SchedulingComponent({
                   label="Time Zone"
                   value={scheduling?.time_zone || getSettingsTimezone()}
                   onChange={(value) => {
-                    if (value) {
-                      const selectedTz = timezoneList.find(
-                        (tz) => tz.value === value
+                    if (!value) return;
+                    const nextTz = timezoneList.find((tz) => tz.value === value);
+                    const current = schedulingRef.current;
+                    const previousTz = timezoneList.find(
+                      (tz) => tz.value === current?.time_zone,
+                    );
+                    const updatedData: Partial<SchedulingData> = {
+                      time_zone: value as string,
+                      time_zone_offset: nextTz?.utc_offset,
+                    };
+
+                    const canShift =
+                      previousTz?.utc_offset &&
+                      nextTz?.utc_offset &&
+                      previousTz.utc_offset !== nextTz.utc_offset;
+
+                    if (canShift && current?.start_date) {
+                      const wall = current.start_date.includes("T")
+                        ? current.start_date
+                        : `${current.start_date}T${current.start_time || defaultStartTime || "08:00"}`;
+                      const converted = convertWallClockBetweenOffsets(
+                        wall,
+                        previousTz.utc_offset,
+                        nextTz.utc_offset,
                       );
-                      const updatedData: Partial<SchedulingData> = {
-                        time_zone: value as string,
-                      };
-
-                      if (
-                        selectedTz?.utc_offset &&
-                        scheduling?.start_date
-                      ) {
-                        updatedData.start_date = formatDateWithTimezone(
-                          scheduling.start_date,
-                          selectedTz.utc_offset,
-                          { includeTime: true }
-                        );
-                      }
-
-                      if (
-                        selectedTz?.utc_offset &&
-                        scheduling?.end_date
-                      ) {
-                        updatedData.end_date = formatDateWithTimezone(
-                          scheduling.end_date,
-                          selectedTz.utc_offset,
-                          { includeTime: true }
-                        );
-                      }
-
-                      updateScheduling(updatedData);
+                      updatedData.start_date = converted;
+                      updatedData.start_time = converted.split("T")[1];
                     }
+
+                    if (canShift && current?.end_date) {
+                      updatedData.end_date = convertWallClockBetweenOffsets(
+                        String(current.end_date),
+                        previousTz.utc_offset,
+                        nextTz.utc_offset,
+                      );
+                    }
+
+                    if (canShift) {
+                      const anchor =
+                        (updatedData.start_date || current?.start_date || "2026-01-01")
+                          .split("T")[0];
+                      const shiftedDefault = shiftClockTime(
+                        defaultStartTime,
+                        anchor,
+                        previousTz.utc_offset,
+                        nextTz.utc_offset,
+                      );
+                      setDefaultStartTime(shiftedDefault);
+                      setSpecificDayStartTimes((rows) =>
+                        rows.map((row) => ({
+                          ...row,
+                          time: shiftClockTime(
+                            row.time,
+                            anchor,
+                            previousTz.utc_offset,
+                            nextTz.utc_offset,
+                          ),
+                        })),
+                      );
+                    }
+
+                    updateScheduling(updatedData);
                   }}
                   options={
                     Array.isArray(timezoneList) && timezoneList.length > 0

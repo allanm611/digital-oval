@@ -10,6 +10,8 @@ import {
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
+import { formatTaskStatus } from "../../../shared/navigation/pageTask";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import {
   ArrowLeft,
@@ -234,6 +236,10 @@ export default function OfferDetailsPage() {
   };
 
   const [offer, setOffer] = useState<Offer | null>(null);
+  usePageTask({
+    subject: offer?.name,
+    status: formatTaskStatus(offer?.status),
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);

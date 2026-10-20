@@ -30,6 +30,7 @@ import {
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
 import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
 import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
 import {
   CreateOfferRequest,
@@ -97,13 +98,9 @@ import {
 import {
   demoteImmediateDefaultRewards,
   ensureImmediateDefaultReward,
-  isDefaultImmediateRewardConfigured,
 } from "../utils/seedingRewardDefaults";
 import { validateOfferRewardTrackingMapping } from "../utils/validateOfferRewardTracking";
-import {
-  findRewardsWithInvalidPriorities,
-  findTrackingSourcesWithInvalidPriorities,
-} from "../utils/trackingRulePriority";
+import { findTrackingSourcesWithInvalidPriorities } from "../utils/trackingRulePriority";
 import {
   formatRouteSelectLabel,
   routeSelectOptionsForOfferChannel,
@@ -192,7 +189,7 @@ interface StepProps {
   rewards: OfferReward[];
   setRewards: (rewards: OfferReward[]) => void;
   requiresTrackingRewardMapping?: boolean;
-  /** Seeding reward (is_seeding_reward): tracking optional; default reward always required */
+  /** SEEDING (or is_seeding_reward): tracking optional; default reward always required */
   usesDefaultReward?: boolean;
   /** Selected offer type display name for seeding-reward CTAs */
   offerTypeName?: string | null;
@@ -242,7 +239,7 @@ const steps: Step[] = [
   {
     id: 5,
     name: "Rewards",
-    description: "Reward configuration",
+    description: "Optional, except Seeding",
     icon: DollarSign,
   },
   {
@@ -940,15 +937,7 @@ function OfferRewardStepWrapper({
         <p className="text-sm text-gray-600">
           Configure rewards and incentives for your offer
         </p>
-        {usesDefaultReward ? (
-          <p className="text-sm text-amber-800 mt-2">
-            
-          </p>
-        ) : requiresTrackingRewardMapping ? (
-          <p className="text-sm text-amber-800 mt-2">
-            
-          </p>
-        ) : null}
+        
         {validationErrors?.rewards ? (
           <p className="text-sm text-red-600 mt-2">{validationErrors.rewards}</p>
         ) : null}
@@ -1637,25 +1626,17 @@ function ReviewStep({
                     ? true
                     : trackingSources.length > 0,
                 },
-                ...(usesDefaultReward
-                  ? [
-                      {
-                        label: "Default reward configured",
-                        complete: isDefaultImmediateRewardConfigured(rewards),
-                      },
-                    ]
-                  : requiresTrackingRewardMapping
-                    ? [
-                        {
-                          label: "Rewards mapped to tracking sources",
-                          complete: !validateOfferRewardTrackingMapping(
-                            rewards,
-                            trackingSources,
-                            true,
-                          ).rewards,
-                        },
-                      ]
-                    : []),
+                {
+                  label: usesDefaultReward
+                    ? "Default reward configured"
+                    : "Rewards (optional)",
+                  complete: !validateOfferRewardTrackingMapping(
+                    rewards,
+                    trackingSources,
+                    requiresTrackingRewardMapping,
+                    { usesDefaultReward },
+                  ).rewards,
+                },
               ].map((item) => (
                 <li key={item.label} className="flex items-center gap-2">
                   <span
@@ -1686,11 +1667,14 @@ function ReviewStep({
 
 interface CreateOfferPageProps {
   onSuccess?: (offerId: number) => void;
+  /** Close the host (campaign mapping modal) without leaving that page. */
+  onDismiss?: () => void;
   offerId?: number; // For modal-based editing
 }
 
 export default function CreateOfferPage({
   onSuccess,
+  onDismiss,
   offerId: propOfferId,
 }: CreateOfferPageProps = {}) {
   const navigate = useNavigate();
@@ -1705,6 +1689,10 @@ export default function CreateOfferPage({
   const returnUrlParam = searchParams.get("returnUrl");
   const returnUrl = returnUrlParam ? decodeURIComponent(returnUrlParam) : null;
   const duplicateIdParam = searchParams.get("duplicateId");
+  const onSuccessRef = useRef(onSuccess);
+  const onDismissRef = useRef(onDismiss);
+  onSuccessRef.current = onSuccess;
+  onDismissRef.current = onDismiss;
 
   // Extract the path to return to (with step parameter preserved)
   const getBackButtonFallback = (): string => {
@@ -1748,6 +1736,21 @@ export default function CreateOfferPage({
     max_usage_per_customer: 1,
     eligibility_rules: {},
   });
+
+  const activeOfferStep = steps.find((step) => step.id === currentStep);
+  usePageTask(
+    onDismiss || propOfferId
+      ? null
+      : {
+          task: isDuplicateMode
+            ? "Duplicate Offer"
+            : isEditMode
+              ? "Edit Offer"
+              : "Create Offer",
+          subject: formData.name,
+          step: activeOfferStep?.name,
+        },
+  );
 
   const [creatives, setCreatives] = useState<LocalOfferCreative[]>([]);
   const [trackingSources, setTrackingSources] = useState<OfferTrackingSource[]>([]);
@@ -2214,8 +2217,12 @@ export default function CreateOfferPage({
       }
     } catch (error) {
       console.error("Failed to load offer data", error);
-      // Failed to load offer data
-      navigate("/dashboard/offers");
+      // Stay on the campaign mapping page when this wizard is hosted there.
+      if (onDismissRef.current) {
+        onDismissRef.current();
+      } else {
+        navigate("/dashboard/offers");
+      }
     } finally {
       setIsLoadingOffer(false);
     }
@@ -2516,46 +2523,13 @@ export default function CreateOfferPage({
         }
         if (!requiresTrackingRewardMapping) return true; // seeding reward: optional
         return trackingSources.some((s) => s.enabled !== false);
-      case 5: // Rewards step
-        if (findRewardsWithInvalidPriorities(rewards).length > 0) {
-          return false;
-        }
-        if (usesDefaultReward) {
-          return isDefaultImmediateRewardConfigured(rewards);
-        }
-        if (!requiresTrackingRewardMapping) return true;
-        {
-          const activeSourceIds = new Set(
-            trackingSources
-              .filter((s) => s.enabled !== false)
-              .map((s) => s.id),
-          );
-          const enabledRules = rewards.flatMap((r) =>
-            r.rules.filter((rule) => rule.enabled),
-          );
-          if (enabledRules.length === 0) return false;
-          return enabledRules.every((rule) => {
-            const parent = rewards.find((r) =>
-              r.rules.some((rr) => rr.id === rule.id),
-            );
-            if (parent?.is_default) return true;
-            const sourceId =
-              parent?.tracking_source_id?.trim() ||
-              rule.tracking_source_id?.trim();
-            if (!sourceId || !activeSourceIds.has(sourceId)) return false;
-            const source = trackingSources.find((s) => s.id === sourceId);
-            const enabledTrackingRules = (source?.rules || []).filter(
-              (r) => r.enabled !== false,
-            );
-            // Rules are optional: source-level OK when the source has none.
-            if (enabledTrackingRules.length === 0) {
-              return !rule.tracking_rule_id?.trim();
-            }
-            const trackingRuleId = rule.tracking_rule_id?.trim();
-            if (!trackingRuleId) return false;
-            return enabledTrackingRules.some((r) => r.id === trackingRuleId);
-          });
-        }
+      case 5: // Rewards step — required only for SEEDING's default reward
+        return !validateOfferRewardTrackingMapping(
+          rewards,
+          trackingSources,
+          requiresTrackingRewardMapping,
+          { usesDefaultReward },
+        ).rewards;
       case 6: // Review step
         // Validate all required fields are filled
         const isReviewValid =
@@ -3071,7 +3045,10 @@ export default function CreateOfferPage({
               : t.offers.createWithCreativeError,
             errorMessage,
           );
-          navigate("/dashboard/offers");
+          // The campaign mapping modal must stay open so the user can retry.
+          if (!onSuccessRef.current) {
+            navigate("/dashboard/offers");
+          }
           return;
         }
       }
@@ -3079,55 +3056,67 @@ export default function CreateOfferPage({
       // Show success message
       showToast(isEditMode ? t.offers.updateSuccess : t.offers.createSuccess);
 
-      // Call onSuccess callback if provided (modal mode) and not in edit mode
-      if (offerId && onSuccess && !isEditMode) {
-        onSuccess(offerId);
-        return;
-      }
-
-      // Check if we should return to campaign creation flow
-      if (returnToCampaign && returnUrl && !isEditMode) {
-        // Store the created offer ID in sessionStorage for campaign flow tracking
-        if (offerId) {
+      const rememberCreatedOffer = (savedId: number) => {
+        try {
           const campaignFlowOffersStr = sessionStorage.getItem(
             "campaignFlowCreatedOffers",
           );
-          const campaignFlowOfferIds: number[] = campaignFlowOffersStr
+          const parsed: unknown = campaignFlowOffersStr
             ? JSON.parse(campaignFlowOffersStr)
             : [];
-          if (!campaignFlowOfferIds.includes(offerId)) {
-            campaignFlowOfferIds.push(offerId);
+          const campaignFlowOfferIds = Array.isArray(parsed)
+            ? parsed.filter((value): value is number => typeof value === "number")
+            : [];
+          if (!campaignFlowOfferIds.includes(savedId)) {
+            campaignFlowOfferIds.push(savedId);
             sessionStorage.setItem(
               "campaignFlowCreatedOffers",
               JSON.stringify(campaignFlowOfferIds),
             );
           }
+        } catch {
+          sessionStorage.setItem(
+            "campaignFlowCreatedOffers",
+            JSON.stringify([savedId]),
+          );
         }
+      };
 
-        // Navigate back to campaign creation at step 3
-        const url = new URL(returnUrl);
-        // Ensure we're on step 3
-        url.searchParams.set("step", "3");
-        url.searchParams.set("returnFromOfferCreate", "true");
-
-        // Clear localStorage form data after successful creation
+      const clearOfferWizardStorage = () => {
         clearPersistedFormData("offer_form_data");
         clearPersistedFormData("offer_creatives");
         clearPersistedFormData("offer_tracking_sources");
         clearPersistedFormData("offer_rewards");
         clearPersistedFormData("offer_products");
+      };
 
-        navigate(url.pathname + url.search);
-      } else {
-        // Clear localStorage form data after successful creation
-        clearPersistedFormData("offer_form_data");
-        clearPersistedFormData("offer_creatives");
-        clearPersistedFormData("offer_tracking_sources");
-        clearPersistedFormData("offer_rewards");
-        clearPersistedFormData("offer_products");
-
-        navigate("/dashboard/offers");
+      // Opened from Map Segments to Offers: close the editor and stay there.
+      if (offerId && onSuccessRef.current) {
+        if (!isEditMode) {
+          rememberCreatedOffer(offerId);
+        }
+        clearOfferWizardStorage();
+        onSuccessRef.current(offerId);
+        return;
       }
+
+      // Full-page editor launched with a campaign return URL (create or edit).
+      if (returnToCampaign && returnUrl) {
+        if (!isEditMode && offerId) {
+          rememberCreatedOffer(offerId);
+        }
+        clearOfferWizardStorage();
+        const url = new URL(returnUrl);
+        url.searchParams.set("step", "3");
+        if (!isEditMode) {
+          url.searchParams.set("returnFromOfferCreate", "true");
+        }
+        navigate(url.pathname + url.search);
+        return;
+      }
+
+      clearOfferWizardStorage();
+      navigate("/dashboard/offers");
     } catch (err: unknown) {
       // Create offer error
 
@@ -3304,9 +3293,27 @@ export default function CreateOfferPage({
     communicationChannels,
   ]);
 
-  const handleCancel = useCallback(() => {
+  const leaveOfferWizard = useCallback(() => {
+    clearPersistedFormData("offer_form_data");
+    clearPersistedFormData("offer_creatives");
+    clearPersistedFormData("offer_products");
+    if (onDismissRef.current) {
+      onDismissRef.current();
+      return;
+    }
+    if (returnToCampaign && returnUrl) {
+      try {
+        const url = new URL(returnUrl);
+        navigate(url.pathname + url.search);
+        return;
+      } catch {
+        // Invalid return URL falls through to the offers list.
+      }
+    }
     navigate("/dashboard/offers");
-  }, [navigate]);
+  }, [navigate, returnToCampaign, returnUrl]);
+
+  const handleCancel = leaveOfferWizard;
 
   const stepProps = useMemo(
     () => ({
@@ -3393,10 +3400,7 @@ export default function CreateOfferPage({
   }
 
   const handleCancelOffer = () => {
-    clearPersistedFormData("offer_form_data");
-    clearPersistedFormData("offer_creatives");
-    clearPersistedFormData("offer_products");
-    navigate("/dashboard/offers");
+    leaveOfferWizard();
   };
 
   const getSubmitButtonText = () => {

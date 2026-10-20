@@ -74,8 +74,8 @@ export interface OfferReward {
   /** Legacy catalog key; retained for API compatibility */
   type: "default" | "sms_night" | "custom" | string;
   /**
-   * Seeding-reward offers carry a tracking-independent default reward.
-   * Default rewards always exist when is_seeding_reward is true and do not require tracking.
+   * Seeding offers (offer type SEEDING, or is_seeding_reward) always carry a
+   * tracking-independent default reward. Every other offer type may omit rewards.
    */
   is_default?: boolean;
   /**

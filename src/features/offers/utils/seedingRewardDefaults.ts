@@ -203,15 +203,21 @@ export function ensureImmediateDefaultReward(
 /** @deprecated Use ensureImmediateDefaultReward */
 export const ensureSeedingDefaultReward = ensureImmediateDefaultReward;
 
-/** When leaving a seeding-reward type, keep configured grants but drop the default flag. */
+/**
+ * When leaving a seeding type, drop an unconfigured default reward so it does
+ * not block offers whose rewards are optional. A default the user already
+ * configured is kept as a normal reward (they still need to bind tracking).
+ */
 export function demoteImmediateDefaultRewards(
   rewards: OfferReward[],
 ): { rewards: OfferReward[]; changed: boolean } {
   let changed = false;
-  const next = rewards.map((reward) => {
-    if (!reward.is_default) return reward;
+  const next = rewards.flatMap((reward) => {
+    if (!reward.is_default) return [reward];
     changed = true;
-    return { ...reward, is_default: false };
+    const configured = (reward.rules || []).some(isRewardConfigurationComplete);
+    if (!configured) return [];
+    return [{ ...reward, is_default: false }];
   });
   return { rewards: changed ? next : rewards, changed };
 }

@@ -47,11 +47,17 @@ import {
 } from "../utils/reportComparison";
 
 import { tw } from "../../../shared/utils/utils";
-import Input from "../../../shared/components/ui/Input";
 import { offerService } from "../../offers/services/offerService";
 import { offerReportsService } from "../services/offerReportsService";
 import { useReportTimeWindow } from "../hooks/useReportTimeWindow";
+import { useReportTableFilters } from "../hooks/useReportTableFilters";
 import ReportTrendsToolbar from "../components/ReportTrendsToolbar";
+import ReportTableFilterBar from "../components/ReportTableFilterBar";
+import {
+  firstNameContains,
+  matchReportFilters,
+  OFFER_REPORT_FILTER_FIELDS,
+} from "../utils/reportTableFilters";
 import SwitchableReportChart from "../components/SwitchableReportChart";
 import { useToast } from "../../../contexts/ToastContext";
 import type { Offer } from "../../offers/types/offer";
@@ -465,6 +471,7 @@ export default function OfferReportsPage() {
   const navigate = useNavigate();
   const [tableQuery, setTableQuery] = useState("");
   const [debouncedTableQuery, setDebouncedTableQuery] = useState("");
+  const tableFilters = useReportTableFilters(OFFER_REPORT_FILTER_FIELDS);
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const timeWindow = useReportTimeWindow({
     overviewPreset: "monthly",
@@ -666,11 +673,15 @@ export default function OfferReportsPage() {
   }, [useDummyData]);
 
   useEffect(() => {
+    setTableQuery(firstNameContains(tableFilters.activeRules, "offerName"));
+  }, [tableFilters.activeRules]);
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedTableQuery(tableQuery);
     }, 300);
     return () => clearTimeout(timer);
-  }, [tableQuery]);
+  }, [tableQuery, tableFilters.serializedFilters]);
 
   const handleRefreshSnapshots = async () => {
     try {
@@ -804,6 +815,7 @@ export default function OfferReportsPage() {
             page: tablePage,
             pageSize: tablePageSize,
             search: debouncedTableQuery.trim() || undefined,
+            filters: tableFilters.serializedFilters || undefined,
             status: statusFilter,
             sortBy: "conversions",
             sortOrder: "desc",
@@ -843,6 +855,7 @@ export default function OfferReportsPage() {
     tablePage,
     tablePageSize,
     debouncedTableQuery,
+    tableFilters.serializedFilters,
     statusFilter,
     dataEpoch,
   ]);
@@ -1048,7 +1061,6 @@ export default function OfferReportsPage() {
   const filteredRows = useMemo(() => {
     if (!useDummyData) return offerTableRows;
 
-    const query = tableQuery.trim().toLowerCase();
     const startDate = parseISODate(overviewWindow.bounds.start);
     const endDate = parseISODate(overviewWindow.bounds.end);
     const startMs = startDate?.getTime() ?? 0;
@@ -1057,17 +1069,19 @@ export default function OfferReportsPage() {
     return offerTableRows.filter((row) => {
       const matchesStatus =
         statusFilter === "All Statuses" ? true : row.status === statusFilter;
-      const matchesQuery = query
-        ? row.offerName.toLowerCase().includes(query)
-        : true;
+      const matchesFilters = matchReportFilters(
+        row as unknown as Record<string, unknown>,
+        tableFilters.activeRules,
+        OFFER_REPORT_FILTER_FIELDS,
+      );
       const rowDate = row.lastUpdatedDate || Date.now();
       const matchesRange = rowDate >= startMs && rowDate <= endMs;
-      return matchesStatus && matchesQuery && matchesRange;
+      return matchesStatus && matchesFilters && matchesRange;
     });
   }, [
     useDummyData,
     statusFilter,
-    tableQuery,
+    tableFilters.activeRules,
     overviewWindow.bounds.start,
     overviewWindow.bounds.end,
     offerTableRows,
@@ -1077,6 +1091,7 @@ export default function OfferReportsPage() {
     setTablePage(1);
   }, [
     debouncedTableQuery,
+    tableFilters.serializedFilters,
     statusFilter,
     overviewWindow.bounds.start,
     overviewWindow.bounds.end,
@@ -1379,12 +1394,6 @@ export default function OfferReportsPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <Input
-              placeholder="Search offer"
-              value={tableQuery}
-              onChange={setTableQuery}
-              className="w-full md:w-80"
-            />
             <HeadlessSelect
               value={statusFilter}
               onChange={(value) => setStatusFilter(value as string)}
@@ -1403,6 +1412,10 @@ export default function OfferReportsPage() {
             />
           </div>
         </div>
+        <ReportTableFilterBar
+          fields={OFFER_REPORT_FILTER_FIELDS}
+          filters={tableFilters}
+        />
 
         {useDummyData ? (
           <>

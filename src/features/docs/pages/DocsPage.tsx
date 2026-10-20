@@ -20,6 +20,7 @@ import { DocsHeader } from '../components/DocsHeader';
 import { DocsBreadcrumb } from '../components/DocsBreadcrumb';
 import { DocsNavigation } from '../components/DocsNavigation';
 import { getSidebar, SidebarItem } from '../services/sidebarService';
+import { usePageTask } from '../../../shared/navigation/PageTaskProvider';
 import styles from './DocsPage.module.css';
 
 
@@ -59,7 +60,13 @@ export function DocsPage() {
     }
   }, [activeVersion]);
 
-  const { content, isLoading, error } = useDocumentation(slug, activeVersion);
+  const {
+    content,
+    isLoading,
+    error,
+    title: documentTitle,
+  } = useDocumentation(slug, activeVersion);
+  usePageTask(documentTitle ? { subject: documentTitle } : null);
 
   // Redirect to login if not authenticated
   if (!user) {

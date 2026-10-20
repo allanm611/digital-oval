@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 
 import DashboardLayout from "../components/DashboardLayout";
@@ -674,6 +673,24 @@ const ServerPages = {
         /* webpackPrefetch: true */ "../../connection-profiles/pages/ConnectionProfilesAnalyticsPage"
       ),
   ),
+  ConnectionProfilePipelinesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../connection-profiles-pipeline/pages/PipelinesPage"
+      ),
+  ),
+  ConnectionProfilePipelineDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../connection-profiles-pipeline/pages/PipelineDetailsPage"
+      ),
+  ),
+  ConnectionProfilePipelineFormPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../connection-profiles-pipeline/pages/PipelineFormPage"
+      ),
+  ),
   KPIsPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../kpis/pages/KPIsContainer"),
   ),
@@ -762,6 +779,25 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/SegmentReportsPage"
       ),
   ),
+  AnalysePage: lazy(() => import("../../analyse/pages/AnalysePage")),
+  AnalyseWorkspacePage: lazy(
+    () => import("../../analyse/pages/AnalyseWorkspacePage"),
+  ),
+  AnalyseResultsPage: lazy(
+    () => import("../../analyse/pages/AnalyseResultsPage"),
+  ),
+};
+
+const LoyaltyPages = {
+  LoyaltyProgramsPage: lazy(
+    () => import("../../loyalty/pages/LoyaltyProgramsPage"),
+  ),
+  LoyaltyProgramFormPage: lazy(
+    () => import("../../loyalty/pages/LoyaltyProgramFormPage"),
+  ),
+  LoyaltyProgramDetailsPage: lazy(
+    () => import("../../loyalty/pages/LoyaltyProgramDetailsPage"),
+  ),
 };
 
 // Administration Pages
@@ -790,10 +826,34 @@ const AdministrationPages = {
         /* webpackPrefetch: true */ "../../administration/pages/AiModelsHubPage"
       ),
   ),
+  InsightWorkbenchPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/InsightWorkbenchPage"
+      ),
+  ),
+  InsightWorkbenchCategoryPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/InsightWorkbenchCategoryPage"
+      ),
+  ),
+  InsightWorkbenchModelPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/InsightWorkbenchModelPage"
+      ),
+  ),
   AiModelConfigurationHubPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationHubPage"
+      ),
+  ),
+  AiModelConfigurationDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../administration/pages/AiModelConfigurationDetailsPage"
       ),
   ),
   AiModelConfigurationFormPage: lazy(
@@ -932,7 +992,6 @@ const OtherPages = {
 };
 
 export default function Dashboard() {
-  const { t } = useLanguage();
   return (
     <DashboardLayout>
       <Suspense
@@ -953,16 +1012,28 @@ export default function Dashboard() {
             element={<AdministrationPages.AiModelsHubPage />}
           />
           <Route
+            path="/ai-models/insight-workbench"
+            element={<AdministrationPages.InsightWorkbenchPage />}
+          />
+          <Route
+            path="/ai-models/insight-workbench/categories/:categorySlug"
+            element={<AdministrationPages.InsightWorkbenchCategoryPage />}
+          />
+          <Route
+            path="/ai-models/insight-workbench/models/:modelId"
+            element={<AdministrationPages.InsightWorkbenchModelPage />}
+          />
+          <Route
             path="/ai-models/configuration"
             element={<AdministrationPages.AiModelConfigurationHubPage />}
           />
           <Route
             path="/ai-models/configuration/:providerId"
-            element={<AdministrationPages.AiModelConfigurationFormPage mode="view" />}
+            element={<AdministrationPages.AiModelConfigurationDetailsPage />}
           />
           <Route
             path="/ai-models/configuration/:providerId/edit"
-            element={<AdministrationPages.AiModelConfigurationFormPage mode="edit" />}
+            element={<AdministrationPages.AiModelConfigurationFormPage />}
           />
           <Route
             path="/monitoring"
@@ -1270,6 +1341,22 @@ export default function Dashboard() {
           />
           <Route path="/customers" element={<AnalyticsPages.CustomersPage />} />
           <Route
+            path="/loyalty-programs"
+            element={<LoyaltyPages.LoyaltyProgramsPage />}
+          />
+          <Route
+            path="/loyalty-programs/create"
+            element={<LoyaltyPages.LoyaltyProgramFormPage />}
+          />
+          <Route
+            path="/loyalty-programs/:id"
+            element={<LoyaltyPages.LoyaltyProgramDetailsPage />}
+          />
+          <Route
+            path="/loyalty-programs/:id/edit"
+            element={<LoyaltyPages.LoyaltyProgramFormPage />}
+          />
+          <Route
             path="/customers/details/:customerId"
             element={<AnalyticsPages.CustomerDetailPage />}
           />
@@ -1446,6 +1533,22 @@ export default function Dashboard() {
             path="/reports/email-delivery"
             element={<AnalyticsPages.DeliveryEmailReportsPage />}
           />
+          <Route
+            path="/analytics/analyse"
+            element={<AnalyticsPages.AnalysePage />}
+          />
+          <Route
+            path="/analytics/analyse/new"
+            element={<AnalyticsPages.AnalyseWorkspacePage />}
+          />
+          <Route
+            path="/analytics/analyse/:id/results"
+            element={<AnalyticsPages.AnalyseResultsPage />}
+          />
+          <Route
+            path="/analytics/analyse/:id"
+            element={<AnalyticsPages.AnalyseWorkspacePage />}
+          />
           <Route path="/settings" element={<SettingsPages.SettingsPage />} />
           <Route path="/servers" element={<ServerPages.ServersPage />} />
           <Route
@@ -1479,6 +1582,22 @@ export default function Dashboard() {
           <Route
             path="/connection-profiles/:id"
             element={<ServerPages.ConnectionProfileDetailsPage />}
+          />
+          <Route
+            path="/connection-profile-pipelines"
+            element={<ServerPages.ConnectionProfilePipelinesPage />}
+          />
+          <Route
+            path="/connection-profile-pipelines/new"
+            element={<ServerPages.ConnectionProfilePipelineFormPage mode="create" />}
+          />
+          <Route
+            path="/connection-profile-pipelines/:id/edit"
+            element={<ServerPages.ConnectionProfilePipelineFormPage mode="edit" />}
+          />
+          <Route
+            path="/connection-profile-pipelines/:id"
+            element={<ServerPages.ConnectionProfilePipelineDetailsPage />}
           />
           <Route
             path="/data-connectors"

@@ -12,7 +12,6 @@ import { parseRecipientMsisdns } from "../utils/parseRecipientMsisdns";
 import { canEditManualReward } from "../utils/canEditManualReward";
 import { mapManualRewardResourceToFormData } from "../utils/mapManualRewardResourceToFormData";
 import { enrichManualRewardFormDataWithProvider } from "../utils/enrichManualRewardFormDataWithProvider";
-import { resolveCreatedRewardId } from "../utils/resolveCreatedRewardId";
 import {
   isVirtualDefaultTemplateId,
   materializeRewardTemplateId,
@@ -31,6 +30,22 @@ import PreviewRewardStep from "../components/PreviewRewardStep";
 import ApplyRewardStep from "../components/ApplyRewardStep";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import MultiStepFormWrapper from "../../../shared/components/MultiStepFormWrapper";
+import type { SchedulingData } from "../../../shared/types/scheduling";
+import { loadQuicklistSubscriberMsisdns } from "../utils/assertQuicklistAudience";
+import { usePageTask } from "../../../shared/navigation/PageTaskProvider";
+
+export interface ManualRewardSeedRecipient {
+  id: number;
+  seed_list_id?: number;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+}
+
+export interface ManualRewardNotificationPreference {
+  stage: string;
+  channels: Array<"email" | "sms" | "in_app" | "platform">;
+}
 
 export interface ManualRewardData {
   // Step 1: Audience
@@ -39,6 +54,8 @@ export interface ManualRewardData {
   audienceDescription?: string;
   uploadType?: string;
   quicklistId?: number;
+  /** MSISDNs resolved from the selected quicklist before save */
+  quicklistMsisdns?: string[];
   rowCount?: number;
   audienceFileText?: string;
   inputMethod?: "file" | "manual";
@@ -60,6 +77,12 @@ export interface ManualRewardData {
   smsRoute?: string;
   rewardTitle?: string;
   selectedCommunicationPolicyId?: number;
+  communicationPolicyName?: string;
+  emailRoute?: string;
+  /** Recipients chosen from a seed list on Define Reward */
+  seedRecipients?: ManualRewardSeedRecipient[];
+  /** Checked seed-list recipient ids */
+  seedRecipientIds?: number[];
   seedTestContacts?: string[];
   rewardValidation?: {
     completed: boolean;
@@ -72,9 +95,12 @@ export interface ManualRewardData {
   applyType?: "now" | "later";
   applyDate?: string;
   applyTime?: string;
-
-  // Step 4: Preview
-  previewData?: Record<string, unknown>;
+  /** Full broadcast schedule, including timezone, recurrence, and notifications */
+  schedule?: SchedulingData;
+  scheduleTimeZone?: string;
+  /** UTC offset of the selected timezone, e.g. +03:00 */
+  timeZoneOffset?: string;
+  notificationPreferences?: ManualRewardNotificationPreference[];
 }
 
 export default function CreateManualRewardPage() {
@@ -122,6 +148,12 @@ export default function CreateManualRewardPage() {
   ];
   const [currentStep, setCurrentStep] = useState(1);
   const [rewardData, setRewardData] = useState<ManualRewardData>({});
+  const activeRewardStep = STEPS.find((step) => step.id === currentStep);
+  usePageTask({
+    task: isEditMode ? "Edit Manual Reward" : "Create Manual Reward",
+    subject: rewardData.rewardTitle,
+    step: activeRewardStep?.name,
+  });
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSaving, setIsSaving] = useState(false);
   const [editBlockedMessage, setEditBlockedMessage] = useState("");
@@ -291,6 +323,21 @@ export default function CreateManualRewardPage() {
         setRewardData(dataForSave);
       }
 
+      if (
+        !isEditMode &&
+        dataForSave.inputMethod === "file" &&
+        dataForSave.quicklistId != null
+      ) {
+        const quicklistMsisdns = await loadQuicklistSubscriberMsisdns(
+          dataForSave.quicklistId,
+        );
+        dataForSave = {
+          ...dataForSave,
+          quicklistMsisdns,
+          rowCount: quicklistMsisdns.length,
+        };
+      }
+
       if (isEditMode && rewardId) {
         if (loadedEditStatus && !canEditManualReward(loadedEditStatus)) {
           showError(
@@ -319,7 +366,7 @@ export default function CreateManualRewardPage() {
           );
         }
 
-        navigate(`/dashboard/manual-rewards/${parsedId}`);
+        navigate("/dashboard/manual-rewards");
         return;
       }
 
@@ -338,14 +385,7 @@ export default function CreateManualRewardPage() {
       showToast(result.message || t.manualRewards.createdSuccess);
 
       clearPersistedFormData("reward_form_data");
-
-      const createdId = resolveCreatedRewardId(result);
-
-      if (createdId) {
-        navigate(`/dashboard/manual-rewards/${createdId}`);
-      } else {
-        navigate("/dashboard/manual-rewards");
-      }
+      navigate("/dashboard/manual-rewards");
     } catch (err) {
       console.error(
         `Failed to ${isEditMode ? "update" : "create"} manual reward:`,

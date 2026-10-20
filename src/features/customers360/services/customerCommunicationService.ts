@@ -1,10 +1,8 @@
-import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
 import { broadcastService } from "../../campaigns/services/broadcastService";
 import { communicationService } from "../../communications/services/communicationService";
 import { customerEventService } from "./customerEventService";
 import { customerSegmentService } from "./customerSegmentService";
 import type {
-  CustomerCommunicationEvidence,
   CustomerCommunicationProgress,
   CustomerCommunicationResult,
 } from "../types/customerCommunication";
@@ -22,7 +20,6 @@ import {
   parseCommunicationRecord,
   parseHintCommunications,
   sortCommunications,
-  unwrapCommunicationList,
   type DraftCommunication,
 } from "../utils/customerCommunicationHelpers";
 import { asRecord } from "../utils/customerSegmentHelpers";
@@ -85,19 +82,6 @@ function emptyResult(warnings: string[] = []): CustomerCommunicationResult {
   };
 }
 
-async function tryJsonGet(url: string): Promise<unknown | null> {
-  try {
-    const response = await fetch(url, { headers: getAuthHeaders() });
-    if (!response.ok) return null;
-    const payload = await response.json();
-    const record = asRecord(payload);
-    if (record?.success === false) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
 function upsertDraft(
   byKey: Map<string, DraftCommunication>,
   draft: DraftCommunication,
@@ -112,114 +96,50 @@ function upsertDraft(
   byKey.set(draftKey(draft), draft);
 }
 
-function draftsFromPayload(
-  payload: unknown,
-  evidence: CustomerCommunicationEvidence,
-  identifiers?: CustomerListIdentifiers,
-): DraftCommunication[] {
-  return unwrapCommunicationList(payload)
-    .map((item) => {
-      const row = asRecord(item);
-      const recipient =
-        row &&
-        (row.recipient ??
-          row.recipient_identifier ??
-          row.msisdn ??
-          row.email ??
-          row.phone);
-      const matched = identifiers
-        ? identifiersMatch(recipient, identifiers)
-        : null;
-      if (identifiers && recipient && !matched) return null;
-      return parseCommunicationRecord(item, {
-        evidence,
-        matchedIdentifierType: matched,
-      });
-    })
-    .filter((item): item is DraftCommunication => Boolean(item));
+function collectMatchedLogs(
+  logs: unknown[],
+  identifiers: CustomerListIdentifiers,
+  drafts: DraftCommunication[],
+) {
+  logs.forEach((log) => {
+    const row = asRecord(log);
+    const match = identifiersMatch(
+      row?.recipient_identifier ?? row?.recipient,
+      identifiers,
+    );
+    if (!match) return;
+    const parsed = parseCommunicationRecord(log, {
+      evidence: "delivery_log",
+      matchedIdentifierType: match,
+    });
+    if (parsed) drafts.push(parsed);
+  });
 }
 
-async function trySubscriberScopedCommunications(
+/**
+ * Communication logs are stored by recipient (msisdn or email), not by a
+ * subscriber communications resource. Search that table for this customer.
+ */
+async function loadCustomerCommunicationLogs(
   subscriberId: string,
   identifiers: CustomerListIdentifiers,
-): Promise<{ available: boolean; drafts: DraftCommunication[] }> {
-  const encoded = encodeURIComponent(subscriberId);
-  const paths = [
-    `${API_CONFIG.BASE_URL}/subscribers/${encoded}/communications`,
-    `${API_CONFIG.BASE_URL}/subscribers/${encoded}/messages`,
-    `${API_CONFIG.BASE_URL}/communications/logs?subscriberId=${encoded}`,
-    `${API_CONFIG.BASE_URL}/communications/logs?customerId=${encoded}`,
-  ];
-
-  const drafts: DraftCommunication[] = [];
-  let available = false;
-
-  for (const url of paths) {
-    const payload = await tryJsonGet(url);
-    if (payload == null) continue;
-    available = true;
-    draftsFromPayload(payload, "subscriber_api", identifiers).forEach((draft) => {
-      drafts.push(draft);
-    });
-  }
-
-  return { available, drafts };
-}
-
-async function loadIdentifierLogs(
-  identifiers: CustomerListIdentifiers,
   isAborted?: () => boolean,
-): Promise<DraftCommunication[]> {
-  const probes = [
-    ...identifiers.msisdns.slice(0, 2),
-    ...identifiers.emails.slice(0, 1),
-  ].slice(0, IDENTIFIER_PROBE_LIMIT);
-
-  const drafts: DraftCommunication[] = [];
-
-  for (const probe of probes) {
-    abortIfNeeded(isAborted);
-    const params = new URLSearchParams({
-      recipient: probe,
-      limit: String(LOG_PAGE_SIZE),
-    });
-    const payload = await tryJsonGet(
-      `${API_CONFIG.BASE_URL}/communications/logs?${params.toString()}`,
-    );
-    if (payload == null) continue;
-    drafts.push(...draftsFromPayload(payload, "delivery_log", identifiers));
-  }
-
-  return drafts;
-}
-
-async function loadRecentLogs(
-  identifiers: CustomerListIdentifiers,
-  isAborted?: () => boolean,
-): Promise<{ drafts: DraftCommunication[]; failed: boolean }> {
+): Promise<{ drafts: DraftCommunication[]; failed: boolean; available: boolean }> {
   const drafts: DraftCommunication[] = [];
   let failed = false;
+  let available = false;
 
   for (let page = 1; page <= MAX_LOG_PAGES; page += 1) {
     abortIfNeeded(isAborted);
     try {
       const response = await communicationService.getLogs({
+        subscriberId,
         page,
         limit: LOG_PAGE_SIZE,
       });
+      available = true;
       const logs = response?.data?.logs ?? [];
-      logs.forEach((log) => {
-        const match = identifiersMatch(
-          log.recipient_identifier ?? (log as { recipient?: string }).recipient,
-          identifiers,
-        );
-        if (!match) return;
-        const parsed = parseCommunicationRecord(log, {
-          evidence: "delivery_log",
-          matchedIdentifierType: match,
-        });
-        if (parsed) drafts.push(parsed);
-      });
+      collectMatchedLogs(logs, identifiers, drafts);
       if (logs.length < LOG_PAGE_SIZE) break;
       const total = response?.data?.pagination?.total;
       if (typeof total === "number" && page * LOG_PAGE_SIZE >= total) break;
@@ -230,7 +150,28 @@ async function loadRecentLogs(
     }
   }
 
-  return { drafts, failed };
+  const probes = [
+    ...identifiers.msisdns.slice(0, 2),
+    ...identifiers.emails.slice(0, 1),
+  ].slice(0, IDENTIFIER_PROBE_LIMIT);
+
+  for (const probe of probes) {
+    abortIfNeeded(isAborted);
+    try {
+      const response = await communicationService.getLogs({
+        recipient: probe,
+        page: 1,
+        limit: LOG_PAGE_SIZE,
+      });
+      available = true;
+      collectMatchedLogs(response?.data?.logs ?? [], identifiers, drafts);
+    } catch (error) {
+      if (isAbortError(error)) throw error;
+      failed = true;
+    }
+  }
+
+  return { drafts, failed, available };
 }
 
 async function loadBroadcastDeliveryLogs(
@@ -342,6 +283,8 @@ async function loadBroadcastDeliveryLogs(
         creativeId: null,
         creativeName: null,
         eventId: null,
+        eventType: null,
+        eventTypeLabel: null,
         evidence: new Set(["delivery_log"]),
       });
     });
@@ -402,24 +345,19 @@ export const customerCommunicationService = {
       return cached.result;
     }
 
-    input.onProgress?.({ phase: "lookup", checked: 0, total: 1 });
-    const scoped = await trySubscriberScopedCommunications(
-      subscriberId,
-      identifiers,
-    );
-    input.onProgress?.({ phase: "lookup", checked: 1, total: 1 });
-
-    const byKey = new Map<string, DraftCommunication>();
-    scoped.drafts.forEach((draft) => upsertDraft(byKey, draft));
-
     input.onProgress?.({ phase: "logs", checked: 0, total: 1 });
+    const byKey = new Map<string, DraftCommunication>();
     let logScanFailed = false;
+    let subscriberLookupUsed = false;
     if (hasAnyIdentifier(identifiers)) {
-      const probed = await loadIdentifierLogs(identifiers, input.isAborted);
-      probed.forEach((draft) => upsertDraft(byKey, draft));
-      const recent = await loadRecentLogs(identifiers, input.isAborted);
-      recent.drafts.forEach((draft) => upsertDraft(byKey, draft));
-      logScanFailed = recent.failed;
+      const logs = await loadCustomerCommunicationLogs(
+        subscriberId,
+        identifiers,
+        input.isAborted,
+      );
+      logs.drafts.forEach((draft) => upsertDraft(byKey, draft));
+      logScanFailed = logs.failed;
+      subscriberLookupUsed = logs.available;
     }
     input.onProgress?.({ phase: "logs", checked: 1, total: 1 });
 
@@ -460,6 +398,8 @@ export const customerCommunicationService = {
     }
 
     input.onProgress?.({ phase: "events", checked: 0, total: 1 });
+    // eventToDraft keeps communication deliveries only. Offer, consent,
+    // usage, and care events in this stream are ignored.
     const eventsResult = await customerEventService.getSubscriberEvents(
       subscriberId,
       {},
@@ -533,7 +473,7 @@ export const customerCommunicationService = {
         logScanFailed || broadcastFailed > 0 || audience.source === "partial" || !eventsLive
           ? "partial"
           : "live",
-      subscriberLookupUsed: scoped.available,
+      subscriberLookupUsed,
       eventsLive,
       warnings: uniqueWarnings,
     };

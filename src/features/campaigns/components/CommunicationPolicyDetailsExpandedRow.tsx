@@ -1,6 +1,7 @@
 import { color, tw } from "../../../shared/utils/utils";
 import type { CommunicationPolicyConfiguration } from "../types/communicationPolicyConfig";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { summarizePolicyConfig } from "../utils/communicationPolicyConfigMapper";
 
 interface CommunicationPolicyDetailsExpandedRowProps {
   policy: CommunicationPolicyConfiguration;
@@ -16,16 +17,6 @@ export default function CommunicationPolicyDetailsExpandedRow({
       return "—";
     }
     return value;
-  };
-
-  const getTypeLabel = (typeCode: string) => {
-    const labels: Record<string, string> = {
-      EMAIL: "Email",
-      SMS: "SMS",
-      PUSH: "Push",
-      INAPP: "In-App",
-    };
-    return labels[typeCode] || typeCode;
   };
 
   const getStatusLabel = (isActive: boolean) => {
@@ -60,12 +51,12 @@ export default function CommunicationPolicyDetailsExpandedRow({
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 md:col-span-3">
           <label className={`text-xs font-medium ${tw.textMuted}`}>
-            Type
+            Configuration
           </label>
-          <div className={`text-sm ${tw.textPrimary}`}>
-            {getTypeLabel((policy as any).type_code || "")}
+          <div className={`text-sm ${tw.textPrimary} break-words`}>
+            {summarizePolicyConfig(policy.type_code, policy.config, policy.type_codes)}
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Input from "../../../shared/components/ui/Input";
@@ -20,11 +20,7 @@ import {
 import ProviderDocsLink from "../components/ProviderDocsLink";
 import type { AiModelConfigSource } from "../types/aiModelConfiguration";
 import { aiModelConfigurationService } from "../services/aiModelConfigurationService";
-import { AI_MODEL_CONFIGURATION_PATH, aiModelEditPath } from "../utils/aiModelNavigation";
-
-interface AiModelConfigurationFormPageProps {
-  mode?: "view" | "edit";
-}
+import { AI_MODEL_CONFIGURATION_PATH, aiModelViewPath } from "../utils/aiModelNavigation";
 
 interface FormState {
   name: string;
@@ -69,15 +65,14 @@ function emptyForm(
   };
 }
 
-export default function AiModelConfigurationFormPage({
-  mode = "edit",
-}: AiModelConfigurationFormPageProps) {
+export default function AiModelConfigurationFormPage() {
   const { providerId } = useParams<{ providerId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error: showError } = useToast();
   const provider = getAiModelProvider(providerId);
   const hubPath = AI_MODEL_CONFIGURATION_PATH;
-  const isView = mode === "view";
+  const fromDetails = (location.state as { from?: string } | null)?.from === "details";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -93,7 +88,7 @@ export default function AiModelConfigurationFormPage({
       provider?.defaultTimeoutMs,
     ),
   );
-  const fieldsLocked = isView || saving;
+  const fieldsLocked = saving;
 
   const modelOptions = useMemo(() => {
     const catalog = (provider?.models || []).map((model) => ({
@@ -117,10 +112,6 @@ export default function AiModelConfigurationFormPage({
       setLoading(true);
       const existing = await aiModelConfigurationService.getByProvider(provider.id);
       if (!existing) {
-        if (isView && provider) {
-          navigate(aiModelEditPath(provider.id), { replace: true });
-          return;
-        }
         setIsConfigured(false);
         setConfigSource(null);
         setForm(
@@ -172,7 +163,6 @@ export default function AiModelConfigurationFormPage({
     e.preventDefault();
     if (!provider) return;
 
-    if (isView) return;
     if (!form.name.trim()) {
       showError("Validation Error", "Display name is required");
       return;
@@ -228,7 +218,7 @@ export default function AiModelConfigurationFormPage({
           ? `${provider.name} is now stored as an admin configuration and ready for generation`
           : `${provider.name} is ready for message generation`,
       );
-      navigate(hubPath);
+      navigate(aiModelViewPath(provider.id));
     } catch (err) {
       showError(
         "Error",
@@ -270,10 +260,14 @@ export default function AiModelConfigurationFormPage({
     <div className="space-y-6">
       <BackButton
         showBreadcrumb={true}
-        currentLabel={isView ? `${provider.name} (view)` : provider.name}
+        currentLabel={`Edit ${provider.name}`}
         parentLabel="AI Model Configuration"
         parentTo={hubPath}
       />
+
+      <h1 className={`text-xl font-semibold ${tw.textPrimary}`}>
+        Edit {provider.name}
+      </h1>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <p className={`text-sm ${tw.textPrimary}`}>{provider.description}</p>
@@ -296,7 +290,7 @@ export default function AiModelConfigurationFormPage({
         <div className={`${tw.rounded} border p-6 shadow-sm ${tw.borderDefault} bg-[var(--c-surface-card-bg)]`}>
           <h2 className={`${tw.cardHeading} ${tw.textPrimary} mb-4`}>Credentials</h2>
           <p className={`text-sm ${tw.textPrimary} mb-6`}>
-            API keys stay on the server in production. Generation requests send only this
+            Generation requests send only this
             configuration id — never the secret. Rotate a key by entering a new value.
           </p>
           <div className="space-y-6">
@@ -335,17 +329,10 @@ export default function AiModelConfigurationFormPage({
                 <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 <span>
                   {form.hasApiKey ? (
-                    isView ? (
-                      <>
-                        A key is already saved{form.apiKeyMasked ? ` (${form.apiKeyMasked})` : ""}.
-                        Open Edit to rotate it.
-                      </>
-                    ) : (
-                      <>
-                        A key is already saved{form.apiKeyMasked ? ` (${form.apiKeyMasked})` : ""}.
-                        Leave this blank to keep it, or paste a new key to rotate.
-                      </>
-                    )
+                    <>
+                      A key is already saved{form.apiKeyMasked ? ` (${form.apiKeyMasked})` : ""}.
+                      Leave this blank to keep it, or paste a new key to rotate.
+                    </>
                   ) : (
                     provider.keyHint
                   )}
@@ -571,7 +558,13 @@ export default function AiModelConfigurationFormPage({
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => navigate(hubPath)}
+              onClick={() =>
+                navigate(
+                  fromDetails && provider
+                    ? aiModelViewPath(provider.id)
+                    : hubPath,
+                )
+              }
               disabled={saving || deleting}
               className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-60"
               style={{
@@ -580,27 +573,16 @@ export default function AiModelConfigurationFormPage({
                 border: "1px solid var(--c-border-accent)",
               }}
             >
-              {isView ? "Back" : "Cancel"}
+              Cancel
             </button>
-            {isView && provider ? (
-              <button
-                type="button"
-                onClick={() => navigate(aiModelEditPath(provider.id))}
-                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md"
-                style={{ backgroundColor: color.primary.action }}
-              >
-                Edit configuration
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={saving || deleting}
-                className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {saving ? "Saving..." : "Save configuration"}
-              </button>
-            )}
+            <button
+              type="submit"
+              disabled={saving || deleting}
+              className="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-60"
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {saving ? "Saving..." : "Save configuration"}
+            </button>
           </div>
         </div>
       </form>

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Power } from "lucide-react";
+import { Play, PowerOff } from "lucide-react";
 import { buttons } from "../../utils/tokens";
 
 interface ActivateDeactivateButtonProps {
@@ -9,7 +9,7 @@ interface ActivateDeactivateButtonProps {
   isLoading?: boolean;
   title?: string;
   children?: ReactNode; // Text content for button variant
-  variant?: "toggle" | "button"; // Display variant
+  variant?: "toggle" | "button" | "icon";
 }
 
 export default function ActivateDeactivateButton({
@@ -22,6 +22,38 @@ export default function ActivateDeactivateButton({
   variant = "toggle",
 }: ActivateDeactivateButtonProps) {
   const hasText = !!children;
+  const label = title || (isActive ? "Deactivate" : "Activate");
+
+  if (variant === "icon") {
+    return (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isActive}
+        aria-busy={isLoading}
+        onClick={onToggle}
+        disabled={disabled || isLoading}
+        className="relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+        style={{
+          backgroundColor: isActive
+            ? "var(--c-toggle-active)"
+            : "var(--c-toggle-inactive)",
+        }}
+        title={label}
+        aria-label={label}
+      >
+        {isLoading ? (
+          <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white border-t-transparent animate-spin" />
+        ) : (
+          <span
+            className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+              isActive ? "translate-x-3.5" : "translate-x-0.5"
+            }`}
+          />
+        )}
+      </button>
+    );
+  }
 
   if (variant === "button" && hasText) {
     // Secondary button variant
@@ -41,8 +73,10 @@ export default function ActivateDeactivateButton({
       >
         {isLoading ? (
           <div className="h-4 w-4 border-2 border-gray-800 border-t-transparent rounded-full animate-spin" />
+        ) : isActive ? (
+          <PowerOff className="w-4 h-4" />
         ) : (
-          <Power className="w-4 h-4" />
+          <Play className="w-4 h-4" />
         )}
         <span>{children}</span>
       </button>

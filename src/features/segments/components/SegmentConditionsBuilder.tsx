@@ -13,6 +13,7 @@ import {
   SegmentType,
   SEGMENT_FIELDS,
 } from "../types/segment";
+import { excludeAnalysisSegments } from "../../analyse/utils/analysisDefinition";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -286,7 +287,7 @@ export default function SegmentConditionsBuilder({
             skipCache: true,
           });
         }
-        setSegmentOptions(response.data || []);
+        setSegmentOptions(excludeAnalysisSegments(response.data || []));
       } catch (error) {
         // Failed to load segments
         setSegmentOptions([]);

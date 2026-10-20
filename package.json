@@ -1,7 +1,11 @@
 {
   "name": "vite-react-typescript-starter",
   "private": true,
+<<<<<<< HEAD
   "version": "1.5.10",
+=======
+  "version": "1.5.16",
+>>>>>>> upstream/fplex/master-sz
   "type": "module",
   "scripts": {
     "dev": "vite",

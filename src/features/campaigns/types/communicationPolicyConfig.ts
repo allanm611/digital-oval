@@ -12,11 +12,19 @@ export interface TimeWindowConfig {
   days?: string[];
 }
 
+export interface FrequencyCappingPeriod {
+  type: "daily" | "weekly" | "monthly";
+  maxCount: number;
+}
+
 export interface MaximumCommunicationConfig {
+  /** Cap enforced by the current broadcast engine. Mirrors the daily period when one exists. */
   type: "daily" | "weekly" | "monthly";
   maxCount: number;
   resetTime?: string;
   resetDay?: string;
+  /** Every period the user configured. This is the source of truth for create/edit. */
+  periods?: FrequencyCappingPeriod[];
 }
 
 export interface DNDConfig {
@@ -32,10 +40,23 @@ export interface DNDCategory {
   value?: "allowed" | "not allowed";
 }
 
+export interface VIPListRule {
+  vipListId: string;
+  vipListName?: string;
+  action: "include" | "exclude";
+  priority: number;
+}
+
 export interface VIPListConfig {
+  /**
+   * Legacy single action used by the exclusion engine.
+   * "exclude" when any rule excludes a list; those lists are the only entries in vipLists.
+   */
   action: "include" | "exclude";
   vipLists: VIPList[];
   priority?: number;
+  /** Per-list action and priority. This is the source of truth for create/edit. */
+  rules?: VIPListRule[];
 }
 
 export interface VIPList {
@@ -46,17 +67,29 @@ export interface VIPList {
   status: "active" | "inactive";
 }
 
+/** One policy can enforce any combination of these configurations. */
+export interface PolicyConfigurationBundle {
+  timeWindow?: TimeWindowConfig | null;
+  maximumCommunication?: MaximumCommunicationConfig | null;
+  dnd?: DNDConfig | null;
+  vipList?: VIPListConfig | null;
+}
+
+export type CommunicationPolicyConfigValue =
+  | TimeWindowConfig
+  | MaximumCommunicationConfig
+  | DNDConfig
+  | VIPListConfig
+  | PolicyConfigurationBundle;
+
 export interface CommunicationPolicyConfiguration {
   id: number;
   name: string;
   description?: string;
   channels: string[];
   type_code: string;
-  config:
-    | TimeWindowConfig
-    | MaximumCommunicationConfig
-    | DNDConfig
-    | VIPListConfig;
+  type_codes?: string[];
+  config: CommunicationPolicyConfigValue;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -67,11 +100,9 @@ export interface CreateCommunicationPolicyRequest {
   description?: string;
   channels: string[];
   type_code: string;
-  config:
-    | TimeWindowConfig
-    | MaximumCommunicationConfig
-    | DNDConfig
-    | VIPListConfig;
+  /** Configurations included on this save. Omitted keys are removed on update. */
+  type_codes?: CommunicationPolicyType[];
+  config: CommunicationPolicyConfigValue;
   is_active?: boolean;
 }
 
@@ -85,9 +116,9 @@ export const COMMUNICATION_POLICY_TYPES = [
   },
   {
     value: "maximumCommunication" as const,
-    label: "Maximum Communication",
+    label: "Frequency Capping",
     description:
-      "Set maximum number of communications sent to a customer in a given period",
+      "Limits the maximum number of communications a customer can receive daily, weekly, or monthly.",
     icon: "📊",
   },
   {
@@ -99,8 +130,9 @@ export const COMMUNICATION_POLICY_TYPES = [
   },
   {
     value: "vipList" as const,
-    label: "VIP List",
-    description: "Include or exclude VIP customers from campaigns",
+    label: "VIP List Rules",
+    description:
+      "Defines inclusion or exclusion rules for high-priority VIP customer lists.",
     icon: "⭐",
   },
 ] as const;
