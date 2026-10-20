@@ -1,3 +1,14 @@
+## [1.1.2](https://github.com/allanm611/digital-oval/compare/v1.1.1...v1.1.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* Merge pull request [#21](https://github.com/allanm611/digital-oval/issues/21) from YellowBird-UG/fplex/master-sz ([3a746a6](https://github.com/allanm611/digital-oval/commit/3a746a649edd25805274d34b1e3bde44b99823ad))
+* Merge pull request [#22](https://github.com/allanm611/digital-oval/issues/22) from YellowBird-UG/fplex/master-sz ([e380d10](https://github.com/allanm611/digital-oval/commit/e380d1030a10d91618470c9b486d8e92fd922b33))
+* Merge pull request [#23](https://github.com/allanm611/digital-oval/issues/23) from YellowBird-UG/fplex/master-sz ([023e05e](https://github.com/allanm611/digital-oval/commit/023e05eaf27350a26833031ac6b6116d5dd4ff7b))
+* Merge pull request [#24](https://github.com/allanm611/digital-oval/issues/24) from YellowBird-UG/fplex/master-sz ([7e63933](https://github.com/allanm611/digital-oval/commit/7e63933d1e5f2f2f8279f3bc2c60ec614d7da877))
+* Merge pull request [#25](https://github.com/allanm611/digital-oval/issues/25) from YellowBird-UG/fplex/master-sz ([72af55a](https://github.com/allanm611/digital-oval/commit/72af55a9b825d4e0259f8de84a84ac9c13f4cdb5))
+
 ## [1.5.14](https://github.com/YellowBird-UG/Sentra_cvm_front/compare/v1.5.13...v1.5.14) (2026-10-13)
 
 
