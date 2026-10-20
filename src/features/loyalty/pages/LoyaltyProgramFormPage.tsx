@@ -40,7 +40,9 @@ export default function LoyaltyProgramFormPage() {
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [status, setStatus] = useState<LoyaltyProgramStatus | null>(null);
-  const [sources, setSources] = useState<AttributeFieldOption[]>([]);
+  const [sources, setSources] = useState<AttributeFieldOption[]>(
+    SAMPLE_ATTRIBUTE_FIELDS,
+  );
   const [sourcesLoading, setSourcesLoading] = useState(true);
   const [sourcesError, setSourcesError] = useState<string | null>(null);
   const [sourcesNote, setSourcesNote] = useState<string | null>(null);
@@ -57,25 +59,22 @@ export default function LoyaltyProgramFormPage() {
     let ignore = false;
     loadAttributeFieldOptions()
       .then((options) => {
-        if (!ignore) setSources(options);
-      })
-      .catch((error) => {
         if (ignore) return;
-        if (
-          import.meta.env.DEV === true ||
-          import.meta.env.VITE_LOYALTY_SAMPLE_DATA === "true"
-        ) {
-          setSources(SAMPLE_ATTRIBUTE_FIELDS);
-          setSourcesNote(
-            "These K fields are sample profile fields so the formula can be tried. Live numeric profile, usage metric, and static fields replace them when the profile dictionary is available.",
-          );
+        if (options.length > 0) {
+          setSources(options);
+          setSourcesNote(null);
           return;
         }
-        setSourcesError(
-          extractBackendError(
-            error,
-            "Numeric fields could not be loaded. You can still save the program without a new custom attribute.",
-          ),
+        setSources(SAMPLE_ATTRIBUTE_FIELDS);
+        setSourcesNote(
+          "These K fields are sample profile fields so the formula can be tried. Live numeric profile, usage metric, and static fields replace them when the profile dictionary is available.",
+        );
+      })
+      .catch(() => {
+        if (ignore) return;
+        setSources(SAMPLE_ATTRIBUTE_FIELDS);
+        setSourcesNote(
+          "These K fields are sample profile fields so the formula can be tried. Live numeric profile, usage metric, and static fields replace them when the profile dictionary is available.",
         );
       })
       .finally(() => {
@@ -145,19 +144,20 @@ export default function LoyaltyProgramFormPage() {
       <BackButton
         parentTo="/dashboard/loyalty-programs"
         parentLabel="Loyalty Programs"
-        currentLabel={isEdit ? "Edit" : "Create"}
+        currentLabel={
+          isEdit
+            ? form.name.trim()
+              ? `Edit ${form.name.trim()}`
+              : "Edit Loyalty Program"
+            : "Create Loyalty Program"
+        }
         showBreadcrumb
       />
 
-      <div>
-        <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-          {isEdit ? "Edit Loyalty Program" : "Create Loyalty Program"}
-        </h1>
-        <p className={`${tw.textSecondary} mt-2 max-w-3xl text-sm`}>
-          Customers can register for more than one program. Bonus points add
-          up inside each program and are redeemed there.
-        </p>
-      </div>
+      <p className={`${tw.textSecondary} max-w-3xl text-sm`}>
+        Customers can register for more than one program. Bonus points add up
+        inside each program and are redeemed there.
+      </p>
 
       {loading ? (
         <div className="flex justify-center py-16">

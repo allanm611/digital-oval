@@ -21,6 +21,9 @@ import {
   List,
   Activity,
   LineChart,
+  BarChart3,
+  PieChart,
+  Search,
   Gift,
   Mail,
   LogOut,
@@ -188,6 +191,8 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../reports-analytics/pages/DeliverySMSReportsPage"),
   "/dashboard/reports/email-delivery": () =>
     import("../../reports-analytics/pages/DeliveryEmailReportsPage"),
+  "/dashboard/analytics/analyse": () =>
+    import("../../analyse/pages/AnalysePage"),
   "/dashboard/servers": () => import("../../servers/pages/ServersPageWrapper"),
   "/dashboard/connection-profiles": () =>
     import("../../connection-profiles/pages/ConnectionProfilesPage"),
@@ -529,46 +534,69 @@ export default function Sidebar({
         type: "parent",
         children: [
           {
-            name: t.sidebar.navigation.overallDashboardPerformance,
-            href: "/dashboard/reports/overview",
-            icon: Activity,
-            type: "single",
+            name: t.sidebar.navigation.reports,
+            href: "/dashboard/reports",
+            icon: BarChart3,
+            type: "parent",
+            children: [
+              {
+                name: t.sidebar.navigation.overallDashboardPerformance,
+                href: "/dashboard/reports/overview",
+                icon: Activity,
+                type: "single",
+              },
+              {
+                name: t.sidebar.navigation.customerProfileReports,
+                href: "/dashboard/reports/customer-profiles",
+                icon: Users,
+                type: "single",
+              },
+              {
+                name: t.sidebar.navigation.campaignReports,
+                href: "/dashboard/reports/campaigns",
+                icon: Target,
+                type: "single",
+              },
+              {
+                name: t.sidebar.navigation.offerReports,
+                href: "/dashboard/reports/offers",
+                icon: Gift,
+                type: "single",
+              },
+              {
+                name: "Segment Reports",
+                href: "/dashboard/reports/segments",
+                icon: UsersRound,
+                type: "single",
+              },
+              {
+                name: t.sidebar.navigation.deliverySmsReports,
+                href: "/dashboard/reports/delivery",
+                icon: MessageSquare,
+                type: "single",
+              },
+              {
+                name: t.sidebar.navigation.deliveryEmailReports,
+                href: "/dashboard/reports/email-delivery",
+                icon: Mail,
+                type: "single",
+              },
+            ],
           },
           {
-            name: t.sidebar.navigation.customerProfileReports,
-            href: "/dashboard/reports/customer-profiles",
-            icon: Users,
-            type: "single",
-          },
-          {
-            name: t.sidebar.navigation.campaignReports,
-            href: "/dashboard/reports/campaigns",
-            icon: Target,
-            type: "single",
-          },
-          {
-            name: t.sidebar.navigation.offerReports,
-            href: "/dashboard/reports/offers",
-            icon: Gift,
-            type: "single",
-          },
-          {
-            name: "Segment Reports",
-            href: "/dashboard/reports/segments",
-            icon: UsersRound,
-            type: "single",
-          },
-          {
-            name: t.sidebar.navigation.deliverySmsReports,
-            href: "/dashboard/reports/delivery",
-            icon: MessageSquare,
-            type: "single",
-          },
-          {
-            name: t.sidebar.navigation.deliveryEmailReports,
-            href: "/dashboard/reports/email-delivery",
-            icon: Mail,
-            type: "single",
+            name: t.sidebar.navigation.analytics,
+            href: "/dashboard/analytics",
+            icon: PieChart,
+            type: "parent",
+            children: [
+              {
+                name: t.sidebar.navigation.analyse,
+                href: "/dashboard/analytics/analyse",
+                icon: Search,
+                type: "single",
+                entity: "analytics",
+              },
+            ],
           },
         ],
       },
@@ -669,19 +697,25 @@ export default function Sidebar({
     });
   };
 
-  const isItemActive = (item: NavigationItem) => {
-    if (item.type === "parent") {
-      return (
-        item.children?.some(
-          (child: NavigationItem) => location.pathname === child.href,
-        ) || location.pathname === item.href
-      );
+  const nodeIsActive = (item: NavigationItem): boolean => {
+    if (item.children?.some((child) => nodeIsActive(child))) return true;
+    if (!item.href || item.href === "/dashboard") {
+      return location.pathname === item.href;
     }
     return (
       location.pathname === item.href ||
-      (item.href !== "/dashboard" &&
-        location.pathname.startsWith(`${item.href}/`))
+      location.pathname.startsWith(`${item.href}/`)
     );
+  };
+
+  const isItemActive = (item: NavigationItem) => {
+    if (item.type === "parent") {
+      return (
+        Boolean(item.children?.some((child) => nodeIsActive(child))) ||
+        location.pathname === item.href
+      );
+    }
+    return nodeIsActive(item);
   };
 
   // Entity permission mapping - consolidates all entity permission strings
@@ -1825,8 +1859,7 @@ export default function Sidebar({
                         <div className="mt-2 ml-7 space-y-2">
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
-                            const isChildActive =
-                              location.pathname === child.href;
+                            const isChildActive = nodeIsActive(child);
 
                             // Check if child has its own children (nested dropdown)
                             if (child.type === "parent" && child.children) {
@@ -1867,7 +1900,7 @@ export default function Sidebar({
                                       {child.children?.map((grandchild) => {
                                         const GrandchildIcon = grandchild.icon;
                                         const isGrandchildActive =
-                                          location.pathname === grandchild.href;
+                                          nodeIsActive(grandchild);
                                         return (
                                           <Link
                                             key={grandchild.name}
@@ -3376,8 +3409,7 @@ export default function Sidebar({
                         >
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
-                            const isChildActive =
-                              location.pathname === child.href;
+                            const isChildActive = nodeIsActive(child);
                             // Check if child has its own children (nested dropdown)
                             if (child.type === "parent" && child.children) {
                               const isChildExpanded = expandedItems.includes(
@@ -3437,8 +3469,7 @@ export default function Sidebar({
                                           const GrandchildIcon =
                                             grandchild.icon;
                                           const isGrandchildActive =
-                                            location.pathname ===
-                                            grandchild.href;
+                                            nodeIsActive(grandchild);
                                           const isLastGrandchild =
                                             gcIndex ===
                                             child.children!.length - 1;

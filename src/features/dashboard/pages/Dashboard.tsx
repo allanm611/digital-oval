@@ -779,6 +779,13 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/SegmentReportsPage"
       ),
   ),
+  AnalysePage: lazy(() => import("../../analyse/pages/AnalysePage")),
+  AnalyseWorkspacePage: lazy(
+    () => import("../../analyse/pages/AnalyseWorkspacePage"),
+  ),
+  AnalyseResultsPage: lazy(
+    () => import("../../analyse/pages/AnalyseResultsPage"),
+  ),
 };
 
 const LoyaltyPages = {
@@ -1525,6 +1532,22 @@ export default function Dashboard() {
           <Route
             path="/reports/email-delivery"
             element={<AnalyticsPages.DeliveryEmailReportsPage />}
+          />
+          <Route
+            path="/analytics/analyse"
+            element={<AnalyticsPages.AnalysePage />}
+          />
+          <Route
+            path="/analytics/analyse/new"
+            element={<AnalyticsPages.AnalyseWorkspacePage />}
+          />
+          <Route
+            path="/analytics/analyse/:id/results"
+            element={<AnalyticsPages.AnalyseResultsPage />}
+          />
+          <Route
+            path="/analytics/analyse/:id"
+            element={<AnalyticsPages.AnalyseWorkspacePage />}
           />
           <Route path="/settings" element={<SettingsPages.SettingsPage />} />
           <Route path="/servers" element={<ServerPages.ServersPage />} />

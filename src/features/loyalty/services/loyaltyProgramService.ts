@@ -216,12 +216,13 @@ class LoyaltyProgramService {
   }
 
   /**
-   * Use the session catalog only before any live loyalty call has succeeded,
-   * and only in local development or when VITE_LOYALTY_SAMPLE_DATA=true.
-   * A missing route or a network failure qualifies. A 500 does not.
+   * Use the session catalog only before any live loyalty call has succeeded.
+   * A missing route (404 or 501) or a network failure qualifies, in every
+   * build, so the program flow can be walked through before the API exists.
+   * A 500 does not, and a later successful live call locks this session to
+   * the server.
    */
   private activateSamples(error: unknown): boolean {
-    if (!sampleFallbackEnabled()) return false;
     if (this.source === "live") return false;
     if (error instanceof LoyaltyProgramApiError) {
       if (error.status !== 404 && error.status !== 501) return false;
@@ -290,10 +291,3 @@ function unwrapRecord(payload: unknown): unknown {
 }
 
 export const loyaltyProgramService = new LoyaltyProgramService();
-
-function sampleFallbackEnabled(): boolean {
-  return (
-    import.meta.env.DEV === true ||
-    import.meta.env.VITE_LOYALTY_SAMPLE_DATA === "true"
-  );
-}

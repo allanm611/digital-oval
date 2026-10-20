@@ -7,6 +7,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
 import { segmentTypeService } from "../services/segmentTypeService";
 import { SegmentType } from "../types/segment";
+import { excludeAnalysisSegments } from "../../analyse/utils/analysisDefinition";
 import DateFormatter from "../../../shared/components/DateFormatter";
 
 interface SegmentPickerModalProps {
@@ -82,7 +83,7 @@ export default function SegmentPickerModal({
               skipCache: true,
             });
           }
-          setSegments(response.data || []);
+          setSegments(excludeAnalysisSegments(response.data || []));
         } catch (error) {
           console.error("Failed to load segments:", error);
           setSegments([]);

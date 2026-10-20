@@ -3101,6 +3101,9 @@ export interface Translations {
       allUsers: string;
       accessControl: string;
       reportsAndAnalytics: string;
+      reports: string;
+      analytics: string;
+      analyse: string;
       overallDashboardPerformance: string;
       customerProfileReports: string;
       campaignReports: string;

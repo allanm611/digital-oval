@@ -148,6 +148,8 @@ const EXACT_TASKS: Record<string, string> = {
   "/dashboard/reports/segments": "Segment Reports",
   "/dashboard/reports/delivery": "Delivery & SMS Reports",
   "/dashboard/reports/email-delivery": "Delivery & Email Reports",
+  "/dashboard/analytics/analyse": "Analyse",
+  "/dashboard/analytics/analyse/new": "Create analysis",
   "/dashboard/settings": "Settings",
   "/dashboard/servers": "Servers",
   "/dashboard/servers/new": "Create Server",
@@ -193,6 +195,14 @@ type TaskPattern = {
 
 /** Routes whose URL shape would otherwise describe the wrong task. */
 const PATTERN_TASKS: TaskPattern[] = [
+  {
+    match: /^\/dashboard\/analytics\/analyse\/[^/]+\/results$/,
+    task: "Analysis results",
+  },
+  {
+    match: /^\/dashboard\/analytics\/analyse\/[^/]+$/,
+    task: "Analysis",
+  },
   {
     match: /^\/dashboard\/campaigns\/[^/]+\/flows\/[^/]+$/,
     task: "Campaign flow",

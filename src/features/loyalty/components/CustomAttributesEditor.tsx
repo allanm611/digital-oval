@@ -102,7 +102,7 @@ export default function CustomAttributesEditor({
     [attributes, sources],
   );
 
-  const canAdd = !disabled && !sourcesLoading && !sourcesError && options.length > 0;
+  const canAdd = !disabled && !sourcesError && options.length > 0;
 
   const updateAttribute = (
     clientId: string,
@@ -123,7 +123,7 @@ export default function CustomAttributesEditor({
         the next K attribute.
       </p>
 
-      {sourcesLoading && (
+      {sourcesLoading && options.length === 0 && (
         <p className={`text-sm ${tw.textSecondary}`}>Loading numeric fields…</p>
       )}
       {sourcesError && <p className="text-sm text-red-600">{sourcesError}</p>}

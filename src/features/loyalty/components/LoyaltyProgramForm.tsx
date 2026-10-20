@@ -50,7 +50,7 @@ export default function LoyaltyProgramForm({
     <div className="space-y-6">
       <Section
         title="Program"
-        description="Name the program and describe how customers earn and redeem inside it. Points stay in this program and are not added to any other program."
+        description="Name the program and describe how customers earn and redeem inside it. Points stay in this program."
       >
         <Input
           label="Program name"
@@ -160,7 +160,6 @@ export default function LoyaltyProgramForm({
           <AddCustomAttributeButton
             disabled={
               disabled ||
-              sourcesLoading ||
               Boolean(sourcesError) ||
               attributeFieldOptions(sources, value.attributes).length === 0
             }
